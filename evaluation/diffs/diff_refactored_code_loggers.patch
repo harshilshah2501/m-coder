@@ -1,0 +1,177 @@
+commit e7e7246ba5e1b30f45817137859f32bf23fd4b48
+Author: vismitmandlik <vismitmandlik03@gmail.com>
+Date:   Tue Sep 23 20:33:59 2025 +0530
+
+    refactored code and removed loggers
+
+diff --git a/motadata/src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java b/motadata/src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java
+index 867c94d529..15bcc1ccf9 100755
+--- a/motadata/src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java
++++ b/motadata/src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java
+@@ -201,8 +201,6 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+     @Override
+     public PolicyCacheService getActivePolicies(JsonObject context, Handler<AsyncResult<JsonObject>> handler)
+     {
+-        LOGGER.info("###sending for get" + context);
+-
+         if (context.containsKey(VisualizationConstants.CATEGORY) && (context.getString(VisualizationConstants.CATEGORY).equalsIgnoreCase(VisualizationConstants.VisualizationDataSource.LOG.getName()) || context.getString(VisualizationConstants.CATEGORY).equalsIgnoreCase(VisualizationConstants.VisualizationDataSource.FLOW.getName()) || context.getString(VisualizationConstants.CATEGORY).equalsIgnoreCase(VisualizationConstants.VisualizationDataSource.TRAP.getName())))
+         {
+             vertx.<JsonObject>executeBlocking(future -> getEventPolicies(context).onComplete(result ->
+@@ -385,7 +383,6 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+     {
+         var result = new JsonObject();
+ 
+-        // TODO : for showing NCM Policy in Netroute, check if device is network config and ncm manage status is on
+         if (context.containsKey(VisualizationConstants.GROUP_BY) && context.getString(VisualizationConstants.GROUP_BY).equalsIgnoreCase("monitor"))
+         {
+             for (var entity : context.getJsonArray(ENTITIES))
+@@ -410,18 +407,6 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+                 }
+             }
+         }
+-        else if (context.containsKey(VisualizationConstants.CATEGORY) && context.getString(VisualizationConstants.CATEGORY).equalsIgnoreCase(VisualizationConstants.VisualizationDataSource.NETWORK_CONFIG.getName()))
+-        {
+-            for (var entity : context.getJsonArray(ENTITIES))
+-            {
+-//                var severity = EventPolicyCacheStore.getStore().getSeverity(CommonUtil.getLong(entity));
+-                // TODO : add logic of getSeverity in EventPolicyCacheStore
+-//                if (severity != null)
+-//                {
+-//                    setSeverityCounts(result, severity);
+-//                }
+-            }
+-        }
+         else
+         {
+             var items = MetricPolicyCacheStore.getStore().getItemsByCategory(context.getJsonArray(ENTITIES),context.getString(VisualizationConstants.CATEGORY));
+@@ -1042,15 +1027,14 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+ 
+             var ticks = EventPolicyCacheStore.getStore().getTriggerTicks();
+ 
+-            LOGGER.info("Printing all ticks : " + ticks);
+             ticks.forEach((policyIdKey, tick) ->
+             {
+                 var policyId = CommonUtil.getLong(policyIdKey);
++
+                 var policy = EventPolicyConfigStore.getStore().getItem(policyId);
+ 
+                 // Check if this is a Network Config Policy
+-                var valid = policy != null &&
+-                        PolicyEngineConstants.PolicyType.NETWORK_CONFIG.getName().equalsIgnoreCase(policy.getString(POLICY_TYPE));
++                var valid = policy != null && PolicyEngineConstants.PolicyType.NETWORK_CONFIG.getName().equalsIgnoreCase(policy.getString(POLICY_TYPE));
+ 
+                 if (valid && tick.containsKey(ConfigConstants.CONFIG_OBJECT_ID))
+                 {
+@@ -1061,6 +1045,7 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+                         for (var i = 0; i < configObjectIds.size(); i++)
+                         {
+                             var entityId = configObjectIds.getLong(i);
++
+                             buildNetworkConfigWorklog(dataPoints, result, tick, policy, entityId);
+                         }
+                     }
+@@ -1096,16 +1081,9 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+                 }
+                 else if (dataPoint.equalsIgnoreCase(IntegrationEngine.ACK_ID))
+                 {
+-                    // Build integration cache key for this specific entity
+-                    var integrationKey = policy.getString(ID) + SEPARATOR +
+-                            entityId + SEPARATOR +
+-                            policy.getString(POLICY_TYPE) + SEPARATOR +
+-                            policy.getJsonObject(POLICY_CONTEXT).getString(VisualizationConstants.DATA_POINT);
++                    var integrationKey = policy.getString(ID) + SEPARATOR + entityId + SEPARATOR + policy.getString(POLICY_TYPE) + SEPARATOR + policy.getJsonObject(POLICY_CONTEXT).getString(VisualizationConstants.DATA_POINT);
+ 
+-                    var response = IntegrationCacheStore.getStore().getItem(
+-                            IntegrationCacheStore.getStore().getIntegrationType(policy.getString(ID)), integrationKey);
+-
+-                    LOGGER.info(IntegrationCacheStore.getStore().getIntegrationType(policy.getString(ID)) + " and " + integrationKey);
++                    var response = IntegrationCacheStore.getStore().getItem(IntegrationCacheStore.getStore().getIntegrationType(policy.getString(ID)), integrationKey);
+ 
+                     result.getJsonArray(dataPoint).add(response != null ? CommonUtil.getString(response) : EMPTY_VALUE);
+                 }
+@@ -1128,10 +1106,8 @@ public class PolicyCacheServiceImpl implements PolicyCacheService
+                 }
+                 else
+                 {
+-                    result.getJsonArray(dataPoint).add(policy.containsKey(dataPoint) && policy.getValue(dataPoint) != null ?
+-                            CommonUtil.getString(policy.getValue(dataPoint)) : EMPTY_VALUE);
++                    result.getJsonArray(dataPoint).add(policy.containsKey(dataPoint) && policy.getValue(dataPoint) != null ? CommonUtil.getString(policy.getValue(dataPoint)) : EMPTY_VALUE);
+                 }
+-
+             }
+         }
+         catch (Exception exception)
+diff --git a/motadata/src/main/java/com/mindarray/config/ConfigResponseProcessor.java b/motadata/src/main/java/com/mindarray/config/ConfigResponseProcessor.java
+index c4ef58a111..e30d68ce31 100644
+--- a/motadata/src/main/java/com/mindarray/config/ConfigResponseProcessor.java
++++ b/motadata/src/main/java/com/mindarray/config/ConfigResponseProcessor.java
+@@ -248,7 +248,6 @@ public class ConfigResponseProcessor extends AbstractVerticle
+ 
+                 case DELETE_POLICY ->
+                 {
+-                    // TODO : Test as it is -> Add logic to remove policiesByTag
+                     policyEngine.removePolicy(event.getLong(ID));
+                 }
+ 
+diff --git a/motadata/src/main/java/com/mindarray/integration/IntegrationEngine.java b/motadata/src/main/java/com/mindarray/integration/IntegrationEngine.java
+index a6825b5b3c..88bde0652c 100644
+--- a/motadata/src/main/java/com/mindarray/integration/IntegrationEngine.java
++++ b/motadata/src/main/java/com/mindarray/integration/IntegrationEngine.java
+@@ -279,30 +279,22 @@ public class IntegrationEngine extends AbstractVerticle
+ 
+                 if (!event.containsKey(MESSAGE))
+                 {
+-                    if (event.getString(POLICY_TYPE).equalsIgnoreCase(PolicyType.NETWORK_CONFIG.getName()))
+-                    {
+-                        // TODO : network config policy message
+-//                        event.put(MESSAGE, PolicyEngineConstants.replaceMetricPolicyPlaceholders(policy, event, InfoMessageConstants.POLICY_EVENT_DEFAULT_EMAIL_SUBJECT, ));
+-                    }
+-                    else
+-                    {
+-                        var item = MetricPolicyConfigStore.getStore().getItem(event.getLong(PolicyEngineConstants.POLICY_ID));
+-
+-                        var context = item.getJsonObject(POLICY_CONTEXT);
++                    var item = MetricPolicyConfigStore.getStore().getItem(event.getLong(PolicyEngineConstants.POLICY_ID));
+ 
+-                        var policyMessage = EMPTY_VALUE;
++                    var context = item.getJsonObject(POLICY_CONTEXT);
+ 
+-                        if (item.getString(POLICY_TYPE).equals(PolicyEngineConstants.PolicyType.AVAILABILITY.getName()))
+-                        {
+-                            policyMessage = String.format(InfoMessageConstants.AVAILABILITY_POLICY_DEFAULT_MESSAGE, ObjectConfigStore.getStore().getObjectName(event.getLong(ENTITY_ID)), event.getString(INSTANCE) != null ? event.getString(INSTANCE) : EMPTY_VALUE, event.getString(VALUE).equalsIgnoreCase(STATUS_UP) ? "Available" : "Unavailable");
+-                        }
+-                        else if (item.getString(POLICY_TYPE).equals(PolicyType.STATIC.getName()))
+-                        {
+-                            policyMessage = String.format(InfoMessageConstants.METRIC_THRESHOLD_POLICY_DEFAULT_MESSAGE, event.getString(GlobalConstants.METRIC), event.getString(INSTANCE) != null ? event.getString(INSTANCE) : EMPTY_VALUE, ObjectConfigStore.getStore().getObjectName(event.getLong(ENTITY_ID)), context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)) != null ? context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)).getString(POLICY_CONDITION) : EMPTY_VALUE, context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)) != null ? context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)).getString(POLICY_THRESHOLD) : EMPTY_VALUE, context.getInteger(POLICY_TRIGGER_TIME) / 60, context.getInteger(POLICY_TRIGGER_OCCURRENCES));
+-                        }
++                    var policyMessage = EMPTY_VALUE;
+ 
+-                        event.put(MESSAGE, PolicyEngineConstants.replaceMetricPolicyPlaceholders(item, event, item.getString(POLICY_MESSAGE) != null && !item.getString(POLICY_MESSAGE).isEmpty() ? item.getString(POLICY_MESSAGE) : EMPTY_VALUE, policyMessage));
++                    if (item.getString(POLICY_TYPE).equals(PolicyEngineConstants.PolicyType.AVAILABILITY.getName()))
++                    {
++                        policyMessage = String.format(InfoMessageConstants.AVAILABILITY_POLICY_DEFAULT_MESSAGE, ObjectConfigStore.getStore().getObjectName(event.getLong(ENTITY_ID)), event.getString(INSTANCE) != null ? event.getString(INSTANCE) : EMPTY_VALUE, event.getString(VALUE).equalsIgnoreCase(STATUS_UP) ? "Available" : "Unavailable");
+                     }
++                    else if (item.getString(POLICY_TYPE).equals(PolicyType.STATIC.getName()))
++                    {
++                        policyMessage = String.format(InfoMessageConstants.METRIC_THRESHOLD_POLICY_DEFAULT_MESSAGE, event.getString(GlobalConstants.METRIC), event.getString(INSTANCE) != null ? event.getString(INSTANCE) : EMPTY_VALUE, ObjectConfigStore.getStore().getObjectName(event.getLong(ENTITY_ID)), context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)) != null ? context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)).getString(POLICY_CONDITION) : EMPTY_VALUE, context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)) != null ? context.getJsonObject(POLICY_SEVERITY).getJsonObject(event.getString(SEVERITY)).getString(POLICY_THRESHOLD) : EMPTY_VALUE, context.getInteger(POLICY_TRIGGER_TIME) / 60, context.getInteger(POLICY_TRIGGER_OCCURRENCES));
++                    }
++
++                    event.put(MESSAGE, PolicyEngineConstants.replaceMetricPolicyPlaceholders(item, event, item.getString(POLICY_MESSAGE) != null && !item.getString(POLICY_MESSAGE).isEmpty() ? item.getString(POLICY_MESSAGE) : EMPTY_VALUE, policyMessage));
+                 }
+ 
+                 if (!event.containsKey(POLICY_KEY))
+diff --git a/motadata/src/main/java/com/mindarray/policy/EventPolicyInspector.java b/motadata/src/main/java/com/mindarray/policy/EventPolicyInspector.java
+index f9e402307a..ae8653ce55 100644
+--- a/motadata/src/main/java/com/mindarray/policy/EventPolicyInspector.java
++++ b/motadata/src/main/java/com/mindarray/policy/EventPolicyInspector.java
+@@ -943,9 +943,7 @@ public class EventPolicyInspector extends AbstractVerticle
+                 // Update severity counts for event policies
+                 if (event.containsKey(ConfigConstants.CONFIG_OBJECT_ID))
+                 {
+-                    var entityId = event.getLong(ConfigConstants.CONFIG_OBJECT_ID);
+-                    var severityEnum = GlobalConstants.Severity.valueOf(severity.toUpperCase());
+-                    EventPolicyCacheStore.getStore().updateSeverityCount(entityId, severityEnum, true);
++                    EventPolicyCacheStore.getStore().updateSeverityCount(event.getLong(ConfigConstants.CONFIG_OBJECT_ID), GlobalConstants.Severity.valueOf(severity.toUpperCase()), true);
+                 }
+ 
+                 if (!event.containsKey(VisualizationConstants.VISUALIZATION_TIMELINE))

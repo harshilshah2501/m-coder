@@ -1,0 +1,40 @@
+}
+    
+    @Override
+    public void start() {
+        // COMPLETE
+    }
+    
+    @Override
+    public void stop() {
+        // COMPLETE
+    }
+    
+    @Override
+    public void destroy() {
+        // COMPLETE
+    }
+    
+    @Override
+    public void handleRequest(Request request) {
+        // COMPLETE
+    }
+    
+    @Override
+    public void handleResponse(Response response) {
+        // COMPLETE
+    }
+    
+    @Override
+    public void handleError(Error error) {
+        // COMPLETE
+    }
+    
+    @Override
+    public void handleEvent(Event event) {
+        // COMPLETE
+    }
+    
+    @Override
+    public void handleNotification(Notification notification) {
+        // COMPLETE

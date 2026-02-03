@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "model": "Iter9-Test",
+    "timestamp": "2025-12-18T13:52:29.804481",
+    "benchmark": "Motadata-Bench v1.0"
+  },
+  "metrics": {
+    "total_tasks": 3,
+    "passed": 2,
+    "failed": 1,
+    "errors": 0,
+    "timeouts": 0,
+    "pass_rate": 66.66666666666666,
+    "avg_execution_time": 22.0,
+    "total_execution_time": 66.0
+  },
+  "by_category": {
+    "TYPE_D_DIRECT": {
+      "total": 3,
+      "passed": 2,
+      "failed": 1,
+      "pass_rate": 66.66666666666666
+    }
+  },
+  "results": [
+    {
+      "task_id": "e0a7fdff9d3a_motadata-6759_refactored_code",
+      "status": "FAIL",
+      "execution_time": 45.2,
+      "verification_output": "Compilation failed",
+      "verification_exit_code": 1,
+      "setup_output": null,
+      "model_output": null,
+      "error_message": null,
+      "timestamp": "2025-12-18T13:52:29.804466"
+    },
+    {
+      "task_id": "config_validator",
+      "status": "PASS",
+      "execution_time": 12.5,
+      "verification_output": "All tests passed",
+      "verification_exit_code": 0,
+      "setup_output": null,
+      "model_output": null,
+      "error_message": null,
+      "timestamp": "2025-12-18T13:52:29.804476"
+    },
+    {
+      "task_id": "rca_trace_analyzer",
+      "status": "PASS",
+      "execution_time": 8.3,
+      "verification_output": "All tests passed",
+      "verification_exit_code": 0,
+      "setup_output": null,
+      "model_output": null,
+      "error_message": null,
+      "timestamp": "2025-12-18T13:52:29.804479"
+    }
+  ]
+}

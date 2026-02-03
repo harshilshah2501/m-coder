@@ -1,0 +1,11 @@
+// 1. Get the notification type from the body
+    // 2. Get the notification message from the body
+    // 3. Get the notification timestamp from the body
+    // 4. Get the notification user from the body
+    // 5. Get the notification user id from the body
+    // 6. Get the notification user name from the body
+    // 7. Get the notification user email from the body
+    // 8. Get the notification user phone from the body
+    // 9. Get the notification user address from the body
+    // 10. Get the notification user city from the body
+    // 11. Get the notification user state from the

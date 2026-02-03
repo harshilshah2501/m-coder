@@ -1,0 +1,4 @@
+event.put(ENTITY_PROPERTY, new JsonObject().put(ENTITY_TYPE, config().getString(ENTITY_TYPE)).put(ENTITY_ID, entityId).put(CHANGE_NOTIFICATION_TYPE, ChangeNotificationType.UPDATE.name()).put(CHANGE_NOTIFICATION_ACTION, ChangeNotificationAction.NOTIFY.name()).put(CHANGE_NOTIFICATION_TIMESTAMP, DateTimeUtil.currentSeconds()).put(CHANGE_NOTIFICATION_WORKER_UUID, config().getString(CHANGE_NOTIFICATION_WORKER_UUID)));
+
+    vertx.eventBus().send(EVENT_CHANGE_LOCAL_NOTIFICATION, event);
+}

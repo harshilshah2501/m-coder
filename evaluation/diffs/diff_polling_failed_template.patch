@@ -1,0 +1,299 @@
+commit 443c87d78326432050523d5bbad7f829a95dc1c8
+Author: nishant.bhandari <nishantbhandari218@gmail.com>
+Date:   Tue Nov 25 18:47:23 2025 +0530
+
+    added polling failed template & refactor
+
+diff --git a/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java b/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+index 02397010df..340ecb64e3 100755
+--- a/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
++++ b/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+@@ -136,6 +136,7 @@ import static com.mindarray.api.User.USER_EMAIL;
+ import static com.mindarray.api.User.USER_NAME;
+ import static com.mindarray.db.DBConstants.*;
+ import static com.mindarray.eventbus.EventBusConstants.*;
++import static com.mindarray.integration.IntegrationConstants.*;
+ import static com.mindarray.log.LogEngineConstants.LogParserType.REGEX;
+ import static com.mindarray.log.LogPatternDetector.END_POS;
+ import static com.mindarray.log.LogPatternDetector.START_POS;
+@@ -3917,7 +3918,7 @@ public class UIActionEventHandler extends AbstractVerticle
+ 
+                             if(IntegrationConstants.IntegrationId.MICROSOFT_TEAMS == integrationId)
+                             {
+-                                var url = entity.getString(GlobalConstants.TARGET, EMPTY_VALUE) + String.format(TeamsIntegration.MESSAGE_END_POINT, entity.getString(TeamsIntegration.TEAM, EMPTY_VALUE), entity.getString(TeamsIntegration.CHANNEL, EMPTY_VALUE));
++                                var url = entity.getString(GlobalConstants.TARGET, EMPTY_VALUE) + String.format(TEAMS_MESSAGE_END_POINT, entity.getString(TEAM, EMPTY_VALUE), entity.getString(CHANNEL, EMPTY_VALUE));
+ 
+                                 Bootstrap.vertx().eventBus().<String>request(EventBusConstants.EVENT_OAUTH_TOKEN_GENERATE, item,
+                                         new DeliveryOptions().setSendTimeout(15 * 1000L),
+@@ -3967,9 +3968,9 @@ public class UIActionEventHandler extends AbstractVerticle
+                             }
+                             else
+                             {
+-                                var url = entity.getString(GlobalConstants.TARGET, EMPTY_VALUE) + SlackIntegration.MESSAGE_END_POINT;
++                                var url = entity.getString(GlobalConstants.TARGET, EMPTY_VALUE) + SLACK_MESSAGE_END_POINT;
+ 
+-                                var payload = new JsonObject().put("text", "This a test message from Motadata").put("channel", entity.getString(SlackIntegration.CHANNEL, EMPTY_VALUE));
++                                var payload = new JsonObject().put("text", "This a test message from Motadata").put("channel", entity.getString(CHANNEL, EMPTY_VALUE));
+ 
+                                 WebClientUtil.getWebClient().postAbs(url)
+                                         .putHeader("Content-Type", "application/json; charset=utf-8")
+diff --git a/motadata/src/main/java/com/mindarray/integration/IntegrationConstants.java b/motadata/src/main/java/com/mindarray/integration/IntegrationConstants.java
+index 32ce317a2d..38388452c8 100644
+--- a/motadata/src/main/java/com/mindarray/integration/IntegrationConstants.java
++++ b/motadata/src/main/java/com/mindarray/integration/IntegrationConstants.java
+@@ -72,6 +72,14 @@ import static com.mindarray.policy.PolicyEngineConstants.*;
+ public class IntegrationConstants
+ {
+     // constants
++    public static final String CHANNEL = "channel";
++    public static final String TEAM = "team";
++    public static final String TEAMS = "teams";
++    public static final String CHANNELS = "channels";
++
++    public static final String TEAMS_MESSAGE_END_POINT = "teams/%s/channels/%s/messages";
++    public static final String SLACK_MESSAGE_END_POINT = "chat.postMessage";
++
+     public static final String INCIDENT_SUBJECT = "incident.subject";
+     public static final String INCIDENT_DESCRIPTION = "incident.description";
+ 
+diff --git a/motadata/src/main/java/com/mindarray/integration/SlackIntegration.java b/motadata/src/main/java/com/mindarray/integration/SlackIntegration.java
+index e9b30105ff..c360665a47 100644
+--- a/motadata/src/main/java/com/mindarray/integration/SlackIntegration.java
++++ b/motadata/src/main/java/com/mindarray/integration/SlackIntegration.java
+@@ -26,7 +26,6 @@ import com.mindarray.db.DBConstants;
+ import com.mindarray.InfoMessageConstants;
+ import com.mindarray.api.CredentialProfile;
+ import com.mindarray.api.Integration;
+-import com.mindarray.eventbus.EventBusConstants;
+ import com.mindarray.store.CredentialProfileConfigStore;
+ import com.mindarray.store.IntegrationConfigStore;
+ import com.mindarray.util.CommonUtil;
+@@ -36,7 +35,6 @@ import com.mindarray.util.WebClientUtil;
+ import io.vertx.core.AbstractVerticle;
+ import io.vertx.core.Future;
+ import io.vertx.core.Promise;
+-import io.vertx.core.eventbus.DeliveryOptions;
+ import io.vertx.core.json.JsonArray;
+ import io.vertx.core.json.JsonObject;
+ import org.apache.http.HttpStatus;
+@@ -49,7 +47,7 @@ import static com.mindarray.GlobalConstants.*;
+ import static com.mindarray.api.Integration.*;
+ import static com.mindarray.api.IntegrationProfile.INTEGRATION_CREDENTIAL_PROFILE;
+ import static com.mindarray.eventbus.EventBusConstants.*;
+-import static com.mindarray.integration.TeamsIntegration.TEAMS;
++import static com.mindarray.integration.IntegrationConstants.*;
+ 
+ /**
+  * Integration class for Slack notification system.
+@@ -66,10 +64,6 @@ import static com.mindarray.integration.TeamsIntegration.TEAMS;
+  */
+ public class SlackIntegration extends AbstractVerticle
+ {
+-    public static final String SLACK = "Slack";
+-    public static final String CHANNELS = "channels";
+-    public static final String CHANNEL = "channel";
+-    public static final String MESSAGE_END_POINT = "chat.postMessage";
+     private static final Logger LOGGER = new Logger(SlackIntegration.class, INTEGRATION_DIR, "Slack Integration");
+     private final AtomicBoolean SYNC_FLAG = new AtomicBoolean();
+     private Long timerId;
+diff --git a/motadata/src/main/java/com/mindarray/integration/TeamsIntegration.java b/motadata/src/main/java/com/mindarray/integration/TeamsIntegration.java
+index e0a93aa0dd..12dd4f1268 100644
+--- a/motadata/src/main/java/com/mindarray/integration/TeamsIntegration.java
++++ b/motadata/src/main/java/com/mindarray/integration/TeamsIntegration.java
+@@ -56,6 +56,8 @@ import static com.mindarray.ErrorMessageConstants.INTEGRATION_ATTRIBUTE_SYNC_FAI
+ import static com.mindarray.GlobalConstants.*;
+ import static com.mindarray.api.Integration.*;
+ import static com.mindarray.eventbus.EventBusConstants.*;
++import static com.mindarray.integration.IntegrationConstants.CHANNELS;
++import static com.mindarray.integration.IntegrationConstants.TEAMS;
+ 
+ /**
+  * Integration class for Microsoft Teams notification system.
+@@ -72,11 +74,6 @@ import static com.mindarray.eventbus.EventBusConstants.*;
+  */
+ public class TeamsIntegration extends AbstractVerticle
+ {
+-    public static final String TEAMS = "teams";
+-    public static final String CHANNELS = "channels";
+-    public static final String TEAM = "team";
+-    public static final String CHANNEL = "channel";
+-    public static final String MESSAGE_END_POINT = "teams/%s/channels/%s/messages";
+     private static final Logger LOGGER = new Logger(TeamsIntegration.class, INTEGRATION_DIR, "Teams Integration");
+     private final AtomicBoolean SYNC_FLAG = new AtomicBoolean();
+     private Long timerId;
+diff --git a/motadata/src/main/java/com/mindarray/nms/MetricEnricher.java b/motadata/src/main/java/com/mindarray/nms/MetricEnricher.java
+index 3583384ec6..3f9f6acd89 100644
+--- a/motadata/src/main/java/com/mindarray/nms/MetricEnricher.java
++++ b/motadata/src/main/java/com/mindarray/nms/MetricEnricher.java
+@@ -60,8 +60,7 @@ import static com.mindarray.GlobalConstants.*;
+ import static com.mindarray.eventbus.EventBusConstants.*;
+ import static com.mindarray.nms.NMSConstants.*;
+ import static com.mindarray.nms.NMSConstants.MetricPlugin;
+-import static com.mindarray.notification.Notification.NOTIFICATION_TYPE;
+-import static com.mindarray.notification.Notification.TEAMS_NOTIFICATION_POLLING_ERROR_JSON_TEMPLATE;
++import static com.mindarray.notification.Notification.*;
+ import static com.mindarray.policy.PolicyEngineConstants.CHANNELS;
+ import static com.mindarray.policy.PolicyEngineConstants.RecipientType.USER_PROFILE;
+ 
+@@ -1473,7 +1472,7 @@ public class MetricEnricher extends AbstractVerticle
+                                 .put(NOTIFICATION_TYPE, channelType)
+                                 .put(CHANNELS, new JsonArray(new ArrayList<>(targets)))
+                                 .put(Notification.CHANNEL_NOTIFICATION_CONTENT, new StringSubstitutor(
+-                                        new JsonObject().mergeIn(event).put(SEVERITY, Severity.CRITICAL.name().toLowerCase()).put(AIOpsObject.OBJECT_GROUPS, StringUtils.join(groups, COMMA_SEPARATOR)).put(TIME_STAMP, DateTimeUtil.timestamp(event.getLong(EVENT_TIMESTAMP) * 1000L)).getMap()).replace(TEAMS_NOTIFICATION_POLLING_ERROR_JSON_TEMPLATE)));
++                                        new JsonObject().mergeIn(event).put(SEVERITY, Severity.CRITICAL.name().toLowerCase()).put(AIOpsObject.OBJECT_GROUPS, StringUtils.join(groups, COMMA_SEPARATOR)).put(TIME_STAMP, DateTimeUtil.timestamp(event.getLong(EVENT_TIMESTAMP) * 1000L)).getMap()).replace(SLACK_NOTIFICATION_POLLING_ERROR_JSON_TEMPLATE)));
+                     }
+                 });
+             }
+diff --git a/motadata/src/main/java/com/mindarray/notification/MicrosoftTeamsNotification.java b/motadata/src/main/java/com/mindarray/notification/MicrosoftTeamsNotification.java
+index 1d81f52fe0..0a96514efb 100644
+--- a/motadata/src/main/java/com/mindarray/notification/MicrosoftTeamsNotification.java
++++ b/motadata/src/main/java/com/mindarray/notification/MicrosoftTeamsNotification.java
+@@ -53,6 +53,7 @@ import java.util.ArrayList;
+ import java.util.concurrent.TimeUnit;
+ 
+ import static com.mindarray.GlobalConstants.*;
++import static com.mindarray.integration.IntegrationConstants.*;
+ 
+ /**
+  * Implementation of the Notification abstract class for sending Microsoft Teams notifications.
+@@ -182,9 +183,9 @@ public class MicrosoftTeamsNotification extends Notification
+                             // Get the channel context and build the Teams API URL
+                             var context = item.getJsonObject(IntegrationProfile.INTEGRATION_PROFILE_CONTEXT);
+                             var url = teams.getJsonObject(Integration.INTEGRATION_CONTEXT).getString(GlobalConstants.TARGET, EMPTY_VALUE) +
+-                                    String.format(TeamsIntegration.MESSAGE_END_POINT,
+-                                            context.getString(TeamsIntegration.TEAM, EMPTY_VALUE),
+-                                            context.getString(TeamsIntegration.CHANNEL, EMPTY_VALUE));
++                                    String.format(TEAMS_MESSAGE_END_POINT,
++                                            context.getString(TEAM, EMPTY_VALUE),
++                                            context.getString(CHANNEL, EMPTY_VALUE));
+ 
+                             // Get the credential profile for authentication
+                             var credentialProfile = CredentialProfileConfigStore.getStore().getItem(
+diff --git a/motadata/src/main/java/com/mindarray/notification/Notification.java b/motadata/src/main/java/com/mindarray/notification/Notification.java
+index bff8a62714..9c963de3b7 100644
+--- a/motadata/src/main/java/com/mindarray/notification/Notification.java
++++ b/motadata/src/main/java/com/mindarray/notification/Notification.java
+@@ -134,20 +134,21 @@ public abstract class Notification
+     public static final String EMAIL_NOTIFICATION_SLO_CYCLE_END_HTML_TEMPLATE = "slo-cycle-end-template.ftl";
+ 
+     // Slack Block Kit Templates
+-    public static final String SLACK_NOTIFICATION_METRIC_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${object.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Object Type:* ${object.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric Counter:* ${metric}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric Value:* ${value}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Triggered Time:* ${timestamp}\"},{\"type\":\"mrkdwn\",\"text\":\"*Action:* ${policy.action}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${policy.message}\"}},{\"type\":\"divider\"},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+-    public static final String SLACK_RENOTIFICATION_METRIC_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${object.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Object Type:* ${object.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric Counter:* ${metric}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric Value:* ${value}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Triggered Time:* ${timestamp}\"},{\"type\":\"mrkdwn\",\"text\":\"*Action:* ${policy.action}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Active Since:* ${lastSeen}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${policy.message}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
++    public static final String SLACK_NOTIFICATION_METRIC_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"$$$title$$$\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Object Type:* ${object.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric Counter:* ${metric}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric Value:* ${value}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Triggered Time:* ${timestamp}\"},{\"type\":\"mrkdwn\",\"text\":\"*Action:* ${policy.action}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${policy.message}\"}},{\"type\":\"divider\"},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
++    public static final String SLACK_RENOTIFICATION_METRIC_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${object.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Object Type:* ${object.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric Counter:* ${metric}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric Value:* ${value}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Triggered Time:* ${timestamp}\"},{\"type\":\"mrkdwn\",\"text\":\"*Action:* ${policy.action}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Active Since:* ${active.since}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${policy.message}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_NOTIFICATION_EVENT_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${policy.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Event Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Evaluation Window:* ${evaluation.window}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric:* ${event.field}\"},{\"type\":\"mrkdwn\",\"text\":\"*Trigger Condition:* ${trigger.condition}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Alert Type:* ${trigger.mode}\"},{\"type\":\"mrkdwn\",\"text\":\"*Trigger Value:* ${value}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${policy.message}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_NOTIFICATION_TRAP_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${policy.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Source:* ${event.source}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Trigger Condition:* ${trigger.condition}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${policy.message}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_SHARE_METRIC_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${message}\"}},{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${object.name} | ${object.ip}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Object Type:* ${object.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric Counter:* ${metric}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric Value:* ${value}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Triggered Time:* ${Timestamp}\"},{\"type\":\"mrkdwn\",\"text\":\"*Action:* ${policy.action}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Active Since:* ${lastSeen}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Alert Message:* ${policy.message}\"}},{\"type\":\"divider\"},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_SHARE_EVENT_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${message}\"}},{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${policy.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Event Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Evaluation Window:* ${evaluation.window}\"},{\"type\":\"mrkdwn\",\"text\":\"*Policy Type:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Metric:* ${event.field}\"},{\"type\":\"mrkdwn\",\"text\":\"*Trigger Condition:* ${triggerCondition}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Alert Type:* ${trigger.mode}\"},{\"type\":\"mrkdwn\",\"text\":\"*Trigger Value:* ${value}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Alert Message:* ${alert.message}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_SHARE_TRAP_POLICY_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"${severity.color}\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${message}\"}},{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${severity} - ${policy.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Policy Name:* ${policy.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Severity:* ${severity}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Source:* ${eventSource}\"},{\"type\":\"mrkdwn\",\"text\":\"*Metric:* ${policy.type}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Trigger Condition:* ${triggerCondition}\"},{\"type\":\"mrkdwn\",\"text\":\"*Last Seen:* ${triggerCondition}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Alert Message:* ${alert.message}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View Alert in AIOps\",\"emoji\":true},\"url\":\"${policy.url}\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+ 
+-    public static final String SLACK_NOTIFICATION_METRIC_EXPLORER_SHARE_JSON_TEMPLATE = "{\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${type}\",\"emoji\":true}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\\n*Sent By:* ${user.name}\"}}],\"imageAttached\":true,\"image_url\":\"${filename}\",\"alt_text\":\"${visualization.name}\"}";
+-    public static final String SLACK_NOTIFICATION_SEARCH_QUERY_SHARE_JSON_TEMPLATE = "{\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"Motadata Search\",\"emoji\":true}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Query:* ${search.query}\\n*Message:* ${message}\\n*Sent By:* ${user.name}\"}}],\"imageAttached\":true,\"image_url\":\"${filename}\",\"alt_text\":\"${visualization.name}\"}";
++    public static final String SLACK_NOTIFICATION_METRIC_EXPLORER_SHARE_JSON_TEMPLATE = "{\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${type}\",\"emoji\":true}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\\n*Sent By:* ${user.name}\"}}],\"imageAttached\":true,\"image_url\":\"${filename}\",\"alt_text\":\"${type}\"}";
++    public static final String SLACK_NOTIFICATION_SEARCH_QUERY_SHARE_JSON_TEMPLATE = "{\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"Motadata Search\",\"emoji\":true}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Query:* ${search.query}\\n*Message:* ${message}\\n*Sent By:* ${user.name}\"}}],\"imageAttached\":true,\"image_url\":\"${filename}\",\"alt_text\":\"Motadata Search\"}";
+     public static final String SLACK_NOTIFICATION_WIDGET_SHARE_JSON_TEMPLATE = "{\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${visualization.name}\",\"emoji\":true}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\\n*Sent By:* ${user.name}\"}}],\"imageAttached\":true,\"image_url\":\"${filename}\",\"alt_text\":\"${visualization.name}\"}";
+     public static final String SLACK_NOTIFICATION_SLO_BREACHED_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"\\\"${severity.color}\\\"\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${slo~status} - ${slo.profile.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Business Service Name:* ${slo.profile.business.service.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Status:* ${slo~status}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*SLO Frequency:* ${slo.frequency}\"},{\"type\":\"mrkdwn\",\"text\":\"*Target:* ${slo.target}%\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Achieved:* ${slo~achieved.percent}%\"},{\"type\":\"mrkdwn\",\"text\":\"*Violation:* ${slo~violated.percent}%\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* ${slo.profile.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Start Date/Time:* ${slo.profile.start.time}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\"}},{\"type\":\"divider\"},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View SLO in AIOps\",\"emoji\":true},\"url\":\"\\\"${slo.url}\\\"\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_NOTIFICATION_SLO_WARNING_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"\\\"${severity.color}\\\"\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${slo~status} - ${slo.profile.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Business Service Name:* ${slo.profile.business.service.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Status:* ${slo~status}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*SLO Frequency:* ${slo.frequency}\"},{\"type\":\"mrkdwn\",\"text\":\"*Target:* ${slo.target}%\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Achieved:* ${slo~achieved.percent}%\"},{\"type\":\"mrkdwn\",\"text\":\"*Violation:* ${slo~violated.percent}%\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* ${slo.profile.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Start Date/Time:* ${slo.profile.start.time}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\"}},{\"type\":\"divider\"},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View SLO in AIOps\",\"emoji\":true},\"url\":\"\\\"${slo.url}\\\"\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
+     public static final String SLACK_NOTIFICATION_SLO_CYCLE_END_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"\\\"${severity.color}\\\"\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${slo~status} - ${slo.profile.name}\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Business Service Name:* ${slo.profile.business.service.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*Status:* ${slo~status}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*SLO Frequency:* ${slo.frequency}\"},{\"type\":\"mrkdwn\",\"text\":\"*Target:* ${slo.target}%\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Achieved:* ${slo~achieved.percent}%\"},{\"type\":\"mrkdwn\",\"text\":\"*Violation:* ${slo~violated.percent}%\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Type:* ${slo.profile.type}\"},{\"type\":\"mrkdwn\",\"text\":\"*Start Date/Time:* ${slo.profile.start.time}\"}]},{\"type\":\"divider\"},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\"}},{\"type\":\"divider\"},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View SLO in AIOps\",\"emoji\":true},\"url\":\"\\\"${slo.url}\\\"\",\"style\":\"primary\",\"action_id\":\"view_aiops_alert\"}]}]}]}";
++    public static final String SLACK_NOTIFICATION_POLLING_ERROR_JSON_TEMPLATE = "{\"attachments\":[{\"color\":\"#FF0000\",\"blocks\":[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"${object.name} - (Polling Failed)\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Object Name:* ${object.name}\"},{\"type\":\"mrkdwn\",\"text\":\"*IP / Host:* ${object.target}\"}]},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Group:* ${object.groups}\"}]},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Message:* ${message}\"}},{\"type\":\"divider\"}]}]}";
+ 
+ 
+     //
+diff --git a/motadata/src/main/java/com/mindarray/notification/SlackNotification.java b/motadata/src/main/java/com/mindarray/notification/SlackNotification.java
+index 82ba011427..c9c589c721 100644
+--- a/motadata/src/main/java/com/mindarray/notification/SlackNotification.java
++++ b/motadata/src/main/java/com/mindarray/notification/SlackNotification.java
+@@ -58,6 +58,8 @@ import java.util.Optional;
+ import java.util.concurrent.TimeUnit;
+ 
+ import static com.mindarray.GlobalConstants.*;
++import static com.mindarray.integration.IntegrationConstants.CHANNEL;
++import static com.mindarray.integration.IntegrationConstants.SLACK_MESSAGE_END_POINT;
+ 
+ /**
+  * Implementation of the Notification abstract class for sending Slack notifications.
+@@ -202,7 +204,7 @@ public class SlackNotification extends Notification
+                             // Get the channel context and build the Slack API URL
+                             var context = item.getJsonObject(IntegrationProfile.INTEGRATION_PROFILE_CONTEXT);
+ 
+-                            var url = slack.getJsonObject(Integration.INTEGRATION_CONTEXT).getString(GlobalConstants.TARGET, EMPTY_VALUE) + SlackIntegration.MESSAGE_END_POINT;
++                            var url = slack.getJsonObject(Integration.INTEGRATION_CONTEXT).getString(GlobalConstants.TARGET, EMPTY_VALUE) + SLACK_MESSAGE_END_POINT;
+ 
+                             var credentialProfile = CredentialProfileConfigStore.getStore().getItem(slack.getJsonObject(Integration.INTEGRATION_CONTEXT).getLong(IntegrationProfile.INTEGRATION_CREDENTIAL_PROFILE));
+ 
+@@ -217,12 +219,12 @@ public class SlackNotification extends Notification
+                                 content = event.getString(Notification.CHANNEL_NOTIFICATION_CONTENT);
+                             }
+ 
+-                            var payload = new JsonObject(content).put("channel", context.getString(SlackIntegration.CHANNEL, EMPTY_VALUE));
++                            var payload = new JsonObject(content).put("channel", context.getString(CHANNEL, EMPTY_VALUE));
+                             
+                             var imageAttached = payload.getBoolean("imageAttached", false);
+                             
+                             var imagePayload = new JsonObject();
+-                            
++
+                             if(imageAttached)
+                             {
+                                 imagePayload.put("image_url", payload.getValue("image_url")).put("alt_text", payload.getValue("alt_text"));
+diff --git a/motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java b/motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java
+index 16ac24a94c..387fcc68fd 100644
+--- a/motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java
++++ b/motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java
+@@ -169,6 +169,8 @@ public class PolicyEngineConstants
+ 
+     public static final String TEAMS_TITLE = "${severity} - ${object.name} | ${object.target}";
+ 
++    public static final String SLACK_TITLE = "${severity} - ${object.name} | ${object.target}";
++
+     public static final String POLICY_ID = "policy.id";
+ 
+     public static final String POLICY_KEY = "policy.key";
+@@ -2517,7 +2519,7 @@ public class PolicyEngineConstants
+ 
+         if (channelType.equalsIgnoreCase(Notification.NotificationType.MICROSOFT_TEAMS.getName()))
+         {
+-            JsonObject notificationPayload = new JsonObject()
++            var notificationPayload = new JsonObject()
+                     .mergeIn(ObjectConfigStore.getStore().getItem(entityId))
+                     .mergeIn(context)
+                     .put(TIME_STAMP, DateTimeUtil.timestamp(context.getLong(EVENT_TIMESTAMP) * 1000L))
+@@ -2536,7 +2538,7 @@ public class PolicyEngineConstants
+         }
+         else
+         {
+-            JsonObject notificationPayload = new JsonObject().mergeIn(ObjectConfigStore.getStore().getItem(entityId)).mergeIn(context)
++            var notificationPayload = new JsonObject().mergeIn(ObjectConfigStore.getStore().getItem(entityId)).mergeIn(context)
+                     .put(POLICY_NAME, policy.getString(POLICY_NAME))
+                     .put(TIME_STAMP, DateTimeUtil.timestamp(context.getLong(EVENT_TIMESTAMP) * 1000L))
+                     .put("policy.action", String.join(", ", runbook));
+@@ -2547,7 +2549,7 @@ public class PolicyEngineConstants
+                 notificationPayload.put(ACTIVE_SINCE, duration);
+             }
+ 
+-            return new StringSubstitutor(notificationPayload.getMap()).replace(Notification.getChannelNotificationTemplate(policy.getString(POLICY_TYPE), channelType, renotify));
++            return new StringSubstitutor(notificationPayload.getMap()).replace(Notification.getChannelNotificationTemplate(policy.getString(POLICY_TYPE), channelType, renotify).replace("$$$title$$$", policy.getString(POLICY_TITLE) != null ? replaceMetricPolicyPlaceholders(policy, context, policy.getString(POLICY_TITLE), EMPTY_VALUE): SLACK_TITLE));
+         }
+     }
+ 
+diff --git a/motadata/src/main/java/com/mindarray/util/OAuthUtil.java b/motadata/src/main/java/com/mindarray/util/OAuthUtil.java
+index f0296ded7a..91458822f0 100644
+--- a/motadata/src/main/java/com/mindarray/util/OAuthUtil.java
++++ b/motadata/src/main/java/com/mindarray/util/OAuthUtil.java
+@@ -58,7 +58,6 @@ import java.util.Set;
+ 
+ import static com.mindarray.GlobalConstants.*;
+ import static com.mindarray.db.DBConstants.FIELD_NAME;
+-import static com.mindarray.integration.SlackIntegration.SLACK;
+ 
+ public class OAuthUtil extends AbstractVerticle
+ {
+@@ -144,6 +143,8 @@ public class OAuthUtil extends AbstractVerticle
+                                     }
+                                     else
+                                     {
++                                        LOGGER.warn(String.format("refresh token not found in the authentication provider response.", principal.getValue("error")));
++
+                                         message.fail(HttpStatus.SC_NOT_FOUND, context.put(MESSAGE, "Failed to receive the refresh token from the authentication provider. Please ensure that the provider is configured correctly and try again.").encode());
+                                     }
+                                 }

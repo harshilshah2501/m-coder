@@ -1,0 +1,5 @@
+promise.complete("Hello World");
+}, res -> {
+    // RESULT
+    System.out.println("The result is: " + res.result());
+});

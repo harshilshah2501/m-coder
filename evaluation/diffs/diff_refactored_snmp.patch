@@ -1,0 +1,228 @@
+commit 45f95bda687ad6dad0de5b6ed2db0862d5f5a218
+Author: nikunj.patel <nikunj.patel@motadata.com>
+Date:   Thu Sep 4 11:18:24 2025 +0530
+
+    - refactored.
+
+diff --git a/motadata/src/main/java/com/mindarray/api/RunbookPlugin.java b/motadata/src/main/java/com/mindarray/api/RunbookPlugin.java
+index aaa6bba291..25c314b2a9 100644
+--- a/motadata/src/main/java/com/mindarray/api/RunbookPlugin.java
++++ b/motadata/src/main/java/com/mindarray/api/RunbookPlugin.java
+@@ -399,7 +399,7 @@ public class RunbookPlugin extends AbstractAPI
+                 }
+                 else if (item.getString(RUNBOOK_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.GROUP.getName()))
+                 {
+-                    response.put(APIConstants.Entity.GROUP.getName(), DataSecurity.qualifyGroups(response.getLong(USER_ID), item.getJsonArray(RUNBOOK_PLUGIN_ENTITIES)));
++                    response.put(APIConstants.Entity.GROUP.getName(), DataSecurity.qualifyGroups(routingContext.user().principal().getLong(ID), item.getJsonArray(RUNBOOK_PLUGIN_ENTITIES)));
+                 }
+             }
+ 
+diff --git a/motadata/src/main/java/com/mindarray/api/SNMPDeviceCatalog.java b/motadata/src/main/java/com/mindarray/api/SNMPDeviceCatalog.java
+index 47163e9668..a130d6b14f 100644
+--- a/motadata/src/main/java/com/mindarray/api/SNMPDeviceCatalog.java
++++ b/motadata/src/main/java/com/mindarray/api/SNMPDeviceCatalog.java
+@@ -288,14 +288,14 @@ public class SNMPDeviceCatalog extends AbstractAPI
+         {
+             var futures = new ArrayList<Future<Void>>();
+ 
++            var userId = CommonUtil.getLong(response.remove(USER_ID));
++
+             for (var catalogue : response)
+             {
+-                futures.add(getQualifiedEntities(Long.parseLong(catalogue.getKey()), response.getLong(USER_ID), response));
++                futures.add(getQualifiedEntities(Long.parseLong(catalogue.getKey()), userId, response));
+             }
+ 
+-            Future.join(futures).onComplete(result ->
+-                    promise.complete(response));
+-
++            Future.join(futures).onComplete(result -> promise.complete(response));
+         }
+         catch (Exception exception)
+         {
+diff --git a/motadata/src/main/java/com/mindarray/api/UserProfile.java b/motadata/src/main/java/com/mindarray/api/UserProfile.java
+index 022eaa82c9..46a71f9e40 100644
+--- a/motadata/src/main/java/com/mindarray/api/UserProfile.java
++++ b/motadata/src/main/java/com/mindarray/api/UserProfile.java
+@@ -105,6 +105,8 @@ public class UserProfile extends AbstractAPI
+         {
+             var users = profile.getJsonArray(USER_PROFILE_USERS);
+ 
++            var usersByProfile = new HashMap<Long, ArrayList<Long>>();
++
+             var futures = new ArrayList<Future<Void>>();
+ 
+             for (var index = 0; index < users.size(); index++)
+@@ -119,7 +121,7 @@ public class UserProfile extends AbstractAPI
+                     {
+                         futures.add(future.future());
+ 
+-                        var oldProfileId = UserConfigStore.getStore().remove(users.getLong(index));
++                        usersByProfile.computeIfAbsent(UserConfigStore.getStore().remove(users.getLong(index)), value -> new ArrayList<>()).add(users.getLong(index));
+ 
+                         user.put(User.USER_PROFILE, entity.getLong(ID));
+ 
+@@ -129,38 +131,10 @@ public class UserProfile extends AbstractAPI
+                                 {
+                                     if (asyncResult.succeeded())
+                                     {
+-                                        try
+-                                        {
+-                                            UserConfigStore.getStore().updateProfile(user.getLong(ID), entity.getLong(ID));
+-
+-                                            var oldProfile = UserProfileConfigStore.getStore().getItem(oldProfileId);
+-
+-                                            var oldProfileUsers = new JsonArray();
++                                        UserConfigStore.getStore().updateProfile(user.getLong(ID), entity.getLong(ID));
+ 
+-                                            if (oldProfile != null)
+-                                            {
+-                                                oldProfileUsers = oldProfile.getJsonArray(USER_PROFILE_USERS);
+-
+-                                                oldProfileUsers.remove(user.getLong(ID));
+-
+-                                                Bootstrap.configDBService().update(DBConstants.TBL_USER_PROFILE,
+-                                                        new JsonObject().put(DBConstants.FIELD_NAME, ID).put(VALUE, oldProfileId),
+-                                                        new JsonObject().put(USER_PROFILE_USERS, oldProfileUsers),
+-                                                        DEFAULT_USER,
+-                                                        SYSTEM_REMOTE_ADDRESS, futureResult -> UserProfileConfigStore.getStore().updateItem(oldProfileId));
+-                                            }
+-                                            else
+-                                            {
+-                                                LOGGER.warn(String.format("UserProfile profile id %s not found for user %s", oldProfileId, user.getString(USER_NAME)));
+-                                            }
+-                                        }
+-                                        catch (Exception exception)
+-                                        {
+-                                            LOGGER.error(exception);
+-                                        }
++                                        future.complete();
+                                     }
+-
+-                                    future.complete();
+                                 }));
+                     }
+                     catch (Exception exception)
+@@ -176,9 +150,19 @@ public class UserProfile extends AbstractAPI
+             {
+                 if (result.succeeded())
+                 {
+-                    this.send(routingContext, entity);
++                    updateProfile(usersByProfile).onComplete(asyncResult ->
++                    {
++                        if (asyncResult.succeeded())
++                        {
++                            this.send(routingContext, entity);
+ 
+-                    promise.complete();
++                            promise.complete();
++                        }
++                        else
++                        {
++                            promise.fail(asyncResult.cause());
++                        }
++                    });
+                 }
+                 else
+                 {
+@@ -634,6 +618,64 @@ public class UserProfile extends AbstractAPI
+         return promise.future();
+     }
+ 
++    private Future<Void> updateProfile(HashMap<Long, ArrayList<Long>> usersByProfile)
++    {
++        var promise = Promise.<Void>promise();
++
++        try
++        {
++            var futures = new ArrayList<Future<Void>>();
++
++            if (usersByProfile != null)
++            {
++                usersByProfile.keySet().forEach(profileId ->
++                {
++                    var future = Promise.<Void>promise();
++
++                    try
++                    {
++                        futures.add(future.future());
++
++                        var users = usersByProfile.get(profileId);
++
++                        var profile = UserProfileConfigStore.getStore().getItem(profileId);
++
++                        var profileUsers = profile.getJsonArray(USER_PROFILE_USERS);
++
++                        for (var user : users)
++                        {
++                            profileUsers.remove(user);
++                        }
++
++                        LOGGER.info(String.format("old profile users : %s", profileUsers.encode()));
++
++                        Bootstrap.configDBService().update(DBConstants.TBL_USER_PROFILE,
++                                new JsonObject().put(DBConstants.FIELD_NAME, ID).put(VALUE, profileId),
++                                new JsonObject().put(USER_PROFILE_USERS, profileUsers),
++                                DEFAULT_USER,
++                                SYSTEM_REMOTE_ADDRESS, futureResult -> UserProfileConfigStore.getStore().updateItem(profileId).onComplete(asyncFutureResult -> future.complete()));
++                    }
++                    catch (Exception exception)
++                    {
++                        LOGGER.error(exception);
++
++                        future.fail(exception);
++                    }
++                });
++            }
++
++            Future.join(futures).onComplete(result -> promise.complete());
++        }
++        catch (Exception exception)
++        {
++            LOGGER.error(exception);
++
++            promise.fail(exception);
++        }
++
++        return promise.future();
++    }
++
+     public enum UserProfileScopeType
+     {
+         GROUP("Group"),
+diff --git a/motadata/src/main/java/com/mindarray/util/DataSecurity.java b/motadata/src/main/java/com/mindarray/util/DataSecurity.java
+index 2b4cc3516b..b0e870cc60 100644
+--- a/motadata/src/main/java/com/mindarray/util/DataSecurity.java
++++ b/motadata/src/main/java/com/mindarray/util/DataSecurity.java
+@@ -86,7 +86,7 @@ public class DataSecurity
+      */
+     public static JsonArray qualifyObjects(long userId, JsonArray objects, String field, JsonArray values, boolean idRequired)
+     {
+-        return qualifyObjects(userId, filter(objects, field, values, idRequired), idRequired);
++        return qualifyObjects(userId, filter(objects, field, values), idRequired);
+     }
+ 
+     /**
+@@ -110,19 +110,18 @@ public class DataSecurity
+      * @param items The items to filter (null for all objects)
+      * @param field The field to filter on
+      * @param values The values to match
+-     * @param idRequired Whether to return only IDs or full objects
+      * @return JsonArray of filtered items
+      */
+-    private static JsonArray filter(JsonArray items, String field, JsonArray values, boolean idRequired)
++    private static JsonArray filter(JsonArray items, String field, JsonArray values)
+     {
+         if (items == null)
+         {
+             items = ObjectConfigStore.getStore().getItems();
+         }
+ 
+-        var objects = items.stream().map(JsonObject::mapFrom).filter(item -> values.contains(item.getValue(field))).collect(Collectors.toList());
++        var objects = items.stream().map(JsonObject::mapFrom).filter(item -> values.contains(item.getValue(field))).map(item -> item.getLong(ID)).collect(Collectors.toList());
+ 
+-        return idRequired ? new JsonArray(objects.stream().map(item -> item.getLong(ID)).collect(Collectors.toList())) : new JsonArray(objects);
++        return new JsonArray(objects);
+     }
+ 
+     /**

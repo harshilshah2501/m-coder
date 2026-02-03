@@ -1,0 +1,7 @@
+// 1. Get the event type from the event
+        // 2. Get the event handler from the event bus
+        // 3. If the event handler is not null, call the handle method on the event handler
+        // 4. If the event handler is null, throw a RuntimeException with the message "No handler for event type: " + eventType
+        // 5. If the event handler is not null, call the handle method on the event handler
+        // 6. If the event handler is null, throw a RuntimeException with the message "No handler for event type: " + eventType
+        // 7. If the event handler is not null, call the handle method on the event handler

@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "model": "motadata-coder-v13",
+    "timestamp": "2025-12-29T06:38:43.614587",
+    "benchmark": "Motadata-Bench v1.0"
+  },
+  "metrics": {
+    "total_tasks": 1,
+    "passed": 0,
+    "failed": 1,
+    "errors": 0,
+    "timeouts": 0,
+    "pass_rate": 0.0,
+    "avg_execution_time": 4.008484125137329,
+    "total_execution_time": 4.008484125137329
+  },
+  "by_category": {
+    "TYPE_D_DIRECT": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "pass_rate": 0.0
+    }
+  },
+  "results": [
+    {
+      "task_id": "e7e7246ba5e1_refactored_code_and_removed_lo",
+      "status": "FAIL",
+      "execution_time": 4.008484125137329,
+      "verification_output": "",
+      "verification_exit_code": -1,
+      "setup_output": "=== Motadata Sandbox Environment ===\nopenjdk version \"17.0.17\" 2025-10-21\nOpenJDK Runtime Environment Temurin-17.0.17+10 (build 17.0.17+10)\nOpenJDK 64-Bit Server VM Temurin-17.0.17+10 (build 17.0.17+10, mixed mode, sharing)\n\u001b[1mApache Maven 3.8.7\u001b[m\nMaven home: /usr/share/maven\nJava version: 17.0.17, vendor: Eclipse Adoptium, runtime: /opt/java/openjdk\nDefault locale: en_US, platform encoding: UTF-8\nOS name: \"linux\", version: \"6.8.0-90-generic\", arch: \"amd64\", family: \"unix\"\n====================================\n\u2705 Baseline files created successfully\n",
+      "model_output": "<thinking>\n**Problem**: Patch8014.java modified but not fully refactored\n**Plan**: Only modify src/main/java/com/mindarray/patch/Patch8014.java to reflect full changes\n**Edge Cases**: Ensure changes are minimal and focused\n</thinking>\n\n<code>\n```diff\n--- a/motadata/src/main/java/com/mindarray/patch/Patch8014.java\n+++ b/motadata/src/main/java/com/mindarray/patch/Patch8014.java\n@@ -10,6 +10,12 @@ public class Patch8014 {\n     public ResponseEntity<List<Device>> getDevices(\n+        @RequestParam(defaultValue = \"0\") int page,\n+        @RequestParam(defaultValue = \"20\") int pageSize\n     ) {\n+        Pageable pageable = PageRequest.of(page, pageSize);\n+        Page<Device> result = deviceRepository.findAll(pageable);\n+        return ResponseEntity.ok(result.getContent());\n     }\n }\n```\n</code>",
+      "error_message": "Patch application failed for 1 file(s): src/main/java/com/mindarray/patch/Patch8014.java",
+      "timestamp": "2025-12-29T06:38:43.614194"
+    }
+  ]
+}

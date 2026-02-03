@@ -1,0 +1,151 @@
+﻿Employee Code:,MA251009,Employee Name:,Harshil Shah,Manager Name: ,Alpesh Dhamelia,Date of Review:,22/01/2026
+DOJ:,9/10/2025,Department:,PMG,Designation:,Senior R&D Engineer,Quarter / year:,Oct-Dec 2025
+Sr. No.,Category of Objective (Innovation/Visionary),Objectives,Key Results,Measurement Criteria (Optional),Self Comments,Manager Comments,Manager Ratings (Red/Amber/Green)
+1,Innovation,Model Selection & Architecture,Evaluate 3 open-source LLMs and select one for fine-tuning,"Success Criteria
+[x] Model selected with documented trade-offs
+[x] Trade-offs documented
+[x] Selection rationale clear","Achievement: 🟢 GREEN (100%)
+
+Evidence & Status:
+- Evaluated 3 LLMs: DeepSeek-Coder-6.7B, Qwen2.5-Coder-7B, CodeLlama-7B across 5 metrics (code quality/linter, logic, entity extraction, hallucination, format strictness) [supporting-docs/LLM Evaluation Report.pdf]
+- Qwen2.5-Coder-7B selected: 6.94/10 weighted score, 12.56s/task inference, 0.90 linter score, 1.00 hallucination score [supporting-docs/LLM Evaluation Report.pdf]
+- Later scaled to Qwen-2.5-14B-Instruct for production [supporting-docs/IMPLEMENTATION_SUMMARY.md, supporting-docs/ORCHESTRATOR_SERVICE_GUIDE.md]
+- Framework production-ready: hardware-aware quantization, deterministic (temp=0, seed=42), reproducible (Run2=Run3) [supporting-docs/LLM Evaluation Report.pdf]
+
+Why 100%:
+Binary KR—evaluate 3 LLMs and select one with rationale. Exceeded by: (1) systematic 5-metric framework, (2) deterministic reproducible methodology, (3) hardware-aware strategy (4-bit/8-bit/FP16), (4) clear winner documented with full traceability.
+
+Downstream Impact:
+- Unlocked Q4 Model Optimization objectives
+- Enabled golden exemplar framework (model-agnostic design, Qwen family as target) [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+- Established hallucination baseline (1.00 = zero hallucinations in test set) [supporting-docs/LLM Evaluation Report.pdf]
+- Deployed v16 production with 14B model [supporting-docs/ORCHESTRATOR_SERVICE_GUIDE.md, supporting-docs/STREAMING_FIX_SUMMARY.md]
+
+No blockers—complete and locked.",,
+1,Innovation,Dataset Preparation,Curate 50–100M code–prompt pairs and build 10K benchmark test set,"Success Criteria
+[ ] 50–100M pairs curated
+[ ] 10K benchmark test set built
+[ ] Benchmark operationalized","Achievement: 🔴 RED (30%)
+
+Evidence & Status:
+- v15 dataset: ~5M pairs (code_edits 32%, single_file 24.3%, diff_gen 16.2%) [supporting-docs/V15_FINAL_DATASET_SUMMARY.md]
+- v16.2 dataset: ~8M pairs (governance/constraint scenarios) [supporting-docs/V17_DATASET_SUMMARY.md comparison section]
+- v17 dataset: ~2M pairs (2,411 examples, 217 files, 29 packages, 100% real Motadata) [supporting-docs/V17_DATASET_SUMMARY.md]
+- Total: ~15M pairs (15% of 100M target); uncertain utility (10-30% may be repurposed; remainder is learning tax)
+- Benchmark: 50 scenarios designed, not operationalized
+
+Why Behind (30% vs 100%):
+Strategic pivot mid-Q3 from high-volume commodity pairs to golden exemplars with reasoning DNA [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]. 
+Critical realization: QLORA on v15/v16.2/v17 trains helpfulness without judgmental reasoning (shows ""what to do"" not ""how to think""). 
+Better approach: 30 manually-curated golden exemplars → 25K+ reasoning-embedded variants (250+ per exemplar) = same volume, exponentially better behavioral quality.
+
+What We Got Instead:
+- Golden exemplar framework [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md, supporting-docs/Golden_Exemplars.mp4]
+- 7-category taxonomy (RCA, Anomaly, Refusal, Constraint, Design, MultiLayer, Coding) [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+- 9 review criteria + 3 D.N.A validation gates [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+- 5/30 exemplars locked (Phase-1 foundation)
+- Variant generation strategy (250+ per exemplar)
+
+Forward Path:
+- Feb 05: Lock 30/30 exemplars (manual, critical)
+- Mid-Feb: Generate 25K+ variants (semi-automated)
+- End-Feb: Build SFT dataset (automated)
+
+Summary:
+Technically RED (missed volume target). Strategically sound—traded volume for depth. Pivot is intentional, model-agnostic, and improves long-term robustness. 6 weeks behind but targeting exponentially higher behavioral quality.",,
+1,Innovation,Fine-tuning & Prototype,Achieve > 40% accuracy and 20% hallucination reduction on benchmark,"Success Criteria
+[ ] >40% accuracy achieved
+[ ] 20% hallucination reduction measured
+[ ] Prototype model ready","Achievement: 🔴 RED (25%)
+
+Evidence & Status:
+- Baseline metrics collected for 12 coding tasks: logic 0.541, entity extraction 0.40, hallucination 1.00 [supporting-docs/BASELINE_EVALUATION_RESULTS.md]
+- v16.2 deployed Jan 7, marked broken Jan 8 (ignores RAG, contradicts itself), rolled back [supporting-docs/MODEL_VERIFICATION_REPORT.md]
+- v15/v16.2/v17 datasets (~15M pairs) exist but lack reasoning DNA [supporting-docs/V15_FINAL_DATASET_SUMMARY.md, supporting-docs/V17_DATASET_SUMMARY.md]
+- QLORA infra ready [supporting-docs/TRAINING_MONITOR.md]; no SFT run yet
+
+Why Behind (25% vs 100%):
+1. Baseline incomplete: 12 coding tasks done; need expanded AIOps scenarios (RCA, anomaly, refusal, constraint, design, config, coding)
+2. Golden exemplar dataset not ready: 5/30 exemplars locked; QLORA on commodity pairs trains helpfulness without safety/reasoning [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+3. No SFT iteration: Waiting for reasoning-embedded variants (250+ per exemplar) to avoid behavioral regression
+
+Root Cause:
+Strategic pivot from high-volume commodity pairs to golden exemplars with embedded reasoning DNA [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md, supporting-docs/From_Fluency_to_Judgment.mp4]. QLORA on v15/v16.2/v17 alone would achieve >40% task accuracy but with unsafe defaults (""be helpful"" not ""think first""). New path: teach HOW to think (decompose, validate, detect adversarial patterns) BEFORE WHAT to do, targeting >70% accuracy + 30% hallucination reduction with safe behavioral defaults.
+
+Forward Path:
+- Feb 05: Lock 30/30 exemplars (manual, critical)
+- Mid-Feb: Generate variants (semi-automated)
+- End-Feb/Early-Mar: Build SFT dataset and train QLORA (automated)
+- Mid-Mar: Benchmark and measure post-SFT metrics
+
+Summary:
+Deliberate trade-off: later but safer. Aiming for robust behavioral defaults over quick unsafe gains. Industry precedent: Bloomberg, Google, Tabnine use similar golden exemplar approaches [cited in EXEMPLAR_AUTHORING_GUIDE.md case studies].",,
+2,Visionary,Evaluation Pipeline,Develop nightly evaluation pipeline with 95% consistency,"Success Criteria
+[ ] Nightly pipeline operational
+[ ] 95% consistency baseline established
+[ ] Automated test reporting","Achievement: 🔴 RED (40%)
+
+Evidence & Status:
+- evaluation/ directory: Production-ready scripts (comprehensive_model_evaluation.py, baseline_evaluation.py, various test scripts)
+- Test harness operational for 12 coding tasks using deterministic 5-metric scoring (temp=0, seed=42) [supporting-docs/BASELINE_EVALUATION_RESULTS.md]
+- 95% consistency validated: Run2=Run3 identical on coding harness (deterministic config) [supporting-docs/BASELINE_EVALUATION_RESULTS.md]
+- 5-metric scoring framework: code quality/linter, logic, entity extraction, hallucination, format strictness [supporting-docs/BASELINE_EVALUATION_RESULTS.md]
+- Automation status: Nightly job for expanded AIOps scenarios not verified
+
+Why Behind (40% vs 100%):
+1. Nightly automation not verified: Scripts exist; unclear if CI/CD runs them nightly for expanded scenarios. No automated reports generated yet.
+2. 95% consistency validated for 12 coding tasks only; need validation on expanded AIOps scenarios (RCA, anomaly, refusal, constraint, design, config, coding).
+3. Baseline partial: 12 coding tasks complete with metrics (logic 0.541, entity 0.40, hallucination 1.00) [supporting-docs/BASELINE_EVALUATION_RESULTS.md]; expanded AIOps baseline pending.
+
+Infrastructure Accomplishments:
+✅ Framework production-ready: 5-metric, hardware-aware, deterministic, reproducible [supporting-docs/BASELINE_EVALUATION_RESULTS.md]
+✅ Consistency proven (Run2/Run3 identical) [supporting-docs/BASELINE_EVALUATION_RESULTS.md]
+✅ Scripts operational in evaluation/ directory
+⚠️ Need operationalization: expand scenarios, automate nightly runs
+
+Forward Path:
+- Mid-Mar: Run expanded AIOps baseline post-SFT training
+- Mid-Mar: Automate nightly job for expanded scenarios
+- Mid-Mar: Generate automated test reports
+
+Summary:
+Recoverable. Framework is sound and validated on 12 tasks. Need to expand to full AIOps scenario suite and operationalize nightly automation post-SFT training.",,
+2,Visionary,Knowledge Sharing,Publish internal report and hold 1 knowledge-sharing session,"Success Criteria
+[x] Internal report published
+[ ] Team knowledge-sharing session conducted
+[ ] Team consensus on exemplar approach","Achievement: 🔴 RED (50%)
+
+Evidence & Status:
+   - EXEMPLAR_AUTHORING_GUIDE.md: 378 lines, comprehensive framework documentation [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+   - Video presentations: Golden Exemplars overview + From Fluency to Judgment philosophy [supporting-docs/Golden_Exemplars.mp4, supporting-docs/From_Fluency_to_Judgment.mp4]
+   - B.R.A.I.N → D.N.A framework fully documented (Breakdown, Reason, Assess, Inspect, Navigate → Define, Navigate, Assess) [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+   - 7-category taxonomy mapped to stress surfaces (RCA, Anomaly, Refusal, Constraint, Design, MultiLayer, Coding) [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+   - 9 review criteria + 3 D.N.A validation gates clarified [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+   - 6-phase exemplar sequence with dependencies [supporting-docs/EXEMPLAR_AUTHORING_GUIDE.md]
+   - Team knowledge-sharing session: Not held (can be scheduled in Feb)
+
+Why 50% (not 100%):
+   1. Internal report published ✅ (50%): Comprehensive framework, philosophy, execution roadmap documented; production-grade; ready for stakeholder review.
+   2. Knowledge-sharing session not held ❌ (0%): Team not briefed on golden exemplar pivot; no alignment on 9 review criteria and 3 D.N.A gates; risk of misunderstanding quality bar.
+
+Impact:
+   Documentation complete; team alignment missing. 
+   Delay prevented team starting on wrong path (good) but team doesn't know framework yet (risk for Feb 05 exemplar deadline).
+
+Forward Path:
+   - End of Jan: Schedule a team session (15mins philosophy, 15mins previous approach and why it failed, 15 mins why golden exemplars is the battle-tested industry-standard approach. 15min 7-layers stress surfaces, B.R.A.I.N framework and review D.N.A criteria/gates, 15min 6-phase sequence, 30min Q&A)
+   - Feb 5: Conduct session and build team consensus
+   - Result: Team aligned and ready to author/review exemplars at scale.
+
+Summary:
+   Documentation excellent and complete. Need to engage with team presentation and Q&A by Feb 5 to unblock exemplar authoring acceleration and build ownership of approach.",,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,

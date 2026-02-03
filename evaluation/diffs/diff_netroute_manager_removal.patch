@@ -1,0 +1,73 @@
+commit da66bf5d58f02b0859da8c2d7c0e28e3a7858ad1
+Author: Umang Sharma <umang.sharma@motadata.com>
+Date:   Thu Jun 12 12:17:36 2025 +0530
+
+    Removed Netroute Manger as well instances for vertx.
+
+diff --git a/motadata/src/main/java/com/mindarray/BootstrapPrimary.java b/motadata/src/main/java/com/mindarray/BootstrapPrimary.java
+index a34837a1a2..890d26670c 100644
+--- a/motadata/src/main/java/com/mindarray/BootstrapPrimary.java
++++ b/motadata/src/main/java/com/mindarray/BootstrapPrimary.java
+@@ -571,8 +571,7 @@ public class BootstrapPrimary
+                                                     {
+                                                         //It would be for both
+                                                         // netroute
+-                                                        startEngine(new LocalEventRouter(EVENT_VISUALIZATION_NETROUTE, ID, MotadataConfigUtil.getVisualizationNetRouteManagerInstances(), VisualizationNetRouteManager.class.getCanonicalName(), true), VisualizationNetRouteManager.class.getSimpleName(), null)
+-                                                                .compose(future -> Bootstrap.startEngine(new NetRouteScheduler(), NetRouteScheduler.class.getSimpleName(), null))
++                                                        startEngine(new NetRouteScheduler(), NetRouteScheduler.class.getSimpleName(), null)
+                                                                 .compose(future -> Bootstrap.startEngine(new NetRouteStatusCalculator(), NetRouteStatusCalculator.class.getSimpleName(), null))
+                                                                 .compose(future -> Bootstrap.startEngine(new NetRouteResponseProcessor(), NetRouteResponseProcessor.class.getSimpleName(), null))
+                                                                 .compose(future -> Bootstrap.startEngine(new NetRoutePolicyTriggerDurationCalculator(), NetRoutePolicyTriggerDurationCalculator.class.getSimpleName(), null))
+diff --git a/motadata/src/main/java/com/mindarray/BootstrapStandalone.java b/motadata/src/main/java/com/mindarray/BootstrapStandalone.java
+index 73592523b5..f5f85a66ad 100644
+--- a/motadata/src/main/java/com/mindarray/BootstrapStandalone.java
++++ b/motadata/src/main/java/com/mindarray/BootstrapStandalone.java
+@@ -630,8 +630,7 @@ public class BootstrapStandalone
+                                                                                 //It would be for both
+ 
+                                                                                 // netroute
+-                                                                                startEngine(new LocalEventRouter(EVENT_VISUALIZATION_NETROUTE, ID, MotadataConfigUtil.getVisualizationNetRouteManagerInstances(), VisualizationNetRouteManager.class.getCanonicalName(), true), VisualizationNetRouteManager.class.getSimpleName(), null)
+-                                                                                        .compose(future -> Bootstrap.startEngine(new NetRouteScheduler(), NetRouteScheduler.class.getSimpleName(), null))
++                                                                                startEngine(new NetRouteScheduler(), NetRouteScheduler.class.getSimpleName(), null)
+                                                                                         .compose(future -> Bootstrap.startEngine(new NetRouteStatusCalculator(), NetRouteStatusCalculator.class.getSimpleName(), null))
+                                                                                         .compose(future -> Bootstrap.startEngine(new NetRouteResponseProcessor(), NetRouteResponseProcessor.class.getSimpleName(), null))
+                                                                                         .compose(future -> Bootstrap.startEngine(new NetRoutePolicyTriggerDurationCalculator(), NetRoutePolicyTriggerDurationCalculator.class.getSimpleName(), null))
+diff --git a/motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java b/motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java
+index 4bac532f42..26a9a13f4f 100644
+--- a/motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java
++++ b/motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java
+@@ -1700,34 +1700,6 @@ public class MotadataConfigUtil
+         }
+     }
+ 
+-    public static int getVisualizationNetRouteManagerInstances()
+-    {
+-        if (configs.containsKey("visualization.netroute.manager.instances"))
+-        {
+-            return Math.max(2, Math.min(configs.getInteger("visualization.netroute.manager.instances"), 10));
+-        }
+-        else
+-        {
+-
+-            return switch (getDeploymentType())
+-            {
+-                //S
+-                case 0 -> 2;
+-
+-                //M
+-                case 1 -> 4;
+-
+-                //L
+-                case 2 -> 6;
+-
+-                //XL
+-                case 3 -> 10;
+-
+-                default -> 2;
+-            };
+-        }
+-    }
+-
+     /**
+      * Method used to limit the report export process
+      * Default will be 10 export process and user can configure upto 20 export process

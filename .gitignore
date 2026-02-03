@@ -1,0 +1,59 @@
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Large files (use Git LFS or backup separately)
+models/
+model-backups/
+*.safetensors
+*.bin
+
+# Training checkpoints and artifacts
+training/checkpoints/
+training/artifacts/results/
+training/data/*.jsonl
+training/data/*.json
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+unsloth_compiled_cache/
+
+# Logs
+*.log
+logs/
+
+# Temporary
+*.tmp
+*.temp
+.env
+.env.local
+

@@ -1,0 +1,852 @@
+{
+  "summary": {
+    "total": 50,
+    "pass": 5,
+    "fail": 45,
+    "pass_rate": 0.1,
+    "avg_score": 0.4209,
+    "model": "claude-sonnet-4-5-20250929",
+    "timestamp": 1768195309,
+    "source_breakdown": {
+      "synthetic_refactoring": {
+        "pass": 0,
+        "fail": 6,
+        "total": 6,
+        "avg_score": 0.5666666666666667,
+        "pass_rate": 0.0
+      },
+      "synthetic_feature_add": {
+        "pass": 0,
+        "fail": 7,
+        "total": 7,
+        "avg_score": 0.4642857142857143,
+        "pass_rate": 0.0
+      },
+      "synthetic_single_file": {
+        "pass": 4,
+        "fail": 7,
+        "total": 11,
+        "avg_score": 0.6245454545454545,
+        "pass_rate": 0.36363636363636365
+      },
+      "evaluation_failure_corrected": {
+        "pass": 0,
+        "fail": 17,
+        "total": 17,
+        "avg_score": 0.15735294117647058,
+        "pass_rate": 0.0
+      },
+      "synthetic_bugfix": {
+        "pass": 0,
+        "fail": 6,
+        "total": 6,
+        "avg_score": 0.5166666666666666,
+        "pass_rate": 0.0
+      },
+      "synthetic_multi_file": {
+        "pass": 1,
+        "fail": 2,
+        "total": 3,
+        "avg_score": 0.5833333333333334,
+        "pass_rate": 0.3333333333333333
+      }
+    }
+  },
+  "results": [
+    {
+      "task_id": "synth_clean_re_0102",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response provides input validation utilities but does not implement the requested strategy pattern for refactoring nested if-else chains. The code shows validation methods with simple if-else logic rather than demonstrating a strategy pattern architecture.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.3,
+        "context_usage": 0.4
+      },
+      "overall_score": 0.6,
+      "hash": "2af8114776ba3f4bf2e54273bc606e89"
+    },
+    {
+      "task_id": "synth_clean_fe_0070",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for rate limiting with a token bucket algorithm and instead implements an unrelated caching solution. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.375,
+      "hash": "5f96a73e69b4c3de807b4974028c1cd5"
+    },
+    {
+      "task_id": "synth_clean_si_0069",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements logging with proper SEARCH/REPLACE format, uses the specified GlobalConstants.MOTADATA_DISCOVERY module, and adds appropriate logging at entry, exit, and error points as requested.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.93,
+      "hash": "1903bbf92578a108ed2cb6ed1faf5c57"
+    },
+    {
+      "task_id": "pref_eval_failure_099",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request to extend validation for special characters in ValidationUtil.java and instead modifies an unrelated file (ObjectManager.java) with an incomplete, irrelevant implementation.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "51d91da64b91a68865f9e7610dfe5507"
+    },
+    {
+      "task_id": "synth_clean_fe_0298",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for rate limiting with a token bucket algorithm and instead implements an unrelated caching solution. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.375,
+      "hash": "5f96a73e69b4c3de807b4974028c1cd5"
+    },
+    {
+      "task_id": "synth_clean_si_0073",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about adding timeout handling to metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    },
+    {
+      "task_id": "synth_clean_bu_0119",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "While the null check fixes the NPE, returning a JsonObject with error fields is poor API design that mixes success and error responses in the same return type, making it impossible for callers to distinguish errors without inspecting content. Should throw an exception or use Optional<JsonObject>.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.4,
+        "instruction_following": 0.6,
+        "context_usage": 1.0
+      },
+      "overall_score": 0.65,
+      "hash": "efdf67c71f79bb7de72019225c7cfc8b"
+    },
+    {
+      "task_id": "pref_eval_failure_005",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "Non-JSON judge response",
+      "scores": {},
+      "overall_score": 0.0,
+      "hash": "143ea6c61cca3fbbf03874a9b5bb2311"
+    },
+    {
+      "task_id": "synth_clean_fe_0096",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for rate limiting with a token bucket algorithm and instead implements an unrelated caching solution. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "5f96a73e69b4c3de807b4974028c1cd5"
+    },
+    {
+      "task_id": "synth_clean_si_0320",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about adding timeout handling to metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    },
+    {
+      "task_id": "synth_clean_re_0091",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "While the code demonstrates basic validation extraction, it lacks critical context about what duplicate logic exists in the original service methods, making it impossible to verify if this actually solves the stated problem. The response appears to be a generic validation utility rather than a targeted refactoring of existing code.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.55,
+      "hash": "c5de0b2eba5da2ccefe2da3ae8531886"
+    },
+    {
+      "task_id": "synth_clean_bu_0067",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about fixing a ConcurrentModificationException in an iterator loop and instead provides an unrelated solution about null checking in a getUserData method.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.25,
+      "hash": "0bce9afd5e0c34f4a839323c77179514"
+    },
+    {
+      "task_id": "synth_clean_fe_0018",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for rate limiting with a token bucket algorithm and instead implements an unrelated caching solution. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.375,
+      "hash": "5f96a73e69b4c3de807b4974028c1cd5"
+    },
+    {
+      "task_id": "pref_eval_failure_064",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "file_creation",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead provides an incomplete, non-functional code change with just a comment. The SEARCH/REPLACE block doesn't add any actual validation logic.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_si_0163",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about adding timeout handling to metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    },
+    {
+      "task_id": "synth_clean_bu_0343",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "While the null check is added correctly, returning a JsonObject with error fields is a poor design pattern that mixes success and error responses in the same return type, making it difficult for callers to handle errors properly. Should throw an exception or use Optional<JsonObject>.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.7,
+        "context_usage": 1.0
+      },
+      "overall_score": 0.55,
+      "hash": "efdf67c71f79bb7de72019225c7cfc8b"
+    },
+    {
+      "task_id": "pref_eval_failure_039",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "The response completely fails to address the requested task of refactoring metric collection to use async pattern in the specified files. Instead, it modifies an entirely different file (ObjectManager.java) with an incomplete, unrelated implementation.",
+      "scores": {
+        "format_compliance": 0.4,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.1,
+      "hash": "6fd41b371f8c4e13c3fa9bece346a7b9"
+    },
+    {
+      "task_id": "synth_clean_re_0022",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "While the code demonstrates basic validation extraction, it lacks critical context about what duplicate logic exists in the original service methods, making it impossible to verify if this actually solves the stated problem. The response appears to be a generic validation utility rather than a targeted refactoring of existing code.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.55,
+      "hash": "c5de0b2eba5da2ccefe2da3ae8531886"
+    },
+    {
+      "task_id": "synth_clean_re_0306",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "While the code demonstrates basic validation extraction, it lacks critical context about what duplicate logic exists in the original service methods, making it impossible to verify if this actually solves the stated problem. The response appears to be a generic validation utility rather than a targeted refactoring of existing code.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.55,
+      "hash": "c5de0b2eba5da2ccefe2da3ae8531886"
+    },
+    {
+      "task_id": "pref_eval_failure_031",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "file_creation",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request to extend validation for special characters in ValidationUtil.java and instead modifies an unrelated file (ObjectManager.java) with an incomplete, irrelevant implementation.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "51d91da64b91a68865f9e7610dfe5507"
+    },
+    {
+      "task_id": "synth_clean_mu_0202",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements a Vert.x event bus pub-sub pattern with proper SEARCH/REPLACE blocks, uses the specified constant, and addresses both required files appropriately.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.9
+      },
+      "overall_score": 0.95,
+      "hash": "426484d7056c4ec64569011ce762b20a"
+    },
+    {
+      "task_id": "synth_clean_si_0244",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about adding timeout handling to metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    },
+    {
+      "task_id": "synth_clean_bu_0169",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "While the null check is added correctly, returning a JsonObject with error fields is a poor design pattern that mixes success and error responses in the same return type, making it difficult for callers to handle errors properly. Should throw an exception or use Optional<JsonObject>.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.7,
+        "context_usage": 1.0
+      },
+      "overall_score": 0.55,
+      "hash": "efdf67c71f79bb7de72019225c7cfc8b"
+    },
+    {
+      "task_id": "synth_clean_re_0209",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "While the code demonstrates basic validation extraction, it lacks critical context about what duplicate logic exists in the original service methods, making it impossible to verify if this actually solves the stated problem. The response appears to be a generic validation utility rather than a targeted refactoring of existing code.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.55,
+      "hash": "c5de0b2eba5da2ccefe2da3ae8531886"
+    },
+    {
+      "task_id": "pref_eval_failure_070",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "The response completely fails to address the requested task of refactoring metric collection to use async pattern in the specified files. Instead, it modifies an entirely different file (ObjectManager.java) with an incomplete, unrelated implementation.",
+      "scores": {
+        "format_compliance": 0.4,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.1,
+      "hash": "6fd41b371f8c4e13c3fa9bece346a7b9"
+    },
+    {
+      "task_id": "pref_eval_failure_125",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to provide proper SEARCH/REPLACE blocks as requested, instead showing unrelated code in a generic code block. Does not address the task of adding special character validation.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.0,
+      "hash": "1bb3e48fedbf91422f90e05d765c927e"
+    },
+    {
+      "task_id": "synth_clean_fe_0135",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for rate limiting with a token bucket algorithm and instead implements an unrelated caching solution. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.375,
+      "hash": "5f96a73e69b4c3de807b4974028c1cd5"
+    },
+    {
+      "task_id": "pref_eval_failure_036",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "pref_eval_failure_044",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request to extend validation for special characters in ValidationUtil.java and instead modifies an unrelated file (ObjectManager.java) with an incomplete, irrelevant implementation.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "51d91da64b91a68865f9e7610dfe5507"
+    },
+    {
+      "task_id": "synth_clean_si_0012",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements logging with proper SEARCH/REPLACE format, uses the specified GlobalConstants.MOTADATA_DISCOVERY module, and adds appropriate logging at entry, exit, and error points as requested.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.93,
+      "hash": "1903bbf92578a108ed2cb6ed1faf5c57"
+    },
+    {
+      "task_id": "pref_eval_failure_060",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to use proper SEARCH/REPLACE block format as requested, provides no actual validation logic, and doesn't address the task of adding validation checks.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.05,
+      "hash": "9af320d95c9e627b9ce1ecad81b23746"
+    },
+    {
+      "task_id": "pref_eval_failure_097",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_si_0207",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about adding timeout handling to metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    },
+    {
+      "task_id": "synth_clean_fe_0047",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements caching correctly, it has critical flaws: no cache invalidation on updates/deletes, potential memory leaks from unbounded cache growth, and missing thread-safety for cleanup operations.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.8,
+        "context_usage": 0.7
+      },
+      "overall_score": 0.65,
+      "hash": "50d6fa7ebf976037a3a77f214b302501"
+    },
+    {
+      "task_id": "pref_eval_failure_143",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to provide the requested SEARCH/REPLACE blocks for the three specified files and only includes a generic code snippet without any async pattern implementation.",
+      "scores": {
+        "format_compliance": 0.1,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.025,
+      "hash": "12e42a48d2eb8b4d19a616ceade7838c"
+    },
+    {
+      "task_id": "pref_eval_failure_091",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "The response modifies a completely different file (ObjectManager.java) than the two files specified in the task (DiscoveryEngine.java and DiscoveryProcessor.java), and adds no logging functionality whatsoever.",
+      "scores": {
+        "format_compliance": 0.6,
+        "technical_correctness": 0.2,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.2,
+      "hash": "2382f061e0353b6606733c7bbcf0fd9f"
+    },
+    {
+      "task_id": "synth_clean_bu_0275",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "While the null check is added correctly, returning a JsonObject with error fields is a poor design pattern that mixes success and error responses in the same return type, making it difficult for callers to handle errors properly. Should throw an exception or use Optional<JsonObject>.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.7,
+        "context_usage": 1.0
+      },
+      "overall_score": 0.55,
+      "hash": "efdf67c71f79bb7de72019225c7cfc8b"
+    },
+    {
+      "task_id": "synth_clean_si_0062",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements logging with proper SEARCH/REPLACE format, uses the specified GlobalConstants.MOTADATA_DISCOVERY module, and adds appropriate logging at entry, exit, and error points as requested.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.93,
+      "hash": "1903bbf92578a108ed2cb6ed1faf5c57"
+    },
+    {
+      "task_id": "synth_clean_si_0304",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements logging with proper SEARCH/REPLACE format, uses the specified GlobalConstants.MOTADATA_DISCOVERY module, and adds appropriate logging at entry, exit, and error points as requested.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.93,
+      "hash": "1903bbf92578a108ed2cb6ed1faf5c57"
+    },
+    {
+      "task_id": "synth_clean_mu_0227",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for JWT authentication middleware in APIServer.java and AuthHandler.java, instead implementing an unrelated event notification system with different files.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.4,
+      "hash": "b922008182c04b70e2dbf99578cb30ed"
+    },
+    {
+      "task_id": "synth_clean_bu_0038",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "While the null check is added correctly, returning a JsonObject with error fields is a poor design pattern that mixes success and error responses in the same return type, making it difficult for callers to handle errors properly. Should throw an exception or use Optional<JsonObject>.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.7,
+        "context_usage": 1.0
+      },
+      "overall_score": 0.55,
+      "hash": "efdf67c71f79bb7de72019225c7cfc8b"
+    },
+    {
+      "task_id": "synth_clean_si_0272",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request about adding timeout handling to metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    },
+    {
+      "task_id": "pref_eval_failure_052",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_re_0200",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response provides input validation utilities but does not implement the requested strategy pattern for refactoring nested if-else chains. The code shows validation methods with simple if-else logic rather than demonstrating a strategy pattern architecture.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.3,
+        "context_usage": 0.4
+      },
+      "overall_score": 0.6,
+      "hash": "2af8114776ba3f4bf2e54273bc606e89"
+    },
+    {
+      "task_id": "pref_eval_failure_107",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "The response modifies a completely different file (ObjectManager.java) than the one specified in the task (SNMPEngine.java), and doesn't address the null pointer exception fix at all.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "42362799f473e014528c5aae8ed412f1"
+    },
+    {
+      "task_id": "synth_clean_fe_0017",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements caching correctly, it has critical flaws: no cache invalidation on updates/deletes, potential memory leaks from unbounded cache growth, and missing thread-safety for cleanup operations.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.8,
+        "context_usage": 0.7
+      },
+      "overall_score": 0.65,
+      "hash": "50d6fa7ebf976037a3a77f214b302501"
+    },
+    {
+      "task_id": "pref_eval_failure_023",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "file_creation",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_mu_0034",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for JWT authentication middleware in APIServer.java and AuthHandler.java, instead implementing an unrelated event notification system with different files.",
+      "scores": {
+        "format_compliance": 0.9,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.4,
+      "hash": "b922008182c04b70e2dbf99578cb30ed"
+    },
+    {
+      "task_id": "pref_eval_failure_015",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to use proper SEARCH/REPLACE block format as requested, provides no actual validation logic, and doesn't address the task of adding validation checks.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.05,
+      "hash": "9af320d95c9e627b9ce1ecad81b23746"
+    },
+    {
+      "task_id": "synth_clean_si_0313",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request for timeout handling in metric collection and instead implements logging for a discovery engine. This is a critical mismatch between request and implementation.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.45,
+      "hash": "16f1c74e2a23ba593947a6db286a7066"
+    }
+  ]
+}

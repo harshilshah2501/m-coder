@@ -1,0 +1,21 @@
+if (type.equals(EVENT_TYPE_COMPLETE)) {
+String id = event.getString(EVENT_ID);
+if (id != null) {
+    Future<JsonObject> future = futures.remove(id);
+    if (future != null) {
+future.complete(event);
+    }
+}
+    } else if (type.equals(EVENT_TYPE_ERROR)) {
+String id = event.getString(EVENT_ID);
+if (id != null) {
+    Future<JsonObject> future = futures.remove(id);
+    if (future != null) {
+future.fail(event.getString(EVENT_ERROR));
+    }
+}
+    } else if (type.equals(EVENT_TYPE_MESSAGE)) {
+String id = event.getString(EVENT_ID);
+if (id != null) {
+    Future<JsonObject> future = futures.remove(id);
+    if (future !=

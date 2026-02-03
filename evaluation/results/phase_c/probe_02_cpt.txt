@@ -1,0 +1,18 @@
+}
+    
+    @Override
+    public void get(Request request) {
+        try {
+            if (request.parameters.containsKey(REQUEST_TYPE)) {
+                if (REQUEST_TYPE_TOGETHER.equalsIgnoreCase(request.parameters.get(REQUEST_TYPE))) {
+                    var items = new JsonArray();
+                    
+                    var objectItems = ObjectConfigStore.getStore().getItemsByUserProfile(request.user.getLong(ID));
+                    
+                    var pluginItems = PluginEngineCacheStore.getStore().getItemsByUserProfile(request.user.getLong(ID));
+                    
+                    for (var index = 0; index < objectItems.size(); index++) {
+                        var item = objectItems.getJsonObject(index);
+                        
+                        if (pluginItems.contains(item.getString(AIOpsObject.OBJECT_PLUGIN))) {
+                            items.add(item);

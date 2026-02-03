@@ -1,0 +1,16 @@
+router.get("/v1/complete", CompleteRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));
+
+    // CONFIG
+    router.get("/v1/config", ConfigRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));
+
+    // EVENT
+    router.post("/v1/event", EventRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));
+
+    // EVENT SOURCE
+    router.get("/v1/event-source", EventSourceRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));
+
+    // EVENT SOURCE
+    router.get("/v1/event-source/:id", EventSourceRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));
+
+    // EVENT SOURCE
+    router.get("/v

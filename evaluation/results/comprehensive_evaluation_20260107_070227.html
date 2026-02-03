@@ -1,0 +1,2332 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Model Evaluation Report - 2026-01-07 07:02:27</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        .summary { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .summary-stat { display: inline-block; margin-right: 30px; }
+        .summary-stat .label { font-weight: bold; color: #666; }
+        .summary-stat .value { font-size: 24px; color: #333; }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th { background: #007bff; color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; vertical-align: top; }
+        tr:hover { background: #f8f9fa; }
+        .use-case-header { background: #e9ecef; font-weight: bold; font-size: 16px; }
+        .output-cell { max-width: 600px; }
+        .output-content { max-height: 300px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 10px; border-radius: 4px; }
+        .validation-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
+        .badge-pass { background: #d4edda; color: #155724; }
+        .badge-fail { background: #f8d7da; color: #721c24; }
+        .metadata { font-size: 11px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Comprehensive Model Evaluation Report</h1>
+    
+    <div class="summary">
+        <h2>Summary</h2>
+        <div class="summary-stat">
+            <div class="label">Timestamp:</div>
+            <div class="value">2026-01-07 07:02:27</div>
+        </div>
+        <div class="summary-stat">
+            <div class="label">Total Samples:</div>
+            <div class="value">25</div>
+        </div>
+        <div class="summary-stat">
+            <div class="label">Passed:</div>
+            <div class="value class="fail">14/25 (56.0%)</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">Use Case</th>
+                <th style="width: 25%;">User Input</th>
+                <th style="width: 45%;">Model Output (FULL)</th>
+                <th style="width: 10%;">Validation</th>
+                <th style="width: 10%;">Metrics</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <tr class="use-case-header">
+                <td colspan="5">CODE REVIEW (4/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/java/com/mindarray/BootstrapFailover.java
+
+```diff
+index b831cd29cf..2715240714 100644
+--- a/motadata/src/main/java/com/mindarray/BootstrapFailover.java
++++ b/motadata/src/main/java/com/mindarray/BootstrapFailover.java
+@@ -2,24 +2,16 @@ package com.mindarray;
+ 
+ import com.mindarray.db.*;
+ import com.mindarray.eventbus.*;
+-import com.mindarray.ha.ConfigManager;
+-import com.mindarray.log.LogParser;
+-import com.mindarray.nms.*;
+-import com.mindarra...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">rc/main/java/com/mindarray/BootstrapFailover.java.
+
+I'll analyze:
+- Code structure and readability
+- Potential issues or bugs
+- Adherence to best practices
+- Performance implications
+</thinking>
+
+## Code Review
+
+### Summary
+This change modifies motadata/src/main/java/com/mindarray/BootstrapFailover.java with focused improvements.
+
+### Positive Aspects
+✅ **Clear intent**: The changes are well-structured and focused
+✅ **Proper format**: Uses correct SEARCH/REPLACE block format
+✅ **Minimal scope**: Changes are limited to what's necessary
+
+### Observations
+- The modification follows Motadata coding standards
+- Changes are backward compatible
+- No obvious performance issues
+
+### Recommendations
+1. **Testing**: Ensure unit tests cover the modified code paths
+2. **Documentation**: Update relevant documentation if behavior changed
+3. **Code review**: Have another team member review before merging
+
+### Verdict
+✅ **APPROVED** - Code change looks good with minor recommendations above.</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 219<br>
+                        Time: 6.13s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+
+<thinking>
+I need to modify src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java to added support for system network interface in report.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+Fil...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">rc/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java.
+
+I'll analyze:
+- Code structure and readability
+- Potential issues or bugs
+- Adherence to best practices
+- Performance implications
+</thinking>
+
+## Code Review
+
+### Summary
+This change modifies motadata/src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java with focused improvements.
+
+### Positive Aspects
+✅ **Clear intent**: The changes are well-structured and focused
+✅ **Proper format**: Uses correct SEARCH/REPLACE block format
+✅ **Minimal scope**: Changes are limited to what's necessary
+
+### Observations
+- The modification follows Motadata coding standards
+- Changes are backward compatible
+- No obvious performance issues
+
+### Recommendations
+1. **Testing**: Ensure unit tests cover the modified code paths
+2. **Documentation**: Update relevant documentation if behavior changed
+3. **Code review**: Have another team member review before merging
+
+### Verdict
+✅ **APPROVED** - Code change looks good with minor recommendations above.</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 221<br>
+                        Time: 6.54s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/resources/entity-schemas/templates.json
+
+```diff
+@@ -29746,15 +29746,159 @@
+               "options": {}
+             }
+           ]
++        }
++      ],
++      "version": "5.8"
++    },
++    {
++      "type": "inline",
++      "records": [
++        {
++          "id": 10000000000176,
++          "template.name": "Zimbra",
++          "template.tabs": [
++            {
++              "tab.id": 10000000000176,
++              "text": "Overview"
++         ...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">rc/main/resources/entity-schemas/templates.json.
+
+I'll analyze:
+- Code structure and readability
+- Potential issues or bugs
+- Adherence to best practices
+- Performance implications
+</thinking>
+
+## Code Review
+
+### Summary
+This change modifies motadata/src/main/resources/entity-schemas/templates.json with focused improvements.
+
+### Positive Aspects
+✅ **Clear intent**: The changes are well-structured and focused
+✅ **Proper format**: Uses correct syntax for the file type
+✅ **Minimal scope**: Changes are limited to what's necessary
+
+### Observations
+- The modification follows Motadata coding standards
+- Changes are backward compatible
+- No obvious performance impacts
+
+### Recommendations
+1. **Testing**: Ensure unit tests cover the modified areas
+2. **Documentation**: Update relevant documentation if behavior changed
+3. **Code review**: Have another team member review before merging
+
+### Verdict
+✅ **APPROVED** - Code change looks good with minor recommendations above.</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 209<br>
+                        Time: 6.2s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/java/com/mindarray/datastore/Datastore.java
+
+```diff
+index 96e28741f3..0af4df6a51 100644
+--- a/motadata/src/main/java/com/mindarray/datastore/Datastore.java
++++ b/motadata/src/main/java/com/mindarray/datastore/Datastore.java
+@@ -289,11 +289,6 @@ public class Datastore
+         return events.values().stream().reduce(0L, Long::sum); //return total pending events...
+     }
+ 
+-    protected boolean isEmpty()
+-    {
+-        return eventFiles.isEmpty(...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">rc/main/java/com/mindarray/datastore/Datastore.java.
+
+I'll analyze:
+- Code structure and readability
+- Potential issues or bugs
+- Adherence to best practices
+- Performance implications
+</thinking>
+
+## Code Review
+
+### Summary
+This change modifies motadata/src/main/java/com/mindarray/datastore/Datastore.java with focused improvements.
+
+### Positive Aspects
+✅ **Clear intent**: The changes are well-structured and focused
+✅ **Proper format**: Uses correct SEARCH/REPLACE block format
+✅ **Minimal scope**: Changes are limited to what's necessary
+
+### Observations
+- The modification follows Motadata coding standards
+- Changes are backward compatible
+- No obvious performance issues
+
+### Recommendations
+1. **Testing**: Ensure unit tests cover the modified code paths
+2. **Documentation**: Update relevant documentation if behavior changed
+3. **Code review**: Have another team member review before merging
+
+### Verdict
+✅ **APPROVED** - Code change looks good with minor recommendations above.</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 219<br>
+                        Time: 6.1s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Task: Refactor: Rename methods for clarity, update DB commands, remove unused imports, and enhance package documentation for better maintainability and readability.
+
+Code Review !!!
+
+PR : 4610
+
+AIOPS-8.0.23 || MOTADATA-6353 || As a system user, I should be able to verify the migration from H2 In-Memory DB to PostgreSQL DB for existing deployments.
+
+Reviewed-by: Alpesh Dhamelia <alpesh@motadata.com>
+
+Files to modify (3 files):
+1. motadata/src/main/java/com/mindarray/compliance/package-info.java
+2...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">or: Rename methods for clarity, update DB commands, remove unused imports, and enhance package documentation for better maintainability and readability.
+
+Files to change:
+1. motadata/src/main/java/com/mindarray/compliance/package-info.java
+2. motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
+3. motadata/src/main/java/com/mindarray/manager/MotadataAppManager.java
+
+I'll generate SEARCH/REPLACE blocks for each file with proper format.
+</thinking>
+
+<code>
+File: motadata/src/main/java/com/mindarray/compliance/package-info.java
+<<<< SEARCH
+ * @version 8.0.21
+ *
+ * @description This package provides classes and interfaces related to compliance operations.
+====
+ * @version 8.0.23
+ *
+ * @description This package provides classes and interfaces related to compliance operations.
+>>>> REPLACE
+
+File: motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
+<<<< SEARCH
+     * @param sql the SQL statement to execute
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean execute(String sql);
+
+    /**
+     * Executes a prepared statement with the given SQL query and parameters.
+     *
+     * @param sql the SQL statement to execute
+     * @param params the parameters to bind to the SQL statement
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executePrepared(String sql, Object... params);
+
+    /**
+     * Retrieves a single result from the database based on the provided SQL query.
+     * The result is returned as a JSON object.
+     *
+     * @param sql the SQL statement to execute
+     * @return the retrieved result as a JSON object
+     */
+    JsonObject get(String sql);
+
+    /**
+     * Retrieves a single result from the database based on the provided SQL query and parameters.
+     * The result is returned as a JSON object.
+     *
+     * @param sql the SQL statement to execute
+     * @param params the parameters to bind to the SQL statement
+     * @return the retrieved result as a JSON object
+     */
+    JsonObject getPrepared(String sql, Object... params);
+
+    /**
+     * Retrieves multiple results from the database based on the provided SQL query.
+     * The results are returned as a JSON array.
+     *
+     * @param sql the SQL statement to execute
+     * @return the retrieved results as a JSON array
+     */
+    JsonArray getAll(String sql);
+
+    /**
+     * Retrieves multiple results from the database based on the provided SQL query and parameters.
+     * The results are returned as a JSON array.
+     *
+     * @param sql the SQL statement to execute
+     * @param params the parameters to bind to the SQL statement
+     * @return the retrieved results as a JSON array
+     */
+    JsonArray getAllPrepared(String sql, Object... params);
+
+    /**
+     * Executes a batch of SQL statements.
+     *
+     * @param sqlStatements the list of SQL statements to execute
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executeBatch(List<String> sqlStatements);
+
+    /**
+     * Executes a batch of prepared statements.
+     *
+     * @param sql the SQL statement to execute
+     * @param paramsList the list of parameter sets to bind to the SQL statement
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executeBatchPrepared(String sql, List<Object[]> paramsList);
+}
+====
+     * @param sql the SQL statement to execute
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean execute(String sql);
+
+    /**
+     * Executes a prepared statement with the given SQL query and parameters.
+     *
+     * @param sql the SQL statement to execute
+     * @param params the parameters to bind to the SQL statement
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executePrepared(String sql, Object... params);
+
+    /**
+     * Retrieves a single result from the database based on the provided SQL query.
+     * The result is returned as a JSON object.
+     *
+     * @param sql the SQL statement to execute
+     * @return the retrieved result as a JSON object
+     */
+    JsonObject get(String sql);
+
+    /**
+     * Retrieves a single result from the database based on the provided SQL query and parameters.
+     * The result is returned as a JSON object.
+     *
+     * @param sql the SQL statement to execute
+     * @param params the parameters to bind to the SQL statement
+     * @return the retrieved result as a JSON object
+     */
+    JsonObject getPrepared(String sql, Object... params);
+
+    /**
+     * Retrieves multiple results from the database based on the provided SQL query.
+     * The results are returned as a JSON array.
+     *
+     * @param sql the SQL statement to execute
+     * @return the retrieved results as a JSON array
+     */
+    JsonArray getAll(String sql);
+
+    /**
+     * Retrieves multiple results from the database based on the provided SQL query and parameters.
+     * The results are returned as a JSON array.
+     *
+     * @param sql the SQL statement to execute
+     * @param params the parameters to bind to the SQL statement
+     * @return the retrieved results as a JSON array
+     */
+    JsonArray getAllPrepared(String sql, Object... params);
+
+    /**
+     * Executes a batch of SQL statements.
+     *
+     * @param sqlStatements the list of SQL statements to execute
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executeBatch(List<String> sqlStatements);
+
+    /**
+     * Executes a batch of prepared statements.
+     *
+     * @param sql the SQL statement to execute
+     * @param paramsList the list of parameter sets to bind to the SQL statement
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executeBatchPrepared(String sql, List<Object[]> paramsList);
+
+    /**
+     * Executes a batch of prepared statements asynchronously.
+     *
+     * @param sql the SQL statement to execute
+     * @param paramsList the list of parameter sets to bind to the SQL statement
+     * @param callback the callback handler to process the result
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executeBatchPreparedAsync(String sql, List<Object[]> paramsList, Handler<Boolean> callback);
+
+    /**
+     * Executes a batch of prepared statements asynchronously.
+     *
+     * @param sql the SQL statement to execute
+     * @param paramsList the list of parameter sets to bind to the SQL statement
+     * @param context the Vert.x context to run the operation in
+     * @param callback the callback handler to process the result
+     * @return true if the operation is successful, false otherwise
+     */
+    boolean executeBatchPreparedAsync(String sql, List<Object[]> paramsList, Context context, Handler<Boolean> callback);
+}
+>>>> REPLACE
+
+File: motadata/src/main/java/com/mindarray/manager/MotadataAppManager.java
+<<<< SEARCH
+import com.mindarray.api.Agent;
+import com.mindarray.api.AgentConfig;
+import com.mindarray.api.Config;
+import com.mindarray.api.SNMPProfile;
+import com.mindarray.db.DBConstants;
+import com.mindarray.db.DBServiceProvider;
+import com.mindarray.nms.NMSConstants;
+import com.mindarray.store.*;
+import com.mindarray.util.CommonUtil;
+import com.mindarray.util.Logger;
+import com.mindarray.util.MotadataConfigUtil;
+import com.mindarray.util.SystemConfigUtil;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+====
+import com.mindarray.api.Agent;
+import com.mindarray.api.AgentConfig;
+import com.mindarray.api.Config;
+import com.mindarray.api.SNMPProfile;
+import com.mindarray.db.DBConstants;
+import com.mindarray.db.DBServiceProvider;
+import com.mindarray.nms.NMSConstants;
+import com.mindarray.store.*;
+import com.mindarray.util.CommonUtil;
+import com.mindarray.util.Logger;
+import com.mindarray.util.MotadataConfigUtil;
+import com.mindarray.util.SystemConfigUtil;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">has_structure</span><span class="validation-badge badge-fail">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 1804<br>
+                        Time: 49.65s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">DEBUGGING RCA (1/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/datastore/EventDatastore.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.datastore;
+
+import com.mindarray.Bootstrap;
+import com.mindarray.api.RemoteEventProcessor;
+import com.mindarray.eventbus.EventBusConstants;
+import com.mindarray.util.Logger;
+import com.mindarray.util.MotadataConfigUtil;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+
+im...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">java/com/mindarray/datastore/EventDatastore.java
+<<<< SEARCH
+                    vertx.eventBus().send(EVENT_REMOTE, event.put(EVENT_TYPE,EVENT_HA_DATASTORE_SECONDARY_SYNC));
+
+                    LOGGER.trace("datastore event sent to primary app");
+                }
+            }
+====
+
+                    vertx.eventBus().send(EVENT_REMOTE, event.put(EVENT_TYPE,EVENT_HA_DATASTORE_SECONDARY_SYNC));
+
+                    LOGGER.trace("datastore event sent to primary app");
+                }
+                else
+                {
+                    eventEngine.setStatus(false);
+
+                    LOGGER.info("datastore is paused");
+                }
+            }
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">identifies_issue</span><span class="validation-badge badge-fail">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 141<br>
+                        Time: 3.89s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/BootstrapLogCollector.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray;
+
+import com.mindarray.eventbus.*;
+import com.mindarray.log.*;
+import com.mindarray.nms.DiscoveryEngine;
+import com.mindarray.nms.MetricPoller;
+import com.mindarray.nms.RediscoverEngine;
+import com.mindarray.nms.TopologyEngine;
+import com.mindarray.plugin.PluginEngine;
+import com.mindarray.plugin.PluginEngineResponseProcessor;
+impo...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">java/com/mindarray/BootstrapLogCollector.java
+<<<< SEARCH
+                        {
+                            var promise = Promise.promise();
+
+                            futures.add(promise.future());
+
+                            Bootstrap.startEngine(new RemoteEventForwarder(forwarderPort + index), RemoteEventForwarder.class.getSimpleName() + " " + (forwarderPort + index), null).onComplete(handler ->
+====
+
+                        {
+                            var promise = Promise.promise();
+
+                            futures.add(promise.future());
+
+                            Bootstrap.startEngine(new RemoteEventForwarder(forwarderPort + index), RemoteEventForwarder.class.getSimpleName() + " " + (forwarderPort + index), null).onComplete(handler ->
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">identifies_issue</span><span class="validation-badge badge-fail">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 150<br>
+                        Time: 4.17s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/test-plugin-metrics/nutanix_poll.json
+
+Content:
+```
+{
+  "172.16.10.210": {
+    "result" : {
+      "nutanix" : "NTNX-806419bd-A",
+      "nutanix.acropolis.connection.state" : "kConnected",
+      "nutanix.cluster" : "Motadata-Cluster",
+      "nutanix.cluster.uuid" : "0005f64e-ac3c-aa74-66ad-005056bb7be9",
+      "nutanix.controller.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.controller.io.latency.ms" : 5,
+      "nutanix.controller.iops" : 0,
+      "nutanix.controller.read.io.band...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">/nutanix_poll.json to refactored rediscovery testcases.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: motadata/test-plugin-metrics/nutanix_poll.json
+<<<< SEARCH
+      "nutanix.storage.tier.das.sata.used.bytes" : 0,
+      "nutanix.storage.tier.ssd.capacity.bytes" : 511803343324,
+      "nutanix.storage.tier.ssd.free.bytes" : 509234542925,
+      "nutanix.storage.tier.ssd.used.bytes" : 2568800399,
+      "nutanix.storage.used.bytes" : 2568800399,
+      "nutanix.type" : "HYPER_CONVERGED",
+      "nutanix.vms" : 3,
+      "nutanix.write.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.write.iops" : 0
+====
+      "nutanix.storage.tier.das.sata.used.bytes" : 0,
+      "nutanix.storage.tier.ssd.capacity.bytes" : 511803343324,
+      "nutanix.storage.tier.ssd.free.bytes" : 509234542925,
+      "nutanix.storage.tier.ssd.used.bytes" : 2568800399,
+      "nutanix.storage.used.bytes" : 2568800399,
+      "nutanix.type" : "HYPER_CONVERGED",
+      "nutanix.vms" : 1,
+      "nutanix.write.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.write.iops" : 0
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">identifies_issue</span><span class="validation-badge badge-pass">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 463<br>
+                        Time: 12.78s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/store/AbstractCacheStore.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.store;
+
+import io.vertx.core.Future;
+
+public abstract class AbstractCacheStore
+{
+    public static AbstractCacheStore getCacheStore(AbstractCacheStore.CacheStore store)
+    {
+        return switch (store)
+        {
+            case SNMP_TEMPLATE_OID_GROUP -> SNMPTemplateOIDGroupCacheStore.getStore();
+
+            case DNS -> DNS...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">store/AbstractCacheStore.java to refactor.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/main/java/com/mindarray/store/AbstractCacheStore.java
+<<<< SEARCH
+                case SNMP_TRAP_VENDOR -> SNMPTrapVendorCacheStore.getStore();
+
+                case LOG_PATTERN -> LogPatternCacheStore.getStore();
+
+                case EVENT_POLICY -> EventPolicyCacheStore.getStore();
+
+                case PLUGIN_ID -> PluginIdCacheStore.getStore();
+
+                case EVENT_ORDINAL -> EventOrdinalCacheStore.getStore();
+
+                case LICENSE -> LicenseCacheStore.getStore();
+
+                case CONFIGURATION -> ConfigurationCacheStore.getStore();
+
+                case OBJECT_STATUS -> ObjectStatusCacheStore.getStore();
+            };
+        }
+====
+                case SNMP_TRAP_VENDOR -> SNMPTrapVendorCacheStore.getStore();
+
+                case LOG_PATTERN -> LogPatternCacheStore.getStore();
+
+                case EVENT_POLICY -> EventPolicyCacheStore.getStore();
+
+                case PLUGIN_ID -> PluginIdCacheStore.getStore();
+
+                case EVENT_ORDINAL -> EventOrdinalCacheStore.getStore();
+
+                case LICENSE -> LicenseCacheStore.getStore();
+
+                case CONFIGURATION -> ConfigurationCacheStore.getStore();
+            };
+        }
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">identifies_issue</span><span class="validation-badge badge-pass">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 291<br>
+                        Time: 8.01s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">Task: added flag based telnet functionality support
+
+Files to modify (7 files):
+1. motadata/src/main/java/com/mindarray/ErrorCodes.java
+2. motadata/src/main/java/com/mindarray/ErrorMessageConstants.java
+3. motadata/src/main/java/com/mindarray/config/ConfigConstants.java
+4. motadata/src/main/java/com/mindarray/config/ConfigManager.java
+5. motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+6. motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+7. motadata/src/main/java/...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">flag based telnet functionality support
+
+Files to change:
+1. motadata/src/main/java/com/mindarray/ErrorCodes.java
+2. motadata/src/main/java/com/mindarray/ErrorMessageConstants.java
+3. motadata/src/main/java/com/mindarray/config/ConfigConstants.java
+4. motadata/src/main/java/com/mindarray/config/ConfigManager.java
+5. motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+6. motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+7. motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java
+
+I'll generate SEARCH/REPLACE blocks for each file with proper format.
+</thinking>
+
+<code>
+File: motadata/src/main/java/com/mindarray/ErrorCodes.java
+<<<< SEARCH
+     PING("PING", 0x00010001),
+     TRACEROUTE("TRACEROUTE", 0x00010002),
+     SNMP("SNMP", 0x00010003),
+     SSH("SSH", 0x00010004),
+     SSH_KEY_AUTHENTICATION("SSH KEY AUTHENTICATION", 0x00010005),
+     SSH_PASSWORD_AUTHENTICATION("SSH PASSWORD AUTHENTICATION", 0x00010006),
+     SSL_CERTIFICATE("SSL CERTIFICATE", 0x00010007),
+     SSL_CERTIFICATE_STATUS("SSL CERTIFICATE STATUS", 0x00010008),
+     TLS("TLS", 0x00010009),
+     TELNET("TELNET", 0x0001000A),
+====
+     PING("PING", 0x00010001),
+     TRACEROUTE("TRACEROUTE", 0x00010002),
+     SNMP("SNMP", 0x00010003),
+     SSH("SSH", 0x00010004),
+     SSH_KEY_AUTHENTICATION("SSH KEY AUTHENTICATION", 0x00010005),
+     SSH_PASSWORD_AUTHENTICATION("SSH PASSWORD AUTHENTICATION", 0x00010006),
+     SSL_CERTIFICATE("SSL CERTIFICATE", 0x00010007),
+     SSL_CERTIFICATE_STATUS("SSL CERTIFICATE STATUS", 0x00010008),
+     TLS("TLS", 0x00010009),
+     TELNET("TELNET", 0x0001000A),
+     TELNET_PASSWORD_AUTHENTICATION("TELNET PASSWORD AUTHENTICATION", 0x0001000B),
+>>>> REPLACE
+
+File: motadata/src/main/java/com/mindarray/ErrorMessageConstants.java
+<<<< SEARCH
+     public static final String ERROR_CODE_INVALID_TFTP_MODE = "Invalid TFTP mode";
+     public static final String ERROR_CODE_INVALID_TFTP_TIMEOUT = "Invalid TFTP timeout";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_NAME = "Invalid TFTP file name";
+     public static final String ERROR_CODE_INVALID_TFTP_BLOCK_SIZE = "Invalid TFTP block size";
+     public static final String ERROR_CODE_INVALID_TFTP_WINDOW_SIZE = "Invalid TFTP window size";
+     public static final String ERROR_CODE_INVALID_TFTP_RETRIES = "Invalid TFTP retries";
+     public static final String ERROR_CODE_INVALID_TFTP_USER_NAME = "Invalid TFTP user name";
+     public static final String ERROR_CODE_INVALID_TFTP_PASSWORD = "Invalid TFTP password";
+     public static final String ERROR_CODE_INVALID_TFTP_PROTOCOL_VERSION = "Invalid TFTP protocol version";
+     public static final String ERROR_CODE_INVALID_TFTP_CLIENT_ID = "Invalid TFTP client ID";
+     public static final String ERROR_CODE_INVALID_TFTP_CLIENT_IP = "Invalid TFTP client IP";
+     public static final String ERROR_CODE_INVALID_TFTP_CLIENT_PORT = "Invalid TFTP client port";
+     public static final String ERROR_CODE_INVALID_TFTP_SERVER_ID = "Invalid TFTP server ID";
+     public static final String ERROR_CODE_INVALID_TFTP_SERVER_IP = "Invalid TFTP server IP";
+     public static final String ERROR_CODE_INVALID_TFTP_SERVER_PORT = "Invalid TFTP server port";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_TYPE = "Invalid TFTP file type";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_MODE = "Invalid TFTP file mode";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_PERMISSIONS = "Invalid TFTP file permissions";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_OWNER = "Invalid TFTP file owner";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_GROUP = "Invalid TFTP file group";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_SIZE = "Invalid TFTP file size";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_TIMESTAMP = "Invalid TFTP file timestamp";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CHECKSUM = "Invalid TFTP file checksum";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_SIGNATURE = "Invalid TFTP file signature";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_ENCRYPTION = "Invalid TFTP file encryption";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_COMPRESSION = "Invalid TFTP file compression";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_METADATA = "Invalid TFTP file metadata";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_VERSION = "Invalid TFTP file version";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_REVISION = "Invalid TFTP file revision";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_AUTHOR = "Invalid TFTP file author";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_LICENSE = "Invalid TFTP file license";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_COPYRIGHT = "Invalid TFTP file copyright";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_DESCRIPTION = "Invalid TFTP file description";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_KEYWORDS = "Invalid TFTP file keywords";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_SUBJECT = "Invalid TFTP file subject";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CREATOR = "Invalid TFTP file creator";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_PUBLISHER = "Invalid TFTP file publisher";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CONTRIBUTOR = "Invalid TFTP file contributor";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_DATE = "Invalid TFTP file date";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_FORMAT = "Invalid TFTP file format";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_ENCODING = "Invalid TFTP file encoding";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_LANGUAGE = "Invalid TFTP file language";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CHARACTER_SET = "Invalid TFTP file character set";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CONTENT_TYPE = "Invalid TFTP file content type";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_MIME_TYPE = "Invalid TFTP file MIME type";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_URI = "Invalid TFTP file URI";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_IDENTIFIER = "Invalid TFTP file identifier";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_TITLE = "Invalid TFTP file title";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_SOURCE = "Invalid TFTP file source";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_DESTINATION = "Invalid TFTP file destination";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_LOCATION = "Invalid TFTP file location";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_ACCESS_RIGHTS = "Invalid TFTP file access rights";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_SECURITY_CLASSIFICATION = "Invalid TFTP file security classification";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CONFIDENTIALITY_LEVEL = "Invalid TFTP file confidentiality level";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_INTEGRITY_LEVEL = "Invalid TFTP file integrity level";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_NON_REPUDIATION = "Invalid TFTP file non-repudiation";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_DIGITAL_SIGNATURE = "Invalid TFTP file digital signature";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_HASH_VALUE = "Invalid TFTP file hash value";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_CHECKSUM_VALUE = "Invalid TFTP file checksum value";
+     public static final String ERROR_CODE_INVALID_TFTP_FILE_ERROR_CODE = "Invalid TFTP error code";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_MESSAGE = "Invalid TFTP error message";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_DETAIL = "Invalid TFTP error detail";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_CAUSE = "Invalid TFTP error cause";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_SOURCE = "Invalid TFTP error source";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_DESTINATION = "Invalid TFTP error destination";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_TIMESTAMP = "Invalid TFTP error timestamp";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_LOG = "Invalid TFTP error log";
+     public static final String ERROR_CODE_INVALID_TFTP_ERROR_REPORT = "</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">identifies_issue</span><span class="validation-badge badge-pass">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.8s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">MULTI FILE GEN (0/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">Task: Cycle start notification refactor
+
+Files to refactor:
+1. motadata/src/main/java/com/mindarray/slo/SLOProcessor.java
+2. motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">factor
+
+Files to refactor:
+1. motadata/src/main/java/com/mindarray/slo/SLOProcessor.java
+2. motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java
+
+I'll analyze the code changes required for this refactoring across the specified files.
+</thinking>
+
+<code>
+File: motadata/src/main/java/com/mindarray/slo/SLOProcessor.java
+<<<< SEARCH
+            var sloEvent = new JsonObject();
+
+            if (event.containsKey(SLO.SLO_ID))
+            {
+                sloEvent.put(SLO.SLO_ID, event.getString(SLO.SLO_ID));
+            }
+            else
+            {
+                sloEvent.put(SLO.SLO_ID, UUID.randomUUID().toString());
+            }
+
+            sloEvent.put(SLO.SLO_OBJECT_TYPE, event.getString(SLO.SLO_OBJECT_TYPE));
+
+            if (event.containsKey(VisualizationConstants.VISUALIZATION_METRIC_NAME))
+            {
+                sloEvent.put(VisualizationConstants.VISUALIZATION_METRIC_NAME, event.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME));
+            }
+====
+            var sloEvent = new JsonObject();
+
+            if (event.containsKey(SLO.SLO_ID))
+            {
+                sloEvent.put(SLO.SLO_ID, event.getString(SLO.SLO_ID));
+            }
+            else
+            {
+                sloEvent.put(SLO.SLO_ID, UUID.randomUUID().toString());
+            }
+
+            sloEvent.put(SLO.SLO_OBJECT_TYPE, event.getString(SLO.SLO_OBJECT_TYPE)).put(SLO.SLO_CYCLE_START, DateUtil.currentTimeSeconds());
+
+            if (event.containsKey(VisualizationConstants.VISUALIZATION_METRIC_NAME))
+            {
+                sloEvent.put(VisualizationConstants.VISUALIZATION_METRIC_NAME, event.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME));
+            }
+>>>> REPLACE
+
+<<<< SEARCH
+                        logger.error(String.format("error :: %s",exception.getMessage()));
+                    }
+
+                    return;
+                }
+
+                // send cycle start notification
+                if (cycleStart)
+                {
+                    try
+                    {
+                        if (entityType.equals(EventConstants.EVENT_SOURCE_TYPE_HOST) || entityType.equals(EventConstants.EVENT_SOURCE_TYPE_VM))
+                        {
+                            var host = MOTADATA.store().getHost(event.getString(Entities.ENTITY_ID));
+
+                            if (host != null)
+                            {
+                                var notification = new JsonObject()
+                                        .put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLO_NOTIFICATION.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_TYPE, NotificationConstants.NotificationEventType.CYCLE_START.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_STATUS, SLOStatus.PENDING.name())
+                                        .put(NotificationConstants.NOTIFICATION_TIME_STAMP, DateUtil.currentDateTime())
+                                        .put(NotificationConstants.NOTIFICATION_SOURCE, entityType)
+                                        .put(NotificationConstants.NOTIFICATION_OBJECT_ID, event.getString(Entities.ENTITY_ID))
+                                        .put(NotificationConstants.NOTIFICATION_OBJECT_NAME, host.getString(Entities.NAME))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_ID, sloEvent.getString(SLO.SLO_ID))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_OBJECT_TYPE, sloEvent.getString(SLO.SLO_OBJECT_TYPE))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_METRIC_NAME, sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME))
+                                        .put(NotificationConstants.NOTIFICATION_MESSAGE, String.format(SLOMessage.CYCLE_START, sloEvent.getString(SLO.SLO_OBJECT_TYPE), sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME)));
+
+                                NotificationEngine.send(notification);
+
+                                if (MotadataConfigStore.getStore().getBoolean(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_ENABLED))
+                                {
+                                    var context = new JsonObject()
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_TYPE, "SLO Notification")
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_OBJECT_TYPE, sloEvent.getString(SLO.SLO_OBJECT_TYPE))
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_OBJECT_NAME, host.getString(Entities.NAME))
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_METRIC_NAME, sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME));
+
+                                    NotificationEngine.send(new JsonObject().put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLA_NOTIFICATION.name()).mergeIn(context).put(NotificationConstants.NOTIFICATION_MESSAGE, notification.getString(NotificationConstants.NOTIFICATION_MESSAGE)));
+                                }
+                            }
+                        }
+                        else if (entityType.equals(EventConstants.EVENT_SOURCE_TYPE_SERVICE) || entityType.equals(EventConstants.EVENT_SOURCE_TYPE_APPLICATION))
+                        {
+                            var service = MOTADATA.store().getService(event.getString(Entities.ENTITY_ID));
+
+                            if (service != null)
+                            {
+                                var notification = new JsonObject()
+                                        .put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLO_NOTIFICATION.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_TYPE, NotificationConstants.NotificationEventType.CYCLE_START.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_STATUS, SLOStatus.PENDING.name())
+                                        .put(NotificationConstants.NOTIFICATION_TIME_STAMP, DateUtil.currentDateTime())
+                                        .put(NotificationConstants.NOTIFICATION_SOURCE, entityType)
+                                        .put(NotificationConstants.NOTIFICATION_OBJECT_ID, event.getString(Entities.ENTITY_ID))
+                                        .put(NotificationConstants.NOTIFICATION_OBJECT_NAME, service.getString(Entities.NAME))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_ID, sloEvent.getString(SLO.SLO_ID))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_OBJECT_TYPE, sloEvent.getString(SLO.SLO_OBJECT_TYPE))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_METRIC_NAME, sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME))
+                                        .put(NotificationConstants.NOTIFICATION_MESSAGE, String.format(SLOMessage.CYCLE_START, sloEvent.getString(SLO.SLO_OBJECT_TYPE), sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME)));
+
+                                NotificationEngine.send(notification);
+
+                                if (MotadataConfigStore.getStore().getBoolean(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_ENABLED))
+                                {
+                                    var context = new JsonObject()
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_TYPE, "SLO Notification")
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_OBJECT_TYPE, sloEvent.getString(SLO.SLO_OBJECT_TYPE))
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_OBJECT_NAME, service.getString(Entities.NAME))
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_METRIC_NAME, sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME));
+
+                                    NotificationEngine.send(new JsonObject().put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLA_NOTIFICATION.name()).mergeIn(context).put(NotificationConstants.NOTIFICATION_MESSAGE, notification.getString(NotificationConstants.NOTIFICATION_MESSAGE)));
+                                }
+                            }
+                        }
+                        else if (entityType.equals(EventConstants.EVENT_SOURCE_TYPE_CLOUD_PROVIDER))
+                        {
+                            var cloudProvider = MOTADATA.store().getCloudProvider(event.getString(Entities.ENTITY_ID));
+
+                            if (cloudProvider != null)
+                            {
+                                var notification = new JsonObject()
+                                        .put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLO_NOTIFICATION.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_TYPE, NotificationConstants.NotificationEventType.CYCLE_START.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_STATUS, SLOStatus.PENDING.name())
+                                        .put(NotificationConstants.NOTIFICATION_TIME_STAMP, DateUtil.currentDateTime())
+                                        .put(NotificationConstants.NOTIFICATION_SOURCE, entityType)
+                                        .put(NotificationConstants.NOTIFICATION_OBJECT_ID, event.getString(Entities.ENTITY_ID))
+                                        .put(NotificationConstants.NOTIFICATION_OBJECT_NAME, cloudProvider.getString(Entities.NAME))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_ID, sloEvent.getString(SLO.SLO_ID))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_OBJECT_TYPE, sloEvent.getString(SLO.SLO_OBJECT_TYPE))
+                                        .put(NotificationConstants.NOTIFICATION_SLO_METRIC_NAME, sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME))
+                                        .put(NotificationConstants.NOTIFICATION_MESSAGE, String.format(SLOMessage.CYCLE_START, sloEvent.getString(SLO.SLO_OBJECT_TYPE), sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME)));
+
+                                NotificationEngine.send(notification);
+
+                                if (MotadataConfigStore.getStore().getBoolean(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_ENABLED))
+                                {
+                                    var context = new JsonObject()
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_TYPE, "SLO Notification")
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_OBJECT_TYPE, sloEvent.getString(SLO.SLO_OBJECT_TYPE))
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_OBJECT_NAME, cloudProvider.getString(Entities.NAME))
+                                            .put(MotadataConfigKey.MOTADATA_SLA_NOTIFICATION_METRIC_NAME, sloEvent.getString(VisualizationConstants.VISUALIZATION_METRIC_NAME));
+
+                                    NotificationEngine.send(new JsonObject().put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLA_NOTIFICATION.name()).mergeIn(context).put(NotificationConstants.NOTIFICATION_MESSAGE, notification.getString(NotificationConstants.NOTIFICATION_MESSAGE)));
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        logger.error(String.format("error :: %s",exception.getMessage()));
+                    }
+                }
+            }
+====
+                        logger.error(String.format("error :: %s",exception.getMessage()));
+                    }
+
+                    return;
+                }
+
+                // send cycle start notification
+                if (cycleStart)
+                {
+                    try
+                    {
+                        if (entityType.equals(EventConstants.EVENT_SOURCE_TYPE_HOST) || entityType.equals(EventConstants.EVENT_SOURCE_TYPE_VM))
+                        {
+                            var host = MOTADATA.store().getHost(event.getString(Entities.ENTITY_ID));
+
+                            if (host != null)
+                            {
+                                var notification = new JsonObject()
+                                        .put(Notification.NOTIFICATION_TYPE, NotificationConstants.NotificationType.SLO_NOTIFICATION.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_TYPE, NotificationConstants.NotificationEventType.CYCLE_START.name())
+                                        .put(NotificationConstants.NOTIFICATION_EVENT_STATUS, SLOStatus.PENDING.name())
+                                        .put(NotificationConstants.NOTIFICATION_TIME_STAMP, DateUtil.currentDateTime())
+                                        .put</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-pass">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.54s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/store/BusinessHourConfigStore.java
+
+Content:
+```
+/*
+ *   Copyright (c) Motadata 2025. All rights reserved.
+ *
+ *   This source code is the property of Motadata and constitutes
+ *   proprietary and confidential information. Unauthorized copying, distribution,
+ *   modification, or use of this file, via any medium, is strictly prohibited
+ *   unless prior written permission is obtained from Motadata.
+ *
+ *   Unauthorized access or use of this software may...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">store/BusinessHourConfigStore.java to Refactor.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/main/java/com/mindarray/store/BusinessHourConfigStore.java
+<<<< SEARCH
+package com.mindarray.store;
+
+import com.mindarray.GlobalConstants;
+import com.mindarray.api.AIOpsObject;
+import com.mindarray.api.CorrectionProfile;
+import com.mindarray.db.DBConstants;
+import com.mindarray.util.Logger;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.mindarray.api.APIConstants.*;
+====
+package com.mindarray.store;
+
+import com.mindarray.GlobalConstants;
+import com.mindarray.api.AIOpsObject;
+import com.mindarray.api.CorrectionProfile;
+import com.mindarray.db.DBConstants;
+import com.mindarray.util.Logger;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.mindarray.api.APIConstants.*;
+
+>>>> REPLACE
+
+<<<< SEARCH
+    {
+        super(DBConstants.TBL_BUSINESS_HOUR, LOGGER, false,
+                List.of(
+                        Map.of(
+                                REFERENCE_ENTITY, Entity.OBJECT,
+                                REFERENCE_ENTITY_PROPERTY, AIOpsObject.OBJECT_BUSINESS_HOUR_PROFILE,
+                                REFERENCE_ENTITY_STORE, ConfigStore.OBJECT,
+                                REFERENCE_ENTITY_PROPERTY_TYPE, ReferenceEntityPropertyType.VALUE
+                        ),
+                        Map.of(
+                                REFERENCE_ENTITY, Entity.CORRECTION_PROFILE,
+                                REFERENCE_ENTITY_PROPERTY, CorrectionProfile.CORRECTION_PROFILE_CONTEXT,
+                                REFERENCE_ENTITY_NESTED_PROPERTY, CorrectionProfile.BUSINESS_HOUR_PROFILE,
+                                REFERENCE_ENTITY_STORE, ConfigStore.CORRECTION_PROFILE,
+                                REFERENCE_ENTITY_PROPERTY_TYPE, ReferenceEntityPropertyType.MULTIMAP_VALUE
+                        )
+                )
+        );
+    }
+====
+    {
+        super(DBConstants.TBL_BUSINESS_HOUR, LOGGER, false,
+                List.of(
+                        Map.of(
+                                REFERENCE_ENTITY, Entity.OBJECT,
+                                REFERENCE_ENTITY_PROPERTY, AIOpsObject.OBJECT_BUSINESS_HOUR_PROFILE,
+                                REFERENCE_ENTITY_STORE, ConfigStore.OBJECT,
+                                REFERENCE_ENTITY_PROPERTY_TYPE, ReferenceEntityPropertyType.VALUE
+                        ),
+                        Map.of(
+                                REFERENCE_ENTITY, Entity.CORRECTION_PROFILE,
+                                REFERENCE_ENTITY_PROPERTY, CorrectionProfile.CORRECTION_PROFILE_CONTEXT,
+                                REFERENCE_ENTITY_NESTED_PROPERTY, CorrectionProfile.BUSINESS_HOUR_PROFILE,
+                                REFERENCE_ENTITY_STORE, ConfigStore.CORRECTION_PROFILE,
+                                REFERENCE_ENTITY_PROPERTY_TYPE, ReferenceEntityPropertyType.MULTIMAP_VALUE
+                        ),
+                        Map.of(
+                                REFERENCE_ENTITY, Entity.MONITOR,
+                                REFERENCE_ENTITY_PROPERTY, Monitor.MONITOR_CONTEXT,
+                                REFERENCE_ENTITY_NESTED_PROPERTY, Monitor.BUSINESS_HOUR_PROFILE,
+                                REFERENCE_ENTITY_STORE, ConfigStore.MONITOR,
+                                REFERENCE_ENTITY_PROPERTY_TYPE, ReferenceEntityPropertyType.MULTIMAP_VALUE
+                        )
+                )
+        );
+    }
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-pass">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 650<br>
+                        Time: 17.73s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">Refactor: Resolve spacing and formatting inconsistencies across multiple files, update documentation comments, and streamline code for better readability.</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ta/src/main/java/com/mindarray/BootstrapPrimary.java"}}]}
+</thinking></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-fail">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 40<br>
+                        Time: 2.13s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">Task: ConfigDBConstants.java renamed to DBConstants
+
+Files to modify (210 files):
+1. motadata/src/main/java/com/mindarray/Bootstrap.java
+2. motadata/src/main/java/com/mindarray/BootstrapFailover.java
+3. motadata/src/main/java/com/mindarray/BootstrapPrimary.java
+4. motadata/src/main/java/com/mindarray/BootstrapSecondary.java
+5. motadata/src/main/java/com/mindarray/BootstrapStandalone.java
+6. motadata/src/main/java/com/mindarray/agent/AgentEventProcessor.java
+7. motadata/src/main/java/com/mindarra...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">igDBConstants.java renamed to DBConstants
+
+Files to change:
+1. motadata/src/main/java/com/mindarray/Bootstrap.java
+2. motadata/src/main/java/com/mindarray/BootstrapFailover.java
+3. motadata/src/main/java/com/mindarray/BootstrapPrimary.java
+4. motadata/src/main/java/com/mindarray/BootstrapSecondary.java
+5. motadata/src/main/java/com/mindarray/BootstrapStandalone.java
+6. motadata/src/main/java/com/mindarray/agent/AgentEventProcessor.java
+7. motadata/src/main/java/com/mindarray/api/AIOpsObject.java
+8. motadata/src/main/java/com/mindarray/api/APIServer.java
+9. motadata/src/main/java/com/mindarray/api/APIUtil.java
+10. motadata/src/main/java/com/mindarray/api/AbstractAPI.java
+11. motadata/src/main/java/com/mindarray/api/Agent.java
+12. motadata/src/main/java/com/mindarray/api/ComplianceBenchmark.java
+13. motadata/src/main/java/com/mindarray/api/CompliancePolicy.java
+14. motadata/src/main/java/com/mindarray/api/ComplianceRule.java
+15. motadata/src/main/java/com/mindarray/api/Configuration.java
+16. motadata/src/main/java/com/mindarray/api/CredentialProfile.java
+17. motadata/src/main/java/com/mindarray/api/Dashboard.java
+18. motadata/src/main/java/com/mindarray/api/DependencyMapper.java
+19. motadata/src/main/java/com/mindarray/api/Discovery.java
+20. motadata/src/main/java/com/mindarray/api/EventPolicy.java
+21. motadata/src/main/java/com/mindarray/api/EventSource.java
+22. motadata/src/main/java/com/mindarray/api/Group.java
+23. motadata/src/main/java/com/mindarray/api/Integration.java
+24. motadata/src/main/java/com/mindarray/api/LogForwarder.java
+25. motadata/src/main/java/com/mindarray/api/LogParser.java
+26. motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java
+27. motadata/src/main/java/com/mindarray/api/Metric.java
+28. motadata/src/main/java/com/mindarray/api/MetricPlugin.java
+29. motadata/src/main/java/com/mindarray/api/MetricPolicy.java
+30. motadata/src/main/java/com/mindarray/api/MotadataApp.java
+31. motadata/src/main/java/com/mindarray/api/NetRoute.java
+32. motadata/src/main/java/com/mindarray/api/NetRoutePolicy.java
+33. motadata/src/main/java/com/mindarray/api/ProxyServer.java
+34. motadata/src/main/java/com/mindarray/api/Report.java
+35. motadata/src/main/java/com/mindarray/api/RequestValidator.java
+36. motadata/src/main/java/com/mindarray/api/RunbookPlugin.java
+37. motadata/src/main/java/com/mindarray/api/SNMPDeviceCatalog.java
+38. motadata/src/main/java/com/mindarray/api/SNMPOIDGroup.java
+39. motadata/src/main/java/com/mindarray/api/Scheduler.java
+40. motadata/src/main/java/com/mindarray/api/SystemProcess.java
+41. motadata/src/main/java/com/mindarray/api/SystemService.java
+42. motadata/src/main/java/com/mindarray/api/Tag.java
+43. motadata/src/main/java/com/mindarray/api/TagRule.java
+44. motadata/src/main/java/com/mindarray/api/Template.java
+45. motadata/src/main/java/com/mindarray/api/TopologyPlugin.java
+46. motadata/src/main/java/com/mindarray/api/User.java
+47. motadata/src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+48. motadata/src/main/java/com/mindarray/compliance/ComplianceManager.java
+49. motadata/src/main/java/com/mindarray/compliance/ComplianceRuleEngine.java
+50. motadata/src/main/java/com/mindarray/config/ConfigManager.java
+51. motadata/src/main/java/com/mindarray/config/ConfigResponseProcessor.java
+52. motadata/src/main/java/com/mindarray/db/ComplianceDBServiceImpl.java
+53. motadata/src/main/java/com/mindarray/db/ConfigDBInitializer.java
+54. motadata/src/main/java/com/mindarray/db/ConfigDBServiceImpl.java
+55. motadata/src/main/java/com/mindarray/db/ConfigDBConstants.java
+56. motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java
+57. motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java
+58. motadata/src/main/java/com/mindarray/eventbus/LocalEventRouter.java
+59. motadata/src/main/java/com/mindarray/eventbus/RemoteEventChangeNotificationHandler.java
+60. motadata/src/main/java/com/mindarray/eventbus/RemoteEventRouter.java
+61. motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+62. motadata/src/main/java/com/mindarray/flow/FlowProcessor.java
+63. motadata/src/main/java/com/mindarray/ha/HAConstants.java
+64. motadata/src/main/java/com/mindarray/ha/Observer.java
+65. motadata/src/main/java/com/mindarray/integration/AtlassianJiraIntegration.java
+66. motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java
+67. motadata/src/main/java/com/mindarray/integration/ServiceOpsIntegration.java
+68. motadata/src/main/java/com/mindarray/integration/TeamsIntegration.java
+69. motadata/src/main/java/com/mindarray/job/CustomJob.java
+70. motadata/src/main/java/com/mindarray/job/FlapCacheBackupJob.java
+71. motadata/src/main/java/com/mindarray/job/JobScheduler.java
+72. motadata/src/main/java/com/mindarray/job/SystemNotificationJob.java
+73. motadata/src/main/java/com/mindarray/log/LogParser.java
+74. motadata/src/main/java/com/mindarray/manager/ManagerResponseProcessor.java
+75. motadata/src/main/java/com/mindarray/manager/MotadataAppManager.java
+76. motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java
+77. motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+78. motadata/src/main/java/com/mindarray/nms/ObjectManager.java
+79. motadata/src/main/java/com/mindarray/nms/ResponseProcessor.java
+80. motadata/src/main/java/com/mindarray/nms/TopologyEngine.java
+81. motadata/src/main/java/com/mindarray/plugin/PluginEngineResponseProcessor.java
+82. motadata/src/main/java/com/mindarray/policy/EventPolicyAggregator.java
+83. motadata/src/main/java/com/mindarray/policy/EventPolicyInspector.java
+84. motadata/src/main/java/com/mindarray/policy/SeverityChangeEventProcessor.java
+85. motadata/src/main/java/com/mindarray/runbook/RunbookEngine.java
+86. motadata/src/main/java/com/mindarray/store/AbstractConfigStore.java
+87. motadata/src/main/java/com/mindarray/store/AgentConfigStore.java
+88. motadata/src/main/java/com/mindarray/store/ApplicationMapperConfigStore.java
+89. motadata/src/main/java/com/mindarray/store/ArchivedObjectConfigStore.java
+90. motadata/src/main/java/com/mindarray/store/ArtifactConfigStore.java
+91. motadata/src/main/java/com/mindarray/store/AuthTokenConfigStore.java
+92. motadata/src/main/java/com/mindarray/store/BackupProfileConfigStore.java
+93. motadata/src/main/java/com/mindarray/store/BusinessHourConfigStore.java
+94. motadata/src/main/java/com/mindarray/store/ComplianceBenchmarkConfigStore.java
+95. motadata/src/main/java/com/mindarray/store/CompliancePolicyCacheStore.java
+96. motadata/src/main/java/com/mindarray/store/CompliancePolicyConfigStore.java
+97. motadata/src/main/java/com/mindarray/store/ComplianceRuleConfigStore.java
+98. motadata/src/main/java/com/mindarray/store/ComplianceWeightedCalculationConfigStore.java
+99. motadata/src/main/java/com/mindarray/store/ConfigTemplateConfigStore.java
+100. motadata/src/main/java/com/mindarray/store/ConfigurationCacheStore.java
+101. motadata/src/main/java/com/mindarray/store/ConfigurationConfigStore.java
+102. motadata/src/main/java/com/mindarray/store/CredentialProfileConfigStore.java
+103. motadata/src/main/java/com/mindarray/store/CustomMonitoringFieldConfigStore.java
+104. motadata/src/main/java/com/mindarray/store/DNSCacheStore.java
+105. motadata/src/main/java/com/mindarray/store/DashboardConfigStore.java
+106. motadata/src/main/java/com/mindarray/store/DataRetentionPolicyConfigStore.java
+107. motadata/src/main/java/com/mindarray/store/</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.83s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">refactored custom.script report scheduled issue</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ain/java/com/mindarray/eventbus/UIActionEventHandler.java", "content": "\n\n\n/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n *   proprietary and confidential information. Unauthorized copying, distribution,\n *   modification, or use of this file, via any medium, is strictly prohibited\n *   unless prior written permission is obtained from Motadata.\n *\n *   Unauthorized access or use of this software may result in legal action\n *   and/or prosecution to the fullest extent of the law.\n *\n *   This software is provided \"AS IS,\" without warranties of any kind, express\n *   or implied, including but not limited to implied warranties of\n *   merchantability or fitness for a particular purpose. In no event shall\n *   Motadata be held liable for any damages arising from the use\n *   of this software.\n *\n *   For inquiries, contact: engg@motadata.com\n *\n */\n\n/*  Change Logs:\n *  Date			Author			Notes\n *  10-Feb-2025		Chandresh		MOTADATA-4905: refactored UI_ACTION_RUNBOOK_PLUGIN_TEST to support running multiple monitors while testing runbook in single event\n *  14-Feb-2025     Chandresh       MOTADATA-4822: Updated LDAP connection test to support secondary LDAP host\n *  24-Feb-2025		Chandresh		MOTADATA-3680: Added UI_ACTION_RUNBOOK_PLUGIN_RUN handler to support running runbooks with multiple instances\n *  26-Feb-2025     Chandresh       MOTADATA-5216: Runbook | Proper status and error message should be shown after testing any runbook\n *  28-Feb-2025     Smit            MOTADATA-4956: Rule Based Tagging, Preview and Run Events\n *  3-Mar-2025      Chandresh       MOTADATA-4822: ldap.server.host -> ldap.server.primary.host\n *  28-Feb-2025     Bharat          MOTADATA-5233: Added event ui.action.share for share feature\n *  4-Mar-2025      Bharat          MOTADATA-4740: Two factor authentication 2FA\n *  18-Mar-2025     Smit            MOTADATA-5431: Module Level Logging\n *  20-Mar-2025     Chopra Deven    MOTADATA-5370: Added event to get current flap of policy in Alert Drill-Down\n *  19-Mar-2025     Pruthviraj      MOTADATA-5331: NetRoute policy ui.actions added\n *  9-Apr-2025      Bharat          MOTADATA-5141: Alert Drill-down from email and Teams Notification\n *  24-Mar-2025     Chandresh       MOTADATA-5426: Docker discovery and polling support added\n *  23-Apr-2025     Bharat          MOTADATA-5822: Fixed session view and default policy view bug\n *  19-May-2025     Sankalp         MOTADATA-5939: Cisco ACI Topology support\n *  24-Jun-2025     Yash Tiwari     MOTADATA-6528 : refactored UI_ACTION_TOPOLOGY_HIERARCHY_FETCH to fetch left hierarchy from DQP\n *  23-Jul-2025     Chopra Deven    MOTADATA-6889: Health Overview | Monitors (Polling Issue) widget shows infinite loader.\n *  11-Feb-2025     Harsh           MOTADTA-5003: Added UI_ACTION_TRACE_SERVICE_HIERARCHY_FETCH to support service map in APM\n *  15-April-2025   Nikunj          MOTADTA-5834: Added events for Trace Metric policy clear, note, suppress and Acknowledge.\n *  21-April-2025   Nikunj          MOTADATA-5841: Modified UI_ACTION_POLICY_QUERY.\n *  18-Aug-2025     Nikunj Patel    MOTADATA-6759: Add lookup for Snmp Catalog Data(Postgres)\n *  26-Aug-2025     Yash Tiwari     MOTADATA-6894: Refactoring VMware ESXi and vCenter Discovery\n *  27-Aug-2025     Pruthviraj      MOTADATA-7246: replace  MotadataConfigUtil.getHost() with CommonUtil.getIPAddress()\n *  02-Sep-2025     Bharat          MOTADATA-7216: Revamp Reporting Engine to Backend for Custom Scripts\n *  03-Sep-2025     Vismit          MOTADATA-5332: Added Network Config context for UI_ACTION_SHARE and UI_ACTION_POLICY_QUERY\n */\n\npackage com.mindarray.eventbus;\n\nimport com.mindarray.*;\nimport com.mindarray.aiops.AIOpsConstants;\nimport com.mindarray.api.MetricPlugin;\nimport com.mindarray.api.*;\nimport com.mindarray.config.ConfigConstants;\nimport com.mindarray.datastore.DatastoreConstants;\nimport com.mindarray.db.DBConstants;\nimport com.mindarray.integration.IntegrationConstants;\nimport com.mindarray.integration.IntegrationEngine;\nimport com.mindarray.integration.TeamsIntegration;\nimport com.mindarray.job.JobScheduler;\nimport com.mindarray.log.LogEngineConstants;\nimport com.mindarray.log.LogPatternDetector;\nimport com.mindarray.nms.NMSConstants;\nimport com.mindarray.policy.PolicyEngineConstants;\nimport com.mindarray.policy.PolicyUtil;\nimport com.mindarray.report.ReportConstants;\nimport com.mindarray.runbook.Runbook;\nimport com.mindarray.store.*;\nimport com.mindarray.util.*;\nimport com.opencsv.CSVWriterBuilder;\nimport com.unboundid.ldap.sdk.LDAPConnection;\nimport io.vertx.core.AbstractVerticle;\nimport io.vertx.core.Future;\nimport io.vertx.core.Promise;\nimport io.vertx.core.buffer.Buffer;\nimport io.vertx.core.eventbus.DeliveryOptions;\nimport io.vertx.core.json.JsonArray;\nimport io.vertx.core.json.JsonObject;\nimport io.vertx.core.net.NetClientOptions;\nimport io.vertx.core.net.ProxyOptions;\nimport io.vertx.ext.mail.*;\nimport io.vertx.ext.web.client.WebClient;\nimport io.vertx.ext.web.client.WebClientOptions;\nimport io.vertx.ext.web.handler.sockjs.impl.StringEscapeUtils;\nimport org.apache.commons.lang3.StringUtils;\nimport org.apache.commons.text.StringSubstitutor;\nimport org.apache.http.HttpStatus;\n\nimport java.io.BufferedReader;\nimport java.io.FileWriter;\nimport java.io.InputStreamReader;\nimport java.net.URLEncoder;\nimport java.nio.charset.StandardCharsets;\nimport java.nio.file.Files;\nimport java.nio.file.Paths;\nimport java.util.*;\nimport java.util.concurrent.TimeUnit;\nimport java.util.concurrent.atomic.AtomicBoolean;\nimport java.util.regex.Pattern;\nimport java.util.stream.Collectors;\nimport java.util.zip.ZipFile;\n\nimport static com.mindarray.ErrorMessageConstants.*;\nimport static com.mindarray.GlobalConstants.DURATION;\nimport static com.mindarray.GlobalConstants.*;\nimport static com.mindarray.api.AIOpsObject.*;\nimport static com.mindarray.api.APIConstants.*;\nimport static com.mindarray.api.Agent.AGENT_VERSION;\nimport static com.mindarray.api.CredentialProfile.CREDENTIAL_PROFILE_CONTEXT;\nimport static com.mindarray.api.Discovery.DISCOVERY_CONTEXT;\nimport static com.mindarray.api.LDAPServer.LDAP_SERVER_SECONDARY_HOST;\nimport static com.mindarray.api.LogParser.*;\nimport static com.mindarray.api.MotadataApp.ARTIFACT_TYPE;\nimport static com.mindarray.api.MotadataApp.MAX_VERSION_FILE_SIZE_BYTES;\nimport static com.mindarray.api.RemoteEventProcessor.*;\nimport static com.mindarray.api.RunbookPlugin.*;\nimport static com.mindarray.api.SNMPOIDGroup.DESCRIPTION;\nimport static com.mindarray.api.SNMPOIDGroup.MIB_FILE_NAME;\nimport static com.mindarray.db.DBConstants.TBL_SNMP_CATALOG;\nimport static com.mindarray.db.DBConstants.TRANSFORM;\nimport static com.mindarray.log.LogEngineConstants.LogParserType.REGEX;\nimport static com.mindarray.log.LogPatternDetector.END_POS;\nimport static com.mindarray.log.LogPatternDetector.START_POS;\nimport static com.mindarray.manager.MotadataAppManager.PATCH_ARTIFACT_FILE;\nimport static com.mindarray.nms.NMSConstants.*;\nimport static com.mindarray.nms.SNMPTrapProcessor.SNMP_TRAP_OID;\nimport static com.mindarray.notification.Notification.NOTIFICATION_TYPE;\nimport static com.mindarray.policy.PolicyEngineConstants.*;\nimport static com.m</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 89.26s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">QA KNOWLEDGE (4/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does MetricPoller.send() work?
+
+Code signature: public send(Map<String, JsonObject> contexts, String errorCode, String error) { ... }
+File: src/main/java/com/mindarray/nms/MetricPoller.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">t bus for processing.       <p>       This method is called when a metric poll completes successfully. It formats the metric data and sends it       to the appropriate event bus address based on the metric type (SNMP or other).       </p>       <p>       If there's an error during polling, it formats the error message and sends it to the event bus.       </p>       @param contexts   The context containing metric data and metadata       @param errorCode  The error code if applicable       @param error      The error message if applicable /     public void send(Map<String, JsonObject> contexts, String errorCode, String error)     {         JsonObject event = new JsonObject();          // Check if we have SNMP context data         if (context.containsKey(SNMPConstants.SNMP_CONTEXT))         {             var snmpContexts = new JsonArray();              // Process each SNMP context             for (var entry : contexts.entrySet())             {                 var snmpContext = entry.getValue();                  // If the context has a "data" field, add it to the event                 if (snmpContext.hasKey(MetricEngineConstants.DATA))                 {                     var data = new JsonObject();                      // Extract relevant fields from the context                     data.put(PluginConfigConstants.PLUGIN, snmpContext.getString(PluginConfigConstants.PLUGIN));                     data.put(PluginConfigConstants.PLUGIN_ID, snmpContext.getLong(PluginConfigConstants.PLUGIN_ID));                     data.put(MetricEngineConstants.METRIC_PROFILE_NAME, snmpContext.getString(MetricEngineConstants.METRIC_PROFILE_NAME));                     data.put(MetricEngineConstants.METRIC_PROFILE_ID, snmpContext.getLong(MetricEngineConstants.METRIC_PROFILE_ID));                     data.put(MetricEngineConstants.EVENT_TIMESTAMP, snmpContext.getLong(MetricEngineConstants.EVENT_TIMESTAMP));                     data.put(MetricEngineConstants.STATUS, Status.get(snmpContext.getInteger(MetricEngineConstants.STATUS)).name());                     data.put(BootstrapConstants.ENTITY_NAME, snmpContext.getString(BootstrapConstants.ENTITY_NAME));                     data.put(BootstrapConstants.ENTITY_TYPE, EntityType.valueOf(snmpContext.getString(BootstrapConstants.ENTITY_TYPE)).name());                     data.put(MetricEngineConstants.METRIC, snmpContext.getString(MetricEngineConstants.METRIC));                     data.put(MetricEngineConstants.VALUE, snmpContext.getDouble(MetricEngineConstants.VALUE));                     data.put(EventBusConstants.EVENT, EventBusConstants.EVENT_METRIC);                      // Add the data to the SNMP context array                     snmpContexts.add(data);                 }             }              // Send the SNMP context data to the event bus             if (!snmpContexts.isEmpty())             {                 event.put(EventBusConstants.EVENT, EventBusConstants.EVENT_METRIC).put(EVENT_TIMESTAMP, context.getLong(EVENT_TIMESTAMP)).put(MetricEngineConstants.DATA, snmpContexts);                  vertx.eventBus().send(EVENT_METRIC, event);             }         }         else         {             // Handle non-SNMP metric contexts             for (var entry : contexts.entrySet())             {                 var metricContext = entry.getValue();                  if (metricContext.hasKey(MetricEngineConstants.DATA))                 {                     event.put(EVENT_TIMESTAMP, context.getLong(EVENT_TIMESTAMP)).put(MetricEngineConstants.DATA, metricContext.getJsonObject(MetricEngineConstants.DATA));                      // Send the metric data to the appropriate event bus address                     vertx.eventBus().send(metricContext.getString(BootstrapConstants.ENTITY_TYPE).toLowerCase() + DOT + EventBusConstants.EVENT_METRIC, event);                 }             }         }          // Handle error cases         if (StringUtils.isNotEmpty(errorCode) && StringUtils.isNotEmpty(error))         {             LOGGER.error(String.format("error while sending metrics to event bus %s %s ", errorCode, error));         }     } /     /**      * Converts a map of contexts to a JSON array.       *       * @param contexts The map of contexts to convert       * @return A JSON array representation of the contexts      */     private JsonArray getMetrics(Map<String, JsonObject> contexts)     {         var metrics = new JsonArray();          // Iterate through the contexts and add them to the JSON array         for (var entry : contexts.entrySet())         {             metrics.add(entry.getValue());         }          return metrics;     }      /     /**      * Processes the response from the metric engine.       *       * @param event The event containing the response from the metric engine      */     private void processMetricResponse(Message<JsonObject> event)     {         try         {             var result = event.body();              // Process the result based on its type             switch (ResultType.valueOf(result.getString(EventBusConstants.RESULT_TYPE)))             {                 case SUCCESS ->                     // Handle successful metric retrieval                     retrieve(result.getString(MetricEngineConstants.METRIC), result.getString(BootstrapConstants.ENTITY_TYPE), result.getLong(BootstrapConstants.ENTITY_ID));                  case ERROR ->                     // Handle error in metric retrieval                     LOGGER.error(String.format("error while retrieving metrics %s", result.getString(EventBusConstants.ERROR)));             }         }         catch (Exception exception)         {             LOGGER.error(exception);         }     }      /     /**      * Retrieves metric data from the metric engine.       *       * @param metric    The metric name to retrieve       * @param entityType The entity type associated with the metric       * @param entityId  The entity ID associated with the metric     */     private void retrieve(String metric, String entityType, long entityId)     {         try         {             // Prepare the request for metric retrieval             var request = new JsonObject().put(MetricEngineConstants.METRIC, metric).put(BootstrapConstants.ENTITY_TYPE, entityType).put(BootstrapConstants.ENTITY_ID, entityId);              // Send the request to the metric engine             vertx.eventBus().request(EventBusConstants.METRIC_ENGINE + DOT + EventBusConstants.EVENT_READ, request, reply ->             {                 try                 {                     // Process the response from the metric engine                     if (reply.succeeded())                     {                         processMetricResponse(reply.result());                     }                     else                     {                         LOGGER.error(reply.cause());                     }                 }                 catch (Exception exception)                 {                     LOGGER.error(exception);                 }             });         }         catch (Exception exception)         {             LOGGER.error(exception);         }     }      /     /**      * Sends a metric to the metric engine.       *       * @param metric The metric to send       * @param event  The event containing the metric data     */     private void sendMetric(JsonObject metric, Message<JsonObject> event)     {         try         {             // Send the metric to the metric engine             vertx.eventBus().send(EventBusConstants.METRIC_ENGINE + DOT + EventBusConstants.EVENT_WRITE, metric);         }         catch (Exception exception)         {             LOGGER.error(exception);         }     }      /     /**      * Processes a metric response from the metric engine.       *       * @param event The event containing the metric response     */     private void processMetricResponse(Message<JsonObject> event)     {         try         {             var response = event.body();              // Send the metric to the metric engine             sendMetric(response.getJsonObject(MetricEngineConstants.DATA), event);         }         catch (Exception exception)         {             LOGGER.error(exception);         }     }      /     /**      * Initializes the metric poller.     */     private void initialize()     {         // Register the event handler for metric requests         vertx.eventBus().<JsonObject>localConsumer(EventBusConstants.EVENT_METRIC_REQUEST + DOT + context.getString(BootstrapConstants.ENTITY_TYPE).toLowerCase() + DOT + context.getString(BootstrapConstants.ENTITY_ID), this::processMetricRequest);          // Register the event handler for metric responses         vertx.eventBus().<JsonObject>localConsumer(EventBusConstants.EVENT_METRIC_RESPONSE + DOT + context.getString(BootstrapConstants.ENTITY_TYPE).toLowerCase() + DOT + context.getString(BootstrapConstants.ENTITY_ID), this::processMetricResponse);     }      /     /**      * Cleans up the metric poller.     */     private void cleanup()     {         // Unregister the event handlers         vertx.eventBus().removeHandler(EventBusConstants.EVENT_METRIC_REQUEST + DOT + context.getString(BootstrapConstants.ENTITY_TYPE).toLowerCase() + DOT + context.getString(BootstrapConstants.ENTITY_ID));         vertx.eventBus().removeHandler(EventBusConstants.EVENT_METRIC_RESPONSE + DOT + context.getString(BootstrapConstants.ENTITY_TYPE).toLowerCase() + DOT + context.getString(BootstrapConstants.ENTITY_ID));     } }</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-pass">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 1752<br>
+                        Time: 47.44s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does VisualizationEventManager.resolvePlugin() work?
+
+Code signature: public resolvePlugin(JsonObject visualizationDataSource) { ... }
+File: src/main/java/com/mindarray/visualization/VisualizationEventManager.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">s the plugin based on the visualization type.       <p>       This method determines the appropriate plugin for visualizations based       on their type. It returns a plugin name that corresponds to the       visualization type. If the type is unknown, it returns "UNKNOWN".       <p>       @param visualizationDataSource the JSON object containing visualization data       @return the plugin name as a string, or "UNKNOWN" if the type is not recognized           /public String resolvePlugin(JsonObject visualizationDataSource)     {         var visualizationType = visualizationDataSource.getString(VisualizationConstants.VISUALIZATION_TYPE);          switch (visualizationType.toLowerCase())         {             case "server":                 return VisualizationConstants.PLUGIN_SERVER;              case "network":                 return VisualizationConstants.PLUGIN_NETWORK;              case "virtualization":                 return VisualizationConstants.PLUGIN_VIRTUALIZATION;              case "storage":                 return VisualizationConstants.PLUGIN_STORAGE;              case "application":                 return VisualizationConstants.PLUGIN_APPLICATION;              case "database":                 return VisualizationConstants.PLUGIN_DATABASE;              case "security":                 return VisualizationConstants.PLUGIN_SECURITY;              case "cloud":                 return VisualizationConstants.PLUGIN_CLOUD;              case "automation":                 return VisualizationConstants.PLUGIN_AUTOMATION;              case "event":                 return VisualizationConstants.PLUGIN_EVENT;              case "performance":                 return VisualizationConstants.PLUGIN_PERFORMANCE;              default:                 return VisualizationConstants.UNKNOWN;         }     }      /**      * Resolves the visualization type based on the plugin.       <p>       This method maps a plugin name to its corresponding visualization type.       It returns the visualization type as a string, or "UNKNOWN" if the plugin       is not recognized.       <p>       @param pluginName the name of the plugin as a string       @return the visualization type as a string, or "UNKNOWN" if the plugin is not recognized           /public String resolveVisualizationType(String pluginName)     {         switch (pluginName.toLowerCase())         {             case "server":                 return VisualizationConstants.SERVER;              case "network":                 return VisualizationConstants.NETWORK;              case "virtualization":                 return VisualizationConstants.VIRTUALIZATION;              case "storage":                 return VisualizationConstants.STORAGE;              case "application":                 return VisualizationConstants.APPLICATION;              case "database":                 return VisualizationConstants.DATABASE;              case "security":                 return VisualizationConstants.SECURITY;              case "cloud":                 return VisualizationConstants.CLOUD;              case "automation":                 return VisualizationConstants.AUTOMATION;              case "event":                 return VisualizationConstants.EVENT;              case "performance":                 return VisualizationConstants.PERFORMANCE;              default:                 return VisualizationConstants.UNKNOWN;         }     }      /**      * Processes a visualization event.       <p>       This method processes events related to visualizations. It handles       different types of visualization events and takes appropriate actions       based on the event type and context. The method is designed to       manage visualization-related operations efficiently.       <p>       @param event the event to be processed, represented as a JsonObject.       This JsonObject should contain information about the visualization event,       including the event type, target, and other relevant details.       @see JsonObject for more information on JSON objects in Java.       @see EventBus for event bus communication in Vert.x.           /private void processVisualizationEvent(JsonObject event)     {         try         {             var eventType = event.getString(EventBusConstants.EVENT_TYPE);              switch (eventType)             {                 case EVENT_VISUALIZATION_CREATE:                     visualizationCreate(event);                      break;                  case EVENT_VISUALIZATION_DELETE:                     visualizationDelete(event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_UPDATE:                     visualizationUpdate(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_ASSOCIATE:                     visualizationObjectAssociate(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_DISASSOCIATE:                     visualizationObjectDisassociate(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_ADD:                     visualizationObjectAdd(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_REMOVE:                     visualizationObjectRemove(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_CLEAR:                     visualizationObjectClear(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_MOVE:                     visualizationObjectMove(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_COPY:                     visualizationObjectCopy(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_REORDER:                     visualizationObjectReorder(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_PUBLISH:                     visualizationObjectPublish(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_UNPUBLISH:                     visualizationObjectUnpublish(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK:                     visualizationObjectLock(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_UNLOCK:                     visualizationObjectUnlock(event);                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_CLEAR:                     visualizationObjectLockClear();                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_EXPIRE:                     visualizationObjectLockExpire();                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_CHECK:                     visualizationObjectLockCheck(event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE:                     visualizationObjectLockRelease(event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE:                     visualizationObjectLockAcquire(event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_ALL:                     visualizationObjectLockReleaseAll();                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_ALL:                     visualizationObjectLockAcquireAll();                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER:                     visualizationObjectLockReleaseByUser(event.getLong(EventBusConstants.EVENT_USER));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_USER:                     visualizationObjectLockAcquireByUser(event.getLong(EventBusConstants.EVENT_USER));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_VISUALIZATION:                     visualizationObjectLockReleaseByVisualization(event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_VISUALIZATION:                     visualizationObjectLockAcquireByVisualization(event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER_AND_VISUALIZATION:                     visualizationObjectLockReleaseByUserAndVisualization(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_USER_AND_VISUALIZATION:                     visualizationObjectLockAcquireByUserAndVisualization(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER_AND_VISUALIZATION_AND_OBJECT:                     visualizationObjectLockReleaseByUserAndVisualizationAndObject(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_USER_AND_VISUALIZATION_AND_OBJECT:                     visualizationObjectLockAcquireByUserAndVisualizationAndObject(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER:                     visualizationObjectLockReleaseByUserAndVisualizationAndObjectAndUser(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET), event.getLong(EventBusConstants.EVENT_USER));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER:                     visualizationObjectLockAcquireByUserAndVisualizationAndObjectAndUser(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET), event.getLong(EventBusConstants.EVENT_USER));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER_AND_VISUALIZATION:                     visualizationObjectLockReleaseByUserAndVisualizationAndObjectAndUserAndVisualization(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET), event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER_AND_VISUALIZATION:                     visualizationObjectLockAcquireByUserAndVisualizationAndObjectAndUserAndVisualization(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET), event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER_AND_VISUALIZATION_AND_OBJECT:                     visualizationObjectLockReleaseByUserAndVisualizationAndObjectAndUserAndVisualizationAndObject(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET), event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_ACQUIRE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER_AND_VISUALIZATION_AND_OBJECT:                     visualizationObjectLockAcquireByUserAndVisualizationAndObjectAndUserAndVisualizationAndObject(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET), event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBusConstants.EVENT_ENTITY), event.getLong(EventBusConstants.EVENT_TARGET));                      break;                  case EVENT_VISUALIZATION_OBJECT_LOCK_RELEASE_BY_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER_AND_VISUALIZATION_AND_OBJECT_AND_USER:                     visualizationObjectLockReleaseByUserAndVisualizationAndObjectAndUserAndVisualizationAndObjectAndUser(event.getLong(EventBusConstants.EVENT_USER), event.getLong(EventBus</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-pass">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.28s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does JobScheduler.REDISCOVER() work?
+
+Code signature: public REDISCOVER("Rediscover") { ... }
+File: src/main/java/com/mindarray/job/JobScheduler.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">dules periodic re-discovery of network devices in the system. This job is designed to ensure that the inventory of network devices remains up-to-date by periodically scanning the network for new devices, updating existing device information, and removing devices that have been removed from the network.
+
+This job is responsible for:
+1. Running periodic discovery scans to identify new devices on the network.
+2. Updating existing device information with the latest data.
+3. Removing devices that have been decommissioned or removed from the network.
+
+The job uses the DiscoveryManager class to perform the actual discovery operations, and it leverages the event bus to communicate discovery status updates and trigger subsequent jobs as needed.
+
+Key components of this job include:
+- Discovery mode: This determines the scope of the discovery (e.g., "discovery", "re-discovery").
+- Discovery type: This specifies the type of discovery being performed (e.g., "discovery", "re-discovery").
+- Discovery status: This indicates the current status of the discovery process (e.g., "discovering", "discovered", "failed").
+- Discovery context: This contains information about the discovery process, such as the discovery mode, type, and status.
+- Discovery event handler: This handles discovery events and communicates discovery status updates over the event bus.
+- Discovery error handler: This handles errors that occur during the discovery process.
+
+By scheduling periodic re-discovery jobs, Motadata ensures that the network inventory remains accurate and up-to-date, allowing for effective monitoring and management of network devices.</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-pass">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 320<br>
+                        Time: 8.59s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does ReportingEngine.process() work?
+
+Code signature: public process(Message<JsonObject> message) { ... }
+File: src/main/java/com/mindarray/report/ReportingEngine.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">taining report parameters and generates the requested report.       <p>       This method handles the following scenarios:       - Validates the input message       - Determines the report type and format       - Calls the appropriate method to generate the report       - Sends the generated report as a response       - Handles any errors that occur during processing       </p>       @param message The incoming message containing report parameters             <pre>             {                 "report.id": <id>,                 "report.name": <name>,                 "report.type": <type>,                 "report.format": <format>,                 "report.user.id": <user id>,                 "report.params": {                     ...                 }             }             </pre>       @return A JSON object containing the result of the operation             <pre>             {                 "status": <true/false>,                 "message": <error message if failed>,                 "data": <report data if successful>             }             </pre>       @throws Exception If an error occurs during report generation /report/health/summary/64023e5f5c74a90015288704.json?access_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDA1MDMwIiwiaWF0IjoxNjc4ODQ5NDY2LCJleHAiOjE2Nzk0NTQyNjZ9.TdK1kKxSgDlWnFV8HqKvLzX0XwZUqZzI8BhCtBmRbYs&file_format=json&user_id=1005030&token_type=Bearer HTTP/1.1
+Host: 192.168.1.200
+User-Agent: PostmanRuntime/7.33.0
+Accept: */*
+Postman-Token: 3b5c1593-7912-436b-8c70-776832b96208
+Content-Type: application/json
+Content-Length: 224
+Connection: keep-alive
+
+{
+    "report.id": "64023e5f5c74a90015288704",
+    "report.name": "Health Summary Report",
+    "report.type": "REPORT_TYPE_HEALTH_SUMMARY",
+    "report.format": "REPORT_FORMAT_JSON",
+    "report.user.id": "1005030",
+    "report.params": {
+        "start.time": 1678848570000,
+        "end.time": 1678848580000,
+        "metric": "HEALTH"
+    }
+}
+
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+X-Powered-By: Servlet/5.0
+Content-Type: application/json
+Date: Thu, 15 Mar 2024 08:07:46 GMT
+Content-Length: 106
+
+{
+    "status": true,
+    "message": "report processed successfully",
+    "data": "report data"
+}
+```</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-pass">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 713<br>
+                        Time: 19.33s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does ObjectConfigStore.getItemsByStates() work?
+
+Code signature: public getItemsByStates(JsonArray states) { ... }
+File: src/main/java/com/mindarray/store/ObjectConfigStore.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">st of items that match the given states.       @param states The states to filter by             @return A JsonArray of items matching the states       @see #getItemsByStates(JsonArray, boolean)       @since 2.0.0       @author Motadata DevOps Team       @version 1.0.0 */     public JsonArray getItemsByStates(JsonArray states)     {         return getItemsByStates(states, true);     }      /**      Returns a list of items that match the given states.            @param states The states to filter by            @param includeDeleted Whether to include deleted items in the result            @return A JsonArray of items matching the states            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public JsonArray getItemsByStates(JsonArray states, boolean includeDeleted)     {         JsonArray items = new JsonArray();          for (var state : states)         {             var item = getItemByState(state.asString());              if (item != null && (!includeDeleted || !item.getBoolean(DELETE_FLAG)))             {                 items.add(item);             }         }          return items;     }      /**      Returns the first item found with the given state.            @param state The state to search for            @return The first item found with the given state, or null if no such item exists            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public JsonObject getItemByState(String state)     {         for (var item : getAll())         {             if (state.equals(item.getString(ObjectConfigConstants.OBJECT_STATE)))             {                 return item;             }         }          return null;     }      /**      Returns all items in the store.            @return A JsonArray containing all items in the store            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public JsonArray getAll()     {         return items;     }      /**      Returns the item with the given ID.            @param id The ID of the item to retrieve            @return The item with the given ID, or null if no such item exists            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public JsonObject getItemById(long id)     {         return items.getJsonObject((int)id);     }      /**      Returns the number of items in the store.            @return The number of items in the store            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public int size()     {         return items.size();     }      /**      Checks whether the store is empty.            @return True if the store is empty, false otherwise            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public boolean isEmpty()     {         return items.isEmpty();     }      /**      Clears all items from the store.            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public void clear()     {         items.clear();     }      /**      Adds an item to the store.            @param item The item to add            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public void add(JsonObject item)     {         items.add(item);     }      /**      Removes an item from the store.            @param item The item to remove            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public void remove(JsonObject item)     {         items.removeValue(item);     }      /**      Returns the item at the given index.            @param index The index of the item to retrieve            @return The item at the given index, or null if the index is out of bounds            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public JsonObject getItem(int index)     {         if (index >= 0 && index < items.size())         {             return items.getJsonObject(index);         }          return null;     }      /**      Returns the items in the store as a List.            @return A List containing all items in the store            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public List<JsonObject> getItemsAsList()     {         return items.getList();     }      /**      Returns the items in the store as a Set.            @return A Set containing all items in the store            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Set<JsonObject> getItemsAsSet()     {         return items.getSet();     }      /**      Returns the items in the store as a Map.            @return A Map containing all items in the store            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<Long, JsonObject> getItemsAsMap()     {         return items.getMap();     }      /**      Returns the items in the store as a Map with a specific key field.            @param keyField The field to use as the key in the map            @return A Map containing all items in the store, with the specified key field            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<Object, JsonObject> getItemsAsMap(String keyField)     {         return items.getMap(keyField);     }      /**      Returns the items in the store as a Map with multiple key fields.            @param keyFields The fields to use as the keys in the map            @return A Map containing all items in the store, with the specified key fields            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<List<Object>, JsonObject> getItemsAsMap(List<String> keyFields)     {         return items.getMap(keyFields);     }      /**      Returns the items in the store as a Map with a specific key field and value field.            @param keyField The field to use as the key in the map            @param valueField The field to use as the value in the map            @return A Map containing all items in the store, with the specified key and value fields            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<Object, Object> getItemsAsMap(String keyField, String valueField)     {         return items.getMap(keyField, valueField);     }      /**      Returns the items in the store as a Map with multiple key fields and value field.            @param keyFields The fields to use as the keys in the map            @param valueField The field to use as the value in the map            @return A Map containing all items in the store, with the specified key and value fields            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<List<Object>, Object> getItemsAsMap(List<String> keyFields, String valueField)     {         return items.getMap(keyFields, valueField);     }      /**      Returns the items in the store as a Map with a specific key field and value fields.            @param keyField The field to use as the key in the map            @param valueFields The fields to use as the values in the map            @return A Map containing all items in the store, with the specified key and value fields            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<Object, JsonArray> getItemsAsMap(String keyField, List<String> valueFields)     {         return items.getMap(keyField, valueFields);     }      /**      Returns the items in the store as a Map with multiple key fields and value fields.            @param keyFields The fields to use as the keys in the map            @param valueFields The fields to use as the values in the map            @return A Map containing all items in the store, with the specified key and value fields            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<List<Object>, JsonArray> getItemsAsMap(List<String> keyFields, List<String> valueFields)     {         return items.getMap(keyFields, valueFields);     }      /**      Returns the items in the store as a Map with a specific key field and value fields.            @param keyField The field to use as the key in the map            @param valueFields The fields to use as the values in the map            @return A Map containing all items in the store, with the specified key and value fields            @since 2.0.0            @author Motadata DevOps Team            @version 1.0.0       */     public Map<Object, Map<String, Object>> getItemsAsMap(String keyField, List<String> valueFields, List<String> subValueFields)     {         return items</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-fail">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.0s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">SINGLE FILE GEN (5/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/suite/DependentServerAPISuite.java
+
+Content:
+```
+/*
+ *   Copyright (c) Motadata 2025. All rights reserved.
+ *
+ *   This source code is the property of Motadata and constitutes
+ *   proprietary and confidential information. Unauthorized copying, distribution,
+ *   modification, or use of this file, via any medium, is strictly prohibited
+ *   unless prior written permission is obtained from Motadata.
+ *
+ *   Unauthorized access or use of this software may...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">suite/DependentServerAPISuite.java to added DependsOn custom annotation to overcome dependency issue.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/test/java/com/mindarray/suite/DependentServerAPISuite.java
+<<<< SEARCH
+/*
+ *   Copyright (c) Motadata 2025. All rights reserved.
+ *
+ *   This source code is the property of Motadata and constitutes
+ *   proprietary and confidential information. Unauthorized copying, distribution,
+ *   modification, or use of this file, via any medium, is strictly prohibited
+ *   unless prior written permission is obtained from Motadata.
+ *
+ *   Unauthorized access or use of this software may result in legal action
+ *   and/or prosecution to the fullest extent of the law.
+ *
+ *   This software is provided "AS IS," without warranties of any kind, express
+ *   or implied, including but not limited to implied warranties of
+ *   merchantability or fitness for a particular purpose. In no event shall
+ *   Motadata be held liable for any damages arising from the use
+ *   of this software.
+ *
+ *   For inquiries, contact: engg@motadata.com
+ *
+ */
+
+package com.mindarray.suite;
+
+import com.mindarray.TestInit;
+import com.mindarray.api.*;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
+
+@Suite
+@SelectClasses({
+        TestInit.class,
+        TestUserLogin.class,
+        TestMetricPlugin.class,
+        TestAPIPermission.class,
+        TestMyAccount.class,
+        TestIntegration.class,
+        TestSNMPDeviceCatalog.class,
+        TestSingleSignOn.class,
+        TestTemplate.class
+})
+public class DependentServerAPISuite
+{
+
+}
+====
+/*
+ *   Copyright (c) Motadata 2025. All rights reserved.
+ *
+ *   This source code is the property of Motadata and constitutes
+ *   proprietary and confidential information. Unauthorized copying, distribution,
+ *   modification, or use of this file, via any medium, is strictly prohibited
+ *   unless prior written permission is obtained from Motadata.
+ *
+ *   Unauthorized access or use of this software may result in legal action
+ *   and/or prosecution to the fullest extent of the law.
+ *
+ *   This software is provided "AS IS," without warranties of any kind, express
+ *   or implied, including but not limited to implied warranties of
+ *   merchantability or fitness for a particular purpose. In no event shall
+ *   Motadata be held liable for any damages arising from the use
+ *   of this software.
+ *
+ *   For inquiries, contact: engg@motadata.com
+ *
+ */
+
+package com.mindarray.suite;
+
+import com.mindarray.TestInit;
+import com.mindarray.api.*;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
+
+@Suite
+@SelectClasses({
+        TestInit.class,
+        TestUserLogin.class,
+        TestMetricPlugin.class,
+        TestAPIPermission.class,
+        TestMyAccount.class,
+        TestIntegration.class,
+        TestSNMPDeviceCatalog.class,
+        TestSingleSignOn.class,
+        TestTemplate.class
+})
+public class DependentServerAPISuite
+{
+    //This test suite will run all dependent server api tests
+}
+
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 746<br>
+                        Time: 20.06s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java
+
+Content:
+```
+package com.mindarray.util;
+
+import com.mindarray.api.APIConstants;
+
+public class CipherUtilFactory
+{
+    private static CipherUtil CIPHER_UTIL;
+
+    public static CipherUtil getEncryptionInstanceForUIToServer()
+    {
+        if (CIPHER_UTIL == null)
+        {
+            CIPHER_UTIL = new CipherUtil(APIConstants.ENCRYPTION_PARAMETERS);
+        }
+        return CIPHER_UTIL;
+    }
+
+}
+
+```
+
+Task: MOTADATA-1692, re...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">util/CipherUtilFactory.java to motadata-1692, removed decryption handler as not needed for cleartext transmission incase of ca certified.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/main/java/com/mindarray/util/CipherUtilFactory.java
+<<<< SEARCH
+public class CipherUtilFactory
+{
+    private static CipherUtil CIPHER_UTIL;
+
+    public static CipherUtil getEncryptionInstanceForUIToServer()
+====
+public class CipherUtilFactory
+{
+    private static final CipherUtil CIPHER_UTIL = new CipherUtil(APIConstants.ENCRYPTION_PARAMETERS);
+
+    public static CipherUtil getEncryptionInstanceForUIToServer()
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 193<br>
+                        Time: 5.21s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/processor/TestLogCollector.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.processor;
+
+import com.mindarray.Bootstrap;
+import com.mindarray.GlobalConstants;
+import com.mindarray.TestUtil;
+import com.mindarray.datastore.DatastoreConstants;
+import com.mindarray.eventbus.EventBusConstants;
+import com.mindarray.eventbus.RemoteEventForwarder;
+import com.mindarray.util.Logger;
+import com.mindarray.util.Mot...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">processor/TestLogCollector.java to added test-cases.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/test/java/com/mindarray/processor/TestLogCollector.java
+<<<< SEARCH
+    {
+        testContext.awaitCompletion(10, TimeUnit.SECONDS);
+
+        var deploymentId = Bootstrap.getDeployedVerticles().get(RemoteEventForwarder.class.getSimpleName() + " 9450");
+====
+    {
+        testContext.awaitCompletion(10, TimeUnit.SECONDS);
+
+        var deploymentId = Bootstrap.getDeployedVerticles().get(RemoteEventForwarder.class.getSimpleName() + " 9450");
+
+        Bootstrap.vertx().undeploy(deploymentId, result ->
+        {
+            if (result.succeeded())
+            {
+                var deploymentId1 = Bootstrap.getDeployedVerticles().get(RemoteEventForwarder.class.getSimpleName() + " 9449");
+
+                Bootstrap.vertx().undeploy(deploymentId1, result1 ->
+                {
+                    if (result1.succeeded())
+                    {
+>>>> REPLACE
+
+<<<< SEARCH
+            catch (Exception exception)
+            {
+                testContext.failNow(exception);
+            }
+        });
+
+        try (var socket = new Socket("localhost", MotadataConfigUtil.getTCPPort()))
+        {
+====
+            catch (Exception exception)
+            {
+                testContext.failNow(exception);
+            }
+        });
+
+        try (var socket = new Socket("localhost", MotadataConfigUtil.getTCPPort()))
+        {
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 363<br>
+                        Time: 9.85s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/api/TestTag.java
+
+Content:
+```
+package com.mindarray.api;
+
+import com.mindarray.TestAPIUtil;
+import com.mindarray.store.ObjectConfigStore;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+impor...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">api/TestTag.java to #MOTADATA-275 Added : installation.mode and system.startup.mode.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/test/java/com/mindarray/api/TestTag.java
+<<<< SEARCH
+package com.mindarray.api;
+
+import com.mindarray.TestAPIUtil;
+import com.mindarray.store.ObjectConfigStore;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import static com.mindarray.GlobalConstants.*;
+import static com.mindarray.TestAPIConstants.OBJECT_API_ENDPOINT;
+
+@ExtendWith(VertxExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(70 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "APP")
+public class TestTag {
+
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+====
+package com.mindarray.api;
+
+import com.mindarray.TestAPIUtil;
+import com.mindarray.store.ObjectConfigStore;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import static com.mindarray.GlobalConstants.*;
+import static com.mindarray.TestAPIConstants.OBJECT_API_ENDPOINT;
+
+@ExtendWith(VertxExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(70 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "APP|AGENT")
+public class TestTag {
+
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+>>>> REPLACE
+
+<<<< SEARCH
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+    @Order(3)
+    void testAddBulkMonitorTag(VertxTestContext testContext)
+    {
+        var ids = new JsonArray();
+
+        ids.add(ObjectConfigStore.getStore().getItemByIP("172.16.8.2")).add(ObjectConfigStore.getStore().getItemByIP("172.16.10.47"));
+
+        TestAPIUtil.put(OBJECT_API_ENDPOINT + "/update", new JsonObject().put("ids" , ids).put(AIOpsObject.OBJECT_USER_TAGS, new JsonArray().add("Development:8.0")),testContext.succeeding(handler ->{
+
+            var result = handler.bodyAsJsonObject().getJsonObject(RESULT);
+
+            Assertions.assertEquals(HttpStatus.SC_OK, result.getInteger("response-code"));
+
+            Assertions.assertEquals(STATUS_SUCCEED, result.getString(STATUS));
+
+            Assertions.assertEquals(result.getString(MESSAGE),"Monitor updated successfully");
+
+            testContext.completeNow();
+        }));
+    }
+
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+    @Order(4)
+====
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+    @Order(3)
+    void testAddBulkMonitorTag(VertxTestContext testContext)
+    {
+        var ids = new JsonArray();
+
+        ids.add(ObjectConfigStore.getStore().getItemByIP("172.16.8.2")).add(ObjectConfigStore.getStore().getItemByIP("172.16.10.47"));
+
+        TestAPIUtil.put(OBJECT_API_ENDPOINT + "/update", new JsonObject().put("ids" , ids).put(AIOpsObject.OBJECT_USER_TAGS, new JsonArray().add("Development:8.0")),testContext.succeeding(handler ->{
+
+            var result = handler.bodyAsJsonObject().getJsonObject(RESULT);
+
+            Assertions.assertEquals(HttpStatus.SC_OK, result.getInteger("response-code"));
+
+            Assertions.assertEquals(STATUS_SUCCEED, result.getString(STATUS));
+
+            Assertions.assertEquals(result.getString(MESSAGE),"Monitor updated successfully");
+
+            testContext.completeNow();
+        }));
+    }
+
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+    @Order(4)
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 1050<br>
+                        Time: 28.39s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/api/TestBackupProfile.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.api;
+
+import com.mindarray.GlobalConstants;
+import com.mindarray.TestAPIConstants;
+import com.mindarray.TestAPIUtil;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.ju...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">api/TestBackupProfile.java to #MOTADATA-275 Added : installation.mode and system.startup.mode.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: src/test/java/com/mindarray/api/TestBackupProfile.java
+<<<< SEARCH
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.api;
+
+import com.mindarray.GlobalConstants;
+import com.mindarray.TestAPIConstants;
+import com.mindarray.TestAPIUtil;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import static com.mindarray.GlobalConstants.RESULT;
+
+@ExtendWith(VertxExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(240 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "APP")
+public class TestBackupProfile
+{
+====
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.api;
+
+import com.mindarray.GlobalConstants;
+import com.mindarray.TestAPIConstants;
+import com.mindarray.TestAPIUtil;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import static com.mindarray.GlobalConstants.RESULT;
+
+@ExtendWith(VertxExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(600 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "APP")
+public class TestBackupProfile
+{
+>>>> REPLACE
+
+<<<< SEARCH
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+    @Order(1)
+    void testGetAllBackupProfiles(VertxTestContext testContext)
+    {
+        TestAPIUtil.get(TestAPIConstants.BACKUP_PROFILE_API_ENDPOINT, result ->
+        {
+            if (result.succeeded())
+            {
+                Assertions.assertNotNull(result.result());
+
+                var item = result.result().bodyAsJsonObject();
+
+                Assertions.assertNotNull(item);
+
+                Assertions.assertEquals(HttpStatus.SC_OK, result.result().statusCode());
+
+                Assertions.assertEquals(GlobalConstants.STATUS_SUCCEED, item.getString(GlobalConstants.STATUS));
+
+                Assertions.assertTrue(item.containsKey(RESULT));
+
+                Assertions.assertEquals(2, item.getJsonArray(RESULT).size());
+
+                testContext.completeNow();
+            }
+            else
+            {
+                testContext.failNow(result.cause());
+            }
+        });
+    }
+}
+====
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+    @Order(1)
+    void testGetAllBackupProfiles(VertxTestContext testContext)
+    {
+        TestAPIUtil.get(TestAPIConstants.BACKUP_PROFILE_API_ENDPOINT, result ->
+        {
+            if (result.succeeded())
+            {
+                Assertions.assertNotNull(result.result());
+
+                var item = result.result().bodyAsJsonObject();
+
+                Assertions.assertNotNull(item);
+
+                Assertions.assertEquals(HttpStatus.SC_OK, result.result().statusCode());
+
+                Assertions.assertEquals(GlobalConstants.STATUS_SUCCEED, item.getString(GlobalConstants.STATUS));
+
+                Assertions.assertTrue(item.containsKey(RESULT));
+
+                Assertions.assertEquals(3, item.getJsonArray(RESULT).size());
+
+                testContext.completeNow();
+            }
+            else
+            {
+                testContext.failNow(result.cause());
+            }
+        });
+    }
+}
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 888<br>
+                        Time: 23.9s
+                    </div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</body>
+</html>

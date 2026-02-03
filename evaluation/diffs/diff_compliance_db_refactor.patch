@@ -1,0 +1,106 @@
+commit fc01bcc7e9efd87ad2c0fa77ac30932434b32196
+Author: Alpesh Dhamelia <alpesh@motadata.com>
+Date:   Thu Jun 12 15:33:49 2025 +0530
+
+    Refactor: Rename package from `compliance` to `db`, update imports, and standardize variable naming for improved structure and readability.
+    
+    Code Review !!!
+    
+    PR : 4610
+    
+    AIOPS-8.0.23 || MOTADATA-6353 || As a system user, I should be able to verify the migration from H2 In-Memory DB to PostgreSQL DB for existing deployments.
+    
+    Reviewed-by: Alpesh Dhamelia <alpesh@motadata.com>
+
+diff --git a/motadata/src/main/java/com/mindarray/Bootstrap.java b/motadata/src/main/java/com/mindarray/Bootstrap.java
+index ea4a4a4045..748a2a6494 100644
+--- a/motadata/src/main/java/com/mindarray/Bootstrap.java
++++ b/motadata/src/main/java/com/mindarray/Bootstrap.java
+@@ -39,13 +39,13 @@ import com.mindarray.cache.AvailabilityCacheService;
+ import com.mindarray.cache.CacheService;
+ import com.mindarray.cache.ConfigCacheService;
+ import com.mindarray.cache.PolicyCacheService;
+-import com.mindarray.compliance.ComplianceDBService;
+ import com.mindarray.compliance.ComplianceManager;
+ import com.mindarray.compliance.ComplianceRuleEngine;
+ import com.mindarray.config.ConfigConstants;
+ import com.mindarray.config.ConfigManager;
+ import com.mindarray.config.ConfigResponseProcessor;
+ import com.mindarray.config.ConfigUpgradeManager;
++import com.mindarray.db.ComplianceDBService;
+ import com.mindarray.db.ConfigDBConstants;
+ import com.mindarray.db.ConfigDBService;
+ import com.mindarray.eventbus.EventBusConstants;
+diff --git a/motadata/src/main/java/com/mindarray/compliance/ComplianceDBService.java b/motadata/src/main/java/com/mindarray/db/ComplianceDBService.java
+similarity index 98%
+rename from motadata/src/main/java/com/mindarray/compliance/ComplianceDBService.java
+rename to motadata/src/main/java/com/mindarray/db/ComplianceDBService.java
+index 816c02d8ef..abb097b9d0 100644
+--- a/motadata/src/main/java/com/mindarray/compliance/ComplianceDBService.java
++++ b/motadata/src/main/java/com/mindarray/db/ComplianceDBService.java
+@@ -19,7 +19,7 @@
+  *
+  */
+ 
+-package com.mindarray.compliance;
++package com.mindarray.db;
+ 
+ import com.mindarray.util.MotadataConfigUtil;
+ import io.vertx.codegen.annotations.Fluent;
+diff --git a/motadata/src/main/java/com/mindarray/compliance/ComplianceDBServiceImpl.java b/motadata/src/main/java/com/mindarray/db/ComplianceDBServiceImpl.java
+similarity index 99%
+rename from motadata/src/main/java/com/mindarray/compliance/ComplianceDBServiceImpl.java
+rename to motadata/src/main/java/com/mindarray/db/ComplianceDBServiceImpl.java
+index 8aede4bfa5..772354476f 100644
+--- a/motadata/src/main/java/com/mindarray/compliance/ComplianceDBServiceImpl.java
++++ b/motadata/src/main/java/com/mindarray/db/ComplianceDBServiceImpl.java
+@@ -19,9 +19,10 @@
+  *
+  */
+ 
+-package com.mindarray.compliance;
++package com.mindarray.db;
+ 
+ import com.mindarray.GlobalConstants;
++import com.mindarray.compliance.ComplianceConstants;
+ import com.mindarray.ha.HAConstants;
+ import com.mindarray.util.CommonUtil;
+ import com.mindarray.util.Logger;
+diff --git a/motadata/src/main/java/com/mindarray/db/DBServiceProvider.java b/motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
+index 9522d773b4..b50a8ec73e 100755
+--- a/motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
++++ b/motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
+@@ -22,7 +22,6 @@
+ package com.mindarray.db;
+ 
+ import com.mindarray.GlobalConstants;
+-import com.mindarray.compliance.ComplianceDBService;
+ import com.mindarray.eventbus.EventBusConstants;
+ import com.mindarray.util.Logger;
+ import com.mindarray.util.MotadataConfigUtil;
+@@ -83,21 +82,21 @@ public class DBServiceProvider extends AbstractVerticle
+         {
+             if (asyncResult.succeeded())
+             {
+-                var startPromise = Promise.<Void>promise();
++                var asyncPromise = Promise.<Void>promise();
+ 
+                 // Clear the config database if running in development/test mode
+                 if (MotadataConfigUtil.devMode())
+                 {
+                     pool.query("DROP SCHEMA public CASCADE;").execute()
+                             .compose(future -> pool.query("CREATE SCHEMA public;").execute())
+-                            .onComplete(result -> startPromise.complete());
++                            .onComplete(result -> asyncPromise.complete());
+                 }
+                 else
+                 {
+-                    startPromise.complete();
++                    asyncPromise.complete();
+                 }
+ 
+-                startPromise.future().onComplete(voidResult->
++                asyncPromise.future().onComplete(asyncResponse ->
+                 {
+                     var futures = new ArrayList<Future<Void>>();
+ 

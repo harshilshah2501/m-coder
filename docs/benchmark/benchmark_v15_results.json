@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-12-31T10:43:02.819894",
+  "model": "v15",
+  "results": [
+    {
+      "task": "Reasoning Task 1: Algorithm Analysis",
+      "time": 0.6683900356292725,
+      "input_tokens": 49,
+      "output_tokens": 9,
+      "response_length": 262,
+      "tokens_per_second": 13.465191759668777
+    },
+    {
+      "task": "Coding Task 1: Function Implementation",
+      "time": 2.8680167198181152,
+      "input_tokens": 24,
+      "output_tokens": 165,
+      "response_length": 800,
+      "tokens_per_second": 57.53104535961841
+    },
+    {
+      "task": "Coding Task 2: Error Handling",
+      "time": 3.152163505554199,
+      "input_tokens": 19,
+      "output_tokens": 181,
+      "response_length": 862,
+      "tokens_per_second": 57.4208792409001
+    },
+    {
+      "task": "Multi-File Task: API Design",
+      "time": 2.8090922832489014,
+      "input_tokens": 39,
+      "output_tokens": 161,
+      "response_length": 920,
+      "tokens_per_second": 57.313887820656724
+    },
+    {
+      "task": "Code Review Task",
+      "time": 2.872227191925049,
+      "input_tokens": 35,
+      "output_tokens": 165,
+      "response_length": 978,
+      "tokens_per_second": 57.44670911266329
+    }
+  ],
+  "summary": {
+    "total_tasks": 5,
+    "successful_tasks": 5,
+    "total_time": 12.369889736175537,
+    "total_output_tokens": 681,
+    "avg_tokens_per_sec": 55.05303721571801
+  }
+}

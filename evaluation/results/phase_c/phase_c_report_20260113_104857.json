@@ -1,0 +1,574 @@
+{
+  "phase": "C - CPT Completion Probe",
+  "timestamp": "20260113_104857",
+  "models": {
+    "base": "Qwen/Qwen2.5-Coder-14B",
+    "cpt": "./models/motadata-cpt-checkpoint"
+  },
+  "generation_settings": {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "max_new_tokens": 200,
+    "do_sample": false
+  },
+  "summary": {
+    "total_probes": 10,
+    "wins": {
+      "base": 3,
+      "cpt": 6,
+      "tie": 1
+    },
+    "cpt_win_rate": 60.0,
+    "avg_domain_scores": {
+      "base": 0.4,
+      "cpt": 0.9
+    },
+    "motadata_token_count": {
+      "base": 4,
+      "cpt": 11
+    },
+    "hallucination_count": {
+      "base": 0,
+      "cpt": 1
+    }
+  },
+  "verdict": "\u26a0\ufe0f  PHASE-C MARGINAL",
+  "verdict_details": "CPT shows improvement but not decisive",
+  "passed": false,
+  "probe_results": [
+    {
+      "probe_id": "probe_01",
+      "category": "Class/Method",
+      "name": "EventRouter.route",
+      "prompt": "public class EventRouter {\n\n    private final EventBus eventBus;\n\n    public EventRouter(EventBus eventBus) {\n        this.eventBus = eventBus;\n    }\n\n    public void route(Event event) {\n        // COMPLETE\n",
+      "base": {
+        "completion": "// 1. Get the event type from the event\n        // 2. Get the event handler from the event bus\n        // 3. If the event handler is not null, call the handle method on the event handler\n        // 4. If the event handler is null, throw a RuntimeException with the message \"No handler for event type: \" + eventType\n        // 5. If the event handler is not null, call the handle method on the event handler\n        // 6. If the event handler is null, throw a RuntimeException with the message \"No handler for event type: \" + eventType\n        // 7. If the event handler is not null, call the handle method on the event handler",
+        "score": {
+          "domain_fit": 0,
+          "structure": 1,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": false,
+              "has_method_call": false,
+              "reasonable_length": true
+            },
+            "length": 626,
+            "has_hallucination": false
+          },
+          "total": 1
+        }
+      },
+      "cpt": {
+        "completion": "// 1. Determine the event type (e.g., \"metric\", \"log\", \"trace\", \"policy\")\n        // 2. Based on the event type, publish to the appropriate event bus topic\n        // 3. For policy events, also publish to the policy engine topic\n        // 4. Handle any special routing requirements (e.g., high priority events)\n    }\n}\n```\n\n### 4. **Event Processor**\n\n- **Purpose**: Processes events based on their type and content.\n- **Responsibilities**:\n  - Deserializes event data.\n  - Validates event content.\n  - Routes events to appropriate handlers.\n  - Handles event-specific logic (e.g., aggregation, filtering).\n\n```java",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 616,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "winner": "CPT"
+    },
+    {
+      "probe_id": "probe_02",
+      "category": "Class/Method",
+      "name": "AbstractAPI Extension",
+      "prompt": "public class DiscoveryAPI extends AbstractAPI {\n    \n    @Override\n    public void initialize() {\n        // COMPLETE\n",
+      "base": {
+        "completion": "}\n    \n    @Override\n    public void start() {\n        // COMPLETE\n    }\n    \n    @Override\n    public void stop() {\n        // COMPLETE\n    }\n    \n    @Override\n    public void destroy() {\n        // COMPLETE\n    }\n    \n    @Override\n    public void handleRequest(Request request) {\n        // COMPLETE\n    }\n    \n    @Override\n    public void handleResponse(Response response) {\n        // COMPLETE\n    }\n    \n    @Override\n    public void handleError(Error error) {\n        // COMPLETE\n    }\n    \n    @Override\n    public void handleEvent(Event event) {\n        // COMPLETE\n    }\n    \n    @Override\n    public void handleNotification(Notification notification) {\n        // COMPLETE",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 685,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "cpt": {
+        "completion": "}\n    \n    @Override\n    public void get(Request request) {\n        try {\n            if (request.parameters.containsKey(REQUEST_TYPE)) {\n                if (REQUEST_TYPE_TOGETHER.equalsIgnoreCase(request.parameters.get(REQUEST_TYPE))) {\n                    var items = new JsonArray();\n                    \n                    var objectItems = ObjectConfigStore.getStore().getItemsByUserProfile(request.user.getLong(ID));\n                    \n                    var pluginItems = PluginEngineCacheStore.getStore().getItemsByUserProfile(request.user.getLong(ID));\n                    \n                    for (var index = 0; index < objectItems.size(); index++) {\n                        var item = objectItems.getJsonObject(index);\n                        \n                        if (pluginItems.contains(item.getString(AIOpsObject.OBJECT_PLUGIN))) {\n                            items.add(item);",
+        "score": {
+          "domain_fit": 1,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "ConfigStore"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 899,
+            "has_hallucination": false
+          },
+          "total": 3
+        }
+      },
+      "winner": "CPT"
+    },
+    {
+      "probe_id": "probe_03",
+      "category": "Class/Method",
+      "name": "ConfigStore Getter",
+      "prompt": "public class ServiceConfig extends AbstractConfigStore {\n    \n    public String getServiceUrl() {\n        // COMPLETE\n",
+      "base": {
+        "completion": "return null;\n    }\n    \n    public String getServiceName() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceVersion() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceDescription() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceContact() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceContactEmail() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceContactPhone() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceContactAddress() {\n        // COMPLETE\n        return null;\n    }\n    \n    public String getServiceContactCity() {\n        // COMPLETE\n        return",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 764,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "cpt": {
+        "completion": "}\n    \n    public int getServicePort() {\n        // COMPLETE\n    }\n    \n    public String getServiceProtocol() {\n        // COMPLETE\n    }\n    \n    public String getServiceType() {\n        // COMPLETE\n    }\n    \n    public String getServiceVersion() {\n        // COMPLETE\n    }\n    \n    public String getServiceEnvironment() {\n        // COMPLETE\n    }\n    \n    public String getServiceStatus() {\n        // COMPLETE\n    }\n    \n    public String getServiceHealth() {\n        // COMPLETE\n    }\n    \n    public String getServiceDeploymentType() {\n        // COMPLETE\n    }\n    \n    public String getServiceDeploymentLocation() {\n        // COMPLETE\n    }\n    \n    public String getServiceDeploymentMethod() {\n        // COMPLETE\n    }\n    \n    public String getService",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": -2,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [
+              "Environment"
+            ],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 766,
+            "has_hallucination": true
+          },
+          "total": 0
+        }
+      },
+      "winner": "BASE"
+    },
+    {
+      "probe_id": "probe_04",
+      "category": "Registration/Wiring",
+      "name": "Bootstrap Startup",
+      "prompt": "public class BootstrapSecondary {\n    \n    public void start() {\n        // COMPLETE\n",
+      "base": {
+        "completion": "// Create a new instance of the Secondary class\n        // Call the start method on the Secondary class\n        // You can use the following code to create a new instance of the Secondary class:\n        // Secondary secondary = new Secondary();\n        // You can use the following code to call the start method on the Secondary class:\n        // secondary.start();\n        // You can use the following code to create a new instance of the Secondary class and call the start method on it:\n        // new Secondary().start();\n        // You can use the following code to create a new instance of the Secondary class and call the start method on it:\n        // new Secondary().start();\n        // You can use the following code to create a new instance of the",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": false,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 757,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "cpt": {
+        "completion": "}\n}<|fim_middle|>\n        \"application.mapper.protocol\": \"TCP\",",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 1,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": true,
+              "has_method_call": false,
+              "reasonable_length": true
+            },
+            "length": 63,
+            "has_hallucination": false
+          },
+          "total": 3
+        }
+      },
+      "winner": "CPT"
+    },
+    {
+      "probe_id": "probe_05",
+      "category": "Registration/Wiring",
+      "name": "APIRouter Registration",
+      "prompt": "public void registerAPIs(APIRouter router) {\n    // COMPLETE\n",
+      "base": {
+        "completion": "router.registerAPI(\"GET\", \"/api/teams\", (request, response) -> {\n        return new JSONObject().put(\"teams\", Team.getTeams());\n    });\n    router.registerAPI(\"GET\", \"/api/teams/:id\", (request, response) -> {\n        return Team.getTeam(request.params(\":id\"));\n    });\n    router.registerAPI(\"POST\", \"/api/teams\", (request, response) -> {\n        return Team.createTeam(request.body());\n    });\n    router.registerAPI(\"PUT\", \"/api/teams/:id\", (request, response) -> {\n        return Team.updateTeam(request.params(\":id\"), request.body());\n    });\n    router.registerAPI(\"DELETE\", \"/api/teams/:id\", (request, response",
+        "score": {
+          "domain_fit": 2,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "router.register",
+              "API"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 616,
+            "has_hallucination": false
+          },
+          "total": 4
+        }
+      },
+      "cpt": {
+        "completion": "router.get(\"/v1/complete\", CompleteRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));\n\n    // CONFIG\n    router.get(\"/v1/config\", ConfigRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));\n\n    // EVENT\n    router.post(\"/v1/event\", EventRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));\n\n    // EVENT SOURCE\n    router.get(\"/v1/event-source\", EventSourceRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));\n\n    // EVENT SOURCE\n    router.get(\"/v1/event-source/:id\", EventSourceRequestHandler.class, new JsonObject().put(REQUEST_TRANSFER, true));\n\n    // EVENT SOURCE\n    router.get(\"/v",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": false,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 655,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "winner": "BASE"
+    },
+    {
+      "probe_id": "probe_06",
+      "category": "Handler/Processor",
+      "name": "LocalEventChangeNotificationHandler",
+      "prompt": "public class LocalEventChangeNotificationHandler {\n    \n    @Override\n    public void handle(Event event) {\n        // COMPLETE\n",
+      "base": {
+        "completion": "// 1. Get the event type\n        // 2. Get the event data\n        // 3. Get the event source\n        // 4. Get the event timestamp\n        // 5. Get the event id\n        // 6. Get the event version\n        // 7. Get the event correlation id\n        // 8. Get the event causation id\n        // 9. Get the event causation version\n        // 10. Get the event causation correlation id\n        // 11. Get the event causation causation id\n        // 12. Get the event causation causation version\n        // 13. Get the event causation",
+        "score": {
+          "domain_fit": 0,
+          "structure": 1,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": false,
+              "has_method_call": false,
+              "reasonable_length": true
+            },
+            "length": 529,
+            "has_hallucination": false
+          },
+          "total": 1
+        }
+      },
+      "cpt": {
+        "completion": "}\n}<|fim_middle|>\nimport com.vmops.api.SLOConstants;\nimport com.vmops.api.UserConstants;\nimport com.vmops.eventbus.EventBusConstants;\nimport com.vmops.model.*;\nimport com.vmops.store.*;\nimport com.vmops.util.*;\nimport io.vertx.core.AbstractVerticle;\nimport io.vertx.core.Promise;\nimport io.vertx.core.json.JsonArray;\nimport io.vertx.core.json.JsonObject;\n\nimport java.util.*;\nimport java.util.stream.Collectors;\n\nimport static com.vmops.api.APIConstants.*;\nimport static com.vmops.api.UserConstants.USER_PREFERENCE;\nimport static com.vmops.eventbus.EventBusConstants.*;\nimport static com.vmops.util.CommonUtil.*;\nimport static com.vmops.util.LoggerUtil.*;\n\n/**\n * The LocalEventChangeNotificationHandler class is",
+        "score": {
+          "domain_fit": 2,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "JsonObject",
+              "EventBusConstants",
+              "notification"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": false,
+              "reasonable_length": true
+            },
+            "length": 712,
+            "has_hallucination": false
+          },
+          "total": 4
+        }
+      },
+      "winner": "CPT"
+    },
+    {
+      "probe_id": "probe_07",
+      "category": "Handler/Processor",
+      "name": "Event Processing",
+      "prompt": "private void processEvent(JsonObject event) {\n    String type = event.getString(EVENT_TYPE);\n    // COMPLETE\n",
+      "base": {
+        "completion": "if (type.equals(EVENT_TYPE_COMPLETE)) {\nString id = event.getString(EVENT_ID);\nif (id != null) {\n    Future<JsonObject> future = futures.remove(id);\n    if (future != null) {\nfuture.complete(event);\n    }\n}\n    } else if (type.equals(EVENT_TYPE_ERROR)) {\nString id = event.getString(EVENT_ID);\nif (id != null) {\n    Future<JsonObject> future = futures.remove(id);\n    if (future != null) {\nfuture.fail(event.getString(EVENT_ERROR));\n    }\n}\n    } else if (type.equals(EVENT_TYPE_MESSAGE)) {\nString id = event.getString(EVENT_ID);\nif (id != null) {\n    Future<JsonObject> future = futures.remove(id);\n    if (future !=",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 617,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "cpt": {
+        "completion": "if (type.equalsIgnoreCase(EVENT_TYPE_METRIC_POLL) || type.equalsIgnoreCase(EVENT_TYPE_TOPOLOGY_MAP_POLL) || type.equalsIgnoreCase(EVENT_TYPE_DISCOVERY) || type.equalsIgnoreCase(EVENT_TYPE_LOG_TAIL) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_STATS) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_DISABLE) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_ENABLE) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_DELETE) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_UPGRADE) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_INSTALL) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_CONFIG_UPDATE) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_FILE_TRANSFER) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_FILE_DELETE) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_FILE_DOWNLOAD) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_FILE_UPLOAD) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_FILE_READ) || type.equalsIgnoreCase(EVENT_TYPE_AGENT_FILE_WRITE",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": false,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 886,
+            "has_hallucination": false
+          },
+          "total": 2
+        }
+      },
+      "winner": "TIE"
+    },
+    {
+      "probe_id": "probe_08",
+      "category": "Handler/Processor",
+      "name": "Message Handler",
+      "prompt": "eventBus.consumer(EventBusConstants.EVENT_NOTIFICATION, message -> {\n    JsonObject body = message.body();\n    // COMPLETE\n",
+      "base": {
+        "completion": "// 1. Get the notification type from the body\n    // 2. Get the notification message from the body\n    // 3. Get the notification timestamp from the body\n    // 4. Get the notification user from the body\n    // 5. Get the notification user id from the body\n    // 6. Get the notification user name from the body\n    // 7. Get the notification user email from the body\n    // 8. Get the notification user phone from the body\n    // 9. Get the notification user address from the body\n    // 10. Get the notification user city from the body\n    // 11. Get the notification user state from the",
+        "score": {
+          "domain_fit": 0,
+          "structure": 1,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": false,
+              "has_braces": false,
+              "has_method_call": false,
+              "reasonable_length": true
+            },
+            "length": 589,
+            "has_hallucination": false
+          },
+          "total": 1
+        }
+      },
+      "cpt": {
+        "completion": "if (body.getString(RESULT).equalsIgnoreCase(EMPTY_VALUE))\n    {\n        LOGGER.info(String.format(\"notification failed to send to %s with reason %s\", message.body().getString(Notification.NotificationType.EMAIL.getName()), message.body().getString(ERROR)));\n    }\n    else\n    {\n        LOGGER.info(String.format(\"notification successfully sent to %s\", message.body().getString(Notification.NotificationType.EMAIL.getName())));\n    }\n});\n\neventEngine = new EventEngine().setEventType(config().getString(EVENT_TYPE))\n        .setPersistEventOffset(true)\n        .setEventQueueSize(1)\n        .setEventHandler(this::send)\n        .setLogger(LOGGER)\n        .start(vertx, promise);\n}<|fim_middle|>            }",
+        "score": {
+          "domain_fit": 2,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "body.get",
+              "getString",
+              "handle"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 707,
+            "has_hallucination": false
+          },
+          "total": 4
+        }
+      },
+      "winner": "CPT"
+    },
+    {
+      "probe_id": "probe_09",
+      "category": "Async/Vertx",
+      "name": "Vertx Execute Blocking",
+      "prompt": "vertx.executeBlocking(promise -> {\n    // COMPLETE\n",
+      "base": {
+        "completion": "promise.complete(\"Hello World\");\n}, res -> {\n    // RESULT\n    System.out.println(\"The result is: \" + res.result());\n});",
+        "score": {
+          "domain_fit": 2,
+          "structure": 2,
+          "brevity": 1,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "promise.complete",
+              "result"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 120,
+            "has_hallucination": false
+          },
+          "total": 5
+        }
+      },
+      "cpt": {
+        "completion": "promise.complete();\n}, false, result -> {\n    // COMPLETE\n});\n```\n\nIn the first example, the `executeBlocking` method is called with a lambda expression that contains the code to be executed in a separate thread. The second parameter `false` indicates that the method should not be executed on the event loop thread. The third parameter is a handler that will be called when the blocking operation is complete.\n\nIn the second example, the `executeBlocking` method is called with a lambda expression that contains the code to be executed in a separate thread. The second parameter `false` indicates that the method should not be executed on the event loop thread. The third parameter is a handler that will be called when the blocking operation is complete.\n\nBy",
+        "score": {
+          "domain_fit": 2,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "promise.complete",
+              "result"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 760,
+            "has_hallucination": false
+          },
+          "total": 4
+        }
+      },
+      "winner": "BASE"
+    },
+    {
+      "probe_id": "probe_10",
+      "category": "Async/Vertx",
+      "name": "EventBus Async Publish",
+      "prompt": "public void notifyChange(String entityId) {\n    Event event = new EntityChangeEvent(entityId);\n    // COMPLETE\n",
+      "base": {
+        "completion": "for (Observer observer : observers) {\nobserver.update(event);\n    }\n}",
+        "score": {
+          "domain_fit": 0,
+          "structure": 2,
+          "brevity": 1,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 69,
+            "has_hallucination": false
+          },
+          "total": 3
+        }
+      },
+      "cpt": {
+        "completion": "event.put(ENTITY_PROPERTY, new JsonObject().put(ENTITY_TYPE, config().getString(ENTITY_TYPE)).put(ENTITY_ID, entityId).put(CHANGE_NOTIFICATION_TYPE, ChangeNotificationType.UPDATE.name()).put(CHANGE_NOTIFICATION_ACTION, ChangeNotificationAction.NOTIFY.name()).put(CHANGE_NOTIFICATION_TIMESTAMP, DateTimeUtil.currentSeconds()).put(CHANGE_NOTIFICATION_WORKER_UUID, config().getString(CHANGE_NOTIFICATION_WORKER_UUID)));\n\n    vertx.eventBus().send(EVENT_CHANGE_LOCAL_NOTIFICATION, event);\n}",
+        "score": {
+          "domain_fit": 2,
+          "structure": 2,
+          "brevity": 0,
+          "hallucinations": 0,
+          "details": {
+            "motadata_tokens": [
+              "JsonObject",
+              "vertx"
+            ],
+            "alien_tokens": [],
+            "structure": {
+              "has_semicolon": true,
+              "has_braces": true,
+              "has_method_call": true,
+              "reasonable_length": true
+            },
+            "length": 486,
+            "has_hallucination": false
+          },
+          "total": 4
+        }
+      },
+      "winner": "CPT"
+    }
+  ]
+}

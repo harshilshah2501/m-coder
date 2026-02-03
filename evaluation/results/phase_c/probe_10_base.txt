@@ -1,0 +1,4 @@
+for (Observer observer : observers) {
+observer.update(event);
+    }
+}

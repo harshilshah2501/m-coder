@@ -1,0 +1,13 @@
+router.registerAPI("GET", "/api/teams", (request, response) -> {
+        return new JSONObject().put("teams", Team.getTeams());
+    });
+    router.registerAPI("GET", "/api/teams/:id", (request, response) -> {
+        return Team.getTeam(request.params(":id"));
+    });
+    router.registerAPI("POST", "/api/teams", (request, response) -> {
+        return Team.createTeam(request.body());
+    });
+    router.registerAPI("PUT", "/api/teams/:id", (request, response) -> {
+        return Team.updateTeam(request.params(":id"), request.body());
+    });
+    router.registerAPI("DELETE", "/api/teams/:id", (request, response

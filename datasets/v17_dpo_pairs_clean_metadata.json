@@ -1,0 +1,28 @@
+{
+  "total": 500,
+  "preference_pairs": 150,
+  "synthetic": 350,
+  "source_distribution": {
+    "synthetic_feature_add": 71,
+    "synthetic_refactoring": 71,
+    "evaluation_failure_corrected": 150,
+    "synthetic_bugfix": 71,
+    "synthetic_multi_file": 66,
+    "synthetic_single_file": 71
+  },
+  "task_type_distribution": {
+    "feature_add": 101,
+    "refactoring": 93,
+    "multi_file": 93,
+    "single_file": 105,
+    "bugfix": 88,
+    "file_creation": 20
+  },
+  "splits": {
+    "train": 400,
+    "val": 50,
+    "test": 50
+  },
+  "format": "ChatML with <thinking> tags, SEARCH/REPLACE or PLAIN CODE",
+  "quality": "Prompt-matched responses, evaluated with Claude judge"
+}

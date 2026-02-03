@@ -1,0 +1,215 @@
+commit a284e89f16323b5c8deea395a46495f3e78b52fe
+Author: Yash Tiwari <official.yasht@gmail.com>
+Date:   Mon Jun 30 11:24:25 2025 +0530
+
+    refactored & migrated logic from PCDM to DQP
+
+diff --git a/motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java b/motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java
+index c70aaa6fd5..e7a0a94995 100644
+--- a/motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java
++++ b/motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java
+@@ -524,29 +524,39 @@ public class DependencyQueryProcessor extends AbstractVerticle
+             }
+         }).exceptionHandler(LOGGER::error);
+ 
+-        vertx.eventBus().<Void>localConsumer(EVENT_PARENT_CHILD_HIERARCHY_FETCH, message ->
++        vertx.eventBus().<JsonObject>localConsumer(EventBusConstants.EVENT_CHANGE_NOTIFICATION, message ->
+         {
++            var event = message.body();
++
+             try
+             {
+-                message.reply(new JsonObject(hierarchies.entrySet().stream().collect(Collectors.toMap(entry -> CommonUtil.getString(entry.getKey()), entry ->  new ArrayList<>(entry.getValue())))));
++                switch (EventBusConstants.ChangeNotificationType.valueOf(event.getString(CHANGE_NOTIFICATION_TYPE)))
++                {
++                    case ADD_DEPENDENCY_MAPPER, UPDATE_DEPENDENCY_MAPPER, DELETE_DEPENDENCY_MAPPER, COMPLETE_TOPOLOGY, STOP_TOPOLOGY -> updateHierarchies();
++
++                    default ->
++                    {
++                        // do nothing
++                    }
++                }
+             }
+             catch (Exception exception)
+             {
+                 LOGGER.error(exception);
+-
+-                message.fail(NOT_AVAILABLE, String.format("Failed to fetch parent-child hierarchies , reason > %s ", exception.getMessage()));
+             }
+         }).exceptionHandler(LOGGER::error);
+ 
+-        vertx.eventBus().<Void>localConsumer(EVENT_PARENT_CHILD_HIERARCHY_UPDATE, message ->
++        vertx.eventBus().<Void>localConsumer(EVENT_PARENT_CHILD_HIERARCHY_FETCH, message ->
+         {
+             try
+             {
+-                updateHierarchies();
++                message.reply(JsonObject.mapFrom(hierarchies));
+             }
+             catch (Exception exception)
+             {
+                 LOGGER.error(exception);
++
++                message.fail(NOT_AVAILABLE, String.format("Failed to fetch parent-child hierarchies , reason > %s ", exception.getMessage()));
+             }
+         }).exceptionHandler(LOGGER::error);
+ 
+@@ -2175,16 +2185,16 @@ public class DependencyQueryProcessor extends AbstractVerticle
+                             }
+                         }
+ 
+-                        event.put("topology.filter.target.type", targetType);
+-                    }
++                        if (targetType.contains("include"))
++                        {
++                            filters.add(source);
++                        }
++                        else
++                        {
++                            filters.remove(source);
++                        }
+ 
+-                    if (targetType.contains("include"))
+-                    {
+-                        filters.add(source);
+-                    }
+-                    else
+-                    {
+-                        filters.remove(source);
++                        event.put("topology.filter.target.type", targetType);
+                     }
+                 }
+                 catch (Exception exception)
+diff --git a/motadata/src/main/java/com/mindarray/api/DependencyMapper.java b/motadata/src/main/java/com/mindarray/api/DependencyMapper.java
+index bef7ed7299..923e7b0900 100644
+--- a/motadata/src/main/java/com/mindarray/api/DependencyMapper.java
++++ b/motadata/src/main/java/com/mindarray/api/DependencyMapper.java
+@@ -19,6 +19,12 @@
+  *
+  */
+ 
++/*
++	Change Logs:
++	Date			Author			    Notes
++*   30-Jun-2025     Yash Tiwari         MOTADATA-6528 : send change notification to DQP for CRUD operations
++*/
++
+ package com.mindarray.api;
+ 
+ import com.mindarray.*;
+@@ -214,6 +220,9 @@ public class DependencyMapper extends AbstractAPI
+                                             .put(AIOpsConstants.DEPENDENCY_TYPE, AIOpsConstants.DependencyType.LOCAL_DOMAIN.getName())
+                                             .put(AIOpsConstants.DEPENDENCY_OPERATION, AIOpsConstants.DependencyOperation.REMOVE_MULTIPLES.getName()));
+ 
++                            Bootstrap.vertx().eventBus().publish(EventBusConstants.EVENT_CHANGE_NOTIFICATION, new JsonObject()
++                                    .put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.DELETE_DEPENDENCY_MAPPER.name()).put(ID, id));
++
+                             this.send(routingContext, new JsonObject().put(RESPONSE_CODE, HttpStatus.SC_OK).put(GlobalConstants.STATUS, STATUS_SUCCEED)
+                                     .put(GlobalConstants.MESSAGE, String.format(InfoMessageConstants.ENTITY_DELETED, APIConstants.Entity.DEPENDENCY_MAPPER.getName())).put(ID, id));
+                         }
+@@ -306,6 +315,12 @@ public class DependencyMapper extends AbstractAPI
+                                             }
+ 
+                                         }
++
++                                        Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_CHANGE_LOCAL_NOTIFICATION,
++                                                new JsonObject().put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.UPDATE_DEPENDENCY_MAPPER.name()).put(ID, id));
++
++                                        Bootstrap.vertx().eventBus().publish(EventBusConstants.EVENT_CHANGE_NOTIFICATION, new JsonObject()
++                                                .put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.UPDATE_DEPENDENCY_MAPPER.name()).put(ID, id));
+                                     });
+                                 }
+ 
+@@ -470,34 +485,17 @@ public class DependencyMapper extends AbstractAPI
+         Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_CHANGE_LOCAL_NOTIFICATION,
+                 new JsonObject().put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.ADD_DEPENDENCY_MAPPER.name()).put(ID, response.getLong(ID)));
+ 
+-        Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_PARENT_CHILD_HIERARCHY_UPDATE, new JsonObject());
++        Bootstrap.vertx().eventBus().publish(EventBusConstants.EVENT_CHANGE_NOTIFICATION, new JsonObject()
++                .put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.ADD_DEPENDENCY_MAPPER.name()).put(ID, response.getLong(ID)));
+ 
+         return super.afterCreate(response, routingContext);
+     }
+ 
+-    @Override
+-    protected Future<JsonObject> afterUpdate(JsonObject response, RoutingContext routingContext)
+-    {
+-        Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_CHANGE_LOCAL_NOTIFICATION,
+-                new JsonObject().put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.UPDATE_DEPENDENCY_MAPPER.name()).put(ID, response.getLong(ID)));
+-
+-        Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_PARENT_CHILD_HIERARCHY_UPDATE, new JsonObject());
+-
+-        return super.afterUpdate(response, routingContext);
+-    }
+-
+-    @Override
+-    protected Future<Void> afterDelete(JsonObject entity, RoutingContext routingContext)
+-    {
+-        Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_PARENT_CHILD_HIERARCHY_UPDATE, new JsonObject());
+-
+-        return super.afterDelete(entity, routingContext);
+-    }
+-
+     @Override
+     protected Future<Void> afterDeleteAll(JsonObject response, RoutingContext routingContext)
+     {
+-        Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_PARENT_CHILD_HIERARCHY_UPDATE, new JsonObject());
++        Bootstrap.vertx().eventBus().publish(EventBusConstants.EVENT_CHANGE_NOTIFICATION, new JsonObject()
++                .put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.DELETE_DEPENDENCY_MAPPER.name()).put(ID, response.getLong(ID)));
+ 
+         return super.afterDeleteAll(response, routingContext);
+     }
+diff --git a/motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java b/motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java
+index 62709c3ed5..983a4a078a 100755
+--- a/motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java
++++ b/motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java
+@@ -423,7 +423,6 @@ public final class EventBusConstants
+     public static final String EVENT_DEPENDENCY = "dependency";
+     public static final String EVENT_DEPENDENCY_QUERY = "dependency.query";
+     public static final String EVENT_PARENT_CHILD_HIERARCHY_FETCH = "parent.child.hierarchy.fetch";
+-    public static final String EVENT_PARENT_CHILD_HIERARCHY_UPDATE = "parent.child.hierarchy.update";
+ 
+     public static final String EVENT_AVAILABILITY_CORRELATION = "availability.correlation";
+ 
+diff --git a/motadata/src/main/java/com/mindarray/nms/TopologyEngine.java b/motadata/src/main/java/com/mindarray/nms/TopologyEngine.java
+index 88d9c25a76..66f0ec98aa 100644
+--- a/motadata/src/main/java/com/mindarray/nms/TopologyEngine.java
++++ b/motadata/src/main/java/com/mindarray/nms/TopologyEngine.java
+@@ -302,8 +302,6 @@ public class TopologyEngine extends AbstractVerticle
+             {
+                 var event = message.body();
+ 
+-                Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_PARENT_CHILD_HIERARCHY_UPDATE, new JsonObject());
+-
+                 var dependencies = TopologyCacheStore.getStore().getDependencies(event.getLong(EventBusConstants.EVENT_SCHEDULER));
+ 
+                 // processing all dependencies one by one where destination port is not available
+@@ -354,6 +352,9 @@ public class TopologyEngine extends AbstractVerticle
+                             .put(ID, event.getLong(EventBusConstants.EVENT_SCHEDULER)));
+                 }
+ 
++                Bootstrap.vertx().eventBus().publish(EventBusConstants.EVENT_CHANGE_NOTIFICATION, new JsonObject()
++                        .put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.COMPLETE_TOPOLOGY.name()));
++
+                 //# 27964
+                 if (TopologyCacheStore.getStore().topologyRunning(event.getLong(EventBusConstants.EVENT_SCHEDULER)))
+                 {
+@@ -379,8 +380,6 @@ public class TopologyEngine extends AbstractVerticle
+                     LOGGER.debug(String.format("received topology stop event for scheduler id %s", event.getLong(EventBusConstants.EVENT_SCHEDULER)));
+                 }
+ 
+-                Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_PARENT_CHILD_HIERARCHY_UPDATE, new JsonObject());
+-
+                 if (CommonUtil.getLong(event.getValue(EventBusConstants.EVENT_SCHEDULER)) > 0)
+                 {
+                     abort(event);
+@@ -393,6 +392,9 @@ public class TopologyEngine extends AbstractVerticle
+                                 .put(ID, event.getLong(EventBusConstants.EVENT_SCHEDULER)));
+                     }
+ 
++                    Bootstrap.vertx().eventBus().publish(EventBusConstants.EVENT_CHANGE_NOTIFICATION, new JsonObject()
++                            .put(EventBusConstants.CHANGE_NOTIFICATION_TYPE, EventBusConstants.ChangeNotificationType.STOP_TOPOLOGY.name()));
++
+                     //# 27964
+                     if (TopologyCacheStore.getStore().topologyRunning(event.getLong(EventBusConstants.EVENT_SCHEDULER)))
+                     {

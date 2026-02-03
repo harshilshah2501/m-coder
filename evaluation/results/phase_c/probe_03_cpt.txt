@@ -1,0 +1,43 @@
+}
+    
+    public int getServicePort() {
+        // COMPLETE
+    }
+    
+    public String getServiceProtocol() {
+        // COMPLETE
+    }
+    
+    public String getServiceType() {
+        // COMPLETE
+    }
+    
+    public String getServiceVersion() {
+        // COMPLETE
+    }
+    
+    public String getServiceEnvironment() {
+        // COMPLETE
+    }
+    
+    public String getServiceStatus() {
+        // COMPLETE
+    }
+    
+    public String getServiceHealth() {
+        // COMPLETE
+    }
+    
+    public String getServiceDeploymentType() {
+        // COMPLETE
+    }
+    
+    public String getServiceDeploymentLocation() {
+        // COMPLETE
+    }
+    
+    public String getServiceDeploymentMethod() {
+        // COMPLETE
+    }
+    
+    public String getService

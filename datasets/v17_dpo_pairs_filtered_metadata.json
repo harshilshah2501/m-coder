@@ -1,0 +1,21 @@
+{
+  "total": 181,
+  "filtering_strategy": "Keep only high-quality patterns (bugfix 100%, multi_file 95%)",
+  "original_size": 500,
+  "removed": 319,
+  "source_distribution": {
+    "synthetic_bugfix": 71,
+    "synthetic_multi_file": 66,
+    "evaluation_failure_corrected": 44
+  },
+  "task_type_distribution": {
+    "bugfix": 88,
+    "multi_file": 93
+  },
+  "splits": {
+    "train": 144,
+    "val": 18,
+    "test": 19
+  },
+  "judge_pass_rate": "18% on full (9/50), focusing on bugfix/multi-file"
+}

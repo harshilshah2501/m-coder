@@ -1,0 +1,1529 @@
+commit 25441efe4d29d001c9593cca3ff8f13306c01b38
+Author: vismitmandlik <vismitmandlik03@gmail.com>
+Date:   Wed Nov 19 14:18:19 2025 +0530
+
+    corner case test cases added
+
+diff --git a/motadata/src/main/java/com/mindarray/config/SSHClientManager.java b/motadata/src/main/java/com/mindarray/config/SSHClientManager.java
+index f656b1c74f..86b18f4fe4 100644
+--- a/motadata/src/main/java/com/mindarray/config/SSHClientManager.java
++++ b/motadata/src/main/java/com/mindarray/config/SSHClientManager.java
+@@ -166,9 +166,9 @@ public class SSHClientManager extends AbstractVerticle
+ 
+                 arguments.add(CURRENT_DIR + PATH_SEPARATOR + util);
+ 
+-                arguments.add(Base64.getEncoder().encodeToString(event.encode().getBytes()));
++                LOGGER.trace(String.format("Event sent for util : %s is : %s", util, event.encodePrettily()));
+ 
+-                LOGGER.trace(String.format("Event sent for util : %s : %s", util, Base64.getEncoder().encodeToString(event.encode().getBytes())));
++                arguments.add(Base64.getEncoder().encodeToString(event.encode().getBytes()));
+ 
+                 var processBuilder = new ProcessBuilder(arguments).redirectErrorStream(true);
+ 
+diff --git a/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java b/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+index c009ea1d79..3df777aa0e 100755
+--- a/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
++++ b/motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+@@ -4045,7 +4045,6 @@ public class UIActionEventHandler extends AbstractVerticle
+         vertx.eventBus().<JsonObject>localConsumer(UI_ACTION_SSH_CLIENT_MANAGER, message ->
+                 vertx.eventBus().send(EVENT_SSH_CLIENT_MANAGER, message.body()));
+ 
+-
+         vertx.eventBus().<JsonObject>localConsumer(UI_NOTIFICATION_ACTIVE_NOTIFICATION_CLEAR, message ->
+         {
+             LOGGER.info(String.format("clear alert notification : %s ", message.body().encode()));
+diff --git a/motadata/src/test/java/com/mindarray/ssh/TestSSHClientManager.java b/motadata/src/test/java/com/mindarray/ssh/TestSSHClientManager.java
+index f22956fc89..9338c68bf7 100644
+--- a/motadata/src/test/java/com/mindarray/ssh/TestSSHClientManager.java
++++ b/motadata/src/test/java/com/mindarray/ssh/TestSSHClientManager.java
+@@ -25,16 +25,22 @@ import com.mindarray.ErrorCodes;
+ import com.mindarray.GlobalConstants;
+ import com.mindarray.TestUtil;
+ import com.mindarray.api.AIOpsObject;
++import com.mindarray.api.Configuration;
+ import com.mindarray.config.ConfigConstants;
++import com.mindarray.api.CredentialProfile;
+ import com.mindarray.eventbus.EventBusConstants;
+ import com.mindarray.nms.NMSConstants;
+ import com.mindarray.store.ConfigurationConfigStore;
++import com.mindarray.store.CredentialProfileConfigStore;
+ import com.mindarray.store.ObjectConfigStore;
+ import com.mindarray.util.CodecUtil;
+ import com.mindarray.util.CommonUtil;
+ import com.mindarray.util.Logger;
++import com.mindarray.util.MotadataConfigUtil;
+ import io.github.artsok.RepeatedIfExceptionsTest;
++import io.vertx.core.buffer.Buffer;
+ import io.vertx.core.eventbus.MessageConsumer;
++import io.vertx.core.json.Json;
+ import io.vertx.core.json.JsonObject;
+ import io.vertx.junit5.Timeout;
+ import io.vertx.junit5.VertxExtension;
+@@ -642,16 +648,45 @@ public class TestSSHClientManager
+         TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject().put(ID, NOT_AVAILABLE).put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName()).put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION));
+     }
+ 
++//     Telnet Protocol Test Cases - Testing with telnet.enabled = "yes"
++
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+     @Order(8)
++    void testEnableTelnetConfiguration(VertxTestContext testContext) throws Exception
++    {
++        // Enable telnet in motadata.json
++        var configs = TestUtil.vertx().fileSystem().readFileBlocking(CURRENT_DIR + PATH_SEPARATOR + CONFIG_DIR + PATH_SEPARATOR + "motadata.json").toJsonObject();
++
++        configs.put("config.telnet.enabled", YES);
++
++        TestUtil.vertx().fileSystem().writeFileBlocking(CURRENT_DIR + PATH_SEPARATOR + CONFIG_DIR + PATH_SEPARATOR + "motadata.json", Buffer.buffer(Json.encodePrettily(configs)));
++
++        MotadataConfigUtil.loadConfigs(configs);
++
++        // Verify telnet is now enabled
++        Assertions.assertTrue(MotadataConfigUtil.configTelnetEnabled(), "Telnet should be enabled after updating config");
++
++        ConfigConstants.CONFIG_TELNET_ENABLED = true;
++
++        LOGGER.info("Telnet enabled successfully for subsequent tests");
++
++        testContext.completeNow();
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(9)
+     void testTelnetClientManagerCloseNonExistentSession(VertxTestContext testContext)
+     {
+         var uuid = CommonUtil.getString(UUID.randomUUID());
+ 
++        var testIP = "192.168.1.1";
++
+         messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
+         {
+             var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
+ 
++            LOGGER.info(String.format("Telnet test - testTelnetClientManagerCloseNonExistentSession - Event received: %s", event.encodePrettily()));
++
+             Assertions.assertNotNull(event);
+ 
+             Assertions.assertFalse(event.isEmpty());
+@@ -660,19 +695,19 @@ public class TestSSHClientManager
+ 
+             Assertions.assertEquals(ConfigConstants.ClientOperation.CLOSE.getName(), event.getString(SSH_OPERATION));
+ 
+-            Assertions.assertTrue(event.getString(SSH_OUTPUT).contains("Connection closed"));
++            Assertions.assertTrue(event.getString(SSH_OUTPUT).equalsIgnoreCase(String.format(SSH_CONNECTION_CLOSED, testIP)), String.format("Expected: '%s', but got: '%s'", String.format(SSH_CONNECTION_CLOSED, testIP), event.getString(SSH_OUTPUT)));
+ 
+             messageConsumer.unregister(asyncResult -> testContext.completeNow());
+         });
+ 
+         TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject()
+-                .put(AIOpsObject.OBJECT_IP, "192.168.1.1")
++                .put(AIOpsObject.OBJECT_IP, testIP)
+                 .put(UI_EVENT_UUID, uuid)
+                 .put(SSH_OPERATION, ConfigConstants.ClientOperation.CLOSE));
+     }
+ 
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+-    @Order(9)
++    @Order(10)
+     void testTelnetClientManagerEmptyCommand(VertxTestContext testContext)
+     {
+         var context = new JsonObject();
+@@ -683,21 +718,48 @@ public class TestSSHClientManager
+         {
+             var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
+ 
+-            var uuid = CommonUtil.getString(UUID.randomUUID());
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
+ 
+-            var sessionId = CommonUtil.getString(UUID.randomUUID());
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
+ 
+-            context.put(ID, item.getLong(ID))
+-                    .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
+-                    .put(UI_EVENT_UUID, uuid)
+-                    .put(SESSION_ID, sessionId)
+-                    .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
+-                    .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(ConfigConstants.CONFIG_PORT, 23).put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID)).put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid).put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
+ 
+             messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
+             {
+                 var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
+ 
++                LOGGER.info(String.format("Telnet test - testTelnetClientManagerEmptyCommand - Event received: %s", event.encodePrettily()));
++
++                // Filter by UUID to avoid processing events from other tests
++                if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                {
++                    return;
++                }
++
+                 if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CONNECTION.getName()))
+                 {
+                     try
+@@ -710,7 +772,7 @@ public class TestSSHClientManager
+ 
+                         Assertions.assertEquals(uuid, event.getString(UI_EVENT_UUID));
+ 
+-                        LOGGER.info("SSH connection validated. Sending empty command.");
++                        LOGGER.info("Telnet connection validated. Sending empty command.");
+ 
+                         // Send empty command
+                         TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject()
+@@ -751,14 +813,46 @@ public class TestSSHClientManager
+                     {
+                         Assertions.assertEquals(STATUS_SUCCEED, event.getString(STATUS));
+ 
+-                        Assertions.assertTrue(event.getString(SSH_OUTPUT).contains("Connection closed"));
++                        Assertions.assertTrue(event.getString(SSH_OUTPUT).equalsIgnoreCase(String.format(SSH_CONNECTION_CLOSED, event.getString(AIOpsObject.OBJECT_IP))),
++                                String.format("Expected connection closed message for IP: %s", event.getString(AIOpsObject.OBJECT_IP)));
+ 
+-                        messageConsumer.unregister(asyncResult -> testContext.completeNow());
++                        messageConsumer.unregister(asyncResult ->
++                        {
++                            // Restore original protocol after test completes
++                            if (originalProtocol != null)
++                            {
++                                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                credentialProfile.remove(PORT);
++                            }
++
++                            if (configContext != null && originalConfigContextProtocol != null)
++                            {
++                                configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                configContext.remove(ConfigConstants.CONFIG_PORT);
++                                configContext.remove(PORT);
++                            }
++
++                            testContext.completeNow();
++                        });
+                     }
+                     catch (Exception exception)
+                     {
+                         LOGGER.warn(String.format("Assertion failed during close validation: %s", exception.getMessage()));
+ 
++                        // Restore protocol before failing
++                        if (originalProtocol != null)
++                        {
++                            credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                            credentialProfile.remove(PORT);
++                        }
++
++                        if (configContext != null && originalConfigContextProtocol != null)
++                        {
++                            configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                            configContext.remove(ConfigConstants.CONFIG_PORT);
++                            configContext.remove(PORT);
++                        }
++
+                         testContext.failNow(exception);
+                     }
+                 }
+@@ -768,7 +862,26 @@ public class TestSSHClientManager
+                 }
+             });
+ 
+-            TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
+         }
+         else
+         {
+@@ -779,7 +892,7 @@ public class TestSSHClientManager
+     }
+ 
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+-    @Order(10)
++    @Order(11)
+     void testTelnetClientManagerMultipleCommands(VertxTestContext testContext)
+     {
+         var context = new JsonObject();
+@@ -790,23 +903,50 @@ public class TestSSHClientManager
+         {
+             var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
+ 
+-            var uuid = CommonUtil.getString(UUID.randomUUID());
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
+ 
+-            var sessionId = CommonUtil.getString(UUID.randomUUID());
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
+ 
+-            var commandCount = new java.util.concurrent.atomic.AtomicInteger(0);
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
+ 
+-            context.put(ID, item.getLong(ID))
+-                    .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
+-                    .put(UI_EVENT_UUID, uuid)
+-                    .put(SESSION_ID, sessionId)
+-                    .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
+-                    .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(ConfigConstants.CONFIG_PORT, 23).put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                var commandCount = new java.util.concurrent.atomic.AtomicInteger(0);
++
++                context.put(ID, item.getLong(ID)).put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid).put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
+ 
+             messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
+             {
+                 var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
+ 
++                LOGGER.info(String.format("Telnet test - Multiple commands - Event received: %s", event.encodePrettily()));
++
++                // Filter by UUID to avoid processing events from other tests
++                if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                {
++                    return;
++                }
++
+                 if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CONNECTION.getName()))
+                 {
+                     try
+@@ -883,16 +1023,48 @@ public class TestSSHClientManager
+                     {
+                         Assertions.assertEquals(STATUS_SUCCEED, event.getString(STATUS));
+ 
+-                        Assertions.assertTrue(event.getString(SSH_OUTPUT).contains("Connection closed"));
++                        Assertions.assertTrue(event.getString(SSH_OUTPUT).equalsIgnoreCase(String.format(SSH_CONNECTION_CLOSED, event.getString(AIOpsObject.OBJECT_IP))),
++                                String.format("Expected connection closed message for IP: %s", event.getString(AIOpsObject.OBJECT_IP)));
+ 
+                         Assertions.assertEquals(3, commandCount.get());
+ 
+-                        messageConsumer.unregister(asyncResult -> testContext.completeNow());
++                        messageConsumer.unregister(asyncResult ->
++                        {
++                            // Restore original protocol after test completes
++                            if (originalProtocol != null)
++                            {
++                                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                credentialProfile.remove(PORT);
++                            }
++
++                            if (configContext != null && originalConfigContextProtocol != null)
++                            {
++                                configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                configContext.remove(ConfigConstants.CONFIG_PORT);
++                                configContext.remove(PORT);
++                            }
++
++                            testContext.completeNow();
++                        });
+                     }
+                     catch (Exception exception)
+                     {
+                         LOGGER.warn(String.format("Assertion failed during close validation: %s", exception.getMessage()));
+ 
++                        // Restore protocol before failing
++                        if (originalProtocol != null)
++                        {
++                            credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                            credentialProfile.remove(PORT);
++                        }
++
++                        if (configContext != null && originalConfigContextProtocol != null)
++                        {
++                            configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                            configContext.remove(ConfigConstants.CONFIG_PORT);
++                            configContext.remove(PORT);
++                        }
++
+                         testContext.failNow(exception);
+                     }
+                 }
+@@ -902,7 +1074,25 @@ public class TestSSHClientManager
+                 }
+             });
+ 
+-            TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);            }
+         }
+         else
+         {
+@@ -913,7 +1103,7 @@ public class TestSSHClientManager
+     }
+ 
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+-    @Order(11)
++    @Order(12)
+     void testTelnetClientManagerMissingUUID(VertxTestContext testContext)
+     {
+         var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
+@@ -953,7 +1143,7 @@ public class TestSSHClientManager
+     }
+ 
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+-    @Order(12)
++    @Order(13)
+     void testTelnetClientManagerNullOperation(VertxTestContext testContext)
+     {
+         var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
+@@ -979,7 +1169,8 @@ public class TestSSHClientManager
+                     .put(UI_EVENT_UUID, uuid));
+ 
+             // Complete after timeout if no response
+-            TestUtil.vertx().setTimer(5000, timer -> {
++            TestUtil.vertx().setTimer(5000, timer ->
++            {
+                 if (messageConsumer != null)
+                 {
+                     messageConsumer.unregister(asyncResult -> testContext.completeNow());
+@@ -995,7 +1186,7 @@ public class TestSSHClientManager
+     }
+ 
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+-    @Order(13)
++    @Order(14)
+     void testTelnetClientManagerMissingID(VertxTestContext testContext)
+     {
+         var uuid = CommonUtil.getString(UUID.randomUUID());
+@@ -1004,15 +1195,15 @@ public class TestSSHClientManager
+         {
+             var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
+ 
++            // Should return error for missing ID
++            LOGGER.info(String.format("Response for missing ID - testTelnetClientManagerMissingID: %s", event.encodePrettily()));
++
+             Assertions.assertNotNull(event);
+ 
+             Assertions.assertFalse(event.isEmpty());
+ 
+             Assertions.assertEquals(STATUS_FAIL, event.getString(STATUS));
+ 
+-            // Should return error for missing ID
+-            LOGGER.info(String.format("Response for missing ID: %s", event.encodePrettily()));
+-
+             messageConsumer.unregister(asyncResult -> testContext.completeNow());
+         });
+ 
+@@ -1024,7 +1215,7 @@ public class TestSSHClientManager
+     }
+ 
+     @RepeatedIfExceptionsTest(suspend = 3000L)
+-    @Order(14)
++    @Order(15)
+     void testTelnetClientManagerDuplicateConnection(VertxTestContext testContext)
+     {
+         var context = new JsonObject();
+@@ -1052,6 +1243,14 @@ public class TestSSHClientManager
+             {
+                 var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
+ 
++                LOGGER.info(String.format("Telnet test - testTelnetClientManagerDuplicateConnection - Event received: %s", event.encodePrettily()));
++
++                // Filter by UUID to avoid processing events from other tests
++                if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                {
++                    return;
++                }
++
+                 if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CONNECTION.getName()))
+                 {
+                     int count = connectionCount.incrementAndGet();
+@@ -1087,6 +1286,18 @@ public class TestSSHClientManager
+                         testContext.failNow(exception);
+                     }
+                 }
++                else if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.EXECUTION.getName()))
++                {
++                    // Duplicate connection might return EXECUTION event instead of CONNECTION
++                    // This happens when the session already exists
++                    LOGGER.info(String.format("Received EXECUTION event (duplicate connection treated as execution): %s", event.encodePrettily()));
++
++                    // Close the session
++                    TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject()
++                            .put(AIOpsObject.OBJECT_IP, event.getString(AIOpsObject.OBJECT_IP))
++                            .put(UI_EVENT_UUID, uuid)
++                            .put(SSH_OPERATION, ConfigConstants.ClientOperation.CLOSE));
++                }
+                 else if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CLOSE.getName()))
+                 {
+                     try
+@@ -1113,4 +1324,1009 @@ public class TestSSHClientManager
+             Assertions.fail("No configuration device found.");
+         }
+     }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(16)
++    void testTelnetClientManager(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
++
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(ConfigConstants.CONFIG_PORT, 23).put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID))
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
++
++                LOGGER.info(String.format("Starting Telnet connection for sessionId: %s, UUID: %s, IP: %s", sessionId, uuid, object.getString(AIOpsObject.OBJECT_IP)));
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                    LOGGER.info(String.format("testTelnetClientManager Received event: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    if (event.containsKey(SSH_OPERATION) && event.getString(SSH_OPERATION).equals(ConfigConstants.ClientOperation.CONNECTION.getName()))
++                    {
++                        LOGGER.info("Telnet connection event detected.");
++
++                        try
++                        {
++                            Assertions.assertTrue(event.containsKey(AIOpsObject.OBJECT_VENDOR), "Event does not contain object vendor");
++
++                            Assertions.assertFalse(event.getString(AIOpsObject.OBJECT_VENDOR).isEmpty(), "object vendor is empty");
++
++                            Assertions.assertTrue(event.containsKey(SSH_OUTPUT) && event.getString(SSH_OUTPUT).isEmpty(),
++                                    String.format("SSH_OUTPUT should be empty for connection, but was: %s", event.getString(SSH_OUTPUT)));
++
++                            Assertions.assertTrue(event.containsKey(STATUS) && event.getString(STATUS).equals(STATUS_SUCCEED),
++                                    String.format("Connection status should be SUCCESS, but was: %s", event.getString(STATUS)));
++
++                            LOGGER.info("Telnet connection validated. Sending close command.");
++
++                            TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject()
++                                    .put(AIOpsObject.OBJECT_IP, event.getString(AIOpsObject.OBJECT_IP))
++                                    .put(UI_EVENT_UUID, event.getString(UI_EVENT_UUID))
++                                    .put(SSH_OPERATION, ConfigConstants.ClientOperation.CLOSE));
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during connection validation: %s", exception.getMessage()));
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                    else if (event.containsKey(SSH_OPERATION) && event.getString(SSH_OPERATION).equals(ConfigConstants.ClientOperation.CLOSE.getName()))
++                    {
++
++                        LOGGER.info("Telnet close event detected.");
++
++                        try
++                        {
++                            Assertions.assertTrue(event.containsKey(STATUS) && event.getString(STATUS).equals(STATUS_SUCCEED),
++                                    String.format("Close status should be SUCCESS,but was: %s", event.getString(STATUS)));
++
++                            LOGGER.info("Telnet connection closed successfully.");
++
++                            messageConsumer.unregister(asyncResult ->
++                            {
++                                // Restore original protocol after test completes
++                                if (originalProtocol != null)
++                                {
++                                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                    credentialProfile.remove(PORT);
++                                }
++
++                                if (configContext != null && originalConfigContextProtocol != null)
++                                {
++                                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                                    configContext.remove(PORT);
++                                }
++
++                                if (asyncResult.succeeded())
++                                {
++                                    LOGGER.info("Consumer unregistered successfully after close.");
++
++                                    testContext.completeNow();
++                                }
++                                else
++                                {
++                                    LOGGER.warn(String.format("Failed to unregister consumer: %s", asyncResult.cause().getMessage()));
++
++                                    testContext.failNow(asyncResult.cause());
++                                }
++                            });
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during close validation: %s", exception.getMessage()));
++
++                            // Restore protocol before failing
++                            if (originalProtocol != null)
++                            {
++                                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                credentialProfile.remove(PORT);
++                            }
++
++                            if (configContext != null && originalConfigContextProtocol != null)
++                            {
++                                configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                configContext.remove(ConfigConstants.CONFIG_PORT);
++                                configContext.remove(PORT);
++                            }
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                    else
++                    {
++                        LOGGER.warn(String.format("Unexpected event structure or operation: %s", event.encodePrettily()));
++                    }
++                });
++
++                // Send the Telnet connection request
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(17)
++    void testTelnetClientManagerServer(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
++
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(ConfigConstants.CONFIG_PORT, 23).put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID))
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.SERVER.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                    LOGGER.info(String.format("Telnet test - Server category - Event received: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    if (event.containsKey(SSH_OPERATION) && event.getString(SSH_OPERATION).equals(ConfigConstants.ClientOperation.CONNECTION.getName()))
++                    {
++                        try
++                        {
++                            Assertions.assertTrue(event.containsKey(AIOpsObject.OBJECT_VENDOR), "Event does not contain object vendor");
++
++                            Assertions.assertFalse(event.getString(AIOpsObject.OBJECT_VENDOR).isEmpty(), "object vendor is empty");
++
++                            Assertions.assertTrue(event.containsKey(SSH_OUTPUT) && event.getString(SSH_OUTPUT).isEmpty(),
++                                    String.format("SSH_OUTPUT should be empty for connection, but was: %s", event.getString(SSH_OUTPUT)));
++
++                            Assertions.assertTrue(event.containsKey(STATUS) && event.getString(STATUS).equals(STATUS_SUCCEED),
++                                    String.format("Connection status should be SUCCESS, but was: %s", event.getString(STATUS)));
++
++                            TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject()
++                                    .put(AIOpsObject.OBJECT_IP, event.getString(AIOpsObject.OBJECT_IP))
++                                    .put(UI_EVENT_UUID, event.getString(UI_EVENT_UUID))
++                                    .put(SSH_OPERATION, ConfigConstants.ClientOperation.CLOSE));
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during connection validation: %s", exception.getMessage()));
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                    else if (event.containsKey(SSH_OPERATION) && event.getString(SSH_OPERATION).equals(ConfigConstants.ClientOperation.CLOSE.getName()))
++                    {
++                        try
++                        {
++                            Assertions.assertTrue(event.containsKey(STATUS) && event.getString(STATUS).equals(STATUS_SUCCEED),
++                                    String.format("Close status should be SUCCESS,but was: %s", event.getString(STATUS)));
++
++                            messageConsumer.unregister(asyncResult ->
++                            {
++                                // Restore original protocol after test completes
++                                if (originalProtocol != null)
++                                {
++                                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                    credentialProfile.remove(PORT);
++                                }
++
++                                if (configContext != null && originalConfigContextProtocol != null)
++                                {
++                                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                                    configContext.remove(PORT);
++                                }
++
++                                testContext.completeNow();
++                            });
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during close validation: %s", exception.getMessage()));
++
++                            // Restore protocol before failing
++                            if (originalProtocol != null)
++                            {
++                                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                credentialProfile.remove(PORT);
++                            }
++
++                            if (configContext != null && originalConfigContextProtocol != null)
++                            {
++                                configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                configContext.remove(ConfigConstants.CONFIG_PORT);
++                                configContext.remove(PORT);
++                            }
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                });
++
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(18)
++    void testTelnetClientManagerBadCredentials(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName());
++                    configContext.put(ConfigConstants.CONFIG_PORT, 23);
++                    configContext.put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID))
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, "172.16.8.2")
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                    LOGGER.info(String.format("Telnet test - Bad credentials - Event received: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    Assertions.assertNotNull(event);
++
++                    Assertions.assertFalse(event.isEmpty());
++
++                    Assertions.assertEquals(STATUS_FAIL, event.getString(STATUS));
++
++                    Assertions.assertEquals(ConfigConstants.ClientOperation.CONNECTION.getName(), event.getString(SSH_OPERATION));
++
++                    messageConsumer.unregister(asyncResult ->
++                    {
++                        // Restore original protocol after test completes
++                        if (originalProtocol != null)
++                        {
++                            credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                            credentialProfile.remove(PORT);
++                        }
++
++                        if (configContext != null && originalConfigContextProtocol != null)
++                        {
++                            configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                            configContext.remove(ConfigConstants.CONFIG_PORT);
++                            configContext.remove(PORT);
++                        }
++
++                        testContext.completeNow();
++                    });
++                });
++
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(19)
++    void testTelnetClientManagerInvalidCommand(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
++
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName());
++                    configContext.put(ConfigConstants.CONFIG_PORT, 23);
++                    configContext.put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID))
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.EXECUTION);
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                    LOGGER.info(String.format("Telnet test - Invalid command - Event received: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    Assertions.assertNotNull(event);
++
++                    Assertions.assertFalse(event.isEmpty());
++
++                    Assertions.assertEquals(STATUS_FAIL, event.getString(STATUS));
++
++                    Assertions.assertEquals(ConfigConstants.ClientOperation.EXECUTION.getName(), event.getString(SSH_OPERATION));
++
++                    messageConsumer.unregister(asyncResult ->
++                    {
++                        // Restore original protocol after test completes
++                        if (originalProtocol != null)
++                        {
++                            credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                            credentialProfile.remove(PORT);
++                        }
++
++                        if (configContext != null && originalConfigContextProtocol != null)
++                        {
++                            configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                            configContext.remove(ConfigConstants.CONFIG_PORT);
++                            configContext.remove(PORT);
++                        }
++
++                        testContext.completeNow();
++                    });
++                });
++
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(20)
++    void testTelnetClientManagerExecuteCommandOps(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
++
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName()).put(ConfigConstants.CONFIG_PORT, 23).put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID))
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION.getName());
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                LOGGER.info(String.format("Telnet test - Execute command ops - Event received: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CONNECTION.getName()))
++                    {
++                        try
++                        {
++                            Assertions.assertNotNull(event);
++
++                            Assertions.assertFalse(event.isEmpty());
++
++                            Assertions.assertEquals(STATUS_SUCCEED, event.getString(STATUS));
++
++                            Assertions.assertEquals(uuid, event.getString(UI_EVENT_UUID));
++
++                            TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject().mergeIn(context)
++                                    .put(SSH_OPERATION, ConfigConstants.ClientOperation.EXECUTION.getName())
++                                    .put("ssh.command", "show version"));
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during connection: %s", exception.getMessage()));
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                    else if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.EXECUTION.getName()))
++                    {
++                        try
++                        {
++                            Assertions.assertNotNull(event);
++
++                            Assertions.assertFalse(event.isEmpty());
++
++                            Assertions.assertEquals(STATUS_SUCCEED, event.getString(STATUS));
++
++                            Assertions.assertTrue(event.containsKey(SSH_OUTPUT));
++
++                            TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, new JsonObject().mergeIn(context)
++                                    .put(SSH_OPERATION, ConfigConstants.ClientOperation.CLOSE.getName()));
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during execution: %s", exception.getMessage()));
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                    else if (event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CLOSE.getName()))
++                    {
++                        try
++                        {
++                            Assertions.assertEquals(STATUS_SUCCEED, event.getString(STATUS));
++
++                            messageConsumer.unregister(asyncResult ->
++                            {
++                                // Restore original protocol after test completes
++                                if (originalProtocol != null)
++                                {
++                                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                    credentialProfile.remove(PORT);
++                                }
++
++                                if (configContext != null && originalConfigContextProtocol != null)
++                                {
++                                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                                    configContext.remove(PORT);
++                                }
++
++                                testContext.completeNow();
++                            });
++                        }
++                        catch (Exception exception)
++                        {
++                            LOGGER.warn(String.format("Assertion failed during close: %s", exception.getMessage()));
++
++                            // Restore protocol before failing
++                            if (originalProtocol != null)
++                            {
++                                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                credentialProfile.remove(PORT);
++                            }
++
++                            if (configContext != null && originalConfigContextProtocol != null)
++                            {
++                                configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                configContext.remove(ConfigConstants.CONFIG_PORT);
++                                configContext.remove(PORT);
++                            }
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                });
++
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(21)
++    void testTelnetClientManagerCloseOps(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
++
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName());
++                credentialProfile.put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName());
++                    configContext.put(ConfigConstants.CONFIG_PORT, 23);
++                    configContext.put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, item.getLong(ID))
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CLOSE.getName());
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                LOGGER.info(String.format("Telnet test - Close ops - Event received: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    if (event.containsKey(SSH_OPERATION) && event.getString(SSH_OPERATION).equalsIgnoreCase(ConfigConstants.ClientOperation.CLOSE.getName()))
++                    {
++                        try
++                        {
++                            Assertions.assertTrue(event.containsKey(SSH_OUTPUT) && !event.getString(SSH_OUTPUT).isEmpty(),
++                                    String.format("SSH_OUTPUT should not be empty for IP: %s", event.getString(AIOpsObject.OBJECT_IP)));
++
++                            Assertions.assertTrue(event.getString(SSH_OUTPUT).equalsIgnoreCase(String.format(SSH_CONNECTION_CLOSED, event.getString(AIOpsObject.OBJECT_IP))),
++                                    String.format("Expected SSH output to confirm connection closed for IP: %s", event.getString(AIOpsObject.OBJECT_IP)));
++
++                            messageConsumer.unregister(asyncResult ->
++                            {
++                                // Restore original protocol after test completes
++                                if (originalProtocol != null)
++                                {
++                                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                    credentialProfile.remove(PORT);
++                                }
++
++                                if (configContext != null && originalConfigContextProtocol != null)
++                                {
++                                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                                    configContext.remove(PORT);
++                                }
++
++                                testContext.completeNow();
++                            });
++                        }
++                        catch (Exception exception)
++                        {
++                            // Restore protocol before failing
++                            if (originalProtocol != null)
++                            {
++                                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                                credentialProfile.remove(PORT);
++                            }
++
++                            if (configContext != null && originalConfigContextProtocol != null)
++                            {
++                                configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                                configContext.remove(ConfigConstants.CONFIG_PORT);
++                                configContext.remove(PORT);
++                            }
++
++                            testContext.failNow(exception);
++                        }
++                    }
++                });
++
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
++
++    @RepeatedIfExceptionsTest(suspend = 3000L)
++    @Order(22)
++    void testTelnetClientManagerInvalidConfigObject(VertxTestContext testContext)
++    {
++        var context = new JsonObject();
++
++        var item = ConfigurationConfigStore.getStore().getItems().getJsonObject(0);
++
++        if (item != null)
++        {
++            var object = ObjectConfigStore.getStore().getItemByValue(AIOpsObject.OBJECT_NAME, item.getString(AIOpsObject.OBJECT_NAME));
++
++            var credentialProfile = CredentialProfileConfigStore.getStore().getItem(item.getLong(Configuration.CONFIG_CREDENTIAL_PROFILE));
++
++            var configContext = item.getJsonObject(Configuration.CONFIG_CONTEXT);
++
++            var originalProtocol = credentialProfile != null ? credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            var originalConfigContextProtocol = configContext != null && configContext.containsKey(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) ?
++                    configContext.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL) : null;
++
++            try
++            {
++                // Override protocol to TELNET for testing
++                Assertions.assertNotNull(credentialProfile);
++                credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName());
++                credentialProfile.put(PORT, 23);
++
++                if (configContext != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, NMSConstants.Protocol.TELNET.getName());
++                    configContext.put(ConfigConstants.CONFIG_PORT, 23);
++                    configContext.put(PORT, 23);
++                }
++
++                var uuid = CommonUtil.getString(UUID.randomUUID());
++
++                var sessionId = CommonUtil.getString(UUID.randomUUID());
++
++                context.put(ID, "NOT_AVAILABLE")
++                        .put(AIOpsObject.OBJECT_CATEGORY, NMSConstants.Category.NETWORK.getName())
++                        .put(UI_EVENT_UUID, uuid)
++                        .put(SESSION_ID, sessionId)
++                        .put(AIOpsObject.OBJECT_IP, object.getString(AIOpsObject.OBJECT_IP))
++                        .put(SSH_OPERATION, ConfigConstants.ClientOperation.CONNECTION);
++
++                messageConsumer = TestUtil.vertx().eventBus().localConsumer(EVENT_UI, message ->
++                {
++                    var event = CodecUtil.toJSONObject(message.body().getBinary(EventBusConstants.EVENT_CONTEXT));
++
++                LOGGER.info(String.format("Telnet test - Invalid config object - Event received: %s", event.encodePrettily()));
++
++                    // Filter by UUID to avoid processing events from other tests
++                    if (!event.containsKey(UI_EVENT_UUID) || !event.getString(UI_EVENT_UUID).equals(uuid))
++                    {
++                        return;
++                    }
++
++                    Assertions.assertNotNull(event);
++
++                    Assertions.assertFalse(event.isEmpty());
++
++                    Assertions.assertEquals(STATUS_FAIL, event.getString(STATUS));
++
++                    Assertions.assertEquals(ConfigConstants.ClientOperation.CONNECTION.getName(), event.getString(SSH_OPERATION));
++
++                    messageConsumer.unregister(asyncResult ->
++                    {
++                        // Restore original protocol after test completes
++                        if (originalProtocol != null)
++                        {
++                            credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                            credentialProfile.remove(PORT);
++                        }
++
++                        if (configContext != null && originalConfigContextProtocol != null)
++                        {
++                            configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                            configContext.remove(ConfigConstants.CONFIG_PORT);
++                            configContext.remove(PORT);
++                        }
++
++                        testContext.completeNow();
++                    });
++                });
++
++                TestUtil.vertx().eventBus().send(EVENT_SSH_CLIENT_MANAGER, context);
++            }
++            catch (Exception exception)
++            {
++                // Restore original protocol in case of exception
++                if (credentialProfile != null && originalProtocol != null)
++                {
++                    credentialProfile.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalProtocol);
++                    credentialProfile.remove(PORT);
++                }
++
++                if (configContext != null && originalConfigContextProtocol != null)
++                {
++                    configContext.put(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL, originalConfigContextProtocol);
++                    configContext.remove(ConfigConstants.CONFIG_PORT);
++                    configContext.remove(PORT);
++                }
++
++                testContext.failNow(exception);
++            }
++        }
++        else
++        {
++            LOGGER.warn("No Config device Present");
++
++            Assertions.fail("No configuration device found.");
++        }
++    }
+ }

@@ -1,0 +1,11 @@
+promise.complete();
+}, false, result -> {
+    // COMPLETE
+});
+```
+
+In the first example, the `executeBlocking` method is called with a lambda expression that contains the code to be executed in a separate thread. The second parameter `false` indicates that the method should not be executed on the event loop thread. The third parameter is a handler that will be called when the blocking operation is complete.
+
+In the second example, the `executeBlocking` method is called with a lambda expression that contains the code to be executed in a separate thread. The second parameter `false` indicates that the method should not be executed on the event loop thread. The third parameter is a handler that will be called when the blocking operation is complete.
+
+By

@@ -1,0 +1,135 @@
+commit 3fa1126b47993fc4afedb003f4d37b113aae980b
+Author: Priyansh <priyansh.sindhav@motadata.com>
+Date:   Mon Jun 9 14:27:12 2025 +0530
+
+    Motadata -6400 MongoDB Protocol removed
+
+diff --git a/motadata/db-files/dashboard-widgets/mongodb.json b/motadata/db-files/dashboard-widgets/mongodb.json
+index 0133341dcc..cd154341c4 100644
+--- a/motadata/db-files/dashboard-widgets/mongodb.json
++++ b/motadata/db-files/dashboard-widgets/mongodb.json
+@@ -1678,12 +1678,6 @@
+           "result.filter": {}
+         },
+         "data.points": [
+-          {
+-            "data.point": "mongodb.database",
+-            "aggregator": "last",
+-            "entity.type": "monitor",
+-            "entities": []
+-          },
+           {
+             "data.point": "mongodb.database~collections",
+             "aggregator": "last",
+@@ -1728,7 +1722,7 @@
+         "searchable": "yes",
+         "column.selection": "no",
+         "header": "yes",
+-        "view": "CPG Details",
++        "view": "Database Statistics",
+         "style": {
+           "header.font.size": "medium",
+           "css.classes": [
+@@ -1738,17 +1732,18 @@
+         },
+         "columns": [
+           {
+-            "name": "monitor",
+-            "show": "no",
+-            "sortable": "no",
++            "name": "mongodb.database",
++            "title": "Database",
++            "show": "yes",
++            "sortable": "yes",
+             "disable": "yes",
+-            "resizable": "no",
++            "resizable": "yes",
+             "selectable": "no",
+             "orderable": "no"
+           },
+           {
+             "name": "mongodb.database~collections.last",
+-            "title": "Colections",
++            "title": "Collections",
+             "show": "yes",
+             "sortable": "yes",
+             "disable": "no",
+diff --git a/motadata/src/main/java/com/mindarray/nms/NMSConstants.java b/motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+index 1c48342411..329968cba2 100755
+--- a/motadata/src/main/java/com/mindarray/nms/NMSConstants.java
++++ b/motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+@@ -471,7 +471,7 @@ public final class NMSConstants
+             JsonObject.of(OBJECT_TYPE, Type.MARIADB, PROTOCOL, Protocol.JDBC, OBJECT_CATEGORY, Category.SERVER),
+             JsonObject.of(OBJECT_TYPE, Type.MICROSOFT_DYNAMICS_CRM, PROTOCOL, Protocol.POWERSHELL, OBJECT_CATEGORY, Category.SERVER),
+             JsonObject.of(OBJECT_TYPE, Type.MICROSOFT_IIS, PROTOCOL, Protocol.POWERSHELL, OBJECT_CATEGORY, Category.SERVER),
+-            JsonObject.of(OBJECT_TYPE, Type.MONGODB, PROTOCOL, Protocol.MONGODB, OBJECT_CATEGORY, Category.SERVER),
++            JsonObject.of(OBJECT_TYPE, Type.MONGODB, PROTOCOL, Protocol.JDBC, OBJECT_CATEGORY, Category.SERVER),
+             JsonObject.of(OBJECT_TYPE, Type.MSMQ, PROTOCOL, Protocol.POWERSHELL, OBJECT_CATEGORY, Category.SERVER),
+             JsonObject.of(OBJECT_TYPE, Type.MYSQL, PROTOCOL, Protocol.JDBC, OBJECT_CATEGORY, Category.SERVER),
+             JsonObject.of(OBJECT_TYPE, Type.ORACLE_DATABASE, PROTOCOL, Protocol.JDBC, OBJECT_CATEGORY, Category.SERVER),
+@@ -694,11 +694,9 @@ public final class NMSConstants
+                  PRISM, CISCO_VMANAGE, CISCO_MERAKI, NETAPP_ONTAP_CLUSTER, HPE_STORE_ONCE, CISCO_ACI, HPE_PRIMERA,
+                  HPE_3PAR, DELL_EMC_UNITY -> Protocol.HTTP_HTTPS;
+ 
+-            case IBM_DB2, MARIADB, SQL_SERVER, MYSQL, ORACLE_DATABASE, POSTGRESQL, SAP_HANA, SAP_MAXDB, SYBASE ->
++            case IBM_DB2, MARIADB, SQL_SERVER, MYSQL, ORACLE_DATABASE,MONGODB, POSTGRESQL, SAP_HANA, SAP_MAXDB, SYBASE ->
+                     Protocol.JDBC;
+ 
+-            case MONGODB -> Protocol.MONGODB;
+-
+             case IBM_MQ -> Protocol.JMS;
+ 
+             default -> Protocol.UNKNOWN;
+@@ -2562,7 +2560,6 @@ public final class NMSConstants
+         SNMPV3("SNMP V3"),
+         SSH("SSH"),
+         JDBC("JDBC"),
+-        MONGODB("MongoDB"),
+         HTTP_HTTPS("HTTP/HTTPS"),
+         JMX("JMX"),
+         JMS("JMS"),
+diff --git a/motadata/src/main/resources/entity-schemas/credential-profiles.json b/motadata/src/main/resources/entity-schemas/credential-profiles.json
+index 47dd689923..0086384418 100644
+--- a/motadata/src/main/resources/entity-schemas/credential-profiles.json
++++ b/motadata/src/main/resources/entity-schemas/credential-profiles.json
+@@ -30,8 +30,7 @@
+         "JMX",
+         "JMS",
+         "Cloud",
+-        "Telnet",
+-        "MongoDB"
++        "Telnet"
+       ]
+     }
+   ],
+@@ -64,7 +63,7 @@
+           "id": 10000000000002
+         }
+       ],
+-      "version": "1.2"
++      "version": "1.1"
+     }
+   ]
+ }
+diff --git a/motadata/src/main/resources/entity-schemas/templates.json b/motadata/src/main/resources/entity-schemas/templates.json
+index 3d1f16eca7..82291f38e8 100644
+--- a/motadata/src/main/resources/entity-schemas/templates.json
++++ b/motadata/src/main/resources/entity-schemas/templates.json
+@@ -29756,7 +29756,7 @@
+             "text": "Overview"
+           },
+             {
+-              "tab.id": 10000000000399,
++              "tab.id": 10000000000401,
+               "text": "Database"
+             },
+             {
+@@ -29910,7 +29910,7 @@
+           ]
+         },
+         {
+-          "id": 10000000000399,
++          "id": 10000000000401,
+           "template.name": "MongoDB Database",
+           "template.tabs": [],
+           "style": {

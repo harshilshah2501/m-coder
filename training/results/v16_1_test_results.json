@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-01-07T05:19:03.463284",
+  "model": "/home/harshil/Harshil-PoCs/models/v16_1_merged",
+  "num_samples": 10,
+  "results": [
+    {
+      "sample_id": 0,
+      "prompt_length": 193,
+      "response_length": 2997,
+      "inference_time": 14.296043395996094,
+      "response": "How does MetricPoller.send() work?\n\nCode signature: public send(Map<String, JsonObject> contexts, String errorCode, String error) { ... }\nFile: src/main/java/com/mindarray/nms/MetricPoller.java\nLine: ..."
+    },
+    {
+      "sample_id": 1,
+      "prompt_length": 217,
+      "response_length": 3016,
+      "inference_time": 13.808438301086426,
+      "response": "How does VisualizationEventManager.resolvePlugin() work?\n\nCode signature: public resolvePlugin(JsonObject visualizationDataSource) { ... }\nFile: src/main/java/com/mindarray/visualization/Visualization..."
+    },
+    {
+      "sample_id": 2,
+      "prompt_length": 1619,
+      "response_length": 3796,
+      "inference_time": 14.295686483383179,
+      "response": "File: motadata/src/test/java/com/mindarray/suite/DependentServerAPISuite.java\n\nContent:\n```\n/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motada..."
+    },
+    {
+      "sample_id": 3,
+      "prompt_length": 3607,
+      "response_length": 5744,
+      "inference_time": 14.315367937088013,
+      "response": "File: motadata/src/main/java/com/mindarray/datastore/EventDatastore.java\n\nContent:\n```\n/*\n * Copyright (c) Motadata 2024. All rights reserved.\n */\n\npackage com.mindarray.datastore;\n\nimport com.mindarr..."
+    },
+    {
+      "sample_id": 4,
+      "prompt_length": 2093,
+      "response_length": 2193,
+      "inference_time": 0.6410942077636719,
+      "response": "Review this code change:\n\nFile: motadata/src/main/java/com/mindarray/BootstrapFailover.java\n\n```diff\nindex b831cd29cf..2715240714 100644\n--- a/motadata/src/main/java/com/mindarray/BootstrapFailover.ja..."
+    },
+    {
+      "sample_id": 5,
+      "prompt_length": 203,
+      "response_length": 2400,
+      "inference_time": 14.450574398040771,
+      "response": "Task: Cycle start notification refactor\n\nFiles to refactor:\n1. motadata/src/main/java/com/mindarray/slo/SLOProcessor.java\n2. motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.j..."
+    },
+    {
+      "sample_id": 6,
+      "prompt_length": 1313,
+      "response_length": 1463,
+      "inference_time": 0.9779849052429199,
+      "response": "Review this code change:\n\nFile: motadata/src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java\n\n<thinking>\nI need to modify src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl..."
+    },
+    {
+      "sample_id": 7,
+      "prompt_length": 153,
+      "response_length": 2680,
+      "inference_time": 13.93522572517395,
+      "response": "How does JobScheduler.REDISCOVER() work?\n\nCode signature: public REDISCOVER(\"Rediscover\") { ... }\nFile: src/main/java/com/mindarray/job/JobScheduler.java\n\nIn JobScheduler.REDISCOVER(), the method is d..."
+    },
+    {
+      "sample_id": 8,
+      "prompt_length": 6983,
+      "response_length": 9515,
+      "inference_time": 14.36521577835083,
+      "response": "File: motadata/src/main/java/com/mindarray/BootstrapLogCollector.java\n\nContent:\n```\n/*\n * Copyright (c) Motadata 2024. All rights reserved.\n */\n\npackage com.mindarray;\n\nimport com.mindarray.eventbus.*..."
+    },
+    {
+      "sample_id": 9,
+      "prompt_length": 2701,
+      "response_length": 3963,
+      "inference_time": 14.380656003952026,
+      "response": "File: motadata/test-plugin-metrics/nutanix_poll.json\n\nContent:\n```\n{\n  \"172.16.10.210\": {\n    \"result\" : {\n      \"nutanix\" : \"NTNX-806419bd-A\",\n      \"nutanix.acropolis.connection.state\" : \"kConnected..."
+    }
+  ]
+}

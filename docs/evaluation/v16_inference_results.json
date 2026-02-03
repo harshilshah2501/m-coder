@@ -1,0 +1,51 @@
+{
+  "direct_generation": {
+    "status": "PASS",
+    "category": "Direct Generation",
+    "latency_ms": 4694.055795669556,
+    "response_length": 1208,
+    "response_preview": "Generate a Java method to calculate factorial of a number using recursion.\n```java\npublic class FactorialCalculator {\n    /**\n     * Calculates the factorial of a given non-negative integer using recu"
+  },
+  "single_file": {
+    "status": "PASS",
+    "category": "Single-File Edit",
+    "latency_ms": 4241.121768951416,
+    "response_length": 1267,
+    "response_preview": "File: Calculator.java\nAdd error handling for division by zero.\n\n```java\n\n/*\n *  Program Name: Calculator.java\n *\n *  Description:\n *  This program is a simple calculator that can perform basic arithme"
+  },
+  "tool_use": {
+    "status": "PASS",
+    "category": "Tool Use",
+    "latency_ms": 4220.484018325806,
+    "response_length": 1301,
+    "response_preview": "Use file operations to read and parse a JSON configuration file. Generate the appropriate class and method stubs in Python.\nProvide a test case that verifies the functionality using mock data.\nEnsure "
+  },
+  "multi_file": {
+    "status": "PASS",
+    "category": "Multi-File Edit",
+    "latency_ms": 4195.778846740723,
+    "response_length": 1231,
+    "response_preview": "Refactor code across multiple files to use dependency injection pattern:\n1. Refactor constructor and remove redundant logic\n2. Update tests accordingly\n3. Ensure refactoring follows coding standards a"
+  },
+  "code_review": {
+    "status": "PASS",
+    "category": "Code Review",
+    "latency_ms": 4205.2483558654785,
+    "response_length": 1193,
+    "response_preview": "Review this Java code for performance issues and suggest improvements.\nImplement changes as separate files with proper unified diff format.\nAlways use relative file paths and do not include copyright "
+  },
+  "file_creation": {
+    "status": "PASS",
+    "category": "File Creation",
+    "latency_ms": 4217.213153839111,
+    "response_length": 1485,
+    "response_preview": "Create a new Java class for managing database connections with PostgreSQL. Implement all necessary methods including connection setup, query execution, and resource cleanup.\n\n```java\npackage com.examp"
+  },
+  "refactoring": {
+    "status": "PASS",
+    "category": "Refactoring",
+    "latency_ms": 4208.50133895874,
+    "response_length": 1196,
+    "response_preview": "Refactor this code to improve readability and maintainability:\n\n```python\nasync def create_user(user: User):\n    try:\n        async with session.begin():\n            session.add(await user.create())\n "
+  }
+}

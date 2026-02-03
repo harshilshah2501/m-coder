@@ -1,0 +1,2998 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Model Evaluation Report - 2026-01-07 06:29:17</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        .summary { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .summary-stat { display: inline-block; margin-right: 30px; }
+        .summary-stat .label { font-weight: bold; color: #666; }
+        .summary-stat .value { font-size: 24px; color: #333; }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th { background: #007bff; color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; vertical-align: top; }
+        tr:hover { background: #f8f9fa; }
+        .use-case-header { background: #e9ecef; font-weight: bold; font-size: 16px; }
+        .output-cell { max-width: 600px; }
+        .output-content { max-height: 300px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 10px; border-radius: 4px; }
+        .validation-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
+        .badge-pass { background: #d4edda; color: #155724; }
+        .badge-fail { background: #f8d7da; color: #721c24; }
+        .metadata { font-size: 11px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Comprehensive Model Evaluation Report</h1>
+    
+    <div class="summary">
+        <h2>Summary</h2>
+        <div class="summary-stat">
+            <div class="label">Timestamp:</div>
+            <div class="value">2026-01-07 06:29:17</div>
+        </div>
+        <div class="summary-stat">
+            <div class="label">Total Samples:</div>
+            <div class="value">25</div>
+        </div>
+        <div class="summary-stat">
+            <div class="label">Passed:</div>
+            <div class="value class="fail">10/25 (40.0%)</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">Use Case</th>
+                <th style="width: 25%;">User Input</th>
+                <th style="width: 45%;">Model Output (FULL)</th>
+                <th style="width: 10%;">Validation</th>
+                <th style="width: 10%;">Metrics</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <tr class="use-case-header">
+                <td colspan="5">CODE REVIEW (3/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/java/com/mindarray/BootstrapFailover.java
+
+```diff
+index b831cd29cf..2715240714 100644
+--- a/motadata/src/main/java/com/mindarray/BootstrapFailover.java
++++ b/motadata/src/main/java/com/mindarray/BootstrapFailover.java
+@@ -2,24 +2,16 @@ package com.mindarray;
+ 
+ import com.mindarray.db.*;
+ import com.mindarray.eventbus.*;
+-import com.mindarray.ha.ConfigManager;
+-import com.mindarray.log.LogParser;
+-import com.mindarray.nms.*;
+-import com.mindarra...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">rray/BootstrapFailover.java.
+
+I'll analyze:
+1. Code quality
+2. Potential bugs
+3. Best practices
+4. Performance considerations
+</thinking>
+
+## Code Quality
+
+### Strengths
+✅ **Readability**: Well-structured and easy to understand
+✅ **Modularity**: Changes are focused and don't introduce complexity
+✅ **Consistency**: Follows existing coding patterns and conventions
+
+### Areas for Improvement
+❌ **Error handling**: Ensure all possible error cases are covered
+❌ **Code duplication**: Avoid repeating similar logic across methods
+❌ **Magic numbers**: Replace hardcoded values with named constants where appropriate
+
+## Potential Bugs
+
+### Risks
+- **Null pointer exceptions**: Ensure all objects are properly initialized
+- **Resource leaks**: Make sure resources like files or network connections are closed
+- **Concurrency issues**: Be cautious of shared state in multi-threaded environments
+
+### Recommendations
+1. **Add null checks** where objects may be `null`
+2. **Use try-with-resources** for managing closeable resources
+3. **Synchronize access** to shared mutable state
+
+## Best Practices
+
+### Adherences
+✅ **DRY principle**: Avoid redundant code
+✅ **YAGNI principle**: Implement only what's necessary
+✅ **KISS principle**: Keep it simple, avoid over-engineering
+
+### Improvements
+1. **Extract methods**: For complex logic, consider breaking into smaller methods
+2. **Use meaningful names**: Ensure variable and method names clearly describe their purpose
+3. **Follow naming conventions**: Adhere to the project's naming standards (e.g., camelCase for methods)
+
+## Performance Considerations
+
+### Implications
+- **Memory usage**: Be mindful of object creation and garbage collection
+- **CPU utilization**: Optimize loops and algorithms for efficiency
+- **I/O operations**: Minimize blocking calls and use non-blocking alternatives when possible
+
+### Recommendations
+1. **Profile performance**: Use tools like VisualVM or JProfiler to identify bottlenecks
+2. **Optimize loops**: Avoid unnecessary iterations and use efficient data structures
+3. **Cache results**: Store frequently accessed data to reduce computation
+
+## Conclusion
+
+### Verdict
+✅ **APPROVED** - The code change is of high quality and meets Motadata standards.
+
+### Next Steps
+1. **Code review**: Have another team member review the changes
+2. **Unit testing**: Ensure existing and new tests cover the modifications
+3. **Merge**: Commit the changes once reviewed and tested
+
+@motadata-bot @adarsh-r @praveen-1401 @vivek-kumarsinha @adarsh-1401 @rakesh-singh-soni @praveen-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-1401 @adarsh-</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.66s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+
+<thinking>
+I need to modify src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java to added support for system network interface in report.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+Fil...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">eServiceImpl.java. Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File: src/main/java/com/mindarray/cache/AvailabilityCacheServiceImpl.java
+```
+
+```diff
+File:</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">has_structure</span><span class="validation-badge badge-fail">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 56.69s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/resources/entity-schemas/templates.json
+
+```diff
+@@ -29746,15 +29746,159 @@
+               "options": {}
+             }
+           ]
++        }
++      ],
++      "version": "5.8"
++    },
++    {
++      "type": "inline",
++      "records": [
++        {
++          "id": 10000000000176,
++          "template.name": "Zimbra",
++          "template.tabs": [
++            {
++              "tab.id": 10000000000176,
++              "text": "Overview"
++         ...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">system
+You are a senior Motadata engineer. Review code and provide feedback, or create new files as needed.
+user
+Review this code change:
+
+File: motadata/src/main/resources/entity-schemas/templates.json
+
+```diff
+@@ -29746,15 +29746,159 @@
+               "options": {}
+             }
+           ]
++        }
++      ],
++      "version": "5.8"
++    },
++    {
++      "type": "inline",
++      "records": [
++        {
++          "id": 10000000000176,
++          "template.name": "Zimbra",
++          "template.tabs": [
++            {
++              "tab.id": 10000000000176,
++              "text": "Overview"
++            }
++          ],
++          "style": {
++            "font.size": "large",
++            "h.gap": 8,
++            "v.gap": 8,
++            "row.height": 85
++          },
++          "template.widgets": [
++            {
++              "x": 0,
++              "y": 0,
++              "h": 2,
++              "w": 2,
++              "id": 10000000001988,
++              "options": {}
++            },
++            {
++              "x": 2,
++              "y": 0,
++              "h": 2,
++              "w": 2,
++              "id": 10000000001989,
++              "options": {}
++            },
++            {
++              "x": 4,
++              "y": 0,
++              "h": 2,
++              "w": 2,
++              "id": 10000000001990,
++              "options": {}
++            },
++            {
++              "x": 6,
++              "y": 0,
++              "h": 2,
++              "w": 2,
++              "id": 10000000001993,
++              "options": {}
++            },
++            {
++              "x": 8,
++              "y": 0,
++              "h": 2,
++              "w": 2,
++              "id": 10000000001991,
++              "options": {}
++            },
++            {
++              "x": 10,
++              "y": 0,
++              "h": 2,
++              "w": 2,
++              "id": 10000000001992,
++              "options": {}
++            },
++            {
++              "x": 0,
++              "y": 2,
++              "h": 3,
++              "w": 2,
++              "id": 10000000003990,
++              "options": {}
++            },
++            {
++              "x": 2,
++              "y": 2,
++              "h": 3,
++              "w": 4,
++              "id": 10000000003991,
++              "options": {}
++            },
++            {
++              "x": 6,
++              "y": 2,
++              "h": 3,
++              "w": 6,
++              "id": 10000000001994,
++              "options": {}
++            },
++            {
++              "x": 0,
++              "y": 5,
++              "h": 3,
++              "w": 4,
++              "id": 10000000001995,
++              "options": {}
++            },
++            {
++              "x": 4,
++              "y": 5,
++              "h": 3,
++              "w": 4,
++              "id": 10000000001996,
++              "options": {}
++            },
++            {
++              "x": 8,
++              "y": 5,
++              "h": 3,
++              "w": 4,
++              "id": 10000000001997,
++              "options": {}
++            },
++            {
++              "x": 0,
++              "y": 8,
++              "h": 4,
++              "w": 4,
++              "id": 10000000001998,
++              "options": {}
++            },
++            {
++              "x": 4,
++              "y": 8,
++              "h": 4,
++              "w": 4,
++              "id": 10000000001999,
++              "options": {}
++            },
++            {
++              "x": 8,
++              "y": 8,
++              "h": 4,
++              "w": 4,
++              "id": 10000000002000,
++              "options": {}
++            }
++          ]
+         },
+         {
+           "id": 10000000000398,
+           "template.name": "MongoDB",
+           "template.tabs": [
+             {
+-            "tab.id": 10000000000398,
+-            "text": "Overview"
+-          },
++              "tab.id": 10000000000398,
++              "text": "Overview"
++            },
+             {
+               "tab.id": 10000000000401,
+               "text": "Database"
+@@ -30040,150 +30184,6 @@
+           ]
+         }
+       ],
+-      "version": "5.8"
+-    },
+-    {
+-      "type": "inline",
+-      "records": [
+-        {
+-          "id": 10000000000176,
+-          "template.name": "Zimbra",
+-          "template.tabs": [
+-            {
+-              "tab.id": 10000000000176,
+-              "text": "Overview"
+-            }
+-          ],
+-          "style": {
+-            "font.size": "large",
+-            "h.gap": 8,
+-            "v.gap": 8,
+-            "row.height": 85
+-          },
+-          "template.widgets": [
+-            {
+-              "x": 0,
+-              "y": 0,
+-              "h": 2,
+-              "w": 2,
+-              "id": 10000000001988,
+-              "options": {}
+-            },
+-            {
+-              "x": 2,
+-              "y": 0,
+-              "h": 2,
+-              "w": 2,
+-              "id": 10000000001989,
+-              "options": {}
+-            },
+-            {
+-              "x": 4,
+-              "y": 0,
+-              "h": 2,
+-              "w": 2,
+-              "id": 10000000001990,
+-              "options": {}
+-            },
+-            {
+-              "x": 6,
+-              "y": 0,
+-              "h": 2,
+-              "w": 2,
+-              "id": 10000000001993,
+-              "options": {}
+-            },
+-            {
+-              "x": 8,
+-              "y": 0,
+-              "h": 2,
+-              "w": 2,
+-              "id": 10000000001991,
+-              "options": {}
+-            },
+-            {
+-              "x": 10,
+-              "y": 0,
+-              "h": 2,
+-              "w": 2,
+-              "id": 10000000001992,
+-              "options": {}
+-            },
+-            {
+-              "x": 0,
+-              "y": 2,
+-              "h": 3,
+-              "w": 2,
+-              "id": 10000000003990,
+-              "options": {}
+-            },
+-            {
+-              "x": 2,
+-              "y": 2,
+-              "h": 3,
+-              "w": 4,
+-              "id": 10000000003991,
+-              "options": {}
+-            },
+-            {
+-              "x": 6,
+-              "y": 2,
+-              "h": 3,
+-              "w": 6,
+-              "id": 10000000001994,
+-              "options": {}
+-            },
+-            {
+-              "x": 0,
+-              "y": 5,
+-              "h": 3,
+-              "w": 4,
+-              "id": 10000000001995,
+-              "options": {}
+-            },
+-            {
+-              "x": 4,
+-              "y": 5,
+-              "h": 3,
+-              "w": 4,
+-              "id": 10000000001996,
+-              "options": {}
+-            },
+-            {
+-              "x": 8,
+-              "y": 5,
+-              "h": 3,
+-              "w": 4,
+-              "id": 10000000001997,
+-              "options": {}
+-            },
+-            {
+-              "x": 0,
+-              "y": 8,
+-              "h": 4,
+-              "w": 4,
+-              "id": 10000000001998,
+-              "options": {}
+-            },
+-            {
+-              "x": 4,
+-              "y": 8,
+-              "h": 4,
+-              "w": 4,
+-              "id": 10000000001999,
+-              "options": {}
+-            },
+-            {
+-              "x": 8,
+-              "y": 8,
+-              "h": 4,
+-              "w": 4,
+-              "id": 10000000002000,
+-              "options": {}
+-            }
+-          ]
+-        }
+-      ],
+       "version": "6.0"
+     }
+   ]
+
+```
+
+Provide a code review focusing on:
+1. Code quality
+2. Potential bugs
+3. Best practices
+4. Performance considerations
+assistant
+<thinking>
+Let me review this code change for motadata/src/main/resources/entity-schemas/templates.json.
+
+I'll analyze:
+- Code structure and readability
+- Potential issues or bugs
+- Adherence to best practices
+- Performance implications
+</thinking>
+
+## Code Review
+
+### Summary
+This change modifies motadata/src/main/resources/entity-schemas/templates.json with focused improvements.
+
+### Positive Aspects
+✅ **Clear intent**: The changes are well-structured and focused
+✅ **Proper format**: Uses correct SEARCH/REPLACE block format
+✅ **Minimal scope**: Changes are limited to what's necessary
+
+### Observations
+- The modification follows Motadata coding standards
+- Changes are backward compatible
+- No obvious performance issues
+
+### Recommendations
+1. **Testing**: Ensure unit tests cover the modified code paths
+2. **Documentation**: Update relevant documentation if behavior changed
+3. **Code review**: Have another team member review before merging
+
+### Verdict
+✅ **APPROVED** - Code change looks good with minor recommendations above.
+assistant
+## Thinking Assistant
+
+Let me assist you with your task. How can I help?</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 18<br>
+                        Time: 0.71s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Review this code change:
+
+File: motadata/src/main/java/com/mindarray/datastore/Datastore.java
+
+```diff
+index 96e28741f3..0af4df6a51 100644
+--- a/motadata/src/main/java/com/mindarray/datastore/Datastore.java
++++ b/motadata/src/main/java/com/mindarray/datastore/Datastore.java
+@@ -289,11 +289,6 @@ public class Datastore
+         return events.values().stream().reduce(0L, Long::sum); //return total pending events...
+     }
+ 
+-    protected boolean isEmpty()
+-    {
+-        return eventFiles.isEmpty(...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ava/com/mindarray/datastore/Datastore.java` is approved.
+
+### Verdict
+✅ **APPROVED**
+
+#### Reason
+The modification follows:
+- Motadata coding standards
+- Best practices for this project
+- No obvious issues or risks
+
+#### Next Steps
+1. **Testing**: Ensure unit tests cover the changes
+2. **Code review**: Have another team member review if possible
+3. **Merge**: Safely merge the change after testing
+
+@abhay-gupta93, you may proceed with this approval.</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 128<br>
+                        Time: 3.48s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>code review</td>
+                <td>
+                    <div class="output-content">Task: Refactor: Rename methods for clarity, update DB commands, remove unused imports, and enhance package documentation for better maintainability and readability.
+
+Code Review !!!
+
+PR : 4610
+
+AIOPS-8.0.23 || MOTADATA-6353 || As a system user, I should be able to verify the migration from H2 In-Memory DB to PostgreSQL DB for existing deployments.
+
+Reviewed-by: Alpesh Dhamelia <alpesh@motadata.com>
+
+Files to modify (3 files):
+1. motadata/src/main/java/com/mindarray/compliance/package-info.java
+2...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">clarity, update DB commands, remove unused imports, and enhance package documentation for better maintainability and readability.
+
+Code Review !!!
+
+PR : 4610
+
+AIOPS-8.0.23 || MOTADATA-6353 || As a system user, I should be able to verify the migration from H2 In-Memory DB to PostgreSQL DB for existing deployments.
+
+Reviewed-by: Alpesh Dhamelia <alpesh@motadata.com>
+
+Files to change:
+1. motadata/src/main/java/com/mindarray/compliance/package-info.java
+2. motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
+3. motadata/src/main/java/com/mindarray/manager/MotadataAppManager.java
+
+I'll generate SEARCH/REPLACE blocks for each file with proper format.
+</thinking>
+
+<code>
+File: motadata/src/main/java/com/mindarray/compliance/package-info.java
+<<<< SEARCH
+ *
+ */
+
+@ModuleGen(groupPackage = "com.mindarray.compliance", name = "compliance")
+package com.mindarray.compliance;
+
+import io.vertx.codegen.annotations.ModuleGen;
+====
+ *
+ */
+
+/**
+ * This package contains compliance-related functionality for the Motadata system.
+ * It provides implementations for handling security configurations, proxy server settings,
+ * and other compliance-related features required for system operations.
+ * <p>
+ * The package includes components for:
+ * <ul>
+ *   <li>Proxy server configuration management</li>
+ *   <li>Security compliance validation</li>
+ *   <li>Configuration persistence and retrieval</li>
+ * </ul>
+ */
+package com.mindarray.compliance;
+
+>>>> REPLACE
+
+File: motadata/src/main/java/com/mindarray/db/DBServiceProvider.java
+<<<< SEARCH
+        LOGGER.info("db pool created...");
+
+        // postgres DB vacuum job
+        vertx.eventBus().localConsumer(EventBusConstants.EVENT_DB_COMPACT, message->
+                pool.query("VACUUM FULL ANALYZE;").execute(result ->
+                {
+                    if (result.succeeded())
+                    {
+                        LOGGER.info("config db compacted successfully!");
+                    }
+                    else
+                    {
+====
+        LOGGER.info("db pool created...");
+
+        // postgres DB vacuum job
+        vertx.eventBus().localConsumer(EventBusConstants.EVENT_DB_COMPACT, message ->
+                pool.query("VACUUM FULL ANALYZE;").execute(result ->
+                {
+                    if (result.succeeded())
+                    {
+                        LOGGER.info("db compacted successfully!");
+                    }
+                    else
+                    {
+>>>> REPLACE
+
+<<<< SEARCH
+                }
+
+                asyncPromise.future().onComplete(asyncResponse ->
+                        createConfigDBService().compose(future ->
+                                createComplianceDBService()).onComplete(result->
+                        {
+                            if (result.succeeded())
+                            {
+====
+                }
+
+                asyncPromise.future().onComplete(asyncResponse ->
+                        registerConfigDBService().compose(future ->
+                                registerComplianceDBService()).onComplete(result ->
+                        {
+                            if (result.succeeded())
+                            {
+>>>> REPLACE
+
+<<<< SEARCH
+        });
+    }
+
+    private Future<Void> createConfigDBService()
+    {
+        var promise = Promise.<Void>promise();
+
+====
+        });
+    }
+
+    private Future<Void> registerConfigDBService()
+    {
+        var promise = Promise.<Void>promise();
+
+>>>> REPLACE
+
+<<<< SEARCH
+        return promise.future();
+    }
+
+    private Future<Void> createComplianceDBService()
+    {
+        var promise = Promise.<Void>promise();
+====
+        return promise.future();
+    }
+
+    private Future<Void> registerComplianceDBService()
+    {
+        var promise = Promise.<Void>promise();
+>>>> REPLACE
+
+File: motadata/src/main/java/com/mindarray/manager/MotadataAppManager.java
+<<<< SEARCH
+                                                    // transferring file from zip to "current/config" directory
+                                                    if (restoreFiles(event, response))
+                                                    {
+                                                        restorePostgresBackup().onComplete(futureResult->
+                                                        {
+                                                            response.put(PROGRESS, 100.0).put(MESSAGE, "Restore completed. starting motadata service....");
+
+====
+                                                    // transferring file from zip to "current/config" directory
+                                                    if (restoreFiles(event, response))
+                                                    {
+                                                        restoreDBBackup().onComplete(futureResult ->
+                                                        {
+                                                            response.put(PROGRESS, 100.0).put(MESSAGE, "Restore completed. starting motadata service....");
+
+>>>> REPLACE
+
+<<<< SEARCH
+        return finished;
+    }
+
+    private Future<String> restorePostgresBackup()
+    {
+        var backupFile = CURRENT_DIR + PATH_SEPARATOR + CONFIG_DIR + PATH_SEPARATOR + "backup.dump";
+
+        return executeCommand(List.of(
+                "pg_restore",
+                "-U", "motadata",
+                "-h", "127.0.0.1",
+                "-c", backupFile,
+                "-d", "motadata"
+        ), true, 0, Map.of("PGPASSWORD", "TRACEorg@2025"));
+    }
+====
+        return finished;
+    }
+
+    private Future<String> restoreDBBackup()
+    {
+        return executeCommand(List.of(
+                "pg_restore",
+                "-U", "motadata",
+                "-h", "127.0.0.1",
+                "-c", CURRENT_DIR + PATH_SEPARATOR + CONFIG_DIR + PATH_SEPARATOR + "backup.dump",
+                "-d", "motadata"
+        ), true, 0, Map.of("PGPASSWORD", "TRACEorg@2025"));
+    }
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">has_structure</span><span class="validation-badge badge-pass">has_verdict</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 1143<br>
+                        Time: 31.36s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">DEBUGGING RCA (3/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/datastore/EventDatastore.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.datastore;
+
+import com.mindarray.Bootstrap;
+import com.mindarray.api.RemoteEventProcessor;
+import com.mindarray.eventbus.EventBusConstants;
+import com.mindarray.util.Logger;
+import com.mindarray.util.MotadataConfigUtil;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+
+im...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ers.</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-fail">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">identifies_issue</span><span class="validation-badge badge-fail">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 21<br>
+                        Time: 0.64s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/BootstrapLogCollector.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray;
+
+import com.mindarray.eventbus.*;
+import com.mindarray.log.*;
+import com.mindarray.nms.DiscoveryEngine;
+import com.mindarray.nms.MetricPoller;
+import com.mindarray.nms.RediscoverEngine;
+import com.mindarray.nms.TopologyEngine;
+import com.mindarray.plugin.PluginEngine;
+import com.mindarray.plugin.PluginEngineResponseProcessor;
+impo...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">tstrapLogCollector.java based on the instructions provided.
+
+Let me analyze the necessary modifications:
+1. Locate the relevant code section
+2. Apply the required changes
+3. Ensure the modifications are accurate and minimal
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+```diff
+File: motadata/src/main/java/com/mindarray/BootstrapLogCollector.java
+<<<< SEARCH
+import com.mindarray.nms.DiscoveryEngine;
+import com.mindarray.nms.MetricPoller;
+import com.mindarray.nms.RediscoverEngine;
+import com.mindarray.nms.TopologyEngine;
+import com.mindarray.plugin.PluginEngine;
+import com.mindarray.plugin.PluginEngineResponseProcessor;
+import com.mindarray.util.*;
+
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+
+public class BootstrapLogCollector
+{
+    private static final Logger LOGGER = new Logger(BootstrapLogCollector.class, GlobalConstants.MOTADATA_SYSTEM, "Bootstrap Log Collector");
+
+    private static void startRemoteEventProcessor()
+    {
+        Bootstrap.startEngine(new RemoteEventChangeNotificationHandler(), RemoteEventChangeNotificationHandler.class.getSimpleName(), null)
+                .onComplete(response ->
+                {
+                    if (response.succeeded())
+                    {
+                        var futures = new ArrayList<Future>();
+
+                        var forwarderPort = CommonUtil.getEventPublisherPort();
+
+                        for (var index = 0; index < MotadataConfigUtil.getEventPublishers(); index++)
+                        {
+                            var promise = Promise.promise();
+
+                            futures.add(promise.future());
+
+                            Bootstrap.startEngine(new RemoteEventForwarder(forwarderPort + index), RemoteEventForwarder.class.getSimpleName() + " " + (forwarderPort + index), null).onComplete(handler ->
+                            {
+                                if (handler.succeeded())
+                                {
+                                    promise.complete();
+                                }
+                                else
+                                {
+                                    promise.fail(handler.cause());
+                                }
+                            });
+                        }
+
+                        CompositeFuture.join(futures).onComplete(handler ->
+                        {
+                            if (handler.succeeded())
+                            {
+                                try
+                                {
+                                    EventBusConstants.setRemoteEventProcessorRegistrationId();
+
+                                    EventBusConstants.register(new CipherUtil());
+
+                                    //need to start this engine after RPE register
+
+                                    var asyncResults = new ArrayList<Future>();
+
+                                    var subscriberPort = CommonUtil.getEventSubscriberPort();
+
+                                    for (var index = 0; index < MotadataConfigUtil.getEventSubscribers(); index++)
+                                    {
+                                        var promise = Promise.promise();
+
+                                        asyncResults.add(promise.future());
+
+                                        Bootstrap.startEngine(new RemoteEventSubscriber(subscriberPort + index), RemoteEventSubscriber.class.getSimpleName() + " " + (subscriberPort + index), null).onComplete(asyncResult ->
+                                        {
+                                            if (asyncResult.succeeded())
+                                            {
+                                                promise.complete();
+                                            }
+                                            else
+                                            {
+                                                promise.fail(asyncResult.cause());
+                                            }
+                                        });
+                                    }
+                                    CompositeFuture.join(asyncResults).compose(future -> Bootstrap.startEngine(new LocalEventRouter(EventBusConstants.EVENT_LOG_PROCESS, EventBusConstants.EVENT_SOURCE, MotadataConfigUtil.getLogParsers(), LogParser.class.getCanonicalName(), true), LogParser.class.getSimpleName(), null))
+                                            .compose(future -> Bootstrap.startEngine(new TCPLogListener(), TCPLogListener.class.getSimpleName(), null))
+                                            .compose(future -> Bootstrap.startEngine(new UDPLogListener(), UDPLogListener.class.getSimpleName(), null))
+                                            .onComplete(result ->
+                                            {
+                                                if (result.failed())
+                                                {
+                                                    Bootstrap.stop(result.cause());
+                                                }
+                                                else
+                                                {
+                                                    LOGGER.info(String.format(InfoMessageConstants.MOTADATA_ENGINE_START_SUCCEEDED, Bootstrap.bootstrapType()));
+                                                }
+                                            });
+                                }
+                                catch (Exception exception)
+                                {
+                                    Bootstrap.stop(exception);
+                                }
+                            }
+                            else
+                            {
+                                Bootstrap.stop(handler.cause());
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Bootstrap.stop(response.cause());
+                    }
+                });
+    }
+
+    /*
+     *   Port details for Agent/RemoteEventProcessor:
+     *
+     *   event.publisher.port : start from 9449
+     *   event.subscriber.port :start from 9444
+     * */
+
+    public void start()
+    {
+        try
+        {
+            Bootstrap.logSystemConfig();
+
+            PortUtil.init();
+
+            WebClientUtil.init();
+
+            MotadataConfigUtil.loadConfigs(new JsonObject(Files.readString(new File(GlobalConstants.CURRENT_DIR + GlobalConstants.PATH_SEPARATOR + GlobalConstants.CONFIG_DIR + GlobalConstants.PATH_SEPARATOR + "motadata.json").toPath(), StandardCharsets.UTF_8)));
+
+            ProcessUtil.setProcessors();
+
+            startRemoteEventProcessor();
+        }
+        catch (Exception exception)
+        {
+            LOGGER.error(exception);
+        }
+    }
+}
+====
+import com.mindarray.nms.DiscoveryEngine;
+import com.mindarray.nms.MetricPoller;
+import com.mindarray.nms.RediscoverEngine;
+import com.mindarray.nms.TopologyEngine;
+import com.mindarray.plugin.PluginEngine;
+import com.mindarray.plugin.PluginEngineResponseProcessor;
+import com.mindarray.util.*;
+
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+
+public class BootstrapLogCollector
+{
+    private static final Logger LOGGER = new Logger(BootstrapLogCollector.class, GlobalConstants.MOTADATA_SYSTEM, "Bootstrap Log Collector");
+
+    private static void startRemoteEventProcessor()
+    {
+        Bootstrap.startEngine(new RemoteEventChangeNotificationHandler(), RemoteEventChangeNotificationHandler.class.getSimpleName(), null)
+                .onComplete(response ->
+                {
+                    if (response.succeeded())
+                    {
+                        var futures = new ArrayList<Future>();
+
+                        var forwarderPort = CommonUtil.getEventPublisherPort();
+
+                        for (var index = 0; index < MotadataConfigUtil.getEventPublishers(); index++)
+                        {
+                            var promise = Promise.promise();
+
+                            futures.add(promise.future());
+
+                            Bootstrap.startEngine(new RemoteEventForwarder(forwarderPort + index), RemoteEventForwarder.class.getSimpleName() + " " + (forwarderPort + index), null).onComplete(handler ->
+                            {
+                                if (handler.succeeded())
+                                {
+                                    promise.complete();
+                                }
+                                else
+                                {
+                                    promise.fail(handler.cause());
+                                }
+                            });
+                        }
+
+                        CompositeFuture.join(futures).onComplete(handler ->
+                        {
+                            if (handler.succeeded())
+                            {
+                                try
+                                {
+                                    EventBusConstants.setRemoteEventProcessorRegistrationId();
+
+                                    EventBusConstants.register(new CipherUtil());
+
+                                    //need to start this engine after RPE register
+
+                                    var asyncResults = new ArrayList<Future>();
+
+                                    var subscriberPort = CommonUtil.getEventSubscriberPort();
+
+                                    for (var index = 0; index < MotadataConfigUtil.getEventSubscribers(); index++)
+                                    {
+                                        var promise = Promise.promise();
+
+                                        asyncResults.add(promise.future());
+
+                                        Bootstrap.startEngine(new RemoteEventSubscriber(subscriberPort + index), RemoteEventSubscriber.class.getSimpleName() + " " + (subscriberPort + index), null).onComplete(asyncResult ->
+                                        {
+                                            if (asyncResult.succeeded())
+                                            {
+                                                promise.complete();
+                                            }
+                                            else
+                                            {
+                                                promise.fail(asyncResult.cause());
+                                            }
+                                        });
+                                    }
+                                    CompositeFuture.join(asyncResults).compose(future -> Bootstrap.startEngine(new LocalEventRouter(EventBusConstants.EVENT_LOG, EventBusConstants.EVENT_SOURCE, MotadataConfigUtil.getLogParsers(), LogParser.class.getCanonicalName(), true), LogParser.class.getSimpleName(), null))
+                                            .compose(future -> Bootstrap.startEngine(new TCPLogListener(), TCPLogListener.class.getSimpleName(), null))
+                                            .compose(future -> Bootstrap.startEngine(new UDPLogListener(), UDPLogListener.class.getSimpleName(), null))
+                                            .onComplete(result ->
+                                            {
+                                                if (result.failed())
+                                                {
+                                                    Bootstrap.stop(result.cause());
+                                                }
+                                                else
+                                                {
+                                                    try
+                                                    {
+                                                        EventBusConstants.register(new CipherUtil());
+                                                    }
+                                                    catch (Exception exception)
+                                                    {
+                                                        LOGGER.error(exception);
+                                                    }
+
+                                                    LOGGER.info(String.format(InfoMessageConstants.MOTADATA_ENGINE_START_SUCCEEDED, Bootstrap.bootstrapType()));
+                                                }
+                                            });
+                                }
+                                catch (Exception exception)
+                                {
+                                    Bootstrap.stop(exception);
+                                }
+                            }
+                            else
+                            {
+                                Bootstrap.stop(handler.cause());
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Bootstrap.stop(response.cause());
+                    }
+                });
+    }
+
+    /*
+     *   Port details for Agent/RemoteEventProcessor:
+     *
+     *   event.publisher.port : start from 9449
+     *   event.subscriber.port :start from 9444
+     * */
+
+    public void start()
+    {
+        try
+        {
+            Bootstrap.logSystemConfig();
+
+            PortUtil.init();
+
+            WebClientUtil.init();
+
+            MotadataConfigUtil.loadConfigs(new JsonObject(Files.readString(new File(GlobalConstants.CURRENT_DIR + GlobalConstants.PATH_SEPARATOR + GlobalConstants.CONFIG_DIR + GlobalConstants.PATH_SEPARATOR + "motadata.json").toPath(), StandardCharsets.UTF_8)));
+
+            ProcessUtil.setProcessors();
+
+            startRemoteEventProcessor();
+        }
+        catch (Exception exception)
+        {
+            LOGGER.error(exception);
+        }
+    }
+}
+====
+```</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">identifies_issue</span><span class="validation-badge badge-pass">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 1940<br>
+                        Time: 53.35s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/test-plugin-metrics/nutanix_poll.json
+
+Content:
+```
+{
+  "172.16.10.210": {
+    "result" : {
+      "nutanix" : "NTNX-806419bd-A",
+      "nutanix.acropolis.connection.state" : "kConnected",
+      "nutanix.cluster" : "Motadata-Cluster",
+      "nutanix.cluster.uuid" : "0005f64e-ac3c-aa74-66ad-005056bb7be9",
+      "nutanix.controller.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.controller.io.latency.ms" : 5,
+      "nutanix.controller.iops" : 0,
+      "nutanix.controller.read.io.band...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">l.json based on the task description.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: motadata/test-plugin-metrics/nutanix_poll.json
+<<<< SEARCH
+      "nutanix.write.iops" : 0
+    },
+    "errors": []
+  }
+}
+====
+      "nutanix.write.iops" : 0
+    },
+    "errors": []
+  },
+  "172.16.10.214": {
+    "result" : {
+      "nutanix" : "NTNX-806419bd-A",
+      "nutanix.acropolis.connection.state" : "kConnected",
+      "nutanix.cluster" : "Motadata-Cluster",
+      "nutanix.cluster.uuid" : "0005f64e-ac3c-aa74-66ad-005056bb7be9",
+      "nutanix.controller.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.controller.io.latency.ms" : 5,
+      "nutanix.controller.iops" : 0,
+      "nutanix.controller.read.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.controller.read.iops" : 0,
+      "nutanix.controller.write.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.controller.write.iops" : 0,
+      "nutanix.cpu.capacity.hz" : 28800000000,
+      "nutanix.cpu.cores" : 12,
+      "nutanix.cpu.frequency.hz" : 2400000000,
+      "nutanix.cpu.model" : "Intel(R) Xeon(R) CPU E5-4657L v2 @ 2.40GHz",
+      "nutanix.cpu.percent" : 11,
+      "nutanix.cpu.sockets" : 4,
+      "nutanix.cpu.threads" : 12,
+      "nutanix.hypervisor.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.hypervisor.io.latency.ms" : 0,
+      "nutanix.hypervisor.iops" : 0,
+      "nutanix.hypervisor.name" : "Nutanix 20190916.276",
+      "nutanix.hypervisor.read.iops" : 0,
+      "nutanix.hypervisor.state" : "kAcropolisNormal",
+      "nutanix.hypervisor.type" : "kKvm",
+      "nutanix.hypervisor.write.iops" : 0,
+      "nutanix.io.bandwidth.bytes.per.sec" : 1000,
+      "nutanix.io.latency.ms" : 14,
+      "nutanix.iops" : 0,
+      "nutanix.memory.capacity.bytes" : 33721155584,
+      "nutanix.memory.used.percent" : 60,
+      "nutanix.oplog.disk.percent" : 10.8,
+      "nutanix.oplog.disk.size.bytes" : 72426913110,
+      "nutanix.read.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.read.iops" : 0,
+      "nutanix.serial.number" : "36d56d40-d1ff-4809-a320-1d5e40187f7c",
+      "nutanix.service.vm.external.ip" : "172.16.10.212",
+      "nutanix.state" : "NORMAL",
+      "nutanix.storage.capacity.bytes" : 511803343324,
+      "nutanix.storage.free.bytes" : 509234542925,
+      "nutanix.storage.tier.das.sata.capacity.bytes" : 0,
+      "nutanix.storage.tier.das.sata.free.bytes" : 0,
+      "nutanix.storage.tier.das.sata.used.bytes" : 0,
+      "nutanix.storage.tier.ssd.capacity.bytes" : 511803343324,
+      "nutanix.storage.tier.ssd.free.bytes" : 509234542925,
+      "nutanix.storage.tier.ssd.used.bytes" : 2568800399,
+      "nutanix.storage.used.bytes" : 2568800399,
+      "nutanix.type" : "HYPER_CONVERGED",
+      "nutanix.vms" : 3,
+      "nutanix.write.io.bandwidth.bytes.per.sec" : 0,
+      "nutanix.write.iops" : 0
+    },
+    "errors": []
+  }
+}
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">identifies_issue</span><span class="validation-badge badge-pass">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 1164<br>
+                        Time: 32.0s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/store/AbstractCacheStore.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.store;
+
+import io.vertx.core.Future;
+
+public abstract class AbstractCacheStore
+{
+    public static AbstractCacheStore getCacheStore(AbstractCacheStore.CacheStore store)
+    {
+        return switch (store)
+        {
+            case SNMP_TEMPLATE_OID_GROUP -> SNMPTemplateOIDGroupCacheStore.getStore();
+
+            case DNS -> DNS...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ore/AbstractCacheStore.java
+<<<< SEARCH
+            case CONFIGURATION -> ConfigurationCacheStore.getStore();
+
+            case OBJECT_STATUS -> ObjectStatusCacheStore.getStore();
+        };
+    }
+
+====
+            case CONFIGURATION -> ConfigurationCacheStore.getStore();
+
+            case OBJECT_STATUS -> ObjectStatusCacheStore.getStore();
+
+            case TAG -> TagCacheStore.getStore();
+        };
+    }
+
+>>>> REPLACE
+
+<<<< SEARCH
+        EVENT_POLICY,
+        LICENSE,
+        CONFIGURATION,
+        OBJECT_STATUS
+    }
+
+}
+====
+        EVENT_POLICY,
+        LICENSE,
+        CONFIGURATION,
+        OBJECT_STATUS,
+        TAG
+    }
+
+}
+>>>> REPLACE
+```</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">identifies_issue</span><span class="validation-badge badge-fail">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 146<br>
+                        Time: 3.97s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>debugging rca</td>
+                <td>
+                    <div class="output-content">Task: added flag based telnet functionality support
+
+Files to modify (7 files):
+1. motadata/src/main/java/com/mindarray/ErrorCodes.java
+2. motadata/src/main/java/com/mindarray/ErrorMessageConstants.java
+3. motadata/src/main/java/com/mindarray/config/ConfigConstants.java
+4. motadata/src/main/java/com/mindarray/config/ConfigManager.java
+5. motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+6. motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+7. motadata/src/main/java/...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">he changes and ensure they're correct before proceeding.
+</thinking>
+
+<code>
+## Summary of Changes
+
+Task: added flag based telnet functionality support
+
+Files to modify (7 files):
+1. motadata/src/main/java/com/mindarray/ErrorCodes.java
+2. motadata/src/main/java/com/mindarray/ErrorMessageConstants.java
+3. motadata/src/main/java/com/mindarray/config/ConfigConstants.java
+4. motadata/src/main/java/com/mindarray/config/ConfigManager.java
+5. motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java
+6. motadata/src/main/java/com/mindarray/nms/NMSConstants.java
+7. motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java
+
+## Code Changes
+
+### Files Modified
+
+#### File: motadata/src/main/java/com/mindarray/ErrorCodes.java
+```diff
+<<<< SEARCH
+ *   Date           Author      Notes
+ *   5-Mar-2025     Bharat      MOTADATA-4740: Two factor authentication 2FA
+ *   13-Aug-2025    Jenil       MOTADATA-7133: Rest API discovery fail error codes
+ */
+package com.mindarray;
+
+====
+ *   Date           Author      Notes
+ *   5-Mar-2025     Bharat      MOTADATA-4740: Two factor authentication 2FA
+ *   13-Aug-2025    Jenil       MOTADATA-7133: Rest API discovery fail error codes
+ *   31-Oct-2025    Jenil       MOTADATA-7591: Added error code for telnet not enabled
+ */
+package com.mindarray;
+
+>>>> REPLACE
+
+<<<< SEARCH
+    public static final String ERROR_CODE_CONFIG_OPERATION_INVALID_CONTENT = "MD140";
+    public static final String ERROR_CODE_SSH_CONNECTION_FAILED = "MD141";
+    public static final String ERROR_CODE_SSH_CONNECTION_LIMIT_EXCEEDED = "MD142";
+
+    public static final String ERROR_CODE_TEAMS_SERVICE_DOWN = "MD143";
+    public static final String ERROR_CODE_MFA_NOT_ENABLED = "MD144";
+====
+    public static final String ERROR_CODE_CONFIG_OPERATION_INVALID_CONTENT = "MD140";
+    public static final String ERROR_CODE_SSH_CONNECTION_FAILED = "MD141";
+    public static final String ERROR_CODE_SSH_CONNECTION_LIMIT_EXCEEDED = "MD142";
+    public static final String ERROR_CODE_TELNET_NOT_ENABLED = "MD146";
+
+    public static final String ERROR_CODE_TEAMS_SERVICE_DOWN = "MD143";
+    public static final String ERROR_CODE_MFA_NOT_ENABLED = "MD144";
+>>>> REPLACE
+
+#### File: motadata/src/main/java/com/mindarray/ErrorMessageConstants.java
+```diff
+<<<< SEARCH
+ *   13-Aug-2025    Jenil           MOTADATA-7133: Rest API discovery fail error codes
+ *   28-Aug-2025    Jay             MOTADATA-7052 : VAPT | Generic Exception Message
+ *   29-Aug-2025     Jay            MOTADATA-7038 : User cannot delete their own account
+ */
+package com.mindarray;
+
+====
+ *   13-Aug-2025    Jenil           MOTADATA-7133: Rest API discovery fail error codes
+ *   28-Aug-2025    Jay             MOTADATA-7052 : VAPT | Generic Exception Message
+ *   29-Aug-2025     Jay            MOTADATA-7038 : User cannot delete their own account
+ *   31-Oct-2025     Vismit         MOTADATA-7591 : Added TELNET_NOT_ENABLED message
+ */
+package com.mindarray;
+
+>>>> REPLACE
+
+<<<< SEARCH
+
+    public static final String PING_FAILED = "Host/IP Unreachable: %s";
+    public static final String PORT_CONNECTION_FAILED = "Connection to port %s failed";
+    public static final String LOG_FORWARDER_CONNECTION_FAILED = "Log Forwarder Connection Failed. Possible reason: %s";
+    public static final String DNS_SERVER_TEST_FAILED = "DNS server test failed, reason: %s";
+    public static final String METRIC_POLL_FAILED = "Metric polling failed. Possible reason: %s";
+====
+
+    public static final String PING_FAILED = "Host/IP Unreachable: %s";
+    public static final String PORT_CONNECTION_FAILED = "Connection to port %s failed";
+    public static final String TELNET_NOT_ENABLED = "Telnet protocol is disabled. Contact support";
+    public static final String LOG_FORWARDER_CONNECTION_FAILED = "Log Forwarder Connection Failed. Possible reason: %s";
+    public static final String DNS_SERVER_TEST_FAILED = "DNS server test failed, reason: %s";
+    public static final String METRIC_POLL_FAILED = "Metric polling failed. Possible reason: %s";
+>>>> REPLACE
+
+#### File: motadata/src/main/java/com/mindarray/config/ConfigConstants.java
+```diff
+<<<< SEARCH
+ *     27-Aug-2025     Pruthviraj      MOTADATA-7246: replace  MotadataConfigUtil.getHost() with CommonUtil.getIPAddress()
+ *     02-Sept-2025    Viram           MOTADATA-7163 : Add OOTB Runbook for Cisco and Juniper Syslog Change Detection (Enable/Disable)
+ *     03-Sept-2025    Vismit          MOTADATA-5332 : Added enum PolicyEvaluationType, PolicyConflictType and ConfigFileType
+ */
+
+package com.mindarray.config;
+====
+ *     27-Aug-2025     Pruthviraj      MOTADATA-7246: replace  MotadataConfigUtil.getHost() with CommonUtil.getIPAddress()
+ *     02-Sept-2025    Viram           MOTADATA-7163 : Add OOTB Runbook for Cisco and Juniper Syslog Change Detection (Enable/Disable)
+ *     03-Sept-2025    Vismit          MOTADATA-5332 : Added enum PolicyEvaluationType, PolicyConflictType and ConfigFileType
+ *     31-Oct-2025     Vismit          MOTADATA-7591 : Added telnet port and TELNET_ENABLED constants
+ */
+
+package com.mindarray.config;
+>>>> REPLACE
+
+<<<< SEARCH
+    ); // command to start ftp and tftp server service
+
+    public static final int SSH_PORT = MotadataConfigUtil.getSSHPort();
+    public static final int CONFIG_OUTPUT_MAX_BYTES = 1000000; // Keeping config output maximum limit ~ 1 MB
+    public static final String CONFIG_OPERATION_STATUS = "config.operation.status";
+    public static final String CONFIG_OPERATION_MESSAGE = "config.operation.message";
+====
+    ); // command to start ftp and tftp server service
+
+    public static final int SSH_PORT = MotadataConfigUtil.getSSHPort();
+    public static final boolean TELNET_ENABLED = MotadataConfigUtil.isTelnetEnabled();
+    public static final String CONFIG_TELNET_PORT = "config.telnet.port";
+    public static final int CONFIG_OUTPUT_MAX_BYTES = 1000000; // Keeping config output maximum limit ~ 1 MB
+    public static final String CONFIG_OPERATION_STATUS = "config.operation.status";
+    public static final String CONFIG_OPERATION_MESSAGE = "config.operation.message";
+>>>> REPLACE
+
+<<<< SEARCH
+                            .remove(CredentialProfile.CREDENTIAL_PROFILE_CONTEXT);
+
+                    attachServerContext(event, credential);
+                }
+
+                event.put(Discovery.DISCOVERY_CREDENTIAL_PROFILES, credentialProfiles);
+====
+                            .remove(CredentialProfile.CREDENTIAL_PROFILE_CONTEXT);
+
+                    attachServerContext(event, credential);
+
+                    // Override config.port with config.telnet.port if present for TELNET protocol
+                    if (credential.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL).equalsIgnoreCase(NMSConstants.Protocol.TELNET.getName()) && credential.containsKey(CONFIG_TELNET_PORT))
+                    {
+                        credential.put(CONFIG_PORT, credential.getInteger(CONFIG_TELNET_PORT));
+                    }
+                }
+
+                event.put(Discovery.DISCOVERY_CREDENTIAL_PROFILES, credentialProfiles);
+>>>> REPLACE
+
+<<<< SEARCH
+
+                attachServerContext(event, credentialProfile);
+
+                event.mergeIn(credentialProfile);
+            }
+        }
+====
+
+                attachServerContext(event, credentialProfile);
+
+                // Override config.port with config.telnet.port if present for TELNET protocol
+                if (credentialProfile.getString(CredentialProfile.CREDENTIAL_PROFILE_PROTOCOL).equalsIgnoreCase(NMSConstants.Protocol.TELNET.getName()) && credentialProfile.containsKey(CONFIG_TELNET_PORT))
+                {
+                    credentialProfile.put(CONFIG_PORT, credentialProfile.getInteger(CONFIG_TELNET_PORT));
+                }
+
+                event.mergeIn(credentialProfile);
+            }
+        }
+>>>> REPLACE
+
+#### File: motadata/src/main/java/com/mindarray/config/ConfigManager.java
+```diff
+<<<< SEARCH
+ *  25-Jun-2025		Ashish 		        MOTADATA-6519: Removed server context merging logic, as it is now handled within the enrich method.
+ *  23-Jun-2025		Vismit				Added removeObjectFromScheduler() method to remove specific object IDs from schedulers without deleting entire scheduler
+ *  14-July-2025	Nikunj Patel		MOTADATA-6779: Creating new object to make sure that object.vendor is overriding every time.
+ */
+
+package com.mindarray.config;
+====
+ *  25-Jun-2025</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">identifies_issue</span><span class="validation-badge badge-pass">suggests_fix</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 56.34s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">MULTI FILE GEN (0/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">Task: Cycle start notification refactor
+
+Files to refactor:
+1. motadata/src/main/java/com/mindarray/slo/SLOProcessor.java
+2. motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">data/src/main/java/com/mindarray/slo/SLOProcessor.java
+* motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java
+
+Changes:
+1. Refactored code to improve readability and maintainability.
+
+@applicable-files
+motadata/src/main/java/com/mindarray/slo/SLOProcessor.java
+motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java
+
+@patch
+@@ -34,6 +34,7 @@ import java.util.Map;
+ import static com.mindarray.GlobalConstants.*;
+ import static com.mindarray.api.APIConstants.*;
++import static com.mindarray.visualization.VisualizationConstants.publishCycleStartTimeToDB;
+ import static com.mindarray.slo.SLOConstants.SLOType;
+ import static com.mindarray.store.SLOCycleConfigStore.SLOCycle;
+ 
+@@ -57,6 +58,7 @@ public class SLOProcessor extends AbstractVerticle
+     private long sloCycleEndTime;
+ 
+     private long sloCycleStartTime;
++    private boolean availabilitySLO;
+ 
+     @Override
+     public void start(Promise<Void> promise) throws Exception
+@@ -111,7 +113,6 @@ public class SLOProcessor extends AbstractVerticle
+         var sloContext = sloProfile.getJsonObject(SLOProfile.SLO_PROFILE_CONTEXT);
+ 
+         availabilitySLO = sloProfile.getString(SLOProfile.SLO_PROFILE_TYPE).equalsIgnoreCase(SLOConstants.SLOType.AVAILABILITY.getName());
+-
+         // initialize the map
+         sloDetails.computeIfAbsent(sloId, key -> new HashMap<>()).clear();
+ 
+@@ -290,7 +291,7 @@ public class SLOProcessor extends AbstractVerticle
+                         else
+                         {
+                             var instanceStatus = availabilitySLO && ObjectStatusCacheStore.getStore().getItem(object, instance) != null ?
+-                                    ObjectStatusCacheStore.getStore().getItem(object, instance).equalsIgnoreCase(STATUS_UP) ?
++                                    ObjectStatusCacheStore.getStore().getItem(object, instance).equalsIgnoreCase(STATUS_UP) ?
+                                             SLOConstants.SLOFlapStatus.HEALTHY : SLOConstants.SLOFlapStatus.DEGRADED
+                                     : SLOConstants.SLOFlapStatus.HEALTHY;
+ 
+@@ -315,7 +316,7 @@ public class SLOProcessor extends AbstractVerticle
+             // means SLO is for monitor
+             else
+             {
+-                var objectStatus = ObjectStatusCacheStore.getStore().getItem(object) != null ?
++                var objectStatus = availabilitySLO && ObjectStatusCacheStore.getStore().getItem(object) != null ?
+                         ObjectStatusCacheStore.getStore().getItem(object).equalsIgnoreCase(STATUS_UP) ?
+                                 SLOConstants.SLOFlapStatus.HEALTHY : SLOConstants.SLOFlapStatus.DEGRADED
+                         : SLOConstants.SLOFlapStatus.HEALTHY;
+@@ -328,7 +329,7 @@ public class SLOProcessor extends AbstractVerticle
+ 
+                 sloDetails.get(sloId).computeIfAbsent(object, key -> new HashMap<>()).put(SLOConstants.SLOStatus.OBJECT_STATUS.getName(), objectStatus);
+ 
+-                // update object status
++                // update object status
+                 sloDetails.get(sloId).get(object).mergeIn(sloProfile.getJsonObject(SLOProfile.SLO_PROFILE_CONTEXT).getJsonObject(object));
+ 
+                 // update the total count
+@@ -624,7 +625,7 @@ public class SLOProcessor extends AbstractVerticle
+ 
+         // send cycle end time to datastore
+         sendCycleEndToDatastore();
+-
++        publishCycleStartTimeToDB(sloId, sloCycleEndTime);
+     }
+ 
+     private void sendCycleStartToDatastore()
+@@ -638,6 +639,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
++            // buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
+             buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+@@ -679,7 +681,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
+-            buffer.appendByte(DatastoreConstants.OperationType.END_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
++            buffer.appendByte(DatastoreConstants.OperationType.END_SLO_CYCLE.getName()).appendBytes(JsonObject.mapFrom(context).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+ 
+@@ -701,7 +703,7 @@ public class SLOProcessor extends AbstractVerticle
+                     }
+                 }
+             }
+-
++            //publishCycleStartTimeToDB(sloId, sloCycleEndTime);
+         }
+         catch (Exception exception)
+         {
+@@ -715,6 +717,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
++            // buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
+             buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+@@ -732,7 +735,7 @@ public class SLOProcessor extends AbstractVerticle
+             {
+                 Bootstrap.vertx().eventBus().send(EVENT_PUBLICATION_DATASTORE_WRITE, new JsonObject()
+                         .put(EventBusConstants.EVENT_COPY_REQUIRED, false).put(EventBusConstants.EVENT_TOPIC, DATASTORE_CONNECTION_ALIVE_TOPIC)
+-                        .put(REMOTE_EVENT_PROCESSOR_TOPIC, DATASTORE_OPERATION_TOPIC)
++                        .put(REMOTE_EVENT_PROCESSOR_TOPIC, DATASTORE_OPERATION_TOPIC)
+                         .put(REMOTE_EVENT_PROCESSOR_UUID, item.getString(REMOTE_EVENT_PROCESSOR_UUID))
+                         .put(EVENT_CONTEXT, buffer.getBytes()));
+             }
+@@ -746,7 +749,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
+-            buffer.appendByte(DatastoreConstants.OperationType.END_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
++            buffer.appendByte(DatastoreConstants.OperationType.END_SLO_CYCLE.getName()).appendBytes(JsonObject.mapFrom(context).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+ 
+@@ -768,7 +771,7 @@ public class SLOProcessor extends AbstractVerticle
+                     }
+                 }
+             }
+-
++            //publishCycleStartTimeToDB(sloId, sloCycleEndTime);
+         }
+         catch (Exception exception)
+         {
+@@ -825,7 +828,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
+-            buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
++            buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes(JsonObject.mapFrom(context).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+ 
+@@ -850,7 +853,7 @@ public class SLOProcessor extends AbstractVerticle
+             {
+                 Bootstrap.vertx().eventBus().send(EVENT_PUBLICATION_DATASTORE_WRITE, new JsonObject()
+                         .put(EventBusConstants.EVENT_COPY_REQUIRED, false).put(EventBusConstants.EVENT_TOPIC, DATASTORE_CONNECTION_ALIVE_TOPIC)
+-                        .put(REMOTE_EVENT_PROCESSOR_TOPIC, DATASTORE_OPERATION_TOPIC)
++                        .put(REMOTE_EVENT_PROCESSOR_TOPIC, DATASTORE_OPERATION_TOPIC)
+                         .put(REMOTE_EVENT_PROCESSOR_UUID, item.getString(REMOTE_EVENT_PROCESSOR_UUID))
+                         .put(EVENT_CONTEXT, buffer.getBytes()));
+             }
+@@ -864,7 +867,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
+-            buffer.appendByte(DatastoreConstants.OperationType.END_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
++            buffer.appendByte(DatastoreConstants.OperationType.END_SLO_CYCLE.getName()).appendBytes(JsonObject.mapFrom(context).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+ 
+@@ -886,7 +889,7 @@ public class SLOProcessor extends AbstractVerticle
+                     }
+                 }
+             }
+-
++            //publishCycleStartTimeToDB(sloId, sloCycleEndTime);
+         }
+         catch (Exception exception)
+         {
+@@ -900,6 +903,7 @@ public class SLOProcessor extends AbstractVerticle
+         {
+             var buffer = Buffer.buffer();
+ 
++            // buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
+             buffer.appendByte(DatastoreConstants.OperationType.START_SLO_CYCLE.getName()).appendBytes((JsonObject.mapFrom(context)).encode().getBytes());
+ 
+             var items = RemoteEventProcessorConfigStore.getStore().getItems();
+@@ -921,7 +925,7 @@ public class SLOProcessor extends AbstractVerticle
+             {
+                 Bootstrap.vertx().eventBus().send(EVENT_PUBLICATION_DATASTORE_WRITE, new JsonObject()
+                         .put(EventBusConstants.EVENT_COPY_REQUIRED, false).put(EventBusConstants.EVENT_TOPIC, DATA</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.87s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/store/BusinessHourConfigStore.java
+
+Content:
+```
+/*
+ *   Copyright (c) Motadata 2025. All rights reserved.
+ *
+ *   This source code is the property of Motadata and constitutes
+ *   proprietary and confidential information. Unauthorized copying, distribution,
+ *   modification, or use of this file, via any medium, is strictly prohibited
+ *   unless prior written permission is obtained from Motadata.
+ *
+ *   Unauthorized access or use of this software may...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ers.</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-fail">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 21<br>
+                        Time: 0.62s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">Refactor: Resolve spacing and formatting inconsistencies across multiple files, update documentation comments, and streamline code for better readability.</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">duce the SEARCH/REPLACE blocks.</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-fail">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 37<br>
+                        Time: 2.27s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">Task: ConfigDBConstants.java renamed to DBConstants
+
+Files to modify (210 files):
+1. motadata/src/main/java/com/mindarray/Bootstrap.java
+2. motadata/src/main/java/com/mindarray/BootstrapFailover.java
+3. motadata/src/main/java/com/mindarray/BootstrapPrimary.java
+4. motadata/src/main/java/com/mindarray/BootstrapSecondary.java
+5. motadata/src/main/java/com/mindarray/BootstrapStandalone.java
+6. motadata/src/main/java/com/mindarray/agent/AgentEventProcessor.java
+7. motadata/src/main/java/com/mindarra...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">.mindarray.api.Discovery;
+import com.mindarray.db.ConfigDBConstants;
+import com.mindarray.eventbus.EventBusConstants;
+-import com.mindarray.eventbus.EventEngine;
+import com.mindarray.store.*;
+import com.mindarray.util.CommonUtil;
+import com.mindarray.util.DateTimeUtil;
+@@ -121,7 +121,7 @@ public class TestVisualizationManager extends AbstractTest
+{
+    @Test
+    @Order(1)
+-   void testCreateVisualization(VertxTestContext testContext)
++   void testCreateVisualization(VertxTestContext testContext)
+    {
+        var items = new JsonArray().add(new JsonObject().put(VisualizationConstants.VISUALIZATION_NAME, "Visualization")
+                .put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION_CONTEXT, new JsonObject().put(VisualizationConstants.VISUALIZATION</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 208.81s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>multi file gen</td>
+                <td>
+                    <div class="output-content">refactored custom.script report scheduled issue</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ath": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java", "content": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n *   proprietary and confidential information. Unauthorized copying, distribution,\n *   modification, or use of this file, via any medium, is strictly prohibited\n *   unless prior written permission is obtained from Motadata.\n *\n *   Unauthorized access or use of this software may result in legal action\n *   and/or prosecution to the fullest extent of the law.\n *\n *   This software is provided \"AS IS,\" without warranties of any kind, express\n *   or implied, including but not limited to implied warranties of\n *   merchantability or fitness for a particular purpose. In no event shall\n *   Motadata be held liable for any damages arising from the use\n *   of this software.\n *\n *   For inquiries, contact: engg@motadata.com\n *\n */\n\n/*  Change Logs:\n *  Date			Author			Notes\n *  10-Feb-2025		Chandresh		MOTADATA-4905: refactored UI_ACTION_RUNBOOK_PLUGIN_TEST to support running multiple monitors while testing runbook in single event\n *  14-Feb-2025     Chandresh       MOTADATA-4822: Updated LDAP connection test to support secondary LDAP host\n *  24-Feb-2025		Chandresh		MOTADATA-3680: Added UI_ACTION_RUNBOOK_PLUGIN_RUN handler to support running runbooks with multiple instances\n *  26-Feb-2025     Chandresh       MOTADATA-5216: Runbook | Proper status and error message should be shown after testing any runbook\n *  28-Feb-2025     Smit            MOTADATA-4956: Rule Based Tagging, Preview and Run Events\n *  3-Mar-2025      Chandresh       MOTADATA-4822: ldap.server.host -> ldap.server.primary.host\n *  28-Feb-2025     Bharat          MOTADATA-5233: Added event ui.action.share for share feature\n *  4-Mar-2025      Bharat          MOTADATA-4740: Two factor authentication 2FA\n *  18-Mar-2025     Chandresh       MOTADATA-5426: Docker discovery and polling support added\n *  20-Mar-2025     Chopra Deven    MOTADATA-5370: Added event to get current flap of policy in Alert Drill-Down\n *  19-Mar-2025     Pruthviraj      MOTADATA-5331: NetRoute policy ui.actions added\n *  9-Apr-2025      Bharat          MOTADATA-5141: Alert Drill-down from email and Teams Notification\n *  24-Mar-2025     Chandresh       MOTADATA-5426: Docker discovery and polling support added\n *  23-Apr-2025     Bharat          MOTADATA-5822: Fixed session view and default policy view bug\n *  19-May-2025     Sankalp         MOTADATA-5939: Cisco ACI Topology support\n *  24-Jun-2025     Yash Tiwari     MOTADATA-6528 : refactored UI_ACTION_TOPOLOGY_HIERARCHY_FETCH to fetch left hierarchy from DQP\n *  23-Jul-2025     Chopra Deven    MOTADATA-6889: Health Overview | Monitors (Polling Issue) widget shows infinite loader.\n *  11-Feb-2025     Harsh           MOTADTA-5003: Added UI_ACTION_TRACE_SERVICE_HIERARCHY_FETCH to support service map in APM\n *  15-April-2025   Nikunj          MOTADATA-5834: Added events for Trace Metric policy clear, note, suppress and Acknowledge.\n *  21-April-2025   Nikunj          MOTADATA-5841: Modified UI_ACTION_POLICY_QUERY.\n *  18-Aug-2025     Nikunj Patel    MOTADATA-6759: Add lookup for Snmp Catalog Data(Postgres)\n *  26-Aug-2025     Yash Tiwari     MOTADATA-6894: Refactoring VMware ESXi and vCenter Discovery\n *  27-Aug-2025     Pruthviraj      MOTADATA-7246: replace  MotadataConfigUtil.getHost() with CommonUtil.getIPAddress()\n *  02-Sep-2025     Bharat          MOTADATA-7216: Revamp Reporting Engine to Backend for Custom Scripts\n *  03-Sep-2025     Vismit          MOTADATA-5332: Added Network Config context for UI_ACTION_SHARE and UI_ACTION_POLICY_QUERY\n */\n\npackage com.mindarray.eventbus;\n\nimport com.mindarray.*;\nimport com.mindarray.aiops.AIOpsConstants;\nimport com.mindarray.api.MetricPlugin;\nimport com.mindarray.api.*;\nimport com.mindarray.config.ConfigConstants;\nimport com.mindarray.datastore.DatastoreConstants;\nimport com.mindarray.db.DBConstants;\nimport com.mindarray.integration.IntegrationConstants;\nimport com.mindarray.integration.IntegrationEngine;\nimport com.mindarray.integration.TeamsIntegration;\nimport com.mindarray.job.JobScheduler;\nimport com.mindarray.log.LogEngineConstants;\nimport com.mindarray.log.LogPatternDetector;\nimport com.mindarray.nms.NMSConstants;\nimport com.mindarray.policy.PolicyEngineConstants;\nimport com.mindarray.report.ReportConstants;\nimport com.mindarray.runbook.Runbook;\nimport com.mindarray.store.*;\nimport com.mindarray.util.*;\nimport com.opencsv.CSVWriterBuilder;\nimport com.unboundid.ldap.sdk.LDAPConnection;\nimport io.vertx.core.AbstractVerticle;\nimport io.vertx.core.Future;\nimport io.vertx.core.Promise;\nimport io.vertx.core.buffer.Buffer;\nimport io.vertx.core.eventbus.DeliveryOptions;\nimport io.vertx.core.json.JsonArray;\nimport io.vertx.core.json.JsonObject;\nimport io.vertx.ext.mail.*;\nimport io.vertx.ext.web.client.WebClient;\nimport io.vertx.ext.web.client.WebClientOptions;\nimport io.vertx.ext.web.handler.sockjs.impl.StringEscapeUtils;\nimport org.apache.commons.lang3.StringUtils;\nimport org.apache.commons.text.StringSubstitutor;\nimport org.apache.http.HttpStatus;\n\nimport java.io.BufferedReader;\nimport java.io.FileWriter;\nimport java.io.InputStreamReader;\nimport java.net.URLEncoder;\nimport java.nio.charset.StandardCharsets;\nimport java.nio.file.Files;\nimport java.nio.file.Paths;\nimport java.util.*;\nimport java.util.concurrent.TimeUnit;\nimport java.util.concurrent.atomic.AtomicBoolean;\nimport java.util.regex.Pattern;\nimport java.util.stream.Collectors;\nimport java.util.zip.ZipFile;\n\nimport static com.mindarray.ErrorMessageConstants.*;\nimport static com.mindarray.GlobalConstants.DURATION;\nimport static com.mindarray.GlobalConstants.*;\nimport static com.mindarray.api.AIOpsObject.*;\nimport static com.mindarray.api.APIConstants.*;\nimport static com.mindarray.api.Agent.AGENT_VERSION;\nimport static com.mindarray.api.CredentialProfile.CREDENTIAL_PROFILE_CONTEXT;\nimport static com.mindarray.api.Discovery.DISCOVERY_CONTEXT;\nimport static com.mindarray.api.LDAPServer.LDAP_SERVER_SECONDARY_HOST;\nimport static com.mindarray.api.LogParser.*;\nimport static com.mindarray.api.MotadataApp.ARTIFACT_TYPE;\nimport static com.mindarray.api.MotadataApp.MAX_VERSION_FILE_SIZE_BYTES;\nimport static com.mindarray.api.RemoteEventProcessor.*;\nimport static com.mindarray.api.RunbookPlugin.*;\nimport static com.mindarray.api.SNMPOIDGroup.DESCRIPTION;\nimport static com.mindarray.api.SNMPOIDGroup.MIB_FILE_NAME;\nimport static com.mindarray.api.User.USER_EMAIL;\nimport static com.mindarray.api.User.USER_NAME;\nimport static com.mindarray.db.DBConstants.TBL_SNMP_CATALOG;\nimport static com.mindarray.db.DBConstants.TRANSFORM;\nimport static com.mindarray.log.LogEngineConstants.LogParserType.REGEX;\nimport static com.mindarray.log.LogPatternDetector.END_POS;\nimport static com.mindarray.log.LogPatternDetector.START_POS;\nimport static com.mindarray.manager.MotadataAppManager.PATCH_ARTIFACT_FILE;\nimport static com.mindarray.nms.NMSConstants.*;\nimport static com.mindarray.nms.SNMPTrapProcessor.SNMP_TRAP_OID;\nimport static com.mindarray.notification.Notification.NOTIFICATION_TYPE;\nimport static com.mindarray.policy.PolicyEngineConstants</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">multiple_files</span><span class="validation-badge badge-fail">has_edits</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 90.61s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">QA KNOWLEDGE (1/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does MetricPoller.send() work?
+
+Code signature: public send(Map<String, JsonObject> contexts, String errorCode, String error) { ... }
+File: src/main/java/com/mindarray/nms/MetricPoller.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">s method iterates through a map of contexts and processes each one with the extract method,
+which formats the error information and sends it. After processing each context, it removes
+it from the map to free up memory and prevent duplicate processing.
+
+The method determines the appropriate error message based on the error code:
+- For PROCESS_TIMEOUT errors: Uses the PROCESS_TIMED_OUT message
+- For other errors: Uses the INTERNAL_ERROR message
+
+@code
+public void send(Map<String, JsonObject> contexts, String errorCode, String error)
+{
+    if (!contexts.isEmpty())
+    {
+        for (var entry : contexts.entrySet())
+        {
+            var id = entry.getKey();
+
+            var context = entry.getValue();
+
+            var targetIp = context.getString(MetricContextConstants.TARGET_IP);
+
+            if (error != null && !error.isEmpty())
+            {
+                LOGGER.warn(String.format("Error occurred for %s with message %s", targetIp, error));
+            }
+
+            var type = context.getString(OBJECT_TYPE);
+
+            switch (type)
+            {
+                case "Server":
+
+                    var server = context.getInteger(SERVER);
+
+                    if (server != null && server != 0L)
+                    {
+                        sendServer(context.getString(OBJECT_IP), errorCode, error);
+                    }
+                    break;
+
+                case "Network Switch":
+
+                    var networkSwitch = context.getInteger(NETWORK_SWITCH);
+
+                    if (networkSwitch != null && networkSwitch != 0L)
+                    {
+                        sendNetworkSwitch(context.getString(OBJECT_IP), errorCode, error);
+                    }
+
+                    break;
+
+                case "Network Router":
+
+                    var networkRouter = context.getInteger(NETWORK_ROUTER);
+
+                    if (networkRouter != null && networkRouter != 0L)
+                    {
+                        sendNetworkRouter(context.getString(OBJECT_IP), errorCode, error);
+                    }
+
+                    break;
+
+                case "Storage Device":
+
+                    var storageDevice = context.getInteger(STORAGE_DEVICE);
+
+                    if (storageDevice != null && storageDevice != 0L)
+                    {
+                        sendStorageDevice(context.getString(OBJECT_IP), errorCode, error);
+                    }
+
+                    break;
+
+                default:
+
+                    break;
+            }
+
+            //remove the item after processing...
+            contexts.remove(targetIp);
+        }
+    }
+}
+@endcode</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-fail">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-pass">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 462<br>
+                        Time: 13.34s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does VisualizationEventManager.resolvePlugin() work?
+
+Code signature: public resolvePlugin(JsonObject visualizationDataSource) { ... }
+File: src/main/java/com/mindarray/visualization/VisualizationEventManager.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ased on visualization category       @param visualizationDataSource Data Source       @return plugin id       @throws IOException if there is an error reading the configuration file     {         if (visualizationDataSource.getString("visualization.category").equalsIgnoreCase(VisualizationConstants.CATEGORY_SYSTEM))         {             return BootstrapConfigUtil.getSystemMetricPluginId();         }         else         {             try             {                 var plugins = new File(MotadataConfigUtil.getPluginDir(), "plugins.json");                  if (plugins.exists())                 {                     return JsonObject.mapFrom(FileUtil.read(plugins)).getJsonObject("plugins")                            .getJsonObject(visualizationDataSource.getString("visualization.plugin")).getString("id");                 }                 else                 {                     throw new RuntimeException(String.format("plugin not found %s", visualizationDataSource.getString("visualization.plugin")));                 }             }             catch (Exception exception)             {                 LOGGER.error(exception);                  return -1L;             }         }     }      // <p>Method to resolve plugin type based on visualization category</p>     private String resolvePluginType(JsonObject visualizationDataSource)     {         if (visualizationDataSource.getString("visualization.category").equalsIgnoreCase(VisualizationConstants.CATEGORY_SYSTEM))         {             return BootstrapConfigUtil.getSystemMetricPlugin();         }         else         {             return visualizationDataSource.getString("visualization.plugin");         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, byte[] data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, data);             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType);                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType);                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType);                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType);                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType);                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType);             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, JsonArray data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, data);                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, data);             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, String data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, data.getBytes());                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, data.getBytes());                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, data.getBytes());                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, data.getBytes());                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, data.getBytes());                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, data.getBytes());             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, Map<String, Object> data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, List<Map<String, Object>> data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, List<String> data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, Set<String> data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_EVENT -> EventEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_METRIC -> MetricEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PLUGIN -> PluginEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());                  case VISUALIZATION_TYPE_PROCESS -> ProcessEventHandler.process(visualizationDataSource, eventType, JsonObject.mapFrom(data).encode().getBytes());             }         }         catch (Exception exception)         {             LOGGER.warn(exception);         }     }      // <p>Method to get visualization event handler based on visualization type</p>     private void getEventHandler(JsonObject visualizationDataSource, String eventType, JsonObject data)     {         try         {             switch (visualizationDataSource.getString("visualization.type"))             {                 case VISUALIZATION_TYPE_FLOW -> FlowEventHandler.process(visualizationDataSource, eventType, data.encode().getBytes());                  case VISUALIZATION_TYPE_LOG -> LogEventHandler.process(visualizationDataSource, eventType, data</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-fail">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 55.95s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does JobScheduler.REDISCOVER() work?
+
+Code signature: public REDISCOVER("Rediscover") { ... }
+File: src/main/java/com/mindarray/job/JobScheduler.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">te their configuration</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-fail">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-fail">has_explanation</span><span class="validation-badge badge-fail">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 18<br>
+                        Time: 0.5s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does ReportingEngine.process() work?
+
+Code signature: public process(Message<JsonObject> message) { ... }
+File: src/main/java/com/mindarray/report/ReportingEngine.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">This method is used to delete a report from the cache after it has been processed or when it needs to be removed.       The method ensures that the report is no longer available in the cache, freeing up resources.       <p>       This method is typically called when a report has been successfully generated and sent to the user,       or when a report needs to be deleted due to certain conditions (e.g., expiration).       </p>       <p>       If the report is found in the cache, it is removed, and the method logs a debug message indicating       that the report has been removed. If the report is not found, a debug message is logged       indicating that the report was not found in the cache.       </p>       <p>       This method is part of the reporting engine's internal caching mechanism, which helps       manage reports efficiently and ensure that they are available to users when needed.       </p>       <p>       The method uses a synchronized block to ensure thread safety when accessing the report cache.       This prevents concurrent modifications to the cache that could lead to data inconsistency.       </p>       <p>       The method also handles the case where the report ID is null or empty, logging a warning       message in such cases.       </p>       @param reportId The unique identifier of the report to remove from the cache. @see #reportCache @see #REPORT_CACHE_TIMEOUT_SECONDS @since 2.8.1296413327984       @version 2.8.1296413327984 - Added support for removing reports from the cache.       @author Siva       @date 2023-10-05 12:35:27 UTC       @code       private void removeReportCache(String reportId)       {           try           {               if (StringUtils.isNotEmpty(reportId))               {                   synchronized (reportCache)                   {                       if (reportCache.containsKey(reportId))                       {                           var report = reportCache.get(reportId);                            reportCache.remove(reportId);                            logger.debug("removed report {} from cache", reportId);                       }                       else                       {                           logger.debug("report {} not found in cache", reportId);                       }                   }               }               else               {                   logger.warn("invalid report id {} to remove from cache", reportId);               }           }           catch (Exception exception)           {               logger.error(exception);           }       }       @endcode       @see com.mindarray.api.APIConstants @see com.mindarray.api.AbstractAPIPlugin @see com.mindarray.eventbus.EventBusConstants @see com.mindarray.util.CommonUtil @see com.mindarray.util.DateTimeUtil @see com.mindarray.util.MotadataConfigUtil @see com.mindarray.util.StringUtils @see com.mindarray.util.SystemConfigUtil @see com.mindarray.util.ThreadUtil @see com.mindarray.util.TimeUtil @see com.mindarray.util.TraceUtil @see com.mindarray.util.ZipUtil @see io.vertx.core.buffer.Buffer @see io.vertx.core.json.JsonArray @see io.vertx.core.json.JsonObject @see org.apache.poi.ss.usermodel.Cell @see org.apache.poi.ss.usermodel.Row @see org.apache.poi.ss.usermodel.Sheet @see org.apache.poi.ss.usermodel.Workbook @see org.apache.poi.xssf.usermodel.XSSFWorkbook @see java.io.File @see java.io.FileInputStream @see java.io.FileOutputStream @see java.nio.file.Files @see java.nio.file.StandardCopyOption @see java.time.Instant @see java.time.ZoneId @see java.util.ArrayList @see java.util.Arrays @see java.util.Calendar @see java.util.Collections @see java.util.Comparator @see java.util.Date @see java.util.HashMap @see java.util.HashSet @see java.util.List @see java.util.Map @see java.util.Objects @see java.util.Set @see java.util.concurrent.ConcurrentHashMap @see java.util.concurrent.ExecutorService @see java.util.concurrent.Executors @see java.util.concurrent.TimeUnit @see java.util.stream.Collectors       @category Reporting Engine       @package com.mindarray.report       @class ReportingEngine       @method removeReportCache       @summary Removes a report from the cache.       @description       Removes a report from the cache.       This method is used to delete a report from the cache after it has been processed or when it needs to be removed.       The method ensures that the report is no longer available in the cache, freeing up resources.       <p>       This method is typically called when a report has been successfully generated and sent to the user,       or when a report needs to be deleted due to certain conditions (e.g., expiration).       </p>       <p>       If the report is found in the cache, it is removed, and the method logs a debug message indicating       that the report has been removed. If the report is not found, a debug message is logged       indicating that the report was not found in the cache.       </p>       <p>       This method is part of the reporting engine's internal caching mechanism, which helps       manage reports efficiently and ensure that they are available to users when needed.       </p>       <p>       The method uses a synchronized block to ensure thread safety when accessing the report cache.       This prevents concurrent modifications to the cache that could lead to data inconsistency.       </p>       <p>       The method also handles the case where the report ID is null or empty, logging a warning       message in such cases.       </p>       @param reportId The unique identifier of the report to remove from the cache. @see #reportCache @see #REPORT_CACHE_TIMEOUT_SECONDS @since 2.8.1296413327984       @version 2.8.1296413327984 - Added support for removing reports from the cache.       @author Siva       @date 2023-10-05 12:35:27 UTC       @code       private void removeReportCache(String reportId)       {           try           {               if (StringUtils.isNotEmpty(reportId))               {                   synchronized (reportCache)                   {                       if (reportCache.containsKey(reportId))                       {                           var report = reportCache.get(reportId);                            reportCache.remove(reportId);                            logger.debug("removed report {} from cache", reportId);                       }                       else                       {                           logger.debug("report {} not found in cache", reportId);                       }                   }               }               else               {                   logger.warn("invalid report id {} to remove from cache", reportId);               }           }           catch (Exception exception)           {               logger.error(exception);           }       }       @endcode       @see com.mindarray.api.APIConstants @see com.mindarray.api.AbstractAPIPlugin @see com.mindarray.eventbus.EventBusConstants @see com.mindarray.util.CommonUtil @see com.mindarray.util.DateTimeUtil @see com.mindarray.util.MotadataConfigUtil @see com.mindarray.util.StringUtils @see com.mindarray.util.SystemConfigUtil @see com.mindarray.util.ThreadUtil @see com.mindarray.util.TimeUtil @see com.mindarray.util.TraceUtil @see com.mindarray.util.ZipUtil @see io.vertx.core.buffer.Buffer @see io.vertx.core.json.JsonArray @see io.vertx.core.json.JsonObject @see org.apache.poi.ss.usermodel.Cell @see org.apache.poi.ss.usermodel.Row @see org.apache.poi.ss.usermodel.Sheet @see org.apache.poi.ss.usermodel.Workbook @see org.apache.poi.xssf.usermodel.XSSFWorkbook @see java.io.File @see java.io.FileInputStream @see java.io.FileOutputStream @see java.nio.file.Files @see java.nio.file.StandardCopyOption @see java.time.Instant @see java.time.ZoneId @see java.util.ArrayList @see java.util.Arrays @see java.util.Calendar @see java.util.Collections @see java.util.Comparator @see java.util.Date @see java.util.HashMap @see java.util.HashSet @see java.util.List @see java.util.Map @see java.util.Objects @see java.util.Set @see java.util.concurrent.ConcurrentHashMap @see java.util.concurrent.ExecutorService @see java.util.concurrent.Executors @see java.util.concurrent.TimeUnit @see java.util.stream.Collectors       @category Reporting Engine       @package com.mindarray.report       @class ReportingEngine       @method removeReportCache       @summary Removes a report from the cache.       @description       Removes a report from the cache.       This method is used to delete a report from the cache after it has been processed or when it needs to be removed.       The method ensures that the report is no longer available in the cache, freeing up resources.       <p>       This method is typically called when a report has been successfully generated and sent to the user,       or when a report needs to be deleted due to certain conditions (e.g., expiration).       </p>       <p>       If the report is found in the cache, it is removed, and the method logs a debug message indicating       that the report has been removed. If the report is not found, a debug message is logged       indicating that the report was not found in the cache.       </p>       <p>       This method is part of the reporting engine's internal caching mechanism, which helps       manage reports efficiently and ensure that they are available to users when needed.       </p>       <p>       The method uses a synchronized block to ensure thread safety when accessing the report cache.       This prevents concurrent modifications to the cache that could lead to data inconsistency.       </p>       <p>       The method also handles the case where the report ID is null or empty, logging a warning       message in such cases.       </p></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-pass">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 56.29s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>qa knowledge</td>
+                <td>
+                    <div class="output-content">How does ObjectConfigStore.getItemsByStates() work?
+
+Code signature: public getItemsByStates(JsonArray states) { ... }
+File: src/main/java/com/mindarray/store/ObjectConfigStore.java</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">ay/store/ObjectConfigStore.java.    *       * Retrieves all object IDs that have a state matching any of the provided states.       *       @param states the array of object states to match       @return a JsonArray containing the internal IDs of objects with matching states     */    public JsonArray getItemsByStates(JsonArray states)    {        var items = new JsonArray();                for (var entry : this.cache.entrySet())        {            if (states.contains(entry.getValue().getString(STATE)))            {                items.add(entry.getKey());            }        }                return items;    }    /**       * Gets the current value of the cache counter.       *       @return the current value of the cache counter     */    public long getCacheCounter()    {        return this.cacheCounter;    }    /**       * Initializes the store by loading data from the database and setting up necessary configurations.       */    private void init()    {        try        {            this.loadFromDB();                        this.configurations.put(CACHE_TYPE, CacheType.OBJECT_CONFIG.name());            this.configurations.put(CACHE_SIZE, 5000);                        this.configurations.put(REMOVE_DELAY_SECONDS, 600);            this.configurations.put(CACHE_EXPIRE_SECONDS, 3600);                        this.configurations.put(PERSISTENCE_INTERVAL_SECONDS, 180);            this.configurations.put(CACHE_FLUSH_INTERVAL_SECONDS, 60);        }        catch (Exception exception)        {            LOGGER.error(exception);        }    }    /**       * Loads data from the database into the cache.       */    private void loadFromDB()    {        try        {            this.cache.clear();                        var statement = MOTADATA_DB_SERVICE.prepareStatement("SELECT " + OBJECT_CONFIG_STORE_COLUMNS + " FROM " + OBJECT_CONFIG_TABLE + " WHERE " + STATUS + " != '" + STATUS_DELETED + "'");            var resultSet = statement.executeQuery();                        while (resultSet.next())            {                this.addItem(resultSet.getLong(ID), resultSet.getString(NAME), resultSet.getString(STATUS));                                this.cacheCounter++;            }                        statement.close();                        LOGGER.info(String.format("Loaded %s %s", this.cache.size(), OBJECT_CONFIG_STORE));        }        catch (Exception exception)        {            LOGGER.error(exception);        }    }    /**       * Removes an item from the cache and updates the persistence status.       *       @param id the internal ID of the object to remove     */    private void removeItem(long id)    {        if (this.cache.containsKey(id))        {            if (this.cache.get(id).getBoolean(IS_PERSISTENT))            {                this.cache.get(id).put(IS_PERSISTENT, false);            }                        this.cache.remove(id);                        this.cacheCounter--;        }    }    /**       * Saves an item to the database.       *       * @param item the JsonObject representing the object to save     */    private void saveItem(JsonObject item)    {        try        {            var statement = MOTADATA_DB_SERVICE.prepareStatement("INSERT INTO " + OBJECT_CONFIG_TABLE + " (" + OBJECT_CONFIG_STORE_COLUMNS + ") VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " + STATUS + "=VALUES(" + STATUS + "), " + NAME + "=VALUES(" + NAME + "), " + OBJECT_TYPE + "=VALUES(" + OBJECT_TYPE + "), " + STATE + "=VALUES(" + STATE + "), " + DESCRIPTION + "=VALUES(" + DESCRIPTION + "), " + DISPLAY_NAME + "=VALUES(" + DISPLAY_NAME + "), " + IP_ADDRESS + "=VALUES(" + IP_ADDRESS + "), " + MAC_ADDRESS + "=VALUES(" + MAC_ADDRESS + "), " + LAST_SYNCED_TIMESTAMP + "=VALUES(" + LAST_SYNCED_TIMESTAMP + "), " + REMOTE_OBJECT_ID + "=VALUES(" + REMOTE_OBJECT_ID + "), " + VIRTUAL_MACHINE + "=VALUES(" + VIRTUAL_MACHINE + "), " + VM_HOST + "=VALUES(" + VM_HOST + "), " + VM_GUEST + "=VALUES(" + VM_GUEST + "), " + VM_HYPERVISOR + "=VALUES(" + VM_HYPERVISOR + "), " + VM_TEMPLATE + "=VALUES(" + VM_TEMPLATE + "), " + VM_RESOURCE_POOL + "=VALUES(" + VM_RESOURCE_POOL + "), " + VM_CPU_CORES + "=VALUES(" + VM_CPU_CORES + "), " + VM_MEMORY_MB + "=VALUES(" + VM_MEMORY_MB + "), " + VM_STORAGE_GB + "=VALUES(" + VM_STORAGE_GB + "), " + VM_NETWORK_ADAPTERS + "=VALUES(" + VM_NETWORK_ADAPTERS + "), " + VM_DISK_DRIVES + "=VALUES(" + VM_DISK_DRIVES + "), " + VM_POWER_STATE + "=VALUES(" + VM_POWER_STATE + "), " + VM_VMWARE_TOOL_STATUS + "=VALUES(" + VM_VMWARE_TOOL_STATUS + "), " + VM_VMWARE_TOOL_VERSION + "=VALUES(" + VM_VMWARE_TOOL_VERSION + "), " + VM_VMWARE_TOOL_RUNNING + "=VALUES(" + VM_VMWARE_TOOL_RUNNING + "), " + VM_VMWARE_TOOL_INSTALLATION_STATUS + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_STATUS + "), " + VM_VMWARE_TOOL_AUTO_UPDATE_STATUS + "=VALUES(" + VM_VMWARE_TOOL_AUTO_UPDATE_STATUS + "), " + VM_VMWARE_TOOL_UPGRADE_POLICY + "=VALUES(" + VM_VMWARE_TOOL_UPGRADE_POLICY + "), " + VM_VMWARE_TOOL_LAST_CHECK_IN + "=VALUES(" + VM_VMWARE_TOOL_LAST_CHECK_IN + "), " + VM_VMWARE_TOOL_LAST_INSTALL + "=VALUES(" + VM_VMWARE_TOOL_LAST_INSTALL + "), " + VM_VMWARE_TOOL_INSTALL_ERROR + "=VALUES(" + VM_VMWARE_TOOL_INSTALL_ERROR + "), " + VM_VMWARE_TOOL_INSTALLATION_ERROR_CODE + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_ERROR_CODE + "), " + VM_VMWARE_TOOL_INSTALLATION_ERROR_MESSAGE + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_ERROR_MESSAGE + "), " + VM_VMWARE_TOOL_UNINSTALL_ERROR + "=VALUES(" + VM_VMWARE_TOOL_UNINSTALL_ERROR + "), " + VM_VMWARE_TOOL_UNINSTALLATION_ERROR_CODE + "=VALUES(" + VM_VMWARE_TOOL_UNINSTALLATION_ERROR_CODE + "), " + VM_VMWARE_TOOL_UNINSTALLATION_ERROR_MESSAGE + "=VALUES(" + VM_VMWARE_TOOL_UNINSTALLATION_ERROR_MESSAGE + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_MESSAGE + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_MESSAGE + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_PERCENTAGE + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_PERCENTAGE + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_COMPLETION_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_COMPLETION_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_DURATION + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_DURATION + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_REMAINING_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_REMAINING_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_START_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_START_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_END_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_END_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_TOTAL_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_TOTAL_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_AVERAGE_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_AVERAGE_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_MIN_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_MIN_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_MAX_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_MAX_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_STANDARD_DEVIATION_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_STANDARD_DEVIATION_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_VARIANCE_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_VARIANCE_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_COEFFICIENT_OF_VARIANCE_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_COEFFICIENT_OF_VARIANCE_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_CONFIDENCE_INTERVAL_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_CONFIDENCE_INTERVAL_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_PREDICTION_INTERVAL_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_PREDICTION_INTERVAL_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_FORECAST_INTERVAL_TIME + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_FORECAST_INTERVAL_TIME + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_SEASONALITY + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_SEASONALITY + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_TREND + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_TREND + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_OUTLIER + "=VALUES(" + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_OUTLIER + "), " + VM_VMWARE_TOOL_INSTALLATION_PROGRESS_ESTIMATED_ANOMALY + "=VALUES</div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_explanation</span><span class="validation-badge badge-fail">references_code</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 56.33s
+                    </div>
+                </td>
+            </tr>
+
+            <tr class="use-case-header">
+                <td colspan="5">SINGLE FILE GEN (3/5 passed)</td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/suite/DependentServerAPISuite.java
+
+Content:
+```
+/*
+ *   Copyright (c) Motadata 2025. All rights reserved.
+ *
+ *   This source code is the property of Motadata and constitutes
+ *   proprietary and confidential information. Unauthorized copying, distribution,
+ *   modification, or use of this file, via any medium, is strictly prohibited
+ *   unless prior written permission is obtained from Motadata.
+ *
+ *   Unauthorized access or use of this software may...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">te/DependentServerAPISuite.java based on the task description.
+
+Let me analyze the changes needed:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+```diff
+File: motadata/src/test/java/com/mindarray/suite/DependentServerAPISuite.java
+<<<< SEARCH
+@SelectClasses({
+        TestInit.class,
+        TestUserLogin.class,
+        TestMetricPlugin.class,
+        TestAPIPermission.class,
+        TestMyAccount.class,
+        TestIntegration.class,
+        TestSNMPDeviceCatalog.class,
+        TestSingleSignOn.class,
+        TestTemplate.class
+})
+public class DependentServerAPISuite
+{
+====
+
+@SelectClasses({
+        TestInit.class,
+        TestUserLogin.class,
+        TestAPIPermission.class,
+        TestMyAccount.class,
+        TestSingleSignOn.class,
+})
+public class DependentServerAPISuite
+{
+>>>> REPLACE
+```</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 232<br>
+                        Time: 6.23s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java
+
+Content:
+```
+package com.mindarray.util;
+
+import com.mindarray.api.APIConstants;
+
+public class CipherUtilFactory
+{
+    private static CipherUtil CIPHER_UTIL;
+
+    public static CipherUtil getEncryptionInstanceForUIToServer()
+    {
+        if (CIPHER_UTIL == null)
+        {
+            CIPHER_UTIL = new CipherUtil(APIConstants.ENCRYPTION_PARAMETERS);
+        }
+        return CIPHER_UTIL;
+    }
+
+}
+
+```
+
+Task: MOTADATA-1692, re...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">l/CipherUtilFactory.java based on task MOTADATA-1692, removed decryption handler as not needed for cleartext transmission incase of ca certified.
+
+I'll analyze the changes:
+1. Locate the code section to be modified
+2. Apply the necessary modifications
+3. Ensure the changes are accurate and minimal
+
+I'll generate a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<code>
+File: motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java
+```
+diff --git a/motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java b/motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java
+index 0766a548..00f52c09 100644
+--- a/motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java
++++ b/motadata/src/main/java/com/mindarray/util/CipherUtilFactory.java
+@@ -1,14 +1,14 @@
+ package com.mindarray.util;
+ 
+-import com.mindarray.api.APIConstants;
++import com.mindarray.api.GlobalConfigConstants;
+ 
+ public class CipherUtilFactory
+ {
+     private static CipherUtil CIPHER_UTIL;
+ 
+     public static CipherUtil getEncryptionInstanceForUIToServer()
+     {
+         if (CIPHER_UTIL == null)
+         {
+             CIPHER_UTIL = new CipherUtil(GlobalConfigConstants.ENCRYPTION_PARAMETERS);
+         }
+         return CIPHER_UTIL;
+     }
+-
+ }
+```
+</code></div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 346<br>
+                        Time: 9.28s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/processor/TestLogCollector.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.processor;
+
+import com.mindarray.Bootstrap;
+import com.mindarray.GlobalConstants;
+import com.mindarray.TestUtil;
+import com.mindarray.datastore.DatastoreConstants;
+import com.mindarray.eventbus.EventBusConstants;
+import com.mindarray.eventbus.RemoteEventForwarder;
+import com.mindarray.util.Logger;
+import com.mindarray.util.Mot...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">tor.java to added test-cases.
+
+Changes:
+1. Locate the relevant code section
+2. Apply the necessary modifications
+3. Ensure the changes are minimal and focused
+
+Generated a SEARCH/REPLACE blocks with proper format.
+</thinking>
+
+<patch>
+File: src/test/java/com/mindarray/processor/TestLogCollector.java
+<<<< SEARCH
+import java.net.Socket;
+import java.util.concurrent.TimeUnit;
+
+import static com.mindarray.GlobalConstants.*;
+import static com.mindarray.eventbus.EventBusConstants.*;
+
+@ExtendWith(VertxExtension.class)
+@Execution(ExecutionMode.SAME_THREAD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(70 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "LOG_COLLECTOR")
+public class TestLogCollector
+{
+    private static final Logger LOGGER = new Logger(RemoteEventForwarder.class, GlobalConstants.MOTADATA_EVENT_BUS, "Remote Event Forwarder");
+====
+import java.net.Socket;
+import java.util.concurrent.TimeUnit;
+
+import static com.mindarray.GlobalConstants.PLUGIN_ID;
+import static com.mindarray.eventbus.EventBusConstants.*;
+
+@ExtendWith(VertxExtension.class)
+@Execution(ExecutionMode.SAME_THREAD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(70 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "EVENT_COLLECTOR")
+public class TestLogCollector
+{
+    private static final Logger LOGGER = new Logger(RemoteEventForwarder.class, GlobalConstants.MOTADATA_EVENT_BUS, "Remote Event Forwarder");
+>>>> REPLACE
+
+<<<< SEARCH
+                    {
+                        if (result1.succeeded())
+                        {
+                            Bootstrap.vertx().eventBus().publish(EVENT_CONFIG_INIT, new JsonObject().put(STATUS, STATUS_SUCCEED));
+
+                            testContext.completeNow();
+                        }
+====
+                    {
+                        if (result1.succeeded())
+                        {
+                            //config init to collector
+                            Bootstrap.vertx().eventBus().publish(EVENT_CHANGE_NOTIFICATION, new JsonObject("{\"event.type\":\"change.notification\",\"event.topic\":\"remote.event.processor \",\"remote.event.processor.uuid\":\"collebctor\",\"change.notification.type\":\"CONFIG_INIT\",\"result\":{\"log.parser.plugin\":[{\"id\":10000000000010,\"log.parser.plugin.name\":\"PostgreSQLLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"PostgreSQLLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000011,\"log.parser.plugin.name\":\"SonicWallLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"SonicWallLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000008,\"log.parser.plugin.name\":\"OracleDatabaseLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"OracleDatabaseLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000009,\"log.parser.plugin.name\":\"PaloAltoLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"PaloAltoLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000014,\"log.parser.plugin.name\":\"WindowsLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"WindowsLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000015,\"log.parser.plugin.name\":\"WindowsUpdateLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"WindowsUpdateLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000012,\"log.parser.plugin.name\":\"SophosLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"SophosLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000013,\"log.parser.plugin.name\":\"WindowsFirewallLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"WindowsFirewallLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000002,\"log.parser.plugin.name\":\"CiscoSwitchLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"CiscoSwitchLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000003,\"log.parser.plugin.name\":\"FortinetLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"FortinetLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000001,\"log.parser.plugin.name\":\"CiscoASALogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"CiscoASALogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000006,\"log.parser.plugin.name\":\"MySQLLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"MySQLLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000007,\"log.parser.plugin.name\":\"MySQLSlowQueryLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"MySQLSlowQueryLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000004,\"log.parser.plugin.name\":\"LinuxLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"LinuxLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000005,\"log.parser.plugin.name\":\"MicrosoftExchangeLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"MicrosoftExchangeLogParserPlugin.java\"},\"_type\":\"0\"},{\"id\":10000000000016,\"log.parser.plugin.name\":\"NutanixLogParserPlugin\",\"log.parser.plugin.context\":{\"log.parser.plugin.script\":\"NutanixLogParserPlugin.java\"},\"_type\":\"0\"}]},\"license\":{\"description\":\"Motadata Observability Edition\",\"license.issue.time\":1705487954030,\"license.expiry.time\":1721240999999,\"license.type\":\"FREE\",\"license.edition\":2,\"monitoring.enabled\":\"yes\",\"licensed.monitors\":1000,\"config.management.enabled\":\"yes\",\"licensed.config.devices\":1000,\"log.enabled\":\"yes\",\"licensed.log.quota.bytes\":5368709120,\"licensed.eps\":200,\"flow.enabled\":\"yes\",\"licensed.flow.quota.bytes\":5368709120,\"licensed.fps\":200,\"license.activation.code\":\"n45WcGx/mxSLdI8A39YXF8mxAc2WmAkP4r/hdLi1eWcSt/i5/YqQLcaQPvlBBTIhdXjjVEBI2DoDrbr1utha2Dr62rtM7J9mfMXlzby5GizQ5ajqjWbpENa2ndR7zaoGUBBiRBMDh5zTvP56kJji28ELyIMYBcHlUIuUxyW3l1/XjvYSb+yqz6dpZNazkdYyfQv7bQWfKU9henJYho8Ytt/YGV5gLIuFzvbbi3EPh3Ea7F4v0+XI3ZuuHZPIjyjBIWBFUfd74RKF6JsqBj8chf85a78g0tzBeWl0O3Wcua/e8EujqKl2HqOwSCQhomduKZjw9J9OCW5Bu3UGvnlpxlEJqClOt0eYT9JUP8DWOISKfjDkgxxQIScXXpxknvSre2bLlgkHlM671pP17iGojL0czmn/v/OlpV7GCiiLoYBUY6JQFNdE3BNOwwHzi1W6D4kY7FBnHSCOJhD25nmmUNTc4GqbCQZe6A/3GXXG8O8D94sClhsBiH0ztSGus39hfT2J65ZDZZT4977GgP3CVp6eerZC7qzbteOvqTB2zaoDMylJZMyQGUN0n2fe6Q1tpuQcRfY87FTWJrNEyCvMOsiu6LGyH5pLTLVHeg53hhMsIQmo8SXRTfQ0LgJ9szpp\",\"remaining.days\":154,\"used.monitors\":0,\"used.applications\":0,\"used.vms\":0,\"used.access.points\":0,\"used.agents\":0,\"used.config.devices\":0,\"used.log.quota.bytes\":0,\"used.flow.quota.bytes\":0}}"));
+
+                            testContext.completeNow();
+                        }
+>>>> REPLACE</div>
+                </td>
+                <td>
+                    <div class="pass">✅</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-pass">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 2048<br>
+                        Time: 56.04s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/api/TestTag.java
+
+Content:
+```
+package com.mindarray.api;
+
+import com.mindarray.TestAPIUtil;
+import com.mindarray.store.ObjectConfigStore;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Assertions;
+impor...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">/TestTag.java
+<<<< SEARCH
+@ExtendWith(VertxExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(70 * 1000)
+@EnabledIfSystemProperty(named = "system.bootstrap.type", matches = "APP")
+public class TestTag {
+
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+====
+@ExtendWith(VertxExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Timeout(70 * 1000)
+@EnabledIfSystemProperty(named = "system.startup.mode", matches = "APP")
+public class TestTag {
+
+    @RepeatedIfExceptionsTest(suspend = 3000L)
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-fail">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 175<br>
+                        Time: 4.94s
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td>single file gen</td>
+                <td>
+                    <div class="output-content">File: motadata/src/test/java/com/mindarray/api/TestBackupProfile.java
+
+Content:
+```
+/*
+ * Copyright (c) Motadata 2024. All rights reserved.
+ */
+
+package com.mindarray.api;
+
+import com.mindarray.GlobalConstants;
+import com.mindarray.TestAPIConstants;
+import com.mindarray.TestAPIUtil;
+import io.github.artsok.RepeatedIfExceptionsTest;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.http.HttpStatus;
+import org.junit.ju...</div>
+                </td>
+                <td class="output-cell">
+                    <div class="output-content">/TestBackupProfile.java
+<<<< SEARCH
+    {
+        TestAPIUtil.get(TestAPIConstants.BACKUP_PROFILE_API_ENDPOINT, result ->
+        {
+            if (result.succeeded())
+            {
+                Assertions.assertNotNull(result.result());
+
+                var item = result.result().bodyAsJsonObject();
+
+                Assertions.assertNotNull(item);
+
+                Assertions.assertEquals(HttpStatus.SC_OK, result.result().statusCode());
+
+                Assertions.assertEquals(GlobalConstants.STATUS_SUCCEED, item.getString(GlobalConstants.STATUS));
+
+                Assertions.assertTrue(item.containsKey(RESULT));
+
+                Assertions.assertEquals(2, item.getJsonArray(RESULT).size());
+
+                testContext.completeNow();
+            }
+            else
+            {
+                testContext.failNow(result.cause());
+            }
+        });
+    }
+}
+====
+    {
+        TestAPIUtil.get(TestAPIConstants.BACKUP_PROFILE_API_ENDPOINT, result ->
+        {
+            if (result.succeeded())
+            {
+                Assertions.assertNotNull(result.result());
+
+                var item = result.result().bodyAsJsonObject();
+
+                Assertions.assertNotNull(item);
+
+                Assertions.assertEquals(HttpStatus.SC_OK, result.result().statusCode());
+
+                Assertions.assertEquals(GlobalConstants.STATUS_SUCCEED, item.getString(GlobalConstants.STATUS));
+
+                Assertions.assertTrue(item.containsKey(RESULT));
+
+                Assertions.assertEquals(3, item.getJsonArray(RESULT).size());
+
+                testContext.completeNow();
+            }
+            else
+            {
+                testContext.failNow(result.cause());
+            }
+        });
+    }
+}
+>>>> REPLACE
+</code></div>
+                </td>
+                <td>
+                    <div class="fail">❌</div>
+                    <span class="validation-badge badge-pass">length_check</span><span class="validation-badge badge-pass">not_truncated</span><span class="validation-badge badge-pass">has_content</span><span class="validation-badge badge-pass">has_search_replace</span><span class="validation-badge badge-fail">has_file_reference</span>
+                </td>
+                <td>
+                    <div class="metadata">
+                        Tokens: 299<br>
+                        Time: 8.08s
+                    </div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</body>
+</html>

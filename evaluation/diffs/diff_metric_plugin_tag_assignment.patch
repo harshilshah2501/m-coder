@@ -1,0 +1,434 @@
+commit ae62a0fa3b59fc0d8c4c25fe14a0d26679b84269
+Author: darshan.parmar <darshan.parmar@motadata.com>
+Date:   Fri Sep 26 14:37:01 2025 +0530
+
+    Metric Plugin Assignment via Tag
+
+diff --git a/motadata/src/main/java/com/mindarray/api/MetricPlugin.java b/motadata/src/main/java/com/mindarray/api/MetricPlugin.java
+index 404ae950ba..b36d731088 100644
+--- a/motadata/src/main/java/com/mindarray/api/MetricPlugin.java
++++ b/motadata/src/main/java/com/mindarray/api/MetricPlugin.java
+@@ -25,6 +25,7 @@
+  *   5-Feb-2025		Yash Tiwari		MOTADATA-5007: added the support to update script variables in metric plugin
+  *   23-Apr-2025		sankalp		    MOTADATA-4883 : Added data security based on user group for reference entities
+  *  28-Jul-2025     Umang               MOTADATA-6754 Support for Tags and Severity
++ *  24-Sept-2025    Darshan         MOTADATA-7352: Metric Plugin Assignment via Tag
+  */
+ 
+ package com.mindarray.api;
+@@ -308,7 +309,7 @@ public class MetricPlugin extends AbstractAPI
+ 
+                 // based on entity.type find assigned metrics from collections
+ 
+-                var objects = item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.OBJECT.getName()) ? updatedIds : ObjectConfigStore.getStore().getItemsByGroups(updatedIds);
++                var objects = getObjectsByEntityType(item.getString(METRIC_PLUGIN_ENTITY_TYPE), updatedIds);
+ 
+                 var metrics = MetricConfigStore.getStore().getItemsByMapMultiValueField(Metric.METRIC_CONTEXT, APIConstants.ENTITY_ID, new JsonArray(new ArrayList(1)).add(CommonUtil.getLong(routingContext.request().getParam(ID))));
+ 
+@@ -340,7 +341,7 @@ public class MetricPlugin extends AbstractAPI
+ 
+                         for (var index = 0; index < updatedIds.size(); index++)
+                         {
+-                            var id = updatedIds.getLong(index);
++                            var id = updatedIds.getValue(index);
+ 
+                             if (entities.contains(id))
+                             {
+@@ -512,8 +513,7 @@ public class MetricPlugin extends AbstractAPI
+ 
+             var entities = item.getJsonArray(METRIC_PLUGIN_ENTITIES);
+ 
+-            var objects = item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.GROUP.getName()) ?
+-                    ObjectConfigStore.getStore().getItemsByGroups(updatedIds) : updatedIds;
++            var objects = getObjectsByEntityType(item.getString(METRIC_PLUGIN_ENTITY_TYPE), updatedIds);
+ 
+             for (var index = 0; index < objects.size(); index++)
+             {
+@@ -530,13 +530,13 @@ public class MetricPlugin extends AbstractAPI
+                 NMSConstants.updateMetrics(metrics, EventBusConstants.EVENT_METRIC_PROVISION);
+             }
+ 
+-            if (update && (!metrics.isEmpty() || item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.GROUP.getName())))
++            if (update && (!metrics.isEmpty() || item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.GROUP.getName()) || item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.TAG.getName())))
+             {
+                 var ids = new JsonArray();
+ 
+                 for (var index = 0; index < updatedIds.size(); index++)
+                 {
+-                    var id = updatedIds.getLong(index);
++                    var id = updatedIds.getValue(index);
+ 
+                     if (!entities.contains(id))
+                     {
+@@ -598,6 +598,29 @@ public class MetricPlugin extends AbstractAPI
+         return exist;
+     }
+ 
++    /**
++     * Resolves entity IDs to object IDs based on entity type.
++     *
++     * @param entityType The type of entity (OBJECT, GROUP, TAG)
++     * @param entityIds The IDs of the entities
++     * @return JsonArray of object IDs
++     */
++    private JsonArray getObjectsByEntityType(String entityType, JsonArray entityIds)
++    {
++        if (entityType.equalsIgnoreCase(APIConstants.Entity.GROUP.getName()))
++        {
++            return ObjectConfigStore.getStore().getItemsByGroups(entityIds);
++        }
++        else if (entityType.equalsIgnoreCase(APIConstants.Entity.TAG.getName()))
++        {
++            return ObjectConfigStore.getStore().getIdsByTags(entityIds);
++        }
++        else
++        {
++            return entityIds; // OBJECT type - return as is
++        }
++    }
++
+     @Override
+     protected Future<JsonObject> getReferencesPreHook(RoutingContext routingContext, JsonObject response)
+     {
+@@ -609,7 +632,9 @@ public class MetricPlugin extends AbstractAPI
+ 
+             if (item != null && item.getJsonArray(METRIC_PLUGIN_ENTITIES) != null && !item.getJsonArray(METRIC_PLUGIN_ENTITIES).isEmpty())
+             {
+-                if (item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.OBJECT.getName()))
++                var entityType = item.getString(METRIC_PLUGIN_ENTITY_TYPE);
++
++                if (entityType.equalsIgnoreCase(APIConstants.Entity.OBJECT.getName()))
+                 {
+                     var objects = ObjectConfigStore.getStore().getItems(ObjectConfigStore.getStore().getIdsByGroups(userGroups, item.getJsonArray(METRIC_PLUGIN_ENTITIES)));
+ 
+@@ -620,11 +645,33 @@ public class MetricPlugin extends AbstractAPI
+ 
+                     response.put(APIConstants.Entity.OBJECT.getName(), objects);
+                 }
+-
+-                else
++                else if (entityType.equalsIgnoreCase(APIConstants.Entity.GROUP.getName()))
+                 {
+                     response.put(APIConstants.Entity.GROUP.getName(), GroupConfigStore.getStore().getItems(GroupConfigStore.getStore().getQualifiedGroups(item.getJsonArray(METRIC_PLUGIN_ENTITIES), userGroups)));
+                 }
++                else if (entityType.equalsIgnoreCase(APIConstants.Entity.TAG.getName()))
++                {
++                    var tags = new JsonArray();
++
++                    var tagNames = item.getJsonArray(METRIC_PLUGIN_ENTITIES);
++
++                    for (var i = 0; i < tagNames.size(); i++)
++                    {
++                        var tagId = TagConfigStore.getStore().getTag(tagNames.getString(i).toLowerCase());
++
++                        if (tagId != DUMMY_ID)
++                        {
++                            var tagItem = TagConfigStore.getStore().getItem(tagId);
++
++                            if (tagItem != null)
++                            {
++                                tags.add(tagItem);
++                            }
++                        }
++                    }
++
++                    response.put(APIConstants.Entity.TAG.getName(), tags);
++                }
+             }
+         }
+         catch (Exception exception)
+@@ -658,15 +705,20 @@ public class MetricPlugin extends AbstractAPI
+ 
+                 if (item.getJsonArray(METRIC_PLUGIN_ENTITIES) != null && !item.getJsonArray(METRIC_PLUGIN_ENTITIES).isEmpty())
+                 {
+-                    if (item.getString(METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(APIConstants.Entity.OBJECT.getName()))
++                    var entityType = item.getString(METRIC_PLUGIN_ENTITY_TYPE);
++
++                    if (entityType.equalsIgnoreCase(APIConstants.Entity.OBJECT.getName()))
+                     {
+                         references = ObjectConfigStore.getStore().getIdsByGroups(userGroups, item.getJsonArray(METRIC_PLUGIN_ENTITIES)).size();
+                     }
+-
+-                    else
++                    else if (entityType.equalsIgnoreCase(APIConstants.Entity.GROUP.getName()))
+                     {
+                         references = GroupConfigStore.getStore().getQualifiedGroups(item.getJsonArray(METRIC_PLUGIN_ENTITIES), userGroups).size();
+                     }
++                    else if (entityType.equalsIgnoreCase(APIConstants.Entity.TAG.getName()))
++                    {
++                        references = TagConfigStore.getStore().getIdsByItems(item.getJsonArray(METRIC_PLUGIN_ENTITIES)).size();
++                    }
+                 }
+ 
+                 response.put(id, response.containsKey(id) ? response.getInteger(id) + references : references);
+diff --git a/motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java b/motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java
+index 8acd4b1159..9c96639d03 100644
+--- a/motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java
++++ b/motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java
+@@ -27,6 +27,7 @@
+  *   24-Jul-2025   Yash Tiwari       MOTADATA-6864: sending change notification for dependency mapper deletion if object is deleted
+  *   14-Jul-2025   Priyansh Sindhav  MOTADATA-6348 : Enable Manual Mapping and Custom Management of Monitor Templates in Motadata AIOps
+  *   23-Aug-2025     Pruthviraj       Logs added
++ *   24-Sept-2025    Darshan      MOTADATA-7352: Metric Plugin Provision and Unprovision on object provision and update
+  */
+ 
+ package com.mindarray.eventbus;
+@@ -249,7 +250,7 @@ public class LocalEventChangeNotificationHandler extends AbstractVerticle
+                                         item.remove(AIOpsObject.OBJECT_CONTEXT);
+                                     }
+ 
+-                                    assignMetricPlugin(item, event);
++                                    handleObjectUpdate(item, event);
+                                 }
+                                 catch (Exception exception)
+                                 {
+@@ -1756,18 +1757,58 @@ public class LocalEventChangeNotificationHandler extends AbstractVerticle
+     {
+         var groups = event.getJsonArray(AIOpsObject.OBJECT_GROUPS);
+ 
+-        if (object != null && groups != null && !groups.isEmpty())
++        var tags = object.getJsonArray(AIOpsObject.OBJECT_TAGS);
++
++        if (object != null)
+         {
+-            var items = MetricPluginConfigStore.getStore().getItemsByMultiValueFieldAny(MetricPlugin.METRIC_PLUGIN_ENTITIES, groups);
+ 
+             var pluginIds = new HashSet<Long>();
+ 
+             var metrics = new ArrayList<JsonObject>();
+ 
+-            for (var index = 0; index < items.size(); index++)
++            // Handle GROUP-based MetricPlugins
++            if (groups != null && !groups.isEmpty())
+             {
+-                var item = items.getJsonObject(index);
++                var items = MetricPluginConfigStore.getStore().getItemsByMultiValueFieldAny(MetricPlugin.METRIC_PLUGIN_ENTITIES, groups);
++
++                processMetricPluginItems(items, object, pluginIds, metrics, APIConstants.Entity.GROUP.getName());
++            }
++
++            // Handle TAG-based MetricPlugins
++            if (tags != null && !tags.isEmpty())
++            {
++                var items = MetricPluginConfigStore.getStore().getItemsByMultiValueFieldAny(MetricPlugin.METRIC_PLUGIN_ENTITIES, TagConfigStore.getStore().getItems(tags));
++
++                processMetricPluginItems(items, object, pluginIds, metrics, APIConstants.Entity.TAG.getName());
++            }
++
++            updateMetrics(metrics, EventBusConstants.EVENT_METRIC_PROVISION).onComplete(result -> vertx.eventBus().send(replyTopic, event));
++        }
++        else
++        {
++            vertx.eventBus().send(replyTopic, event);
++        }
++    }
++
++    /**
++     * Processes MetricPlugin items for a specific entity type and adds qualifying metrics.
++     *
++     * @param items The MetricPlugin items to process
++     * @param object The object to assign metrics to
++     * @param pluginIds Set to track processed plugin IDs to avoid duplicates
++     * @param metrics List to collect metrics for provisioning
++     * @param entityType The entity type being processed (GROUP or TAG)
++     */
++    private void processMetricPluginItems(JsonArray items, JsonObject object, Set<Long> pluginIds,
++                                        ArrayList<JsonObject> metrics, String entityType)
++    {
++        for (var index = 0; index < items.size(); index++)
++        {
++            var item = items.getJsonObject(index);
+ 
++            // Only process items that match the expected entity type
++            if (item.getString(MetricPlugin.METRIC_PLUGIN_ENTITY_TYPE).equalsIgnoreCase(entityType))
++            {
+                 if (item.containsKey(MetricPlugin.METRIC_PLUGIN_CONTEXT))
+                 {
+                     item.mergeIn(item.getJsonObject(MetricPlugin.METRIC_PLUGIN_CONTEXT));
+@@ -1780,12 +1821,6 @@ public class LocalEventChangeNotificationHandler extends AbstractVerticle
+                     setMetricPluginContext(item.put(APIConstants.ENTITY_ID, item.getLong(ID)), object, metrics);
+                 }
+             }
+-
+-            updateMetrics(metrics, EventBusConstants.EVENT_METRIC_PROVISION).onComplete(result -> vertx.eventBus().send(replyTopic, event));
+-        }
+-        else
+-        {
+-            vertx.eventBus().send(replyTopic, event);
+         }
+     }
+ 
+@@ -2200,6 +2235,138 @@ public class LocalEventChangeNotificationHandler extends AbstractVerticle
+         return groups;
+     }
+ 
++    /**
++     * Handles object updates by checking for removed tags/groups and unprovisioning associated metrics
++     */
++    private void handleObjectUpdate(JsonObject currentObject, JsonObject event)
++    {
++        if (currentObject == null)
++        {
++            vertx.eventBus().send(replyTopic, event);
++
++            return;
++        }
++
++        // Unprovision metrics for removed tags/groups
++        unprovisionMetrics(currentObject).onComplete(result ->
++        {
++            // After unprovisioning, proceed with normal metric assignment
++            assignMetricPlugin(currentObject, event);
++        });
++    }
++
++    /**
++     * Unprovisions metrics that were assigned via removed tags or groups
++     */
++    private Future<Void> unprovisionMetrics(JsonObject object)
++    {
++        var promise = Promise.<Void>promise();
++
++        var metrics = new ArrayList<JsonObject>();
++
++        try
++        {
++            var objectId = object.getLong(ID);
++
++            // Find metrics assigned to this object
++            for (var metric : MetricConfigStore.getStore().getItemsByObject(objectId))
++            {
++                var context = metric.getJsonObject(Metric.METRIC_CONTEXT);
++
++                if (context != null && context.containsKey(APIConstants.ENTITY_ID))
++                {
++                    var metricPluginId = context.getLong(APIConstants.ENTITY_ID);
++
++                    var metricPlugin = MetricPluginConfigStore.getStore().getItem(metricPluginId);
++
++                    if (metricPlugin != null && shouldUnprovisionMetric(object, metricPlugin))
++                    {
++                        metrics.add(new JsonObject().put(ID, metric.getLong(ID)));
++
++                        LOGGER.info(String.format("Unprovisioning metric %s from object %s due to removed tag/group assignment",
++                            metric.getString(Metric.METRIC_NAME), objectId));
++                    }
++                }
++            }
++
++            if (!metrics.isEmpty())
++            {
++                NMSConstants.updateMetrics(metrics, EventBusConstants.EVENT_METRIC_UNPROVISION).onComplete(result ->
++                {
++                    if (result.succeeded())
++                    {
++                        LOGGER.info(String.format("Successfully unprovisioned %d metrics for object %s",
++                            metrics.size(), objectId));
++                    }
++                    else
++                    {
++                        LOGGER.error(result.cause());
++                    }
++                    promise.complete();
++                });
++            }
++            else
++            {
++                promise.complete();
++            }
++        }
++        catch (Exception exception)
++        {
++            LOGGER.error(exception);
++
++            promise.complete();
++        }
++
++        return promise.future();
++    }
++
++    /**
++     * Determines if a metric should be unprovisioned based on removed tags/groups
++     */
++    private boolean shouldUnprovisionMetric(JsonObject object, JsonObject metricPlugin)
++    {
++        var entityType = metricPlugin.getString(MetricPlugin.METRIC_PLUGIN_ENTITY_TYPE);
++
++        var entities = metricPlugin.getJsonArray(MetricPlugin.METRIC_PLUGIN_ENTITIES);
++
++        if (entities == null || entities.isEmpty())
++        {
++            return false;
++        }
++
++        // Check if metric plugin was assigned via removed groups
++        if (APIConstants.Entity.GROUP.getName().equalsIgnoreCase(entityType))
++        {
++            var items = new HashSet<>(object.getJsonArray(AIOpsObject.OBJECT_GROUPS).getList());
++
++            for (var i = 0; i < entities.size(); i++)
++            {
++                if (items.contains(entities.getLong(i)))
++                {
++
++                    return false;
++                }
++            }
++        }
++        // Check if metric plugin was assigned via removed tags
++        else if (APIConstants.Entity.TAG.getName().equalsIgnoreCase(entityType))
++        {
++            var tagItems = TagConfigStore.getStore().getIdsByItems(entities);
++
++            var items = new HashSet<>(object.getJsonArray(AIOpsObject.OBJECT_TAGS).getList());
++
++            for (var i = 0; i < tagItems.size(); i++)
++            {
++                if (items.contains(tagItems.getInteger(i)))
++                {
++                    return false;
++                }
++            }
++        }
++
++        return true;
++    }
++
+     @Override
+     public void stop(Promise<Void> promise) throws Exception
+     {
+diff --git a/motadata/src/main/java/com/mindarray/nms/MetricPoller.java b/motadata/src/main/java/com/mindarray/nms/MetricPoller.java
+index 7cc721ed18..e0ada9f4a7 100644
+--- a/motadata/src/main/java/com/mindarray/nms/MetricPoller.java
++++ b/motadata/src/main/java/com/mindarray/nms/MetricPoller.java
+@@ -26,6 +26,7 @@
+ 	24-Mar-2025     Yash Tiwari         MOTADATA-5432: Either 3 or value returned by "ping.check.packet.retries" will be considered as packet retries i.e. "-c in ping/fping"
+ 	20-May-2025     Aagam               MOTADATA-5847 : Added windows build support
+ 	05-Aug-2025     Viram               MOTADATA-6858 Removed redundant code to have atomic operations
++ *  24-Sept-2025    Darshan             MOTADATA-7352: Custom Metric Plugin should not be batched
+ */
+ 
+ package com.mindarray.nms;
+@@ -878,6 +879,8 @@ public class MetricPoller extends AbstractVerticle
+                                 pendingAvailabilityMetrics.get(packet).add(event.getLong(ID));
+                             }
+ 
++                            case CUSTOM -> metricsByCategory.get(category).get(getMetricTimeoutValueType(event)).add(event.getLong(ID));
++
+                             default ->
+                             {
+                                 // assign batch or normal metrics based on category and metric timeout value type
+diff --git a/motadata/src/main/resources/entity-schemas/metric-plugins.json b/motadata/src/main/resources/entity-schemas/metric-plugins.json
+index 5f9ec48f83..bc79adb9f2 100644
+--- a/motadata/src/main/resources/entity-schemas/metric-plugins.json
++++ b/motadata/src/main/resources/entity-schemas/metric-plugins.json
+@@ -30,7 +30,8 @@
+       ],
+       "values": [
+         "Monitor",
+-        "Group"
++        "Group",
++        "Tag"
+       ]
+     },
+     {

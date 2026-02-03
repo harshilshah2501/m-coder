@@ -1,0 +1,51 @@
+{
+  "total_tests": 7,
+  "passed": 7,
+  "failed": 0,
+  "latencies": [
+    0.9740772247314453,
+    3.241908550262451,
+    5.149626016616821,
+    5.642294406890869,
+    1.3286445140838623,
+    5.732188701629639,
+    5.498847723007202
+  ],
+  "details": {
+    "direct_generation": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 0.9740772247314453
+    },
+    "single_file": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 3.241908550262451
+    },
+    "tool_use": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 5.149626016616821
+    },
+    "multi_file": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 5.642294406890869
+    },
+    "code_review": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 1.3286445140838623
+    },
+    "file_creation": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 5.732188701629639
+    },
+    "refactoring": {
+      "format_valid": true,
+      "code_valid": true,
+      "latency": 5.498847723007202
+    }
+  }
+}

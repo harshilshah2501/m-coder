@@ -1,0 +1,857 @@
+{
+  "summary": {
+    "total": 50,
+    "pass": 9,
+    "fail": 41,
+    "pass_rate": 0.18,
+    "avg_score": 0.5679,
+    "model": "claude-sonnet-4-5-20250929",
+    "timestamp": 1768195994,
+    "source_breakdown": {
+      "synthetic_single_file": {
+        "pass": 0,
+        "fail": 11,
+        "total": 11,
+        "avg_score": 0.6545454545454544,
+        "pass_rate": 0.0
+      },
+      "synthetic_bugfix": {
+        "pass": 5,
+        "fail": 0,
+        "total": 5,
+        "avg_score": 1.0,
+        "pass_rate": 1.0
+      },
+      "evaluation_failure_corrected": {
+        "pass": 0,
+        "fail": 12,
+        "total": 12,
+        "avg_score": 0.12458333333333337,
+        "pass_rate": 0.0
+      },
+      "synthetic_refactoring": {
+        "pass": 0,
+        "fail": 10,
+        "total": 10,
+        "avg_score": 0.6500000000000001,
+        "pass_rate": 0.0
+      },
+      "synthetic_feature_add": {
+        "pass": 0,
+        "fail": 8,
+        "total": 8,
+        "avg_score": 0.5499999999999999,
+        "pass_rate": 0.0
+      },
+      "synthetic_multi_file": {
+        "pass": 4,
+        "fail": 0,
+        "total": 4,
+        "avg_score": 0.95,
+        "pass_rate": 1.0
+      }
+    }
+  },
+  "results": [
+    {
+      "task_id": "synth_clean_si_0290",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_bu_0199",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "PASS",
+      "reason": "The response correctly fixes the ClassCastException with proper type checking, handles multiple types including null, and uses appropriate SEARCH/REPLACE format with thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 1.0,
+        "instruction_following": 1.0,
+        "context_usage": 1.0
+      },
+      "overall_score": 1.0,
+      "hash": "6a1bfec9bf6bd09247ed822789c8eae4"
+    },
+    {
+      "task_id": "pref_eval_failure_148",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request to extend validation for special characters in ValidationUtil.java and instead modifies an unrelated file (ObjectManager.java) with an incomplete, irrelevant implementation.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "51d91da64b91a68865f9e7610dfe5507"
+    },
+    {
+      "task_id": "synth_clean_re_0016",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_re_0305",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_si_0284",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "pref_eval_failure_043",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_bu_0215",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "PASS",
+      "reason": "The response correctly fixes the ClassCastException with proper type checking, handles multiple types including null, and uses appropriate SEARCH/REPLACE format with thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 1.0,
+        "instruction_following": 1.0,
+        "context_usage": 1.0
+      },
+      "overall_score": 1.0,
+      "hash": "6a1bfec9bf6bd09247ed822789c8eae4"
+    },
+    {
+      "task_id": "synth_clean_fe_0099",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "synth_clean_fe_0108",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "synth_clean_re_0189",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples or integration guidance for the services that need to use this validator.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.5,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_si_0146",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_mu_0005",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements Vert.x event bus pub-sub pattern across two files using the specified constant, with proper SEARCH/REPLACE blocks and thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.9
+      },
+      "overall_score": 0.95,
+      "hash": "1fdde815712b8ee29f15e11bba072fdf"
+    },
+    {
+      "task_id": "pref_eval_failure_119",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "The response modifies a completely different file (ObjectManager.java) than the one specified in the task (SNMPEngine.java), and doesn't address the null pointer exception fix at all.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "42362799f473e014528c5aae8ed412f1"
+    },
+    {
+      "task_id": "pref_eval_failure_051",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to use proper SEARCH/REPLACE block format as requested, provides no actual validation logic, and doesn't address the task of adding validation checks.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.05,
+      "hash": "9af320d95c9e627b9ce1ecad81b23746"
+    },
+    {
+      "task_id": "synth_clean_bu_0084",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "PASS",
+      "reason": "The response correctly fixes the NPE with proper null checking and returns an appropriate error response. Format is correct with SEARCH/REPLACE blocks and thinking tags, and the solution directly addresses the stated problem.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 1.0,
+        "instruction_following": 1.0,
+        "context_usage": 1.0
+      },
+      "overall_score": 1.0,
+      "hash": "353129d3240ba18116aba7b62feaad9b"
+    },
+    {
+      "task_id": "synth_clean_si_0064",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_fe_0017",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "pref_eval_failure_071",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to provide proper SEARCH/REPLACE blocks as requested, instead showing unrelated code in a generic code block. Does not address the task of adding special character validation.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.0,
+      "hash": "1bb3e48fedbf91422f90e05d765c927e"
+    },
+    {
+      "task_id": "pref_eval_failure_090",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to provide the requested SEARCH/REPLACE blocks for the two specified files. Instead, it provides a generic code snippet that doesn't address logging implementation at all.",
+      "scores": {
+        "format_compliance": 0.1,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.03,
+      "hash": "2de87edf7736b42ca01575e0e9cf7777"
+    },
+    {
+      "task_id": "synth_clean_re_0047",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "pref_eval_failure_133",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to provide proper SEARCH/REPLACE blocks as requested, instead showing unrelated code in a generic code block. Does not address the task of adding special character validation.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.0,
+      "hash": "1bb3e48fedbf91422f90e05d765c927e"
+    },
+    {
+      "task_id": "synth_clean_si_0123",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_bu_0289",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "PASS",
+      "reason": "The response correctly fixes the ClassCastException with proper type checking, handles multiple types including null, and uses appropriate SEARCH/REPLACE format with thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 1.0,
+        "instruction_following": 1.0,
+        "context_usage": 1.0
+      },
+      "overall_score": 1.0,
+      "hash": "6a1bfec9bf6bd09247ed822789c8eae4"
+    },
+    {
+      "task_id": "synth_clean_bu_0312",
+      "source": "synthetic_bugfix",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "PASS",
+      "reason": "The response correctly fixes the NPE with proper null checking and returns an appropriate error response. Format is correct with SEARCH/REPLACE blocks and thinking tags, and the solution directly addresses the stated problem.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 1.0,
+        "instruction_following": 1.0,
+        "context_usage": 1.0
+      },
+      "overall_score": 1.0,
+      "hash": "353129d3240ba18116aba7b62feaad9b"
+    },
+    {
+      "task_id": "pref_eval_failure_122",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_re_0114",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples or integration guidance for the services that need to use this validator.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.5,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "pref_eval_failure_145",
+      "source": "evaluation_failure_corrected",
+      "category": "multi_file",
+      "task_type": "file_creation",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to provide proper SEARCH/REPLACE blocks as requested, instead showing unrelated code in a generic code block. Does not address the task of adding special character validation.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.0,
+      "hash": "1bb3e48fedbf91422f90e05d765c927e"
+    },
+    {
+      "task_id": "synth_clean_fe_0213",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "synth_clean_fe_0210",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "pref_eval_failure_040",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "The response fails to implement the requested validation check and instead leaves an incomplete implementation comment. The SEARCH/REPLACE block doesn't add any actual validation logic as requested.",
+      "scores": {
+        "format_compliance": 0.8,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.33,
+      "hash": "a94bc6cf370230e0ef86110d78336104"
+    },
+    {
+      "task_id": "synth_clean_si_0115",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods. It also lacks method exit logging in the success path (only logs completion, not explicit exit), and doesn't demonstrate logging at multiple entry/exit points as requested.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.8,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.45,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_si_0287",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_si_0271",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_re_0035",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_si_0203",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_si_0132",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_re_0234",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_re_0085",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples or integration guidance for the services that need to use this validator.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.5,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_re_0253",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "synth_clean_fe_0093",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "synth_clean_si_0286",
+      "source": "synthetic_single_file",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response only logs at method entry and exit for one method, missing comprehensive logging across all methods as requested. It also lacks method exit logging in the success path (only logs 'completed successfully' but not actual exit points).",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.7,
+        "instruction_following": 0.4,
+        "context_usage": 0.6
+      },
+      "overall_score": 0.675,
+      "hash": "b54381dd216167bcae4d869175f50b1a"
+    },
+    {
+      "task_id": "synth_clean_mu_0193",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements Vert.x event bus pub-sub pattern across two files using the specified constant, with proper SEARCH/REPLACE blocks and thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.9
+      },
+      "overall_score": 0.95,
+      "hash": "1fdde815712b8ee29f15e11bba072fdf"
+    },
+    {
+      "task_id": "synth_clean_fe_0231",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    },
+    {
+      "task_id": "synth_clean_mu_0249",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements Vert.x event bus pub-sub pattern across two files using the specified constant, with proper SEARCH/REPLACE blocks and thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.9
+      },
+      "overall_score": 0.95,
+      "hash": "1fdde815712b8ee29f15e11bba072fdf"
+    },
+    {
+      "task_id": "synth_clean_mu_0080",
+      "source": "synthetic_multi_file",
+      "category": "multi_file",
+      "task_type": "multi_file",
+      "verdict": "PASS",
+      "reason": "Response correctly implements Vert.x event bus pub-sub pattern across two files using the specified constant, with proper SEARCH/REPLACE blocks and thinking tags.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.9,
+        "instruction_following": 1.0,
+        "context_usage": 0.9
+      },
+      "overall_score": 0.95,
+      "hash": "1fdde815712b8ee29f15e11bba072fdf"
+    },
+    {
+      "task_id": "pref_eval_failure_055",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "bugfix",
+      "verdict": "FAIL",
+      "reason": "Response completely fails to use proper SEARCH/REPLACE block format as requested, and provides no actual fix for the null pointer exception despite having <thinking> tags.",
+      "scores": {
+        "format_compliance": 0.0,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.2
+      },
+      "overall_score": 0.05,
+      "hash": "a11764676764f57317720cc0519b831d"
+    },
+    {
+      "task_id": "synth_clean_re_0173",
+      "source": "synthetic_refactoring",
+      "category": "multi_file",
+      "task_type": "refactoring",
+      "verdict": "FAIL",
+      "reason": "The response is incomplete - it only implements 2 of the 3 requested validators (missing URL validation) and lacks usage examples showing how this eliminates duplication across services.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.6,
+        "instruction_following": 0.5,
+        "context_usage": 0.5
+      },
+      "overall_score": 0.65,
+      "hash": "ef3e70eaa719a8e7bdf9e9319810d02b"
+    },
+    {
+      "task_id": "pref_eval_failure_086",
+      "source": "evaluation_failure_corrected",
+      "category": "single_file",
+      "task_type": "single_file",
+      "verdict": "FAIL",
+      "reason": "The response completely ignores the user's request to extend validation for special characters in ValidationUtil.java and instead modifies an unrelated file (ObjectManager.java) with an incomplete, irrelevant implementation.",
+      "scores": {
+        "format_compliance": 0.5,
+        "technical_correctness": 0.0,
+        "instruction_following": 0.0,
+        "context_usage": 0.0
+      },
+      "overall_score": 0.125,
+      "hash": "51d91da64b91a68865f9e7610dfe5507"
+    },
+    {
+      "task_id": "synth_clean_fe_0313",
+      "source": "synthetic_feature_add",
+      "category": "single_file",
+      "task_type": "feature_add",
+      "verdict": "FAIL",
+      "reason": "While the code implements basic caching correctly, it has critical production issues: no cache cleanup mechanism leads to unbounded memory growth, and ConcurrentHashMap alone doesn't guarantee thread-safe compound operations during cache updates.",
+      "scores": {
+        "format_compliance": 1.0,
+        "technical_correctness": 0.5,
+        "instruction_following": 0.9,
+        "context_usage": 0.8
+      },
+      "overall_score": 0.55,
+      "hash": "ed6fed59c6c574391af6c860241127df"
+    }
+  ]
+}

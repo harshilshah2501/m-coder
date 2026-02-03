@@ -1,0 +1,122 @@
+{
+  "dataset": "datasets/v15_gold.jsonl",
+  "json_validity": {
+    "valid": 2599,
+    "total": 2599,
+    "pass": true
+  },
+  "format_consistency": {
+    "single_file": {
+      "has_thinking": 600,
+      "has_code": 600,
+      "has_search_replace": 600,
+      "has_diffs": 3,
+      "total": 600
+    },
+    "code_review": {
+      "has_thinking": 299,
+      "has_code": 0,
+      "has_search_replace": 0,
+      "has_diffs": 0,
+      "total": 299
+    },
+    "code_edits": {
+      "has_thinking": 800,
+      "has_code": 800,
+      "has_search_replace": 800,
+      "has_diffs": 3,
+      "total": 800
+    },
+    "diff_generation": {
+      "has_thinking": 400,
+      "has_code": 0,
+      "has_search_replace": 0,
+      "has_diffs": 400,
+      "total": 400
+    },
+    "refactoring": {
+      "has_thinking": 50,
+      "has_code": 50,
+      "has_search_replace": 50,
+      "has_diffs": 0,
+      "total": 50
+    },
+    "file_creation": {
+      "has_thinking": 146,
+      "has_code": 146,
+      "has_search_replace": 0,
+      "has_diffs": 5,
+      "total": 150
+    },
+    "multi_file": {
+      "has_thinking": 300,
+      "has_code": 300,
+      "has_search_replace": 300,
+      "has_diffs": 1,
+      "total": 300
+    }
+  },
+  "duplicates": {
+    "unique": 2470,
+    "duplicates": 129,
+    "duplicate_pairs": [
+      [
+        153,
+        22
+      ],
+      [
+        166,
+        31
+      ],
+      [
+        373,
+        280
+      ],
+      [
+        404,
+        233
+      ],
+      [
+        408,
+        31
+      ],
+      [
+        412,
+        280
+      ],
+      [
+        414,
+        280
+      ],
+      [
+        420,
+        393
+      ],
+      [
+        443,
+        198
+      ],
+      [
+        464,
+        109
+      ]
+    ]
+  },
+  "statistics": {
+    "total_examples": 2599,
+    "mean_tokens": 468.66775682954983,
+    "median_tokens": 152.1,
+    "p95_tokens": 1454.7,
+    "min_tokens": 22.1,
+    "max_tokens": 51593.1,
+    "category_distribution": {
+      "single_file": 600,
+      "code_review": 299,
+      "code_edits": 800,
+      "diff_generation": 400,
+      "refactoring": 50,
+      "file_creation": 150,
+      "multi_file": 300
+    }
+  }
+}

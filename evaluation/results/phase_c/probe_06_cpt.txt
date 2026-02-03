@@ -1,0 +1,24 @@
+}
+}<|fim_middle|>
+import com.vmops.api.SLOConstants;
+import com.vmops.api.UserConstants;
+import com.vmops.eventbus.EventBusConstants;
+import com.vmops.model.*;
+import com.vmops.store.*;
+import com.vmops.util.*;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.vmops.api.APIConstants.*;
+import static com.vmops.api.UserConstants.USER_PREFERENCE;
+import static com.vmops.eventbus.EventBusConstants.*;
+import static com.vmops.util.CommonUtil.*;
+import static com.vmops.util.LoggerUtil.*;
+
+/**
+ * The LocalEventChangeNotificationHandler class is

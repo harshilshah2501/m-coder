@@ -1,0 +1,120 @@
+task_id: 45f95bda687a_-_refactored
+git_commit: 45f95bda687a
+category: TYPE_B_MULTIFILE
+difficulty: hard
+description: '- refactored.'
+patterns:
+- snmp
+- vertx
+- database
+- discovery
+- integration
+score: 85
+rank: 4
+prompt: 'Complete the following real Motadata AIOps production task:
+
+
+  Task ID: 45f95bda687a
+
+  Description: - refactored.
+
+
+  This task was originally fixed in production commit 45f95bda687a. Your goal is to implement the same fix.
+
+
+  Files to modify (4 files):
+
+  1. motadata/src/main/java/com/mindarray/api/RunbookPlugin.java
+
+  2. motadata/src/main/java/com/mindarray/api/SNMPDeviceCatalog.java
+
+  3. motadata/src/main/java/com/mindarray/api/UserProfile.java
+
+  4. motadata/src/main/java/com/mindarray/util/DataSecurity.java
+
+
+  Requirements:
+
+  - Maintain semantic equivalence to the original production fix
+
+  - Follow Motadata coding patterns (Vert.x async, SNMP, Database)
+
+  - Preserve all existing functionality
+
+  - Apply changes across all affected files
+
+  - Ensure code compiles successfully
+
+
+  Context:
+
+  - Java 17, Vert.x 4.3.4 environment
+
+  - Motadata AIOps monitoring system
+
+  - Follow patterns from existing codebase'
+expected_files:
+- src/main/java/com/mindarray/api/RunbookPlugin.java
+- src/main/java/com/mindarray/api/SNMPDeviceCatalog.java
+- src/main/java/com/mindarray/api/UserProfile.java
+- src/main/java/com/mindarray/util/DataSecurity.java
+setup_script: "#!/bin/bash\nset -e\n\n# Create Motadata project structure\nmkdir -p /workspace/src/main/java/com/mindarray/{api,db,eventbus,nms,integration,policy,notification,util,config,runbook,report,visualization,patch,compliance,manager,agent,job,store,cache}\n\
+  mkdir -p /workspace/src/main/resources/entity-schemas\nmkdir -p /workspace/src/test/java/com/mindarray/{api,eventbus,nms}\n\
+  mkdir -p /workspace/db-files/{template-widgets,dashboard-widgets}\n\n# Create pom.xml\ncat > /workspace/pom.xml << 'EOF'\n\
+  <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n         xmlns:xsi=\"\
+  http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\"\
+  >\n    <modelVersion>4.0.0</modelVersion>\n    \n    <groupId>com.mindarray</groupId>\n    <artifactId>motadata</artifactId>\n\
+  \    <version>1.0-SNAPSHOT</version>\n    \n    <properties>\n        <maven.compiler.source>17</maven.compiler.source>\n\
+  \        <maven.compiler.target>17</maven.compiler.target>\n        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\n\
+  \        <vertx.version>4.3.4</vertx.version>\n    </properties>\n    \n    <dependencies>\n        <dependency>\n     \
+  \       <groupId>io.vertx</groupId>\n            <artifactId>vertx-core</artifactId>\n            <version>${vertx.version}</version>\n\
+  \        </dependency>\n        <dependency>\n            <groupId>io.vertx</groupId>\n            <artifactId>vertx-web</artifactId>\n\
+  \            <version>${vertx.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>io.vertx</groupId>\n\
+  \            <artifactId>vertx-web-client</artifactId>\n            <version>${vertx.version}</version>\n        </dependency>\n\
+  \        <dependency>\n            <groupId>org.slf4j</groupId>\n            <artifactId>slf4j-api</artifactId>\n     \
+  \       <version>2.0.7</version>\n        </dependency>\n        <dependency>\n            <groupId>com.fasterxml.jackson.core</groupId>\n\
+  \            <artifactId>jackson-databind</artifactId>\n            <version>2.15.2</version>\n        </dependency>\n \
+  \       <dependency>\n            <groupId>org.apache.httpcomponents</groupId>\n            <artifactId>httpclient</artifactId>\n\
+  \            <version>4.5.14</version>\n        </dependency>\n        <dependency>\n            <groupId>org.junit.jupiter</groupId>\n\
+  \            <artifactId>junit-jupiter</artifactId>\n            <version>5.9.3</version>\n            <scope>test</scope>\n\
+  \        </dependency>\n    </dependencies>\n</project>\n\nEOF\n\n# Inject Infrastructure Stubs\ncat > /workspace/src/main/java/com/mindarray/GlobalConstants.java << 'EOF'\n\
+  package com.mindarray;\npublic class GlobalConstants {\n    public static final String MOTADATA_API = \"api\";\n    public static final String STATUS = \"status\";\n\
+  \    public static final String STATUS_SUCCEED = \"succeed\";\n    public static final String STATUS_FAIL = \"fail\";\n\
+  \    public static final String MESSAGE = \"message\";\n    public static final String RESULT = \"result\";\n    public static final String ID = \"id\";\n\
+  \    public static final String VALUE = \"value\";\n    public static final String JSON_FIELD_FILTER = \"filter\";\n    public static final String NOT_AVAILABLE = \"not-available\";\n    public static final String YES = \"yes\";\n    public static final String NO = \"no\";\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/agent/Scheduler.java << 'EOF'\n\
+  package com.mindarray.agent;\nimport io.vertx.core.json.JsonObject;\npublic class Scheduler {\n    public static void update(JsonObject jsonObject) {}\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/util/Logger.java << 'EOF'\n\
+  package com.mindarray.util;\npublic class Logger {\n    public Logger(Class<?> clazz, String part, String name) {}\n    public void error(Throwable throwable) {}\n\
+  \    public void error(String message) {}\n    public void error(String message, Throwable throwable) {}\n    public void info(String message) {}\n    public void warn(String message) {}\n\
+  \    public void debug(String message) {}\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/api/APIConstants.java << 'EOF'\n\
+  package com.mindarray.api;\npublic class APIConstants {\n    public static final String RESPONSE_CODE = \"response.code\";\n\
+  \    public static final String REQUEST_PARAM_IDS = \"ids\";\n    public static final String SYSTEM_REMOTE_ADDRESS = \"system.remote.address\";\n\
+  \    public enum Entity {\n        RUNBOOK_PLUGIN(\"Runbook Plugin\"), GROUP(\"Group\");\n        private final String name;\n\
+  \        Entity(String name) { this.name = name; }\n        public String getName() { return name; }\n    }\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/job/JobScheduler.java << 'EOF'\npackage com.mindarray.job;\nimport io.vertx.core.json.JsonObject;\npublic class JobScheduler {\n    public enum JobType {\n        RUNBOOK(\"Runbook\");\n        private final String name;\n        JobType(String name) { this.name = name; }\n        public String getName() { return name; }\n    }\n    public static void schedule(JobType type, Long id, Long time) {}\n    public static void schedule(JobType type, Long id, Long time, JsonObject context) {}\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/cache/RunbookCacheStore.java << 'EOF'\npackage com.mindarray.cache;\nimport io.vertx.core.json.JsonObject;\npublic class RunbookCacheStore {\n    public static RunbookCacheStore getStore() { return new RunbookCacheStore(); }\n    public void delete(Long id) {}\n    public String getItem(Long id) { return \"NOT_AVAILABLE\"; }\n    public static void update(JsonObject jsonObject) {}\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/policy/PolicyEngineConstants.java << 'EOF'\npackage com.mindarray.policy;\npublic class PolicyEngineConstants {\n    public static final String POLICY_ID = \"policy.id\";\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/api/AbstractAPI.java << 'EOF'\n\
+  package com.mindarray.api;\nimport io.vertx.core.Future;\nimport io.vertx.core.json.JsonObject;\nimport io.vertx.ext.web.Router;\n\
+  import io.vertx.ext.web.RoutingContext;\nimport com.mindarray.util.Logger;\nimport com.mindarray.store.AbstractConfigStore;\n\n\
+  public abstract class AbstractAPI {\n    protected final String endpoint;\n    protected final AbstractConfigStore configStore;\n\
+  \    protected AbstractAPI(String endpoint, AbstractConfigStore store, Logger logger) {\n        this.endpoint = endpoint;\n\
+  \        this.configStore = store;\n    }\n    public void init(Router router) {}\n    protected void send(RoutingContext context, JsonObject response) {}\n\
+  \    protected Future<JsonObject> updateItem(JsonObject item, Object value, RoutingContext context) { return Future.succeededFuture(); }\n\
+  \    protected Future<JsonObject> beforeDelete(RoutingContext routingContext) { return Future.succeededFuture(); }\n    protected Future<JsonObject> beforeUpdate(RoutingContext routingContext) { return Future.succeededFuture(); }\n    protected Future<JsonObject> afterCreate(JsonObject result, RoutingContext routingContext) { return Future.succeededFuture(); }\n    protected Future<JsonObject> afterUpdate(JsonObject result, RoutingContext routingContext) { return Future.succeededFuture(); }\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/api/APIUtil.java << 'EOF'\npackage com.mindarray.api;\nimport io.vertx.core.json.JsonObject;\nimport io.vertx.ext.web.RoutingContext;\npublic class APIUtil {\n    public static Long getUserId(JsonObject context) { return 1L; }\n    public static void sendResponse(Exception e, RoutingContext context) {}\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/job/Scheduler.java << 'EOF'\npackage com.mindarray.job;\nimport io.vertx.core.json.JsonObject;\npublic class Scheduler {\n    public static void update(JsonObject jsonObject) {}\n}\nEOF\n  \ncat > /workspace/src/main/java/com/mindarray/store/AbstractConfigStore.java << 'EOF'\n\
+  package com.mindarray.store;\nimport io.vertx.core.Future;\nimport io.vertx.core.json.JsonObject;\nimport io.vertx.core.json.JsonArray;\n\
+  public abstract class AbstractConfigStore {\n    public JsonObject getItem(Long id) { return new JsonObject(); }\n    public JsonArray getItems() { return new JsonArray(); }\n\
+  \    public Future<JsonArray> getReferenceEntities(Long id) { return Future.succeededFuture(new JsonArray()); }\n    public Future<JsonObject> updateItem(Long id) { return Future.succeededFuture(new JsonObject()); }\n}\nEOF\n\n\
+  \ncat > /workspace/src/main/java/com/mindarray/store/SchedulerConfigStore.java << 'EOF'\npackage com.mindarray.store;\npublic class SchedulerConfigStore extends AbstractConfigStore {\n    public static SchedulerConfigStore getStore() { return new SchedulerConfigStore(); }\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/util/DataSecurity.java << 'EOF'\npackage com.mindarray.util;\nimport io.vertx.core.json.JsonObject;\nimport io.vertx.core.json.JsonArray;\npublic class DataSecurity {\n    public static JsonArray getIds(JsonObject context, String entity) { return new JsonArray(); }\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/nms/NMSConstants.java << 'EOF'\npackage com.mindarray.nms;\npublic class NMSConstants {\n    public static final String ENGINE_ID = \"engine.id\";\n    public static final String STATE = \"state\";\n    public static final String STATE_RUNNING = \"running\";\n    public static final String STATE_NOT_RUNNING = \"not.running\";\n    public static final String OBJECTS = \"objects\";\n    public static void enrich(JsonObject jsonObject) {}\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/cache/RunbookCacheStore.java << 'EOF'\npackage com.mindarray.cache;\nimport io.vertx.core.json.JsonObject;\npublic class RunbookCacheStore {\n    public static RunbookCacheStore getStore() { return new RunbookCacheStore(); }\n    public void delete(Long id) {}\n    public String getItem(Long id) { return \"NOT_AVAILABLE\"; }\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/api/User.java << 'EOF'\n\
+  package com.mindarray.api;\npublic class User {\n    public static final String USER_ID = \"user.id\";\n    public static final String USER_NAME = \"user.name\";\n\
+  \    public static final String USER_PROFILE = \"user.profile\";\n    public static final String USER_CONTEXT = \"user.context\";\n\
+  \    public static final String USER_ROLE = \"user.role\";\n    public static final String USER_GROUPS = \"user.groups\";\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/InfoMessageConstants.java << 'EOF'\n\
+  package com.mindarray;\npublic class InfoMessageConstants {\n    public static final String ASSIGN_SUCCEEDED = \"Assignment Succeeded for %s\";\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/util/CommonUtil.java << 'EOF'\n\
+  package com.mindarray.util;\nimport io.vertx.core.json.JsonObject;\npublic class CommonUtil {\n    public static Long getLong(Object obj) { return 1L; }\n\
+  \    public static JsonObject getEntitySchema(String endpoint) { return new JsonObject(); }\n}\nEOF\n\ncat > /workspace/src/main/java/com/mindarray/store/RunbookPluginConfigStore.java << 'EOF'\n\
+  package com.mindarray.store;\npublic class RunbookPluginConfigStore extends AbstractConfigStore {\n    public static RunbookPluginConfigStore getStore() { return new RunbookPluginConfigStore(); }\n}\nEOF\n\n# Create baseline files with content_before\n\ncat > /workspace/src/main/java/com/mindarray/api/RunbookPlugin.java\
+  \ << 'BASELINE_EOF'\n/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property\
+  \ of Motadata and constitutes\n *   proprietary and confidential information. Unauthorized copying, distribution,\n *  \
+  \ modification, or use of this file, via any medium, is strictly prohibited\n *   unless prior written permission is obtained\
+  \ from Motadata.\n *\n *   Unauthorized access or use of this software may result in legal action\n *   and/or prosecution\
+  \ to the fullest extent of the law.\n *\n *   This software is provided \"AS IS,\" without warranties of any kind, express\n\
+  \ *   or implied, including but not limited to implied warranties of\n *   merchantability or fitness for a particular purpose.\
+  \ In no event shall\n *   Motadata be held liable for any damages arising from the use\n *   of this software.\n *\n * \
+  \  For inquiries, contact: engg@motadata.com\n *\n */\n\n/*\n *  Change Logs:\n *  Date\t\t\tAuthor\t\t\tNotes\n *  24-Feb-2025\t\
+  \tChandresh\t\tMOTADATA-3680: Added RUNBOOK_PLUGIN_INSTANCES constant for handling multiple instances in runbooks\n *  23-Apr-2025\t\
+  \tsankalp\t\t    MOTADATA-4883 : Added data security based on user group for reference entities\n *  30-Jul-2025\t\tVismit\t\

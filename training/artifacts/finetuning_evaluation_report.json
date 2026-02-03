@@ -1,0 +1,201 @@
+{
+  "metadata": {
+    "generated_at": "2025-12-11T10:50:43.030301",
+    "model_endpoint": "http://localhost:8080/v1/chat/completions",
+    "total_tests": 10
+  },
+  "summary": {
+    "overall_pass_rate": "5/10 (50.0%)",
+    "average_score": "2.90/5",
+    "tool_obsession_rate": "0.0%",
+    "repetition_rate": "0.0%",
+    "avg_response_time_ms": 1776,
+    "critical_issues": [
+      "LOW QUALITY: Average score 2.90/5 is below threshold"
+    ]
+  },
+  "category_breakdown": {
+    "TYPE_A_KNOWLEDGE": {
+      "total": 3,
+      "passed": 2,
+      "avg_score": 3.3333333333333335,
+      "pass_rate": 66.66666666666666
+    },
+    "TYPE_B_MULTIFILE": {
+      "total": 2,
+      "passed": 1,
+      "avg_score": 3.0,
+      "pass_rate": 50.0
+    },
+    "RCA_DEBUGGING": {
+      "total": 2,
+      "passed": 1,
+      "avg_score": 3.0,
+      "pass_rate": 50.0
+    },
+    "CODE_REVIEW": {
+      "total": 2,
+      "passed": 0,
+      "avg_score": 1.0,
+      "pass_rate": 0.0
+    },
+    "DIRECT_REASONING": {
+      "total": 1,
+      "passed": 1,
+      "avg_score": 5.0,
+      "pass_rate": 100.0
+    }
+  },
+  "detailed_results": [
+    {
+      "test_id": "A1",
+      "category": "TYPE_A_KNOWLEDGE",
+      "name": "Query Class Methods",
+      "passed": true,
+      "score": 3,
+      "response": "The Query class has 26 methods:\n- getQuery()\n- buildMetricQueriesByGroup()",
+      "issues": [],
+      "response_time_ms": 217,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": true
+    },
+    {
+      "test_id": "A2",
+      "category": "TYPE_A_KNOWLEDGE",
+      "name": "AbstractConfigStore Knowledge",
+      "passed": true,
+      "score": 5,
+      "response": "AbstractConfigStore is the base class for all configuration stores, providing common functionality such as loading configurations from files into memory data structures (maps). It defines methods to retrieve specific items by ID.\n\nClasses extending AbstractConfigStore:\n1. SNMPTrapForwarderCacheStore - Manages trap forwarding settings.\n2. CredentialProfileConfigStore - Stores credential profiles used for authentication/authorization.\n3. UserProfileConfigStore - Handles user account information including permissions and roles.",
+      "issues": [],
+      "response_time_ms": 890,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": true
+    },
+    {
+      "test_id": "A3",
+      "category": "TYPE_A_KNOWLEDGE",
+      "name": "EventBus Architecture",
+      "passed": false,
+      "score": 2,
+      "response": "Motadata uses a dedicated event bus verticle for communication between components, with separate instances for different types of events and services. The system has 30 worker threads configured for the event bus processor.",
+      "issues": [],
+      "response_time_ms": 409,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": false
+    },
+    {
+      "test_id": "B1",
+      "category": "TYPE_B_MULTIFILE",
+      "name": "Create Full API Feature",
+      "passed": true,
+      "score": 5,
+      "response": "**Architecture Design for Correction Profile**\n\n### **File 1:** `CorrectionProfile.java`\n\n```java\n// src/main/java/com/mindarray/api/CorrectionProfile.java\n\npublic class CorrectionProfile {\n    private Long id;\n    \n    private String name;\n\n    // Other fields...\n}\n```\n\n---\n\n### **File 2:** `DBConstants.java` - Schema Registration\n\n```diff\n+ public static final Set<String> CORRECTION_PROFILE_FIELDS = new HashSet<>(Arrays.asList(\n        \"correction.profile.name\",\n        \"correction.profile.description\"\n));\n```\n---\n### **File 3:** `APIRouterConfigStore.java` - Store Initialization\n\n```java\nprivate void initStores() {\n    register(new ConfigurationCachePolicy());\n-   this.store.put(\"CORRECTION_PROFILE\", new CorrectionProfile()); \n}\n\nthis.configs.add(CORRECTION_PROFILE);\n```\n---\n\n\n## Implementation Execution Plan:\n\n#### Step 1: Implement the Class (5 minutes)\n* Copy-paste skeleton from existing classes (`Configuration`, etc.)\n* Define all required properties including ID, Name, Description.\n\n#### Step 2: Update DB Constants (4 minutes)\n* Add correction profile field to constants.\n  \n#### Step 3: Register in API Router (8 minutes) \n* Find where stores are registered already.\n* Modify method signature if necessary:\n\t- Change return type from Map -> Set of Strings\n\t- Ensure order is preserved by using LinkedHashSet instead of ArrayList\n  \n##### Code Changes Required:\n| File | Line # | Action |\n|------|--------|--------|\n|| N/A | Replace `Map.of()` with ordered set |\n\n#### Testing Requirements:\n- Verify that store loads correctly without errors.\n- Confirm no duplicate keys when adding multiple profiles.",
+      "issues": [],
+      "response_time_ms": 3453,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": true
+    },
+    {
+      "test_id": "B2",
+      "category": "TYPE_B_MULTIFILE",
+      "name": "New Monitor Plugin",
+      "passed": false,
+      "score": 1,
+      "response": "",
+      "issues": [
+        "MINIMAL_RESPONSE: Response too short/empty"
+      ],
+      "response_time_ms": 43,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": false
+    },
+    {
+      "test_id": "R1",
+      "category": "RCA_DEBUGGING",
+      "name": "NullPointer RCA",
+      "passed": true,
+      "score": 5,
+      "response": "**Root Cause:** Null pointer exception in `handleDiscoveryRequest` method, likely due to null object reference when processing discovery request.\n\n**Fix Suggestion:** Add explicit null checks before accessing objects returned from DiscoveryEngine.getInstances(). Ensure proper initialization of all required fields.",
+      "issues": [],
+      "response_time_ms": 541,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": false
+    },
+    {
+      "test_id": "R2",
+      "category": "RCA_DEBUGGING",
+      "name": "Timeout RCA",
+      "passed": false,
+      "score": 1,
+      "response": "",
+      "issues": [
+        "MINIMAL_RESPONSE: Response too short/empty"
+      ],
+      "response_time_ms": 43,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": false
+    },
+    {
+      "test_id": "C1",
+      "category": "CODE_REVIEW",
+      "name": "API Pattern Review",
+      "passed": false,
+      "score": 1,
+      "response": "",
+      "issues": [
+        "MINIMAL_RESPONSE: Response too short/empty"
+      ],
+      "response_time_ms": 52,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": false
+    },
+    {
+      "test_id": "C2",
+      "category": "CODE_REVIEW",
+      "name": "ConfigStore Review",
+      "passed": false,
+      "score": 1,
+      "response": "The code is missing a `return` statement in the method, which will cause an error when called.\n\n**Risk:** Medium\n\n**File:** `motadata/src/main/java/com/mindarray/Test.java`\n\n```java\n/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n *   proprietary and confidential information. Unauthorized copying, distribution,\n *   modification, or use of this file, via any medium, is strictly prohibited\n *   unless prior written permission is obtained from Motadata.\n *\n *   Unauthorized access or use of this software may result in legal action\n *   and/or prosecution to the fullest extent of the law.\n *\n *   This software is provided \"AS IS,\" without warranties of any kind, express\n *   or implied, including but not limited to implied warranties of\n *   merchantability or fitness for a particular purpose. In no event shall\n *   Motadata be held liable for any damages arising from the use\n *   of this software.\n *\n */\n\npackage com.mindarray;\n\nimport io.vertx.core.json.JsonObject;\nimport org.apache.commons.io.FileUtils;\n\nimport java.nio.charset.StandardCharsets;\nimport java.util.Arrays;\nimport java.util.List;\n\n\n/**\n* Central configuration store that manages all JSON-based configuration files used throughout the application.\n*\n* <p>This class provides methods to load various config stores asynchronously using Vert.x promises.</p>\n*\n* <h3>Configuration Stores</h3>\n* <ul>\n*     <li><b>AIOpsMetricPolicyFlapDurationCacheStore</b>: Metric policy flap duration cache data</li>\n*     <li><b>AgentConfigStore</b>: Agent registration details by agent ID</li>\n*     <li><b>AnomalySuppressionConfigStore</b>: Custom anomaly suppression rules by user</li>\n*     <li><b>APIExplorerConfigStore</b>: API endpoint configurations with security settings</li>\n*     <<li><b<ApplicationMapperConfigStore</i></n: Application mappers by IP address range with protocols/services mappings </l1 >\n< l i > &lt; b&gt ; A p p r o v e d S t u f",
+      "issues": [],
+      "response_time_ms": 9998,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": true
+    },
+    {
+      "test_id": "D1",
+      "category": "DIRECT_REASONING",
+      "name": "Memory Leak Analysis",
+      "passed": true,
+      "score": 5,
+      "response": "This code has a potential memory leak risk due to the use of `static` variables and methods.\n\n**Reasoning:**\n1. **Static Variable:** The `cache` variable is declared as `private static`, which means it will retain all entries indefinitely.\n2. **No Eviction Mechanism:** There's no mechanism in place to remove items from the cache when they are no longer needed or after a certain period.\n3. **Memory Accumulation:** As more objects are added over time without being removed, the size of the cache grows unbounded, potentially consuming all available heap space if not properly managed.\n\n**Fixes Needed:**\n\n- Implement an eviction policy (e.g., LRU - Least Recently Used).\n- Add mechanisms to periodically clean up old or unused entries based on criteria like age or access frequency.\n- Consider using bounded collections with automatic removal capabilities such as Guava\u2019s LoadingCache with maximumSize() configuration instead of manual management through static fields/methods.\n\nBy implementing these changes, you can prevent excessive memory usage caused by growing caches that accumulate data indefinitely.",
+      "issues": [],
+      "response_time_ms": 2116,
+      "has_tool_calls": false,
+      "has_repetition": false,
+      "has_valid_code": false
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "issue": "Low CODE_REVIEW Performance",
+      "description": "Only 0.0% pass rate in CODE_REVIEW",
+      "fix": "Add more training examples for CODE_REVIEW category"
+    },
+    {
+      "priority": "HIGH",
+      "issue": "Knowledge Gaps / Hallucinations",
+      "description": "Model struggling with factual accuracy",
+      "fix": "Implement RAG with Qdrant to ground responses in actual codebase"
+    }
+  ]
+}

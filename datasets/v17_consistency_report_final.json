@@ -1,0 +1,32 @@
+{
+  "version": "v17",
+  "timestamp": "2026-01-05T10:04:37.536097",
+  "total_examples": 1314,
+  "source": "Real Motadata codebase (484 Java files)",
+  "unique_classes": 217,
+  "unique_packages": 29,
+  "type_distribution": {
+    "qa_pair": 217,
+    "code_generation": 1097
+  },
+  "difficulty_distribution": {
+    "beginner": 217,
+    "intermediate": 1097
+  },
+  "quality_issues": {
+    "short_questions": 0,
+    "short_answers": 0,
+    "short_code": 0,
+    "duplicate_questions": 0
+  },
+  "alignment_checks": {
+    "All entries are real Motadata code": true,
+    "No synthetic data": true,
+    "Consistent field structure": true,
+    "Valid JSON format": true,
+    "Proper categorization": true,
+    "Meaningful content": true,
+    "No duplicates": true
+  },
+  "all_checks_passed": true
+}

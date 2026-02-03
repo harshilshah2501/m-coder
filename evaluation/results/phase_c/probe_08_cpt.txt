@@ -1,0 +1,17 @@
+if (body.getString(RESULT).equalsIgnoreCase(EMPTY_VALUE))
+    {
+        LOGGER.info(String.format("notification failed to send to %s with reason %s", message.body().getString(Notification.NotificationType.EMAIL.getName()), message.body().getString(ERROR)));
+    }
+    else
+    {
+        LOGGER.info(String.format("notification successfully sent to %s", message.body().getString(Notification.NotificationType.EMAIL.getName())));
+    }
+});
+
+eventEngine = new EventEngine().setEventType(config().getString(EVENT_TYPE))
+        .setPersistEventOffset(true)
+        .setEventQueueSize(1)
+        .setEventHandler(this::send)
+        .setLogger(LOGGER)
+        .start(vertx, promise);
+}<|fim_middle|>            }

@@ -1,0 +1,12 @@
+{
+  "total_files_scanned": 484,
+  "files_with_valid_examples": 218,
+  "total_examples_extracted": 1395,
+  "by_type": {
+    "qa_pair": 217,
+    "code_generation": 1178,
+    "code_pattern": 0,
+    "integration": 0
+  },
+  "validation_failures": []
+}

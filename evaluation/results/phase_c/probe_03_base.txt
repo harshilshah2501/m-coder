@@ -1,0 +1,41 @@
+return null;
+    }
+    
+    public String getServiceName() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceVersion() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceDescription() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceContact() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceContactEmail() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceContactPhone() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceContactAddress() {
+        // COMPLETE
+        return null;
+    }
+    
+    public String getServiceContactCity() {
+        // COMPLETE
+        return

@@ -1,0 +1,13 @@
+// 1. Get the event type
+        // 2. Get the event data
+        // 3. Get the event source
+        // 4. Get the event timestamp
+        // 5. Get the event id
+        // 6. Get the event version
+        // 7. Get the event correlation id
+        // 8. Get the event causation id
+        // 9. Get the event causation version
+        // 10. Get the event causation correlation id
+        // 11. Get the event causation causation id
+        // 12. Get the event causation causation version
+        // 13. Get the event causation

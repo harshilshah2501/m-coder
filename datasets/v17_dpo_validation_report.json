@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-01-09T10:58:27.850923",
+  "dataset_file": "datasets/v17_dpo_pairs_enhanced.jsonl",
+  "total_examples": 320,
+  "duplicates_by_hash": 0,
+  "duplicate_task_ids": {},
+  "missing_keys": 0,
+  "role_order_errors": 0,
+  "empty_content": 0,
+  "schema_errors_sample": [],
+  "length_chars": {
+    "min": 255,
+    "max": 11146,
+    "avg": 687.46
+  },
+  "category_counts": {
+    "single_file": 65,
+    "multi_file": 40,
+    "bugfix": 70,
+    "refactoring": 50,
+    "feature_add": 50,
+    "file_creation": 45
+  },
+  "task_type_counts": {
+    "single_file": 65,
+    "multi_file": 40,
+    "bugfix": 70,
+    "refactoring": 50,
+    "feature_add": 50,
+    "file_creation": 45
+  },
+  "source_counts": {
+    "evaluation_failure": 14,
+    "synthetic_single_file": 50,
+    "synthetic_multi_file": 40,
+    "synthetic_bugfix": 70,
+    "synthetic_refactoring": 50,
+    "synthetic_feature_add": 50,
+    "synthetic_file_creation": 45,
+    "synthetic_context_usage": 1
+  },
+  "tag_counts_top": [
+    [
+      "npe_fix",
+      70
+    ],
+    [
+      "defensive_programming",
+      70
+    ],
+    [
+      "constants",
+      51
+    ],
+    [
+      "validation",
+      50
+    ],
+    [
+      "null_safety",
+      50
+    ],
+    [
+      "code_quality",
+      50
+    ],
+    [
+      "performance",
+      50
+    ],
+    [
+      "caching",
+      50
+    ],
+    [
+      "config",
+      45
+    ],
+    [
+      "new_file",
+      45
+    ],
+    [
+      "refactoring",
+      40
+    ],
+    [
+      "multi_file_edit",
+      40
+    ],
+    [
+      "real_failure",
+      14
+    ],
+    [
+      "multi_file_gen",
+      4
+    ],
+    [
+      "debugging_rca",
+      4
+    ],
+    [
+      "qa_knowledge",
+      2
+    ],
+    [
+      "single_file_gen",
+      2
+    ],
+    [
+      "code_review",
+      2
+    ],
+    [
+      "rag_usage",
+      1
+    ],
+    [
+      "pattern_matching",
+      1
+    ]
+  ],
+  "sensitive_pattern_hits": {
+    "author": [],
+    "commit": [],
+    "jira": [],
+    "patch": [],
+    "branch": [],
+    "ticket": [],
+    "merge": []
+  },
+  "splits": {
+    "sizes": {
+      "train": 255,
+      "val": 33,
+      "test": 32
+    },
+    "missing_from_splits": [],
+    "overlaps": {}
+  }
+}

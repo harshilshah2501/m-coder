@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-01-06T09:18:40.655659",
+  "input_dir": "/home/harshil/Harshil-PoCs/datasets/v16_1_splits",
+  "output_dir": "/home/harshil/Harshil-PoCs/datasets/v16_1_fixed",
+  "stats": {
+    "total": 3912,
+    "qa_pair_converted": 1314,
+    "messages_fixed": 2598,
+    "errors": 0
+  },
+  "fixes_applied": [
+    "Converted qa_pair format to messages format",
+    "Changed 'unified diff' instructions to 'SEARCH/REPLACE blocks'"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "timestamp": "/home/harshil/Harshil-PoCs",
+  "total_pairs": 275,
+  "splits": {
+    "train": {
+      "count": 220,
+      "sources": {
+        "synthetic_context_usage": 56,
+        "synthetic_search_replace": 69,
+        "synthetic_bugfix": 55,
+        "synthetic_plain_code": 40
+      },
+      "difficulties": {
+        "intermediate": 111,
+        "beginner": 109
+      },
+      "categories": {
+        "single_file": 180,
+        "file_creation": 40
+      }
+    },
+    "val": {
+      "count": 27,
+      "sources": {
+        "synthetic_search_replace": 6,
+        "synthetic_bugfix": 8,
+        "synthetic_context_usage": 8,
+        "synthetic_plain_code": 5
+      },
+      "difficulties": {
+        "beginner": 11,
+        "intermediate": 16
+      },
+      "categories": {
+        "single_file": 22,
+        "file_creation": 5
+      }
+    },
+    "test": {
+      "count": 28,
+      "sources": {
+        "synthetic_bugfix": 7,
+        "synthetic_context_usage": 11,
+        "synthetic_search_replace": 5,
+        "synthetic_plain_code": 5
+      },
+      "difficulties": {
+        "intermediate": 18,
+        "beginner": 10
+      },
+      "categories": {
+        "single_file": 23,
+        "file_creation": 5
+      }
+    }
+  },
+  "overall_distribution": {
+    "by_category": {
+      "single_file": 225,
+      "file_creation": 50
+    },
+    "by_source": {
+      "synthetic_search_replace": 80,
+      "synthetic_plain_code": 50,
+      "synthetic_bugfix": 70,
+      "synthetic_context_usage": 75
+    },
+    "by_difficulty": {
+      "beginner": 130,
+      "intermediate": 145
+    }
+  }
+}

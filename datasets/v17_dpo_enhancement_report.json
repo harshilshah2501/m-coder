@@ -1,0 +1,41 @@
+{
+  "total_pairs": 500,
+  "source_distribution": {
+    "evaluation_failure": 150,
+    "synthetic_single_file": 58,
+    "synthetic_multi_file": 47,
+    "synthetic_bugfix": 77,
+    "synthetic_refactoring": 56,
+    "synthetic_feature_add": 56,
+    "synthetic_file_creation": 55,
+    "synthetic_context_usage": 1
+  },
+  "category_distribution": {
+    "single_file": 153,
+    "multi_file": 132,
+    "bugfix": 70,
+    "refactoring": 50,
+    "feature_add": 50,
+    "file_creation": 45
+  },
+  "task_type_distribution": {
+    "single_file": 93,
+    "multi_file": 74,
+    "bugfix": 94,
+    "refactoring": 78,
+    "feature_add": 86,
+    "file_creation": 75
+  },
+  "splits": {
+    "train": 398,
+    "val": 47,
+    "test": 55
+  },
+  "notes": [
+    "Topped up from 320 to 500 pairs",
+    "30% evaluation failures (150), 70% synthetic (350)",
+    "Sanitized for identifiers (no JIRA/ticket/author)",
+    "Stratified splits by category+task_type",
+    "Ready for LLM-as-judge validation"
+  ]
+}
