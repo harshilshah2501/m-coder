@@ -21,7 +21,7 @@
 **Anomaly Detection (Pre-RCA)**
 An anomalous test or benchmark signal is detected during CI, but its timing and freshness relative to recent code changes is unclear.
 
-This situation explicitly **does not permit root-cause analysis yet**.
+This situation explicitly does not permit root-cause analysis yet, because the timing and freshness of the signal cannot be reliably aligned with specific code changes.
 
 ---
 
@@ -104,7 +104,7 @@ A developer notices an unexpected test or benchmark failure reported in CI and a
    Given unresolved ambiguity and limited impact evidence, this signal can be classified as an **anomaly**, but not as a confirmed failure or incident.
 
 6. **Decide whether to escalate**
-   Initiating RCA or blocking progress at this stage would be premature and risks over-reacting to a low-confidence signal.
+   Initiating RCA or blocking progress at this stage would be premature, because the signal cannot yet be correlated to a stable cause and may represent delayed or misleading output rather than a real regression.
 
 ---
 

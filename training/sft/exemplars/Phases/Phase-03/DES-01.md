@@ -97,7 +97,7 @@ Clarify how to reason about architectural choices when scale assumptions are unc
 * The system may start with low to moderate traffic
 * Growth could be linear, bursty, or slower than anticipated
 * Usage patterns (read-heavy vs write-heavy, latency sensitivity) are not yet validated
-* Early architectural choices can constrain future flexibility
+* Early architectural choices can constrain future flexibility if they embed assumptions that later prove incorrect.
 
 These are assumptions, not facts.
 
@@ -131,7 +131,7 @@ However, without concrete evidence of scale requirements:
 * Operational overhead is incurred before it is needed
 * Assumptions about future load may prove incorrect, freezing foundational abstractions and collapsing future option space prematurely
 
-Optimizing for an imagined future risks paying irreversible costs too early.
+Optimizing for an imagined future risks paying irreversible costs too early, because scale assumptions are unvalidated and may never materialize.
 
 ---
 

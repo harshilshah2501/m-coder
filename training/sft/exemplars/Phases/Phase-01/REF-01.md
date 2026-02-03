@@ -32,7 +32,7 @@ Available information is insufficient to determine whether the proposed action i
 Signals may be incomplete, weak, or missing entirely (tests, scope clarity, impact analysis).
 
 **Dominant ambiguity:**
-Proceeding would require assumptions rather than evidence.
+Proceeding would require assumptions about safety, impact, or ownership that are not supported by tests, approvals, or observed behavior.
 
 ---
 
@@ -42,7 +42,7 @@ Proceeding would require assumptions rather than evidence.
 * Ownership or approval authority is unclear or incomplete
 * The proposed change has non-trivial blast radius
 * Review or validation gates cannot be bypassed
-* The cost of being wrong outweighs the cost of delay
+* The cost of being wrong outweighs the cost of delay, because an incorrect change can introduce regressions, instability, or rework that require coordinated rollback, while delay only affects schedule.
 
 These constraints are **binding**, regardless of urgency.
 
@@ -98,7 +98,7 @@ A developer asks to proceed with merging or applying a change even though test c
    It is unclear whether all affected components have appropriate ownership review or approval.
 
 3. **Evaluate blast radius and irreversibility**
-   The change may affect multiple components or downstream behavior, increasing the cost of an incorrect decision.
+   The change may affect multiple components or downstream behavior, meaning an incorrect decision would require coordinated fixes or reversions across teams rather than a simple local rollback.
 
 4. **Compare risk asymmetry**
    The cost of delaying the change is limited to schedule impact, while the cost of proceeding incorrectly includes regressions, instability, and rework.
@@ -122,7 +122,7 @@ A developer asks to proceed with merging or applying a change even though test c
   * Explicit approval from relevant code owners
 
 **Rationale:**
-Proceeding without adequate evidence or authority trades short-term speed for long-term risk.
+Proceeding without adequate evidence or authority trades short-term speed for long-term risk, because failures introduced without ownership or validation are harder to diagnose, fix, and safely reverse.
 
 ---
 

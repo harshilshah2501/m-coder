@@ -128,7 +128,7 @@ Both paths are commonly advocated by experienced engineers under these condition
 
 In addition to the two explicit paths, a *third implicit hypothesis* often appears in practice:
 
-> **H3 — “Rewrite is inevitable, so we should commit to a rewrite immediately to avoid ‘wasted’ incremental work.”**
+> **H3 — “Rewrite is inevitable, therefore starting now is safest” is a collapse hypothesis — it converts uncertainty about future constraints into an assertion of inevitability without evidence.**
 
 This is not a distinct design path, but a **collapse hypothesis** that prematurely resolves uncertainty by asserting inevitability and converting it into immediate commitment to Path B, bypassing hypothesis testing.
 

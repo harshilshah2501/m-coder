@@ -77,7 +77,7 @@ Every exemplar encodes a **stop condition**:
 * stop explaining
 * stop fixing
 
-Phase-1 does not reward activity — it rewards correct restraint.
+Phase-1 does not reward activity — it rewards correct restraint, because premature action under ambiguity increases the risk of misclassification and irreversible mistakes.
 
 ---
 

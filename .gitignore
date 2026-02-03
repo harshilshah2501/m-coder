@@ -4,6 +4,11 @@ env/
 ENV/
 .venv/
 
+backup_complete_v16_2.sh
+backup_local_v16_2.sh
+backup_to_github.sh
+backup_v16_2_to_hf.py
+
 # Python cache
 __pycache__/
 *.py[cod]
@@ -34,6 +39,7 @@ models/
 model-backups/
 *.safetensors
 *.bin
+
 
 # Training checkpoints and artifacts
 training/checkpoints/

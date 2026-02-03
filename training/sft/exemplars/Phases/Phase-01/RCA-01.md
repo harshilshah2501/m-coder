@@ -27,7 +27,7 @@ Root cause analysis of a bug, failure, or regression discovered during developme
 Multiple symptoms are present (test failures, performance regressions, logs), but their causal relationship is unclear.
 
 **Dominant ambiguity:**
-Symptoms are correlated in time, not yet proven to be causally linked.
+Symptoms are correlated in time, meaning they appear close together, but no evidence yet shows that one directly causes the other.
 
 ---
 
@@ -90,12 +90,11 @@ They ask for the root cause so the issue can be fixed quickly and the release ca
    These symptoms are temporally correlated but not yet causally linked.
 
 2. **Assess evidence quality**
-   Test failures are flaky and non-deterministic, reducing confidence in any single failure as a reliable signal.
-   A performance regression is observed, but lacks sufficient profiling data to establish causality.
+   Test failures are flaky and non-deterministic, meaning the same tests fail and pass under identical conditions, which prevents treating any single failure as reliable evidence of a specific cause.
 
 3. **Avoid premature anchoring**
    Although the refactor is the most recent change, recency alone is not evidence of causality.
-   Anchoring on it risks masking other contributing factors.
+   Anchoring on it risks masking other contributing factors, because early fixes may suppress symptoms without addressing the underlying cause.
 
 4. **Generate competing hypotheses**
    Plausible explanations include:
@@ -126,7 +125,7 @@ They ask for the root cause so the issue can be fixed quickly and the release ca
   * Isolating failures to specific code paths or environments
 
 **Rationale:**
-Acting on incomplete or misleading symptoms risks embedding an incorrect fix and increasing long-term instability. Proceeding without this evidence would trade short-term progress for long-term instability
+Acting on incomplete or misleading symptoms risks embedding an incorrect fix and increasing long-term instability. Proceeding without this evidence would trade short-term progress for long-term instability, because incorrect fixes often introduce new failures and increase future debugging effort
 
 ---
 
