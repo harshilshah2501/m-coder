@@ -119,13 +119,12 @@ They ask for the root cause so the issue can be fixed quickly before release.
 
 ## Output
 
-* Do **not** attribute the failure to a single component solely because it was recently changed.
-* Do **not** apply a patch or workaround that preserves incompatible assumptions.
-* Identify and document the **implicit assumptions** held by each interacting component.
-* Align or formalize these assumptions (interfaces, defaults, contracts) **before** implementing any corrective changes.
+* The available evidence does not justify attributing the failure to a single component based on recency or proximity.
+* The available evidence does not justify applying a patch or workaround that preserves incompatible assumptions.
+* No further interpretation is justified without evidence that resolves the current classification ambiguity.
+* Corrective changes cannot be justified until assumption compatibility is understood.
 
-**Rationale:**
-Fixing symptoms without reconciling assumptions treats the effect, not the cause, and guarantees recurrence.
+This judgment withholds attribution and corrective action; it does not assign blame or grant permission to proceed.
 
 ---
 
@@ -157,7 +156,7 @@ Reusable reasoning blocks:
 
 The exemplar remains trustworthy even if it stops after:
 
-> “Nothing is broken yet — our assumptions are.”
+> “No component failure has been established; incompatibility exists at the assumption level.”
 
 Deferral is framed as insight, not avoidance.
 

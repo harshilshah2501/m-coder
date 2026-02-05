@@ -44,7 +44,8 @@ Proceeding would require assumptions about safety, impact, or ownership that are
 * Review or validation gates cannot be bypassed
 * The cost of being wrong outweighs the cost of delay, because an incorrect change can introduce regressions, instability, or rework that require coordinated rollback, while delay only affects schedule.
 
-These constraints are **binding**, regardless of urgency.
+These constraints remain decisive regardless of urgency.
+
 
 ---
 
@@ -113,16 +114,9 @@ A developer asks to proceed with merging or applying a change even though test c
 
 ## Output
 
-* **Do not proceed** with merging or applying the change at this time.
-* Explain that the decision is based on **insufficient evidence and unresolved ownership**, not lack of willingness to help.
-* Clearly state what is required to revisit the decision, such as:
-
-  * Additional or stabilized tests
-  * Clarification of scope and downstream impact
-  * Explicit approval from relevant code owners
-
-**Rationale:**
-Proceeding without adequate evidence or authority trades short-term speed for long-term risk, because failures introduced without ownership or validation are harder to diagnose, fix, and safely reverse.
+* The available evidence and authority do not justify proceeding with merging or applying the change.
+* The refusal is based on insufficient evidence and unresolved ownership and does not imply conditional approval.
+* Progression past this point is not authorized under the current evidence or authority conditions.
 
 ---
 

@@ -36,7 +36,7 @@ Symptoms are correlated in time, meaning they appear close together, but no evid
 * Limited reproduction confidence (flaky or non-deterministic tests)
 * Partial observability (tests and logs do not cover all code paths)
 * Time pressure due to upcoming merge or release deadline
-* No authority to bypass test or review gates
+* Test and review gates must not be bypassed under the current evidence conditions.
 * Risk of introducing a fix that masks the real issue
 
 ---
@@ -102,30 +102,22 @@ They ask for the root cause so the issue can be fixed quickly and the release ca
    * Latent test flakiness exposed by timing or ordering changes
    * An interaction between the refactor and existing code paths
    * Environmental or configuration differences in CI
-   * An unrelated performance regression coinciding in time
 
 5. **Eliminate hypotheses using available evidence**
    At this stage, no hypothesis can be conclusively supported or eliminated.
    Available signals are insufficiently specific to justify selecting a single root cause.
 
 6. **Decide whether to act or continue investigation**
-   Introducing a fix without stronger evidence risks addressing symptoms rather than the underlying issue.
-   The safest course is to defer corrective changes until the causal chain is clearer.
+   Introducing corrective changes is not justified under the current evidence conditions.
 
 ---
 
 ## Output
 
-* Do **not** attribute the failures to the recent refactor based solely on timing.
-* Do **not** introduce a fix or revert changes without clearer evidence of causality.
-* Treat the current state as **inconclusive**, not blocked.
-* Recommend gathering higher-quality signals, such as:
-  * Stabilizing test runs to reduce flakiness
-  * Adding targeted logging or profiling
-  * Isolating failures to specific code paths or environments
-
-**Rationale:**
-Acting on incomplete or misleading symptoms risks embedding an incorrect fix and increasing long-term instability. Proceeding without this evidence would trade short-term progress for long-term instability, because incorrect fixes often introduce new failures and increase future debugging effort
+* The available evidence is insufficient to establish causality for the observed failures.
+* The available evidence does not justify introducing fixes, reverting changes, or selecting a root cause.
+* The current state is inconclusive and prohibits progression.
+* This judgment is complete and does not authorize corrective action, attribution, or progression.
 
 ---
 

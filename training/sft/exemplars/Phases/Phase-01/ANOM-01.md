@@ -101,30 +101,23 @@ A developer notices an unexpected test or benchmark failure reported in CI and a
    No corroborating signals (functional errors, widespread failures, downstream effects) indicate user-visible or systemic impact.
 
 5. **Determine appropriate classification boundary**
-   Given unresolved ambiguity and limited impact evidence, this signal can be classified as an **anomaly**, but not as a confirmed failure or incident.
+   Given unresolved ambiguity and limited impact evidence, this signal remains classified as an **anomaly**, but not as a confirmed failure or incident.
 
 6. **Decide whether to escalate**
-   Initiating RCA or blocking progress at this stage would be premature, because the signal cannot yet be correlated to a stable cause and may represent delayed or misleading output rather than a real regression.
+   Progression beyond anomaly classification is not justified under the current evidence.
+
 
 ---
 
 ## Output
 
-* Classify the observed behavior as a **valid anomaly with unresolved meaning**.
-* Do **not** attribute the anomaly to a specific commit or change.
-* Do **not** initiate root-cause analysis or corrective action yet.
-* Continue monitoring **until one of the following occurs**:
-  * the anomaly repeats across N subsequent CI runs
-  * the anomaly correlates consistently with a specific change
-  * corroborating functional or performance signals appear
-  * the anomaly disappears after baseline refresh or rerun
+* The observed behavior remains classified as a **valid anomaly with unresolved meaning**.
+* No attribution to a specific commit or change is justified.
+* Root-cause analysis or corrective action is not justified under the current evidence.
+* This judgment does not authorize proceeding with merges, deployments, or releases.
+* The anomaly remains uninterpretable under the current evidence and no progression beyond classification is authorized by this exemplar.
+* In the absence of additional confirming or refuting signals, the anomaly cannot be resolved or dismissed and remains unresolved.
 
-* If none of the above occur within the defined observation window,
-  the anomaly must be explicitly reclassified or closed.
-
-
-**Rationale:**
-Temporal misalignment and reporting uncertainty make early interpretation unreliable; escalation without convergence risks wasted effort and false attribution.
 
 ---
 
@@ -132,7 +125,7 @@ Temporal misalignment and reporting uncertainty make early interpretation unreli
 
 * No cause is inferred.
 * No fix is proposed.
-* No merge is blocked.
+* No execution, approval, or progression decision is made.
 * The exemplar explicitly stops at anomaly classification.
 
 ---

@@ -113,17 +113,15 @@ A developer reports failing tests due to timeouts or slow execution and asks whe
 
 ## Output
 
-* Classify the observed behavior as a **performance regression anomaly**, not a functional bug.
-* Do **not** initiate functional debugging or corrective code changes yet.
-* Do **not** attribute the issue to a specific code change without profiling evidence.
-* Recommend next steps focused on **classification refinement**, such as:
+* Classify the observed behavior as a **performance regression anomaly**, not a confirmed functional bug.
+* The available evidence does not justify treating this as a functional defect.
+* The available evidence does not justify initiating corrective code changes or attributing the issue to a specific commit.
 
-  * Gathering profiling or tracing data
-  * Comparing execution paths against prior baselines
-  * Validating workload assumptions and test thresholds
+* No further interpretation is justified without evidence that resolves the current classification ambiguity.
 
-**Rationale:**
-Misclassifying performance regressions as functional bugs leads to wasted effort and increases the risk of introducing unnecessary changes.
+
+This classification does **not** imply resolution, safety, or permission to proceed; it only states that functional attribution is currently unjustified.
+
 
 ---
 
