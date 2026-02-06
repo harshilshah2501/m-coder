@@ -7,7 +7,7 @@
 ## Identity
 
 * **ID**: ANOM-02
-* **Category**: Anomaly Detection (Pre-RCA)
+* **Category**: Anomaly Detection
 * **Phase**: Phase-1 (Foundations)
 * **Judgment Surface**: Engineering / Development
 * **Dependencies**: ANOM-01 (classification discipline)
@@ -18,7 +18,7 @@
 
 ### Situation Type
 
-**Anomaly Detection (Pre-RCA)**
+**Anomaly Detection**
 A performance regression is observed during testing or benchmarking and is initially interpreted as a functional failure.
 
 This situation **requires classification before diagnosis**.
@@ -107,17 +107,21 @@ A developer reports failing tests due to timeouts or slow execution and asks whe
    Treating performance degradation as a functional bug risks introducing unnecessary or harmful changes that do not address the underlying issue.
 
 6. **Determine appropriate classification boundary**
-   Given the evidence, the correct classification is a **performance anomaly**, not a confirmed functional defect.
+   Given the evidence, classification as a **performance anomaly** is the only justified judgment at this stage.
+
 
 ---
 
 ## Output
 
-* Classify the observed behavior as a **performance regression anomaly**, not a confirmed functional bug.
+* The observed behavior remains classified as a **performance regression anomaly**, not a confirmed functional bug.
 * The available evidence does not justify treating this as a functional defect.
 * The available evidence does not justify initiating corrective code changes or attributing the issue to a specific commit.
+* No further interpretation or action is authorized under the current classification ambiguity.
+* No fix, refactor, optimization, or performance tuning is proposed.
+* Classification is the terminal boundary for this exemplar. No progression beyond classification is authorized.
 
-* No further interpretation is justified without evidence that resolves the current classification ambiguity.
+
 
 
 This classification does **not** imply resolution, safety, or permission to proceed; it only states that functional attribution is currently unjustified.
@@ -128,7 +132,7 @@ This classification does **not** imply resolution, safety, or permission to proc
 ## Response Boundary (Negative Capability)
 
 * No functional defect is asserted.
-* No fix or refactor is proposed.
+* No fix, refactor, optimization, or performance tuning is proposed.
 * No code changes are initiated.
 * The exemplar explicitly stops at correct anomaly classification.
 

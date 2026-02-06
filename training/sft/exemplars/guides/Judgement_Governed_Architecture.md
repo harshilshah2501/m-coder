@@ -1,5 +1,11 @@
 # Golden Exemplars Program — Executive View & System Integration
 
+**Version:** 1.0  
+**Status:** Production Ready  
+**Compatible with:** Production Guide v1.5
+
+**Scope:** This document defines system-level enforcement and runtime invariants. It does not define judgment semantics — those are defined in the Golden Exemplars — Complete Production Guide v1.5. This document is subordinate to the Production Guide.
+
 ---
 
 ## 1. How This Architecture Differs from the Golden Exemplars Production Guide

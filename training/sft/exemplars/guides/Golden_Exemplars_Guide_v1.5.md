@@ -53,6 +53,28 @@ You cannot copy exemplars from Anthropic, OpenAI, or any public alignment datase
 
 ---
 
+## Human Review & Enforcement (Out of Scope)
+
+**This guide does not teach how to review exemplars.**
+
+Reviewer behavior, calibration, and adversarial testing are defined in the **Reviewer Pack v1.0**, which includes:
+
+* External Review Handout (orientation for external reviewers)
+* Reviewer Walkthrough (step-by-step review process)
+* Phase-5/6 Reviewer Addendum (specialized guidance for CODE and ADV phases)
+* Reviewer Scoring Rubric (quantitative agreement tracking)
+
+**Authority relationship:**
+
+* This Production Guide defines **what judgment is** (constitutional authority)
+* The Reviewer Pack defines **how humans validate judgment integrity** (subordinate authority)
+
+The Reviewer Pack must conform strictly to the semantics defined in this guide. If there is any conflict between documents, **this Production Guide always wins**.
+
+**For comprehensive system navigation,** see `JUDGMENT_SYSTEM_README.md` in the guides directory.
+
+---
+
 ## Table of Contents
 
 1. What Are Golden Exemplars?

@@ -1,0 +1,41 @@
+
+═══════════════════════════════════════════════════════════════════════════════
+TERMINOLOGY CORRECTION APPLIED — February 6, 2026
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ INCORRECT TERMINOLOGY (Previously Used):
+   "STOP, DEFER, or REFUSE"
+   "when to STOP/REFUSE"
+   "when NOT to act"
+
+✅ CORRECT TERMINOLOGY (Now Used):
+   "stop, defer, or bound actions"
+   "when to stop, defer, or bound actions under uncertainty"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+RATIONALE:
+
+The correct terminology aligns with the Golden Exemplars framework:
+
+- **Stop**: Complete refusal when evidence/authority is missing (Phase-1)
+- **Defer**: Delay action until conditions are met
+- **Bound**: Set explicit boundaries on what can/cannot be done (Phase-2)
+
+"Refuse" was incorrectly used as a catch-all term when it specifically refers
+to Phase-1 behavior. The framework teaches assistants to stop, defer, OR bound
+actions based on the phase and context.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FILES CORRECTED:
+- README.md
+- COORDINATOR_QUICK_START.md
+- EMAIL_TO_TEAM.md
+- 5_MINUTE_BRIEFING_SCRIPT.md
+- 01_START_HERE/PHASE_01_REVIEW_GUIDE.md
+
+VERIFICATION: All instances corrected to use proper terminology.
+
+═══════════════════════════════════════════════════════════════════════════════
+

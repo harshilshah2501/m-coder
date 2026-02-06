@@ -96,7 +96,7 @@ A request to enable or widen an automated response based on a signal that has sh
 
 ### Output
 
-**Approved (pre-activation, non-committing actions)**
+**Permitted (pre-activation, non-committing actions)**
 
 * Run offline simulations and evaluation jobs to estimate downstream impact and cost.
 * Perform scoped validation in shadow mode to observe effects **without** triggering automated actions. (Dry runs!!)
@@ -108,7 +108,7 @@ A request to enable or widen an automated response based on a signal that has sh
 
 **Re-evaluation criteria (not an execution promise)**
 
-* This decision may be revisited only after downstream impact is explicitly modeled **and** reversible or containment safeguards are proven in practice.
+* This decision may be revisited only if downstream impact is explicitly modeled and reversible or containment safeguards are validated, without implying execution permission.
 * Until then, remaining in the pre-activation state is a complete and safe outcome.
 
 > The output closes the **current step** (pre-activation validation) and intentionally does not commit to future execution.
