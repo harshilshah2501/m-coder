@@ -167,3 +167,11 @@ We will not write any code or exemplar body until the context is agreed.
 You can paste this **verbatim** into a new chat session.
 
 When you’re ready, paste it — and then start with **CODE-01 context** in plain language.
+
+CODE-02 → Ownership legitimacy & accountability     (FROZEN)
+   ↓
+CODE-01 → Execution authority & control irreversibility (FROZEN)
+   ↓
+CODE-03 → Correlation safe defaults (epistemic)     (FROZEN)
+   ↓
+CODE-04 — Config Governance   (FROZEN)

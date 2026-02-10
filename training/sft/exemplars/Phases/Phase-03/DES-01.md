@@ -108,7 +108,7 @@ These are assumptions, not facts.
 **Path A — Simple, minimally coupled design**
 
 * Begin with a straightforward architecture optimized for clarity and ease of change
-* Defer heavy scalability mechanisms until real usage data exists
+* Avoid introducing heavy scalability mechanisms in the absence of validated need; the presence of usage data alone does not obligate their introduction.
 * Accept potential refactoring later in exchange for faster learning now
 
 **Path B — Scale-optimized, highly engineered design**
@@ -150,11 +150,13 @@ Given the uncertainty around scale and usage:
 
 * It is premature to lock in a scale-optimized architecture or freeze foundational abstractions
 * Irreversible decisions should be deferred to preserve future option value
-* Priority should be placed on validating real usage patterns and growth characteristics
+* Priority should be placed on interpreting naturally emerging usage patterns and growth characteristics without requiring deliberate experimentation or execution.
 
-Commitment is appropriate only once usage patterns stabilize and growth shape is empirically observed.
 
-Commitment should follow evidence, not anticipation.
+Stabilized usage patterns and observed growth shape reduce uncertainty, but do not make architectural commitment inherently appropriate or expected.
+
+Commitment follows explicit human judgment, not anticipation or automatic response to evidence.
+
 
 ---
 
@@ -162,13 +164,26 @@ Commitment should follow evidence, not anticipation.
 
 Rather than finalizing an architecture now, treat current design choices as provisional.
 
-Focus on approaches that:
+Favor design choices that do not require early commitment to coupling, scale assumptions, 
+or irreversible coordination, without implying execution, experimentation, or automation.
 
-* keep components loosely coupled
-* allow scale assumptions to be tested
-* preserve the ability to change direction once real data is available
+Provisional design choices must not be reflected in frozen contracts, shared schemas, 
+cross-team APIs, or coordination surfaces unless an explicit commitment decision is made.
 
-Revisit architectural commitments once concrete evidence about scale and usage exists.
+Routine design reviews, incremental shipping decisions, or documentation updates do not constitute an explicit architectural commitment decision.
+
+
+Remaining indefinitely in a provisional, non-committed architectural state is a valid 
+and stable outcome. The presence of evidence does not obligate commitment.
+
+
+Architectural commitments may be reconsidered only through an explicit, human-reviewed decision.
+
+The initiation of architectural reconsideration is itself a human-initiated act; automated signals, metrics, or thresholds must not initiate, schedule, or request reconsideration.
+
+The existence of scale or usage evidence alone does not trigger reconsideration.
+
+Even after uncertainty is reduced, choosing not to commit remains an equally valid, stable outcome; commitment is never the default or expected resolution.
 
 ---
 
@@ -181,7 +196,8 @@ Revisit architectural commitments once concrete evidence about scale and usage e
 * Alternative path comparison as competing design hypotheses
 * Weak-hypothesis rejection based on premature irreversibility, not preference
 * Trade-off articulation tied to option value, coordination cost, and rollback difficulty
-* Deferred commitment decision with explicit evidence-based unlock criteria
+* Deferred commitment decision with evidence-informed review considerations that do not authorize or trigger commitment
+
 
 ### Negative Capability Test
 
@@ -197,7 +213,7 @@ If one or more assumptions change (e.g., traffic becomes bursty or growth accele
 
 * previously stated hypotheses can be re-evaluated without restructuring the reasoning
 * weak-path rejection may flip only when evidence invalidates prior assumptions
-* commitment emerges only after hypothesis collapse, not narrative pressure
+* commitment emerges only after hypothesis collapse, not narrative pressure 
 
 ---
 
