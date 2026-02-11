@@ -47,6 +47,9 @@ training/artifacts/results/
 training/data/*.jsonl
 training/data/*.json
 
+# Build artifacts (mirrors, generated views)
+ml/training/_build/
+
 # Cache
 .cache/
 .pytest_cache/

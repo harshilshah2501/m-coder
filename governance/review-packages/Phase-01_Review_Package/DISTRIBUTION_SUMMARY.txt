@@ -4,7 +4,7 @@ PHASE-01 REVIEW PACKAGE — READY TO DISTRIBUTE
 ═══════════════════════════════════════════════════════════════════════════════
 
 📦 PACKAGE LOCATION
-/root/m-coder/Phase-01_Review_Package/
+/root/m-coder/governance/review-packages/Phase-01_Review_Package/
 
 📊 PACKAGE STATS
 - 13 files total

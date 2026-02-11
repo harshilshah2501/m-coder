@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Created:** February 6, 2026  
-**Package Location:** `/root/m-coder/Phase-01_Review_Package/`  
+**Package Location:** `/root/m-coder/governance/review-packages/Phase-01_Review_Package/`  
 **Coordinator:** Harshil Shah
 
 ---

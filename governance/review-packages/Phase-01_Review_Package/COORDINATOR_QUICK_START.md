@@ -1,7 +1,7 @@
 # Coordinator Quick Start — Harshil Shah
 
 **Package Status:** ✅ READY TO DISTRIBUTE  
-**Location:** `/root/m-coder/Phase-01_Review_Package/`  
+**Location:** `/root/m-coder/governance/review-packages/Phase-01_Review_Package/`  
 **Created:** February 6, 2026  
 **Total Files:** 13 files, ~150 KB
 
@@ -69,7 +69,7 @@ Pick ONE option:
 #### Option A: Zip File (Easiest)
 
 ```bash
-cd /root/m-coder
+cd /root/m-coder/governance/review-packages
 zip -r Phase-01_Review_Package.zip Phase-01_Review_Package/
 ```
 
@@ -102,7 +102,7 @@ zip -r Phase-01_Review_Package.zip Phase-01_Review_Package/
 
 ```bash
 cd /root/m-coder
-git add Phase-01_Review_Package/
+git add governance/review-packages/Phase-01_Review_Package/
 git commit -m "Add Phase-01 review package for team distribution"
 git push
 ```
