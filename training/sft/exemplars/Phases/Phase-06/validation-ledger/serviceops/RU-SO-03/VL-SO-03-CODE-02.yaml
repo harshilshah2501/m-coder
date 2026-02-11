@@ -1,0 +1,39 @@
+validation_ledger_entry:
+  entry_id: VL-SO-03-CODE-02
+
+  reachability_unit_id: RU-SO-03
+
+  execution_surface:
+    system: ServiceOps
+    surface_name: Incident Auto-Resolution & Closure Logic
+
+  code_guard: CODE-02
+
+  enforcement_points:
+    pre_action: present
+    mid_action: absent
+    post_action: present
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: uncovered
+    failure_paths: covered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: incident-ownership validator
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: audit-only
+
+  evidence:
+    artifact_type: code
+    reference: incident-ownership-check-module
+
+  notes: >
+    Ownership legitimacy is evaluated when auto-resolution is
+    triggered and when closing out incident state reconciliation;
+    retry attempts do not re-validate ownership context
+

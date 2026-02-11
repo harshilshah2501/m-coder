@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-02
+  name: Policy Engine with Action Bindings
+  system: AIOps
+  plane: control
+  description: >
+    Policy evaluation engine that binds conditions to executable
+    actions, including inherited or default policies.

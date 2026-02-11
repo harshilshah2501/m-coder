@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-08
+  name: Scheduler / Deferred Execution Engine
+  system: AIOps
+  plane: control
+  description: >
+    Deferred or scheduled execution of previously
+    stored AIOps intent.

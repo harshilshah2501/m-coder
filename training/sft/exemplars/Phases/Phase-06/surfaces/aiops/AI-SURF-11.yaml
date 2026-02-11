@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-11
+  name: API & Integration Execution Endpoints
+  system: AIOps
+  plane: control
+  description: >
+    APIs, webhooks, or integrations capable
+    of triggering AIOps execution paths.

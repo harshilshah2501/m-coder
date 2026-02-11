@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-12
+  name: System Recovery & Bootstrap Paths
+  system: AIOps
+  plane: control
+  description: >
+    Execution paths activated during system startup,
+    recovery, or state rehydration.

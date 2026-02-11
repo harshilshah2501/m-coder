@@ -1,0 +1,8 @@
+execution_surface:
+  id: SO-SURF-04
+  name: Service Request Fulfillment Automation
+  system: ServiceOps
+  plane: control
+  description: >
+    Automated provisioning or fulfillment actions
+    triggered by approved service requests.

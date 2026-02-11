@@ -1,0 +1,40 @@
+ReachabilityUnit:
+  id: RU-AIOPS-10
+  execution_surface:
+    ref: AI-SURF-10
+    system: AIOps
+    plane: hybrid
+    description: Audit-only, dry-run, or simulation paths that may leak into execution
+
+  action_transition:
+    from_state: advisory
+    to_state: execution
+    trigger: audit or simulation workflow misclassification
+
+  required_guards:
+    - CODE-01
+    - CODE-02
+    - CODE-03
+    - CODE-06
+    - CODE-08
+
+  control_paths:
+    primary_path: audit or simulation run → side-effecting operation
+    fallback_paths:
+      - audit flag dropped during propagation
+    retry_paths:
+      - re-run of audit workflow
+    failure_paths:
+      - partial execution during simulation
+      - audit-to-live mode confusion
+      - misrouted execution flag
+
+  guard_enforcement_points:
+    pre_action: audit/simulation classification gate
+    mid_action: side-effect prevention checks
+    post_action: audit outcome finalization
+
+  safe_terminal_states:
+    - refusal
+    - audit-only
+    - no-op

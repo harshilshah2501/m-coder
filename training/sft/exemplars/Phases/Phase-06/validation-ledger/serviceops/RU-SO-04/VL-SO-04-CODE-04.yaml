@@ -1,0 +1,39 @@
+validation_ledger_entry:
+  entry_id: VL-SO-04-CODE-04
+
+  reachability_unit_id: RU-SO-04
+
+  execution_surface:
+    system: ServiceOps
+    surface_name: Service Request Fulfillment Automation
+
+  code_guard: CODE-04
+
+  enforcement_points:
+    pre_action: present
+    mid_action: conditional
+    post_action: absent
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: covered
+    failure_paths: uncovered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: fulfillment approval policy engine
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: audit-only
+
+  evidence:
+    artifact_type: config
+    reference: fulfillment-approval-policies
+
+  notes: >
+    Approval scope and irreversibility are enforced when bridging
+    approved requests into fulfillment workflows; failure recovery
+    paths may not re-evaluate approval
+

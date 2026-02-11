@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-05
+  name: Baseline / Model State Mutation
+  system: AIOps
+  plane: control
+  description: >
+    Mutation of baselines, learned state, or model parameters
+    used by anomaly detection and RCA.

@@ -1,0 +1,42 @@
+ReachabilityUnit:
+  id: RU-AIOPS-11
+  execution_surface:
+    ref: AI-SURF-11
+    system: AIOps
+    plane: control
+    description: API or integration endpoints capable of triggering AIOps actions
+
+  action_transition:
+    from_state: external-request
+    to_state: execution
+    trigger: API call, webhook, or third-party integration event
+
+  required_guards:
+    - CODE-01
+    - CODE-02
+    - CODE-05
+    - CODE-06
+    - CODE-07
+    - CODE-08
+
+  control_paths:
+    primary_path: API request received → action dispatched
+    fallback_paths:
+      - legacy or compatibility endpoint
+    retry_paths:
+      - client-side retries
+      - webhook replay
+    failure_paths:
+      - duplicate request processing
+      - partial auth context
+      - integration timeout
+
+  guard_enforcement_points:
+    pre_action: API admission and validation layer
+    mid_action: execution dispatch from API handler
+    post_action: request execution reconciliation
+
+  safe_terminal_states:
+    - refusal
+    - audit-only
+    - no-op

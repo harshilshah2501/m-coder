@@ -1,0 +1,38 @@
+validation_ledger_entry:
+  entry_id: VL-AIOPS-07-CODE-06
+
+  reachability_unit_id: RU-AIOPS-07
+
+  execution_surface:
+    system: AIOps
+    surface_name: Cross-Service / Cross-Domain Correlation Actions
+
+  code_guard: CODE-06
+
+  enforcement_points:
+    pre_action: present
+    mid_action: present
+    post_action: absent
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: covered
+    failure_paths: covered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: coordinated execution controller
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: refusal
+
+  evidence:
+    artifact_type: code
+    reference: coordinated-execution-safety-checks
+
+  notes: >
+    Uncertain or unsafe conditions for cross-service or cross-domain
+    correlated actions prevent execution from starting or continuing
+    across all configured paths

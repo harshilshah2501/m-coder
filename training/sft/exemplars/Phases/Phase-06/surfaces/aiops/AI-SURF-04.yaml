@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-04
+  name: Configuration Write & Propagation Plane
+  system: AIOps
+  plane: control
+  description: >
+    Configuration persistence and propagation mechanisms
+    that influence downstream AIOps behavior.
