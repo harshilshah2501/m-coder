@@ -68,6 +68,8 @@ Comprehensive documentation for the Motadata AI system including model training,
 │   ├── README.md                # Documentation index (this file)
 │   ├── architecture/            # System architecture
 │   ├── guides/                  # How-to guides
+│   ├── reference/               # Canonical technical references
+│   ├── status/                  # Status, incidents, and session summaries
 │   ├── api/                     # API documentation
 │   ├── troubleshooting/         # Troubleshooting guides
 │   ├── iterations/              # Iteration notes
@@ -154,6 +156,11 @@ Comprehensive documentation for the Motadata AI system including model training,
 ### 📚 Historical Documentation
 - **[iterations/](iterations/)** - Per-iteration notes and progress
 - **[archive/](archive/)** - Historical and deprecated documentation
+
+### 📌 Core References
+- **[reference/IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
+- **[reference/MODEL_VERIFICATION_REPORT.md](reference/MODEL_VERIFICATION_REPORT.md)** - Model verification and rollback decisions
+- **[reference/DIRECTORY_STRUCTURE_ANALYSIS.md](reference/DIRECTORY_STRUCTURE_ANALYSIS.md)** - Repository structure and disk usage analysis
 
 ## V16 Documentation
 
