@@ -17,7 +17,7 @@ but they were missing at path: $
 
 ## Root Cause
 
-In `rag/src/api/rag_api.py`, the `_stream_vllm_response()` function was sending the first chunk with ONLY RAG context:
+In `runtime/rag/src/api/rag_api.py`, the `_stream_vllm_response()` function was sending the first chunk with ONLY RAG context:
 
 ```python
 # BROKEN: First chunk missing required OpenAI fields
@@ -57,7 +57,7 @@ async for line in response.aiter_lines():
 
 ## Changes Made
 
-**File**: `rag/src/api/rag_api.py`
+**File**: `runtime/rag/src/api/rag_api.py`
 **Function**: `_stream_vllm_response()` (lines 1307-1365)
 **Changes**:
 - Removed separate RAG context chunk

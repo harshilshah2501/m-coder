@@ -72,8 +72,8 @@ journalctl -xeu motadata-orchestrator.service
 # View vLLM logs from systemd journal
 journalctl -u motadata-orchestrator -f | grep -i vllm
 
-# Or check the service logs directly
-tail -f rag/logs/vllm.log
+# Or check the service logs directly (repo layout)
+tail -f runtime/rag/logs/vllm.log
 ```
 
 #### RAG API (Application API - Port 8081)
@@ -81,8 +81,8 @@ tail -f rag/logs/vllm.log
 # View RAG API logs from systemd journal
 journalctl -u motadata-orchestrator -f | grep -i "rag\|api"
 
-# Or check the service logs directly
-tail -f rag/logs/rag_api.log
+# Or check the service logs directly (repo layout)
+tail -f runtime/rag/logs/rag_api.log
 ```
 
 #### Qdrant (Vector Database - Port 6333)
@@ -108,8 +108,8 @@ docker logs neo4j-motadata --tail 50
 # View health monitor logs
 journalctl -u motadata-orchestrator -f | grep -i "health\|monitor"
 
-# Or check the service logs directly
-tail -f rag/logs/monitor.log
+# Or check the service logs directly (repo layout)
+tail -f runtime/rag/logs/monitor.log
 ```
 
 ### Log Filtering Examples

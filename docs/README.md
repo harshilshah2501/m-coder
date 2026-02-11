@@ -118,7 +118,7 @@ Comprehensive documentation for the Motadata AI system including model training,
   - Audit reports
 
 ### 🔌 RAG System
-- **[rag/](rag/)** - RAG system documentation
+- **[runtime/rag/](../runtime/rag/)** - RAG system documentation
   - Implementation details
   - System iterations and analysis
 
@@ -200,11 +200,11 @@ journalctl -u motadata-orchestrator -f
 
 ### Manual Service Management (Legacy)
 ```bash
-# If you need to run the orchestrator script directly:
-bash rag/scripts/orchestrator_unified.sh start
-bash rag/scripts/orchestrator_unified.sh stop
-bash rag/scripts/orchestrator_unified.sh restart
-bash rag/scripts/orchestrator_unified.sh status
+# If you need to run the orchestrator script directly from the repo:
+bash runtime/rag/scripts/orchestrator_unified.sh start
+bash runtime/rag/scripts/orchestrator_unified.sh stop
+bash runtime/rag/scripts/orchestrator_unified.sh restart
+bash runtime/rag/scripts/orchestrator_unified.sh status
 ```
 
 ### Auto-Start on Boot

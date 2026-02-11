@@ -29,7 +29,7 @@ Implemented a complete production-ready orchestration system with:
 
 ### 2. Code Changes
 
-#### `rag/src/api/rag_api.py`
+#### `runtime/rag/src/api/rag_api.py`
 ```python
 # OLD: VLLM_MODEL = os.getenv("VLLM_MODEL", "motadata-coder")
 # NEW: VLLM_MODEL = os.getenv("VLLM_MODEL_NAME", "motadata-coder")
@@ -37,7 +37,7 @@ Implemented a complete production-ready orchestration system with:
 - Reads from `VLLM_MODEL_NAME` environment variable
 - Falls back to `motadata-coder` if not set
 
-#### `rag/src/orchestrator/agents/coder_agent.py`
+#### `runtime/rag/src/orchestrator/agents/coder_agent.py`
 ```python
 # OLD: self.model = "motadata-coder"
 # NEW: self.model = os.getenv("VLLM_MODEL_NAME", "motadata-coder")
@@ -47,7 +47,7 @@ Implemented a complete production-ready orchestration system with:
 
 ### 3. Orchestrator Script
 
-#### `rag/scripts/orchestrator_unified.sh`
+#### `runtime/rag/scripts/orchestrator_unified.sh`
 - Added `VLLM_MODEL_NAME="motadata-coder"` variable
 - Updated vLLM startup: `--served-model-name $VLLM_MODEL_NAME`
 - Updated RAG API startup: `env VLLM_MODEL_NAME="$VLLM_MODEL_NAME" ...`
