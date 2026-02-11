@@ -1,0 +1,40 @@
+ValidationLedgerEntry:
+  entry_id: VL-AIOPS-03-CODE-02
+
+  reachability_unit_id: RU-AIOPS-03
+
+  execution_surface:
+    system: AIOps
+    surface_name: Advisory → Apply Bridge
+
+  code_guard: CODE-02
+
+  enforcement_points:
+    pre_action: present
+    mid_action: absent
+    post_action: present
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: uncovered
+    failure_paths: covered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: advisory ownership and approval validator
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: audit-only
+
+  evidence:
+    artifact_type: code
+    reference: recommendation-ownership-check-module
+
+  notes: >
+    Ownership legitimacy and approval attribution for advisory outputs
+    is evaluated at the approval-to-execution boundary and on
+    fulfillment logging; delayed execution after approval does not
+    re-validate ownership context
+

@@ -1,0 +1,8 @@
+execution_surface:
+  id: SO-SURF-05
+  name: CMDB Write & Relationship Propagation
+  system: ServiceOps
+  plane: control
+  description: >
+    Creation, modification, reconciliation, or synchronization
+    of CI records and their relationships, including external imports.

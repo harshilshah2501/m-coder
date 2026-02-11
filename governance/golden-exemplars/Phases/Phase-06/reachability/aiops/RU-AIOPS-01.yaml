@@ -1,0 +1,41 @@
+ReachabilityUnit:
+  id: RU-AIOPS-01
+  execution_surface:
+    ref: AI-SURF-01
+    system: AIOps
+    plane: control
+    description: Automated remediation workflows triggered by anomaly or RCA outcomes
+
+  action_transition:
+    from_state: reasoning
+    to_state: execution
+    trigger: remediation workflow dispatch
+
+  required_guards:
+    - CODE-01
+    - CODE-02
+    - CODE-04
+    - CODE-05
+    - CODE-06
+    - CODE-07
+
+  control_paths:
+    primary_path: anomaly detected → RCA inferred → remediation workflow executed
+    fallback_paths:
+      - RCA confidence threshold fallback to default remediation
+    retry_paths:
+      - remediation retry after partial failure
+    failure_paths:
+      - infra timeout during remediation
+      - partial execution across targets
+      - workflow engine restart
+
+  guard_enforcement_points:
+    pre_action: remediation workflow entry gate
+    mid_action: step-level orchestration checks
+    post_action: execution result finalization
+
+  safe_terminal_states:
+    - refusal
+    - audit-only
+    - no-op

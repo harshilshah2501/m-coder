@@ -1,0 +1,38 @@
+ValidationLedgerEntry:
+  entry_id: VL-AIOPS-09-CODE-06
+
+  reachability_unit_id: RU-AIOPS-09
+
+  execution_surface:
+    system: AIOps
+    surface_name: Retry & Self-Healing Loops
+
+  code_guard: CODE-06
+
+  enforcement_points:
+    pre_action: present
+    mid_action: present
+    post_action: absent
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: covered
+    failure_paths: covered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: retry and self-healing execution controller
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: refusal
+
+  evidence:
+    artifact_type: code
+    reference: retry-and-self-healing-safety-checks
+
+  notes: >
+    Uncertain or guard-failing conditions for retry or self-healing prevent
+    re-execution from starting or continuing across all configured
+    paths

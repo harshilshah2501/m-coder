@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-10
+  name: Audit / Simulation Modes with Side Effects
+  system: AIOps
+  plane: hybrid
+  description: >
+    Audit-only, dry-run, or simulation paths
+    that may inadvertently cause side effects.

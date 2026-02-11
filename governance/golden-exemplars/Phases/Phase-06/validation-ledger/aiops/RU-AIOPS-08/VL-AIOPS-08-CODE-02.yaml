@@ -1,0 +1,38 @@
+ValidationLedgerEntry:
+  entry_id: VL-AIOPS-08-CODE-02
+
+  reachability_unit_id: RU-AIOPS-08
+
+  execution_surface:
+    system: AIOps
+    surface_name: Scheduler / Deferred Execution Engine
+
+  code_guard: CODE-02
+
+  enforcement_points:
+    pre_action: present
+    mid_action: absent
+    post_action: present
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: uncovered
+    failure_paths: covered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: deferred intent ownership validator
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: audit-only
+
+  evidence:
+    artifact_type: code
+    reference: deferred-intent-ownership-check-module
+
+  notes: >
+    Ownership legitimacy for persisted AIOps intent is evaluated when
+    deferred execution is admitted and when reconciliation completes;
+    deferred execution retries do not re-validate ownership context

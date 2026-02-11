@@ -1,0 +1,8 @@
+execution_surface:
+  id: SO-SURF-03
+  name: Incident Auto-Resolution & Closure Logic
+  system: ServiceOps
+  plane: control
+  description: >
+    Automated logic that resolves, closes, suppresses,
+    or downgrades incidents without human confirmation.

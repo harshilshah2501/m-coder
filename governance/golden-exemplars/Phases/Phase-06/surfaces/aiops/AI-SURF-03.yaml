@@ -1,0 +1,8 @@
+execution_surface:
+  id: AI-SURF-03
+  name: Recommendation → Apply Bridge
+  system: AIOps
+  plane: hybrid
+  description: >
+    Transition boundary where advisory recommendations
+    become approved and executed actions.

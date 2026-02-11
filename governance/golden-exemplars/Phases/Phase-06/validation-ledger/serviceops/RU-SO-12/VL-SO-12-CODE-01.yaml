@@ -1,0 +1,39 @@
+ValidationLedgerEntry:
+  entry_id: VL-SO-12-CODE-01
+
+  reachability_unit_id: RU-SO-12
+
+  execution_surface:
+    system: ServiceOps
+    surface_name: System Recovery, Import & Bootstrap Paths
+
+  code_guard: CODE-01
+
+  enforcement_points:
+    pre_action: present
+    mid_action: present
+    post_action: present
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: covered
+    retry_paths: covered
+    failure_paths: covered
+
+  enforcement_mechanism:
+    type: hard-gate
+    location: recovery admission gate
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: refusal
+
+  evidence:
+    artifact_type: workflow
+    reference: recovery-and-bootstrap-admission-gate
+
+  notes: >
+    CODE-01 enforcement evaluated when recovered or imported state
+    is admitted to trigger queued ServiceOps actions across all
+    configured paths
+

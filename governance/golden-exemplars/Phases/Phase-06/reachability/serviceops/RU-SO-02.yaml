@@ -1,0 +1,45 @@
+reachability_unit:
+  id: RU-SO-02
+  execution_surface:
+    ref: SO-SURF-02
+    system: ServiceOps
+    plane: hybrid
+    description: Transition from approved change request to downstream execution
+
+  action_transition:
+    from_state: approved-change
+    to_state: execution
+    trigger: approval completion event
+
+  required_guards:
+    - CODE-01
+    - CODE-02
+    - CODE-04
+    - CODE-05
+    - CODE-06
+    - CODE-07
+    - CODE-08
+
+  control_paths:
+    primary_path: change approved → execution triggered
+    fallback_paths:
+      - conditional approval auto-advance
+    retry_paths:
+      - delayed execution retry
+    failure_paths:
+      - approval replay
+      - execution worker restart
+      - partial downstream execution
+
+  guard_enforcement_points:
+    pre_action: approval-to-execution boundary
+    mid_action: execution orchestration
+    post_action: execution completion reconciliation
+
+  safe_terminal_states:
+    - refusal
+    - audit-only
+    - no-op
+
+  notes: >
+    Approval context may differ from execution context due to time delay or actor changes

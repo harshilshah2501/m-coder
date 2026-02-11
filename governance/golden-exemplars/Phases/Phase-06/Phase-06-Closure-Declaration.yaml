@@ -1,0 +1,81 @@
+Phase06ClosureDeclaration:
+
+  program: Golden Exemplars Program
+  phase: Phase-06 (REACHABILITY)
+
+  status: CLOSED
+  closure_type: VERIFIED
+
+  effective_date: <YYYY-MM-DD>
+
+  scope:
+
+    execution_surfaces:
+      serviceops:
+        range: SO-SURF-01 → SO-SURF-12
+      aiops:
+        range: AI-SURF-01 → AI-SURF-12
+
+    reachability_units:
+      serviceops:
+        range: RU-SO-01 → RU-SO-12
+      aiops:
+        range: RU-AIOPS-01 → RU-AIOPS-12
+
+    validation_ledger:
+      total_entries: 62
+      coverage_rule: >
+        One ledger entry per (ReachabilityUnit × required CODE guard).
+      directory: phase-06/validation-ledger/
+
+  exit_conditions_verified:
+
+    completeness:
+      surfaces_complete: true
+      reachability_complete: true
+      ledger_entries_match_required_guards: true
+
+    path_coverage:
+      primary_path_present: true
+      fallback_paths_present: true
+      retry_paths_present: true
+      failure_paths_present: true
+
+    schema_compliance:
+      canonical_root_key: ValidationLedgerEntry
+      required_fields_present: true
+      enum_values_canonical: true
+
+    non_interpretive_discipline:
+      interpretive_fields_clean: true
+      evidence_reference_exempt: true
+
+  invariants_established:
+
+    - All Phase-05 CODE guards are structurally reachable on every declared execution surface.
+    - No execution surface exists without a corresponding ReachabilityUnit.
+    - No ReachabilityUnit exists without ledger validation.
+    - No guard required by a ReachabilityUnit lacks a ledger entry.
+    - Structural enforcement points are documented for all control paths.
+
+  constraints_post_closure:
+
+    - No modification to surfaces without reopening Phase-06.
+    - No modification to reachability units without reopening Phase-06.
+    - No modification to ledger schema without reopening Phase-06.
+    - Ledger directory must be treated as read-only baseline.
+
+  next_phase_authorized: GREG (Runtime Enforcement & Observation Layer)
+
+  declaration:
+
+    statement: >
+      Phase-06 (REACHABILITY) is formally closed.
+      Structural guard reachability across ServiceOps and AIOps
+      execution surfaces has been verified.
+      Further evolution must occur through controlled phase reopening
+      or transition to runtime enforcement (GREG).
+
+    approved_by: <name>
+    approval_role: <role>
+    signature_hash: <optional_commit_hash_or_signature>

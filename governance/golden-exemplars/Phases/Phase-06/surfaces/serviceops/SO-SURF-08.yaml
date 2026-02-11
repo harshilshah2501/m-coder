@@ -1,0 +1,8 @@
+execution_surface:
+  id: SO-SURF-08
+  name: Knowledge Article Auto-Publish / Auto-Retire
+  system: ServiceOps
+  plane: control
+  description: >
+    Automated publication, update, or retirement of knowledge
+    articles based on workflow state, usage, or confidence signals.
