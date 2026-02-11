@@ -7,7 +7,7 @@
 ## Version Update
 
 **Current Version:** v1.5
-**Status:** Phase-4 LOCKED · Phase-5 READY  
+**Status:** Phase-5 LOCKED · Phase-6 DEFINED (ADV not yet instantiated)  
 **Scope of Update:** Coverage expansion, variant staging, dataset pipeline articulation, and audit-layer integration  
 **Breaking Changes:** None
 
