@@ -1,8 +1,0 @@
-execution_surface:
-  id: AI-SURF-06
-  name: Incident Lifecycle Automation Hooks
-  system: AIOps
-  plane: hybrid
-  description: >
-    Automated actions triggered by incident creation,
-    update, or closure events.

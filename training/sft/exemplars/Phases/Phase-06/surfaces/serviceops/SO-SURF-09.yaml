@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-09
-  name: Scheduler / Deferred ITSM Actions
-  system: ServiceOps
-  plane: control
-  description: >
-    Scheduled or delayed execution of ServiceOps actions,
-    such as deferred changes, follow-ups, or cleanup jobs.

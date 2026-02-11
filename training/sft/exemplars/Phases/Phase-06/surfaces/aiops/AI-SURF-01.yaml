@@ -1,8 +1,0 @@
-execution_surface:
-  id: AI-SURF-01
-  name: Automated Remediation Orchestrator
-  system: AIOps
-  plane: control
-  description: >
-    Orchestration layer that executes automated remediation actions
-    based on anomaly detection, RCA outcomes, or policies.

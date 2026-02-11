@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-02
-  name: Change Management Approval → Execution Bridge
-  system: ServiceOps
-  plane: hybrid
-  description: >
-    Transition where an approved change request triggers downstream
-    execution, deployment, or configuration activity.

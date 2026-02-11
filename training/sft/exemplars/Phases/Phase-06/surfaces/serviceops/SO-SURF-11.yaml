@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-11
-  name: API & Integration Execution Endpoints
-  system: ServiceOps
-  plane: control
-  description: >
-    External or internal APIs, webhooks, or integrations
-    capable of creating, modifying, or transitioning ITSM entities.

@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-10
-  name: Retry, Replay & Reconciliation Jobs
-  system: ServiceOps
-  plane: control
-  description: >
-    Background jobs that retry failed ITSM actions,
-    replay events, or reconcile partial or inconsistent state.

@@ -42,10 +42,10 @@ model-backups/
 
 
 # Training checkpoints and artifacts
-training/checkpoints/
-training/artifacts/results/
-training/data/*.jsonl
-training/data/*.json
+ml/training/checkpoints/
+ml/training/artifacts/results/
+ml/training/data/*.jsonl
+ml/training/data/*.json
 
 # Build artifacts (mirrors, generated views)
 ml/training/_build/

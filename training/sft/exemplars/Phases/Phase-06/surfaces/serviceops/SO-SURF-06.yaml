@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-06
-  name: SLA / SLO Breach Automation
-  system: ServiceOps
-  plane: control
-  description: >
-    Automated actions triggered by SLA or SLO breach detection,
-    including escalations, penalties, or workflow transitions.

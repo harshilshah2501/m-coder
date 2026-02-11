@@ -1,8 +1,0 @@
-execution_surface:
-  id: AI-SURF-07
-  name: Cross-Service / Cross-Domain Correlation Actions
-  system: AIOps
-  plane: control
-  description: >
-    Correlation-driven actions spanning multiple services,
-    domains, or tenants.

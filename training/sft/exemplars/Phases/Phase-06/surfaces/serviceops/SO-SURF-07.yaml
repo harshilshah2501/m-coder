@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-07
-  name: Problem Management Lifecycle Automation
-  system: ServiceOps
-  plane: control
-  description: >
-    Automated creation, linking, acceptance, or closure
-    of problems based on incidents, analytics, or rules.

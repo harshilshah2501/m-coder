@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-12
-  name: System Recovery, Import & Bootstrap Paths
-  system: ServiceOps
-  plane: control
-  description: >
-    Actions executed during system startup, bulk import,
-    migration, or recovery that may trigger workflows or state changes.

@@ -1,8 +1,0 @@
-execution_surface:
-  id: SO-SURF-01
-  name: ITSM Workflow Automation Engine
-  system: ServiceOps
-  plane: control
-  description: >
-    Workflow rules that automatically transition, assign, escalate,
-    or resolve incidents, changes, problems, or requests.
