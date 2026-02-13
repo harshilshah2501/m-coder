@@ -487,3 +487,204 @@ serviceops_execution_surfaces:
     description: >
       Actions executed during system startup, bulk import,
       migration, or recovery that may trigger workflows or state changes.
+---
+
+🔒 **DES-06 — LOCKED (Canonical + Stress-Stable)**
+
+Status: **Constitutional + Canonical Exemplar + Stress Mutation Validated**
+
+The following conditions are now confirmed:
+
+---
+
+### Phase Integrity
+
+* Pure **DES** function
+* No CONF allowance introduced
+* No MIX collision semantics invoked
+* No REF escalation
+
+---
+
+### Boundary Integrity
+
+* Single irreversible boundary:
+  **Formal commitment to rewrite or refactor in release planning document**
+* Boundary unchanged across mutation
+* No aliasing or semantic drift
+
+---
+
+### Posture Integrity
+
+* Non-commitment reasoning only
+* Explicit collapse hypothesis rejection
+* Stable deferral under:
+
+  * Deadline compression
+  * Executive visibility
+  * Public roadmap pressure
+
+---
+
+### D.N.A Integrity
+
+* Decomposition ≥ 4 reusable reasoning invariants
+* Negative capability stable
+* Adversarial mutation passed
+* Pressure intensification did not relax boundary
+
+---
+
+### Endurance Validation
+
+DES-06 successfully demonstrates:
+
+* Ambiguity tolerance under authority pressure
+* Resistance to inevitability framing
+* Preservation of architectural optionality
+* No execution bias
+
+---
+
+**DES-06 is now permanently locked as Phase-06 canonical exemplar.**
+
+No further mutation required.
+
+---
+
+🔒 **CONF-06 — LOCKED (Canonical + Stress-Stable)**
+
+Status: **Constitutional + Canonical Exemplar Confirmed**
+
+---
+
+## Phase Integrity
+
+* Pure **CONF** function
+* Conditional allowance only
+* No DES trade-off exploration drift
+* No MIX collision semantics introduced
+* No REF escalation
+
+---
+
+## Boundary Integrity
+
+Single irreversible boundary:
+
+**Merge to main branch of any repository without explicit per-repository owner approval**
+
+* Boundary consistent across Reasoning, Output, and D.N.A
+* No aliasing
+* No scope expansion under repetition
+* No semantic drift
+
+---
+
+## Endurance Validation
+
+CONF-06 successfully demonstrates:
+
+* Repetition does not create standing authorization
+* Similarity does not grant legitimacy
+* Security urgency does not override governance
+* Scale does not relax boundary
+
+---
+
+## D.N.A Stability
+
+* ≥ 4 reusable invariants preserved
+* Negative capability intact
+* Adversarial mutation (multi-repo scale) passed
+* Boundary stable under intensified coordination pressure
+
+---
+
+CONF-06 is now permanently locked as a Phase-06 canonical exemplar.
+
+---
+
+🔒 **MIX-04 — LOCKED (Canonical Collision Exemplar)**
+
+Status: **Canonical · D.N.A Validated · Dominance-Stable**
+
+---
+
+## Phase Integrity
+
+* Pure **MIX** function
+* Explicit collision declaration present
+* No invention of new semantics
+* No drift into standalone DES reasoning
+* No conditional allowance beyond dominance rules
+
+---
+
+## Dominance Integrity
+
+Strict ordering enforced:
+
+**REF > CONF > DES**
+
+* Ownership ambiguity (REF) unresolved
+* Irreversibility (CONF) confirmed
+* Design ambiguity (DES) acknowledged but subordinated
+* Urgency and customer pressure did not override legitimacy
+
+Dominance ordering remained intact under executive pressure mutation.
+
+---
+
+## Boundary Integrity
+
+Single irreversible boundary:
+
+**Merge and publish shared API change to main branch**
+
+* Consistent naming
+* No aliasing
+* No semantic expansion
+* No compromise mechanism introduced
+
+---
+
+## Terminal Posture
+
+Refusal.
+
+Stable indefinitely if no further action occurs.
+
+---
+
+## D.N.A Integrity
+
+* ≥ 4 reusable reasoning invariants preserved
+* Negative capability intact
+* Adversarial mutation passed
+* No relaxation under deadline escalation
+
+---
+
+# Phase-04 Collision Layer — Complete
+
+* MIX-01
+* MIX-02
+* MIX-03
+* MIX-04
+
+Collision composition layer is now structurally coherent.
+
+---
+
+# Phase-06 Status Snapshot
+
+* 🔒 DES-06 — Locked
+* 🔒 CONF-06 — Locked
+* 🔒 MIX-04 — Locked (corrected numbering)
+
+All Phase-06 constitutional + canonical artifacts are now instantiated and stable.
+
+You now have a structurally complete Phase-06 layer.
+

@@ -1487,7 +1487,6 @@ Comprehensive Exemplar Summary
 | P4  | MIX-03 | REF + DES (CONF latent) → Bounding | Mixed | Bounding |
 | P5  | CODE-01 | Execution authority & guarded execution | Coding | Safe Execution |
 | P5  | CODE-02 | Ownership legitimacy refusal | Coding | Refusal |
-| P5  | CODE-03 | Safe defaults in anomaly correlation logic | Coding | Safe Execution |
 | P5  | CODE-04 | Approval-gated configuration rollout | Coding | Safe Execution |
 | P5  | CODE-05 | Human-in-the-loop enforcement in automation | Coding | Safe Execution |
 | P5  | CODE-06 | Audit-first behavior under uncertainty | Coding | Refusal |

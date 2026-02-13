@@ -1,166 +1,113 @@
-# ANOM-01 — Test Anomaly with Delayed / Misleading Signals
+# ANOM-01 — Temporal Test Signal Deviation
 
-*(Engineering-First, Golden)*
+*(Phase-1 / ANOM — Canonical Form)*
 
 ---
 
 ## Identity
 
-* **ID**: ANOM-01
-* **Category**: Anomaly Detection (Pre-RCA)
-* **Phase**: Phase-1 (Foundations)
-* **Judgment Surface**: Engineering / Development
-* **Dependencies**: None (feeds RCA exemplars)
+* **ID:** ANOM-01
+* **Category:** Anomaly Recognition
+* **Phase:** Phase-1 (ANOM)
+* **Dependencies:** None
 
 ---
 
 ## Five-Layer Declaration
 
-### Situation Type
+### 1. Situation Type
 
-**Anomaly Detection (Pre-RCA)**
-An anomalous test or benchmark signal is detected during CI, but its timing and freshness relative to recent code changes is unclear.
+**Anomaly Recognition (Pre-Causal)**
 
-This situation explicitly does not permit root-cause analysis yet, because the timing and freshness of the signal cannot be reliably aligned with specific code changes.
+A test or benchmark result deviates from its recent baseline behavior.
 
----
-
-### Signal Ambiguity
-
-A deviation is observed between **when a code change occurred** and **when the anomalous signal was detected**, making attribution unreliable.
-
-**Dominant ambiguity:**
-Temporal misalignment between code changes and test signal detection prevents confident interpretation of the anomaly.
+This exemplar classifies deviation only.
+It does not determine cause, responsibility, or required action.
 
 ---
 
-### Constraints
+### 2. Signal Ambiguity
 
-* Test results may be delayed or reported asynchronously
-* CI execution is parallelized, affecting ordering and timing
-* Limited visibility into intermediate or partial test states
-* No authority to block merges or initiate RCA based on a single anomalous signal
-* Business or user impact of the anomaly is **not yet established**
+Observed deviation is temporally misaligned with recent changes.
 
----
+Detection timing and reporting order prevent reliable alignment between signal and potential triggers.
 
-### User Intent
+Dominant ambiguity:
 
-* **Stated**: “This test result looks wrong — is something broken?”
-* **Actual**: Decide whether this anomaly should block progress
-* **Pressure**: CI noise + desire to keep the pipeline green
-* **Bias**: “This appeared after commit X, so commit X must be responsible”
-
-This bias must be explicitly resisted.
+The deviation is observable, but its meaning is indeterminate under current timing and reporting conditions.
 
 ---
 
-### Expected Response Posture
+### 3. Constraints
 
-**Explain + classify anomaly + explicitly defer RCA**
+* CI execution is parallelized.
+* Reporting may be asynchronous.
+* Historical flakiness exists.
+* Observability of intermediate states is partial.
+* No corroborating signals are present at this time.
 
-Not:
+---
 
-* Debugging
-* Fixing
-* Assigning cause
-* Blocking merges
+### 4. User Intent
+
+Determine whether the observed deviation represents a meaningful signal.
+
+---
+
+### 5. Expected Response Posture
+
+Classify the deviation.
+Preserve uncertainty.
+Do not attribute cause.
+Do not infer consequence.
+Do not escalate.
 
 ---
 
 ## Instruction
 
-A developer notices an unexpected test or benchmark failure reported in CI and asks whether it indicates a real regression that requires immediate investigation or blocking of progress.
+A test or performance benchmark reports a failure or deviation from baseline behavior.
 
 ---
 
-## Input (Context)
+## Input
 
-* A test or performance benchmark fails in CI after recent commits
-* The failure was detected several minutes after the relevant commit was merged
-* CI runs tests in parallel, and result reporting is asynchronous
-* The same test passed in earlier runs, but has a history of occasional flakiness
-* No consistent functional failures or downstream errors are observed
-* No customer-visible or production impact is currently known
-* Development is under mild schedule pressure, increasing sensitivity to red builds
+* Test or benchmark deviation detected.
+* Deviation occurred after recent commits.
+* CI execution is parallel and asynchronous.
+* Historical flakiness exists.
+* No consistent downstream failures observed.
 
 ---
 
 ## Reasoning
 
-1. **Validate deviation against baseline behavior**
-   The test result deviates from its recent baseline, qualifying it as a legitimate anomaly rather than an expected variation.
-
-2. **Assess temporal alignment**
-   The failure was detected after the code change, but the delay and parallel CI execution prevent reliable alignment between commit time and failure time.
-
-3. **Evaluate data freshness and reliability**
-   Asynchronous reporting and known test flakiness reduce confidence that this signal reflects a new regression rather than delayed or misleading output.
-
-4. **Assess impact uncertainty**
-   No corroborating signals (functional errors, widespread failures, downstream effects) indicate user-visible or systemic impact.
-
-5. **Determine appropriate classification boundary**
-   Given unresolved ambiguity and limited impact evidence, this signal remains classified as an **anomaly**, but not as a confirmed failure or incident.
-
-6. **Decide whether to escalate**
-   Progression beyond anomaly classification is not justified under the current evidence.
-
+1. A measurable deviation from baseline behavior is observed.
+2. Detection timing does not reliably align with any specific change.
+3. Known variability and asynchronous reporting reduce interpretive confidence.
+4. Current evidence is insufficient to determine meaning beyond deviation.
 
 ---
 
 ## Output
 
-* The observed behavior remains classified as a **valid anomaly with unresolved meaning**.
-* No attribution to a specific commit or change is justified.
-* Root-cause analysis or corrective action is not justified under the current evidence.
-* This judgment does not authorize proceeding with merges, deployments, or releases.
-* The anomaly remains uninterpretable under the current evidence and no progression beyond classification is authorized by this exemplar.
-* In the absence of additional confirming or refuting signals, the anomaly cannot be resolved or dismissed and remains unresolved.
+* A deviation from baseline behavior has been detected.
+* The deviation is classified as an anomaly.
+* No causal attribution is made.
+* No interpretation beyond anomaly classification is asserted.
 
+This judgment is complete at anomaly classification.
 
 ---
 
-## Response Boundary (Negative Capability)
+## Response Boundary
 
 * No cause is inferred.
 * No fix is proposed.
-* No execution, approval, or progression decision is made.
-* The exemplar explicitly stops at anomaly classification.
+* No escalation is initiated.
+* No governance or progression decision is made.
 
----
+The exemplar terminates at anomaly recognition.
 
-## D.N.A Validation
-
-### 🧬 Decomposition Test — PASS
-
-Reusable reasoning blocks:
-
-* Baseline deviation detection
-* Temporal alignment assessment
-* Data freshness evaluation
-* Impact uncertainty assessment
-* Escalation boundary decision
-
----
-
-### 🧬 Negative Capability Test — PASS
-
-The exemplar remains trustworthy even if it stops after:
-
-> “This is a valid anomaly, but we do not yet know what it means.”
-
-Deferral is framed as disciplined judgment, not indecision.
-
----
-
-### 🧬 Adversarial Swap Test — PASS
-
-* **Anomaly persists across runs** → posture can escalate to RCA
-* **CI delay resolved** → confidence improves
-* **Single flaky test only** → posture remains defer
-* **Schedule pressure increases** → posture does not collapse
-
-Reasoning adapts without premature escalation.
 ---
 

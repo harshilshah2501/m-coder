@@ -291,3 +291,114 @@ It turns DES review into a **mechanical judgment**, not a debate.
 
 ---
 
+
+It does what Phase-3 is supposed to do:
+
+- Explores competing design paths
+- Names assumptions explicitly
+- Identifies the irreversible boundary
+- Preserves optionality
+- Refuses premature convergence
+- Does not recommend execution
+- Does not narrow into CONF
+- Does not drift into CODE
+
+The important thing:
+It actively protects design space, not just avoids commitment.
+
+The boundary is clean.
+The deferral is stable.
+There is no stealth prioritization disguised as reasoning.
+
+This is a proper Phase-3 anchor exemplar.
+
+Phase-3 is now legitimately started.
+
+So no human-validation check list for me for DES-01?
+
+Short answer:
+You don’t need one for structural correctness.
+
+DES-01 is structurally sound.
+
+But if you’re asking as the architect —
+“Should I personally run a mental checklist before locking it?”
+
+Yes. And it’s different from REF / RCA / CONF checklists.
+
+Phase-3 requires a Design Integrity Checklist, not a safety checklist.
+
+Here’s the right one for DES:
+
+🔎 Phase-3 Human Validation Checklist (Design Integrity)
+
+Use this before locking any DES exemplar.
+
+1️⃣ Did I Preserve Multiple Viable Paths?
+
+Are at least two design paths genuinely viable?
+
+Did I avoid ranking one as “the obvious choice”?
+
+Did I avoid collapsing option space through tone?
+
+If the reader feels nudged — you drifted.
+
+2️⃣ Is the Irreversible Boundary Explicit and Real?
+
+Is the boundary observable?
+
+Does crossing it require coordination or migration?
+
+Is it architectural, not operational?
+
+If it’s vague, it’s weak.
+If it’s operational, it belongs in CONF or CODE.
+
+3️⃣ Did I Separate Assumptions from Facts?
+
+Are speculative scale assumptions clearly marked?
+
+Is any “likely future” framed as hypothesis, not inevitability?
+
+Design rot starts when assumptions masquerade as inevitability.
+
+4️⃣ Did I Avoid Implicit Recommendation?
+
+Look carefully for phrases like:
+
+“This path is safer”
+
+“This is more future-proof”
+
+“This is preferable”
+
+“This avoids rework”
+
+If those exist without symmetry, you’re recommending.
+
+DES must compare — not endorse.
+
+5️⃣ Is Non-Commitment Stable?
+
+Ask yourself:
+
+If the organization stayed in this provisional state for 2 years,
+would the reasoning still hold?
+
+If the answer is “no, because we eventually must scale” —
+you’ve smuggled inevitability into the design.
+
+Phase-3 must tolerate indefinite deferral.
+
+6️⃣ Does Evidence Inform but Not Trigger?
+
+This is subtle and you handled it well:
+
+Evidence may reduce uncertainty.
+
+Evidence must not automatically trigger commitment.
+
+Only explicit human decision can cross the boundary.
+
+If metrics can auto-initiate commitment, you drifted into CODE.

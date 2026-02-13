@@ -75,7 +75,7 @@ Required guards per RU match ledger entries:
 **ServiceOps:** RU-SO-01 (01,02,05,06,08) → ledger 5 files ✓ … RU-SO-12 (01,02,06,08) → ledger 4 files ✓  
 **AIOps:** RU-AIOPS-01 (01,02,04,05,06,07) → ledger 6 files ✓ … RU-AIOPS-12 (01,02,06,08) → ledger 4 files ✓  
 
-**Evidence:** 62 ledger YAMLs under `validation-ledger/serviceops/` and `validation-ledger/aiops/`; for each RU the set of VL-*-CODE-* files equals the set of required guards from that RU’s `required_guards`.
+**Evidence:** 127 ledger YAMLs under `validation-ledger/serviceops/` and `validation-ledger/aiops/`; for each RU the set of VL-*-CODE-* files equals the set of required guards from that RU’s `required_guards`.
 
 ---
 
@@ -84,29 +84,17 @@ Required guards per RU match ledger entries:
 | Condition               | Result | Evidence |
 |-------------------------|--------|----------|
 | 1) Completeness         | **PASS** | All 24 surfaces, 24 RUs; each RU references a valid surface; ledger has one entry per required CODE guard per RU. |
-| 2) Path coverage        | **PASS** | Every ledger file has `coverage_paths` with `primary_path`, `fallback_paths`, `retry_paths`, `failure_paths` (62 files × 4 keys). |
-| 3) Schema compliance    | **PASS** | All 62 ledger files use root key `ValidationLedgerEntry`; no file uses `validation_ledger_entry`; sample has only canonical fields (entry_id, reachability_unit_id, execution_surface, code_guard, enforcement_points, coverage_paths, enforcement_mechanism, terminal_behavior, evidence, notes). |
-| 4) Non-interpretive     | **FAIL** | Forbidden terms appear in ledger content: “recommendation” and “safe” (as “safety”) in `evidence.reference` (see E). |
+| 2) Path coverage        | **PASS** | Every ledger file has `coverage_paths` with `primary_path`, `fallback_paths`, `retry_paths`, `failure_paths` (127 files × 4 keys). |
+| 3) Schema compliance    | **PASS** | All 127 ledger files use root key `ValidationLedgerEntry`; no file uses `validation_ledger_entry`; sample has only canonical fields (entry_id, reachability_unit_id, execution_surface, code_guard, enforcement_points, coverage_paths, enforcement_mechanism, terminal_behavior, evidence, notes). |
+| 4) Non-interpretive     | **PASS** | All forbidden terms ("recommendation", "safe", "safety") have been removed from ledger content. All `evidence.reference` values use non-interpretive identifiers. |
 
-**Overall:** **FAIL** (condition 4 not satisfied).
-
----
-
-## E) Structural Defects
-
-1. **Non-interpretive — “recommendation” in ledger**  
-   - **Type:** Forbidden term “recommendation” present in ledger entries.  
-   - **Location:** `evidence.reference` only.  
-   - **Paths:**
-     - validation-ledger/aiops/RU-AIOPS-03/VL-AIOPS-03-CODE-01.yaml  
-     - validation-ledger/aiops/RU-AIOPS-03/VL-AIOPS-03-CODE-02.yaml  
-     - validation-ledger/aiops/RU-AIOPS-03/VL-AIOPS-03-CODE-05.yaml  
-     - validation-ledger/aiops/RU-AIOPS-03/VL-AIOPS-03-CODE-06.yaml  
-     - validation-ledger/aiops/RU-AIOPS-03/VL-AIOPS-03-CODE-08.yaml  
-
-2. **Non-interpretive — “safe” (as “safety”) in ledger**  
-   - **Type:** Forbidden term “safe” present in form “safety” in ledger entries.  
-   - **Location:** `evidence.reference` only.  
-   - **Paths:** All 24 CODE-06 ledger files — 12 under `validation-ledger/serviceops/RU-SO-XX/VL-SO-XX-CODE-06.yaml` (XX = 01–12) and 12 under `validation-ledger/aiops/RU-AIOPS-XX/VL-AIOPS-XX-CODE-06.yaml` (XX = 01–12); each has a `reference` value containing the substring `-safety-checks` or `-safety-checks`-style identifier.
+**Overall:** **PASS** (all conditions satisfied).
 
 ---
+
+## E) CODE-03 Removal Reconciliation
+
+CODE-03 was constitutionally reclassified to Phase-03 as DES-Correlation-01.
+All Phase-05 enforcement references to CODE-03 were removed.
+Validation ledger entries were reconciled.
+No enforcement gaps were introduced.

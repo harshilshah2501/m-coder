@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: workflow
-    reference: recommendation-approval-bridge-gate
+    reference: analysis-record-approval-bridge-gate
 
   notes: >
     CODE-01 enforcement evaluated when approved advisory outputs cross

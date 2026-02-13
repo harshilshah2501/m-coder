@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: config
-    reference: recommendation-human-approval-rules
+    reference: analysis-record-human-approval-rules
 
   notes: >
     Human-in-the-loop checks are used when approving and applying

@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: configuration-propagation-safety-checks
+    reference: configuration-propagation-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for configuration write and

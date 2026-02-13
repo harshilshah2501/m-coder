@@ -95,7 +95,7 @@ A request to proceed with merging a refactor that appears correct but may have u
 
 * Perform dependency mapping to identify known and unknown downstream consumers.
 * Split the refactor into smaller, scoped changes that do not alter shared contracts.
-* Introduce feature flags or compatibility layers to reduce uncertainty without committing others.
+* Design (but do not merge, publish, or enable) feature flags or compatibility layers to evaluate containment strategies without crossing the merge boundary.
 
 **Explicitly blocked action**
 

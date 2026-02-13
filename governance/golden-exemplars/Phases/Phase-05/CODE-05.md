@@ -92,7 +92,10 @@ CODE-05 exists to ensure that **human confirmation is enforced as a hard gate in
    Reduce MTTR and operational load by minimizing pauses and allowing automation to act end-to-end without waiting for explicit human confirmation
 
 5. **Response Posture**
-   Enforce explicit, current human confirmation as a hard gate before automation may proceed when uncertainty or impact thresholds are crossed
+   Enforce explicit, current human confirmation as a hard gate before automation may proceed for any action classified as:
+   * Non-unilaterally reversible
+   * Cross-scope or cross-tenant
+   * Outside previously authorized execution policies
 
 ---
 
@@ -106,17 +109,10 @@ The system is incentivized to move directly from recommendation to execution to 
 
 **Secondary collisions**
 
-* Automation confidence as justification vs explicit human intent as requirement
-
-* Silence or delay vs deliberate human neutrality
-
-* Historical approval patterns vs current situational judgment
-
-* High automation confidence vs absence of explicit human intent
-
-* Silence or delay vs deliberate human neutrality
-
-* Historical approval patterns vs current situational judgment
+   * Automation confidence as justification vs explicit human intent as requirement
+   * Silence or delay vs deliberate human neutrality
+   * Historical approval patterns vs current situational judgment
+   * High automation confidence vs absence of explicit human intent
 
 **Key constraint insight**
 

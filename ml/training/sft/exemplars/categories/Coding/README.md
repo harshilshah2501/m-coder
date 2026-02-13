@@ -14,7 +14,6 @@ These exemplars translate reasoning patterns into safe, policy-compliant code im
 
 - Safe refactor with validation hooks (CODE-01)
 - API change workflow with reviews before breaking change (CODE-02)
-- Test config modification respecting ownership gates & freezes (CODE-03)
 - Staged refactor with rollout plan, tests, assumptions (CODE-04)
 - Safe defaults: opt-in features with audit trails (CODE-05)
 - Error handling: when code should refuse (e.g., validation failure) (CODE-06)
@@ -51,7 +50,6 @@ Coding/
 ├── README.md (this file)
 ├── CODE-01.md (safe remediation)
 ├── CODE-02.md (policy workflows)
-├── CODE-03.md (RBAC-compliant runbooks)
 ├── CODE-04.md (staged refactors)
 ├── CODE-05.md (safe defaults)
 ├── CODE-06.md (error handling & refusal)

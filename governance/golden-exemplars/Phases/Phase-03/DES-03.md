@@ -11,7 +11,7 @@
 * **Phase**: Phase-3 (Design Reasoning)
 * **Judgment Surface**: Architecture / Metrics / Organizational Trade-offs
 * **Dependencies**: DES-01, DES-02, Phase-3 Anti-Pattern — Collapse Hypothesis
-* **Status**: DRAFT
+* **Status**: LOCKED
 
 ---
 
@@ -179,15 +179,13 @@ Commitment should follow evidence such as:
 
 ## Output
 
-Avoid collapsing the decision based on local metric success alone.
+The decision should not collapse based on local metric success alone.
 
-Pursue actions that:
+Both local optimization and systemic redesign remain live hypotheses.
 
-* test whether system-level failures correlate with interaction effects
-* keep local optimizations reversible
-* allow systemic redesign to emerge if evidence accumulates
+Evidence concerning interaction effects, reversibility of local changes, and system-level signal patterns may inform future judgment, but does not mandate commitment.
 
-Revisit the decision when system-level evidence outweighs local metric signals.
+The reasoning posture remains exploratory until hypothesis falsification materially distinguishes one path from the other.
 
 ---
 

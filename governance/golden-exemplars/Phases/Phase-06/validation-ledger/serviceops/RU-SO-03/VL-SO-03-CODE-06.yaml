@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: auto-resolution-safety-checks
+    reference: auto-resolution-constraint-checks
 
   notes: >
     Guard-failing or uncertain conditions for incident auto-resolution

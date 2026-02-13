@@ -271,7 +271,6 @@ Before Deployment:
 | 4 | MIX-05 | Multi-Layer Pressure | All 7 layers | Unknown unknowns: escalation and learning loops | MIX-01–04 all pass |
 | 5 | CODE-01 | Coding Implementation | #5–6 (Automation + Governance) | Safe remediation: CPU spike with validation hooks | MIX-01–05 + DES-01–05 pass |
 | 5 | CODE-02 | Coding Implementation | #5–7 (Automation + Governance + Business) | Policy update workflow: approvals before execution | CODE-01 + mutation |
-| 5 | CODE-03 | Coding Implementation | #5–6 (Automation + Governance) | Runbook modification: RBAC gates and change windows | CODE-02 + peer review |
 | 5 | CODE-04 | Coding Implementation | #5–7 (multi-layer) | Staged refactor: rollout plan, tests, assumptions | CODE-03 + calibration |
 | 5 | CODE-05 | Coding Implementation | #5–7 (multi-layer) | Safe defaults: disable-by-default with audit trails | CODE-04 + mutation |
 | 5 | CODE-06 | Coding Implementation | #5–7 (multi-layer) | Error handling: when code should refuse (e.g., validation failure) | CODE-05 + peer review |

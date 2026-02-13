@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: side-effect-prevention-safety-checks
+    reference: side-effect-prevention-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for audit or simulation paths

@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: baseline-model-update-safety-checks
+    reference: baseline-model-update-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for baseline or model state

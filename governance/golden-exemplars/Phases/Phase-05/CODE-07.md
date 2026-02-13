@@ -14,7 +14,6 @@ Blast-radius containment and scope integrity across tenants and services
 
 * Execution authority and guarded execution (CODE-01)
 * Ownership legitimacy (CODE-02)
-* Correlation epistemics and safe defaults (CODE-03)
 * Approval-gated rollout semantics (CODE-04)
 * Human intent enforcement (CODE-05)
 * Audit-only behavior under uncertainty (CODE-06)

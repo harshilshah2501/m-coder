@@ -11,7 +11,7 @@
 * **Phase**: Phase-3 (Design Reasoning)
 * **Judgment Surface**: Architecture / Scale / Trade-offs
 * **Dependencies**: REF-01, REF-02 (refusal semantics established)
-
+* **Status**: LOCKED
 ---
 
 ## Five-Layer Judgment Declaration (LOCKED)

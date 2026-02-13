@@ -14,7 +14,6 @@ Audit-first enforcement when uncertainty prevents safe execution
 
 * Execution authority mechanics (CODE-01)
 * Ownership legitimacy (CODE-02)
-* Epistemic safeguards in correlation (CODE-03)
 * Approval gating for configuration rollout (CODE-04)
 * Human-in-the-loop enforcement (CODE-05)
 

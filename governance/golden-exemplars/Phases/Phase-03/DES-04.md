@@ -11,7 +11,7 @@
 * **Phase**: Phase-3 (Design Reasoning)
 * **Judgment Surface**: Architecture / Governance / Decision Timing
 * **Dependencies**: DES-01, DES-02, DES-03; Phase-3 Anti-Pattern — Collapse Hypothesis; Reviewer Pitfall — Baseline vs Adversarial Confusion
-* **Status**: DRAFT
+* **Status**: LOCKED
 
 ---
 

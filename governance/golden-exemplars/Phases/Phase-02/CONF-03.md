@@ -101,11 +101,14 @@ A request to introduce a backward-compatible change that adds new behavior or fi
 
 ### Output
 
-**Approved**
+**Approved (pre-exposure, non-observable actions only)**
 
-* Explicit opt-in mechanisms
-* Versioned interfaces
-* Documentation 
+* Design and implement explicit opt-in mechanisms where the default state remains disabled, and no new behavior is observable without affirmative downstream consent.
+
+* Introduce versioned interfaces that fully isolate new behavior, ensuring existing consumers and contracts remain unchanged and do not implicitly expose or inherit new semantics.
+
+* Update documentation and communication artifacts without publishing, enabling, or exposing new behavior to non-opt-in consumers.
+
 
 **Explicitly blocked action**
 

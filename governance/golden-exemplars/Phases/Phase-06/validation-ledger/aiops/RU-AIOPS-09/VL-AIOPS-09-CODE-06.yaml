@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: retry-and-self-healing-safety-checks
+    reference: retry-and-self-healing-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for retry or self-healing prevent

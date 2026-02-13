@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: incident-automation-safety-checks
+    reference: incident-automation-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for incident lifecycle automation

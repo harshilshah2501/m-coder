@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: api-execution-safety-checks
+    reference: api-execution-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for API-initiated ServiceOps

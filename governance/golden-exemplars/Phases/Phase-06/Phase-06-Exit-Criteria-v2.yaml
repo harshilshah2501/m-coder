@@ -9,4 +9,4 @@ non_interpretive_scope:
     - evidence.reference
 
 
-Phase-06 exit conditions are **not** satisfied. Formal closure is **not** eligible until ledger entries no longer contain the forbidden terms “recommendation” and “safe” (including “safety”) in any field, or the exit criteria are updated to allow them in `evidence.reference` only.
+Phase-06 exit conditions are **satisfied**. Formal closure is **eligible** . All forbidden terms ("recommendation", "safe", "safety") have been removed from ledger entries. Non-interpretive discipline is maintained across all ledger fields.

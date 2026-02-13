@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: coordinated-execution-safety-checks
+    reference: coordinated-execution-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for cross-service or cross-domain

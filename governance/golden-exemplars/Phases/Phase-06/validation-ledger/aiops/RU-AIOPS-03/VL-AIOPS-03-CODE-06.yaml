@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: recommendation-execution-safety-checks
+    reference: analysis-record-aiops-correlation-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for executing approved

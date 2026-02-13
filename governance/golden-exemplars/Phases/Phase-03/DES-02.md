@@ -11,7 +11,7 @@
 * **Phase**: Phase-3 (Design Reasoning)
 * **Judgment Surface**: Architecture / Legacy Constraints / Trade-offs
 * **Dependencies**: DES-01 (baseline Phase-3 posture), REF-01, REF-02
-* **Status**: DRAFT
+* **Status**: LOCKED
 
 ---
 

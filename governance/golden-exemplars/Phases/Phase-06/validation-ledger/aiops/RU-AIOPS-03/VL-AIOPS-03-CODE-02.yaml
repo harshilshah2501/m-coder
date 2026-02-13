@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: recommendation-ownership-check-module
+    reference: analysis-record-ownership-check-module 
 
   notes: >
     Ownership legitimacy and approval attribution for advisory outputs

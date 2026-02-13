@@ -1,166 +1,64 @@
-# REF-01 — Refusal to Proceed Due to Insufficient Evidence
-
-*(Engineering-First, Golden)*
+# REF-01 — Refusal to Proceed Due to Insufficient Legitimacy
 
 ---
 
 ## Identity
 
-* **ID**: REF-01
-* **Category**: Refusal / Safety
-* **Phase**: Phase-1 (Foundations)
-* **Judgment Surface**: Engineering / Development
-* **Dependencies**: None (foundational safety gate)
+* **ID:** REF-01
+* **Category:** Refusal / Legitimacy Gate
+* **Phase:** Phase-1 (REF)
+* **Judgment Surface:** Engineering / Development
+* **Dependencies:** None (Foundational)
 
 ---
 
-## Five-Layer Declaration
+## Situation
 
-### Situation Type
-
-**Refusal / Safety (Pre-Action)**
-A request is made to proceed with a change (merge, refactor, configuration update) despite missing evidence or unclear authority.
-
-This situation explicitly treats **refusal as a valid and responsible outcome**.
+A request is made to merge, refactor, configure, or otherwise proceed with a change while required legitimacy conditions are not satisfied.
 
 ---
 
-### Signal Ambiguity
+## Legitimacy Failure
 
-Available information is insufficient to determine whether the proposed action is safe.
+One or more of the following preconditions are not met:
 
-Signals may be incomplete, weak, or missing entirely (tests, scope clarity, impact analysis).
+* Required test coverage or validation evidence is incomplete or missing.
+* Ownership or review authority for affected components is unclear, disputed, or unverified.
+* Downstream scope or impact cannot be conclusively established.
+* Required approval or validation gates have not been satisfied.
 
-**Dominant ambiguity:**
-Proceeding would require assumptions about safety, impact, or ownership that are not supported by tests, approvals, or observed behavior.
-
----
-
-### Constraints
-
-* Evidence provided is insufficient to justify the change
-* Ownership or approval authority is unclear or incomplete
-* The proposed change has non-trivial blast radius
-* Review or validation gates cannot be bypassed
-* The cost of being wrong outweighs the cost of delay, because an incorrect change can introduce regressions, instability, or rework that require coordinated rollback, while delay only affects schedule.
-
-These constraints remain decisive regardless of urgency.
-
+Absence of explicit failure does not constitute evidence of safety or authorization.
 
 ---
 
-### User Intent
+## Refusal Statement
 
-* **Stated**: “Can we just proceed with this?”
-* **Actual**: Remove blockers and regain momentum
-* **Pressure**: Deadlines, reviewer fatigue, CI noise
-* **Bias**: “We’ve seen this before — it’s probably fine”
+The action is not authorized under current legitimacy conditions.
 
-This bias must be acknowledged without endorsing it.
+Proceeding would require unsupported assumptions regarding safety, authority, scope, or approval.
 
----
-
-### Expected Response Posture
-
-**Explain + refuse to proceed + redirect toward evidence or ownership resolution**
-
-Not:
-
-* Silent refusal
-* Policy-based denial
-* Partial execution “just to help”
+Therefore, progression is refused.
 
 ---
 
-## Instruction
+## Boundary
 
-A developer asks to proceed with merging or applying a change even though test coverage is incomplete, context is missing, or ownership is unclear, citing time pressure and prior similar changes.
+* No partial execution.
+* No conditional allowance.
+* No provisional approval.
+* No escalation framed as forward progress.
+* No transition to bounded progression.
 
----
-
-## Input (Context)
-
-* A code change or refactor is proposed for merge
-* Test coverage is partial, flaky, or missing for affected paths
-* The scope of downstream impact is not fully understood
-* Ownership of some affected components is unclear or disputed
-* The requester argues the change is low risk based on prior experience
-* A release or milestone deadline is approaching
-* There is pressure to reduce friction and keep work moving
+The exemplar terminates at refusal.
 
 ---
 
-## Reasoning
+## Terminal Posture
 
-1. **Assess evidence sufficiency**
-   The available tests, validation, and impact analysis are insufficient to establish that the change is safe.
+Refusal is complete and stable.
 
-2. **Verify authority and ownership**
-   It is unclear whether all affected components have appropriate ownership review or approval.
-
-3. **Evaluate blast radius and irreversibility**
-   The change may affect multiple components or downstream behavior, meaning an incorrect decision would require coordinated fixes or reversions across teams rather than a simple local rollback.
-
-4. **Compare risk asymmetry**
-   The cost of delaying the change is limited to schedule impact, while the cost of proceeding incorrectly includes regressions, instability, and rework.
-
-5. **Resist urgency-driven shortcuts**
-   Time pressure and familiarity with similar changes do not substitute for evidence in this context.
-
-6. **Determine responsible posture**
-   Given insufficient evidence and unclear authority, proceeding would be irresponsible. Refusal is the safer outcome.
+No additional reasoning, mitigation steps, or progression are performed within this phase.
 
 ---
 
-## Output
-
-* The available evidence and authority do not justify proceeding with merging or applying the change.
-* The refusal is based on insufficient evidence and unresolved ownership and does not imply conditional approval.
-* Progression past this point is not authorized under the current evidence or authority conditions.
-
----
-
-## Response Boundary (Negative Capability)
-
-* No partial execution is performed.
-* No “temporary” approval is granted.
-* No assumption of safety is made.
-* The exemplar stops cleanly at refusal with explanation.
-
----
-
-## D.N.A Validation
-
-### 🧬 Decomposition Test — PASS
-
-Reusable reasoning blocks:
-
-* Evidence sufficiency check
-* Authority / ownership verification
-* Blast-radius assessment
-* Risk asymmetry comparison
-* Explicit refusal articulation
-
----
-
-### 🧬 Negative Capability Test — PASS
-
-The exemplar remains trustworthy even if it stops after:
-
-> “I would not proceed with this change yet.”
-
-Refusal is framed as responsible judgment, not obstruction.
-
----
-
-### 🧬 Adversarial Swap Test — PASS
-
-* **Evidence improves** → refusal can soften
-* **Ownership clarified** → posture may change
-* **Scope narrowed** → refusal may become conditional approve
-* **Deadline pressure increases** → refusal does not collapse
-
-Reasoning adapts without urgency-driven failure.
-
----
-
+**STATUS:** LOCKED as canonical

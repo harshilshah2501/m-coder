@@ -35,6 +35,6 @@ This preamble normalizes Phase-05 exemplars so that:
 
 * Multiple CODE exemplars compose without contradiction
 * Authority, ownership, and execution semantics are layered explicitly
-* Downstream exemplars (CODE-03+) can rely on stable assumptions
+* Downstream exemplars can rely on stable assumptions
 
 This preamble is structural, not narrative.

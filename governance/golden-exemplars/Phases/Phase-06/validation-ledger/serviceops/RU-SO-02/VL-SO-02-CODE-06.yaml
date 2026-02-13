@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: execution-safety-checks
+    reference: execution-constraint-checks
 
   notes: >
     Guard prevents triggering or continuing change execution when

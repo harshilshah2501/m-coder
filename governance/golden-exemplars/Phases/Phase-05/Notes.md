@@ -106,7 +106,6 @@ We will author **8 base exemplars**, roughly aligned as:
 
 1. **CODE-01** — Guardrails before automated remediation (AIOps)
 2. **CODE-02** — Refusal-in-code when ownership metadata is missing
-3. **CODE-03** — Safe defaults in anomaly correlation logic
 4. **CODE-04** — Preventing irreversible config rollout without approval
 5. **CODE-05** — Human-in-the-loop enforcement in automation
 6. **CODE-06** — Audit-only mode under uncertainty
@@ -171,7 +170,5 @@ When you’re ready, paste it — and then start with **CODE-01 context** in pla
 CODE-02 → Ownership legitimacy & accountability     (FROZEN)
    ↓
 CODE-01 → Execution authority & control irreversibility (FROZEN)
-   ↓
-CODE-03 → Correlation safe defaults (epistemic)     (FROZEN)
    ↓
 CODE-04 — Config Governance   (FROZEN)

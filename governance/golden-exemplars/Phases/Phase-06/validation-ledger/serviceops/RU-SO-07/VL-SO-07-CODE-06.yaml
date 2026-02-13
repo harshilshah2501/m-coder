@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: problem-lifecycle-safety-checks
+    reference: problem-lifecycle-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for automated problem lifecycle

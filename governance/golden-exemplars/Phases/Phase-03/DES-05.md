@@ -11,7 +11,7 @@
 * **Phase**: Phase-3 (Design Reasoning)
 * **Judgment Surface**: Observability / Metrics / Decision Confidence
 * **Dependencies**: DES-01, DES-02, DES-03, DES-04; Phase-3 Anti-Pattern — Collapse Hypothesis; Reviewer Pitfall — Baseline vs Adversarial Confusion; Metric Salience Bias
-* **Status**: DRAFT
+* **Status**: LOCKED
 
 ---
 

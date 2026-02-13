@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: cmdb-write-safety-checks
+    reference: cmdb-write-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for CMDB writes and relationship

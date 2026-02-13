@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: retry-and-replay-safety-checks
+    reference: retry-and-replay-constraint-checks
 
   notes: >
     Uncertain or guard-failing conditions for retry, replay, or reconciliation

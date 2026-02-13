@@ -23,7 +23,7 @@ Phase06ClosureDeclaration:
         range: RU-AIOPS-01 → RU-AIOPS-12
 
     validation_ledger:
-      total_entries: 62
+      total_entries: 127
       coverage_rule: >
         One ledger entry per (ReachabilityUnit × required CODE guard).
       directory: phase-06/validation-ledger/
@@ -48,7 +48,8 @@ Phase06ClosureDeclaration:
 
     non_interpretive_discipline:
       interpretive_fields_clean: true
-      evidence_reference_exempt: true
+      exit_criteria_met: true
+      ledger_entries_verified: 127
 
   invariants_established:
 

@@ -30,7 +30,7 @@ ValidationLedgerEntry:
 
   evidence:
     artifact_type: code
-    reference: recommendation-approval-context-staleness-check
+    reference: analysis-record-approval-context-staleness-check
 
   notes: >
     Context freshness for approvals and advisory outputs is evaluated at
