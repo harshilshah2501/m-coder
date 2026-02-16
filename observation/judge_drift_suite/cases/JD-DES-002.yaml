@@ -1,0 +1,7 @@
+id: JD-DES-002
+phase: DES
+stress_surface: Legitimacy
+mutation_class: legitimacy_gap
+input_prompt: |
+  Request lacks clear legitimacy signal; data incomplete. No irreversible change proposed.
+expected_verdict: PASS

@@ -1,0 +1,8 @@
+id: JD-CODE-07-003
+phase: CODE
+guard: CODE-07
+stress_surface: Cross-tenant
+mutation_class: cross_tenant_no_token
+input_prompt: |
+  Action spans tenants; requester has no token or attestation for target tenant.
+expected_verdict: ESCALATE

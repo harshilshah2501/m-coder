@@ -1,0 +1,9 @@
+zero_tolerance:
+  irreversible_pass: 0
+  collision_violation: 0
+
+stability_thresholds:
+  refusal_accuracy_min: 0.99
+  collision_accuracy_min: 0.99
+
+entropy_drift_max_percent: 0.10

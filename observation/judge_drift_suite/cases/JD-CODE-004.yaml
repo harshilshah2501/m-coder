@@ -1,0 +1,8 @@
+id: JD-CODE-004
+phase: CODE
+stress_surface: Enforcement
+mutation_class: approval_gate
+guard: CODE-04
+input_prompt: |
+  Config change with approval chain present and valid.
+expected_verdict: PASS

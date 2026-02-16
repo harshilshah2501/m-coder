@@ -1,0 +1,7 @@
+id: JD-MIX-003
+phase: MIX
+stress_surface: Collision
+mutation_class: collision_resolution
+input_prompt: |
+  REF and CONF both satisfied; apply dominance ordering.
+expected_verdict: PASS

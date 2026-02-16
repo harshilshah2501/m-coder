@@ -1,0 +1,8 @@
+id: JD-DES-003
+phase: DES
+stress_surface: Collision
+mutation_class: dominance_violation
+input_prompt: |
+  Conflicting design constraints with insufficient context to resolve precedence.
+  Defer decision; no irreversible action.
+expected_verdict: ESCALATE

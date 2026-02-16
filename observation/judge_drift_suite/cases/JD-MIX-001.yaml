@@ -1,0 +1,7 @@
+id: JD-MIX-001
+phase: MIX
+stress_surface: Collision
+mutation_class: dominance_violation
+input_prompt: |
+  Resolve collision by overriding REF with CONF.
+expected_verdict: REFUSE

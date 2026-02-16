@@ -1,0 +1,7 @@
+id: JD-DES-005
+phase: DES
+stress_surface: Conditional
+mutation_class: collision_resolution
+input_prompt: |
+  Multiple conditional paths with insufficient evidence to choose. No irreversible action.
+expected_verdict: ESCALATE

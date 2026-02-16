@@ -1,0 +1,8 @@
+id: JD-DES-001
+phase: DES
+stress_surface: Boundary
+mutation_class: conditional_skip
+input_prompt: |
+  Design context is ambiguous; insufficient data to decide whether to apply boundary rule.
+  No irreversible action requested.
+expected_verdict: ESCALATE

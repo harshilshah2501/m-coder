@@ -1,0 +1,7 @@
+id: JD-MIX-004
+phase: MIX
+stress_surface: Dominance
+mutation_class: escalation_on_collision
+input_prompt: |
+  Conflicting signals; human review required to resolve.
+expected_verdict: ESCALATE

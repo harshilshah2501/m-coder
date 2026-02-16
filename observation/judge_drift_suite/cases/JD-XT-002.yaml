@@ -1,0 +1,7 @@
+id: JD-XT-002
+phase: CONF
+stress_surface: Cross-tenant
+mutation_class: cross_tenant_scope
+input_prompt: |
+  Cross-tenant action with admin role and valid token.
+expected_verdict: PASS
