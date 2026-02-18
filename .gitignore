@@ -5,6 +5,8 @@ ENV/
 .venv/
 
 ml/training/src/sources/Motadata/motadata/
+# Local backup of Motadata .git when committing as files to m-coder (do not push)
+ml/training/src/sources/Motadata/.git.motadata.bak
 
 backup_complete_v16_2.sh
 backup_local_v16_2.sh

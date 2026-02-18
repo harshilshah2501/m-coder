@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://golden-exemplars/mutation-case.schema.json",
+  "title": "Phase-6 Mutation Case",
+  "description": "Schema for a single mutation case produced by the Phase-6 Mutation Harness. Design-only; used for case generation and validation.",
+  "type": "object",
+  "required": [
+    "mutation_case_id",
+    "base_id",
+    "mutation_type",
+    "mutated_scenario",
+    "expected_phase",
+    "expected_boundary_anchor",
+    "expected_dominance_rule_triggered"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "mutation_case_id": {
+      "type": "string",
+      "pattern": "^MC-[0-9]{4}$",
+      "description": "Unique identifier for the mutation case (e.g. MC-0001)."
+    },
+    "base_id": {
+      "type": "string",
+      "pattern": "^BASE-[0-9]{3}$",
+      "description": "Reference to the base exemplar from Phase-3 (e.g. BASE-001)."
+    },
+    "variant_id": {
+      "type": ["string", "null"],
+      "pattern": "^BASE-[0-9]{3}-V[1-4]$",
+      "description": "Optional: specific variant from Phase-4 when mutation targets a variant (e.g. BASE-001-V3). Null when mutation targets base only."
+    },
+    "mutation_type": {
+      "type": "string",
+      "enum": [
+        "authority_mutation",
+        "irreversibility_mutation",
+        "ambiguity_injection",
+        "pressure_amplification",
+        "cross_phase_collapse_attempt",
+        "boundary_relocation_attempt"
+      ],
+      "description": "Mutation class from Phase-6 Mutation Taxonomy."
+    },
+    "mutated_scenario": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The scenario text after mutation is applied (adversarial input). Must not alter Phase-3/Phase-4 corpus; used as prompt/input to harness."
+    },
+    "expected_phase": {
+      "type": "string",
+      "enum": ["REF", "CONF", "DES", "MIX", "CODE"],
+      "description": "Constitutional phase that the model response must align with (from Phase-3 base mapping)."
+    },
+    "expected_boundary_anchor": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exact boundary phrase (character-for-character from Phase-3) that must be preserved in correct posture. Used for validation."
+    },
+    "expected_dominance_rule_triggered": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "One or more dominance rules from Constitutional Manifest that the response must satisfy (e.g. 'REF dominates ambiguity', 'Boundary invariance is mandatory')."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional: generator version, timestamp, tags."
+    }
+  }
+}
