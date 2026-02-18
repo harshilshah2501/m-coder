@@ -4,6 +4,8 @@ env/
 ENV/
 .venv/
 
+ml/training/src/sources/Motadata/motadata/
+
 backup_complete_v16_2.sh
 backup_local_v16_2.sh
 backup_to_github.sh
