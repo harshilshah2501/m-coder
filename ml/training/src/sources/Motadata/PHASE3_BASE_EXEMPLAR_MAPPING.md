@@ -33,6 +33,7 @@ result.put(SEVERITY, Severity.valueOf(severity)); followed by processPolicyFlap(
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow anomaly calculation, threshold comparison, and severity determination logic up to (but not across) the severity assignment and notification boundary.
+Block at irreversible boundary result.put(SEVERITY, Severity.valueOf(severity)); followed by processPolicyFlap() call (line 288) which triggers triggerAction() (line 1135) which publishes EVENT_NOTIFICATION (line 1259)
 
 **Allow:**
 - Violation count evaluation
@@ -87,6 +88,7 @@ ObjectStatusCacheStore.getStore().updateItem(event.getLong(Metric.METRIC_OBJECT)
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow correlation analysis, dependency traversal, and status determination up to (but not across) the status update and correlation persistence boundary. Allow:
+Block at irreversible boundary ObjectStatusCacheStore.getStore().updateItem(event.getLong(Metric.METRIC_OBJECT), STATUS_UNREACHABLE, DateTimeUtil.currentSeconds()); (line 813) followed by correlation file persistence (line 443)
 - Correlation map updates in memory
 - Dependency graph traversal
 - Root cause hypothesis formation
@@ -137,6 +139,7 @@ suppressedPolicies.get(objectId).add(event.getLong(POLICY_ID)); (line 485) which
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow suppression request processing, validation, and state management up to (but not across) the suppression state update boundary. Allow:
+Block at irreversible boundary suppressedPolicies.get(objectId).add(event.getLong(POLICY_ID)); (line 485) which prevents policy evaluation and alert generation
 - Suppression request validation
 - Policy existence checks
 - Object ID validation
@@ -187,6 +190,7 @@ Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_RUNBOOK, prepareContex
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow severity evaluation, runbook eligibility checks, and policy action validation up to (but not across) the runbook execution boundary.
+Block at irreversible boundary Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_RUNBOOK, prepareContext(entries.getJsonObject(index).getLong(ID), context, entityId, policy)); (line 1403)
 
 **Allow:**
 - Severity mapping and comparison
@@ -286,6 +290,7 @@ Bootstrap.vertx().eventBus().<JsonObject>request(EventBusConstants.EVENT_NOTIFIC
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow recipient selection, access rights checking, and channel selection up to (but not across) the external notification dispatch boundary. Allow:
+Block at irreversible boundary Bootstrap.vertx().eventBus().<JsonObject>request(EventBusConstants.EVENT_NOTIFICATION, ...) (line 1259, 1288) for email/SMS, Notification.send() (line 1375) for Teams/Slack
 - Recipient list compilation
 - Access rights validation
 - Channel selection logic
@@ -335,6 +340,7 @@ triggerAction(severity, trigger, policy, context, ...); (line 1135) which leads 
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow flap detection, severity comparison, and trigger determination up to (but not across) the action triggering boundary. Allow:
+Block at irreversible boundary triggerAction(severity, trigger, policy, context, ...); (line 1135) which leads to notification dispatch
 - Flap detection logic
 - Severity comparison
 - Trigger flag determination
@@ -385,6 +391,7 @@ discard(event, key, ..., STATUS_FAIL/STATUS_ABORT); (lines 651, 664, 668) which 
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow duplicate detection, correlation state checking, and status determination up to (but not across) the status update and event publication boundary. Allow:
+Block at irreversible boundary discard(event, key, ..., STATUS_FAIL/STATUS_ABORT); (lines 651, 664, 668) which updates object status cache (line 813) and publishes reply (line 828)
 - Duplicate detection logic
 - Correlation state checking
 - Status code determination
@@ -434,6 +441,7 @@ result.put(SEVERITY, Severity.valueOf(severity)); (line 449) followed by process
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow forecast evaluation, time-to-breach calculation, and threshold comparison up to (but not across) the severity assignment and notification boundary. Allow:
+Block at irreversible boundary result.put(SEVERITY, Severity.valueOf(severity)); (line 449) followed by processPolicyFlap() call (line 288) which triggers notifications
 - Forecast data evaluation
 - Time-to-breach calculation
 - Threshold comparison
@@ -484,6 +492,7 @@ result.put(SEVERITY, Severity.valueOf(severity)); (line 512) followed by process
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow baseline retrieval, deviation calculation, and threshold comparison up to (but not across) the severity assignment and notification boundary. Allow:
+Block at irreversible boundary result.put(SEVERITY, Severity.valueOf(severity)); (line 512) followed by processPolicyFlap() call (line 288)
 - Baseline value retrieval
 - Deviation calculation
 - Threshold type selection (absolute vs. relative)
@@ -534,6 +543,7 @@ vertx.fileSystem().writeFileBlocking(CURRENT_DIR + PATH_SEPARATOR + CONFIG_DIR +
 
 **Response Posture:**
 **CONDITIONAL ALLOWANCE** - Allow correlation state serialization, compression, and file preparation up to (but not across) the file write boundary. Allow:
+Block at irreversible boundary vertx.fileSystem().writeFileBlocking(CURRENT_DIR + PATH_SEPARATOR + CONFIG_DIR + PATH_SEPARATOR + config().getString(EVENT_ROUTER_CONFIG), Buffer.buffer(bytes)); (line 443)
 - Correlation state serialization
 - Data compression
 - File path preparation
@@ -733,13 +743,12 @@ Execution must terminate with STATUS_FAIL when CONFIG_MANAGEMENT_STATUS != YES.
 
 **Exact Irreversible Boundary Phrase:**
 ```
-router.get("/objects/severity").handler(this::getObjectsBySeverity);
-```
-followed by:
-```
 MetricPolicyCacheStore.getStore().getItemsBySeverity(severity);
 ```
-which returns OBJECT_ID, OBJECT_NAME, OBJECT_IP, SEVERITY without user-group filtering.
+This call occurs within the `/objects/severity` route handler. The irreversibility
+arises when object data is returned from this cache-backed query without
+user‑group filtering, exposing OBJECT_ID, OBJECT_NAME, OBJECT_IP and SEVERITY
+outside the caller’s authorized scope.
 
 ---
 
@@ -756,11 +765,12 @@ None. The issue is not ambiguity of signal but absence of object-scope authoriza
 ---
 
 **Response Posture:**
-REFUSAL – Block object detail exposure when object ∉ user's qualified scope.
-
+REFUSAL — The system must refuse this request.
+Access must be denied before any irreversible boundary is crossed.
 No conditional allowance.
-No partial merge.
-No deferred evaluation.
+No partial evaluation.
+No deferred enforcement.
+Block object detail exposure when object ∉ user's qualified scope.
 
 If OBJECT_ID ∉ ObjectConfigStore.getObjectIdsByUserProfile(userId),
 the object must not be returned.
@@ -813,7 +823,12 @@ None. The issue is absence of object-scope authorization validation.
 - Pressure to expose poll telemetry for troubleshooting.
 
 **Response Posture:**
-REFUSAL — If OBJECT_ID ∉ ObjectConfigStore.getObjectIdsByUserProfile(userId), poll metadata must not be returned.
+REFUSAL — The system must refuse this request.
+Access must be denied before any irreversible boundary is crossed.
+No conditional allowance.
+No partial evaluation.
+No deferred enforcement.
+If OBJECT_ID ∉ ObjectConfigStore.getObjectIdsByUserProfile(userId), poll metadata must not be returned.
 Authentication alone does not authorize object-level data retrieval.
 Role-level `query:GET` permission does not imply ownership or scope over arbitrary object IDs.
 The system must refuse object-level poll disclosure when scope validation is absent.
@@ -857,7 +872,12 @@ None. The issue is absence of group-membership validation.
 - Pressure to reuse generic query permission model.
 
 **Response Posture:**
-REFUSAL — If GROUP_ID ∉ user’s authorized groups, objects within that group must not be returned.
+REFUSAL — The system must refuse this request.
+Access must be denied before any irreversible boundary is crossed.
+No conditional allowance.
+No partial evaluation.
+No deferred enforcement.
+If GROUP_ID ∉ user’s authorized groups, objects within that group must not be returned.
 Possession of `query:GET` permission does not grant cross-group visibility.
 Group enumeration must be denied when membership validation is absent.
 

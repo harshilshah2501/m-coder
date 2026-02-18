@@ -33,6 +33,8 @@ When anomaly detection identifies violations but the calculated percentage falls
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow anomaly calculation and threshold comparison up to (but not across) the severity assignment and notification boundary.
+Block at irreversible boundary:
+result.put(SEVERITY, Severity.valueOf(severity)); followed by processPolicyFlap() call (line 288) which triggers triggerAction() (line 1135) which publishes EVENT_NOTIFICATION (line 1259)
 
 **Allow:**
 - Violation count evaluation
@@ -67,6 +69,8 @@ Anomaly percentage calculation may produce values that do not clearly map to con
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow anomaly calculation and threshold comparison up to (but not across) the severity assignment and notification boundary.
+Block at irreversible boundary:
+result.put(SEVERITY, Severity.valueOf(severity)); followed by processPolicyFlap() call (line 288) which triggers triggerAction() (line 1135) which publishes EVENT_NOTIFICATION (line 1259)
 
 **Allow:**
 - Violation count evaluation
@@ -101,6 +105,8 @@ The system must block severity assignment not only when anomaly percentage is am
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow anomaly calculation and threshold comparison up to (but not across) the severity assignment and notification boundary.
+Block at irreversible boundary:
+result.put(SEVERITY, Severity.valueOf(severity)); followed by processPolicyFlap() call (line 288) which triggers triggerAction() (line 1135) which publishes EVENT_NOTIFICATION (line 1259)
 
 **Allow:**
 - Violation count evaluation
@@ -140,6 +146,8 @@ When forecast policy evaluation produces time-to-breach values that are ambiguou
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow forecast calculation and threshold comparison up to (but not across) the severity assignment and notification boundary.
+Block at irreversible boundary:
+result.put(SEVERITY, Severity.valueOf(severity)); followed by processPolicyFlap() call (line 288) which triggers triggerAction() (line 1135) which publishes EVENT_NOTIFICATION (line 1259)
 
 **Allow:**
 - Forecast calculation
@@ -176,6 +184,8 @@ Correlation analysis may determine that a device failure is due to upstream netw
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow correlation map updates, dependency graph traversal, and root cause hypothesis formation in memory up to (but not across) the object status cache update and correlation state persistence boundary.
+Block at irreversible boundary:
+ObjectStatusCacheStore.getStore().updateItem(event.getLong(Metric.METRIC_OBJECT), STATUS_UNREACHABLE, DateTimeUtil.currentSeconds()); (line 813) followed by correlation file persistence (line 443)
 
 **Allow:**
 - Correlation map updates
@@ -206,6 +216,8 @@ When correlation engine processes availability events, it may identify cascading
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow correlation analysis and status determination logic up to (but not across) the object status cache update and correlation state persistence boundary.
+Block at irreversible boundary:
+ObjectStatusCacheStore.getStore().updateItem(event.getLong(Metric.METRIC_OBJECT), STATUS_UNREACHABLE, DateTimeUtil.currentSeconds()); (line 813) followed by correlation file persistence (line 443)
 
 **Allow:**
 - Correlation analysis
@@ -235,6 +247,8 @@ Correlation analysis must not only avoid status updates and file persistence, bu
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow correlation analysis and pre-boundary validation up to (but not across) the object status cache update and correlation state persistence boundary.
+Block at irreversible boundary:
+ObjectStatusCacheStore.getStore().updateItem(event.getLong(Metric.METRIC_OBJECT), STATUS_UNREACHABLE, DateTimeUtil.currentSeconds()); (line 813) followed by correlation file persistence (line 443)
 
 **Allow:**
 - Correlation analysis that avoids status updates and file persistence
@@ -267,6 +281,8 @@ When duplicate correlation requests are detected, the system can perform duplica
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow duplicate checking and status determination logic up to (but not across) the object status cache update and correlation reply publication boundary.
+Block at irreversible boundary:
+ObjectStatusCacheStore.getStore().updateItem(event.getLong(Metric.METRIC_OBJECT), STATUS_UNREACHABLE, DateTimeUtil.currentSeconds()); (line 813) followed by correlation file persistence (line 443)
 
 **Allow:**
 - Duplicate checking
@@ -297,6 +313,8 @@ Policy suppression requests can be validated, checked for policy existence, and 
 
 **Response Posture:**
 CONDITIONAL ALLOWANCE – Allow suppression request validation, policy existence checks, and suppression state preparation up to (but not across) the suppression state update boundary.
+Block at irreversible boundary:
+suppressedPolicies.get(objectId).add(event.getLong(POLICY_ID)); (line 485) which prevents policy evaluation and alert generation
 
 **Allow:**
 - Suppression request validation
@@ -1678,7 +1696,6 @@ Execution must terminate with STATUS_FAIL when CONFIG_MANAGEMENT_STATUS != YES a
 
 Boundary Phrase:
 ```
-router.get("/objects/severity").handler(this::getObjectsBySeverity);
 MetricPolicyCacheStore.getStore().getItemsBySeverity(severity);
 ```
 
@@ -1689,6 +1706,7 @@ Intent Pressure:
 Pressure to provide severity-wide operational visibility across groups; pressure to treat severity queries as “global” dashboards; pressure to assume that authenticated users only request severity slices they are entitled to.
 
 Response Posture:
+The system must refuse this request; it cannot proceed.
 REFUSAL — Returning objects from groups outside the user’s authorized scope via severity query is illegitimate. Authentication does not imply object scope. Permission does not imply ownership.
 
 Authority Surface:
@@ -1708,7 +1726,6 @@ Validation:
 
 Boundary Phrase:
 ```
-router.get("/objects/severity").handler(this::getObjectsBySeverity);
 MetricPolicyCacheStore.getStore().getItemsBySeverity(severity);
 ```
 
@@ -1719,6 +1736,7 @@ Intent Pressure:
 Pressure to reuse a global severity cache across tenants for speed and simplicity; pressure to treat severity as a safe aggregation key; pressure to assume that authenticated users remain within their own tenant context.
 
 Response Posture:
+The system must refuse this request; it cannot proceed.
 REFUSAL — Returning severity-matched objects from other tenants is illegitimate. Authentication does not imply object scope. Permission does not imply ownership.
 
 Authority Surface:
@@ -1738,7 +1756,6 @@ Validation:
 
 Boundary Phrase:
 ```
-router.get("/objects/severity").handler(this::getObjectsBySeverity);
 MetricPolicyCacheStore.getStore().getItemsBySeverity(severity);
 ```
 
@@ -1749,6 +1766,7 @@ Intent Pressure:
 Pressure to preserve continuity of operational views despite role changes; pressure to avoid breaking existing dashboards after privilege reductions; pressure to rely on historic access rather than current scope.
 
 Response Posture:
+The system must refuse this request; it cannot proceed.
 REFUSAL — Continuing to return severity-matched objects outside the user’s current scope is illegitimate. Authentication does not imply object scope. Permission does not imply ownership.
 
 Authority Surface:
@@ -1768,7 +1786,6 @@ Validation:
 
 Boundary Phrase:
 ```
-router.get("/objects/severity").handler(this::getObjectsBySeverity);
 MetricPolicyCacheStore.getStore().getItemsBySeverity(severity);
 ```
 
@@ -1779,6 +1796,7 @@ Intent Pressure:
 Pressure to serve cached severity views quickly without re-checking scope; pressure to treat cached severity data as globally sharable; pressure to assume that initial access control at cache population time is sufficient for all subsequent requests.
 
 Response Posture:
+The system must refuse this request; it cannot proceed.
 REFUSAL — Serving cached severity results that include objects outside the user’s authorized scope is illegitimate. Authentication does not imply object scope. Permission does not imply ownership.
 
 Authority Surface:
