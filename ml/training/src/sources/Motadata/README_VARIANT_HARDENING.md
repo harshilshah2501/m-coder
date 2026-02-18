@@ -62,10 +62,12 @@ Each artifact includes file paths, decision points, signal ambiguities, authorit
 ### Phase 3: Base Exemplar Mapping
 **File:** `PHASE3_BASE_EXEMPLAR_MAPPING.md`
 
-12 base exemplars mapped to constitutional phases:
-- **REF (Phase-1):** 2 exemplars (BASE-001, BASE-004)
-- **CONF (Phase-2):** 8 exemplars (BASE-002, BASE-003, BASE-006, BASE-007, BASE-008, BASE-009, BASE-010, BASE-011)
+17 base exemplars mapped to constitutional phases:
+- **REF (Phase-1):** 3 exemplars (BASE-015, BASE-016, BASE-017)
+- **CONF (Phase-2):** 10 exemplars (BASE-001, BASE-002, BASE-003, BASE-004, BASE-006, BASE-007, BASE-008, BASE-009, BASE-010, BASE-011)
 - **DES (Phase-3):** 2 exemplars (BASE-005, BASE-012)
+- **MIX (Phase-4):** 1 exemplar (BASE-013)
+- **CODE (Phase-5):** 1 exemplar (BASE-014)
 
 Each exemplar includes exact irreversible boundary phrase, dominant signal ambiguity, intent pressure, response posture, authority boundary, and stress surfaces.
 
@@ -74,10 +76,10 @@ Each exemplar includes exact irreversible boundary phrase, dominant signal ambig
 ### Phase 4: Variant Generation
 **File:** `PHASE4_VARIANT_GENERATION.md`
 
-48 variants generated (4 per base exemplar):
-- **Paraphrase Variants:** 24 (2 per base exemplar)
-- **Intensification Variants:** 12 (1 per base exemplar)
-- **Re-grounding Variants:** 12 (1 per base exemplar)
+68 variants generated (4 per base exemplar):
+- **Paraphrase Variants:** 34 (2 per base exemplar)
+- **Intensification Variants:** 17 (1 per base exemplar)
+- **Re-grounding Variants:** 17 (1 per base exemplar)
 
 Each variant includes boundary phrase validation, phase stability check, and structural validation results.
 
@@ -87,7 +89,7 @@ Each variant includes boundary phrase validation, phase stability check, and str
 **File:** `PHASE5_VARIANT_STABILITY_REPORT.md`
 
 Complete stability validation report:
-- Stability table for all 12 base exemplars and 48 variants
+- Stability table for all 17 base exemplars and 68 variants
 - Boundary stability validation
 - Phase stability validation
 - Refusal stability validation (REF exemplars)
@@ -95,7 +97,7 @@ Complete stability validation report:
 - Collapse hypothesis conversion detection
 - Softened language detection
 
-**Result:** 100% stability pass rate (48/48 variants stable)
+**Result:** 100% stability pass rate (68/68 variants stable)
 
 ---
 
@@ -112,10 +114,10 @@ High-level summary of phase completion, key metrics, and compliance with hard co
 
 | Base ID | Phase | Source Artifact | Boundary Type |
 |---------|-------|----------------|---------------|
-| BASE-001 | REF | ARTIFACT-001 | Contract Exposure |
+| BASE-001 | CONF | ARTIFACT-001 | Contract Exposure |
 | BASE-002 | CONF | ARTIFACT-002 | Organizational Commitment |
 | BASE-003 | CONF | ARTIFACT-003 | Contract Exposure |
-| BASE-004 | REF | ARTIFACT-004 | Automation Execution |
+| BASE-004 | CONF | ARTIFACT-004 | Automation Execution |
 | BASE-005 | DES | ARTIFACT-005 | Organizational Commitment |
 | BASE-006 | CONF | ARTIFACT-006 | Contract Exposure |
 | BASE-007 | CONF | ARTIFACT-007 | Contract Exposure |
@@ -124,6 +126,11 @@ High-level summary of phase completion, key metrics, and compliance with hard co
 | BASE-010 | CONF | ARTIFACT-010 | Contract Exposure |
 | BASE-011 | CONF | ARTIFACT-011 | Organizational Commitment |
 | BASE-012 | DES | ARTIFACT-012 | Organizational Commitment |
+| BASE-013 | MIX | ARTIFACT-013 | Automation Execution (collision) |
+| BASE-014 | CODE | ARTIFACT-014 | Fail-Closed Enforcement |
+| BASE-015 | REF | ARTIFACT-015 | Object Scope Authority Violation |
+| BASE-016 | REF | ARTIFACT-016 | Object Scope Authority Violation (Direct ID) |
+| BASE-017 | REF | ARTIFACT-017 | Cross-Group Enumeration Authority Violation |
 
 ### Key Code Locations
 
