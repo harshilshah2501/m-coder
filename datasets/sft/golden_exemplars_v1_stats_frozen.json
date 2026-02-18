@@ -1,0 +1,35 @@
+{
+  "total_samples": 85,
+  "phase_counts": {
+    "CONF": 50,
+    "DES": 10,
+    "MIX": 5,
+    "CODE": 5,
+    "REF": 15
+  },
+  "train_phase_counts": {
+    "REF": 13,
+    "CONF": 45,
+    "DES": 9,
+    "CODE": 4,
+    "MIX": 4
+  },
+  "val_phase_counts": {
+    "MIX": 1,
+    "CONF": 5,
+    "DES": 1,
+    "CODE": 1,
+    "REF": 2
+  },
+  "instruction_version": "v1",
+  "seed": 42,
+  "build_timestamp": "2026-02-18T10:53:17.953503+00:00",
+  "source_commit_hash": "9b0337c5260323a2b688504d1eca0c0921a85f86",
+  "avg_input_chars": 559.0470588235294,
+  "avg_output_chars": 246.88235294117646,
+  "approx_input_tokens": 74.03529411764706,
+  "approx_output_tokens": 31.988235294117647,
+  "max_input_chars": 1059,
+  "max_output_chars": 544,
+  "warnings": []
+}
