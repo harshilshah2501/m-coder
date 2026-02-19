@@ -6,9 +6,9 @@
 
 ## Version Update
 
-**Current Version:** v1.5
+**Current Version:** v1.6
 **Status:** Phase-4 LOCKED · Phase-5 READY  
-**Scope of Update:** Coverage expansion, variant staging, dataset pipeline articulation, and audit-layer integration  
+**Scope of Update:** Phase-6 mutation harness design, coverage expansion, variant staging, dataset pipeline articulation, audit-layer integration, and section numbering corrections  
 **Breaking Changes:** None
 
 This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy.
@@ -41,6 +41,8 @@ This guide ends at **dataset freeze**. Everything that happens **after** freeze 
 - **Dataset freeze is a hard precondition** for any gradient updates. No SFT run may begin without an approved freeze.
 
 This separation preserves constitutional judgment in this document while allowing training mechanics to evolve independently in Phase‑08.
+
+For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**.
 
 ### Scope Clarification: Judgment Is Proprietary Capital (Not Commodity)
 
@@ -110,31 +112,30 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 
 ---
 
-### Navigation Guide: v1.4 → v1.5 Changes
+### Navigation Guide: v1.6
 
-**This update (Phase-4 LOCKED → Phase-5 READY) introduces the dataset construction path and clarifies where mutation ends and dataset begins.**
+**This version (v1.6) aligns section numbering (8 → 9 → 10, 11 → 12, 13 → 14), adds Phase-6 mutation harness design, and clarifies where mutation ends and dataset begins.**
 
 **🔧 IMMEDIATE (Read First):**
 
-* **2.1** Judgment Authorship Reality Check *(why SFT must inherit authority, not memory)*
-* **7.1** Phase Routing Decision Tree *(when to escalate to MIX)*
+* **§2** Why Manual Authoring? *(judgment authorship reality — why SFT must inherit authority, not memory)*
+* **§8** Manual Authoring Workflow — Step 1: Phase Routing Check *(when to escalate to MIX)*
 
 **✍️ AUTHORING (Before Writing Exemplars):**
 
-* **5.1** Bad vs Good Reasoning *(execution vs reasoning posture)*
-* **9.1** Authority Sub-Cases *(expanded authority drift modes)*
+* **§5** Exemplar Body Template *(reasoning vs execution posture; template structure)*
+* **§9** Architecture-Aware Coverage *(stress surfaces; 9.3 includes Authority, Ownership & Legitimacy)*
 
 **📦 PIPELINE (From Lock to SFT Row):**
 
-* **13.6** Dataset Readiness Checklist *(when mutation ends)*
-* **14.1** Variant Scaling Discipline *(what not to scale)*
+* **14.6** When the Dataset Is "Ready" *(when mutation ends; dataset readiness)*
+* **13.4** Scaling Order, **13.5** When to Stop Scaling *(what not to scale; variant discipline)*
 
 **🎯 PHASE-5 (Code Exemplars):**
 
-* **15.6** CODE-01 → CODE-07 Shells *(behavioral encoding in code)*
-* **15.7** Phase-05 Lock Rules *(defaults, refusal-in-code, observability)*
+* **§15** Chronology & Phase Plan — **Phase‑5 (Coding)** *(CODE-01 → CODE-07; behavioral encoding in code; defaults, refusal-in-code, observability)*
 
-**Reading order:** 2.1 → 7.1 → 5.1 → 13.6 → rest of guide. Skipping 2.1 leads to hallucinated generalization. Skipping 13.6 leads to dataset drift.
+**Reading order:** §2 → §8 → §5 → 14.6 → rest of guide. Skipping §2 leads to hallucinated generalization. Skipping 14.6 leads to dataset drift.
 
 ---
 
@@ -571,7 +572,7 @@ This section defines those stress surfaces and how they anchor the exemplar corp
 
 ---
 
-### 8.1 Why Architecture‑Aware Coverage Exists
+### 9.1 Why Architecture‑Aware Coverage Exists
 
 Feature-based coverage produces **fluent** assistants. Architecture-aware coverage produces **safe and trusted** ones.
 
@@ -586,7 +587,7 @@ Stress surfaces locate the **origin of irreversible mistakes** — not where the
 
 ---
 
-### 8.2 The Coverage Translation Pipeline
+### 9.2 The Coverage Translation Pipeline
 
 Exemplar coverage flows from system fragility, not scenario labels.
 
@@ -611,7 +612,7 @@ Variants (controlled mutation only)
 
 ---
 
-### 8.3 Canonical Engineering Stress Surfaces
+### 9.3 Canonical Engineering Stress Surfaces
 
 Each of the following must be covered across the corpus. Phases overlay these surfaces; they do not invent new ones.
 
@@ -700,7 +701,7 @@ Breaks:
 
 ---
 
-### 8.4 Coverage Rules (Non‑Negotiable)
+### 9.4 Coverage Rules (Non‑Negotiable)
 
 * Every exemplar **must** map to at least one stress surface
 * Phase-1 focuses on **signal integrity** and **authority boundaries**
@@ -726,7 +727,7 @@ This mapping guarantees:
 
 ---
 
-### 9.1 Canonical Category Distribution (35 Exemplars)
+### 10.1 Canonical Category Distribution (35 Exemplars)
 
 | Category          | Count | Primary Judgment         |
 | ----------------- | ----- | ------------------------ |
@@ -753,7 +754,7 @@ Phase distribution and exemplar counts **must be declared per corpus**. Future r
 
 ---
 
-### 9.2 Stress Surface → Category Mapping
+### 10.2 Stress Surface → Category Mapping
 
 Each stress surface must feed **at least one primary category**. Coverage is corpus-wide.
 
@@ -771,7 +772,7 @@ Each stress surface must feed **at least one primary category**. Coverage is cor
 
 ---
 
-### 9.3 Category → Base Exemplar Mapping (Illustrative)
+### 10.3 Category → Base Exemplar Mapping (Illustrative)
 
 Each category is instantiated via **LOCKED base exemplars**.
 
@@ -789,7 +790,7 @@ Each category is instantiated via **LOCKED base exemplars**.
 
 ---
 
-### 9.4 Exemplar → Variant Expansion
+### 10.4 Exemplar → Variant Expansion
 
 LOCKED exemplars may generate **multiple variants**, with strict inheritance:
 
@@ -817,7 +818,7 @@ Variants:
 
 ---
 
-### 9.5 Coverage Validation Rule
+### 10.5 Coverage Validation Rule
 
 The corpus is **coverage-complete** only when:
 
@@ -990,7 +991,7 @@ Golden exemplars must **not** sound like:
 
 ---
 
-### 11.1 Language Translation: Ops → Engineering
+### 12.1 Language Translation: Ops → Engineering
 
 Translate operational phrasing into **pre-execution control language**.
 
@@ -1015,7 +1016,7 @@ Translate operational phrasing into **pre-execution control language**.
 
 ---
 
-### 11.2 What Reviewers Must Evaluate
+### 12.2 What Reviewers Must Evaluate
 
 Review as if you're co-signing a boundary approval.
 
@@ -1031,7 +1032,7 @@ Ask:
 
 ---
 
-### 11.3 Common Review Errors (Engineering Context)
+### 12.3 Common Review Errors (Engineering Context)
 
 Flag immediately if the exemplar:
 
@@ -1051,7 +1052,7 @@ Replace with control-plane equivalents:
 
 ---
 
-### 11.4 Final Review Questions
+### 12.4 Final Review Questions
 
 Before locking, ask:
 
@@ -1076,7 +1077,7 @@ Golden exemplars are **roots**. Variants are controlled branches that reinforce 
 
 ---
 
-### 12.1 What Variants Are (and Are Not)
+### 13.1 What Variants Are (and Are Not)
 
 **Variants ARE**:
 
@@ -1095,7 +1096,7 @@ Golden exemplars are **roots**. Variants are controlled branches that reinforce 
 
 ---
 
-### 12.2 Canonical Variant Dimensions
+### 13.2 Canonical Variant Dimensions
 
 Mutate **only one dimension at a time**. Compositional drift is not allowed.
 
@@ -1137,7 +1138,7 @@ Mutate **only one dimension at a time**. Compositional drift is not allowed.
 
 ---
 
-### 12.3 Variant Validation Rules (Hard Gates)
+### 13.3 Variant Validation Rules (Hard Gates)
 
 Each variant must:
 
@@ -1157,7 +1158,7 @@ Each variant must:
 
 ---
 
-### 12.4 Scaling Order (Non-Negotiable)
+### 13.4 Scaling Order (Non-Negotiable)
 
 Variants must be generated **in strict order** after base lock:
 
@@ -1170,7 +1171,7 @@ Variants must be generated **in strict order** after base lock:
 
 ---
 
-### 12.5 When to Stop Scaling
+### 13.5 When to Stop Scaling
 
 Variant generation ends when:
 
@@ -1182,7 +1183,7 @@ Variant generation ends when:
 
 ---
 
-### 12.6 Common Variant Failure Modes
+### 13.6 Common Variant Failure Modes
 
 Immediate rejection if variant:
 
@@ -1206,7 +1207,7 @@ Judgment must be *earned* before it is *scaled*.
 
 ---
 
-### 13.1 The Three-Stage Training Pipeline
+### 14.1 The Three-Stage Training Pipeline
 
 Golden exemplar programs progress through **three explicit maturity stages**:
 
@@ -1222,7 +1223,7 @@ Each stage has **different safety properties**, **different failure modes**, and
 
 ---
 
-### 13.2 Stage 1 — Manual: Golden Exemplars (Authoritative Source)
+### 14.2 Stage 1 — Manual: Golden Exemplars (Authoritative Source)
 
 **Purpose**: Create *new judgment*.
 
@@ -1245,7 +1246,7 @@ They are **roots**, not data points.
 
 ---
 
-### 13.3 Stage 2 — Semi-Automated: Variant Expansion
+### 14.3 Stage 2 — Semi-Automated: Variant Expansion
 
 **Purpose**: Expand coverage *without introducing new judgment*.
 
@@ -1277,7 +1278,7 @@ Semi-automation accelerates *breadth*, not *depth*.
 
 ---
 
-### 13.4 Stage 3 — Automated: SFT Dataset Construction
+### 14.4 Stage 3 — Automated: SFT Dataset Construction
 
 **Purpose**: Convert validated judgment artifacts into model-consumable training data.
 
@@ -1299,7 +1300,7 @@ Automation here is *mechanical*, not cognitive.
 
 ---
 
-### 13.5 What This Pipeline Explicitly Prevents
+### 14.5 What This Pipeline Explicitly Prevents
 
 This staged approach prevents:
 
@@ -1312,7 +1313,7 @@ Any pipeline that attempts to skip stages will amplify failure modes instead of 
 
 ---
 
-### 13.6 When the Dataset Is "Ready"
+### 14.6 When the Dataset Is "Ready"
 
 An SFT dataset is considered **training-grade** only when:
 
@@ -1323,7 +1324,7 @@ An SFT dataset is considered **training-grade** only when:
 
 Dataset readiness is a **judgment property**, not a size metric.
 
-### 13.7 Deterministic Dataset Compilation (Canonical Rule)
+### 14.7 Deterministic Dataset Compilation (Canonical Rule)
 
 Dataset assembly must satisfy **all** of the following canonical rules:
 
@@ -1803,3 +1804,162 @@ When operating inside **stateless conversational environments** (for example, Ch
 
 Failure to re-establish these elements at session start reintroduces semantic drift and weakens constitutional guarantees. Session macros (such as a “Project State Ledger” header) are the canonical mechanism for this continuity.
 
+---
+
+## Appendix H: 4-Layer System Map (Two Phase Axes)
+
+We separate:
+
+* **Vertical Layers** → Governance → Compilation → Runtime → Observation
+* **Horizontal Axes** → Constitutional Phases vs Pipeline Phases
+
+They are orthogonal.
+
+---
+
+### LAYER 1 — GOVERNANCE (Constitution)
+
+📁 `governance/`
+
+**What lives here**
+
+* Constitutional Manifest
+* 29 locked abstract golden exemplars
+* Dominance hierarchy (REF > CONF > DES)
+* Boundary invariance doctrine
+* Phase-06 reachability (governance-level)
+* GREG protocol
+
+---
+
+### Constitutional Phase Axis (Semantic)
+
+These phases define judgment semantics:
+
+| Constitutional Phase | Meaning |
+| -------------------- | --------------------------- |
+| Phase-1 | REF — legitimacy refusal |
+| Phase-2 | CONF — bounded allowance |
+| Phase-3 | DES — design reasoning only |
+| Phase-4 | MIX — collision arbitration |
+| Phase-5 | CODE — enforcement encoding |
+| Phase-6 | REACH — endurance proof |
+
+These are **semantic roles**. They do not describe workflow steps. They describe *how reasoning must behave*.
+
+---
+
+### LAYER 2 — ML COMPILATION
+
+📁 `ml/training/`
+
+This layer turns constitutional doctrine into trainable artifacts.
+
+---
+
+### Pipeline Phase Axis (Workflow)
+
+These phases describe *preparation stages*, not semantics:
+
+| Pipeline Phase | Meaning |
+| -------------- | --------------------------------- |
+| Phase-3 | Motadata base exemplar mapping |
+| Phase-4 | Variant generation |
+| Phase-5 | Variant stability gate |
+| Phase-6 | Mutation harness (pre-SFT stress) |
+| Phase-7 | Dataset compilation |
+| Phase-8 | SFT training |
+
+These are **operational steps**. They do not redefine REF/CONF/DES etc.
+
+---
+
+### Where Mutation Actually Lives
+
+Your mutation harness:
+
+* Lives in ML Compilation layer.
+* Operates on Motadata bases + variants.
+* Uses constitutional phase semantics.
+* Does NOT redefine constitutional phases.
+* Tests collapse vectors before dataset freeze.
+
+So: **Mutation Phase-6 ≠ Constitutional Phase-6.** One is workflow stress. The other is governance endurance.
+
+---
+
+### LAYER 3 — RUNTIME
+
+📁 `runtime/`
+
+**What will live here**
+
+* Actor (trained model)
+* Plan gate
+* Judge gate
+* Authority validator
+* Irreversibility detector
+* Execution control
+* Ledger emission
+
+Runtime consumes trained behavior and enforces it.
+
+---
+
+### LAYER 4 — OBSERVATION
+
+📁 `observation/`
+
+**What lives here**
+
+* Mutation harness (post-SFT version)
+* Drift probes
+* Coverage analytics
+* Collapse vector tracking
+* Ledger reconciliation
+* GREG audit evidence
+
+Observation validates behavior after execution.
+
+---
+
+### Clean Visual Separation
+
+```
+GOVERNANCE (Semantic Phases)
+REF / CONF / DES / MIX / CODE / REACH
+↓
+ML COMPILATION (Workflow Phases)
+Base → Variants → Stability → Mutation → Freeze → SFT
+↓
+RUNTIME
+Plan → Judge → Execute → Final Gate
+↓
+OBSERVATION
+Drift → Mutation → Ledger → GREG
+```
+
+---
+
+### What You Achieved So Far (Layered)
+
+**Governance:** Fully locked. Semantics stable. Dominance frozen. GREG-ready.
+
+**ML Compilation:** 17 Motadata bases derived from doctrine. 68 variants. Stability validated. CONF skew detected. Mutation taxonomy built. Freeze gate defined. Not yet compiled. Not yet trained.
+
+**Runtime:** Architected. Not instantiated.
+
+**Observation:** Governance endurance proven. ML endurance not yet tested post-training.
+
+---
+
+### Final Clean Distinction
+
+* **Constitutional Phases** answer: *How must judgment behave?*
+* **Pipeline Phases** answer: *How do we prepare data for training?*
+* **Mutation harness** answers: *Does the compilation layer preserve constitutional behavior under adversarial stress?*
+* **SFT** will answer: *Does gradient optimization preserve constitutional behavior?*
+* **Runtime** will answer: *Does execution preserve constitutional behavior?*
+* **Observation** will answer: *Does it stay preserved over time?*
+
+No overlap. No ambiguity. No phase confusion. You are standing at: **Compilation Phase-7 → Dataset Freeze → SFT.** The only unknown left is model behavior.

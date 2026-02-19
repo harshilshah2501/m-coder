@@ -6,9 +6,9 @@
 
 ## Version Update
 
-**Current Version:** v1.5
+**Current Version:** v1.6
 **Status:** Phase-5 LOCKED · Phase-6 DEFINED (ADV not yet instantiated)  
-**Scope of Update:** Coverage expansion, variant staging, dataset pipeline articulation, and audit-layer integration  
+**Scope of Update:** Phase-6 mutation harness design, coverage expansion, variant staging, dataset pipeline articulation, audit-layer integration, and section numbering corrections  
 **Breaking Changes:** None
 
 This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy.
@@ -698,7 +698,7 @@ This mapping guarantees:
 
 ---
 
-### 9.1 Canonical Category Distribution (35 Exemplars)
+### 10.1 Canonical Category Distribution (35 Exemplars)
 
 | Category          | Count | Primary Judgment         |
 | ----------------- | ----- | ------------------------ |
@@ -714,7 +714,7 @@ This mapping guarantees:
 
 ---
 
-### 9.2 Stress Surface → Category Mapping
+### 10.2 Stress Surface → Category Mapping
 
 Each stress surface must feed **at least one primary category**. Coverage is corpus-wide.
 
@@ -732,7 +732,7 @@ Each stress surface must feed **at least one primary category**. Coverage is cor
 
 ---
 
-### 9.3 Category → Base Exemplar Mapping (Illustrative)
+### 10.3 Category → Base Exemplar Mapping (Illustrative)
 
 Each category is instantiated via **LOCKED base exemplars**.
 
@@ -750,7 +750,7 @@ Each category is instantiated via **LOCKED base exemplars**.
 
 ---
 
-### 9.4 Exemplar → Variant Expansion
+### 10.4 Exemplar → Variant Expansion
 
 LOCKED exemplars may generate **multiple variants**, with strict inheritance:
 
@@ -778,7 +778,7 @@ Variants:
 
 ---
 
-### 9.5 Coverage Validation Rule
+### 10.5 Coverage Validation Rule
 
 The corpus is **coverage-complete** only when:
 
@@ -1034,7 +1034,7 @@ Golden exemplars are **roots**. Variants are controlled branches that reinforce 
 
 ---
 
-### 12.1 What Variants Are (and Are Not)
+### 13.1 What Variants Are (and Are Not)
 
 **Variants ARE**:
 
@@ -1053,7 +1053,7 @@ Golden exemplars are **roots**. Variants are controlled branches that reinforce 
 
 ---
 
-### 12.2 Canonical Variant Dimensions
+### 13.2 Canonical Variant Dimensions
 
 Mutate **only one dimension at a time**. Compositional drift is not allowed.
 
@@ -1095,7 +1095,7 @@ Mutate **only one dimension at a time**. Compositional drift is not allowed.
 
 ---
 
-### 12.3 Variant Validation Rules (Hard Gates)
+### 13.3 Variant Validation Rules (Hard Gates)
 
 Each variant must:
 
@@ -1115,7 +1115,7 @@ Each variant must:
 
 ---
 
-### 12.4 Scaling Order (Non-Negotiable)
+### 13.4 Scaling Order (Non-Negotiable)
 
 Variants must be generated **in strict order** after base lock:
 
@@ -1128,7 +1128,7 @@ Variants must be generated **in strict order** after base lock:
 
 ---
 
-### 12.5 When to Stop Scaling
+### 13.5 When to Stop Scaling
 
 Variant generation ends when:
 
@@ -1140,7 +1140,7 @@ Variant generation ends when:
 
 ---
 
-### 12.6 Common Variant Failure Modes
+### 13.6 Common Variant Failure Modes
 
 Immediate rejection if variant:
 
@@ -1164,7 +1164,7 @@ Judgment must be *earned* before it is *scaled*.
 
 ---
 
-### 13.1 The Three-Stage Training Pipeline
+### 14.1 The Three-Stage Training Pipeline
 
 Golden exemplar programs progress through **three explicit maturity stages**:
 
@@ -1180,7 +1180,7 @@ Each stage has **different safety properties**, **different failure modes**, and
 
 ---
 
-### 13.2 Stage 1 — Manual: Golden Exemplars (Authoritative Source)
+### 14.2 Stage 1 — Manual: Golden Exemplars (Authoritative Source)
 
 **Purpose**: Create *new judgment*.
 
@@ -1203,7 +1203,7 @@ They are **roots**, not data points.
 
 ---
 
-### 13.3 Stage 2 — Semi-Automated: Variant Expansion
+### 14.3 Stage 2 — Semi-Automated: Variant Expansion
 
 **Purpose**: Expand coverage *without introducing new judgment*.
 
@@ -1235,7 +1235,7 @@ Semi-automation accelerates *breadth*, not *depth*.
 
 ---
 
-### 13.4 Stage 3 — Automated: SFT Dataset Construction
+### 14.4 Stage 3 — Automated: SFT Dataset Construction
 
 **Purpose**: Convert validated judgment artifacts into model-consumable training data.
 
@@ -1257,7 +1257,7 @@ Automation here is *mechanical*, not cognitive.
 
 ---
 
-### 13.5 What This Pipeline Explicitly Prevents
+### 14.5 What This Pipeline Explicitly Prevents
 
 This staged approach prevents:
 
@@ -1270,7 +1270,7 @@ Any pipeline that attempts to skip stages will amplify failure modes instead of 
 
 ---
 
-### 13.6 When the Dataset Is "Ready"
+### 14.6 When the Dataset Is "Ready"
 
 An SFT dataset is considered **training-grade** only when:
 

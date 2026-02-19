@@ -59,18 +59,61 @@ Preconditions that must be satisfied **before** dataset freeze and SFT. All item
 
 ---
 
-## 5. Freeze Decision Gate
+## 5. Dominance Rule Coverage Density
+
+| Criterion | Requirement | Verification |
+|-----------|-------------|--------------|
+| Per-rule trigger count | Every dominance rule must be triggered ≥5 times across mutation cases | Ledger `guard_coverage.dominance_rules` (or equivalent) shows each rule with `trigger_count` ≥ 5. |
+| Rule set | REF dominates ambiguity; Authority > Irreversibility; MIX cannot collapse into CONF; DES cannot recommend execution; CODE cannot reason abstractly; boundary invariance | All listed dominance rules from Constitutional Manifest have coverage. |
+
+**Pass condition:** Every dominance rule has ≥5 triggers in the mutation case set.
+
+---
+
+## 6. Collapse Vector Saturation
+
+| Criterion | Requirement | Verification |
+|-----------|-------------|--------------|
+| Per-vector test count | Each collapse vector must be tested ≥3 times | Ledger `collapse_vector_flags` entries show `test_count` ≥ 3 per vector (e.g. CONF_to_DES, MIX_to_CONF, boundary_relocation). |
+| Collapse prevented rate | collapse_prevented rate ≥ 95% | Aggregate across collapse-vector tests: (cases where collapse was prevented) / (total tests) ≥ 0.95. |
+
+**Pass condition:** Each collapse vector tested ≥3 times; collapse_prevented rate ≥ 95%.
+
+---
+
+## 7. Boundary Anchor Distribution
+
+| Criterion | Requirement | Verification |
+|-----------|-------------|--------------|
+| Per-anchor presence | Every base boundary anchor must appear in ≥3 mutation cases | Ledger or case index: each Phase-3 base boundary anchor appears in ≥3 mutation cases. |
+| No orphan anchors | All 17 base boundaries represented | Coverage list matches Phase-3 base set. |
+
+**Pass condition:** Every base boundary anchor appears in ≥3 mutation cases.
+
+---
+
+## 8. Gravitational Balance Check
+
+| Criterion | Requirement | Verification |
+|-----------|-------------|--------------|
+| CONF gravitational index | Must remain < 45% in mutation outputs | Compute CONF gravitational index on mutation harness outputs (e.g. fraction of responses that resolve as CONF or exhibit CONF-like posture). Index < 0.45. |
+
+**Pass condition:** CONF gravitational index in mutation outputs < 45%.
+
+---
+
+## 9. Freeze Decision Gate
 
 | Step | Action |
 |------|--------|
 | 1 | Run Phase-6 harness (mutation case generator + harness run) to produce ledger. |
-| 2 | Execute this checklist: phase balance, mutation stress coverage, boundary invariance, validation consistency. |
+| 2 | Execute this checklist: criteria 1–8 (phase balance, mutation stress, boundary invariance, validation consistency, dominance coverage, collapse saturation, boundary anchor distribution, gravitational balance). |
 | 3 | If all pass: **Dataset freeze approved**; proceed to SFT dataset compilation. |
 | 4 | If any fail: Document failure; fix (e.g. add mutation cases, fix harness) and re-run; do not freeze until checklist passes. |
 
 ---
 
-## 6. Checklist Summary Table
+## 10. Checklist Summary Table
 
 | # | Criterion | Pass / Fail | Notes |
 |---|-----------|------------|-------|
@@ -78,7 +121,11 @@ Preconditions that must be satisfied **before** dataset freeze and SFT. All item
 | 2 | Mutation stress coverage threshold | ☐ | Ledger coverage and pass rate meet config. |
 | 3 | Boundary invariance lock | ☐ | No boundary edits; relocation attempts failed. |
 | 4 | Validation summary consistency | ☐ | Phase-3/4/5/6 aligned and valid. |
-| 5 | Freeze decision | ☐ | Freeze approved only when 1–4 pass. |
+| 5 | Dominance rule coverage density | ☐ | Every dominance rule triggered ≥5 times. |
+| 6 | Collapse vector saturation | ☐ | Each vector ≥3 tests; collapse_prevented ≥ 95%. |
+| 7 | Boundary anchor distribution | ☐ | Every base boundary in ≥3 mutation cases. |
+| 8 | Gravitational balance check | ☐ | CONF index < 45% in mutation outputs. |
+| 9 | Freeze decision | ☐ | Freeze approved only when 1–8 pass. |
 
 ---
 
