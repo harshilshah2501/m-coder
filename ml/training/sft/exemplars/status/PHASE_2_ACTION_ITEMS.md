@@ -57,7 +57,7 @@
 - [ ] Generate re-grounds (5-10 per variant)
 - [ ] Generate intensified versions (5-10 per variant)
 - [ ] Generate relaxed versions (5-10 per variant)
-- [ ] Output: `datasets/sft/processed/golden_phase2.jsonl`
+- [ ] Output: `ml/datasets/sft/processed/golden_phase2.jsonl`
 
 ---
 

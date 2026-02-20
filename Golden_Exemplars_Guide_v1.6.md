@@ -8,10 +8,10 @@
 
 **Current Version:** v1.6
 **Status:** Phase-4 LOCKED · Phase-5 READY  
-**Scope of Update:** Phase-6 mutation harness design, coverage expansion, variant staging, dataset pipeline articulation, audit-layer integration, and section numbering corrections  
+**Scope of Update:** Phase-6 mutation harness design, coverage expansion, variant staging, dataset pipeline articulation, audit-layer integration, section numbering corrections, and Layer-II base exemplar expansion (BASE-018 through BASE-025)  
 **Breaking Changes:** None
 
-This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy.
+This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy. Layer-II developments expand the Motadata corpus to 25 base exemplars (BASE-001 through BASE-025) with additions across CODE (BASE-018, BASE-019, BASE-025), MIX (BASE-020, BASE-021, BASE-024), and DES (BASE-022, BASE-023) phases.
 
 ---
 
@@ -746,7 +746,7 @@ This mapping guarantees:
 The Golden Exemplars program may maintain **multiple corpora** at once:
 
 1. **Governance Corpus (Constitutional Layer)** — abstract exemplars under GREG ratification (for example, REF‑01, DES‑01, MIX‑04, CODE‑08). This layer encodes constitutional semantics and review discipline.
-2. **ML Compilation Corpus (Product-Specific Layer)** — concrete, system-grounded exemplars for a particular product pipeline (for example, the Motadata corpus with 17 base exemplars and 68 variants across REF/CONF/DES/MIX/CODE).
+2. **ML Compilation Corpus (Product-Specific Layer)** — concrete, system-grounded exemplars for a particular product pipeline (for example, the Motadata corpus with 25 base exemplars (BASE-001 through BASE-025) across REF/CONF/DES/MIX/CODE phases: REF (3), CONF (10), DES (4), MIX (4), CODE (4)).
 
 These corpora **may differ** in size and phase distribution. Only **compilation corpora** are eligible to enter SFT.
 
@@ -1806,14 +1806,14 @@ Failure to re-establish these elements at session start reintroduces semantic dr
 
 ---
 
-## Appendix H: 4-Layer System Map (Two Phase Axes)
+## Appendix H: 4-Layer System Map (Two Axes)
 
 We separate:
 
 * **Vertical Layers** → Governance → Compilation → Runtime → Observation
-* **Horizontal Axes** → Constitutional Phases vs Pipeline Phases
+* **Horizontal Axes** → Constitutional Phase Axis (Layer-1 semantics) vs Pipeline Stage Axis (Layer-2 workflow)
 
-They are orthogonal.
+They are orthogonal. Using **Stage** for the pipeline axis avoids confusion with constitutional **Phase** (REF, CONF, DES, MIX, CODE, REACH).
 
 ---
 
@@ -1857,20 +1857,140 @@ This layer turns constitutional doctrine into trainable artifacts.
 
 ---
 
-### Pipeline Phase Axis (Workflow)
+### Pipeline Stage Axis (Workflow)
 
-These phases describe *preparation stages*, not semantics:
+These **stages** describe *preparation workflow*, not constitutional semantics:
 
-| Pipeline Phase | Meaning |
+| Pipeline Stage | Meaning |
 | -------------- | --------------------------------- |
-| Phase-3 | Motadata base exemplar mapping |
-| Phase-4 | Variant generation |
-| Phase-5 | Variant stability gate |
-| Phase-6 | Mutation harness (pre-SFT stress) |
-| Phase-7 | Dataset compilation |
-| Phase-8 | SFT training |
+| Stage-1 | Structural mapping |
+| Stage-1A | Boundary detection |
+| Stage-2 | Artifact extraction |
+| Stage-3 | Motadata base exemplar mapping |
+| Stage-4 | Variant generation |
+| Stage-5 | Variant stability gate |
+| Stage-6 | Mutation harness (pre-SFT stress) |
+| Stage-7 | Dataset compilation |
+| Stage-8 | SFT training (see subphases below) |
 
 These are **operational steps**. They do not redefine REF/CONF/DES etc.
+
+---
+
+### Stage-08 — ML Compilation Layer (SFT Governance)
+
+Stage-08 is the SFT training stage within the ML-Compilation layer. It is subdivided into disciplined subphases to separate pilot validation, hyperparameter sensitivity, dataset geometry, retrain, audit, loss refinement (if needed), stability sweep, and freeze.
+
+#### 08A — Initial SFT Pilot
+
+**Objective:** Validate that Golden + Layer-II base exemplars can be compiled into a working LoRA adapter.
+
+**Characteristics:**
+* Minimal LoRA config
+* Basic stratified split
+* 2–3 epochs
+* Standard CE loss
+* First structural invariance audit
+
+**Outcome in your case:** Optimization stable. Structural drift detected.
+
+---
+
+#### 08B — Hyperparameter Sensitivity Check
+
+**Objective:** Test whether drift was due to overfitting / capacity.
+
+**Changes tested:**
+* Lower rank
+* Lower LR
+* Same dataset
+* Same split
+
+**Outcome:** Worse invariance → ruled out "rank problem hypothesis."
+
+---
+
+#### 08C — Dataset Geometry Expansion
+
+**Objective:** Address structural sparsity (not hyperparameters).
+
+**Sub-steps:**
+* Base-level split correction
+* Inline pressure variants
+* Phase-balancing
+* Expansion of MIX / DES / CODE surfaces
+* Deterministic base split
+
+This is where you stopped tinkering and started strengthening geometry.
+
+---
+
+#### 08D — Balanced Constitutional Retrain (Next Step)
+
+**Objective:** Train on structurally strengthened Layer-II mapping.
+
+**Constraints:**
+* No Stage redesign
+* No Golden modification
+* No augmentation tricks
+* Same optimizer config
+* Clean deterministic split
+* Pure CE loss
+
+**Goal:** Evaluate whether geometry alone stabilizes invariance.
+
+---
+
+#### 08E — Structural Invariance Audit v2
+
+**Objective:** Re-run structural drift suite after 08D.
+
+**Checks:**
+* Per-phase invariance rate
+* Boundary preservation
+* Arbitration integrity
+* Enforcement integrity
+* Recommendation drift in DES
+
+If invariance ≥ acceptable threshold → success. If not → move to 08F.
+
+---
+
+#### 08F — Objective Alignment Layer (If Needed)
+
+Only triggered if 08D fails.
+
+**Possible actions:**
+* Boundary-anchored auxiliary loss
+* Contrastive boundary loss
+* Hard negative pressure training
+* Invariance regularization
+
+This is **not** hyperparameter tweaking. This is loss-function refinement.
+
+---
+
+#### 08G — Stability & Regression Sweep
+
+**Objective:**
+* Multi-seed retrain
+* Cold-start evaluation
+* Adversarial pressure sweep
+* Phase dominance verification
+
+Ensures invariance is not seed-dependent.
+
+---
+
+#### 08H — Compile Freeze
+
+**Objective:**
+* Lock adapter
+* Lock dataset
+* Lock evaluation harness
+* Promote to Layer-III runtime integration
+
+This is the exit point from ML-Compilation.
 
 ---
 
@@ -1884,7 +2004,7 @@ Your mutation harness:
 * Does NOT redefine constitutional phases.
 * Tests collapse vectors before dataset freeze.
 
-So: **Mutation Phase-6 ≠ Constitutional Phase-6.** One is workflow stress. The other is governance endurance.
+So: **Mutation Stage-6 ≠ Constitutional Phase-6.** One is workflow stress (pipeline stage). The other is governance endurance (semantic phase).
 
 ---
 
@@ -1926,11 +2046,11 @@ Observation validates behavior after execution.
 ### Clean Visual Separation
 
 ```
-GOVERNANCE (Semantic Phases)
+GOVERNANCE (Constitutional Phase Axis)
 REF / CONF / DES / MIX / CODE / REACH
 ↓
-ML COMPILATION (Workflow Phases)
-Base → Variants → Stability → Mutation → Freeze → SFT
+ML COMPILATION (Pipeline Stage Axis)
+Stage-1 Mapping → Stage-1A Boundary → Stage-2 Artifact → Stage-3 Base → Stage-4 Variants → Stage-5 Stability → Stage-6 Mutation → Stage-7 Freeze → Stage-8 SFT
 ↓
 RUNTIME
 Plan → Judge → Execute → Final Gate
@@ -1945,7 +2065,7 @@ Drift → Mutation → Ledger → GREG
 
 **Governance:** Fully locked. Semantics stable. Dominance frozen. GREG-ready.
 
-**ML Compilation:** 17 Motadata bases derived from doctrine. 68 variants. Stability validated. CONF skew detected. Mutation taxonomy built. Freeze gate defined. Not yet compiled. Not yet trained.
+**ML Compilation:** 25 Motadata bases (BASE-001 through BASE-025) derived from doctrine: REF (3), CONF (10), DES (4), MIX (4), CODE (4). Variants in progress. Stability validated for locked bases. CONF skew detected. Mutation taxonomy built. Freeze gate defined. Not yet compiled. Not yet trained.
 
 **Runtime:** Architected. Not instantiated.
 
@@ -1956,10 +2076,10 @@ Drift → Mutation → Ledger → GREG
 ### Final Clean Distinction
 
 * **Constitutional Phases** answer: *How must judgment behave?*
-* **Pipeline Phases** answer: *How do we prepare data for training?*
-* **Mutation harness** answers: *Does the compilation layer preserve constitutional behavior under adversarial stress?*
-* **SFT** will answer: *Does gradient optimization preserve constitutional behavior?*
+* **Pipeline Stages** answer: *How do we prepare data for training?*
+* **Mutation harness** (Stage-6) answers: *Does the compilation layer preserve constitutional behavior under adversarial stress?*
+* **SFT** (Stage-8) will answer: *Does gradient optimization preserve constitutional behavior?*
 * **Runtime** will answer: *Does execution preserve constitutional behavior?*
 * **Observation** will answer: *Does it stay preserved over time?*
 
-No overlap. No ambiguity. No phase confusion. You are standing at: **Compilation Phase-7 → Dataset Freeze → SFT.** The only unknown left is model behavior.
+No overlap. No ambiguity. No phase/stage confusion. You are standing at: **Stage-7 Dataset Freeze → Stage-8 SFT.** The only unknown left is model behavior.

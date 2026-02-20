@@ -34,8 +34,8 @@ training_args:
 ## Dataset Configuration
 dataset:
   type: "instruction_response"
-  train_file: "./datasets/sft/processed/train.jsonl"
-  validation_file: "./datasets/sft/processed/validation.jsonl"
+  train_file: "./ml/datasets/sft/processed/train.jsonl"
+  validation_file: "./ml/datasets/sft/processed/validation.jsonl"
   max_length: 512
   
 ## Description

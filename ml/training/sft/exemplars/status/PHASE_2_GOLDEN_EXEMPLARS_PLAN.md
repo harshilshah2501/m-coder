@@ -70,7 +70,7 @@ One golden exemplar → 3 adversarial variants → 100-200 SFT samples via:
 - Generate paraphrases (5-10 per variant)
 - Generate re-grounds (5-10 per variant)
 - Generate intensified/relaxed versions (5-10 per variant)
-- **Output**: `datasets/sft/processed/golden_phase2.jsonl` (7.5K-10K samples)
+- **Output**: `ml/datasets/sft/processed/golden_phase2.jsonl` (7.5K-10K samples)
 
 ### Week 4: Training & Validation
 - Train SFT model on golden_phase2.jsonl

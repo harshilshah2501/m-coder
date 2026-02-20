@@ -659,12 +659,12 @@ Parse exemplar (extract layers + body)
 Normalize to schema:
   instruction, input, response, category, tags, dna_passed
     ↓
-Aggregate to datasets/sft/processed/golden.jsonl
+Aggregate to ml/datasets/sft/processed/golden.jsonl
     ↓
 Generate variants (re-ground, paraphrase, intensify)
     ↓
-datasets/sft/processed/train.jsonl (90%)
-datasets/sft/processed/validation.jsonl (10%)
+ml/datasets/sft/processed/train.jsonl (90%)
+  ml/datasets/sft/processed/validation.jsonl (10%)
     ↓
 Train SFT model on processed set
 ```

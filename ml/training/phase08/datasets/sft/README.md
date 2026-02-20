@@ -3,11 +3,11 @@
 ## Instruction Data Sources
 data_sources:
   - source: "motadata_docs"
-    path: "./datasets/sft/raw/motadata_instructions.jsonl"
+    path: "./raw/motadata_instructions.jsonl"
     format: "instruction_response"
     
   - source: "code_patterns"
-    path: "./datasets/sft/raw/code_patterns.jsonl"
+    path: "./raw/code_patterns.jsonl"
     format: "instruction_response"
 
 ## Data Format Expected

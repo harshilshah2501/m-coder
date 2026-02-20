@@ -1,0 +1,21 @@
+Phase-08C augmented dataset statistics
+========================================
+Total rows: 136
+
+Phase distribution (all rows):
+  CODE: 8
+  CONF: 80
+  DES: 16
+  MIX: 8
+  REF: 24
+
+Augmented rows per phase (new pressure variants):
+  CODE: 3
+  CONF: 30
+  DES: 6
+  MIX: 3
+  REF: 9
+
+Original frozen rows: 85
+New augmented rows: 51
+Base exemplars: 17
