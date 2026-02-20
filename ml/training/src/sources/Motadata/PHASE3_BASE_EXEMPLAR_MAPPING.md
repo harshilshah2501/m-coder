@@ -900,6 +900,439 @@ Group enumeration must be denied when membership validation is absent.
 
 ---
 
+### BASE-018: Runbook Execution Lifecycle Idempotency Guard (CODE)
+
+**Source Artifact:** RunbookEngine (EventEngine handler, EVENT_RUNBOOK consumer) + RunbookCacheStore (RunbookCacheStore.java L64–91; RunbookEngine.java L389)
+
+**Constitutional Phase:** CODE (Phase-5)
+
+**Exact Irreversible Boundary Phrase:**
+```
+RunbookCacheStore.getStore().getItem(id) == NOT_AVAILABLE
+```
+Entry to execution path (route(context, reply, manual)) is permitted only when this condition holds. RunbookCacheStore.updateItem(id, …) sets running state; RunbookCacheStore.complete(id) clears it. Duplicate execution is the boundary: entering execution when getItem(id) != NOT_AVAILABLE.
+
+**Enforcement Rule (implementation-level):**
+- Before invoking route(context, reply, manual), read RunbookCacheStore.getStore().getItem(id). If the result is not NOT_AVAILABLE, do not invoke route(...); complete or reply with failure and do not call updateItem for this id.
+- On entry to the execution path, call updateItem(id, …) so getItem(id) is not NOT_AVAILABLE for the duration of execution.
+- On exit from execution (success or failure), call complete(id) so getItem(id) returns NOT_AVAILABLE.
+- No retry of the guard. No conditional allowance. Single check gates entry.
+
+**Fail-Closed Behavior:**
+- If getItem(id) returns any value other than NOT_AVAILABLE, do not invoke route(...).
+- If getItem(id) throws, returns null, or state is otherwise unknown, treat as not NOT_AVAILABLE and do not invoke route(...).
+- Unknown or unreadable state denies execution.
+
+**Validation Checklist:**
+- ✓ Guard is evaluated once before route(...); no execution without NOT_AVAILABLE.
+- ✓ updateItem(id, …) and complete(id) are the only state transitions that set and clear running state.
+- ✓ Unknown or exceptional state results in denial of execution (no route(...)).
+- ✓ No retry or advisory path; enforcement is hard fail-closed.
+- ✓ Invariant: at most one execution in progress per id; duplicate execution does not occur when guard is enforced.
+
+---
+
+### BASE-019: Plugin and Script File Write Guard (CODE)
+
+**Source Artifact:** LocalEventChangeNotificationHandler (motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java; EventEngine handler, blocking; L996, L1304)
+
+**Constitutional Phase:** CODE (Phase-5)
+
+**Exact Irreversible Boundary Phrase:**
+```
+vertx.fileSystem().writeFileBlocking(classFile, ...);
+vertx.fileSystem().writeFileBlocking(event.getString(SCRIPT), ...);
+```
+The boundary is writing plugin class files or script files to disk. Unauthorized or invalid file write must not occur.
+
+**Enforcement Rule (implementation-level):**
+- Resolve target path only within an explicit allow-list directory (e.g. configured plugin/script root). Reject if resolved path is outside that directory.
+- Reject if file name or path segment contains traversal patterns (`..`, path separators, or equivalent). Validate before any path concatenation.
+- Reject if authorization context is absent (e.g. no validated principal or event origin in handler context). Do not invoke writeFileBlocking when context is missing.
+- Use a single resolved path derived from allow-list base + validated filename; no dynamic path construction from unsanitized event fields beyond a validated filename.
+- No retry. No conditional allowance. Single validation gates the write.
+
+**Fail-Closed Behavior:**
+- If path validation fails, do not invoke writeFileBlocking.
+- If allow-list directory is unset or unresolvable, do not invoke writeFileBlocking.
+- If authorization context is absent or unknown, do not invoke writeFileBlocking.
+- Unknown or unreadable state denies the write.
+
+**Validation Checklist:**
+- ✓ writeFileBlocking is invoked only after path is validated to be inside the allow-list directory.
+- ✓ Filename/path is rejected when it contains `..` or path separators (or equivalent traversal).
+- ✓ writeFileBlocking is not invoked when authorization context is absent.
+- ✓ No retry or advisory path; enforcement is hard fail-closed.
+- ✓ Invariant: only authorized, path-valid plugin/script writes occur; unauthorized or invalid file write does not occur when the guard is enforced.
+
+---
+
+### BASE-020: Integration Event Dispatch Collision (MIX)
+
+**Source Artifact:** PolicyEngineConstants (motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java; triggerAction integration branch; L1424, L3412)
+
+**Constitutional Phase:** MIX (Phase-4)
+
+**Exact Irreversible Boundary Phrase:**
+```
+Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_INTEGRATION, integrationContext);
+```
+integrationContext = new JsonObject().mergeIn(context).put(POLICY_ID, ...) (L3412). This call triggers external system mutation (ServiceNow, Jira, LAMA, etc.). Tickets and state changes in external systems cannot be un-sent.
+
+**Independent Pressure A:**
+Policy automation pressure — incident remediation via integration. When policy triggers (severity, threshold, flap), the system is under pressure to dispatch EVENT_INTEGRATION immediately so that external ticketing/monitoring systems create or update tickets for fast remediation. Delay or suppression reduces automation value.
+
+**Independent Pressure B:**
+Duplicate ticket / delivery-integrity constraint. Retry, re-trigger, or multiple policy evaluations for the same incident can cause duplicate ticket creation in external systems. External systems may not deduplicate. Pressure to guarantee delivery (retry on failure) collides with pressure to avoid duplicate tickets and data pollution.
+
+**Collision Description:**
+Both pressures apply at the same boundary: the moment EVENT_INTEGRATION is sent. Pressure A pushes for immediate send on every trigger; Pressure B pushes for gating (deduplication, idempotency key, or suppression) before send. Neither pressure alone determines the outcome; arbitration is required at the boundary.
+
+**Arbitration Rule:**
+Dispatch may proceed only when integration context has been evaluated for duplicate risk (e.g. idempotency key, policy+entity+severity window, or integration-specific deduplication). If duplicate risk is present and not resolved, block at boundary (do not send) until resolved or suppressed. If duplicate risk cannot be determined (unknown state), block at boundary. REF/CONF/DES precedence applies to any upstream legitimacy or conditional allowance; at the MIX boundary, arbitration resolves collision, not a single-dimension allow/block.
+
+**Allow:**
+- Policy severity and trigger evaluation
+- Construction of integrationContext (mergeIn(context), POLICY_ID, entity, severity)
+- Integration target resolution (which system receives the event)
+- Deduplication or idempotency check when implemented before send
+
+**Block at Boundary:**
+- Sending EVENT_INTEGRATION when duplicate ticket risk is present and not mitigated
+- Sending EVENT_INTEGRATION when integration context is incomplete or invalid for the target system
+- Sending EVENT_INTEGRATION when arbitration rule has not been applied (unknown duplicate state → block)
+
+Execution must not proceed to send until collision is resolved per arbitration rule.
+
+**Authority Boundary:**
+- PolicyEngineConstants.triggerAction (integration branch)
+- EVENT_INTEGRATION event bus address
+- External ticketing/monitoring systems (ServiceNow, Jira, LAMA) as consumers
+- Context ownership: policy/entity/severity in integrationContext
+
+**Stress Surfaces:**
+- Retry after transient failure: same context sent again → duplicate ticket
+- Rapid severity changes: multiple triggers in short window → multiple tickets for same incident
+- Multi-tenant or multi-integration: same policy context routed to more than one system → consistency and deduplication scope
+- Unknown consumer state: integration system unavailable or slow → send vs hold vs fail
+
+**Validation Checklist:**
+- ✓ MIX models collision of two independent pressures (automation vs duplicate-integrity).
+- ✓ Boundary is exact irreversible phrase (EVENT_INTEGRATION send).
+- ✓ Arbitration rule is explicit; execution does not collapse into single-dimension decision.
+- ✓ No pure REF posture (authority intact at boundary).
+- ✓ No pure CONF posture (collision at boundary, not conditional allowance alone).
+- ✓ No pure CODE posture (arbitration, not implementation guard only).
+
+---
+
+### BASE-021: Severity Escalation vs. Suppression Collision (MIX)
+
+**Source Artifact:** ARTIFACT-001 (severity assignment + notification dispatch) + ARTIFACT-003 (suppression state) — PolicyEngineConstants (motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java; triggerAction notification branch; L1135, L1259) + AIOpsMetricPolicyManager (motadata/src/main/java/com/mindarray/policy/AIOpsMetricPolicyManager.java; suppression check; L191, L485)
+
+**Constitutional Phase:** MIX (Phase-4)
+
+**Exact Irreversible Boundary Phrase:**
+```
+result.put(SEVERITY, Severity.valueOf(severity));
+processPolicyFlap();
+triggerAction(severity, trigger, policy, context, ...);
+Bootstrap.vertx().eventBus().request(EventBusConstants.EVENT_NOTIFICATION, ...);
+```
+Collision occurs when severity escalation (CRITICAL threshold crossed) and active suppression (`suppressedPolicies.get(objectId).contains(policyId)`) both apply at the notification dispatch boundary. Suppression check at L191 prevents policy evaluation, but severity assignment (L288) and triggerAction (L1135) may proceed before suppression check, creating collision at notification send (L1259).
+
+**Independent Pressure A:**
+Severity escalation pressure — when anomaly crosses CRITICAL threshold (or severity changes from MAJOR to CRITICAL), automation expects escalation and immediate alert publication. Policy evaluation determines severity; flap detection triggers action; notification dispatch is the expected outcome for high-severity incidents. Delay or suppression reduces incident response speed.
+
+**Independent Pressure B:**
+Active suppression authority — object/policy is currently suppressed (via `suppressedPolicies.get(objectId).add(policyId)` at L485). Suppression intends to prevent alert generation for false positives, maintenance windows, or manual override. Suppression check at L191 should prevent policy evaluation, but if severity assignment occurs before suppression check or suppression state changes during evaluation, both pressures reach the notification boundary simultaneously.
+
+**Collision Description:**
+Both pressures apply at the same boundary: the moment `EVENT_NOTIFICATION` is sent (L1259). Pressure A pushes for immediate notification dispatch when CRITICAL severity is assigned and triggerAction is invoked. Pressure B pushes for blocking notification dispatch when suppression is active. Neither pressure alone determines the outcome; arbitration is required at the notification boundary. The collision is not resolved by simple precedence (suppression does not automatically downgrade severity calculation; escalation does not automatically override suppression).
+
+**Arbitration Rule:**
+Notification dispatch may proceed only when suppression state has been evaluated and determined to be inactive for the object/policy pair. If suppression is active (`suppressedPolicies.get(objectId).contains(policyId)`), block at boundary (do not send EVENT_NOTIFICATION) regardless of severity. If suppression state is ambiguous or unknown (e.g. suppression map not initialized, objectId not in map, or state read failure), block at boundary. Severity calculation and assignment may proceed (CONF allows bounded pre-boundary actions), but notification dispatch requires arbitration resolution. REF/CONF/DES precedence applies to upstream legitimacy; at the MIX boundary, arbitration resolves collision, not a single-dimension allow/block.
+
+**Allow:**
+- Severity calculation and threshold comparison
+- Severity assignment (`result.put(SEVERITY, ...)`)
+- Policy flap detection and trigger determination
+- Suppression state check (`suppressedPolicies.get(objectId).contains(policyId)`)
+- triggerAction invocation when suppression is inactive
+
+**Block at Boundary:**
+- Sending EVENT_NOTIFICATION when suppression is active for the object/policy pair
+- Sending EVENT_NOTIFICATION when suppression state is ambiguous or unknown (unknown → block)
+- Sending EVENT_NOTIFICATION when arbitration rule has not been applied (suppression check not performed or result not evaluated)
+
+Execution must not proceed to notification dispatch until collision is resolved per arbitration rule.
+
+**Authority Boundary:**
+- PolicyEngineConstants.triggerAction (notification branch, L1135)
+- Bootstrap.vertx().eventBus().request(EVENT_NOTIFICATION, ...) (L1259)
+- suppressedPolicies map state (AIOpsMetricPolicyManager, L97, L191, L485)
+- External notification systems (email/SMS/Teams/Slack) — cannot un-send notifications
+- Severity assignment authority (policy configuration, threshold evaluation)
+
+**Stress Surfaces:**
+- Suppression applied after severity assignment: severity CRITICAL assigned, then suppression added → should notification be blocked?
+- Suppression expires during evaluation: suppression active at start, expires before notification → should notification proceed?
+- Rapid severity changes with suppression: MAJOR → CRITICAL while suppressed → escalation pressure vs suppression authority
+- Multi-policy suppression: object suppressed for policy A, but policy B triggers → does suppression apply to all policies or per-policy?
+- Suppression state race: two threads — one adds suppression, one evaluates severity → which state governs at notification boundary?
+
+**Validation Checklist:**
+- ✓ MIX models collision of two independent pressures (severity escalation vs suppression authority).
+- ✓ Boundary is exact irreversible phrase (EVENT_NOTIFICATION request at L1259).
+- ✓ Arbitration rule is explicit; execution does not collapse into single-dimension decision (suppression check required, unknown → block).
+- ✓ No pure REF posture (authority intact at boundary; suppression is legitimate operational control).
+- ✓ No pure CONF posture (collision at boundary, not conditional allowance alone; arbitration resolves dual pressure).
+- ✓ No pure CODE posture (arbitration, not implementation guard only; suppression state evaluation is policy-level, not code-level enforcement).
+
+---
+
+### BASE-022: Policy Threshold Configuration Tradeoff Without Commitment (DES)
+
+**Source Artifact:** ARTIFACT-001 (AIOpsMetricPolicyInspector; anomaly threshold comparison, severity evaluation). Policy severity configuration: `policy.getJsonObject(POLICY_CONTEXT).getJsonObject(POLICY_SEVERITY)` — no new code surfaces; reasoning about configuration semantics and threshold design tradeoffs only.
+
+**Constitutional Phase:** DES (Phase-3)
+
+**Exact Irreversible Boundary Phrase (indirect):**
+```
+Policy threshold configuration affects severity assignment and notification dispatch.
+```
+The boundary is indirect: configuration stored in `POLICY_CONTEXT` / `POLICY_SEVERITY` governs threshold comparison logic; when that logic assigns severity and triggers `processPolicyFlap()` → `triggerAction()` → `EVENT_NOTIFICATION`, the irreversible impact occurs (alert publication, external notification). This base does not introduce or modify code; it reasons about the design space of threshold configuration.
+
+**Dominant Signal Ambiguity:**
+- Absolute vs relative threshold: Policy semantics do not specify whether thresholds are absolute (fixed cutoff) or relative (e.g. multiple of baseline); configuration philosophy is underspecified.
+- Multi-tier precedence: WARNING / MAJOR / CRITICAL tiers are evaluated in order; which tier to use when multiple are breached, and whether tiers are independent or cumulative, is a design choice not fully encoded.
+- Dynamic vs static: Whether thresholds should adapt over time (seasonality, trend) or remain fixed is a configuration philosophy question, not an execution question.
+- Per-metric vs policy-wide: Whether thresholds apply uniformly across metrics or vary by metric type is a design tradeoff, not prescribed by existing artifact.
+
+**Intent Pressure:**
+- Pressure to use absolute thresholds for simplicity and predictability
+- Pressure to use relative thresholds for adaptability across different baselines or object types
+- Pressure to use multi-tier thresholds for graduated response (WARNING vs CRITICAL)
+- Pressure to allow dynamic threshold adaptation for seasonal or trend-driven environments
+- Pressure to fix thresholds policy-wide for consistency vs per-metric for accuracy
+
+**Response Posture:**
+**DESIGN REASONING** — Surface assumptions, compare alternatives, defer irreversible commitment. Do not recommend a threshold. Do not commit to a configuration. Do not prescribe implementation or give configuration values. Irreversible impact occurs when configuration (via threshold comparison) drives severity assignment and notification dispatch; commitment to a threshold strategy is deferred.
+
+**Tradeoff dimensions (no recommendation):**
+
+1. **Absolute vs relative threshold**  
+   Assumption (absolute): A fixed cutoff is appropriate across contexts; same value denotes “breach” everywhere. Assumption (relative): Baseline or reference varies; threshold should scale (e.g. multiple of baseline). Comparison: Absolute favors consistency and interpretability; relative favors context-adaptation. Hybrid (e.g. cap relative with absolute floor/ceiling) is a third option. Validation needed: Evidence that one strategy fits the operational context; no commitment here.
+
+2. **Single vs multi-tier (WARNING / MAJOR / CRITICAL)**  
+   Assumption (multi-tier): Severity levels map to distinct response levels (notification, runbook, escalation). Assumption (single): One breach level suffices. Comparison: Multi-tier allows graduated response; single tier simplifies configuration. Validation needed: Operational requirements for escalation granularity; no commitment here.
+
+3. **Static vs dynamic threshold**  
+   Assumption (static): Thresholds are stable and predictable; operators can tune once. Assumption (dynamic): Thresholds adapt to seasonality, trend, or workload. Comparison: Static reduces surprise and tuning cost; dynamic may improve accuracy in non-stationary environments. Validation needed: Evidence of non-stationarity and acceptable complexity; no commitment here.
+
+4. **Policy-wide vs per-metric (or per-object) threshold**  
+   Assumption (policy-wide): One threshold set applies to all metrics in the policy for consistency. Assumption (per-metric): Different metrics have different normal ranges; thresholds should vary. Comparison: Policy-wide favors simplicity; per-metric favors accuracy. Validation needed: Heterogeneity of metrics under the policy; no commitment here.
+
+**Deferral:** Final commitment to a threshold strategy (absolute, relative, hybrid, tier count, static/dynamic, scope) is deferred. Irreversible impact occurs at the boundary where configuration drives severity assignment and notification dispatch (BASE-001 chain); this base does not recommend how that configuration should be set.
+
+**Authority Boundary:**
+- Policy configuration: `policy.getJsonObject(POLICY_CONTEXT).getJsonObject(POLICY_SEVERITY)` governs threshold comparison
+- Severity assignment: Configuration affects `result.put(SEVERITY, ...)` and downstream triggerAction / EVENT_NOTIFICATION
+- No new code surfaces; authority is over configuration semantics and design tradeoffs, not implementation
+
+**Stress Surfaces:**
+- Metric heterogeneity: Same policy covers metrics with very different ranges (e.g. CPU % vs packet rate) — single threshold strategy may be poor fit for all
+- Baseline stability: Relative thresholds depend on baseline quality; unstable baseline → unstable breach detection
+- Tier ordering: When multiple tiers are breached (e.g. WARNING and CRITICAL), which severity is assigned depends on evaluation order — design choice, not execution guarantee
+- Configuration drift: Thresholds tuned for one period may be wrong after workload or season change — static vs dynamic tradeoff
+
+**Validation Checklist:**
+- ✓ DES must not recommend — **PASS**: Surfaces assumptions, compares alternatives (absolute vs relative vs hybrid, tier, static vs dynamic, scope), defers commitment; no configuration values given
+- ✓ No phase bleed — **PASS**: Design reasoning only; no CONF conditional allowance, no MIX collision, no CODE guard
+- ✓ Boundary phrase (indirect) — **PASS**: Irreversible impact identified at severity assignment + notification dispatch driven by configuration
+- ✓ Response posture surfaces ≥4 tradeoff dimensions — **PASS**: Absolute vs relative, single vs multi-tier, static vs dynamic, policy-wide vs per-metric; assumptions stated; commitment deferred
+
+---
+
+### BASE-023: Correlation Strategy Selection Without Execution Commitment (DES)
+
+**Source Artifact:** ARTIFACT-002 (Correlation Root Cause vs. Cascading Failure), ARTIFACT-008 (Correlation Duplicate Request Detection), ARTIFACT-011 (Correlation Graph Persistence Decision). Relevant boundary references: `ObjectStatusCacheStore.getStore().updateItem(...)`, `vertx.fileSystem().writeFileBlocking(...)`, `discard(event, key, ...)`. No new code surfaces; reasoning about correlation strategy design, not execution.
+
+**Constitutional Phase:** DES (Phase-3)
+
+**Exact Irreversible Boundary Phrase (indirect):**
+```
+ObjectStatusCacheStore.getStore().updateItem(...)
+→ result.put(SEVERITY, ...)
+→ triggerAction(...)
+→ EVENT_NOTIFICATION
+```
+The boundary is indirect: the outcome of correlation (root cause determination, duplicate decision, graph state) drives `ObjectStatusCacheStore.getStore().updateItem(...)` (BASE-002, BASE-008), correlation file persistence via `vertx.fileSystem().writeFileBlocking(...)` (BASE-011), and `discard(event, key, ...)` (BASE-008); downstream, status and severity affect notification dispatch. Irreversible impact occurs when correlation result drives object status update, downstream severity assignment, and notification dispatch. This base does not introduce or modify code; it reasons about the design space of correlation strategy.
+
+**Dominant Signal Ambiguity:**
+- Root cause vs cascading: When multiple devices fail, which is root cause and which is downstream? Design choice of attribution strategy, not execution guarantee.
+- Traversal depth: How far upstream should correlation traverse? Design choice of dependency depth, not prescribed algorithm.
+- Time window: Should correlation use immediate co-occurrence or a time window? Design choice of clustering philosophy.
+- Duplicate vs distinct: When is a request a duplicate vs a new correlation? Design choice of deduplication strategy, not runtime fact.
+
+**Intent Pressure:**
+- Pressure to attribute root cause immediately (upstream-first) for fast remediation
+- Pressure to traverse dependency graph deeply for accurate root cause
+- Pressure to use time-window clustering to group related failures
+- Pressure to use statistical co-occurrence for correlation without explicit graph
+- Pressure to apply first-failure-wins heuristic for simplicity
+- Pressure to use majority-signal dominance when multiple candidates exist
+- Pressure to avoid duplicate correlation processing (discard logic) while not over-suppressing
+
+**Response Posture:**
+**DESIGN REASONING** — Surface assumptions, compare alternative correlation strategies, defer irreversible execution commitment. Do not recommend a correlation strategy. Do not prescribe algorithm (e.g. do not say “use graph traversal” or “apply BFS/DFS”). Do not prescribe dependency depth. Irreversible impact occurs when correlation result drives `ObjectStatusCacheStore.updateItem(...)`, downstream severity assignment, and notification dispatch; commitment to a correlation strategy is deferred.
+
+**Strategy philosophies (no recommendation):**
+
+1. **Immediate upstream attribution**  
+   Assumption: Root cause is the immediate upstream dependency of the failed object; one hop suffices. Comparison: Fast and simple; may miss true root when failure chain is long. Validation needed: Topology and failure patterns; no commitment here.
+
+2. **Deep dependency traversal**  
+   Assumption: Root cause may be several hops upstream; full or bounded traversal is required. Comparison: More accurate for long chains; higher cost and complexity; traversal order and depth are design choices (no prescription of algorithm or depth). Validation needed: Graph structure and operational cost; no commitment here.
+
+3. **Time-window clustering**  
+   Assumption: Failures that occur within a time window are correlated; root cause is inferred from cluster. Comparison: Handles concurrent failures without explicit graph; window size and clustering rule are design choices. Validation needed: Failure timing distribution; no commitment here.
+
+4. **Statistical co-occurrence correlation**  
+   Assumption: Correlation is inferred from historical or statistical co-occurrence of failures; no explicit dependency graph required. Comparison: Data-driven; may not match physical topology. Validation needed: Data quality and causality assumptions; no commitment here.
+
+5. **First-failure-wins heuristic**  
+   Assumption: The first failure in a window or sequence is the root cause. Comparison: Simple and deterministic; may be wrong when failures are nearly simultaneous. Validation needed: Ordering and timing guarantees; no commitment here.
+
+6. **Majority-signal dominance**  
+   Assumption: When multiple candidates exist, the majority or dominant signal (e.g. most downstream objects point to same upstream) is root cause. Comparison: Reduces noise; may suppress legitimate minority root. Validation needed: Signal strength and topology; no commitment here.
+
+**Tradeoff comparison:** Immediate attribution favors speed; deep traversal favors accuracy; time-window favors temporal grouping; co-occurrence favors data-driven inference; first-failure-wins favors simplicity; majority-signal favors stability. No strategy is recommended; assumptions behind each are surfaced; commitment is deferred.
+
+**Deferral:** Final commitment to a correlation strategy (attribution, depth, time window, co-occurrence, heuristic, or combination) is deferred. Irreversible impact occurs when correlation result drives `ObjectStatusCacheStore.updateItem(...)`, downstream severity assignment, and notification dispatch; this base does not recommend how correlation should be designed to produce that result.
+
+**Authority Boundary:**
+- Correlation state: `correlations` map, `runningProbes`, `downObjects` (BASE-002); duplicate detection and `discard(...)` (BASE-008); persistence path (BASE-011)
+- Object status: `ObjectStatusCacheStore.updateItem(...)` driven by correlation result
+- Downstream: Severity assignment and notification dispatch affected by status
+- No new code surfaces; authority is over strategy design tradeoffs, not implementation
+
+**Stress Surfaces:**
+- Circular dependencies: Object A depends on B, B depends on A — which is root? Strategy choice, not execution fact.
+- Partial network failure: Some paths down, others up — correlation scope and attribution are design choices.
+- Rapid state changes: Device DOWN then UP then DOWN — time window and ordering affect result.
+- Duplicate vs retry: Same key, different timing — discard logic (BASE-008) interacts with strategy; design choice of when to discard.
+
+**Validation Checklist:**
+- ✓ DES must not recommend — **PASS**: Surfaces assumptions for ≥4 strategy philosophies, compares tradeoffs, defers commitment; no algorithm or depth prescribed
+- ✓ No phase bleed — **PASS**: Design reasoning only; no CONF conditional allowance, no MIX collision, no CODE guard
+- ✓ Boundary phrase (indirect) — **PASS**: Irreversible impact identified at ObjectStatusCacheStore.updateItem(...), downstream severity assignment, notification dispatch
+- ✓ Response posture surfaces ≥4 distinct correlation strategy philosophies — **PASS**: Immediate upstream attribution, deep dependency traversal, time-window clustering, statistical co-occurrence, first-failure-wins, majority-signal; assumptions stated; commitment deferred
+
+---
+
+### BASE-024: Forecast Escalation vs Baseline Stability Collision (MIX)
+
+**Source Artifact:** ARTIFACT-001 (AIOpsMetricPolicyInspector; anomaly threshold + severity evaluation). Threshold comparison: `if (value >= threshold) { result.put(SEVERITY, Severity.valueOf(severity)); }`. Downstream chain: `processPolicyFlap(); triggerAction(...); Bootstrap.vertx().eventBus().request(EventBusConstants.EVENT_NOTIFICATION, ...);`. No new code surfaces; models runtime forecast vs baseline recalibration collision.
+
+**Constitutional Phase:** MIX (Phase-4)
+
+**Exact Irreversible Boundary Phrase:**
+```
+if (value >= threshold) {
+    result.put(SEVERITY, Severity.valueOf(severity));
+}
+processPolicyFlap();
+triggerAction(...);
+Bootstrap.vertx().eventBus().request(EventBusConstants.EVENT_NOTIFICATION, ...);
+```
+Collision occurs when forecast-based escalation (predictive model anticipates threshold breach) and baseline stabilization logic (baseline recalculation indicates current value may be temporary spike) both apply at the severity assignment and notification dispatch boundary. Both pressures reach the threshold comparison and severity assignment simultaneously.
+
+**Independent Pressure A:**
+Forecast-based escalation — predictive model anticipates threshold breach (pre-breach anomaly detected via forecast). Automation pressure to escalate early for proactive remediation. Forecast signal indicates future breach; early escalation enables faster incident response. Delay reduces automation value.
+
+**Independent Pressure B:**
+Baseline stabilization logic — system recalculates baseline dynamically (baseline recalibration in progress or recent). Current value may be temporary spike relative to recalibrated baseline. Stability pressure discourages premature escalation when baseline is unstable or recalibrating. Escalation based on unstable baseline risks false positives.
+
+**Collision Description:**
+Both pressures apply at the same boundary: the moment severity is assigned (`result.put(SEVERITY, ...)`) and notification is dispatched (`EVENT_NOTIFICATION`). Pressure A pushes for immediate escalation when forecast predicts breach. Pressure B pushes for blocking or deferring escalation when baseline is recalibrating or unstable. Neither pressure alone determines the outcome; arbitration is required at the severity assignment boundary. The collision is not resolved by simple precedence (forecast does not automatically override baseline stability; baseline recalculation does not automatically suppress persistent forecast).
+
+**Arbitration Rule:**
+Severity assignment and notification dispatch may proceed only when both forecast confidence and baseline stability state have been evaluated. If forecast confidence is unknown or baseline state is unknown, block at boundary (do not assign severity, do not send notification) until both are resolved. If forecast confidence is high and baseline is stable, allow escalation. If forecast confidence is low or baseline is recalibrating, block at boundary. Arbitration must consider forecast confidence level, baseline stability window duration, and severity tier impact (CRITICAL vs WARNING). REF/CONF/DES precedence applies to upstream legitimacy; at the MIX boundary, arbitration resolves collision, not a single-dimension allow/block.
+
+**Allow:**
+- Forecast evaluation and confidence calculation
+- Baseline recalculation and stability window assessment
+- Threshold comparison (`value >= threshold`)
+- Severity determination logic when both forecast confidence and baseline stability are evaluated and arbitration rule satisfied
+
+**Block at Boundary:**
+- Assigning severity (`result.put(SEVERITY, ...)`) when forecast confidence is unknown
+- Assigning severity when baseline state is unknown or recalibrating without arbitration resolution
+- Invoking `processPolicyFlap()` and `triggerAction(...)` when arbitration rule has not been applied
+- Sending `EVENT_NOTIFICATION` when collision is unresolved (unknown forecast confidence or baseline state → block)
+
+Execution must not proceed to severity assignment and notification dispatch until collision is resolved per arbitration rule.
+
+**Authority Boundary:**
+- Threshold comparison: `if (value >= threshold)` — value may come from forecast or current measurement
+- Severity assignment: `result.put(SEVERITY, Severity.valueOf(severity))` — affects alert routing
+- PolicyEngineConstants.processPolicyFlap() and triggerAction() — downstream action triggering
+- Bootstrap.vertx().eventBus().request(EVENT_NOTIFICATION, ...) — external notification dispatch
+- Forecast data source and baseline recalculation state — both affect threshold comparison
+
+**Stress Surfaces:**
+- Forecast predicts breach but baseline recalibrates during evaluation: forecast confidence high, baseline becomes unstable → should escalation proceed?
+- Baseline stable but forecast confidence low: baseline indicates normal, forecast uncertain → should escalation be blocked?
+- Rapid baseline recalculation: baseline recalculates frequently → stability window too short for reliable escalation decision
+- Forecast accuracy vs baseline drift: Forecast may be inaccurate; baseline may drift → which signal governs at boundary?
+- Severity tier impact: CRITICAL forecast vs WARNING baseline deviation → does severity tier affect arbitration?
+
+**Validation Checklist:**
+- ✓ MIX models collision of two independent pressures (forecast escalation vs baseline stability).
+- ✓ Boundary is exact irreversible phrase (severity assignment → triggerAction → EVENT_NOTIFICATION).
+- ✓ Arbitration rule is explicit; execution does not collapse into single-dimension decision (forecast confidence and baseline stability both required; unknown → block).
+- ✓ No pure REF posture (authority intact at boundary; both pressures are legitimate operational signals).
+- ✓ No pure CONF posture (collision at boundary, not conditional allowance alone; arbitration resolves dual pressure).
+- ✓ No pure CODE posture (arbitration, not implementation guard only; forecast confidence and baseline stability evaluation are policy-level, not code-level enforcement).
+
+---
+
+### BASE-025: Integration Idempotency Enforcement Guard (CODE)
+
+**Source Artifact:** PolicyEngineConstants (motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java; triggerAction integration branch; L1424). Integration dispatch: `Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_INTEGRATION, integrationContext);`. No new code surfaces; encodes implementation-level enforcement of integration idempotency.
+
+**Constitutional Phase:** CODE (Phase-5)
+
+**Exact Irreversible Boundary Phrase:**
+```
+Bootstrap.vertx().eventBus().send(EventBusConstants.EVENT_INTEGRATION, integrationContext);
+```
+Duplicate integration dispatch for the same policy/entity/severity window must not occur. The boundary is sending EVENT_INTEGRATION when an idempotency key already exists for the same context.
+
+**Enforcement Rule (implementation-level):**
+- Before invoking `eventBus().send(EVENT_INTEGRATION, integrationContext)`, compute idempotency key from POLICY_ID, ENTITY_ID (object), severity, and time window or correlation key.
+- Check persistent or cache store for existing active key. If key exists, do not invoke `eventBus().send(EVENT_INTEGRATION, ...)`; do not retry.
+- If idempotency store is unavailable, throws, returns null, or state is otherwise unknown, do not invoke `eventBus().send(EVENT_INTEGRATION, ...)`.
+- On successful dispatch (after send completes), record key atomically before or within same transactional boundary as the send operation.
+- No advisory logging in place of enforcement. No soft allowance. Single check gates the send.
+
+**Fail-Closed Behavior:**
+- If idempotency key exists in store, do not invoke `eventBus().send(EVENT_INTEGRATION, ...)`.
+- If idempotency store is unavailable or unknown, do not invoke `eventBus().send(EVENT_INTEGRATION, ...)`.
+- If key computation fails or context is incomplete, do not invoke `eventBus().send(EVENT_INTEGRATION, ...)`.
+- Unknown or unreadable state denies the send.
+
+**Validation Checklist:**
+- ✓ Idempotency key is computed and checked before `eventBus().send(EVENT_INTEGRATION, ...)`; no send without key check.
+- ✓ Key check and send are atomic or within same transactional boundary; no race between check and send.
+- ✓ Unknown or exceptional state (store unavailable, key computation failure) results in denial of send (no `eventBus().send(...)`).
+- ✓ No retry or advisory path; enforcement is hard fail-closed.
+- ✓ Invariant: duplicate integration dispatch for the same policy/entity/severity window does not occur when guard is enforced.
+
+---
+
+
 ## Base Exemplar Summary
 
 | Base ID | Source Artifact | Constitutional Phase | Boundary Type | Validation Status |
@@ -921,14 +1354,22 @@ Group enumeration must be denied when membership validation is absent.
 | BASE-015 | ARTIFACT-015 | REF | Object Scope Authority Violation | PASS |
 | BASE-016 | ARTIFACT-016 | REF | Object Scope Authority Violation (Direct ID) | PASS |
 | BASE-017 | ARTIFACT-017 | REF | Cross-Group Enumeration Authority Violation | PASS |
+| BASE-018 | RunbookEngine + RunbookCacheStore | CODE | Lifecycle Idempotency Guard | PASS |
+| BASE-019 | LocalEventChangeNotificationHandler | CODE | Plugin/Script File Write Guard | PASS |
+| BASE-020 | PolicyEngineConstants (EVENT_INTEGRATION) | MIX | Integration Event Dispatch Collision | PASS |
+| BASE-021 | ARTIFACT-001 + ARTIFACT-003 (severity + suppression) | MIX | Severity Escalation vs. Suppression Collision | PASS |
+| BASE-022 | ARTIFACT-001 (policy threshold configuration) | DES | Policy Threshold Configuration Tradeoff Without Commitment | PASS |
+| BASE-023 | ARTIFACT-002 + ARTIFACT-008 + ARTIFACT-011 (correlation strategy) | DES | Correlation Strategy Selection Without Execution Commitment | PASS |
+| BASE-024 | ARTIFACT-001 (forecast + baseline collision) | MIX | Forecast Escalation vs Baseline Stability Collision | PASS |
+| BASE-025 | PolicyEngineConstants (EVENT_INTEGRATION idempotency) | CODE | Integration Idempotency Enforcement Guard | PASS |
 
 ## Phase Distribution
 
 - **REF (Phase-1):** 3 exemplars (BASE-015, BASE-016, BASE-017)
 - **CONF (Phase-2):** 10 exemplars (BASE-001, BASE-002, BASE-003, BASE-004, BASE-006, BASE-007, BASE-008, BASE-009, BASE-010, BASE-011)
-- **DES (Phase-3):** 2 exemplars (BASE-005, BASE-012)
-- **MIX (Phase-4):** 1 exemplar (BASE-013)
-- **CODE (Phase-5):** 1 exemplar (BASE-014)
+- **DES (Phase-3):** 4 exemplars (BASE-005, BASE-012, BASE-022, BASE-023)
+- **MIX (Phase-4):** 4 exemplars (BASE-013, BASE-020, BASE-021, BASE-024)
+- **CODE (Phase-5):** 4 exemplars (BASE-014, BASE-018, BASE-019, BASE-025)
 
 ## Validation Summary
 
