@@ -8,10 +8,10 @@
 
 **Current Version:** v1.6
 **Status:** Phase-4 LOCKED · Phase-5 READY  
-**Scope of Update:** Phase-6 mutation harness design, coverage expansion, variant staging, dataset pipeline articulation, audit-layer integration, section numbering corrections, and Layer-II base exemplar expansion (BASE-018 through BASE-025)  
+**Scope of Update:** Phase-6 mutation harness design, coverage expansion, variant staging, dataset pipeline articulation, audit-layer integration, and section numbering corrections  
 **Breaking Changes:** None
 
-This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy. Layer-II developments expand the Motadata corpus to 25 base exemplars (BASE-001 through BASE-025) with additions across CODE (BASE-018, BASE-019, BASE-025), MIX (BASE-020, BASE-021, BASE-024), and DES (BASE-022, BASE-023) phases.
+This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy.
 
 ---
 
@@ -102,7 +102,7 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 12. How to Review (Engineering Lens)
 13. Variants & Scaling Strategy
 14. From Exemplars to SFT Dataset
-15. Chronology & Phase Plan (35 Exemplars)
+15. Chronology & Phase Plan (Governance: 29 Exemplars, Phases 01–05)
     Appendix A: What makes an exemplar structurally invalid
     Appendix B: What reviewers must never overlook or tolerate
     Appendix C: Complete gated checklist + worked example
@@ -746,11 +746,11 @@ This mapping guarantees:
 The Golden Exemplars program may maintain **multiple corpora** at once:
 
 1. **Governance Corpus (Constitutional Layer)** — abstract exemplars under GREG ratification (for example, REF‑01, DES‑01, MIX‑04, CODE‑08). This layer encodes constitutional semantics and review discipline.
-2. **ML Compilation Corpus (Product-Specific Layer)** — concrete, system-grounded exemplars for a particular product pipeline (for example, the Motadata corpus with 25 base exemplars (BASE-001 through BASE-025) across REF/CONF/DES/MIX/CODE phases: REF (3), CONF (10), DES (4), MIX (4), CODE (4)).
+2. **ML Compilation Corpus (Product-Specific Layer)** — concrete, system-grounded exemplars for a particular product pipeline (for example, the Motadata corpus with 17 base exemplars and 68 variants across REF/CONF/DES/MIX/CODE).
 
 These corpora **may differ** in size and phase distribution. Only **compilation corpora** are eligible to enter SFT.
 
-Phase distribution and exemplar counts **must be declared per corpus**. Future readers must not assume that a canonical governance count (e.g., 35 design-era exemplars) is identical to any given SFT dataset.
+Phase distribution and exemplar counts **must be declared per corpus**. Future readers must not assume that a canonical governance count (e.g., 29 locked exemplars per GREG Phases 01–05; Phase-06 hardening artifacts excluded) is identical to any given SFT dataset.
 
 ---
 
@@ -776,15 +776,15 @@ Each stress surface must feed **at least one primary category**. Coverage is cor
 
 Each category is instantiated via **LOCKED base exemplars**.
 
-| Category         | Base Exemplars (examples) |
-| ---------------- | ------------------------- |
-| RCA              | RCA‑01, RCA‑02, RCA‑03    |
-| Anomaly          | ANOM‑01, ANOM‑02, ANOM‑03 |
-| Config / Change  | CONF‑01, CONF‑02, CONF‑03 |
-| Refusal / Safety | REF‑01, REF‑02, REF‑03    |
-| Design           | DES‑01, DES‑02, DES‑03    |
-| Coding Judgment  | CODE‑01, CODE‑02, CODE‑03 |
-| Mixed / Ugly     | MIX‑01, MIX‑02            |
+| Category         | Base Exemplars (examples)              |
+| ---------------- | ------------------------------------------------------------------ |
+| RCA              | RCA‑01, RCA‑02                                                     |
+| Anomaly          | ANOM‑01, ANOM‑02                                                   |
+| Config / Change  | CONF‑01, CONF‑02, CONF‑03, CONF‑04, CONF‑05, CONF‑06               |
+| Refusal / Safety | REF‑01, REF‑02                                                     |
+| Design           | DES‑01, DES‑02, DES‑03, DES‑04, DES‑05, DES‑06, DES-Correlation-01 |
+| Coding Judgment  | CODE‑01, CODE‑02, CODE‑04, CODE‑05, CODE‑06, CODE‑07, CODE‑08      |
+| Mixed / Ugly     | MIX‑01, MIX‑02, MIX‑03, MIX‑04                                     |
 
 > 🔒 Base exemplars are the **only place** new judgment may be authored. Variants follow.
 
@@ -1340,17 +1340,17 @@ Dataset artifacts must be versioned and tagged **at freeze**. Any violation of t
 
 ---
 
-## 15. Chronology & Phase Plan (35 Exemplars)
+## 15. Chronology & Phase Plan (Governance: 29 Exemplars, Phases 01–05)
 
 **Foundational Principle**: *Judgment precedes code. Refusal precedes automation. Reasoning precedes execution.*
 
-Exemplars are authored, reviewed, and **LOCKED sequentially**. A phase may not advance unless all exemplars in the current phase pass D.N.A validation.
+This section describes the **governance (constitutional) phase plan**. Exemplar counts and IDs are canonical per GREG: `governance/golden-exemplars/GREG/GREG-Initiation-Ratification-v0.9.md`. **29 locked exemplars** (Phases 01–05) are counted; **Phase-06 is hardening/reachability only** and is not counted in the governance total. Product pipelines (e.g. Motadata) may use different base counts (e.g. 17 bases) derived from this doctrine.
 
-Phases are sequenced by **irreversibility class**, not by use case or workflow order.
+Exemplars are authored, reviewed, and **LOCKED sequentially**. A phase may not advance unless all exemplars in the current phase pass D.N.A validation. Phases are sequenced by **irreversibility class**, not by use case or workflow order.
 
 ---
 
-### Phase‑1 — Foundations: Signal Skepticism & Judgment Basics (5)
+### Phase‑1 — Foundations: Signal Skepticism & Judgment Basics (6)
 
 **Goal**: Train early refusal, ambiguity recognition, and judgment restraint **before** progress is permitted.
 
@@ -1360,13 +1360,14 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 * Ambiguity containment
 * Early stopping over speculation
 
-**Exemplars:**
+**Exemplars (GREG locked):**
 
+* **REF‑01** — Refusal due to insufficient evidence
+* **REF‑02** — Refusal due to missing authority or ownership
 * **RCA‑01** — Bug root cause with misleading symptoms
 * **RCA‑02** — Failure caused by assumption mismatch (code vs design)
 * **ANOM‑01** — Flaky or non‑deterministic test behavior
 * **ANOM‑02** — Performance regression misclassified as correctness bug
-* **REF‑01** — Refusal due to insufficient evidence
 
 **Pass Condition:**
 
@@ -1387,14 +1388,14 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 > *If this action goes wrong, can I still roll it back unilaterally and completely?*
 > If **no**, an irreversible boundary is crossed.
 
-**Exemplars:**
+**Exemplars (GREG locked):**
 
 * **CONF‑01** — Refactor request with unclear blast radius (merge risk)
 * **CONF‑02** — API change with unknown downstream consumers (autonomy risk)
 * **CONF‑03** — Configuration change conflicting with repo ownership (contract exposure)
 * **CONF‑04** — Change requested under deadline pressure (implicit expansion)
 * **CONF‑05** — Multi‑stakeholder change with partial approvals (loss of rollback control)
-* **REF‑02** — Refusal due to missing authority or ownership
+* **CONF‑06** — Multi‑repo / multi‑team coordination (irreversible boundary)
 
 **Pass Condition:**
 
@@ -1414,14 +1415,14 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 * Rollback observability
 * Ambiguity-respecting deferral
 
-**Exemplars:**
+**Exemplars (GREG locked):**
 
 * **DES‑01** — Greenfield design with unclear scale assumptions
 * **DES‑02** — Incremental enhancement vs rewrite decision
 * **DES‑03** — Migration design with rollback uncertainty
 * **DES‑04** — Performance‑critical design with weak evidence
 * **DES‑05** — Design under conflicting requirements
-* **REF‑03** — Refusal to finalize design due to unresolved trade‑offs
+* **DES‑Correlation‑01** — Safe defaults in anomaly correlation logic (reclassified from CODE‑03; no enforcement gap)
 
 **Pass Condition:**
 
@@ -1430,9 +1431,9 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 
 ---
 
-### Phase‑4 — Collision Judgment (MIX) (3)
+### Phase‑4 — Collision Judgment (MIX) (4)
 
-**Status:** Canonical and complete
+**Status:** Canonical and complete  
 **Role:** Resolve judgment collisions when REF, CONF, and DES interact
 
 > Phase-4 validates **correct collapse of previously valid judgments** under simultaneous pressure.
@@ -1455,13 +1456,14 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 * Deferral — irreversibility cannot be justified
 * Bounding — limited, non-committal action allowed
 
-**Canonical Exemplars:**
+**Canonical Exemplars (GREG locked):**
 
 * **MIX‑01** — REF + CONF → Refusal
 * **MIX‑02** — CONF + DES → Deferral
 * **MIX‑03** — REF + DES (CONF latent) → Bounding
+* **MIX‑04** — Constitutional MIX (audited in Phase‑06)
 
-> No other Phase‑4 combinations permitted under schema v1.0
+> No other Phase‑4 combinations permitted under schema v1.0.
 
 **Pass Condition:**
 
@@ -1469,7 +1471,7 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 
 ---
 
-### Phase‑5 — Coding with Judgment: Safe Implementation (8)
+### Phase‑5 — Coding with Judgment: Safe Implementation (7)
 
 **Goal**: Ensure implementation reflects restraint and encodes refusal where required.
 
@@ -1479,16 +1481,15 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 * Defaults that fail safe
 * Explicit refusal encoded in code
 
-**Exemplars:**
+**Exemplars (GREG locked):** CODE‑03 is reclassified to Phase‑03 as DES‑Correlation‑01; **7 active CODE** exemplars:
 
-* **CODE‑01** — Implement fix with explicit assumption documentation
-* **CODE‑02** — Code change that must fail safely
-* **CODE‑03** — Introducing validation and guardrails
-* **CODE‑04** — Staged refactor with incremental rollout
-* **CODE‑05** — Safe defaults and feature flags
-* **CODE‑06** — Refusal‑in‑code (hard stop on unsafe state)
-* **CODE‑07** — Observability and audit hooks
-* **REF‑05** — Refusal to generate code without required context
+* **CODE‑01** — Implement fix with explicit assumption documentation / execution authority & guarded execution
+* **CODE‑02** — Code change that must fail safely / ownership legitimacy refusal
+* **CODE‑04** — Staged refactor with incremental rollout / approval-gated configuration rollout
+* **CODE‑05** — Safe defaults and feature flags / human-in-the-loop enforcement
+* **CODE‑06** — Refusal‑in‑code (hard stop on unsafe state) / audit-first behavior under uncertainty
+* **CODE‑07** — Observability and audit hooks / cross-tenant containment
+* **CODE‑08** — Stale context refusal / adaptive behavior with explicit safety bounds
 
 **Pass Condition:**
 
@@ -1497,22 +1498,19 @@ Phases are sequenced by **irreversibility class**, not by use case or workflow o
 
 ---
 
-### Phase‑6 — Advanced / Optional Depth (4)
+### Phase‑6 — Hardening & Reachability (not counted in 29)
 
-**Goal**: Capture judgment at sustained scale, coordination depth, or irreversible horizon.
+**Role:** Structural proof and endurance; **not** part of the governance exemplar count. Phase‑06 artifacts validate that CODE guards and judgment hold across reachability surfaces.
 
-**Note**: Phase-5 encodes judgment. Phase-6 tests whether judgment survives time, scale, and pressure.
+**Artifacts (GREG):**
 
-**Exemplars:**
-
-* **DES‑06** — Long‑term design decision with irreversible cost
-* **CONF‑06** — Multi‑repo / multi‑team coordination
-* **MIX‑06** — Sustained pressure causing decision quality decay
-* **CODE‑08** — Adaptive behavior with explicit safety bounds
+* **DES‑06** — Long‑term design decision with irreversible cost (constitutional/endurance)
+* **CONF‑06** — Multi‑repo / multi‑team coordination (constitutional/endurance)
+* MIX‑04 audited; CODE‑08 exercised in reachability. No MIX‑06 artifact.
 
 **Entry Condition:**
 
-* All prior phases are locked and mutation-stable
+* All Phases 01–05 are locked and mutation-stable. Phase‑06 does not introduce new judgment semantics.
 
 ### Collapse Vector Detection (Mandatory for Mutation Harness)
 
@@ -1531,43 +1529,44 @@ The mutation ledger must record, for each vector, **whether collapse was prevent
 
 
 
-### Comprehensive Exemplar Summary
+### Comprehensive Exemplar Summary (Governance: 29, Phases 01–05)
 
 > **Note on terminal posture**
-> Terminal posture describes the *only stable, correct end state* once the exemplar’s judgment is fully applied. It is not an execution outcome; it is a governance outcome.
+> Terminal posture describes the *only stable, correct end state* once the exemplar’s judgment is fully applied. It is not an execution outcome; it is a governance outcome. **Source:** GREG-Initiation-Ratification-v0.9.md. Phase‑06 (hardening) is listed separately and not counted in the 29.
 
-| Phase | ID      | Title                                           | Type    | Terminal Posture  |
-| ----- | ------- | ----------------------------------------------- | ------- | ----------------- |
-| P1    | RCA-01  | Bug root cause with misleading symptoms         | RCA     | Refusal           |
-| P1    | RCA-02  | Failure from assumption mismatch                | RCA     | Refusal           |
-| P1    | ANOM-01 | Flaky test behavior                             | Anomaly | Refusal           |
-| P1    | ANOM-02 | Misclassified performance regression            | Anomaly | Refusal           |
-| P1    | REF-01  | Refusal due to insufficient evidence            | Refusal | Refusal           |
-| P2    | CONF-01 | Refactor with unclear blast radius              | Config  | Conditional Block |
-| P2    | CONF-02 | API change with unknown consumers               | Config  | Conditional Block |
-| P2    | CONF-03 | Ownership-conflicting config change             | Config  | Conditional Block |
-| P2    | CONF-04 | Change requested under deadline pressure        | Config  | Conditional Block |
-| P2    | CONF-05 | Multi-stakeholder change with partial approvals | Config  | Conditional Block |
-| P2    | REF-02  | Refusal due to missing ownership                | Refusal | Refusal           |
-| P3    | DES-01  | Greenfield with unclear scale assumptions       | Design  | Deferral          |
-| P3    | DES-02  | Enhancement vs rewrite decision                 | Design  | Deferral          |
-| P3    | DES-03  | Migration with rollback uncertainty             | Design  | Deferral          |
-| P3    | DES-04  | Performance-critical design with weak signal    | Design  | Deferral          |
-| P3    | DES-05  | Conflicting design requirements                 | Design  | Deferral          |
-| P4    | MIX-01  | REF + CONF → Refusal                            | Mixed   | Refusal           |
-| P4    | MIX-02  | CONF + DES → Deferral                           | Mixed   | Deferral          |
-| P4    | MIX-03  | REF + DES (CONF latent) → Bounding              | Mixed   | Bounding          |
-| P5    | CODE-01 | Execution authority & guarded execution         | Coding  | Safe Execution    |
-| P5    | CODE-02 | Ownership legitimacy refusal                    | Coding  | Refusal           |
-| P5    | CODE-03 | Safe defaults in anomaly correlation logic      | Coding  | Safe Execution    |
-| P5    | CODE-04 | Approval-gated configuration rollout            | Coding  | Safe Execution    |
-| P5    | CODE-05 | Human-in-the-loop enforcement in automation     | Coding  | Safe Execution    |
-| P5    | CODE-06 | Audit-first behavior under uncertainty          | Coding  | Refusal           |
-| P5    | CODE-07 | Cross-tenant / cross-service containment        | Coding  | Refusal           |
-| P5    | CODE-08 | Stale context refusal                           | Coding  | Refusal           |
-| P6    | DES-06  | Long-term irreversible design decision          | Design  | Deferral          |
-| P6    | CONF-06 | Cross-repo / cross-team irreversible change     | Config  | Conditional Block |
-| P6    | MIX-06  | Judgment decay under sustained pressure         | Mixed   | Refusal           |
+| Phase | ID                 | Title                                             | Type    | Terminal Posture  |
+| ----- | ------------------ | ------------------------------------------------- | ------- | ----------------- |
+| P1    | REF-01             | Refusal due to insufficient evidence              | Refusal | Refusal           |
+| P1    | REF-02             | Refusal due to missing authority or ownership     | Refusal | Refusal           |
+| P1    | RCA-01             | Bug root cause with misleading symptoms           | RCA     | Refusal           |
+| P1    | RCA-02             | Failure from assumption mismatch                  | RCA     | Refusal           |
+| P1    | ANOM-01            | Flaky test behavior                               | Anomaly | Refusal           |
+| P1    | ANOM-02            | Misclassified performance regression              | Anomaly | Refusal           |
+| P2    | CONF-01            | Refactor with unclear blast radius                | Config  | Conditional Block |
+| P2    | CONF-02            | API change with unknown consumers                 | Config  | Conditional Block |
+| P2    | CONF-03            | Ownership-conflicting config change               | Config  | Conditional Block |
+| P2    | CONF-04            | Change requested under deadline pressure          | Config  | Conditional Block |
+| P2    | CONF-05            | Multi-stakeholder change with partial approvals   | Config  | Conditional Block |
+| P2    | CONF-06            | Multi-repo / multi-team coordination              | Config  | Conditional Block |
+| P3    | DES-01             | Greenfield with unclear scale assumptions         | Design  | Deferral          |
+| P3    | DES-02             | Enhancement vs rewrite decision                   | Design  | Deferral          |
+| P3    | DES-03             | Migration with rollback uncertainty               | Design  | Deferral          |
+| P3    | DES-04             | Performance-critical design with weak signal      | Design  | Deferral          |
+| P3    | DES-05             | Conflicting design requirements                   | Design  | Deferral          |
+| P3    | DES-Correlation-01 | Safe defaults in anomaly correlation (ex CODE-03) | Design  | Deferral / Safe   |
+| P4    | MIX-01             | REF + CONF → Refusal                              | Mixed   | Refusal           |
+| P4    | MIX-02             | CONF + DES → Deferral                             | Mixed   | Deferral          |
+| P4    | MIX-03             | REF + DES (CONF latent) → Bounding                | Mixed   | Bounding          |
+| P4    | MIX-04             | Constitutional MIX (Phase‑06 audited)             | Mixed   | Per exemplar      |
+| P5    | CODE-01            | Execution authority & guarded execution           | Coding  | Safe Execution    |
+| P5    | CODE-02            | Ownership legitimacy refusal                      | Coding  | Refusal           |
+| P5    | CODE-04            | Approval-gated configuration rollout              | Coding  | Safe Execution    |
+| P5    | CODE-05            | Human-in-the-loop enforcement in automation       | Coding  | Safe Execution    |
+| P5    | CODE-06            | Audit-first / refusal-in-code under uncertainty   | Coding  | Refusal           |
+| P5    | CODE-07            | Cross-tenant / cross-service containment          | Coding  | Refusal           |
+| P5    | CODE-08            | Stale context refusal / explicit safety bounds    | Coding  | Refusal           |
+
+**Phase‑06 (hardening; not counted in 29):** DES‑06, CONF‑06 (constitutional/endurance). MIX‑04 audited; CODE‑08 exercised in reachability.
 
 ---
 
@@ -1596,19 +1595,19 @@ The mutation ledger must record, for each vector, **whether collapse was prevent
 * **Safe Execution** — Execution is permitted *only because* irreversible boundaries are fully guarded and refusal remains dominant if conditions break.
 * **Refusal** — Structural conditions (authority, ownership, freshness, scope, auditability) are violated; execution must be impossible.
 
-### Phase-06 (ADV)
+### Phase-06 (Hardening / Reachability)
 
-* **Deferral** — Judgment must hold over time; commitment is postponed to observe endurance under sustained pressure.
-* **Conditional Block** — Multi-actor or cross-repo coordination may unlock legitimacy, but never by default.
-* **Refusal** — Judgment decay under pressure is detected; normalization of violation must be prevented.
+* **Deferral** — Judgment must hold over time; commitment is postponed to observe endurance under sustained pressure (e.g. DES‑06).
+* **Conditional Block** — Multi-actor or cross-repo coordination may unlock legitimacy, but never by default (e.g. CONF‑06).
+* Phase‑06 does not introduce new judgment semantics; it validates structural proof and endurance. Not counted in the 29 governance exemplars.
 
 ---
 
-## Explicit Gap Acknowledgement
+## Governance Corpus Lock (GREG)
 
-* **REF-03** is intentionally **not authored yet**.
-* Any prior references to REF-03 should be treated as placeholders, not canonical exemplars.
-* If REF-03 is introduced later, it must re-enter **Phase-01 (REF)** and may impact downstream MIX exemplars.
+* The **29 governance exemplars** (Phases 01–05) are canonical per **GREG-Initiation-Ratification-v0.9.md**. No changes without governance versioning.
+* **Phase‑06** is hardening and reachability only; DES‑06 and CONF‑06 are not counted in the 29.
+* Product pipelines (e.g. Motadata 17 bases, 68 variants) are derived from this doctrine and may have different IDs and counts; they remain subordinate to the constitutional phase semantics.
 
 ---
 
@@ -1824,7 +1823,7 @@ They are orthogonal. Using **Stage** for the pipeline axis avoids confusion with
 **What lives here**
 
 * Constitutional Manifest
-* 29 locked abstract golden exemplars
+* 29 locked exemplars (Phases 01–05 per GREG; Phase-06 hardening excluded — see `governance/golden-exemplars/GREG/GREG-Initiation-Ratification-v0.9.md`)
 * Dominance hierarchy (REF > CONF > DES)
 * Boundary invariance doctrine
 * Phase-06 reachability (governance-level)
@@ -1836,14 +1835,14 @@ They are orthogonal. Using **Stage** for the pipeline axis avoids confusion with
 
 These phases define judgment semantics:
 
-| Constitutional Phase | Meaning |
+| Constitutional Phase | Meaning                     |
 | -------------------- | --------------------------- |
-| Phase-1 | REF — legitimacy refusal |
-| Phase-2 | CONF — bounded allowance |
-| Phase-3 | DES — design reasoning only |
-| Phase-4 | MIX — collision arbitration |
-| Phase-5 | CODE — enforcement encoding |
-| Phase-6 | REACH — endurance proof |
+| Phase-1              | REF — legitimacy refusal    |
+| Phase-2              | CONF — bounded allowance    |
+| Phase-3              | DES — design reasoning only |
+| Phase-4              | MIX — collision arbitration |
+| Phase-5              | CODE — enforcement encoding |
+| Phase-6              | REACH — endurance proof     |
 
 These are **semantic roles**. They do not describe workflow steps. They describe *how reasoning must behave*.
 
@@ -1861,17 +1860,14 @@ This layer turns constitutional doctrine into trainable artifacts.
 
 These **stages** describe *preparation workflow*, not constitutional semantics:
 
-| Pipeline Stage | Meaning |
+| Pipeline Phase | Meaning |
 | -------------- | --------------------------------- |
-| Stage-1 | Structural mapping |
-| Stage-1A | Boundary detection |
-| Stage-2 | Artifact extraction |
-| Stage-3 | Motadata base exemplar mapping |
-| Stage-4 | Variant generation |
-| Stage-5 | Variant stability gate |
-| Stage-6 | Mutation harness (pre-SFT stress) |
-| Stage-7 | Dataset compilation |
-| Stage-8 | SFT training (see subphases below) |
+| Phase-3 | Motadata base exemplar mapping |
+| Phase-4 | Variant generation |
+| Phase-5 | Variant stability gate |
+| Phase-6 | Mutation harness (pre-SFT stress) |
+| Phase-7 | Dataset compilation |
+| Phase-8 | SFT training |
 
 These are **operational steps**. They do not redefine REF/CONF/DES etc.
 
@@ -2049,8 +2045,8 @@ Observation validates behavior after execution.
 GOVERNANCE (Constitutional Phase Axis)
 REF / CONF / DES / MIX / CODE / REACH
 ↓
-ML COMPILATION (Pipeline Stage Axis)
-Stage-1 Mapping → Stage-1A Boundary → Stage-2 Artifact → Stage-3 Base → Stage-4 Variants → Stage-5 Stability → Stage-6 Mutation → Stage-7 Freeze → Stage-8 SFT
+ML COMPILATION (Workflow Phases)
+Base → Variants → Stability → Mutation → Freeze → SFT
 ↓
 RUNTIME
 Plan → Judge → Execute → Final Gate

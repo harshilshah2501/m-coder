@@ -5,7 +5,7 @@ It explains how judgment is defined, taught, enforced, and proven across:
 
 - 4 judgment layers
 - 6 phases
-- 35 exemplars
+- 29 exemplars (GREG locked, Phases 01–05; Phase-06 hardening excluded; see `governance/golden-exemplars/GREG/GREG-Initiation-Ratification-v0.9.md`)
 - 7 architectural stress surfaces
 - Execution surfaces (where behavior happens)
 - Validation ledgers
@@ -112,7 +112,7 @@ flowchart TB
 
 ---
 
-## 2. Phases & Exemplars (6 Phases, 35 Exemplars)
+## 2. Phases & Exemplars (6 Phases, 29 Exemplars — GREG Locked, Phases 01–05)
 
 ### 2.1 Phase semantics
 
@@ -142,7 +142,7 @@ Each phase has **exactly one** allowed judgmental function:
 
 ### 2.2 Exemplar index (conceptual view)
 
-A comprehensive table (in the canonical guide) lists all 35 exemplars. Conceptually:
+A comprehensive table (in the canonical guide) lists all 29 governance exemplars (GREG Phases 01–05: 6+6+6+4+7; Phase-06 hardening excluded). Conceptually:
 
 - **Phase‑1 (REF / RCA / ANOM)**  
   - RCA‑01, RCA‑02, ANOM‑01, ANOM‑02, REF‑01, REF‑02.  

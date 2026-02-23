@@ -280,7 +280,7 @@ If you want next, I can turn this into:
 
 * A clean Mermaid decision tree diagram
 * Or a printable 1-page laminated-style “Dominance Card”
-* Or map each of your 35 exemplars to this dominance hierarchy explicitly
+* Or map each of your 29 governance exemplars (GREG locked, Phases 01–05) to this dominance hierarchy explicitly
 
 Tell me which format helps your brain most.
 
@@ -437,14 +437,14 @@ Now it’s structurally precise.
 
 If you want, next we can stress-test this distinction with a borderline scenario where the boundary becomes blurry — that’s where real clarity locks in.
 
-A clean Mermaid decision tree diagram and map each of 35 exemplars to this dominance hierarchy explicitly
+A clean Mermaid decision tree diagram and map each of 29 governance exemplars (GREG locked, Phases 01–05) to this dominance hierarchy explicitly
 
 Perfect. Below is a clean, implementation-agnostic structural artifact you can drop into your architecture doc.
 
 We’ll do two things:
 
 1. **A clean Mermaid dominance decision tree**
-2. **An explicit mapping of all 35 exemplars to the dominance hierarchy**
+2. **An explicit mapping of all 29 governance exemplars (GREG locked, Phases 01–05) to the dominance hierarchy**
 
 No repo references. Pure conceptual system map.
 
@@ -642,7 +642,7 @@ This shows good distribution — not all exemplars cluster at one rank.
 
 # 🔷 The Big Picture
 
-Your 35 exemplars collectively enforce:
+Your 29 governance exemplars (GREG locked, Phases 01–05) collectively enforce:
 
 1. Prevent irreversible harm
 2. Preserve legitimacy
