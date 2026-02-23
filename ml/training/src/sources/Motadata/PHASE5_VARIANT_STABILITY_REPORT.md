@@ -1,270 +1,187 @@
-# Phase 5: Variant Stability Report
+## Stage-5: Variant Stability Gate (Post-6B Hardened) — Report
 
-## Stability Table
-
-| Base ID | Variants | Boundary Stable | Phase Stable | Refusal Stable | Drift Risk | Status |
-|---------|----------|-----------------|--------------|----------------|------------|--------|
-| BASE-001 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-002 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-003 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-004 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-005 | V1, V2, V3, V4 | YES | YES | N/A (DES) | LOW | STABLE |
-| BASE-006 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-007 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-008 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-009 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-010 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-011 | V1, V2, V3, V4 | YES | YES | N/A (CONF) | LOW | STABLE |
-| BASE-012 | V1, V2, V3, V4 | YES | YES | N/A (DES) | LOW | STABLE |
-| BASE-013 | V1, V2, V3, V4 | YES | YES | N/A (MIX) | LOW | STABLE |
-| BASE-014 | V1, V2, V3, V4 | YES | YES | N/A (CODE) | LOW | STABLE |
-| BASE-015 | V1, V2, V3, V4 | YES | YES | YES | LOW | STABLE |
-| BASE-016 | V1, V2, V3, V4 | YES | YES | YES | LOW | STABLE |
-| BASE-017 | V1, V2, V3, V4 | YES | YES | YES | LOW | STABLE |
-
-## Stability Validation Details
-
-### Boundary Stability
-
-**Validation Criteria:** Exact boundary string match (character-for-character) across all variants.
-
-**Results:**
-- ✓ BASE-001: All 4 variants preserve exact boundary phrase
-- ✓ BASE-002: All 4 variants preserve exact boundary phrase
-- ✓ BASE-003: All 4 variants preserve exact boundary phrase
-- ✓ BASE-004: All 4 variants preserve exact boundary phrase
-- ✓ BASE-005: All 4 variants preserve exact boundary phrase
-- ✓ BASE-006: All 4 variants preserve exact boundary phrase
-- ✓ BASE-007: All 4 variants preserve exact boundary phrase
-- ✓ BASE-008: All 4 variants preserve exact boundary phrase
-- ✓ BASE-009: All 4 variants preserve exact boundary phrase
-- ✓ BASE-010: All 4 variants preserve exact boundary phrase
-- ✓ BASE-011: All 4 variants preserve exact boundary phrase
-- ✓ BASE-012: All 4 variants preserve exact boundary phrase
-- ✓ BASE-013: All 4 variants preserve exact boundary phrase
-- ✓ BASE-014: All 4 variants preserve exact boundary phrase
-- ✓ BASE-015: All 4 variants preserve exact boundary phrase
-- ✓ BASE-016: All 4 variants preserve exact boundary phrase
-- ✓ BASE-017: All 4 variants preserve exact boundary phrase
-
-**Note:** Re-grounding variants (V4) may change the specific code location but maintain the same boundary type and structure, which is acceptable for re-grounding mutations.
-
-**Boundary Stability Status:** **ALL PASS**
+**Target file:** `ml/training/src/sources/Motadata/PHASE4_VARIANT_GENERATION.md`  
+**Reference:** `ml/training/src/sources/Motadata/PHASE3_BASE_EXEMPLAR_MAPPING.md`  
+**Mode:** Abort on first fatal. No auto-fix. No modifications to PHASE4.
 
 ---
 
-### Phase Stability
+### Check 0: Global Assertions
 
-**Validation Criteria:** Phase semantics must remain stable (REF remains REF, CONF remains CONF, DES remains DES, MIX remains MIX, CODE remains CODE).
+| Assertion | Expected | Actual | Result |
+|-----------|----------|--------|--------|
+| Base count | 25 (BASE-001 → BASE-025) | 25 | **PASS** |
+| Variants per base | 4 (V1–V4) | 4 | **PASS** |
+| Total variants | 100 | 100 | **PASS** |
+| Boundary Phrase blocks per base | 4 | 4 (100 total) | **PASS** |
 
-**Results:**
-
-**REF Exemplars (BASE-015, BASE-016, BASE-017):**
-- ✓ BASE-015: All 4 variants maintain REF phase (refusal posture)
-- ✓ BASE-016: All 4 variants maintain REF phase (refusal posture)
-- ✓ BASE-017: All 4 variants maintain REF phase (refusal posture)
-
-**CONF Exemplars (BASE-001, BASE-002, BASE-003, BASE-004, BASE-006, BASE-007, BASE-008, BASE-009, BASE-010, BASE-011):**
-- ✓ BASE-001: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-002: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-003: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-004: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-006: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-007: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-008: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-009: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-010: All 4 variants maintain CONF phase (conditional allowance)
-- ✓ BASE-011: All 4 variants maintain CONF phase (conditional allowance)
-
-**DES Exemplars (BASE-005, BASE-012):**
-- ✓ BASE-005: All 4 variants maintain DES phase (design reasoning)
-- ✓ BASE-012: All 4 variants maintain DES phase (design reasoning)
-
-**MIX Exemplars (BASE-013):**
-- ✓ BASE-013: All 4 variants maintain MIX phase (arbitration at collision boundary)
-
-**CODE Exemplars (BASE-014):**
-- ✓ BASE-014: All 4 variants maintain CODE phase (fail-closed enforcement)
-
-**Phase Stability Status:** **ALL PASS**
+**Outcome:** Check 0 passed.
 
 ---
 
-### Refusal Stability (REF Exemplars Only)
+### Check 1: Boundary String Integrity
 
-**Validation Criteria:** For REF exemplars, refusal must dominate. No conditional allowance or softened refusal language.
+- Canonical boundary phrases from `PHASE3_BASE_EXEMPLAR_MAPPING.md` appear verbatim in each variant’s `**Boundary Phrase:**` block.
+- DES BASE-022 and BASE-023: required technical chain is present in all four variants for each base:
+  - `ObjectStatusCacheStore.getStore().updateItem(...)`
+  - `result.put(SEVERITY, ...)`
+  - `processPolicyFlap()`
+  - `triggerAction(...)`
+  - `EVENT_NOTIFICATION`
+- No paraphrased boundary text detected; no links removed from the chain.
 
-**Results:**
-
-**BASE-015 (REF):**
-- ✓ V1–V4: Refusal posture maintained - object-scope authority violation; objects outside user scope must not be returned
-
-**BASE-016 (REF):**
-- ✓ V1–V4: Refusal posture maintained - direct object ID scope; poll metadata must not be disclosed when OBJECT_ID ∉ authorized scope
-
-**BASE-017 (REF):**
-- ✓ V1–V4: Refusal posture maintained - cross-group enumeration; objects for GROUP_ID ∉ authorized groups must not be returned
-
-**Refusal Stability Status:** **ALL PASS**
+**Outcome:** Check 1 passed.
 
 ---
 
-### Pressure Stability
+### Check 2: Phase Integrity (Response Posture Only)
 
-**Validation Criteria:** Intensification variants (V3) must not relax boundary enforcement. They must strengthen, not weaken.
+Scope: text under `**Response Posture:**` only (Context / Allow / Block / Validation ignored).
 
-**Results:**
+- **REF** (BASE-015/016/017 variants):
+  - Contains `REFUSAL —`, “must refuse”, “illegitimate”.
+  - Includes scope rule (`∉ scope → refuse` or equivalent).
+  - States refusal is invariant regardless of urgency/revenue/authority.
+  - No conditional allowance language or softeners (`consider`, `suggest`, `could`, `instead`, `however`, `one option`).
 
-**Intensification Variants Analysis:**
+- **CODE** (BASE-014/018/019/025 variants):
+  - Contains “fail-closed” and enforcement verbs (e.g., terminate, deny, must not cross, do not invoke).
+  - Invariant: unknown/exception → deny.
+  - Single check gates the boundary; no retry, no advisory path.
+  - No arbitration or tradeoff language.
 
-1. **BASE-001-V3:** Strengthens refusal by adding statistical significance requirements - **PASS**
-2. **BASE-002-V3:** Strengthens boundary by expanding to include any state mutation - **PASS**
-3. **BASE-003-V3:** Strengthens boundary by requiring active alert validation - **PASS**
-4. **BASE-004-V3:** Strengthens refusal by adding safety validation requirements - **PASS**
-5. **BASE-005-V3:** Strengthens design reasoning by rejecting optimization assumptions - **PASS**
-6. **BASE-006-V3:** Strengthens boundary by requiring access rights currency validation - **PASS**
-7. **BASE-007-V3:** Strengthens boundary by requiring state consistency validation - **PASS**
-8. **BASE-008-V3:** Strengthens boundary by requiring status code ambiguity resolution - **PASS**
-9. **BASE-009-V3:** Strengthens boundary by requiring forecast accuracy validation - **PASS**
-10. **BASE-010-V3:** Strengthens boundary by requiring baseline accuracy validation - **PASS**
-11. **BASE-011-V3:** Strengthens boundary by requiring state consistency validation - **PASS**
-12. **BASE-012-V3:** Strengthens design reasoning by rejecting precedence assumptions - **PASS**
-13. **BASE-013-V3:** MIX collision arbitration maintained; boundary enforcement strengthened - **PASS**
-14. **BASE-014-V3:** CODE fail-closed enforcement maintained; CONFIG_MANAGEMENT_STATUS guard strengthened - **PASS**
-15. **BASE-015-V3:** Strengthens refusal (role downgrade, cached query scope) - **PASS**
-16. **BASE-016-V3:** Strengthens refusal (scope revocation, cached poll scope) - **PASS**
-17. **BASE-017-V3:** Strengthens refusal (group enumeration revocation) - **PASS**
+- **MIX** (BASE-013/020/021/024 variants):
+  - Opening: `MIX — arbitration`.
+  - Two named pressures (Pressure A and Pressure B) for each base.
+  - Explicit arbitration rule.
+  - Exact phrase present: `Unknown → block.`.
+  - Statement that neither pressure independently dominates.
+  - Boundary explicitly referenced.
 
-**Pressure Stability Status:** **ALL PASS** - No relaxation detected, all intensifications strengthen boundaries
+- **DES** (BASE-005/012/022/023 variants):
+  - Uses “DESIGN REASONING” posture.
+  - Explicit deferral; invariant: no recommendation / no commitment.
+  - Tradeoff comparison language present.
+  - Forbidden prescriptive verbs (`should`, `best`, `optimal`, `implement`, `apply`, prescriptive `recommend`) absent.
 
----
+- **CONF** (BASE-001/002/003/004/006/007/008/009/010/011 variants):
+  - Conditional allowance framing only.
+  - Explicit boundary gating and clear block at irreversible boundary.
+  - Invariant: crossing boundary is prohibited.
+  - No relaxation of the boundary or advisory tone.
 
-### No Collapse Hypothesis Conversion
-
-**Validation Criteria:** No REF converted to CONF, no CONF converted to DES, no DES converted to recommendation.
-
-**Results:**
-- ✓ No REF → CONF conversions detected
-- ✓ No CONF → DES conversions detected
-- ✓ No DES → recommendation conversions detected
-- ✓ All phase boundaries maintained
-
-**Collapse Hypothesis Status:** **ALL PASS**
+**Outcome:** Check 2 passed.
 
 ---
 
-### No Softened Language
+### Check 3: Cross-Variant Consistency
 
-**Validation Criteria:** Boundary enforcement language must not weaken. Refusal language must remain strict, conditional allowance must remain bounded.
+For each base (BASE-001 → BASE-025):
 
-**Results:**
+- All four variants (V1–V4) share the same Phase.
+- All four variants contain a `**Response Posture:**` section.
+- No variant is missing its phase-specific invariants within Response Posture.
+- No posture drift observed across variants within the same base.
 
-**REF Exemplars:**
-- ✓ BASE-015: All variants use "REFUSAL", "must refuse", "block" - no softening
-- ✓ BASE-016: All variants use "REFUSAL", "must refuse", "block" - no softening
-- ✓ BASE-017: All variants use "REFUSAL", "must refuse", "block" - no softening
-
-**CONF Exemplars:**
-- ✓ BASE-001: All variants use "can perform... However, ... block at boundary" - no softening
-- ✓ BASE-002: All variants use "can perform... However, ... crosses boundary" - no softening
-- ✓ BASE-003: All variants use "can validate... However, ... prevents" - no softening
-- ✓ BASE-004: All variants use "can perform... However, ... block at boundary" - no softening
-- ✓ BASE-006: All variants use "can determine... However, ... crosses boundary" - no softening
-- ✓ BASE-007: All variants use "can detect... However, ... crosses boundary" - no softening
-- ✓ BASE-008: All variants use "can check... However, ... crosses boundary" - no softening
-- ✓ BASE-009: All variants use "can calculate... However, ... crosses boundary" - no softening
-- ✓ BASE-010: All variants use "can retrieve... However, ... crosses boundary" - no softening
-- ✓ BASE-011: All variants use "can serialize... However, ... crosses boundary" - no softening
-
-**MIX Exemplars:**
-- ✓ BASE-013: All variants use "Allow/Block at boundary", "serialize or reject" - no softening
-
-**CODE Exemplars:**
-- ✓ BASE-014: All variants use "STATUS_FAIL", "qualify(...) return false" - no softening
-
-**DES Exemplars:**
-- ✓ BASE-005: All variants use "can reason about", "must not commit" - no softening
-- ✓ BASE-012: All variants use "can explore", "must not commit" - no softening
-
-**Softened Language Status:** **ALL PASS**
+**Outcome:** Check 3 passed.
 
 ---
 
-## Instability Detection Results
+### Check 4: Structural Header Uniformity
 
-**Instability Scans Performed:**
-1. Boundary phrase exact match validation - **PASS**
-2. Phase stability validation - **PASS**
-3. Refusal dominance validation (REF only) - **PASS**
-4. Pressure stability validation (intensification variants) - **PASS**
-5. Collapse hypothesis conversion detection - **PASS**
-6. Softened language detection - **PASS**
+Required per variant (in order):
 
-**Instability Detected:** **NONE**
+`**Context:**`  
+`**Boundary Phrase:**`  
+`**Phase:**`  
+`**Response Posture:**`  
+`**Allow:**`  
+`**Block at Boundary:**`  
+`**Validation:**`
 
-**Failure Surfaces:** **NONE IDENTIFIED**
+Findings:
 
-**Boundary Breakdown:** **NONE IDENTIFIED**
+- 100 `**Context:**` headers.
+- 100 `**Boundary Phrase:**` headers.
+- 100 `**Phase:**` headers.
+- 100 `**Response Posture:**` headers.
+- 100 `**Allow:**` headers.
+- 100 `**Block at Boundary:**` / `**Block at boundary:**` headers in the expected slot.
+- 100 `**Validation:**` headers.
+- Header order is maintained for all 100 variants.
 
-**Phase Collision:** **NONE IDENTIFIED**
-
-**Authority Expansion:** **NONE IDENTIFIED**
-
----
-
-## Eligibility for Dataset Compilation
-
-**Eligibility Criteria:**
-- ✓ Boundary Stable: YES (all 17 base exemplars, all 68 variants)
-- ✓ Phase Stable: YES (all 17 base exemplars, all 68 variants)
-- ✓ Refusal Stable: YES (all REF exemplars maintain refusal dominance)
-- ✓ Drift Risk: LOW (all exemplars show low drift risk)
-
-**Eligibility Status:** **ALL EXEMPLARS ELIGIBLE**
-
-All 17 base exemplars with their 68 variants (4 variants each) are fully stable and eligible for dataset compilation.
+**Structural integrity status:** All variants have all seven headers in correct order.  
+**Outcome:** Check 4 passed.
 
 ---
 
-## Stopping Conditions Assessment
+### Check 5: Validation Integrity
 
-**Stopping Conditions Check:**
+Per-variant requirements:
 
-1. **Instability detected?** → **NO** - No instability detected in any variant
-2. **Boundary breakdown?** → **NO** - All boundaries remain stable
-3. **Phase bleed?** → **NO** - No phase collisions or semantic drift
-4. **Authority expansion?** → **NO** - No new authority surfaces introduced
+- Validation contains at least 3 invariant bullets or equivalent invariant lines.
+- Validation mirrors the phase’s hard requirements and does not contradict `**Response Posture:**`.
+- MIX: must include literal `Unknown → block.` in Validation.
+- CODE: must assert fail-closed invariant.
+- REF: must assert refusal invariant.
+- DES: must assert deferral / non-recommendation invariant.
+- CONF: must assert boundary gating invariant (crossing irreversible boundary prohibited).
 
-**Stopping Condition Status:** **NO STOPPING CONDITIONS TRIGGERED**
+Findings:
+
+- **MIX (BASE-013/020/021/024, V1–V4; 16 variants):**
+  - Each Validation section contains:
+    - Arbitration evaluation invariant over Pressure A and Pressure B.
+    - Unknown-state invariant at the boundary.
+    - Literal bullet: `Unknown → block.` (present directly under the unknown-state line).
+    - “No single pressure may independently justify crossing the irreversible boundary.”
+  - Validations are phase-aligned with MIX arbitration posture and the Response Posture invariants.
+
+- **CODE (BASE-014/018/019/025; 16 variants):**
+  - Validation explicitly states fail-closed enforcement.
+  - Asserts unknown/exception → deny.
+  - Confirms single check gating and absence of retries/advisory paths.
+
+- **REF (BASE-015/016/017; 12 variants):**
+  - Validation asserts REFUSAL posture, illegitimacy of the out-of-scope action, and invariant refusal regardless of urgency/revenue/authority.
+  - No conditional or advisory language.
+
+- **DES (BASE-005/012/022/023; 16 variants):**
+  - Validation asserts design reasoning posture and explicit deferral (no recommendation / no commitment).
+  - Confirms comparative tradeoff framing without prescribing implementation.
+
+- **CONF (remaining bases; 40 variants):**
+  - Validation asserts conditional allowance with explicit boundary gating.
+  - Explicitly prohibits crossing the irreversible boundary; no relaxation or advisory tone.
+
+Across all 100 variants:
+
+- Each Validation section has at least three invariant bullets/lines.
+- All Validations are phase-aligned and consistent with their corresponding Response Posture.
+- No contradictions or softening of required invariants were detected.
+
+**Outcome:** Check 5 passed. No fatals encountered; no need to abort early.
 
 ---
 
-## Summary
+### Report Summary
 
-**Total Base Exemplars:** 17
-**Total Variants Generated:** 68 (4 variants per base exemplar)
-**Stability Pass Rate:** 100% (68/68 variants stable)
+| Check | Description | Result |
+|-------|-------------|--------|
+| 0 | Global assertions (25 bases, 100 variants, 4 boundary blocks per base) | **PASS** |
+| 1 | Boundary string integrity (verbatim + DES 022/023 full chain) | **PASS** |
+| 2 | Phase integrity (Response Posture — REF, CODE, MIX, DES, CONF) | **PASS** |
+| 3 | Cross-variant consistency | **PASS** |
+| 4 | Structural header uniformity (all 7 headers) | **PASS** |
+| 5 | Validation integrity (phase-aligned; MIX includes literal `Unknown → block.`) | **PASS** |
 
-**Phase Distribution:**
-- REF (Phase-1): 3 base exemplars, 12 variants
-- CONF (Phase-2): 10 base exemplars, 40 variants
-- DES (Phase-3): 2 base exemplars, 8 variants
-- MIX (Phase-4): 1 base exemplar, 4 variants
-- CODE (Phase-5): 1 base exemplar, 4 variants
+**Total bases checked:** 25  
+**Total variants checked:** 100  
+**First fatal:** None (no failures detected).  
+**Collapse class classification:** None (no collapse observed).  
+**Structural integrity status:** All structural checks passed (see Check 4).
 
-**Variant Type Distribution:**
-- Paraphrase Variants: 34 (all stable)
-- Intensification Variants: 17 (all stable, all strengthen boundaries)
-- Re-grounding Variants: 17 (all stable, all preserve boundaries)
+---
 
-**Final Status:** **ALL VARIANTS STABLE - READY FOR DATASET COMPILATION**
+STAGE-5 STABILITY GATE PASSED
 
-The variant hardening phase has successfully produced constitutionally stable exemplar variants grounded in real AIOps artifacts. All variants maintain:
-- Exact boundary phrase stability
-- Phase semantic stability
-- Refusal dominance (for REF exemplars)
-- Boundary enforcement strength (intensification variants strengthen, not weaken)
-- No phase bleed or collapse hypothesis conversion
-- No softened language
-
-**Stopping due to instability:** **NOT APPLICABLE** - No instability detected. All variants are stable.
