@@ -47,6 +47,8 @@ model-backups/
 
 # Training checkpoints and artifacts
 ml/training/checkpoints/
+ml/training/phase08/training_env/
+ml/training/phase08/training/checkpoints/
 ml/training/artifacts/results/
 ml/training/data/*.jsonl
 ml/training/data/*.json
