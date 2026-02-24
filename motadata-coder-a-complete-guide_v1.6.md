@@ -1862,12 +1862,17 @@ These **stages** describe *preparation workflow*, not constitutional semantics:
 
 | Pipeline Phase | Meaning |
 | -------------- | --------------------------------- |
-| Phase-3 | Motadata base exemplar mapping |
-| Phase-4 | Variant generation |
-| Phase-5 | Variant stability gate |
-| Phase-6 | Mutation harness (pre-SFT stress) |
-| Phase-7 | Dataset compilation |
-| Phase-8 | SFT training |
+| Stage-1 | Structural Mapping|
+| Stage-2 | Artifact Extraction |
+| Stage-3 | Motadata base exemplar mapping |
+| Stage-4 | Variant generation |
+| Stage-5 | Variant stability gate |
+| Stage-6 | Mutation harness (pre-SFT stress) |
+| Stage-6A| Single-Step Mutation Harness |
+| Stage-6B| Systemic Hardening Rewrite |
+| Stage-6C| Agent-Loop Mutation Harness |
+| Stage-7 | Dataset compilation |
+| Stage-8 | SFT training |
 
 These are **operational steps**. They do not redefine REF/CONF/DES etc.
 

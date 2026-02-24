@@ -1,0 +1,9 @@
+seeds_dir: "phase6c/seeds_sample"
+horizons: [3, 6]
+shapes: ["linear", "retry_biased"]
+carryover_modes: ["cold_start", "full_transcript"]
+# For smoke with wrappers: include 1-2 profile ids to see wrapper presence in traces
+injection_profiles: ["none", "deadline_squeeze", "tool_failure"]
+max_transcript_chars: null
+# full_transcript_policy: step_query_only | include_wrappers (default)
+full_transcript_policy: "include_wrappers"

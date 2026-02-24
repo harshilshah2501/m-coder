@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phase6c"
+version = "0.1.0"
+description = "Phase-6C Agent-Loop mutation harness (M2 skeleton)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["pyyaml"]
+
+[project.scripts]
+phase6c-smoke-run = "phase6c.cli.main:main"
+phase6c-report = "phase6c.reporting.cli:main"
+phase6c-run-suite = "phase6c.orchestrator.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["phase6c*"]

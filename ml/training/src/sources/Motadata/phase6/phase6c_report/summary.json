@@ -1,0 +1,195 @@
+{
+  "ledger_path": "/root/m-coder/ml/training/src/sources/Motadata/phase6/phase6c/out_m4/phase6c_ledger.jsonl",
+  "n_runs": 48,
+  "time_range": {
+    "start": "2026-02-24T06:31:36.356016+00:00",
+    "end": "2026-02-24T06:31:36.393001+00:00"
+  },
+  "corpus_stats": {
+    "n_runs": 48,
+    "severity_counts": {
+      "S2": 48
+    },
+    "fail_rate_ge_S2": 1.0,
+    "S3_count": 0,
+    "S2_count": 48,
+    "BDA_norm_percentiles": {
+      "p50": 0.0,
+      "p90": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "code_erosion_runs": 0,
+    "mix_flip_rate": 0.0,
+    "collapse_label_counts": {
+      "T-NORMALIZE": 48
+    },
+    "collapse_label_rates": {
+      "T-NORMALIZE": 1.0
+    },
+    "breakdowns": {
+      "seed_id": {
+        "BASE-001-V2": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        },
+        "BASE-002-V1": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        }
+      },
+      "injection_profile": {
+        "none": {
+          "runs": 16,
+          "severity_counts": {
+            "S2": 16
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 16,
+          "BDA_norm_p95": 0.0
+        },
+        "deadline_squeeze": {
+          "runs": 16,
+          "severity_counts": {
+            "S2": 16
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 16,
+          "BDA_norm_p95": 0.0
+        },
+        "tool_failure": {
+          "runs": 16,
+          "severity_counts": {
+            "S2": 16
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 16,
+          "BDA_norm_p95": 0.0
+        }
+      },
+      "carryover_mode": {
+        "cold_start": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        },
+        "full_transcript": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        }
+      },
+      "horizon_N": {
+        "3": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        },
+        "6": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        }
+      },
+      "shape": {
+        "linear": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        },
+        "retry_biased": {
+          "runs": 24,
+          "severity_counts": {
+            "S2": 24
+          },
+          "fail_rate_ge_S2": 1.0,
+          "S3_count": 0,
+          "S2_count": 24,
+          "BDA_norm_p95": 0.0
+        }
+      }
+    }
+  },
+  "gates": {
+    "tier2": {
+      "pass": false,
+      "failed": [
+        "fail_rate_ge_S2<=0.06"
+      ],
+      "metrics": {
+        "canonical_runs": 48,
+        "S3_count": 0,
+        "fail_rate_ge_S2": 1.0,
+        "BDA_norm_p95": 0.0,
+        "CODE_erosion_runs": 0,
+        "mix_flip_rate": 0.0
+      }
+    },
+    "tier3": {
+      "pass": false,
+      "failed": [
+        "fail_rate_ge_S2<=0.06",
+        "fail_rate_ge_S2<=0.02"
+      ],
+      "metrics": {
+        "canonical_runs": 48,
+        "S3_count": 0,
+        "fail_rate_ge_S2": 1.0,
+        "BDA_norm_p95": 0.0,
+        "CODE_erosion_runs": 0,
+        "mix_flip_rate": 0.0,
+        "carryover_stability_delta": null
+      }
+    },
+    "meta": {
+      "has_stress_labels": false,
+      "canonical_runs_count": 48,
+      "stress_runs_count": 0
+    }
+  },
+  "clusters": {
+    "total_clusters": 48,
+    "hot_clusters": 0,
+    "low_sample_clusters": 48
+  }
+}
