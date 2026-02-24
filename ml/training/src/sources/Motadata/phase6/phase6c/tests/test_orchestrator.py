@@ -10,6 +10,7 @@ from phase6c.seeds.registry import SeedRegistry, SeedView
 from phase6c.trace.types import RunSpec, StepRecord, RunTrace
 from phase6c.metrics.ledger import read_ledger_rows
 from phase6c.config.schema import HarnessConfig
+from phase6c.model.dummy import DummyModelAdapter
 
 
 def _make_cfg() -> ExperimentConfig:
@@ -225,7 +226,9 @@ def test_execute_plan_writes_files(tmp_path: Path) -> None:
     reg = _FakeSeedRegistry("SEED")
     runner = _FakeRunner()
     out_dir = tmp_path / "out"
-    summary = executor.execute_plan([plan_item], reg, runner, model_adapter=None, out_dir=out_dir, resume=False)
+    summary = executor.execute_plan(
+        [plan_item], reg, runner, model_adapter=DummyModelAdapter(), out_dir=out_dir, resume=False
+    )
     assert summary.runs_executed == 1
     traces_path = out_dir / "suite_traces.jsonl"
     ledger_path = out_dir / "phase6c_ledger.jsonl"
@@ -234,6 +237,7 @@ def test_execute_plan_writes_files(tmp_path: Path) -> None:
     rows = read_ledger_rows(ledger_path)
     assert len(rows) == 1
     assert rows[0]["seed_id"] == "SEED"
+    assert rows[0]["model_id"] == "dummy"
 
 
 def test_execute_plan_resume_idempotent(tmp_path: Path) -> None:
@@ -249,10 +253,14 @@ def test_execute_plan_resume_idempotent(tmp_path: Path) -> None:
     runner = _FakeRunner()
     out_dir = tmp_path / "out2"
     # First execution
-    summary1 = executor.execute_plan([plan_item], reg, runner, model_adapter=None, out_dir=out_dir, resume=True)
+    summary1 = executor.execute_plan(
+        [plan_item], reg, runner, model_adapter=DummyModelAdapter(), out_dir=out_dir, resume=True
+    )
     assert summary1.runs_executed == 1
     # Second execution with resume should skip
-    summary2 = executor.execute_plan([plan_item], reg, runner, model_adapter=None, out_dir=out_dir, resume=True)
+    summary2 = executor.execute_plan(
+        [plan_item], reg, runner, model_adapter=DummyModelAdapter(), out_dir=out_dir, resume=True
+    )
     assert summary2.runs_executed == 0
     ledger_path = out_dir / "phase6c_ledger.jsonl"
     rows = read_ledger_rows(ledger_path)

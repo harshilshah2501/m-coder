@@ -16,6 +16,9 @@ class DummyModelAdapter(ModelAdapter):
     Response content is a fixed string derived from these three; no randomness.
     """
 
+    def model_id(self) -> str:
+        return "dummy"
+
     def generate(self, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
         # Runner injects run_id, step_index, step_role into the step_query message's metadata.
         run_id = ""

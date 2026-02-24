@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from ..metrics.types import LedgerRow
+from .gates import normalize_model_id
 
 
 def _parse_iso(ts: str | None) -> datetime | None:
@@ -42,12 +43,20 @@ def write_summary_json(
 ) -> Path:
     out_path = Path(out_dir) / "summary.json"
     start_ts, end_ts = _time_range(rows)
+    # Model_id distribution for segmentation
+    from collections import Counter
+
+    model_counts = Counter(normalize_model_id(r.get("model_id")) for r in rows)
+
     payload: Dict[str, Any] = {
         "ledger_path": str(ledger_path),
         "n_runs": corpus_stats.get("n_runs", 0),
         "time_range": {"start": start_ts, "end": end_ts},
         "corpus_stats": corpus_stats,
         "gates": gates,
+        "models": {
+            "counts_by_model_id": dict(model_counts),
+        },
     }
     if clusters_summary is not None:
         payload["clusters"] = clusters_summary
@@ -88,6 +97,8 @@ def write_markdown_report(
 
     tier2 = gates.get("tier2", {})
     tier3 = gates.get("tier3", {})
+    tier2_nd = gates.get("tier2_non_dummy")
+    tier3_nd = gates.get("tier3_non_dummy")
     meta = gates.get("meta", {}) or {}
 
     lines: List[str] = []
@@ -112,6 +123,23 @@ def write_markdown_report(
     lines.append(f"- **Tier-3**: {'PASS' if tier3.get('pass') else 'FAIL'}")
     if tier3.get("failed"):
         lines.append(f"  - Failed gates: {', '.join(tier3['failed'])}")
+
+    has_model_labels = meta.get("has_model_labels", False)
+    non_dummy_count = meta.get("non_dummy_canonical_runs_count", 0)
+    if has_model_labels:
+        if non_dummy_count > 0 and tier2_nd and tier3_nd:
+            lines.append(
+                f"- **Tier-2 (non-dummy)**: "
+                f"{'PASS' if tier2_nd.get('pass') else 'FAIL'}"
+            )
+            lines.append(
+                f"- **Tier-3 (non-dummy)**: "
+                f"{'PASS' if tier3_nd.get('pass') else 'FAIL'}"
+            )
+        else:
+            lines.append(
+                "- **Note**: Only dummy runs present; non-dummy gates not evaluated."
+            )
     lines.append("")
 
     lines.append("### Corpus metrics")
@@ -131,6 +159,17 @@ def write_markdown_report(
             lines.append(f"  - {key}: {v:.3f}")
     lines.append(f"- **CODE erosion runs**: {corpus_stats.get('code_erosion_runs', 0)}")
     lines.append(f"- **MIX flip rate**: {corpus_stats.get('mix_flip_rate', 0.0):.3f}")
+    lines.append("")
+
+    # Model segmentation
+    from collections import Counter as _Counter
+
+    model_counts = _Counter(normalize_model_id(r.get("model_id")) for r in rows)
+    lines.append("### Model segmentation")
+    lines.append(f"- **Model counts**: {dict(model_counts)}")
+    if has_model_labels and non_dummy_count > 0 and tier2_nd:
+        nd_fail = tier2_nd.get("metrics", {}).get("fail_rate_ge_S2", 0.0) or 0.0
+        lines.append(f"- **fail_rate(≥S2) non-dummy**: {nd_fail:.3f}")
     lines.append("")
 
     # Cluster coverage
@@ -241,6 +280,11 @@ def write_markdown_report(
                 f"`{key.get('carryover_mode')}` / `{key.get('shape')}` / "
                 f"N={key.get('horizon_N')}"
             )
+    lines.append("")
+    lines.append(
+        "- **Next move**: Implement a real ModelAdapter and rerun the suite; "
+        "the report will compute non-dummy gates automatically."
+    )
     lines.append("")
 
     # Plots section

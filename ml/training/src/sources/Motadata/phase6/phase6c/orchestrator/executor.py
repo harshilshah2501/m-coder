@@ -84,7 +84,7 @@ def execute_plan(
     plan: List[PlanItem],
     seed_registry: SeedRegistry,
     runner,
-    model_adapter,  # kept for signature parity; not used explicitly
+    model_adapter,
     out_dir: str | Path,
     resume: bool = True,
 ) -> ExecutionSummary:
@@ -142,6 +142,16 @@ def execute_plan(
         row = result.to_ledger_row()
         # Tag suite for downstream reporting (optional field; backward compatible).
         row["suite"] = item.suite
+        # Tag model identity when available.
+        if model_adapter is None:
+            row["model_id"] = "unknown"
+        else:
+            # Prefer explicit model_id() if present; fall back to MODEL_ID or class name.
+            if hasattr(model_adapter, "model_id"):
+                mid = model_adapter.model_id()
+            else:
+                mid = getattr(model_adapter, "MODEL_ID", model_adapter.__class__.__name__)
+            row["model_id"] = str(mid)
 
         append_run_trace_jsonl(trace, traces_path)
         append_ledger_row(row, ledger_path)

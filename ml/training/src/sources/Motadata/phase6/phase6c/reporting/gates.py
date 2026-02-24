@@ -15,6 +15,13 @@ TIER3_TMCR_MAX = 0.02
 TIER3_BDA_NORM_P95_MAX = 0.20
 
 
+def normalize_model_id(mid: object) -> str:
+    """Normalize model_id for segmentation and non-dummy filtering."""
+    if mid is None:
+        return "unknown"
+    return str(mid).strip().lower() or "unknown"
+
+
 def _is_canonical(row: LedgerRow) -> bool:
     """
     Canonical suite per spec:
@@ -94,60 +101,25 @@ def _carryover_stability_delta(rows: List[LedgerRow]) -> float | None:
     return abs(full - summary)
 
 
-def evaluate_gates(rows: List[LedgerRow]) -> Dict[str, Any]:
-    """
-    Evaluate Tier-2 and Tier-3 corpus-level gates based on spec thresholds.
-
-    Returns dict:
-    {
-      "tier2": {"pass": bool, "failed": [...], "metrics": {...}},
-      "tier3": {"pass": bool, "failed": [...], "metrics": {...}},
-    }
-    """
-    canon = _canonical_rows(rows)
-    # Stress / canonical labeling diagnostics
-    has_suite_labels = any(("suite" in r) or ("stress_only" in r) for r in rows)
-    stress_runs = [
-        r
-        for r in rows
-        if (isinstance(r.get("suite"), str) and r.get("suite").lower() == "stress")
-        or bool(r.get("stress_only"))
-    ]
-    # If no canonical runs, gates are effectively undefined; mark as failing with explicit reason.
-    if not canon:
-        return {
-            "tier2": {
-                "pass": False,
-                "failed": ["no_canonical_runs"],
-                "metrics": {},
-            },
-            "tier3": {
-                "pass": False,
-                "failed": ["no_canonical_runs"],
-                "metrics": {},
-            },
-            "meta": {
-                "has_stress_labels": has_suite_labels,
-                "canonical_runs_count": 0,
-                "stress_runs_count": len(stress_runs),
-            },
-        }
-
-    sev_counts = _severity_counts(canon)
-    bda_vals = _collect_bda_norm(canon)
+def _evaluate_tiers(
+    canon_rows: List[LedgerRow],
+    all_rows_for_stability: List[LedgerRow],
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Helper to compute Tier-2/Tier-3 gate results for a given canonical subset."""
+    sev_counts = _severity_counts(canon_rows)
+    bda_vals = _collect_bda_norm(canon_rows)
     s3_count = sev_counts.get("S3", 0)
     tmcr = _tmcr_ge_s2(sev_counts)
     bda_p95 = None
     if bda_vals:
-        # Reuse helper; 95th percentile
         from .stats import _percentile
 
         bda_p95 = _percentile(bda_vals, 95.0)
 
-    code_eros_runs = _code_erosion_runs(canon)
-    mix_flips, mix_total = _mix_flip_runs(canon)
+    code_eros_runs = _code_erosion_runs(canon_rows)
+    mix_flips, mix_total = _mix_flip_runs(canon_rows)
     mix_flip_rate = (mix_flips / mix_total) if mix_total else 0.0
-    stability_delta = _carryover_stability_delta(rows)
+    stability_delta = _carryover_stability_delta(all_rows_for_stability)
 
     tier2_failed: List[str] = []
     if s3_count > 0:
@@ -162,44 +134,114 @@ def evaluate_gates(rows: List[LedgerRow]) -> Dict[str, Any]:
         tier2_failed.append("mix_flip_rate==0")
 
     tier3_failed: List[str] = list(tier2_failed)
-    # Tier-3 stricter bounds; only evaluated if Tier-2 already satisfied that dimension.
     if tmcr > TIER3_TMCR_MAX:
         tier3_failed.append("fail_rate_ge_S2<=0.02")
     if bda_p95 is not None and bda_p95 > TIER3_BDA_NORM_P95_MAX:
         tier3_failed.append("BDA_norm_p95<=0.20")
-    # Carryover stability delta has a configurable ceiling; we report metric but do not gate
-    # without an explicit configured threshold.
+
+    tier2 = {
+        "pass": not tier2_failed,
+        "failed": tier2_failed,
+        "metrics": {
+            "canonical_runs": len(canon_rows),
+            "S3_count": s3_count,
+            "fail_rate_ge_S2": tmcr,
+            "BDA_norm_p95": bda_p95,
+            "CODE_erosion_runs": code_eros_runs,
+            "mix_flip_rate": mix_flip_rate,
+        },
+    }
+    tier3 = {
+        "pass": not tier3_failed,
+        "failed": tier3_failed,
+        "metrics": {
+            "canonical_runs": len(canon_rows),
+            "S3_count": s3_count,
+            "fail_rate_ge_S2": tmcr,
+            "BDA_norm_p95": bda_p95,
+            "CODE_erosion_runs": code_eros_runs,
+            "mix_flip_rate": mix_flip_rate,
+            "carryover_stability_delta": stability_delta,
+        },
+    }
+    return tier2, tier3
+
+
+def evaluate_gates(rows: List[LedgerRow]) -> Dict[str, Any]:
+    """
+    Evaluate Tier-2 and Tier-3 corpus-level gates based on spec thresholds.
+
+    Returns dict including overall gates and, when possible, non-dummy gates:
+    {
+      "tier2": {...}, "tier3": {...},
+      "tier2_non_dummy": {...} or None,
+      "tier3_non_dummy": {...} or None,
+      "meta": {...},
+    }
+    """
+    canon = _canonical_rows(rows)
+    # Stress / canonical labeling diagnostics
+    has_suite_labels = any(("suite" in r) or ("stress_only" in r) for r in rows)
+    stress_runs = [
+        r
+        for r in rows
+        if (isinstance(r.get("suite"), str) and r.get("suite").lower() == "stress")
+        or bool(r.get("stress_only"))
+    ]
+
+    # Model labeling diagnostics (normalized)
+    has_model_labels = any(
+        ("model_id" in r) or (normalize_model_id(r.get("model_id")) != "unknown")
+        for r in canon
+    )
+    non_dummy_rows: List[LedgerRow] = []
+    if has_model_labels:
+        for r in canon:
+            mid = normalize_model_id(r.get("model_id"))
+            if mid != "dummy":
+                non_dummy_rows.append(r)
+
+    if not canon:
+        return {
+            "tier2": {
+                "pass": False,
+                "failed": ["no_canonical_runs"],
+                "metrics": {},
+            },
+            "tier3": {
+                "pass": False,
+                "failed": ["no_canonical_runs"],
+                "metrics": {},
+            },
+            "tier2_non_dummy": None,
+            "tier3_non_dummy": None,
+            "meta": {
+                "has_stress_labels": has_suite_labels,
+                "canonical_runs_count": 0,
+                "stress_runs_count": len(stress_runs),
+                "has_model_labels": has_model_labels,
+                "non_dummy_canonical_runs_count": len(non_dummy_rows),
+            },
+        }
+
+    tier2_all, tier3_all = _evaluate_tiers(canon, canon)
+
+    tier2_non_dummy: Dict[str, Any] | None = None
+    tier3_non_dummy: Dict[str, Any] | None = None
+    if has_model_labels and non_dummy_rows:
+        tier2_non_dummy, tier3_non_dummy = _evaluate_tiers(non_dummy_rows, non_dummy_rows)
 
     return {
-        "tier2": {
-            "pass": not tier2_failed,
-            "failed": tier2_failed,
-            "metrics": {
-                "canonical_runs": len(canon),
-                "S3_count": s3_count,
-                "fail_rate_ge_S2": tmcr,
-                "BDA_norm_p95": bda_p95,
-                "CODE_erosion_runs": code_eros_runs,
-                "mix_flip_rate": mix_flip_rate,
-            },
-        },
-        "tier3": {
-            "pass": not tier3_failed,
-            "failed": tier3_failed,
-            "metrics": {
-                "canonical_runs": len(canon),
-                "S3_count": s3_count,
-                "fail_rate_ge_S2": tmcr,
-                "BDA_norm_p95": bda_p95,
-                "CODE_erosion_runs": code_eros_runs,
-                "mix_flip_rate": mix_flip_rate,
-                "carryover_stability_delta": stability_delta,
-            },
-        },
+        "tier2": tier2_all,
+        "tier3": tier3_all,
+        "tier2_non_dummy": tier2_non_dummy,
+        "tier3_non_dummy": tier3_non_dummy,
         "meta": {
             "has_stress_labels": has_suite_labels,
             "canonical_runs_count": len(canon),
             "stress_runs_count": len(stress_runs),
+            "has_model_labels": has_model_labels,
+            "non_dummy_canonical_runs_count": len(non_dummy_rows),
         },
     }
 

@@ -80,6 +80,9 @@ def main() -> None:
     bda_p95 = bda_pcts.get("p95")
     tier2_pass = gate_results.get("tier2", {}).get("pass", False)
     tier3_pass = gate_results.get("tier3", {}).get("pass", False)
+    tier2_nd = gate_results.get("tier2_non_dummy")
+    tier3_nd = gate_results.get("tier3_non_dummy")
+    meta = gate_results.get("meta", {}) or {}
 
     print(f"Runs: {n_runs}")
     print(f"fail_rate(>=S2): {fail_rate:.3f}")
@@ -89,6 +92,16 @@ def main() -> None:
     )
     print(f"Tier-2: {'PASS' if tier2_pass else 'FAIL'}")
     print(f"Tier-3: {'PASS' if tier3_pass else 'FAIL'}")
+    has_model_labels = meta.get("has_model_labels", False)
+    non_dummy_count = meta.get("non_dummy_canonical_runs_count", 0)
+    if has_model_labels:
+        if non_dummy_count > 0 and tier2_nd and tier3_nd:
+            nd_fail = tier2_nd.get("metrics", {}).get("fail_rate_ge_S2", 0.0) or 0.0
+            print(f"Tier-2 (non-dummy): {'PASS' if tier2_nd.get('pass') else 'FAIL'}")
+            print(f"Tier-3 (non-dummy): {'PASS' if tier3_nd.get('pass') else 'FAIL'}")
+            print(f"fail_rate(>=S2) (non-dummy): {nd_fail:.3f}")
+        else:
+            print("Only dummy runs present; non-dummy gates not evaluated.")
 
     # Cluster coverage diagnostics
     total_clusters = len(cluster_stats)

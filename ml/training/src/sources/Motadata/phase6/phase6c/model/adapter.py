@@ -17,3 +17,13 @@ class ModelAdapter(ABC):
         Returns e.g. {"content": str, "model": str, "tokens": int}.
         """
         ...
+
+    def model_id(self) -> str:
+        """
+        Stable identifier for this adapter / underlying model.
+
+        Default implementation falls back to an optional MODEL_ID attribute
+        or the class name if not provided.
+        """
+        model_id = getattr(self, "MODEL_ID", self.__class__.__name__)
+        return str(model_id)

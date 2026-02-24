@@ -50,7 +50,13 @@ def main() -> None:
     parser.add_argument("--seeds-dir", type=str, help="Directory of seed JSON files (overrides config if set)")
     parser.add_argument("--out", type=str, required=True, help="Output directory for traces + ledger + reports")
     parser.add_argument("--mode", type=str, choices=["plan", "execute"], default="plan")
-    parser.add_argument("--model", type=str, default="dummy", help="Model adapter name (dummy supported)")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="dummy",
+        choices=["dummy", "openai", "local"],
+        help="Model adapter name (dummy supported; others are placeholders)",
+    )
     parser.add_argument("--repeats-per-cluster", type=int, default=5)
     parser.add_argument("--amplify", type=str, default="true", choices=["true", "false"])
     parser.add_argument("--amplify-k", type=int, default=10)
@@ -103,9 +109,13 @@ def main() -> None:
         )
 
     # Execute mode
-    if args.model != "dummy":
-        raise NotImplementedError("Only 'dummy' model adapter is supported in this harness CLI.")
-    model = DummyModelAdapter()
+    if args.model == "dummy":
+        model = DummyModelAdapter()
+    else:
+        raise SystemExit(
+            f"Model adapter '{args.model}' not implemented yet. "
+            "Implement phase6c/model/{args.model}.py and wire it into the orchestrator CLI."
+        )
     runner = LoopRunner(
         registry,
         model,
@@ -171,6 +181,10 @@ def main() -> None:
     print(
         f"Amplification executed {amp_summary.runs_executed} / {amp_summary.runs_planned} runs "
         f"(skipped={amp_summary.runs_skipped}, resume=True)"
+    )
+    print(
+        "Next move: implement a real ModelAdapter and rerun the suite; "
+        "the Phase-6C report will evaluate non-dummy gates separately."
     )
 
 

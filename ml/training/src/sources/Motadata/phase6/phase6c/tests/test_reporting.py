@@ -22,8 +22,9 @@ def _make_row(
     code_erosions: int = 0,
     mix_flip: bool = False,
     collapse_labels: list[str] | None = None,
+    model_id: str | None = None,
 ) -> dict:
-    return {
+    row = {
         "run_id": run_id,
         "seed_id": seed_id,
         "horizon_N": N,
@@ -51,6 +52,9 @@ def _make_row(
         "finished_at": None,
         "pass": severity in ("S0", "S1"),
     }
+    if model_id is not None:
+        row["model_id"] = model_id
+    return row
 
 
 def test_load_ledger_missing_required_fields(tmp_path: Path) -> None:
@@ -146,6 +150,8 @@ def test_summary_uses_fail_rate_key(tmp_path: Path) -> None:
     cs = data["corpus_stats"]
     assert "fail_rate_ge_S2" in cs
     assert "TMCR_ge_S2" not in cs
+    models = data["models"]
+    assert "counts_by_model_id" in models
 
 
 def test_gates_respect_suite_and_stress_only_flags() -> None:
@@ -174,6 +180,68 @@ def test_gates_fall_back_when_no_suite_or_stress_only() -> None:
     assert meta.get("has_stress_labels") is False
     assert meta.get("canonical_runs_count") == len(rows)
     assert meta.get("stress_runs_count") == 0
+
+
+def test_gates_non_dummy_vs_all() -> None:
+    # Mix dummy and real model_ids; non-dummy gates should only see real rows.
+    rows = [
+        _make_row("r1", severity="S2", model_id="dummy"),
+        _make_row("r2", severity="S2", model_id="real"),
+        _make_row("r3", severity="S0", model_id="real"),
+    ]
+    g = gates.evaluate_gates(rows)
+    meta = g.get("meta", {})
+    assert meta.get("has_model_labels") is True
+    assert meta.get("non_dummy_canonical_runs_count") == 2
+    tier2_nd = g.get("tier2_non_dummy")
+    tier3_nd = g.get("tier3_non_dummy")
+    assert tier2_nd is not None
+    assert tier3_nd is not None
+    assert tier2_nd["metrics"]["canonical_runs"] == 2
+
+    # Only dummy rows -> has_model_labels True but no non-dummy gates.
+    rows_dummy = [
+        _make_row("d1", severity="S0", model_id="dummy"),
+        _make_row("d2", severity="S1", model_id="dummy"),
+    ]
+    g2 = gates.evaluate_gates(rows_dummy)
+    meta2 = g2.get("meta", {})
+    assert meta2.get("has_model_labels") is True
+    assert meta2.get("non_dummy_canonical_runs_count") == 0
+    assert g2.get("tier2_non_dummy") is None
+    assert g2.get("tier3_non_dummy") is None
+
+    # No model_id at all -> has_model_labels False, non-dummy sections None.
+    rows_nomodel = [
+        _make_row("m1", severity="S0"),
+        _make_row("m2", severity="S2"),
+    ]
+    g3 = gates.evaluate_gates(rows_nomodel)
+    meta3 = g3.get("meta", {})
+    assert meta3.get("has_model_labels") is False
+    assert g3.get("tier2_non_dummy") is None
+    assert g3.get("tier3_non_dummy") is None
+
+
+def test_model_id_normalization_counts_and_non_dummy_filtering(tmp_path: Path) -> None:
+    rows = [
+        _make_row("r1", severity="S2", model_id=" Dummy "),
+        _make_row("r2", severity="S0", model_id="DUMMY"),
+        _make_row("r3", severity="S1", model_id="dummy"),
+        _make_row("r4", severity="S2", model_id="Llama-3.1"),
+        _make_row("r5", severity="S0", model_id=" llama-3.1 "),
+    ]
+    corpus_stats = stats.compute_corpus_stats(rows)
+    g = gates.evaluate_gates(rows)
+    # Summary JSON counts use normalized model_id.
+    out = render.write_summary_json(tmp_path, tmp_path / "ledger.jsonl", rows, corpus_stats, g)
+    data = json.loads(out.read_text(encoding="utf-8"))
+    counts = data["models"]["counts_by_model_id"]
+    assert counts == {"dummy": 3, "llama-3.1": 2}
+
+    meta = g.get("meta", {})
+    # Non-dummy canonical runs should count only the llama rows.
+    assert meta.get("non_dummy_canonical_runs_count") == 2
 
 
 def _write_ledger(tmp_path: Path, rows: list[dict]) -> Path:
