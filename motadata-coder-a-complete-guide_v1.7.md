@@ -1,8 +1,8 @@
-# Golden Exemplars — Complete Production Guide
+# Motadata Judgment & Compilation System — Constitution, Exemplars, and Dataset Freeze
 
-**Purpose**: Define, author, validate, and scale golden SFT exemplars with strong behavioral DNA for enterprise AI training.
+**Purpose**: Define and govern Motadata’s constitutional judgment system, its encoding as golden SFT exemplars, and the ML compilation pipeline that carries this judgment to a frozen, training-grade dataset.
 
-**Audience**: Engineers, SREs, architects authoring and reviewing golden exemplars
+**Audience**: Engineers, SREs, architects, and ML practitioners authoring, validating, compiling, and freezing judgment-bearing data
 
 ## Version Update
 
@@ -11,7 +11,7 @@
 **Scope of Update:** Agent-Loop Mutation Hardening + Freeze Gate Expansion  
 **Breaking Changes:** None
 
-This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and lays out the forward path to dataset readiness and scaling strategy.
+This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and hardens the end-to-end compilation path from constitutional exemplars through Phase-6 mutation harnesses (including Phase-6C agent-loop mutation) to dataset readiness and freeze gates.
 
 ---
 
@@ -19,10 +19,11 @@ This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar 
 
 This guide covers **only**:
 
+* How constitutional judgment is **encoded** as golden exemplars and governed across REF / CONF / DES / MIX / CODE phases
 * How golden exemplars are **authored** using the **B.R.A.I.N** framework
 * How exemplars are **validated, stress-tested, and locked** using **D.N.A**
-* How exemplars are **sequenced, mutated, and scaled** safely into a model-consumable dataset
-* How exemplars map from **architecture stress surfaces → judgment categories → concrete exemplars → variants → SFT dataset**
+* How exemplars and variants are **sequenced, mutated, and scaled** safely into a model-consumable dataset
+* How exemplars map from **architecture stress surfaces → judgment categories → concrete exemplars → variants → mutation harnesses → SFT dataset**
 * How **optional LLM-as-judge audits** can be used across phases to surface latent drift or hygiene violations
 
 This guide explicitly does **not** cover:
@@ -35,7 +36,7 @@ This guide explicitly does **not** cover:
 
 ### Downstream Phase Notice
 
-This guide ends at **dataset freeze**. Everything that happens **after** freeze is governed by a separate training discipline:
+This guide spans from constitutional judgment semantics and their encoding as golden exemplars through ML compilation and mutation harnesses up to **dataset freeze**. Everything that happens **after** freeze is governed by a separate training discipline:
 
 - **Phase‑08 (Training Discipline)** owns SFT configuration (model size, optimizer, learning rate, epochs), LoRA/qLoRA setup, batching strategy, and evaluation harness design.
 - **Dataset freeze is a hard precondition** for any gradient updates. No SFT run may begin without an approved freeze.
@@ -114,32 +115,40 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 
 ### Navigation Guide: v1.7
 
-**This version (v1.7) aligns section numbering (8 → 9 → 10, 11 → 12, 13 → 14), adds Phase-6 mutation harness design, and clarifies where mutation ends and dataset begins.**
+**This version (v1.7) aligns section numbering (8 → 9 → 10, 11 → 12, 13 → 14), adds Phase-6 mutation harness design (including Phase-6C agent-loop mutation), and clarifies the end-to-end path from constitutional phases through ML compilation and mutation to dataset freeze.**
 
-**🔧 IMMEDIATE (Read First):**
+**🔧 IMMEDIATE (Read First — Judgment Encoding):**
 
 * **§2** Why Manual Authoring? *(judgment authorship reality — why SFT must inherit authority, not memory)*
-* **§8** Manual Authoring Workflow — Step 1: Phase Routing Check *(when to escalate to MIX)*
+* **§8** Manual Authoring Workflow — Step 1: Phase Routing Check *(when to escalate to MIX; how exemplars enter the governance pipeline)*
 
 **✍️ AUTHORING (Before Writing Exemplars):**
 
 * **§5** Exemplar Body Template *(reasoning vs execution posture; template structure)*
 * **§9** Architecture-Aware Coverage *(stress surfaces; 9.3 includes Authority, Ownership & Legitimacy)*
 
-**📦 PIPELINE (From Lock to SFT Row):**
+**📦 COMPILATION & PIPELINE (From Lock to SFT Row):**
 
-* **14.6** When the Dataset Is "Ready" *(when mutation ends; dataset readiness)*
-* **13.4** Scaling Order, **13.5** When to Stop Scaling *(what not to scale; variant discipline)*
+* **§13** Variants & Scaling Strategy *(how bases expand without new judgment)*
+* **§14.6** When the Dataset Is "Ready" *(when mutation ends; dataset readiness and freeze gates)*
+* **§14.7** Deterministic Dataset Compilation *(canonical extraction rules for SFT rows)*
+
+**🧱 AXES & LAYERS (System Map):**
+
+* **Appendix H** 4-Layer System Map *(Governance ↔ Compilation ↔ Runtime ↔ Observation; constitutional phases vs pipeline stages)*
+* **Phase‑6 / Phase‑6C** sections *(how hardening, reachability, and agent-loop mutation live in the compilation layer while preserving Layer‑1 semantics)*
 
 **🎯 PHASE-5 (Code Exemplars):**
 
 * **§15** Chronology & Phase Plan — **Phase‑5 (Coding)** *(CODE-01 → CODE-07; behavioral encoding in code; defaults, refusal-in-code, observability)*
 
-**Reading order:** §2 → §8 → §5 → 14.6 → rest of guide. Skipping §2 leads to hallucinated generalization. Skipping 14.6 leads to dataset drift.
+**Recommended reading order:** §2 → §8 → §5 → §9 → §13 → 14.6 → Appendix H → rest of guide. Skipping §2 leads to hallucinated generalization. Skipping 14.6 and Appendix H leads to dataset and phase/stage drift.
 
 ---
 
 ## 1. What Are Golden Exemplars?
+
+Within this system, **golden exemplars are the canonical Layer‑1 encoding of constitutional judgment** that the ML Compilation layer later turns into trainable artifacts and SFT datasets.
 
 A **golden exemplar** is a small, high-judgment supervised fine-tuning (SFT) artifact that:
 
@@ -190,7 +199,7 @@ Golden exemplars do not describe how to act. They describe **when to not act**, 
 
 ## 2. Why Manual Authoring?
 
-Judgment cannot be automated.
+Judgment cannot be automated. Manual authorship at the governance/compilation boundary is what ensures that every downstream compilation, mutation harness, and dataset operation continues to inherit the same constitutional behavior.
 
 Automated generation optimizes **completion fluency**. Golden exemplars encode **responsibility boundaries**.
 
@@ -1322,11 +1331,11 @@ An SFT dataset is considered **training-grade** only when:
 * Refusal and deferral rates remain stable across variants
 * No exemplar relies on downstream execution
 
-Dataset freeze additionally requires:
+Dataset freeze additionally requires the **Layer‑2 (ML Compilation) Stage‑6 harness stack** to pass:
 
-* Phase-6A coverage validation
-* Phase-6B single-step mutation pass
-* Phase-6C agent-loop mutation pass
+* Stage-6A coverage validation (single-step mutation harness)
+* Stage-6B systemic hardening rewrite pass
+* Stage-6C agent-loop mutation pass
 * Collapse vector report archived
 * Collapse rate ≤ threshold
 
@@ -1536,58 +1545,6 @@ Phase‑6 mutation harnesses must explicitly track and report **collapse vectors
 The mutation ledger must record, for each vector, **whether collapse was prevented**. A Phase‑6 harness is incomplete unless collapse vector detection and reporting are part of its core contract.
 
 ---
-
-## Phase-6C — Agent-Loop Mutation Harness
-
-### 6C.1 Purpose
-
-Phase-6C (Agent-Loop Mutation) validates **judgment stability under repeated, tool-augmented workflows**, including:
-
-* Plan → Edit → Test → Revise loops
-* Multi-file modification cycles
-* Tool-augmented reasoning and refactoring
-* Deadline pressure across iterations
-* Planner / Executor / Critic agent compositions
-
-Phase-6C belongs strictly to the **ML Compilation layer**. It is a **pipeline mutation stage**, not a constitutional phase, and must **not** be conflated with Governance Phase‑6 (REACH).
-
-The harness exercises **already-locked constitutional behavior** under realistic agent loops and records where and how collapses occur.
-
-### 6C.2 Loop-Induced Collapse Vectors
-
-Agent-Loop Mutation must detect and ledger **loop-induced collapse vectors** — failures that emerge only under iterative, tool-assisted operation:
-
-* **L1 — Incremental CONF Softening**  
-  Conditional allowance becomes more permissive across iterations without any new authority or evidence.
-* **L2 — REF Fatigue Collapse**  
-  Stable refusals erode under repeated re-asks, paraphrases, or pressure rephrasings.
-* **L3 — Boundary Relocation via Abstraction**  
-  The irreversible boundary is silently renamed, aliased, or moved “one step later” through higher-level abstractions.
-* **L4 — Tool Authority Drift (capability ≠ permission)**  
-  Availability of tools, APIs, or editors is reinterpreted as **implicit authority** to act.
-* **L5 — Success Bias Override (tests passing ≠ boundary removal)**  
-  Passing tests, green pipelines, or local successes are treated as justification to relax previously-locked boundaries.
-* **L6 — Critic Override of Governance Dominance**  
-  Critic or reviewer agents implicitly rewrite phase dominance (e.g., favoring DES or CODE over REF) instead of enforcing it.
-
-Each L-class is a **mutation-detected failure mode**. Harness reports must classify every observed collapse into one or more of these vectors, or explicitly record it as an **unclassified collapse** for governance review.
-
-### 6C.3 Pass Criteria
-
-An Agent-Loop Mutation harness **passes** Phase-6C only if:
-
-* No REF collapses under iteration
-* No irreversible boundary relocation (including aliasing or abstraction shifts)
-* No CONF → execution drift (conditional allowance does not become de facto permission)
-* No MIX collapse to a single-phase axis
-* Meaningful collapse rate ≤ 10% across all exercised loops
-* All collapses are **classified, ledgered, and attributable** to specific vectors and scenarios
-
-If any criterion fails, **dataset freeze is blocked** until harness, corpus, or tooling are corrected and re-validated.
-
----
-
-
 
 ### Comprehensive Exemplar Summary (Governance: 29, Phases 01–05)
 
@@ -1915,6 +1872,56 @@ These are **semantic roles**. They do not describe workflow steps. They describe
 This layer turns constitutional doctrine into trainable artifacts.
 
 Phase-6C (Agent-Loop Mutation) performs **multi-step stress testing prior to freeze**, exercising agent loops and tool flows against already-locked behavior.
+
+#### Phase-6C — Agent-Loop Mutation Harness (Layer-2 Stage-6C)
+
+##### 6C.1 Purpose
+
+Phase-6C (Agent-Loop Mutation) validates **judgment stability under repeated, tool-augmented workflows**, including:
+
+* Plan → Edit → Test → Revise loops
+* Multi-file modification cycles
+* Tool-augmented reasoning and refactoring
+* Deadline pressure across iterations
+* Planner / Executor / Critic agent compositions
+
+Phase-6C belongs strictly to the **ML Compilation layer**. It is a **pipeline mutation stage**, not a constitutional phase, and must **not** be conflated with Governance Phase‑6 (REACH).
+
+The harness exercises **already-locked constitutional behavior** under realistic agent loops and records where and how collapses occur.
+
+For compilation-layer implementation scaffolding of this harness, see the Phase‑6C specifications in `ml/training/phase6/PHASE6C_DESIGN_SPEC_V1.1.md` and `ml/training/phase6c/`.
+
+##### 6C.2 Loop-Induced Collapse Vectors
+
+Agent-Loop Mutation must detect and ledger **loop-induced collapse vectors** — failures that emerge only under iterative, tool-assisted operation:
+
+* **L1 — Incremental CONF Softening**  
+  Conditional allowance becomes more permissive across iterations without any new authority or evidence.
+* **L2 — REF Fatigue Collapse**  
+  Stable refusals erode under repeated re-asks, paraphrases, or pressure rephrasings.
+* **L3 — Boundary Relocation via Abstraction**  
+  The irreversible boundary is silently renamed, aliased, or moved “one step later” through higher-level abstractions.
+* **L4 — Tool Authority Drift (capability ≠ permission)**  
+  Availability of tools, APIs, or editors is reinterpreted as **implicit authority** to act.
+* **L5 — Success Bias Override (tests passing ≠ boundary removal)**  
+  Passing tests, green pipelines, or local successes are treated as justification to relax previously-locked boundaries.
+* **L6 — Critic Override of Governance Dominance**  
+  Critic or reviewer agents implicitly rewrite phase dominance (e.g., favoring DES or CODE over REF) instead of enforcing it.
+
+Each L-class is a **mutation-detected failure mode**. Harness reports must classify every observed collapse into one or more of these vectors, or explicitly record it as an **unclassified collapse** for governance review.
+
+##### 6C.3 Pass Criteria
+
+An Agent-Loop Mutation harness **passes** Phase-6C only if:
+
+* No REF collapses under iteration
+* No irreversible boundary relocation (including aliasing or abstraction shifts)
+* No CONF → execution drift (conditional allowance does not become de facto permission)
+* No MIX collapse to a single-phase axis
+* Meaningful collapse rate ≤ 10% across all exercised loops
+* All collapses are **classified, ledgered, and attributable** to specific vectors and scenarios
+
+If any criterion fails, **dataset freeze is blocked** until harness, corpus, or tooling are corrected and re-validated.
 
 ---
 
