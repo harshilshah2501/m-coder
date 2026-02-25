@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import List
 
@@ -145,6 +145,7 @@ def execute_plan(
         # Tag model identity when available.
         if model_adapter is None:
             row["model_id"] = "unknown"
+            row["adapter_params"] = {}
         else:
             # Prefer explicit model_id() if present; fall back to MODEL_ID or class name.
             if hasattr(model_adapter, "model_id"):
@@ -152,6 +153,12 @@ def execute_plan(
             else:
                 mid = getattr(model_adapter, "MODEL_ID", model_adapter.__class__.__name__)
             row["model_id"] = str(mid)
+            # Adapter config for provenance
+            if hasattr(model_adapter, "get_config") and callable(getattr(model_adapter, "get_config")):
+                row["adapter_params"] = asdict(model_adapter.get_config())
+            else:
+                row["adapter_params"] = {}
+        row["adapter_retries"] = 0
 
         append_run_trace_jsonl(trace, traces_path)
         append_ledger_row(row, ledger_path)

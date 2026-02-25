@@ -1,11 +1,80 @@
 from __future__ import annotations
 
+import json
 import math
 from collections import Counter, defaultdict
 from typing import Any, Dict, Iterable, List, Tuple
 
 from ..metrics.types import LedgerRow
 from .load import normalize_carryover, normalize_injection_profile
+
+
+def _adapter_param_signature(params: Any) -> str:
+    """Stable JSON string for adapter_params (sorted keys)."""
+    if params is None:
+        return "{}"
+    if not isinstance(params, dict):
+        return str(params)
+    return json.dumps(params, sort_keys=True)
+
+
+def _is_canonical_for_carryover(row: LedgerRow) -> bool:
+    """Canonical row filter for carryover delta (matches gates logic)."""
+    suite = row.get("suite")
+    if isinstance(suite, str) and suite.lower() == "stress":
+        return False
+    if bool(row.get("stress_only")):
+        return False
+    N = row.get("horizon_N")
+    shape = row.get("shape")
+    carry = normalize_carryover(row)
+    if N not in (3, 4, 6):
+        return False
+    if shape not in ("linear", "retry_biased"):
+        return False
+    if carry not in ("cold", "cold_start", "full_transcript", "summary_compressed"):
+        return False
+    return True
+
+
+def compute_adapter_param_signatures(rows: Iterable[LedgerRow]) -> Dict[str, int]:
+    """Count distinct adapter_params signatures (stable JSON with sorted keys)."""
+    c: Counter = Counter()
+    for row in rows:
+        params = row.get("adapter_params")
+        sig = _adapter_param_signature(params)
+        c[sig] += 1
+    return dict(c)
+
+
+def compute_canonical_carryover_delta(rows: List[LedgerRow]) -> Dict[str, Any]:
+    """
+    For canonical rows only: mean BDA_norm by carryover_mode,
+    and carryover_delta_full_minus_cold (full_transcript - cold_start) if both exist.
+    """
+    canon = [r for r in rows if _is_canonical_for_carryover(r)]
+    by_carry: Dict[str, List[float]] = defaultdict(list)
+    for row in canon:
+        carry = normalize_carryover(row)
+        v = row.get("BDA_norm")
+        if carry is not None and isinstance(v, (int, float)):
+            by_carry[carry].append(float(v))
+
+    mean_bda_by_carryover: Dict[str, float] = {}
+    for k, vals in by_carry.items():
+        if vals:
+            mean_bda_by_carryover[k] = sum(vals) / len(vals)
+
+    cold = mean_bda_by_carryover.get("cold_start") or mean_bda_by_carryover.get("cold")
+    full = mean_bda_by_carryover.get("full_transcript")
+    carryover_delta_full_minus_cold: float | None = None
+    if cold is not None and full is not None:
+        carryover_delta_full_minus_cold = full - cold
+
+    return {
+        "mean_bda_by_carryover": mean_bda_by_carryover,
+        "carryover_delta_full_minus_cold": carryover_delta_full_minus_cold,
+    }
 
 
 def _percentile(values: List[float], q: float) -> float | None:
@@ -145,6 +214,9 @@ def compute_corpus_stats(rows: List[LedgerRow]) -> Dict[str, Any]:
     by_horizon = _breakdown_by(rows, lambda r: r.get("horizon_N"))
     by_shape = _breakdown_by(rows, lambda r: r.get("shape"))
 
+    adapter_param_signatures = compute_adapter_param_signatures(rows)
+    carryover_delta = compute_canonical_carryover_delta(rows)
+
     return {
         "n_runs": n_runs,
         "severity_counts": dict(sev_counts),
@@ -163,5 +235,7 @@ def compute_corpus_stats(rows: List[LedgerRow]) -> Dict[str, Any]:
             "horizon_N": by_horizon,
             "shape": by_shape,
         },
+        "adapter_param_signatures": adapter_param_signatures,
+        "carryover_delta": carryover_delta,
     }
 

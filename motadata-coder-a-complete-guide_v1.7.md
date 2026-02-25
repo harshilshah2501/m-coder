@@ -15,6 +15,12 @@ This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar 
 
 ---
 
+## Document Identity
+
+This document is the **complete system guide** for the Motadata Judgment & Compilation System. It spans all four layers — Governance, Compilation, Runtime, Observation — and their artifacts. Golden exemplars are the constitutional encoding at Layer 1; the ML Compilation layer derives product-specific bases (25 Motadata bases, 100 variants) from them.
+
+---
+
 ## Documentation Scope (Explicit)
 
 This guide covers **only**:
@@ -752,12 +758,12 @@ This mapping guarantees:
 
 ### Corpus Layers (Governance vs ML Compilation)
 
-The Golden Exemplars program may maintain **multiple corpora** at once:
+Two layers exist: the **Governance corpus** (constitutional) and the **ML Compilation corpus** (product-specific). For Motadata, there is **one** ML Compilation corpus.
 
-1. **Governance Corpus (Constitutional Layer)** — abstract exemplars under GREG ratification (for example, REF‑01, DES‑01, MIX‑04, CODE‑08). This layer encodes constitutional semantics and review discipline.
-2. **ML Compilation Corpus (Product-Specific Layer)** — concrete, system-grounded exemplars for a particular product pipeline (for example, the Motadata corpus with 17 base exemplars and 68 variants across REF/CONF/DES/MIX/CODE).
+1. **Governance Corpus (Constitutional Layer)** — 29 locked exemplars under GREG ratification (for example, REF‑01, DES‑01, MIX‑04, CODE‑08). This layer encodes constitutional semantics and review discipline.
+2. **ML Compilation Corpus (Product-Specific Layer)** — concrete, system-grounded exemplars for a particular product pipeline. The **Motadata corpus** comprises 25 base exemplars (BASE-001 through BASE-025) and 100 variants (4 per base) across REF/CONF/DES/MIX/CODE. It was expanded from 17 to 25 bases to strengthen REF, DES, and MIX representation.
 
-These corpora **may differ** in size and phase distribution. Only **compilation corpora** are eligible to enter SFT.
+These corpora **differ** in size and phase distribution. The 29 constitutional exemplars map to 25 Motadata bases at the ML Compilation layer. Only **compilation corpora** are eligible to enter SFT.
 
 Phase distribution and exemplar counts **must be declared per corpus**. Future readers must not assume that a canonical governance count (e.g., 29 locked exemplars per GREG Phases 01–05; Phase-06 hardening artifacts excluded) is identical to any given SFT dataset.
 
@@ -1363,7 +1369,7 @@ Dataset artifacts must be versioned and tagged **at freeze**. Any violation of t
 
 **Foundational Principle**: *Judgment precedes code. Refusal precedes automation. Reasoning precedes execution.*
 
-This section describes the **governance (constitutional) phase plan**. Exemplar counts and IDs are canonical per GREG: `governance/golden-exemplars/GREG/GREG-Initiation-Ratification-v0.9.md`. **29 locked exemplars** (Phases 01–05) are counted; **Phase-06 is hardening/reachability only** and is not counted in the governance total. Product pipelines (e.g. Motadata) may use different base counts (e.g. 17 bases) derived from this doctrine.
+This section describes the **governance (constitutional) phase plan**. Exemplar counts and IDs are canonical per GREG: `governance/golden-exemplars/GREG/GREG-Initiation-Ratification-v0.9.md`. **29 locked exemplars** (Phases 01–05) are counted; **Phase-06 is hardening/reachability only** and is not counted in the governance total. The **Motadata ML Compilation corpus** comprises 25 bases (BASE-001 through BASE-025), derived from these 29 constitutional exemplars. The expansion from 17 to 25 bases was undertaken to improve REF, DES, and MIX representation.
 
 Exemplars are authored, reviewed, and **LOCKED sequentially**. A phase may not advance unless all exemplars in the current phase pass D.N.A validation. Phases are sequenced by **irreversibility class**, not by use case or workflow order.
 
@@ -1624,7 +1630,7 @@ The mutation ledger must record, for each vector, **whether collapse was prevent
 
 * The **29 governance exemplars** (Phases 01–05) are canonical per **GREG-Initiation-Ratification-v0.9.md**. No changes without governance versioning.
 * **Phase‑06** is hardening and reachability only; DES‑06 and CONF‑06 are not counted in the 29.
-* Product pipelines (e.g. Motadata 17 bases, 68 variants) are derived from this doctrine and may have different IDs and counts; they remain subordinate to the constitutional phase semantics.
+* The Motadata ML Compilation corpus (25 bases, 100 variants) is derived from this doctrine; 29 constitutional exemplars map to 25 Motadata bases at the ML Compilation layer. It remains subordinate to the constitutional phase semantics.
 
 ---
 
@@ -2152,7 +2158,7 @@ The compilation pipeline prepares the model to **cooperate with these runtime ga
 
 **Governance:** Fully locked. Semantics stable. Dominance frozen. GREG-ready.
 
-**ML Compilation:** 25 Motadata bases (BASE-001 through BASE-025) derived from doctrine: REF (3), CONF (10), DES (4), MIX (4), CODE (4). Variants in progress. Stability validated for locked bases. CONF skew detected. Mutation taxonomy built. Freeze gate defined. Not yet compiled. Not yet trained.
+**ML Compilation:** 25 Motadata bases (BASE-001 through BASE-025) derived from doctrine: REF (3), CONF (10), DES (4), MIX (4), CODE (4). Target: 100 variants (4 per base); expansion from 17→25 bases was for REF/DES/MIX coverage. Variants in progress. Stability validated for locked bases. CONF skew detected. Mutation taxonomy built. Freeze gate defined. Not yet compiled. Not yet trained.
 
 **Runtime:** Architected. Not instantiated.
 

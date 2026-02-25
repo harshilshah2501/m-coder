@@ -47,6 +47,8 @@ def write_summary_json(
     from collections import Counter
 
     model_counts = Counter(normalize_model_id(r.get("model_id")) for r in rows)
+    adapter_signatures = corpus_stats.get("adapter_param_signatures") or {}
+    carryover_delta = corpus_stats.get("carryover_delta") or {}
 
     payload: Dict[str, Any] = {
         "ledger_path": str(ledger_path),
@@ -56,7 +58,9 @@ def write_summary_json(
         "gates": gates,
         "models": {
             "counts_by_model_id": dict(model_counts),
+            "adapter_param_signatures": adapter_signatures,
         },
+        "carryover_delta": carryover_delta,
     }
     if clusters_summary is not None:
         payload["clusters"] = clusters_summary
@@ -171,6 +175,35 @@ def write_markdown_report(
         nd_fail = tier2_nd.get("metrics", {}).get("fail_rate_ge_S2", 0.0) or 0.0
         lines.append(f"- **fail_rate(≥S2) non-dummy**: {nd_fail:.3f}")
     lines.append("")
+
+    # Adapter configuration
+    adapter_signatures = corpus_stats.get("adapter_param_signatures") or {}
+    if adapter_signatures:
+        lines.append("### Adapter configuration")
+        sorted_sigs = sorted(
+            adapter_signatures.items(), key=lambda kv: kv[1], reverse=True
+        )
+        for sig, count in sorted_sigs[:3]:
+            lines.append(f"- `{sig}`: {count}")
+        if len(adapter_signatures) > 1:
+            lines.append(
+                "- **Warning**: Multiple adapter parameter sets detected; results may not be comparable."
+            )
+        lines.append("")
+
+    # Carryover delta (canonical)
+    carryover_delta = corpus_stats.get("carryover_delta") or {}
+    mean_bda = carryover_delta.get("mean_bda_by_carryover") or {}
+    delta_val = carryover_delta.get("carryover_delta_full_minus_cold")
+    if mean_bda or delta_val is not None:
+        lines.append("### Carryover delta (canonical)")
+        if mean_bda:
+            lines.append("- **mean BDA_norm by carryover**:")
+            for carry, val in sorted(mean_bda.items()):
+                lines.append(f"  - {carry}: {val:.3f}")
+        if delta_val is not None:
+            lines.append(f"- **carryover_delta (full_transcript − cold_start)**: {delta_val:.3f}")
+        lines.append("")
 
     # Cluster coverage
     total_clusters = len(clusters)

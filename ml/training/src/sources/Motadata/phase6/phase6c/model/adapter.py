@@ -4,7 +4,18 @@ Model adapter interface: consume messages (with origin tags), return response di
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any, Dict, List
+
+
+@dataclass
+class AdapterConfig:
+    temperature: float = 0.0
+    top_p: float = 1.0
+    max_tokens: int = 1200
+    stop: list[str] | None = None
+    retry_policy: str = "none"
+    max_retries: int = 0
 
 
 class ModelAdapter(ABC):
@@ -27,3 +38,7 @@ class ModelAdapter(ABC):
         """
         model_id = getattr(self, "MODEL_ID", self.__class__.__name__)
         return str(model_id)
+
+    def get_config(self) -> AdapterConfig:
+        """Return adapter configuration (defaults OK)."""
+        return AdapterConfig()

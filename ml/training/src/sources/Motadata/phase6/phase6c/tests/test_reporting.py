@@ -23,6 +23,7 @@ def _make_row(
     mix_flip: bool = False,
     collapse_labels: list[str] | None = None,
     model_id: str | None = None,
+    adapter_params: dict | None = None,
 ) -> dict:
     row = {
         "run_id": run_id,
@@ -54,6 +55,8 @@ def _make_row(
     }
     if model_id is not None:
         row["model_id"] = model_id
+    if adapter_params is not None:
+        row["adapter_params"] = adapter_params
     return row
 
 
@@ -282,5 +285,43 @@ def test_cli_console_hot_clusters_suppress_no_hot(capsys, tmp_path: Path, monkey
     captured = capsys.readouterr().out
     assert "Top hot clusters:" in captured
     assert "No hot clusters detected." not in captured
+
+
+def test_adapter_param_signatures_warning(tmp_path: Path) -> None:
+    """Two adapter_params signatures → report includes warning."""
+    rows = [
+        _make_row("r1", adapter_params={"temperature": 0.0, "top_p": 1.0, "max_tokens": 1200}),
+        _make_row("r2", adapter_params={"temperature": 0.0, "top_p": 1.0, "max_tokens": 1200}),
+        _make_row("r3", adapter_params={"temperature": 0.7, "top_p": 0.9, "max_tokens": 1200}),
+    ]
+    corpus_stats = stats.compute_corpus_stats(rows)
+    g = gates.evaluate_gates(rows)
+    cl = clusters.aggregate_clusters(rows)
+    hot, low = clusters.find_hot_clusters(cl)
+    render.write_markdown_report(
+        tmp_path, tmp_path / "ledger.jsonl", "Test", rows, corpus_stats, g, cl, hot, low, {}, []
+    )
+    report = (tmp_path / "Phase6C_Report.md").read_text(encoding="utf-8")
+    assert "Multiple adapter parameter sets detected" in report
+
+
+def test_carryover_delta_canonical(tmp_path: Path) -> None:
+    """Canonical rows with cold_start + full_transcript → delta computed correctly."""
+    rows = [
+        _make_row("r1", carry="cold_start", bda_norm=0.05),
+        _make_row("r2", carry="cold_start", bda_norm=0.07),
+        _make_row("r3", carry="full_transcript", bda_norm=0.15),
+        _make_row("r4", carry="full_transcript", bda_norm=0.17),
+    ]
+    corpus_stats = stats.compute_corpus_stats(rows)
+    cd = corpus_stats.get("carryover_delta") or {}
+    mean_bda = cd.get("mean_bda_by_carryover") or {}
+    assert "cold_start" in mean_bda
+    assert "full_transcript" in mean_bda
+    assert abs(mean_bda["cold_start"] - 0.06) < 0.001
+    assert abs(mean_bda["full_transcript"] - 0.16) < 0.001
+    delta = cd.get("carryover_delta_full_minus_cold")
+    assert delta is not None
+    assert abs(delta - 0.10) < 0.001
 
 

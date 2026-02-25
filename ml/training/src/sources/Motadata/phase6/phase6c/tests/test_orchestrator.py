@@ -238,6 +238,11 @@ def test_execute_plan_writes_files(tmp_path: Path) -> None:
     assert len(rows) == 1
     assert rows[0]["seed_id"] == "SEED"
     assert rows[0]["model_id"] == "dummy"
+    assert "adapter_params" in rows[0]
+    ap = rows[0]["adapter_params"]
+    assert "temperature" in ap
+    assert "top_p" in ap
+    assert "max_tokens" in ap
 
 
 def test_execute_plan_resume_idempotent(tmp_path: Path) -> None:
