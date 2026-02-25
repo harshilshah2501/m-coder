@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08D — Balanced Constitutional Retrain
+Stage-08D — Balanced Constitutional Retrain
 Clean retrain using strengthened Layer-II base exemplars (BASE-001 through BASE-025).
 Deterministic base-level split ensuring validation contains at least: 1 REF, 2 CONF, 1 DES, 1 MIX, 1 CODE.
 """
@@ -29,7 +29,7 @@ MAX_LENGTH = 4096
 VALID_PHASES = {"REF", "CONF", "DES", "MIX", "CODE"}
 LABEL_PAD_ID = -100
 
-# Phase-08D: Validation must contain at least 1 REF, 2 CONF, 1 DES, 1 MIX, 1 CODE
+# Stage-08D: Validation must contain at least 1 REF, 2 CONF, 1 DES, 1 MIX, 1 CODE
 BALANCED_VAL_SPEC = {"REF": 1, "CONF": 2, "DES": 1, "MIX": 1, "CODE": 1}
 
 
@@ -107,7 +107,7 @@ def _base_id_and_phase(rec):
 
 
 def balanced_base_split_phase08D(records):
-    """Phase-08D: Deterministic split ensuring validation contains at least 1 REF, 2 CONF, 1 DES, 1 MIX, 1 CODE.
+    """Stage-08D: Deterministic split ensuring validation contains at least 1 REF, 2 CONF, 1 DES, 1 MIX, 1 CODE.
     All variants of each base stay together."""
     base_to_phase = {}
     base_to_indices = {}
@@ -146,7 +146,7 @@ def write_split_stats_phase08D(train_records, val_records, phases_before):
     val_c = Counter(val_phases)
     
     lines = [
-        "Phase-08D: Deterministic base-level split",
+        "Stage-08D: Deterministic base-level split",
         "Validation must contain at least: 1 REF, 2 CONF, 1 DES, 1 MIX, 1 CODE",
         "All variants of a base stay in same split",
         "",
@@ -263,7 +263,7 @@ def main():
         )
     print(f"Loaded {len(records)} records")
     
-    # Phase-08D: Deterministic base-level split
+    # Stage-08D: Deterministic base-level split
     train_records, val_records, phases_before = balanced_base_split_phase08D(records)
     write_split_stats_phase08D(train_records, val_records, phases_before)
     print(f"Split: {len(train_records)} train, {len(val_records)} val")
@@ -341,7 +341,7 @@ def main():
         save_steps=eval_steps,
         save_total_limit=2,
         logging_steps=config["logging_steps"],
-        load_best_model_at_end=False,  # Phase-08D: No early stop, train full 2 epochs
+        load_best_model_at_end=False,  # Stage-08D: No early stop, train full 2 epochs
         bf16=use_bf16,
         fp16=use_fp16,
         gradient_checkpointing=False,
@@ -359,7 +359,7 @@ def main():
         callbacks=callbacks,
     )
     
-    print("Starting training (Phase-08D)...")
+    print("Starting training (Stage-08D)...")
     print(f"Epochs: {config['num_train_epochs']}, LR: {config['learning_rate']}, Batch size: {config['per_device_train_batch_size']}")
     trainer.train()
     
@@ -382,7 +382,7 @@ def main():
     val_phases = Counter([str(r.get("phase", "")).strip().upper() for r in val_records])
     
     summary_lines = [
-        "Phase-08D Training Summary",
+        "Stage-08D Training Summary",
         "=" * 50,
         f"Final train loss: {final_train_loss}",
         f"Final val loss: {final_eval_loss}",

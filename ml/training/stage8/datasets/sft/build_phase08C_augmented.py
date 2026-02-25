@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08C Dataset Augmentation.
+Stage-08C Dataset Augmentation.
 Generate 3 inline pressure variants per base exemplar; keep canonical outputs and all existing rows.
 """
 import json
@@ -8,8 +8,8 @@ from pathlib import Path
 from collections import Counter
 
 FROZEN_PATH = Path(__file__).resolve().parent / "golden_exemplars_v1_frozen.jsonl"
-OUT_PATH = Path(__file__).resolve().parent / "golden_exemplars_v1_phase08C.jsonl"
-STATS_PATH = Path(__file__).resolve().parent / "phase08C_dataset_stats.txt"
+OUT_PATH = Path(__file__).resolve().parent / "golden_exemplars_v1_stage08C.jsonl"
+STATS_PATH = Path(__file__).resolve().parent / "stage08C_dataset_stats.txt"
 
 # Inline pressure sentences (no headers, no brackets)
 AUTHORITY = "A senior executive has approved proceeding and considers the risk minimal."
@@ -66,7 +66,7 @@ def main():
     phase_aug = Counter(r.get("phase") for r in augmented)
 
     lines = [
-        "Phase-08C augmented dataset statistics",
+        "Stage-08C augmented dataset statistics",
         "=" * 40,
         f"Total rows: {total_rows}",
         "",

@@ -62,7 +62,7 @@ Phases are ordered by irreversibility class, not scenario type.
 | Phase-3 (DES) | Design reasoning | Explore assumptions and trade-offs | Decide or recommend |
 | Phase-4 (MIX) | Judgment collision | Resolve which phase dominates | Invent new semantics |
 | Phase-5 (CODE) | Judgment encoding | Encode judgment into code safely | Redefine judgment |
-| Phase-6 (ADV) | Judgment endurance | Stress judgment under time, scale, and coordination | Introduce new behavior |
+| Phase-6 (REACH) | Judgment endurance | Stress judgment under time, scale, and coordination | Introduce new semantics/behavior |
 
 Reviewers are not evaluating solution quality.
 They are evaluating whether judgment behavior is correct for the phase.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08 LoRA SFT training harness.
+Stage-08 LoRA SFT training harness.
 Single-GPU, constitution-locked. No DeepSpeed/FSDP/QLoRA/TRL/DPO/gradient_checkpointing.
 Dataset: SCRIPT_DIR/dataset or phase08/datasets/sft (Golden Exemplars). Fields: input, output, phase.
 
@@ -183,7 +183,7 @@ def write_split_stats(train_records, val_records, phases_before, stratified_fall
     before = Counter(phases_before)
     train_c = Counter(train_phases)
     val_c = Counter(val_phases)
-    header = split_header or "Phase-stratified 80/20 split at BASE level (seed=42). All variants of same base_id in same split."
+    header = split_header or "Stage-stratified 80/20 split at BASE level (seed=42). All variants of same base_id in same split."
     lines = [header]
     if stratified_fallback is not None:
         lines.append("Stratified fallback used (non-stratified): " + str(stratified_fallback))

@@ -6,8 +6,8 @@ import sys
 
 import pytest
 
-from phase6c.reporting.load import load_ledger, LedgerValidationError
-from phase6c.reporting import stats, gates, clusters, render, cli as reporting_cli
+from stage6.stage6c.reporting.load import load_ledger, LedgerValidationError
+from stage6.stage6c.reporting import stats, gates, clusters, render, cli as reporting_cli
 
 
 def _make_row(

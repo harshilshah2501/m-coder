@@ -1,4 +1,4 @@
-# Stage-5 Variant Stability Gate Report (Refined Phase-Scoped Mode)
+# Stage-5 Variant Stability Gate Report (Refined Stage-Scoped Mode)
 # File validated: ml/training/src/sources/Motadata/PHASE4_VARIANT_GENERATION.md
 # Generated: 2025-02-20
 

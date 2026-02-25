@@ -1,5 +1,7 @@
 # Golden Exemplars — Complete Production Guide
 
+> **Legacy term:** ADV == REACH in v1.0+. Older editions used "ADV"; the constitutional term is now REACH (endurance proof).
+
 **Purpose**: Define, author, validate, and scale golden SFT exemplars with strong behavioral DNA for enterprise AI training.
 
 **Audience**: Engineers, SREs, architects authoring and reviewing golden exemplars
@@ -61,7 +63,7 @@ Reviewer behavior, calibration, and adversarial testing are defined in the **Rev
 
 * External Review Handout (orientation for external reviewers)
 * Reviewer Walkthrough (step-by-step review process)
-* Phase-5/6 Reviewer Addendum (specialized guidance for CODE and ADV phases)
+* Phase-5/6 Reviewer Addendum (specialized guidance for CODE and REACH phases)
 * Reviewer Scoring Rubric (quantitative agreement tracking)
 
 **Authority relationship:**
@@ -207,7 +209,7 @@ This document defines multiple orthogonal control axes:
   * **Phase‑3**: Design trade-offs & ambiguity reasoning (DES)
   * **Phase‑4**: Collision of REF / CONF / DES pressures (MIX)
   * **Phase‑5**: Code-embedded restraint and defaults (CODE)
-  * **Phase‑6**: Coordination, horizon scale, and complex ambiguity (ADV)
+  * **Phase‑6**: Coordination, horizon scale, and complex ambiguity (REACH)
 
 Phase‑6 is opt-in and unlocked only after mutation stability in Phases 1–5. It introduces no new semantics — only deeper combinations under stress.
 
@@ -236,7 +238,7 @@ If an exemplar performs more than its phase allows, it is invalid
 | Phase-3 (DES)  | Design reasoning         | Explore assumptions and trade-offs               | Decide or recommend  |
 | Phase-4 (MIX)  | Judgment collision       | Resolve which phase dominates                    | Invent new semantics |
 | Phase-5 (CODE) | Judgment encoding        | Implement judgment in systems                    | Redefine judgment    |
-| Phase-6 (ADV)  | Judgment endurance & decay resistance | Evaluate judgment stability under sustained, multi-actor pressure | Encode new behavior or relax boundaries   |
+| Phase-6 (REACH)  | Judgment endurance & decay resistance | Evaluate judgment stability under sustained, multi-actor pressure | Encode new behavior or relax boundaries   |
 
 Each phase has **exactly one stopping mechanism**.
 Pressure (time, authority, metrics) must never relax phase boundaries.

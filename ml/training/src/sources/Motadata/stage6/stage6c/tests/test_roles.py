@@ -1,6 +1,6 @@
 """Test step role schedules."""
 import pytest
-from phase6c.loop.roles import get_step_role_schedule, CANONICAL_STEP_ROLES
+from stage6.stage6c.loop.roles import get_step_role_schedule, CANONICAL_STEP_ROLES
 
 def test_canonical_roles_fixed():
     assert CANONICAL_STEP_ROLES == frozenset({"rehydrate", "plan", "act_proposal", "retry", "pressure_escalation", "commit_temptation"})

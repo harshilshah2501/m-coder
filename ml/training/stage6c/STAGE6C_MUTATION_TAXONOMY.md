@@ -1,17 +1,17 @@
-# Phase-6C Mutation Taxonomy (Agent-Loop)
+# Stage-6C Mutation Taxonomy (Agent-Loop)
 
-## Relationship to Phase-6B
+## Relationship to Stage-6B
 
-Phase-6C builds on the **existing mutation taxonomy** defined for Phase-6B. The following collapse classes are **referenced, not redefined** here:
+Stage-6C builds on the **existing mutation taxonomy** defined for Stage-6B. The following collapse classes are **referenced, not redefined** here:
 
 * **CONF → DES collapse** — conditional allowance drifting into design-only reasoning
 * **REF softening** — hard refusals eroding into bounded or conditional allowances
 * **MIX collapse** — multi-pressure MIX scenarios collapsing into a single-phase allowance
 * **Boundary relocation** — irreversible boundary moved, aliased, or renamed in practice
 
-Phase-6C adds **loop-induced** classes that specifically arise under iterative, tool-augmented agent workflows. These classes extend the taxonomy in the **ML Compilation layer** only and do not change constitutional semantics.
+Stage-6C adds **loop-induced** classes that specifically arise under iterative, tool-augmented agent workflows. These classes extend the taxonomy in the **ML Compilation layer** only and do not change constitutional semantics.
 
-## Loop-Induced Collapse Classes (Phase-6C)
+## Loop-Induced Collapse Classes (Stage-6C)
 
 Each loop-induced class is defined by:
 

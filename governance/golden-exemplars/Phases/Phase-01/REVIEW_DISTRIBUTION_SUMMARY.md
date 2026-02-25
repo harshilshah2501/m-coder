@@ -24,7 +24,7 @@ Reviewer Pack v1.0 consists of:
    → Step-by-step walkthrough (10-min read) ← REQUIRED
    
 4. Phase_5_6_Reviewer_Addendum.md
-   → For CODE/ADV phases only (NOT needed for Phase-01)
+   → For CODE/REACH phases only (NOT needed for Phase-01)
    
 5. Reviewer_Scoring_Rubric.md
    → For multi-reviewer calibration (optional for small teams)

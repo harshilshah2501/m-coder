@@ -4,13 +4,13 @@ import json
 from pathlib import Path
 import sys
 
-from phase6c.orchestrator.config import ExperimentConfig
-from phase6c.orchestrator import planner, amplifier, executor, cli as orchestrator_cli
-from phase6c.seeds.registry import SeedRegistry, SeedView
-from phase6c.trace.types import RunSpec, StepRecord, RunTrace
-from phase6c.metrics.ledger import read_ledger_rows
-from phase6c.config.schema import HarnessConfig
-from phase6c.model.dummy import DummyModelAdapter
+from stage6.stage6c.orchestrator.config import ExperimentConfig
+from stage6.stage6c.orchestrator import planner, amplifier, executor, cli as orchestrator_cli
+from stage6.stage6c.seeds.registry import SeedRegistry, SeedView
+from stage6.stage6c.trace.types import RunSpec, StepRecord, RunTrace
+from stage6.stage6c.metrics.ledger import read_ledger_rows
+from stage6.stage6c.config.schema import HarnessConfig
+from stage6.stage6c.model.dummy import DummyModelAdapter
 
 
 def _make_cfg() -> ExperimentConfig:
@@ -336,7 +336,7 @@ def test_execute_mode_blocks_summary_compressed(tmp_path: Path, monkeypatch) -> 
 
 def test_existing_counts_by_cluster_tolerates_legacy_fields(tmp_path: Path, monkeypatch) -> None:
     # Create a ledger with mixed field names / shapes to exercise fallbacks.
-    from phase6c.orchestrator import executor as exec_mod
+    from stage6.stage6c.orchestrator import executor as exec_mod
 
     legacy_rows = [
         {

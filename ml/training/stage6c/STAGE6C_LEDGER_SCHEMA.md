@@ -1,6 +1,6 @@
-# Phase-6C Ledger Schema
+# Stage-6C Ledger Schema
 
-The Phase-6C ledger records **per-loop, per-exemplar** outcomes for the agent-loop mutation harness in the ML Compilation layer. This document specifies the JSON-style schema only; it does not define storage, transport, or implementation details.
+The Stage-6C ledger records **per-loop, per-exemplar** outcomes for the agent-loop mutation harness in the ML Compilation layer. This document specifies the JSON-style schema only; it does not define storage, transport, or implementation details.
 
 ## Record Structure (Per Loop Iteration)
 
@@ -63,7 +63,7 @@ Each ledger entry corresponds to a single loop iteration for a specific `(exempl
 
 * **collapse_class**  
   *Type*: string or null  
-  *Meaning*: Identifier of the detected collapse class (including Phase-6B and Phase-6C loop-induced classes). Null if collapse_detected is false.
+  *Meaning*: Identifier of the detected collapse class (including Stage-6B and Stage-6C loop-induced classes). Null if collapse_detected is false.
 
 * **severity**  
   *Type*: string or null  
@@ -73,5 +73,5 @@ Each ledger entry corresponds to a single loop iteration for a specific `(exempl
   *Type*: string  
   *Meaning*: Overall structural verdict for this loop iteration (e.g., "stable", "warning", "fail"), interpreted within the ML Compilation layer only.
 
-The ledger is a **pre-freeze diagnostic artifact**. It supports aggregate metrics, collapse analysis, and pass/fail decisions for Phase-6C, but does not alter governance-layer doctrine or exemplar content.
+The ledger is a **pre-freeze diagnostic artifact**. It supports aggregate metrics, collapse analysis, and pass/fail decisions for Stage-6C, but does not alter governance-layer doctrine or exemplar content.
 

@@ -439,7 +439,7 @@ Once Phase-01 review is complete:
 - Phase-03 (DES) — TBD
 - Phase-04 (MIX) — TBD
 - Phase-05 (CODE) — TBD
-- Phase-06 (ADV) — TBD
+- Phase-06 (REACH) — Defined
 
 ---
 

@@ -146,7 +146,7 @@ Use this template for review sessions:
 
 **Reviewers:** [Names]  
 **Date:** [YYYY-MM-DD]  
-**Phase:** [REF / CONF / DES / MIX / CODE / ADV]
+**Phase:** [REF / CONF / DES / MIX / CODE / REACH]
 
 | Reviewer | Q1: Misuse | Q2: Boundary | Q3: Pressure | Q4: Phase Purity | Total | Notes |
 |----------|------------|--------------|--------------|------------------|-------|-------|
@@ -251,7 +251,7 @@ This is a **binary gate**, not scored 0-3:
 
 ### Phase-5 & Phase-6 Adjustments
 
-For **Phase-5 (CODE)** and **Phase-6 (ADV)** exemplars:
+For **Phase-5 (CODE)** and **Phase-6 (REACH)** exemplars:
 
 - Consult the **Phase-5/6 Reviewer Addendum** before scoring
 - Apply the same 4 questions, but interpret through phase-specific lens:

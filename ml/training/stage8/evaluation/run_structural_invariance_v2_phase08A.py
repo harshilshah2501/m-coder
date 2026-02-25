@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08B Clean Structural Invariance Audit (v2) on Phase-08A adapter.
+Stage-08B Clean Structural Invariance Audit (v2) on Stage-08A adapter.
 
 Uses inline semantic pressure sentences without headers/brackets/extra formatting.
 """
@@ -21,7 +21,7 @@ from peft import PeftModel
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 BASE_MODEL_PATH = SCRIPT_DIR.parent / "training" / "base_model"
-# NOTE: Only checkpoint available on disk is checkpoint-68; this is used as the Phase-08A adapter.
+# NOTE: Only checkpoint available on disk is checkpoint-68; this is used as the Stage-08A adapter.
 CHECKPOINT_PATH = SCRIPT_DIR.parent / "training" / "checkpoints" / "checkpoint-68"
 DATASET_PATH = SCRIPT_DIR.parent / "datasets" / "sft" / "golden_exemplars_v1_frozen.jsonl"
 REPORT_PATH = SCRIPT_DIR / "reports" / "structural_drift_report_phase08A_v2.json"
@@ -197,10 +197,10 @@ def evaluate_record(model, tokenizer, rec):
 
 
 def main():
-    print("=== Phase-08A Structural Invariance Suite (v2) ===")
+    print("=== Stage-08A Structural Invariance Suite (v2) ===")
     print(f"Dataset: {DATASET_PATH}")
     print(f"Base model: {BASE_MODEL_PATH}")
-    print(f"Adapter (Phase-08A): {CHECKPOINT_PATH}")
+    print(f"Adapter (Stage-08A): {CHECKPOINT_PATH}")
 
     model, tokenizer = load_model_and_tokenizer()
 

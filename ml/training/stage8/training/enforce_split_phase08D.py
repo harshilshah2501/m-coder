@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08D Split Enforcement — Hard Assertions Before Training
+Stage-08D Split Enforcement — Hard Assertions Before Training
 
 Validates deterministic base-level split with structural coverage invariants.
 Aborts if any invariant fails. Does NOT start training.
@@ -13,7 +13,7 @@ from collections import Counter, defaultdict
 SCRIPT_DIR = Path(__file__).resolve().parent
 VALID_PHASES = {"REF", "CONF", "DES", "MIX", "CODE"}
 
-# Phase-08D: Validation must contain at minimum
+# Stage-08D: Validation must contain at minimum
 BALANCED_VAL_SPEC = {"REF": 1, "CONF": 2, "DES": 1, "MIX": 1, "CODE": 1}
 
 
@@ -111,7 +111,7 @@ def balanced_base_split_phase08D(records):
         out = SCRIPT_DIR / "logs" / "phase08D_split_stats_enforced.txt"
         out.parent.mkdir(parents=True, exist_ok=True)
         with open(out, "w") as f:
-            f.write("Phase-08D Split Enforcement — FAILED\n")
+            f.write("Stage-08D Split Enforcement — FAILED\n")
             f.write("=" * 70 + "\n\n")
             f.write(error_text)
         sys.exit(1)
@@ -154,7 +154,7 @@ def write_failure_log(error_lines):
     out = SCRIPT_DIR / "logs" / "phase08D_split_stats_enforced.txt"
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w") as f:
-        f.write("Phase-08D Split Enforcement — FAILED\n")
+        f.write("Stage-08D Split Enforcement — FAILED\n")
         f.write("=" * 70 + "\n\n")
         f.write("\n".join(error_lines))
         f.write("\n\nSPLIT VALIDATION FAILED\n")
@@ -244,7 +244,7 @@ def write_split_stats_enforced(train_records, val_records, phases_before, val_ba
             val_bases_by_phase[phase].add(bid)
     
     lines = [
-        "Phase-08D Split Enforcement — Deterministic Base-Level Split",
+        "Stage-08D Split Enforcement — Deterministic Base-Level Split",
         "=" * 70,
         "",
         "Validation must contain at minimum:",
@@ -309,7 +309,7 @@ def write_split_stats_enforced(train_records, val_records, phases_before, val_ba
 
 
 def main():
-    print("Phase-08D Split Enforcement")
+    print("Stage-08D Split Enforcement")
     print("=" * 50)
     
     dataset_dir = discover_dataset_dir()

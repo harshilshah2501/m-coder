@@ -1,8 +1,8 @@
-# Phase-6C Agent-Loop Mutation Harness
+# Stage-6C Agent-Loop Mutation Harness
 
 ## Purpose
 
-Phase-6C Agent-Loop Mutation is a **compilation-layer stress harness** that simulates iterative agent workflows before dataset freeze.
+Stage-6C Agent-Loop Mutation is a **compilation-layer stress harness** that simulates iterative agent workflows before dataset freeze.
 
 The harness exercises Plan → Edit → Test → Revise → Retry loops across:
 
@@ -20,7 +20,7 @@ This harness:
 
 ## Simulation Model
 
-Phase-6C uses a generic, tooling-agnostic loop structure. It does **not** require or define specific agents, APIs, or runtimes.
+Stage-6C uses a generic, tooling-agnostic loop structure. It does **not** require or define specific agents, APIs, or runtimes.
 
 High-level loop pattern:
 
@@ -50,7 +50,7 @@ No real tools, agents, or models are required to be instantiated in this specifi
 
 ## Allowed Inputs
 
-Phase-6C operates only on already-locked, compilation-layer artifacts and explicit mutation parameters:
+Stage-6C operates only on already-locked, compilation-layer artifacts and explicit mutation parameters:
 
 * **Base exemplar** — canonical LOCKED exemplar, with fixed phase semantics and irreversible boundary
 * **Variant** — LOCKED variant inheriting the same boundary and posture

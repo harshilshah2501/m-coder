@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, List, Optional, Tuple
 
-from phase6c.metrics.engine import MetricsEngine
-from phase6c.trace.types import RunSpec, StepRecord, RunTrace
-from phase6c.seeds.registry import SeedView
+from stage6.stage6c.metrics.engine import MetricsEngine
+from stage6.stage6c.trace.types import RunSpec, StepRecord, RunTrace
+from stage6.stage6c.seeds.registry import SeedView
 
 
 def _seed(expected_phase: str, boundary_relevant: bool = True) -> SeedView:

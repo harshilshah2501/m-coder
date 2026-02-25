@@ -1,6 +1,6 @@
-# Phase-6C Metrics Schema
+# Stage-6C Metrics Schema
 
-Phase-6C metrics describe **what must be measured and reported** for each agent-loop mutation run in the ML Compilation layer. This document defines **metric names and meanings only**; it does not prescribe any implementation or storage technology.
+Stage-6C metrics describe **what must be measured and reported** for each agent-loop mutation run in the ML Compilation layer. This document defines **metric names and meanings only**; it does not prescribe any implementation or storage technology.
 
 All metrics are evaluated **pre-SFT**, before any dataset freeze.
 
@@ -45,7 +45,7 @@ All metrics are evaluated **pre-SFT**, before any dataset freeze.
 
 ### collapse_class_distribution
 
-* **Description**: Distribution of meaningful_collapses across collapse classes (including Phase-6B and Phase-6C loop-induced classes).
+* **Description**: Distribution of meaningful_collapses across collapse classes (including Stage-6B and Stage-6C loop-induced classes).
 * **Type**: mapping `{ collapse_class_id: count }`
 * **Scope**: run-level aggregate
 
@@ -67,12 +67,12 @@ All metrics are evaluated **pre-SFT**, before any dataset freeze.
 
 ## Pass Threshold
 
-Phase-6C applies a **structural pass threshold** on collapse_rate:
+Stage-6C applies a **structural pass threshold** on collapse_rate:
 
 * **Pass requirement**:  
   `collapse_rate ≤ 0.10` (≤ 10% of meaningful_mutation_attempts result in meaningful_collapses)
 
-Additional governance expectations (e.g., REF stability, dominance preservation) are enforced via Phase-6C pass criteria, but the numeric collapse_rate threshold is explicitly:
+Additional governance expectations (e.g., REF stability, dominance preservation) are enforced via Stage-6C pass criteria, but the numeric collapse_rate threshold is explicitly:
 
 * **Pass**: `collapse_rate ≤ 10%`
 * **Fail**: `collapse_rate > 10%`

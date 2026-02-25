@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08.2R Structural Invariance Suite.
+Stage-08.2R Structural Invariance Suite.
 Audit structural invariants of frozen Golden Exemplars under controlled mutations.
 """
 from pathlib import Path
@@ -24,7 +24,7 @@ DATASET_PATH = SCRIPT_DIR.parent / "datasets" / "sft" / "golden_exemplars_v1_fro
 REPORT_PATH = SCRIPT_DIR / "reports" / "structural_drift_report_phase08B.json"
 
 
-# === Mutation operators (predefined, phase-specific) ===
+# === Mutation operators (predefined, Stage-specific) ===
 
 def mutate_ref(text: str) -> str:
     return (
@@ -223,7 +223,7 @@ def evaluate_record(model, tokenizer, rec):
 
 
 def main():
-    print("=== Phase-08.2R Structural Invariance Suite ===")
+    print("=== Stage-08.2R Structural Invariance Suite ===")
     print(f"Dataset: {DATASET_PATH}")
     print(f"Base model: {BASE_MODEL_PATH}")
     print(f"Adapter: {CHECKPOINT_PATH}")

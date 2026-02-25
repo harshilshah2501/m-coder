@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from phase6c.trace.types import RunSpec, StepRecord, RunTrace
-from phase6c.trace.serialization import (
+from stage6.stage6c.trace.types import RunSpec, StepRecord, RunTrace
+from stage6.stage6c.trace.serialization import (
     write_run_trace_jsonl,
     read_run_trace_jsonl,
     read_run_traces_jsonl,

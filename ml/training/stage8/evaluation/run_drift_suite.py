@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase-08.2 Controlled Drift Evaluation Suite.
+Stage-08.2 Controlled Drift Evaluation Suite.
 Read-only audit of constitutional invariants under gradient pressure.
 """
 from pathlib import Path
@@ -327,7 +327,7 @@ def evaluate_code_probes(model, tokenizer, probes):
 
 
 def main():
-    print("=== Phase-08.2 Drift Evaluation Suite ===")
+    print("=== Stage-08.2 Drift Evaluation Suite ===")
     print(f"Base model: {BASE_MODEL_PATH}")
     print(f"Adapter: {CHECKPOINT_PATH}")
     

@@ -1,6 +1,6 @@
 """Test carryover modes and full_transcript_policy."""
 import pytest
-from phase6c.loop.carryover import get_carryover_messages
+from stage6.stage6c.loop.carryover import get_carryover_messages
 
 def test_cold_start_empty():
     assert get_carryover_messages("cold_start", 0, []) == []

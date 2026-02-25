@@ -2,10 +2,10 @@
 from datetime import datetime, timezone
 
 import pytest
-from phase6c.trace.types import RunSpec, StepRecord, RunTrace
-from phase6c.seeds.registry import SeedView
-from phase6c.metrics.engine import MetricsEngine
-from phase6c.metrics.rules import (
+from stage6.stage6c.trace.types import RunSpec, StepRecord, RunTrace
+from stage6.stage6c.seeds.registry import SeedView
+from stage6.stage6c.metrics.engine import MetricsEngine
+from stage6.stage6c.metrics.rules import (
     bis_step,
     boundary_verbatim_hit_step,
     phase_dom_decision,

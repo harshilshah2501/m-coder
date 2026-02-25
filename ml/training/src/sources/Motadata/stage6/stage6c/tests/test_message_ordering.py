@@ -1,6 +1,6 @@
 """Test message ordering: governance -> seed -> wrappers -> carryover -> step_query via origin tags."""
-from phase6c.loop.runner import build_step_messages
-from phase6c.seeds.registry import SeedView
+from stage6.stage6c.loop.runner import build_step_messages
+from stage6.stage6c.seeds.registry import SeedView
 
 
 def _make_seed():

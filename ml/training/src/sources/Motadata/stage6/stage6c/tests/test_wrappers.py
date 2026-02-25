@@ -1,11 +1,11 @@
 """M3: Wrapper position, origin=wrapper, none when injection_profile_id==none, config no role collision."""
 import pytest
-from phase6c.loop.runner import build_step_messages
-from phase6c.seeds.registry import SeedView
-from phase6c.injections.wrapper import apply_wrapper
-from phase6c.injections.types import WrapperState
-from phase6c.injections.profiles import get_profile, list_profile_ids, CANONICAL_PROFILE_IDS
-from phase6c.config.schema import HarnessConfig, CANONICAL_STEP_ROLES
+from stage6.stage6c.loop.runner import build_step_messages
+from stage6.stage6c.seeds.registry import SeedView
+from stage6.stage6c.injections.wrapper import apply_wrapper
+from stage6.stage6c.injections.types import WrapperState
+from stage6.stage6c.injections.profiles import get_profile, list_profile_ids, CANONICAL_PROFILE_IDS
+from stage6.stage6c.config.schema import HarnessConfig, CANONICAL_STEP_ROLES
 
 
 def _make_seed():
