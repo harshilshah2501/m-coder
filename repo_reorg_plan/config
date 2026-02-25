@@ -1,0 +1,4 @@
+# Reorganization execution config
+# Set EXECUTE=1 to allow actual moves, archives, and reference updates.
+# Default: EXECUTE=0 (plan mode only)
+EXECUTE=0
