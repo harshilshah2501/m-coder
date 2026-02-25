@@ -1,3 +1,10 @@
+> ⚠️ **Historical Canonical (Superseded)**
+> Primary guide (canonical): `motadata-coder-a-complete-guide_v1.7.md`
+> Retained for auditability and backward-reference stability.
+> Do not update doctrine here; apply changes only to the primary guide.
+
+---
+
 # Golden Exemplars — Complete Production Guide
 
 **Purpose**: Define, author, validate, and scale golden SFT exemplars with strong behavioral DNA for enterprise AI training.
