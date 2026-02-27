@@ -27,6 +27,7 @@
 - **Canonicalization:** Stable JSON with sorted keys, UTF-8 encoding.
 - **Hashing:** SHA-256 of canonicalized plan JSON. Required at ledger emission time.
 - **Plan hash** links ledger row to plan; `boundary.irreversible_boundary_phrase` must match exactly between plan and ledger.
+- **Reconciliation join key:** `(request_id, plan_hash)`.
 
 ## Validation Rules (Runtime MUST Enforce)
 
@@ -77,6 +78,12 @@ JSON Schema validates structure only; runtime-rule validation (R1–R5, L1–L5)
 | `plan_invalid_r2_ref_phase_not_refuse.json` | R2 | constitutional_phase_expected=REF + terminal_posture=safe_execute (REF must refuse) |
 
 Each file passes JSON Schema validation (structure OK) but fails runtime-rule validation for its targeted rule.
+
+## Invalid Ledger Examples (Runtime-Rule Coverage)
+
+| File | Target Rule | Violation |
+|------|-------------|-----------|
+| `ledger_invalid_l4_authority_fail_but_crossed.json` | L4 | authority_verdict != pass AND boundary_verdict=crossed (invalid combination) |
 
 ## Example Excerpts
 

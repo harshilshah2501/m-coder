@@ -30,6 +30,32 @@ def load_json(path: Path) -> dict:
         return json.load(f)
 
 
+def validate_runtime_rules_ledger(ledger: dict) -> list[str]:
+    """Validate ledger against runtime rules L1–L5. Returns list of violated rule codes."""
+    violations: list[str] = []
+    v = ledger.get("verdicts", {})
+    b = ledger.get("boundary", {})
+    auth = v.get("authority_verdict")
+    boundary_verdict = v.get("boundary_verdict")
+    ref_enforced = v.get("ref_enforced")
+    phase = v.get("phase_emitted")
+    crossed = b.get("boundary_crossed")
+    attempted = b.get("boundary_cross_attempted")
+    phrase = (b.get("irreversible_boundary_phrase") or "").strip()
+
+    if auth != "pass" and boundary_verdict == "crossed":
+        violations.append("L4")
+    if ref_enforced and phase not in ("REF", "MIX"):
+        violations.append("L1")
+    if crossed and boundary_verdict != "crossed":
+        violations.append("L2")
+    if attempted and not crossed and boundary_verdict != "blocked":
+        violations.append("L3")
+    if not phrase:
+        violations.append("L5")
+    return violations
+
+
 def validate_runtime_rules_plan(plan: dict) -> list[str]:
     """Validate plan against runtime rules R1–R5. Returns list of violated rule codes."""
     violations: list[str] = []
@@ -108,6 +134,50 @@ class TestLedgerSchema(unittest.TestCase):
     def test_ledger_conf_preboundary_valid(self) -> None:
         data = load_json(EXAMPLES / "ledger_conf_preboundary.json")
         self.ledger_validator.validate(data)
+
+    def test_ledger_invalid_l4_structurally_valid(self) -> None:
+        data = load_json(EXAMPLES / "ledger_invalid_l4_authority_fail_but_crossed.json")
+        self.ledger_validator.validate(data)
+
+    def test_ledger_invalid_l4_fails_runtime_rule_l4(self) -> None:
+        data = load_json(EXAMPLES / "ledger_invalid_l4_authority_fail_but_crossed.json")
+        violations = validate_runtime_rules_ledger(data)
+        self.assertEqual(violations, ["L4"], "L4: authority fail + boundary crossed must be the only violation")
+
+
+class TestEnumFreeze(unittest.TestCase):
+    """Freeze enums to prevent silent drift in reason_codes and surfaces."""
+
+    def test_reason_codes_enum_frozen(self) -> None:
+        rc = load_json(SCHEMAS / "reason_codes.v0.1.json")
+        actual = set(rc["items"]["enum"])
+        expected = {
+            "MISSING_AUTHORITY",
+            "AUTHORITY_UNKNOWN",
+            "BOUNDARY_BLOCKED",
+            "BOUNDARY_RELOCATED_DETECTED",
+            "PHASE_MISMATCH_PREVENTED",
+            "REF_ENFORCED",
+            "INSUFFICIENT_EVIDENCE",
+            "TOOL_NOT_PERMITTED",
+            "SAFE_PREBOUNDARY_ONLY",
+        }
+        self.assertEqual(actual, expected, "reason_codes enum must not change without explicit version bump")
+
+    def test_surfaces_enum_frozen(self) -> None:
+        sf = load_json(SCHEMAS / "surfaces.v0.1.json")
+        actual = set(sf["items"]["enum"])
+        expected = {
+            "SignalIntegrity",
+            "BaselinesHistory",
+            "ChangeBlastRadius",
+            "AuthorityOwnership",
+            "TimePressure",
+            "Compositional",
+            "ImplementationIrreversibility",
+            "ContextDrift",
+        }
+        self.assertEqual(actual, expected, "surfaces enum must not change without explicit version bump")
 
 
 class TestInvalidExamplesTargetRules(unittest.TestCase):
