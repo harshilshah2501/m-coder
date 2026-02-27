@@ -28,6 +28,7 @@ For more details, see [ORCHESTRATOR_SERVICE_GUIDE.md](ORCHESTRATOR_SERVICE_GUIDE
 The m-coder repository follows a 4-layer structure (Governance, ML Compilation, Runtime, Observation):
 
 - **[docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation
+- **[docs/ROADMAP_L2_L3_L4.md](docs/ROADMAP_L2_L3_L4.md)** — L2/L3/L4 milestone roadmap, snapshot, sequencing
 - **[docs/architecture/Golden_Exemplars_Architecture_Map.md](docs/architecture/Golden_Exemplars_Architecture_Map.md)** — Golden Exemplars system map
 - **[observation/README.md](observation/README.md)** — Layer-4 (Observation) boundaries
 

@@ -97,6 +97,11 @@ Comprehensive documentation for the Motadata AI system including model training,
 
 ## Documentation by Component
 
+### 🏛️ Core Architecture Docs
+
+- **[ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation
+- **[ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md)** — L2/L3/L4 milestone roadmap, snapshot, sequencing
+
 ### 📊 Evaluation & Benchmarking
 - **[evaluation/](evaluation/)** - Model evaluation reports and analysis
   - Comprehensive evaluation reports
