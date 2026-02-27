@@ -1,1 +1,1 @@
-# Phase-6C tests
+# Stage-6C tests

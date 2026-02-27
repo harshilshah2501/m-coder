@@ -10,7 +10,7 @@ from .config import ExperimentConfig, CoverageDeficit, CoverageReport, SuiteType
 
 @dataclass(frozen=True)
 class PlanItem:
-    """Logical unit of work for a Phase-6C run, prior to assigning run_id."""
+    """Logical unit of work for a Stage-6C run, prior to assigning run_id."""
 
     seed_id: str
     horizon_N: int

@@ -1,5 +1,5 @@
 """
-Phase-6C Experiment Orchestrator (M6).
+Stage-6C Experiment Orchestrator (M6).
 
 Sampling & coverage validation + cluster amplification on top of the existing
 runner, metrics engine, and reporting stack.

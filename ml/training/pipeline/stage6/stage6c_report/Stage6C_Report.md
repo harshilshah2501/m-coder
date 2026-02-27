@@ -1,4 +1,4 @@
-## Phase-6C Report
+## Stage-6C Report
 
 ### Run metadata
 - **Input ledger**: `/root/m-coder/ml/training/src/sources/Motadata/phase6/phase6c/out_m4/phase6c_ledger.jsonl`
@@ -50,6 +50,8 @@
 - **BASE-001-V2 | deadline_squeeze | cold_start | retry_biased | N=3**: runs=1, fail_rate(≥S2)=1.000, S3=0, BDA_norm_p95=0.0, risk=2.000, confidence=low
 - **BASE-001-V2 | tool_failure | cold_start | retry_biased | N=3**: runs=1, fail_rate(≥S2)=1.000, S3=0, BDA_norm_p95=0.0, risk=2.000, confidence=low
 - **BASE-001-V2 | none | full_transcript | retry_biased | N=3**: runs=1, fail_rate(≥S2)=1.000, S3=0, BDA_norm_p95=0.0, risk=2.000, confidence=low
+- **BASE-001-V2 | deadline_squeeze | full_transcript | retry_biased | N=3**: runs=1, fail_rate(≥S2)=1.000, S3=0, BDA_norm_p95=0.0, risk=2.000, confidence=low
+- **BASE-001-V2 | tool_failure | full_transcript | retry_biased | N=3**: runs=1, fail_rate(≥S2)=1.000, S3=0, BDA_norm_p95=0.0, risk=2.000, confidence=low
 - Recommendation: Increase repeats or enable amplification (M6) for these clusters.
 
 ### Next Actions

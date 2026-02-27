@@ -1,5 +1,5 @@
 """
-Load and validate Phase-6C harness config from YAML or JSON.
+Load and validate Stage-6C harness config from YAML or JSON.
 """
 from __future__ import annotations
 

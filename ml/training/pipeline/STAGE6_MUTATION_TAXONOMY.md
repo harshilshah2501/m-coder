@@ -1,8 +1,10 @@
-# Phase 6: Mutation Taxonomy
+# Stage 6: Mutation Taxonomy
+
+This document refers to pipeline Stage-6 (mutation harness), not Constitutional Phase-6 (REACH).
 
 ## Purpose
 
-Define mutation classes for the Phase-6 Mutation Harness. Each class maps to expected constitutional posture and dominance-rule behavior. Used to generate adversarial mutation cases against the frozen base+variant corpus without altering Phase-3 or Phase-4 content.
+Define mutation classes for the Stage-6 mutation harness. Each class maps to expected constitutional posture and dominance-rule behavior. Used to generate adversarial mutation cases against the frozen base+variant corpus without altering Phase-3 or Phase-4 content.
 
 **Invariant:** Phase definitions and dominance rules from Constitutional Manifest v1.0 remain locked.
 

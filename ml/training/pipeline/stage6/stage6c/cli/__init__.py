@@ -1,1 +1,1 @@
-# Phase-6C CLI
+# Stage-6C CLI

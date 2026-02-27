@@ -1,17 +1,19 @@
-# Phase-6: Mutation Harness (Design)
+# Stage-6: Mutation Harness (Design)
+
+This document refers to pipeline Stage-6 (mutation harness), not Constitutional Phase-6 (REACH).
 
 ## Scope
 
-Phase-6 defines the **Mutation Harness** for the Golden Exemplars Program: mutation taxonomy, mutation case schema, mutation ledger schema, directory layout, and dataset freeze readiness checklist. This is **harness architecture design only**; no new exemplars, no phase rebalancing, no modification of Phase-3 or Phase-4.
+Stage-6 defines the **Mutation Harness** for the Golden Exemplars Program: mutation taxonomy, mutation case schema, mutation ledger schema, directory layout, and dataset freeze readiness checklist. This is **harness architecture design only**; no new exemplars, no phase rebalancing, no modification of Phase-3 or Phase-4.
 
 ## Deliverables
 
 | Deliverable | Location |
 |-------------|----------|
-| Mutation Taxonomy | `../PHASE6_MUTATION_TAXONOMY.md` |
+| Mutation Taxonomy | `../STAGE6_MUTATION_TAXONOMY.md` |
 | Mutation Case Schema | `schemas/mutation_case.schema.json` |
 | Mutation Ledger Schema | `schemas/mutation_ledger.schema.json` |
-| Directory Layout | `PHASE6_DIRECTORY_LAYOUT.md` |
+| Directory Layout | `STAGE6_DIRECTORY_LAYOUT.md` |
 | Dataset Freeze Checklist | `PHASE6_DATASET_FREEZE_CHECKLIST.md` |
 | Design Index | `docs/DESIGN_INDEX.md` |
 
@@ -35,4 +37,4 @@ Phase-6 defines the **Mutation Harness** for the Golden Exemplars Program: mutat
 
 - Phase definitions and dominance rules from Constitutional Manifest v1.0 are locked.  
 - Boundary phrase and anchors are character-for-character from Phase-3.  
-- No edits to PHASE3_BASE_EXEMPLAR_MAPPING.md or PHASE4_VARIANT_GENERATION.md from Phase-6.
+- No edits to PHASE3_BASE_EXEMPLAR_MAPPING.md or PHASE4_VARIANT_GENERATION.md from Stage-6.

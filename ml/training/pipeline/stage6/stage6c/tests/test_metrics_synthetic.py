@@ -1,5 +1,5 @@
 """
-Synthetic-trace test suite for Phase-6C collapse taxonomy audit.
+Synthetic-trace test suite for Stage-6C collapse taxonomy audit.
 Minimal RunTrace objects, no model inference. Uses MetricsEngine.compute(trace, seed_view).
 """
 from __future__ import annotations

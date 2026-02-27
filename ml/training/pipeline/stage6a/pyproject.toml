@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "phase6c"
 version = "0.1.0"
-description = "Phase-6C Agent-Loop mutation harness (M2 skeleton)"
+description = "Stage-6C Agent-Loop mutation harness (M2 skeleton)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

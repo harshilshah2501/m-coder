@@ -92,7 +92,7 @@ def write_markdown_report(
     plot_paths: Dict[str, str],
     plot_warnings: List[str],
 ) -> Path:
-    out_path = Path(out_dir) / "Phase6C_Report.md"
+    out_path = Path(out_dir) / "Stage6C_Report.md"
     start_ts, end_ts = _time_range(rows)
 
     n_runs = corpus_stats.get("n_runs", 0)

@@ -9,7 +9,7 @@ from . import clusters, gates, load, plots, render, stats
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Phase-6C reporting and visualization (M5).",
+        description="Stage-6C reporting and visualization (M5).",
     )
     parser.add_argument(
         "--ledger",
@@ -26,7 +26,7 @@ def main() -> None:
     parser.add_argument(
         "--title",
         type=str,
-        default="Phase-6C Report",
+        default="Stage-6C Report",
         help="Report title (markdown heading)",
     )
     args = parser.parse_args()

@@ -1,6 +1,6 @@
 """
-Trace types for Phase-6C runs: RunSpec, StepRecord, RunTrace.
-Consistent with PHASE6C_DESIGN_SPEC_V1.1; placeholders for phase_dom_decision_t / phase_dom_rhetoric_t (M2: None).
+Trace types for Stage-6C runs: RunSpec, StepRecord, RunTrace.
+Consistent with STAGE6C_DESIGN_SPEC_V1.1; placeholders for phase_dom_decision_t / phase_dom_rhetoric_t (M2: None).
 """
 from __future__ import annotations
 

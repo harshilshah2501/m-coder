@@ -1,9 +1,11 @@
-# Phase-6 Directory Layout Proposal
+# Stage-6 Directory Layout Proposal
+
+This document refers to pipeline Stage-6 (mutation harness), not Constitutional Phase-6 (REACH).
 
 ## Rationale
 
-- **Alignment:** Phase 1–5 artifacts live under `ml/training/src/sources/Motadata/`. Phase-6 harness is part of the same Golden Exemplars pipeline (ML Compilation → Mutation Harness → Dataset Freeze → SFT).
-- **Placement:** Harness is **training pipeline** (pre-SFT stress and coverage), not post-SFT evaluation. Therefore Phase-6 lives under **ml/training**, alongside Phase-3/4/5, not under a separate ml/evaluation root.
+- **Alignment:** Phase 1–5 artifacts live under `ml/training/src/sources/Motadata/`. Stage-6 harness is part of the same Golden Exemplars pipeline (ML Compilation → Mutation Harness → Dataset Freeze → SFT).
+- **Placement:** Harness is **training pipeline** (pre-SFT stress and coverage), not post-SFT evaluation. Therefore Stage-6 lives under **ml/training**, alongside Phase-3/4/5, not under a separate ml/evaluation root.
 - **Production-grade:** Clear separation of schemas, config, cases, ledger, and docs; no modification of Phase-3 or Phase-4 files.
 
 ---
@@ -15,11 +17,11 @@ ml/training/src/sources/Motadata/
 ├── PHASE3_BASE_EXEMPLAR_MAPPING.md          # unchanged
 ├── PHASE4_VARIANT_GENERATION.md             # unchanged
 ├── PHASE5_VARIANT_STABILITY_REPORT.md      # unchanged
-├── PHASE6_MUTATION_TAXONOMY.md             # Phase-6 design (root-level doc)
+├── PHASE6_MUTATION_TAXONOMY.md             # Stage-6 design (root-level doc)
 │
 └── phase6/
-    ├── README.md                            # Phase-6 overview and usage
-    ├── PHASE6_DIRECTORY_LAYOUT.md           # this file
+    ├── README.md                            # Stage-6 overview and usage
+    ├── STAGE6_DIRECTORY_LAYOUT.md           # this file
     ├── PHASE6_DATASET_FREEZE_CHECKLIST.md   # freeze criteria
     │
     ├── schemas/
@@ -43,7 +45,7 @@ ml/training/src/sources/Motadata/
 
 ## Alternative: ml/evaluation
 
-If Phase-6 is later treated as **evaluation-only** (run after SFT to score model behavior), a parallel layout under `ml/evaluation/` could be:
+If Stage-6 is later treated as **evaluation-only** (run after SFT to score model behavior), a parallel layout under `ml/evaluation/` could be:
 
 ```
 ml/evaluation/
@@ -55,7 +57,7 @@ ml/evaluation/
 └── ...
 ```
 
-**Recommendation:** Keep Phase-6 under **ml/training** for now so that:
+**Recommendation:** Keep Stage-6 under **ml/training** for now so that:
 1. Dataset freeze and SFT readiness are decided in one pipeline.
 2. Harness runs **before** freeze as a gate (see Dataset Freeze Checklist).
 3. Evaluation runs (post-SFT) can consume the same cases and ledger schema from a symlink or copy if needed.
@@ -76,6 +78,6 @@ ml/evaluation/
 
 ## Invariants
 
-- **No edits** to `PHASE3_BASE_EXEMPLAR_MAPPING.md` or `PHASE4_VARIANT_GENERATION.md` from Phase-6.
+- **No edits** to `PHASE3_BASE_EXEMPLAR_MAPPING.md` or `PHASE4_VARIANT_GENERATION.md` from Stage-6.
 - **Read-only** consumption of Phase-3 (base_id, phase, boundary phrase) and Phase-4 (variant_id, variant text) for case generation.
 - **Production-grade:** Schemas and config are versioned; cases and ledger are generated artifacts with clear ownership.

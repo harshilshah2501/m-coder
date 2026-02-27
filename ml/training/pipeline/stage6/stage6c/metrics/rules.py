@@ -1,6 +1,6 @@
 """
 Pure deterministic rules for BIS, phase dominance, MCI, CODE erosion, collapse triggers.
-No LLM calls; text pattern matching only. Spec: PHASE6C_DESIGN_SPEC_V1.1.
+No LLM calls; text pattern matching only. Spec: STAGE6C_DESIGN_SPEC_V1.1.
 M4.1: Full step_record/run_spec/seed_view; decrement-table BIS; visibility window; CODE erosion without phase gate.
 """
 from __future__ import annotations

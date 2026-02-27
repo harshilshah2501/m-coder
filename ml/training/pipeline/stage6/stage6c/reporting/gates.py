@@ -16,7 +16,7 @@ from .stats import (
 )
 
 
-# Spec thresholds (PHASE6C_DESIGN_SPEC_V1.1 §7).
+# Spec thresholds (STAGE6C_DESIGN_SPEC_V1.1 §7).
 TIER2_TMCR_MAX = 0.06
 TIER2_BDA_NORM_P95_MAX = 0.30
 

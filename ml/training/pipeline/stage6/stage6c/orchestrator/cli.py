@@ -45,7 +45,7 @@ def _build_experiment_config(hcfg: HarnessConfig, seeds: List[str], args) -> Exp
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Phase-6C suite runner (M6 orchestrator).")
+    parser = argparse.ArgumentParser(description="Stage-6C suite runner (M6 orchestrator).")
     parser.add_argument("--config", type=str, help="Path to harness config (YAML or JSON)")
     parser.add_argument("--seeds-dir", type=str, help="Directory of seed JSON files (overrides config if set)")
     parser.add_argument("--out", type=str, required=True, help="Output directory for traces + ledger + reports")
@@ -184,7 +184,7 @@ def main() -> None:
     )
     print(
         "Next move: implement a real ModelAdapter and rerun the suite; "
-        "the Phase-6C report will evaluate non-dummy gates separately."
+        "the Stage-6C report will evaluate non-dummy gates separately."
     )
 
 

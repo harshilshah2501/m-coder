@@ -1,5 +1,7 @@
 # Post-SFT Evaluation Protocol
 
+This document refers to pipeline Stage-6 (mutation harness), not Constitutional Phase-6 (REACH).
+
 **Purpose:** Define how to evaluate the trained 14B model against constitutional behavior and when to rollback. Ensures post-SFT results do not redefine doctrine; drift triggers remediation, not constitution change.
 
 **Scope:** Post–Layer 5 (SFT); feeds Layer 6 (Post-SFT Drift Evaluation).  
@@ -11,7 +13,7 @@
 
 1. **Load trained 14B model** (QLoRA merge or adapter load as per TRAINING_PREP_14B.md).
 
-2. **Run all mutation cases** from the Phase-6 harness against the trained model (same cases used pre-SFT for ledger).
+2. **Run all mutation cases** from the Stage-6 mutation harness against the trained model (same cases used pre-SFT for ledger).
 
 3. **Compute and record:**
    - **Phase drift rate** — Fraction of cases where model output phase (REF/CONF/DES/MIX/CODE) differs from expected phase.

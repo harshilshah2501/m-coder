@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://golden-exemplars/mutation-case.schema.json",
-  "title": "Phase-6 Mutation Case",
-  "description": "Schema for a single mutation case produced by the Phase-6 Mutation Harness. Design-only; used for case generation and validation.",
+  "title": "Stage-6 Mutation Case",
+  "description": "Schema for a single mutation case produced by the Stage-6 Mutation Harness. Design-only; used for case generation and validation.",
   "type": "object",
   "required": [
     "mutation_case_id",
@@ -40,7 +40,7 @@
         "cross_phase_collapse_attempt",
         "boundary_relocation_attempt"
       ],
-      "description": "Mutation class from Phase-6 Mutation Taxonomy."
+      "description": "Mutation class from Stage-6 Mutation Taxonomy."
     },
     "mutated_scenario": {
       "type": "string",

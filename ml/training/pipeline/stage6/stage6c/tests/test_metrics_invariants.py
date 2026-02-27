@@ -1,11 +1,11 @@
 """
 PHASE-6C TAXONOMY INVARIANTS — NON-NEGOTIABLE GUARDRAILS
 
-These tests encode constitutional invariants for Phase-6C collapse taxonomy.
+These tests encode constitutional invariants for Stage-6C collapse taxonomy.
 They must remain stable across refactors and tuning.
 
 Allowed changes ONLY when ALL are true:
-- PHASE6C_DESIGN_SPEC version is bumped (e.g., v1.1 -> v1.2) with rationale
+- STAGE6C_DESIGN_SPEC version is bumped (e.g., v1.1 -> v1.2) with rationale
 - A deliberate decision is recorded in docs/phase6c/ (link to the change log)
 - The new semantics are reflected consistently in metrics/rules.py, engine, and reporting
 

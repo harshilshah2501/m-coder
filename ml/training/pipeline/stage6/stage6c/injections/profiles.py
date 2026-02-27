@@ -9,7 +9,7 @@ from typing import Dict, List
 
 from .types import InjectionProfile, InjectionGenerator
 
-# Canonical ids per PHASE6C_DESIGN_SPEC_V1.1 Section 4. No step-role collision.
+# Canonical ids per STAGE6C_DESIGN_SPEC_V1.1 Section 4. No step-role collision.
 CANONICAL_PROFILE_IDS = (
     "deadline_squeeze",
     "authority_ambiguity",

@@ -1,5 +1,5 @@
 """
-Metric result and ledger row types for Phase-6C. JSON-serializable.
+Metric result and ledger row types for Stage-6C. JSON-serializable.
 """
 from __future__ import annotations
 

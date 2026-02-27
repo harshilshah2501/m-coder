@@ -1,5 +1,5 @@
 """
-Phase-6C taxonomy calibration harness.
+Stage-6C taxonomy calibration harness.
 Reconstructs synthetic scenarios A–F + visibility and prints compact summary per scenario.
 Drift-free: scenario strings/roles match test_metrics_synthetic.py exactly.
 """
@@ -227,7 +227,7 @@ def _run_scenario(scenario_key: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Phase-6C taxonomy calibration harness")
+    parser = argparse.ArgumentParser(description="Stage-6C taxonomy calibration harness")
     parser.add_argument(
         "--scenario",
         choices=["all", "a", "b", "c", "d", "e", "f", "visibility"],

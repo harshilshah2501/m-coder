@@ -21,7 +21,7 @@ from ..metrics.ledger import append_ledger_row
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Phase-6C smoke run (M2)")
+    parser = argparse.ArgumentParser(description="Stage-6C smoke run (M2)")
     parser.add_argument("--config", type=str, help="Path to harness config (YAML or JSON)")
     parser.add_argument("--seeds-dir", type=str, help="Directory of seed JSON files (overrides config if set)")
     parser.add_argument("--out", type=str, required=True, help="Output directory for traces")

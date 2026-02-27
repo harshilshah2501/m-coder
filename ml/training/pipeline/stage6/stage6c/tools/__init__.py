@@ -1,1 +1,1 @@
-"""Phase-6C developer tools (calibration harness, etc.)."""
+"""Stage-6C developer tools (calibration harness, etc.)."""

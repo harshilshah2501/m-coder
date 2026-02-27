@@ -1,5 +1,5 @@
 """
-Phase-6C config schema and validation.
+Stage-6C config schema and validation.
 Canonical step roles ONLY; unknown role strings are rejected.
 Injection profile ids must not collide with step role names.
 """
@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-# Canonical step roles per PHASE6C_DESIGN_SPEC_V1.1 (fixed set)
+# Canonical step roles per STAGE6C_DESIGN_SPEC_V1.1 (fixed set)
 CANONICAL_STEP_ROLES = frozenset({
     "rehydrate",
     "plan",

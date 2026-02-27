@@ -328,7 +328,7 @@ def test_adapter_param_signatures_warning(tmp_path: Path) -> None:
     render.write_markdown_report(
         tmp_path, tmp_path / "ledger.jsonl", "Test", rows, corpus_stats, g, cl, hot, low, {}, []
     )
-    report = (tmp_path / "Phase6C_Report.md").read_text(encoding="utf-8")
+    report = (tmp_path / "Stage6C_Report.md").read_text(encoding="utf-8")
     assert "Multiple adapter parameter sets detected" in report
 
 

@@ -12,7 +12,7 @@ SuiteType = Literal["canonical", "stress"]
 @dataclass
 class ExperimentConfig:
     """
-    High-level experiment configuration for Phase-6C suites.
+    High-level experiment configuration for Stage-6C suites.
 
     This is intentionally separate from HarnessConfig so we can express
     coverage and amplification concerns (repeats per cluster, suite labels, etc.).

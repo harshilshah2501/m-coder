@@ -1,5 +1,5 @@
 """
-Phase-6C reporting and visualization (M5).
+Stage-6C reporting and visualization (M5).
 
 Turns phase6c_ledger.jsonl into corpus stats, gates, clusters, plots, and reports.
 """
