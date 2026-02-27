@@ -1,4 +1,6 @@
-# Phase-6C Real-Model Evaluation Targets
+# Stage-6C Real-Model Evaluation Targets (Pipeline Mutation)
+
+Stage-6C is a pipeline mutation stage, not Constitutional Phase-6 (REACH).
 
 ## Canonical suite targets (non-dummy gates)
 

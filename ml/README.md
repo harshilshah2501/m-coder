@@ -13,3 +13,10 @@ The goal of the `ml/` namespace is to clearly separate **learning workflows** fr
 - `runtime/` (deployment and live services), and
 - `docs/` (narrative documentation).
 
+## Layer Boundaries
+
+- **Allowed:** Exemplar/variant mapping, Stage-6 mutation specs and code, dataset compiler, freeze checklists, SFT configs.
+- **Forbidden:** Redefining constitutional phase semantics; runtime enforcement code.
+
+See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-layer structure.
+

@@ -1,4 +1,8 @@
-# Phase-6 Dataset Freeze Readiness Checklist
+# Stage-6 Dataset Freeze Readiness Checklist
+
+## Axis Clarification
+
+This document refers to the **pipeline Stage-6** mutation harness (operational workflow). Constitutional Phase-6 (REACH) is governance-level reachability semantics. **Mutation Stage-6 ≠ Constitutional Phase-6.**
 
 ## Purpose
 
@@ -25,7 +29,7 @@ Preconditions that must be satisfied **before** dataset freeze and SFT. All item
 
 | Criterion | Requirement | Verification |
 |-----------|-------------|--------------|
-| Mutation types covered | All 6 mutation classes from Phase-6 taxonomy | Ledger `mutation_coverage` has entries for authority, irreversibility, ambiguity, pressure, collapse, boundary_relocation. |
+| Mutation types covered | All 6 mutation classes from Stage-6 taxonomy | Ledger `mutation_coverage` has entries for authority, irreversibility, ambiguity, pressure, collapse, boundary_relocation. |
 | Per-phase mutation cases | At least N cases per phase (configurable; e.g. N ≥ 2) | Ledger `phase_coverage[phase].total_cases` ≥ N for REF, CONF, DES, MIX, CODE. |
 | Stress coverage threshold | Minimum pass rate (e.g. ≥ 95%) or explicit waiver | Ledger aggregate pass rate across mutation cases meets threshold or waiver documented. |
 
@@ -52,10 +56,10 @@ Preconditions that must be satisfied **before** dataset freeze and SFT. All item
 | Phase-3 validation | All base exemplars PASS | Phase-3 validation summary: all REF/CONF/DES/MIX/CODE validations PASS. |
 | Phase-4 validation | All variants PASS | Phase-4 variant summary: boundary exact, phase stable, no softened language. |
 | Phase-5 stability | All bases/variants STABLE | Phase-5 stability table: all rows STABLE. |
-| Phase-6 ledger | Ledger schema valid and complete | Ledger JSON validates against mutation_ledger.schema.json; required fields present. |
+| Stage-6 ledger | Ledger schema valid and complete | Ledger JSON validates against mutation_ledger.schema.json; required fields present. |
 | Cross-doc consistency | Base IDs and phase labels align | Phase-3 base list = Phase-4 base list = Phase-5 base list; phase labels match Constitutional Manifest. |
 
-**Pass condition:** Phase-3, Phase-4, Phase-5 summaries and Phase-6 ledger are consistent; no conflicting base IDs or phase labels.
+**Pass condition:** Phase-3, Phase-4, Phase-5 summaries and Stage-6 ledger are consistent; no conflicting base IDs or phase labels.
 
 ---
 
@@ -106,7 +110,7 @@ Preconditions that must be satisfied **before** dataset freeze and SFT. All item
 
 | Step | Action |
 |------|--------|
-| 1 | Run Phase-6 harness (mutation case generator + harness run) to produce ledger. |
+| 1 | Run Stage-6 harness (mutation case generator + harness run) to produce ledger. |
 | 2 | Execute this checklist: criteria 1–8 (phase balance, mutation stress, boundary invariance, validation consistency, dominance coverage, collapse saturation, boundary anchor distribution, gravitational balance). |
 | 3 | If all pass: **Dataset freeze approved**; proceed to SFT dataset compilation. |
 | 4 | If any fail: Document failure; fix (e.g. add mutation cases, fix harness) and re-run; do not freeze until checklist passes. |
@@ -120,7 +124,7 @@ Preconditions that must be satisfied **before** dataset freeze and SFT. All item
 | 1 | Phase balance threshold | ☐ | No rebalance; 17 bases, distribution as Phase-3. |
 | 2 | Mutation stress coverage threshold | ☐ | Ledger coverage and pass rate meet config. |
 | 3 | Boundary invariance lock | ☐ | No boundary edits; relocation attempts failed. |
-| 4 | Validation summary consistency | ☐ | Phase-3/4/5/6 aligned and valid. |
+| 4 | Validation summary consistency | ☐ | Phase-3/4/5 summaries and Stage-6 ledger aligned and valid. |
 | 5 | Dominance rule coverage density | ☐ | Every dominance rule triggered ≥5 times. |
 | 6 | Collapse vector saturation | ☐ | Each vector ≥3 tests; collapse_prevented ≥ 95%. |
 | 7 | Boundary anchor distribution | ☐ | Every base boundary in ≥3 mutation cases. |

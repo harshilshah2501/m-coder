@@ -110,6 +110,10 @@ flowchart TB
   observation --> constitution
 ```
 
+### 1.6 Layer ↔ Directory Mapping
+
+For repository structure and allowed/forbidden boundaries per layer, see [docs/ARCHITECTURE_4_LAYER.md](../ARCHITECTURE_4_LAYER.md).
+
 ---
 
 ## 2. Phases & Exemplars (6 Phases, 29 Exemplars — GREG Locked, Phases 01–05)

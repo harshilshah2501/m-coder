@@ -23,6 +23,16 @@ For more details, see [ORCHESTRATOR_SERVICE_GUIDE.md](ORCHESTRATOR_SERVICE_GUIDE
 
 ---
 
+## 4-Layer Architecture
+
+The m-coder repository follows a 4-layer structure (Governance, ML Compilation, Runtime, Observation):
+
+- **[docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation
+- **[docs/architecture/Golden_Exemplars_Architecture_Map.md](docs/architecture/Golden_Exemplars_Architecture_Map.md)** — Golden Exemplars system map
+- **[observation/README.md](observation/README.md)** — Layer-4 (Observation) boundaries
+
+---
+
 # H100 Backup System
 
 Automated backup system for H100 server data using Unison sync.

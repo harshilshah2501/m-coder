@@ -29,8 +29,15 @@
 | 4 | `observation/` | Probes, drift, audits |
 | — | `archive/` | Historical, deprecated |
 
+## Layer Boundaries
+
+- **Allowed:** Constitutional manifest, phase definitions, GREG protocol, golden exemplar doctrine, dominance hierarchy, review packages.
+- **Forbidden:** ML code, dataset artifacts, runtime code, compilation harnesses, training scripts, mutation implementation.
+
+See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-layer structure.
+
 ## Rules of Engagement
 
-- **No moves without plan:** Follow repo_reorg_plan/MOVESET_PLAN.jsonl; high-risk docs = needs_decision.
+- **Structural changes:** See docs/ARCHITECTURE_4_LAYER.md. Legacy reorg planning artifacts archived to archive/reorg/.
 - **All boundary phrases must remain verbatim:** Do not soften or reword constitutional language.
 - **Stage gates must pass before SFT:** Phase-06 lock, GREG readiness, and dataset freeze precede training.
