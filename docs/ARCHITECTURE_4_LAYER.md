@@ -42,6 +42,8 @@ This document provides **structural clarity** for the m-coder repository layout.
 
 **Forbidden:** Redefining doctrine; training pipelines; dataset compilation.
 
+**Plan and ledger schemas:** See [docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md](RUNTIME_PLAN_AND_LEDGER_V0_1.md) for v0.1 schema spec.
+
 ### Layer-4: observation/
 
 **Allowed:** Drift probes, collapse vector tracking, ledger reconciliation, coverage analytics, GREG audit evidence.

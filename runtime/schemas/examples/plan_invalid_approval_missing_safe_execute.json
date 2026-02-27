@@ -1,0 +1,42 @@
+{
+  "schema_version": "plan.v0.1",
+  "request": {
+    "request_id": "req-invalid",
+    "session_id": "sess-invalid",
+    "timestamp_utc": "2026-02-27T12:10:00Z",
+    "actor": { "user_id": "u3" },
+    "artifacts": []
+  },
+  "constitutional_phase_expected": "REF",
+  "stress_surfaces": ["AuthorityOwnership"],
+  "authority": {
+    "claimed": { "requester_role": "developer", "approvals": [], "scope": "prod_write" },
+    "validation_requirements": ["prod_approval"],
+    "validated": {
+      "verdict": "fail",
+      "missing": ["prod_approval"],
+      "validator": "authority_validator_v1"
+    }
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "Production deployment",
+    "boundary_type": "prod_write",
+    "rollback_unilateral": false
+  },
+  "routing_invariants": {
+    "legitimacy_state": "illegitimate",
+    "irreversibility_state": "boundary_present",
+    "ambiguity_state": "resolved",
+    "dominance_applied": "REF>CONF>DES"
+  },
+  "policy_posture": {
+    "allowed_pre_boundary_actions": [],
+    "blocked_actions": ["deploy"],
+    "terminal_posture": "safe_execute"
+  },
+  "tooling_intent": {
+    "tools_may_be_used": [],
+    "tools_must_not_be_used": ["deploy"],
+    "execution_mode": "live"
+  }
+}

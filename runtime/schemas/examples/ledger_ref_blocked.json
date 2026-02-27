@@ -1,0 +1,30 @@
+{
+  "schema_version": "ledger_row.v0.1",
+  "event": {
+    "event_id": "evt-001",
+    "timestamp_utc": "2026-02-27T12:00:01Z",
+    "request_id": "req-001",
+    "session_id": "sess-001",
+    "mode": "shadow",
+    "runtime_version": "0.1"
+  },
+  "plan_link": {"plan_hash": "sha256:abc123", "plan_schema_version": "plan.v0.1"},
+  "verdicts": {
+    "phase_emitted": "REF",
+    "terminal_posture": "refuse",
+    "authority_verdict": "fail",
+    "boundary_verdict": "blocked",
+    "ref_enforced": true
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "Commit to production branch triggers deployment",
+    "boundary_cross_attempted": false,
+    "boundary_crossed": false
+  },
+  "actions": {
+    "tool_calls_attempted": [{"tool": "git_commit", "intent": "commit_to_prod", "blocked": true, "reason_code": "REF_ENFORCED"}],
+    "execution_intents": [{"intent": "deploy", "blocked": true, "reason_code": "MISSING_AUTHORITY"}]
+  },
+  "reason_codes": ["MISSING_AUTHORITY", "REF_ENFORCED"],
+  "metrics": {"latency_ms": 45}
+}

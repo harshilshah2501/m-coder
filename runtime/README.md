@@ -20,3 +20,8 @@ Runtime enforces Phase-05 CODE semantics; it cannot redefine doctrine.
 
 See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-layer structure.
 
+## Runtime Plan and Ledger (v0.1)
+
+- **Schemas:** `runtime/schemas/plan.v0.1.schema.json`, `runtime/schemas/ledger_row.v0.1.schema.json`
+- **Spec:** [docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md](../docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md)
+

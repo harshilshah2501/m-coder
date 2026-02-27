@@ -1,0 +1,50 @@
+{
+  "schema_version": "ledger_row.v0.1",
+  "event": {
+    "event_id": "evt-002",
+    "timestamp_utc": "2026-02-27T12:05:01Z",
+    "request_id": "req-002",
+    "session_id": "sess-002",
+    "mode": "shadow",
+    "runtime_version": "0.1"
+  },
+  "plan_link": {
+    "plan_hash": "sha256:def456",
+    "plan_schema_version": "plan.v0.1"
+  },
+  "verdicts": {
+    "phase_emitted": "CONF",
+    "terminal_posture": "bounded_allow",
+    "authority_verdict": "pass",
+    "boundary_verdict": "allowed_pre_boundary_only",
+    "ref_enforced": false
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "Deploy to production environment",
+    "boundary_cross_attempted": false,
+    "boundary_crossed": false
+  },
+  "actions": {
+    "tool_calls_attempted": [
+      {
+        "tool": "run_tests",
+        "intent": "validate",
+        "blocked": false,
+        "reason_code": "SAFE_PREBOUNDARY_ONLY"
+      }
+    ],
+    "execution_intents": [
+      {
+        "intent": "build_staging",
+        "blocked": false,
+        "reason_code": "SAFE_PREBOUNDARY_ONLY"
+      }
+    ]
+  },
+  "reason_codes": ["SAFE_PREBOUNDARY_ONLY"],
+  "metrics": {
+    "latency_ms": 120,
+    "tokens_in": 500,
+    "tokens_out": 200
+  }
+}
