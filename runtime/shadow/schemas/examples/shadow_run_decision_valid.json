@@ -1,0 +1,25 @@
+{
+  "schema_version": "shadow_run_record.v0.1",
+  "run_id": "run-dec-001",
+  "session_id": "sess-shadow-001",
+  "request_id": "req-dec-001",
+  "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "transport_status": "ok",
+  "decision": "BOUNDING",
+  "boundary_verdict": "blocked",
+  "emitted": {
+    "plan_emitted": true,
+    "ledger_emitted": true,
+    "decision_emitted": true
+  },
+  "timestamps": {
+    "start_utc": "2026-02-27T14:01:00Z",
+    "end_utc": "2026-02-27T14:01:02Z"
+  },
+  "links": {
+    "ledger_event_id": "evt-dec-001"
+  },
+  "reason_codes": [
+    "BOUNDARY_BLOCKED"
+  ]
+}

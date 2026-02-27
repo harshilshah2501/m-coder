@@ -60,9 +60,9 @@ Join key: (request_id, plan_hash). Drift metrics and GREG triggers.
 
 ## Deployment Modes
 
-- Shadow: log-only
-- Block: enforce REF + conditional blocks
-- CI backstop: plugin not sole enforcement
+- **Shadow:** Log-only; no execution side-effects; full plan+ledger emission for drift detection. See [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md).
+- **Block:** Enforce REF + conditional blocks
+- **CI backstop:** Plugin not sole enforcement
 
 ## Phase Alignment
 

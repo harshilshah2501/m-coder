@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "boundary_verdicts.v0.1",
+  "title": "Boundary Verdicts v0.1",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": [
+      "blocked",
+      "not_reached",
+      "allowed_pre_boundary_only",
+      "crossed"
+    ]
+  }
+}

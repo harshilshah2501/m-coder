@@ -39,7 +39,7 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 | **M3.5 Runtime ledger emission** | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields; inconsistent format |
 | **M3.6 Shadow mode validation** | M3.5 complete | Shadow mode runs without user impact; ledger captures behavior; no REF violations | REF violations in shadow; ledger gaps |
 
-**M3.4 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts.
+**M3.4 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.6 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch.
 
 ### What Cannot Ship Without REF Enforcement
 

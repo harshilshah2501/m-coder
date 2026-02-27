@@ -1,0 +1,16 @@
+{
+  "schema_version": "shadow_session.v0.1",
+  "session_id": "sess-shadow-001",
+  "created_utc": "2026-02-27T14:00:00Z",
+  "mode": "shadow",
+  "runtime_version": "0.1",
+  "environment": {
+    "host": "devhost",
+    "os": "linux",
+    "ide": "intellij",
+    "repo": "m-coder"
+  },
+  "policy": {
+    "fail_closed_if_gate_unreachable": true
+  }
+}

@@ -29,6 +29,8 @@
 - **Plan hash** links ledger row to plan; `boundary.irreversible_boundary_phrase` must match exactly between plan and ledger.
 - **Reconciliation join key:** `(request_id, plan_hash)`.
 
+**Shadow mode:** Plan and ledger MUST emit for every request, even on gate error. See [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md).
+
 ## Validation Rules (Runtime MUST Enforce)
 
 ### Plan

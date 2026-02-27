@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "transport_status.v0.1",
+  "title": "Transport Status v0.1",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": [
+      "ok",
+      "gate_unreachable",
+      "timeout",
+      "error"
+    ]
+  }
+}
