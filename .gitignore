@@ -4,9 +4,8 @@ env/
 ENV/
 .venv/
 
-ml/training/src/sources/Motadata/motadata/
-# Local backup of Motadata .git when committing as files to m-coder (do not push)
-ml/training/src/sources/Motadata/.git.motadata.bak
+# Vendor mirror (embedded git; use submodule if needed)
+ml/training/vendor/
 
 backup_complete_v16_2.sh
 backup_local_v16_2.sh
@@ -47,8 +46,9 @@ model-backups/
 
 # Training checkpoints and artifacts
 ml/training/checkpoints/
-ml/training/phase08/training_env/
-ml/training/phase08/training/checkpoints/
+ml/training/training/base_model/
+ml/training/training/checkpoints/
+ml/training/training/logs/
 ml/training/artifacts/results/
 ml/training/data/*.jsonl
 ml/training/data/*.json

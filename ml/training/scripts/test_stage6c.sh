@@ -2,8 +2,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PY="$REPO_ROOT/ml/training/src/sources/Motadata/stage6a/.venv/bin/python"
+PY="$REPO_ROOT/ml/training/pipeline/stage6a/.venv/bin/python"
 
-export PYTHONPATH="$REPO_ROOT/ml/training/src/sources/Motadata/stage6"
+export PYTHONPATH="$REPO_ROOT/ml/training/pipeline"
 
-"$PY" -m pytest -q "$REPO_ROOT/ml/training/src/sources/Motadata/stage6/stage6c/tests"
+"$PY" -m pytest -q "$REPO_ROOT/ml/training/pipeline/stage6/stage6c/tests"
