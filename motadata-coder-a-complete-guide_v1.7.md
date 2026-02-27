@@ -7,11 +7,11 @@
 ## Version Update
 
 **Current Version:** v1.7
-**Status:** Phase-6C Integrated  
+**Status:** Stage-6C Integrated  
 **Scope of Update:** Agent-Loop Mutation Hardening + Freeze Gate Expansion  
 **Breaking Changes:** None
 
-This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and hardens the end-to-end compilation path from constitutional exemplars through Phase-6 mutation harnesses (including Phase-6C agent-loop mutation) to dataset readiness and freeze gates.
+This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar authoring, embeds optional LLM-as-judge auditing across phases, and hardens the end-to-end compilation path from constitutional exemplars through Stage-6 mutation harnesses (including Stage-6C agent-loop mutation) to dataset readiness and freeze gates.
 
 ---
 
@@ -49,7 +49,7 @@ This guide spans from constitutional judgment semantics and their encoding as go
 
 This separation preserves constitutional judgment in this document while allowing training mechanics to evolve independently in Phase‑08.
 
-For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**.
+For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For directory structure and milestone roadmaps, see `docs/ARCHITECTURE_4_LAYER.md` and `docs/ROADMAP_L2_L3_L4.md`.
 
 ### Scope Clarification: Judgment Is Proprietary Capital (Not Commodity)
 
@@ -121,7 +121,7 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 
 ### Navigation Guide: v1.7
 
-**This version (v1.7) aligns section numbering (8 → 9 → 10, 11 → 12, 13 → 14), adds Phase-6 mutation harness design (including Phase-6C agent-loop mutation), and clarifies the end-to-end path from constitutional phases through ML compilation and mutation to dataset freeze.**
+**This version (v1.7) aligns section numbering (8 → 9 → 10, 11 → 12, 13 → 14), adds Stage-6 mutation harness design (including Stage-6C agent-loop mutation), and clarifies the end-to-end path from constitutional phases through ML compilation and mutation to dataset freeze.**
 
 **🔧 IMMEDIATE (Read First — Judgment Encoding):**
 
@@ -142,7 +142,9 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 **🧱 AXES & LAYERS (System Map):**
 
 * **Appendix H** 4-Layer System Map *(Governance ↔ Compilation ↔ Runtime ↔ Observation; constitutional phases vs pipeline stages)*
-* **Phase‑6 / Phase‑6C** sections *(how hardening, reachability, and agent-loop mutation live in the compilation layer while preserving Layer‑1 semantics)*
+* **docs/ARCHITECTURE_4_LAYER.md** — Directory philosophy, layer boundaries, axis separation
+* **docs/ROADMAP_L2_L3_L4.md** — L2/L3/L4 milestone roadmap, snapshot, sequencing
+* **Stage‑6 / Stage‑6C** sections *(how hardening, reachability, and agent-loop mutation live in the compilation layer while preserving Layer‑1 semantics)*
 
 **🎯 PHASE-5 (Code Exemplars):**
 
@@ -1837,6 +1839,8 @@ We separate:
 
 They are orthogonal. Using **Stage** for the pipeline axis avoids confusion with constitutional **Phase** (REF, CONF, DES, MIX, CODE, REACH).
 
+For repository structure and milestone details, see **docs/ARCHITECTURE_4_LAYER.md** and **docs/ROADMAP_L2_L3_L4.md**.
+
 ---
 
 ### LAYER 1 — GOVERNANCE (Constitution)
@@ -1877,13 +1881,13 @@ These are **semantic roles**. They do not describe workflow steps. They describe
 
 This layer turns constitutional doctrine into trainable artifacts.
 
-Phase-6C (Agent-Loop Mutation) performs **multi-step stress testing prior to freeze**, exercising agent loops and tool flows against already-locked behavior.
+Stage-6C (Agent-Loop Mutation) performs **multi-step stress testing prior to freeze**, exercising agent loops and tool flows against already-locked behavior.
 
-#### Phase-6C — Agent-Loop Mutation Harness (Layer-2 Stage-6C)
+#### Stage-6C — Agent-Loop Mutation Harness (Layer-2 Stage-6C)
 
 ##### 6C.1 Purpose
 
-Phase-6C (Agent-Loop Mutation) validates **judgment stability under repeated, tool-augmented workflows**, including:
+Stage-6C (Agent-Loop Mutation) validates **judgment stability under repeated, tool-augmented workflows**, including:
 
 * Plan → Edit → Test → Revise loops
 * Multi-file modification cycles
@@ -1891,11 +1895,11 @@ Phase-6C (Agent-Loop Mutation) validates **judgment stability under repeated, to
 * Deadline pressure across iterations
 * Planner / Executor / Critic agent compositions
 
-Phase-6C belongs strictly to the **ML Compilation layer**. It is a **pipeline mutation stage**, not a constitutional phase, and must **not** be conflated with Governance Phase‑6 (REACH).
+Stage-6C belongs strictly to the **ML Compilation layer**. It is a **pipeline mutation stage**, not a constitutional phase, and must **not** be conflated with Governance Phase‑6 (REACH).
 
 The harness exercises **already-locked constitutional behavior** under realistic agent loops and records where and how collapses occur.
 
-For compilation-layer implementation scaffolding of this harness, see the Phase‑6C specifications in `ml/training/phase6/PHASE6C_DESIGN_SPEC_V1.1.md` and `ml/training/phase6c/`.
+For compilation-layer implementation scaffolding of this harness, see the Stage‑6C specifications in `ml/training/pipeline/stage6/STAGE6C_DESIGN_SPEC_V1.1.md`.
 
 ##### 6C.2 Loop-Induced Collapse Vectors
 
@@ -1918,7 +1922,7 @@ Each L-class is a **mutation-detected failure mode**. Harness reports must class
 
 ##### 6C.3 Pass Criteria
 
-An Agent-Loop Mutation harness **passes** Phase-6C only if:
+An Agent-Loop Mutation harness **passes** Stage-6C only if:
 
 * No REF collapses under iteration
 * No irreversible boundary relocation (including aliasing or abstraction shifts)
@@ -2082,7 +2086,7 @@ Your mutation harness:
 
 So: **Mutation Stage-6 ≠ Constitutional Phase-6.** One is workflow stress (pipeline stage). The other is governance endurance (semantic phase).
 
-Mutation Phase-6C (Agent-Loop Mutation) remains a **workflow stress harness inside ML Compilation**, while Constitutional Phase‑6 (REACH) remains a **governance endurance phase**; Phase‑6C may only test whether compiled behavior honors this doctrine, never redefine it.
+Stage‑6C (Agent-Loop Mutation) remains a **workflow stress harness inside ML Compilation**, while Constitutional Phase‑6 (REACH) remains a **governance endurance phase**; Stage‑6C may only test whether compiled behavior honors this doctrine, never redefine it.
 
 ---
 
