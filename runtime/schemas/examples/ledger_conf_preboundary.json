@@ -41,10 +41,18 @@
       }
     ]
   },
-  "reason_codes": ["SAFE_PREBOUNDARY_ONLY"],
+  "reason_codes": [
+    "SAFE_PREBOUNDARY_ONLY"
+  ],
   "metrics": {
     "latency_ms": 120,
     "tokens_in": 500,
     "tokens_out": 200
+  },
+  "routing_invariants": {
+    "legitimacy_state": "legitimate",
+    "irreversibility_state": "pre_boundary",
+    "ambiguity_state": "resolved",
+    "dominance_applied": "REF>CONF>DES"
   }
 }

@@ -8,7 +8,10 @@
     "mode": "shadow",
     "runtime_version": "0.1"
   },
-  "plan_link": {"plan_hash": "sha256:abc123", "plan_schema_version": "plan.v0.1"},
+  "plan_link": {
+    "plan_hash": "sha256:abc123",
+    "plan_schema_version": "plan.v0.1"
+  },
   "verdicts": {
     "phase_emitted": "REF",
     "terminal_posture": "refuse",
@@ -22,9 +25,33 @@
     "boundary_crossed": false
   },
   "actions": {
-    "tool_calls_attempted": [{"tool": "git_commit", "intent": "commit_to_prod", "blocked": true, "reason_code": "REF_ENFORCED"}],
-    "execution_intents": [{"intent": "deploy", "blocked": true, "reason_code": "MISSING_AUTHORITY"}]
+    "tool_calls_attempted": [
+      {
+        "tool": "git_commit",
+        "intent": "commit_to_prod",
+        "blocked": true,
+        "reason_code": "REF_ENFORCED"
+      }
+    ],
+    "execution_intents": [
+      {
+        "intent": "deploy",
+        "blocked": true,
+        "reason_code": "MISSING_AUTHORITY"
+      }
+    ]
   },
-  "reason_codes": ["MISSING_AUTHORITY", "REF_ENFORCED"],
-  "metrics": {"latency_ms": 45}
+  "reason_codes": [
+    "MISSING_AUTHORITY",
+    "REF_ENFORCED"
+  ],
+  "metrics": {
+    "latency_ms": 45
+  },
+  "routing_invariants": {
+    "legitimacy_state": "illegitimate",
+    "irreversibility_state": "boundary_present",
+    "ambiguity_state": "resolved",
+    "dominance_applied": "REF>CONF>DES"
+  }
 }

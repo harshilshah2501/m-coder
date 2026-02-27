@@ -67,6 +67,17 @@
 - `runtime/schemas/surfaces.v0.1.json`
 - `runtime/schemas/examples/` — plan and ledger examples
 
+JSON Schema validates structure only; runtime-rule validation (R1–R5, L1–L5) covers the rest. Tests in `runtime/tests/test_schemas_v0_1.py` assert both schema compliance and runtime-rule violations for invalid examples.
+
+## Invalid Plan Examples (Runtime-Rule Coverage)
+
+| File | Target Rule | Violation |
+|------|-------------|-----------|
+| `plan_invalid_r1_authority_fail_risky_boundary_safe_execute.json` | R1 | authority fail + risky boundary + terminal_posture=safe_execute (must be refuse/defer) |
+| `plan_invalid_r2_ref_phase_not_refuse.json` | R2 | constitutional_phase_expected=REF + terminal_posture=safe_execute (REF must refuse) |
+
+Each file passes JSON Schema validation (structure OK) but fails runtime-rule validation for its targeted rule.
+
 ## Example Excerpts
 
 **Plan (REF, missing authority):**
