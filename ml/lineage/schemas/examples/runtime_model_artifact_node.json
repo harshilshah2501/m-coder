@@ -1,0 +1,16 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:model1",
+  "node_type": "RUNTIME_MODEL_ARTIFACT",
+  "created_utc": "2026-02-27T11:30:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [{"node_id": "sha256:ckpt1", "node_type": "SFT_CHECKPOINT"}],
+  "semantic": {
+    "phase_semantic_label": "CODE",
+    "boundary_phrase": "Runtime model boundary",
+    "boundary_phrase_hash": "56fb59d8f8a220f7927949f616375c2f22908c744f1c2e7adcee75a67c5c40d6"
+  },
+  "collapse": {"collapse_vector_result": "NA", "collapse_vectors": [], "surface_coverage": []},
+  "provenance": {"repo": "m-coder", "branch": "main", "build_id": "adapter-1", "actor": "adapter_build"},
+  "runtime_model": {"model_artifact_id": "model-001", "checkpoint_id": "ckpt-001", "adapter_hash": "sha256:adapter1", "serving_bundle_hash": "sha256:serve1"}
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:ledger1",
+  "node_type": "LEDGER_RECORD",
+  "created_utc": "2026-02-27T12:00:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [{"node_id": "sha256:model1", "node_type": "RUNTIME_MODEL_ARTIFACT"}],
+  "semantic": {
+    "phase_semantic_label": "REF",
+    "boundary_phrase": "Ledger record boundary",
+    "boundary_phrase_hash": "f59cfa034bfadc812da6d52b1fdb8080ea734de83f642b8cd28fe5df43499abe"
+  },
+  "collapse": {
+    "collapse_vector_result": "NA",
+    "collapse_vectors": [],
+    "surface_coverage": []
+  },
+  "provenance": {
+    "repo": "m-coder",
+    "branch": "main",
+    "build_id": "runtime-1",
+    "actor": "runtime"
+  },
+  "ledger": {
+    "ledger_row_id": "evt-001",
+    "plan_hash": "sha256:plan1",
+    "model_artifact_id": "model-001",
+    "request_id": "req-001"
+  }
+}

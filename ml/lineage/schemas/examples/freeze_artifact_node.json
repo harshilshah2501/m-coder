@@ -1,0 +1,36 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:freeze1",
+  "node_type": "FREEZE_ARTIFACT",
+  "created_utc": "2026-02-27T10:20:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [
+    {
+      "node_id": "sha256:row1",
+      "node_type": "DATASET_ROW"
+    }
+  ],
+  "semantic": {
+    "phase_semantic_label": "CODE",
+    "boundary_phrase": "Freeze boundary set",
+    "boundary_phrase_hash": "5f26ef018877346d0e1cb0d417cee0313702d8e715f966378fc26e0bda4e0df4"
+  },
+  "collapse": {
+    "collapse_vector_result": "PASS",
+    "collapse_vectors": [],
+    "surface_coverage": []
+  },
+  "provenance": {
+    "repo": "m-coder",
+    "branch": "main",
+    "build_id": "freeze-1",
+    "actor": "freeze_gate"
+  },
+  "freeze_artifact": {
+    "freeze_version_id": "freeze-v1",
+    "dataset_hash": "sha256:ds1",
+    "boundary_set_hash": "sha256:bs1",
+    "row_count": 100,
+    "deterministic": true
+  }
+}

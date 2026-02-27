@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "surfaces.v0.1",
+  "title": "Stress Surfaces v0.1 (Lineage)",
+  "description": "Same as runtime surfaces. Set equality with runtime/schemas/surfaces.v0.1.json.",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": [
+      "SignalIntegrity",
+      "BaselinesHistory",
+      "ChangeBlastRadius",
+      "AuthorityOwnership",
+      "TimePressure",
+      "Compositional",
+      "ImplementationIrreversibility",
+      "ContextDrift"
+    ]
+  },
+  "minItems": 1
+}

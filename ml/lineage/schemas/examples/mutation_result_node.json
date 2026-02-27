@@ -1,0 +1,37 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:mut1",
+  "node_type": "MUTATION_RESULT",
+  "created_utc": "2026-02-27T10:10:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [
+    {
+      "node_id": "sha256:var1",
+      "node_type": "LOCKED_VARIANT"
+    }
+  ],
+  "semantic": {
+    "phase_semantic_label": "CONF",
+    "boundary_phrase": "Stage-6 mutation result",
+    "boundary_phrase_hash": "ea5aed5dde91ba871cb67739b0397ad3329ba4dcb7d54e62720ad8e508353f86"
+  },
+  "collapse": {
+    "collapse_vector_result": "PASS",
+    "collapse_vectors": [],
+    "surface_coverage": [
+      "AuthorityOwnership"
+    ]
+  },
+  "provenance": {
+    "repo": "m-coder",
+    "branch": "main",
+    "build_id": "stage6-1",
+    "actor": "stage6_harness"
+  },
+  "mutation": {
+    "stage6_run_id": "run-001",
+    "harness_version": "1.0",
+    "results_hash": "sha256:res1",
+    "canonical_pass": true
+  }
+}

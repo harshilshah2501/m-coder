@@ -36,6 +36,8 @@ This document provides **structural clarity** for the m-coder repository layout.
 
 **Forbidden:** Redefining constitutional phase semantics; governance-locked doctrine (read-only reference); runtime enforcement code.
 
+**Compilation DAG and lineage:** See [docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md](COMPILATION_DAG_AND_LINEAGE_V0_1.md) for provenance schemas.
+
 ### Layer-3: runtime/
 
 **Allowed:** Plan gate, judge gate, authority validator, irreversibility detector, execution control, ledger emission, RAG/orchestrator integrations.

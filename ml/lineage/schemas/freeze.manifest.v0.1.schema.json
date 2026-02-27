@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "freeze.manifest.v0.1",
+  "title": "Freeze Manifest v0.1",
+  "description": "Deterministic dataset freeze manifest. Gates SFT training.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "freeze_version_id",
+    "dataset_hash",
+    "compiler_hash",
+    "boundary_set_hash",
+    "row_count",
+    "created_utc",
+    "source_commit_hash",
+    "upstream",
+    "excluded",
+    "determinism",
+    "policy_summary"
+  ],
+  "properties": {
+    "schema_version": { "const": "freeze.manifest.v0.1" },
+    "freeze_version_id": { "type": "string", "minLength": 1 },
+    "dataset_hash": { "type": "string", "minLength": 1 },
+    "compiler_hash": { "type": "string", "minLength": 1 },
+    "boundary_set_hash": { "type": "string", "minLength": 1 },
+    "row_count": { "type": "integer", "minimum": 0 },
+    "created_utc": { "type": "string", "format": "date-time" },
+    "source_commit_hash": { "type": "string", "minLength": 1 },
+    "upstream": {
+      "type": "object",
+      "required": ["base_exemplars", "variants", "mutation_results"],
+      "properties": {
+        "base_exemplars": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "variants": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "mutation_results": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "excluded": {
+      "type": "object",
+      "required": ["excluded_variant_ids", "reason"],
+      "properties": {
+        "excluded_variant_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "reason": { "type": "string" }
+      }
+    },
+    "determinism": {
+      "type": "object",
+      "required": ["canonical_row_sort_key", "canonicalization", "manifest_hash"],
+      "properties": {
+        "canonical_row_sort_key": { "type": "string" },
+        "canonicalization": { "type": "string" },
+        "manifest_hash": { "type": "string" }
+      }
+    },
+    "policy_summary": {
+      "type": "object",
+      "required": ["fail_count", "warn_count", "allow_warn_threshold", "freeze_allowed"],
+      "properties": {
+        "fail_count": { "type": "integer", "minimum": 0 },
+        "warn_count": { "type": "integer", "minimum": 0 },
+        "allow_warn_threshold": { "type": "integer", "minimum": 0 },
+        "freeze_allowed": { "type": "boolean" }
+      }
+    }
+  }
+}

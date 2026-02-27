@@ -3,6 +3,7 @@
 This directory contains all **model lifecycle** code and assets:
 
 - `ml/datasets/` – dataset specifications, generation scripts, and versioned dataset artifacts.
+- `ml/lineage/` – compilation DAG and provenance schemas (see [docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md](../docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md)).
 - `ml/training/` – training, finetuning, and evaluation pipelines that consume datasets and exemplar mirrors.
 - `ml/evaluation/` – evaluation scripts and reports.
 - `ml/scripts/` – shared ML-related utility and CI scripts.
