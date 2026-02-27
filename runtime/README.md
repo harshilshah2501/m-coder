@@ -25,3 +25,7 @@ See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-l
 - **Schemas:** `runtime/schemas/plan.v0.1.schema.json`, `runtime/schemas/ledger_row.v0.1.schema.json`
 - **Spec:** [docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md](../docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md)
 
+## IDE Integration (v0.1)
+
+- **Schemas:** `runtime/ide/schemas/` — plan_request, decision_response, ide_event
+- **Spec:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](../docs/JETBRAINS_PLUGIN_FLOW_V0_1.md)

@@ -1,0 +1,18 @@
+{
+  "schema_version": "ide_event.v0.1",
+  "event_id": "550e8400-e29b-41d4-a716-446655440002",
+  "timestamp_utc": "2026-02-27T14:05:00Z",
+  "ide_context": {
+    "product": "jetbrains",
+    "ide": "pycharm",
+    "project": "m-coder",
+    "repo_root": "/home/user/m-coder",
+    "branch": "main",
+    "user": "dev1"
+  },
+  "action": {
+    "action_type": "CONFIG_CHANGE",
+    "target": "config/prod.yaml"
+  },
+  "evidence_refs": []
+}

@@ -46,6 +46,8 @@ This document provides **structural clarity** for the m-coder repository layout.
 
 **Plan and ledger schemas:** See [docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md](RUNTIME_PLAN_AND_LEDGER_V0_1.md) for v0.1 schema spec.
 
+**IDE integration:** See [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) for plugin plan-gate contracts.
+
 ### Layer-4: observation/
 
 **Allowed:** Drift probes, collapse vector tracking, ledger reconciliation, coverage analytics, GREG audit evidence.

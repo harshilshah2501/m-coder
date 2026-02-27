@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "decision_enums.v0.1",
+  "title": "Decision Enums v0.1",
+  "description": "Plan-gate decision outcomes for plugin.",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": ["APPROVE", "CONDITIONAL_BLOCK", "REFUSAL", "BOUNDING"]
+  }
+}

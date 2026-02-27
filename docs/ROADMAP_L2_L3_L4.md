@@ -39,6 +39,8 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 | **M3.5 Runtime ledger emission** | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields; inconsistent format |
 | **M3.6 Shadow mode validation** | M3.5 complete | Shadow mode runs without user impact; ledger captures behavior; no REF violations | REF violations in shadow; ledger gaps |
 
+**M3.4 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts.
+
 ### What Cannot Ship Without REF Enforcement
 
 - Production execution **cannot** ship if REF (refusal under illegitimacy or missing authority) is not enforced at runtime. Authority validator must block action when scope is invalid or authority is missing. No “best-effort” or advisory-only REF.
