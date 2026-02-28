@@ -68,6 +68,20 @@ Join key: (request_id, plan_hash). Drift metrics and GREG triggers.
 
 See [docs/PHASE_ALIGNMENT_TABLE_V0_1.md](PHASE_ALIGNMENT_TABLE_V0_1.md) for constitutional phases, compilation stages, runtime gates, and observation artifacts.
 
+## CI Backstop
+
+CLI client (`runtime/ci_gate/cli.py`) calls Plan-Gate Service and fails the build on REFUSAL or CONDITIONAL_BLOCK. Used in CI pipelines as a backstop gate.
+
+## Local Plan-Gate Service
+
+HTTP endpoint for plugin clients:
+
+- **POST /v0/plan** — Request body: PlanRequest v0.1 JSON. Response: DecisionResponse v0.1 JSON.
+- Default port: 8089 (env `PLAN_GATE_PORT`)
+- Run: `python -m runtime.plan_gate_service.app`
+- Health check: GET `/healthz` (returns `{"status":"ok"}`) — used by plugin for liveness
+- See [runtime/plan_gate_service/README.md](../runtime/plan_gate_service/README.md)
+
 ## Schema Locations
 
 - runtime/ide/schemas/plan_request.v0.1.schema.json

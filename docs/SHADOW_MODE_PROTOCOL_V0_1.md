@@ -46,9 +46,13 @@ Shadow mode is **log-only enforcement**: no execution side-effects. It validates
 - runtime/shadow/schemas/transport_status.v0.1.json
 - runtime/shadow/schemas/boundary_verdicts.v0.1.json
 
-## Stub Runner
+## Observation Ingest CLI
 
-`runtime/plan_gate_stub/cli.py` — CLI that accepts PlanRequest v0.1 and produces all artifacts. Use `--fixed-time` for deterministic output. Not a real judge; protocol plumbing only.
+[observation/ingest/](../observation/ingest/README.md) — consumes ingestion batches, validates, reconciles by (request_id, plan_hash), and produces deterministic JSON + Markdown reports. See `observation/ingest/README.md`.
+
+## Stub and Service
+
+`runtime/plan_gate_stub/cli.py` — CLI producer. `runtime/plan_gate_service/app.py` — HTTP service; emits the same artifacts as the stub to spool. — CLI that accepts PlanRequest v0.1 and produces all artifacts. Use `--fixed-time` for deterministic output. Not a real judge; protocol plumbing only.
 
 ## Rule Summary (S-1 to S-6)
 

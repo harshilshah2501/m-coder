@@ -39,3 +39,13 @@ See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-l
 
 - **Path:** `runtime/plan_gate_stub/`
 - **Purpose:** CLI that accepts PlanRequest v0.1 and produces schema-valid plan, decision, ledger, shadow record, ingestion batch. Protocol pressure-test only; not a real judge.
+
+## CI Backstop Gate
+
+- **Path:** `runtime/ci_gate/`
+- **Purpose:** CLI client that calls Plan-Gate Service; fails build on REFUSAL or CONDITIONAL_BLOCK. See [runtime/ci_gate/README.md](ci_gate/README.md).
+
+## Plan-Gate Service
+
+- **Path:** `runtime/plan_gate_service/`
+- **Purpose:** Local HTTP daemon exposing POST /v0/plan for PlanRequest v0.1 → DecisionResponse v0.1. Reuses stub decision logic; emits artifacts to spool. See [runtime/plan_gate_service/README.md](plan_gate_service/README.md).

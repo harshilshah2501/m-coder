@@ -97,6 +97,16 @@ Comprehensive documentation for the Motadata AI system including model training,
 
 ## Documentation by Component
 
+### Full Test Command
+
+Canonical command to run all tests (runtime, ide, shadow, lineage, observation):
+
+```bash
+cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
+```
+
+**Expected total test count:** 173 (as of this commit)
+
 ### 🏛️ Core Architecture Docs
 
 - **[ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation

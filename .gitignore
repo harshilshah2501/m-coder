@@ -12,6 +12,9 @@ backup_local_v16_2.sh
 backup_to_github.sh
 backup_v16_2_to_hf.py
 
+# Plan-gate spool (runtime output)
+.spool/
+
 # Python cache
 __pycache__/
 *.py[cod]

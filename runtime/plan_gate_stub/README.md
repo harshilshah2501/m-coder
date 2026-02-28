@@ -26,3 +26,16 @@ python -m runtime.plan_gate_stub.cli \
 ## Determinism
 
 Use `--fixed-time "2026-03-01T00:00:00Z"` for identical outputs across runs. IDs are derived from sha256(canonical_json(input)).
+
+## Generating Batches for Observation Ingest
+
+The stub produces `ingestion_batch.json` and `ingestion_batch.jsonl`. These can be fed to the observation ingest CLI:
+
+```bash
+python -m observation.ingest.cli \
+  --input <path-to-ingestion_batch.json> \
+  --outdir <outdir> \
+  --fixed-time "2026-03-01T00:00:00Z"
+```
+
+See [observation/ingest/README.md](../../observation/ingest/README.md).

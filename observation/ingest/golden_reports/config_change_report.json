@@ -1,0 +1,39 @@
+{
+  "schema_version": "observation.report.v0.1",
+  "input_summary": {
+    "files": [
+      "observation/ingest/examples/sample_batch_from_stub_config_change.json"
+    ],
+    "items_count": 1
+  },
+  "counts": {
+    "by_decision": {
+      "REFUSAL": 1
+    },
+    "by_phase_emitted": {
+      "REF": 1
+    },
+    "by_boundary_verdict": {
+      "blocked": 1
+    },
+    "by_authority_verdict": {
+      "unknown": 1
+    },
+    "by_reason_code": {
+      "MISSING_AUTHORITY": 1,
+      "REF_ENFORCED": 1
+    }
+  },
+  "integrity": {
+    "reconciliation_key": "(request_id, plan_hash)",
+    "mismatches_count": 0,
+    "mismatches_samples": []
+  },
+  "lineage_links": {
+    "base_id": 0,
+    "variant_id": 0,
+    "freeze_version_id": 0,
+    "model_artifact_id": 0
+  },
+  "deterministic_hash": "3310ab0230090c28dbd290d1bd25a2ee71fcadfbfc29cad4a8b1aad74024d49b"
+}
