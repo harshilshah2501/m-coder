@@ -46,6 +46,10 @@ Shadow mode is **log-only enforcement**: no execution side-effects. It validates
 - runtime/shadow/schemas/transport_status.v0.1.json
 - runtime/shadow/schemas/boundary_verdicts.v0.1.json
 
+## Stub Runner
+
+`runtime/plan_gate_stub/cli.py` — CLI that accepts PlanRequest v0.1 and produces all artifacts. Use `--fixed-time` for deterministic output. Not a real judge; protocol plumbing only.
+
 ## Rule Summary (S-1 to S-6)
 
 | Rule | Constraint |

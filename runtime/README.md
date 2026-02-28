@@ -34,3 +34,8 @@ See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-l
 
 - **Schemas:** `runtime/shadow/schemas/` — shadow_session, shadow_run_record, ingestion_batch
 - **Spec:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](../docs/SHADOW_MODE_PROTOCOL_V0_1.md)
+
+## Plan-Gate Stub Runner
+
+- **Path:** `runtime/plan_gate_stub/`
+- **Purpose:** CLI that accepts PlanRequest v0.1 and produces schema-valid plan, decision, ledger, shadow record, ingestion batch. Protocol pressure-test only; not a real judge.
