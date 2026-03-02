@@ -12,6 +12,11 @@ import hashlib
 from collections import Counter, defaultdict
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+try:
+    from ._path_utils import get_canonical_sft_dataset_dir
+except ImportError:
+    from _path_utils import get_canonical_sft_dataset_dir
+
 VALID_PHASES = {"REF", "CONF", "DES", "MIX", "CODE"}
 
 # Stage-08D: Validation must contain at minimum (at BASE level)
@@ -26,7 +31,7 @@ def discover_dataset_dir():
         jsonl_files = list(local.glob("*.jsonl"))
         if jsonl_files:
             return local
-    canonical = SCRIPT_DIR.parent / "datasets" / "sft"
+    canonical = get_canonical_sft_dataset_dir()
     if canonical.exists():
         jsonl_files = list(canonical.glob("*.jsonl"))
         if jsonl_files:
@@ -197,9 +202,9 @@ def balanced_base_split_phase08D(records):
             # Already handled by slicing above, but ensure it's not in val
             pass
     
-    base_ids = list(base_to_indices.keys())
-    train_records = [records[i] for b in base_ids for i in base_to_indices[b] if b not in val_bases]
-    val_records = [records[i] for b in base_ids for i in base_to_indices[b] if b in val_bases]
+    base_ids = sorted(base_to_indices.keys())
+    train_records = [records[i] for b in base_ids for i in sorted(base_to_indices[b]) if b not in val_bases]
+    val_records = [records[i] for b in base_ids for i in sorted(base_to_indices[b]) if b in val_bases]
 
     # Enforce BALANCED_VAL_SPEC at BASE level (from val_records)
     val_bases_by_phase = defaultdict(set)

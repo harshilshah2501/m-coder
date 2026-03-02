@@ -1,5 +1,5 @@
 """
-CLI: phase6c-smoke-run --config <path> --seeds-dir <dir> --out <dir>
+CLI: stage6c-smoke-run --config <path> --seeds-dir <dir> --out <dir>
 Runs small grid: 1-2 seeds, N in {3,6}, shapes linear/retry_biased, carryover cold_start/full_transcript.
 Uses DummyModelAdapter; writes JSONL traces and prints summary.
 """
@@ -67,7 +67,7 @@ def main() -> None:
     )
     metrics_engine = MetricsEngine()
     output_file = out_dir / "smoke_traces.jsonl"
-    ledger_file = out_dir / "phase6c_ledger.jsonl"
+    ledger_file = out_dir / "stage6c_ledger.jsonl"
     run_count = 0
     for seed_id in seeds_to_run:
         for N in horizons:

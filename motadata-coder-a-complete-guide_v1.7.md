@@ -49,7 +49,7 @@ This guide spans from constitutional judgment semantics and their encoding as go
 
 This separation preserves constitutional judgment in this document while allowing training mechanics to evolve independently in Phase‑08.
 
-For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For directory structure and milestone roadmaps, see `docs/ARCHITECTURE_4_LAYER.md` and `docs/ROADMAP_L2_L3_L4.md`.
+For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For directory structure and milestone roadmaps, see `docs/ARCHITECTURE_4_LAYER.md` and `docs/ROADMAP_L2_L3_L4.md`. For canonical stage→path and CLI mapping (Stage-6A/B/C, Stage-7 freeze, Stage-8), see `docs/STAGE_LAYOUT_CANONICAL.md`.
 
 ### Scope Clarification: Judgment Is Proprietary Capital (Not Commodity)
 
@@ -1880,6 +1880,8 @@ These are **semantic roles**. They do not describe workflow steps. They describe
 📁 `ml/training/`
 
 This layer turns constitutional doctrine into trainable artifacts.
+
+For canonical paths and entry points (stage6a/6b/6c, freeze, stage08), see `docs/STAGE_LAYOUT_CANONICAL.md`.
 
 Stage-6C (Agent-Loop Mutation) performs **multi-step stress testing prior to freeze**, exercising agent loops and tool flows against already-locked behavior.
 

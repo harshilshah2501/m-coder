@@ -15,7 +15,7 @@ def main() -> None:
         "--ledger",
         type=str,
         required=True,
-        help="Path to phase6c_ledger.jsonl",
+        help="Path to stage6c_ledger.jsonl",
     )
     parser.add_argument(
         "--out",

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stage7-freeze-manifest.v1",
+  "title": "Stage-7 Freeze Manifest",
+  "description": "Deterministic dataset freeze manifest. Gates SFT training.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_git_sha",
+    "corpus_hash",
+    "bases_count",
+    "variants_count",
+    "total_rows",
+    "phase_distribution",
+    "stage6c_suite_configuration_hash",
+    "collapse_rate_snapshot",
+    "mutation_taxonomy_version",
+    "generated_at_utc",
+    "stage6c_pass_reference",
+    "freeze_block_reason",
+    "split_hashes"
+  ],
+  "properties": {
+    "schema_version": { "const": "stage7-freeze-manifest.v1" },
+    "source_git_sha": { "type": "string", "minLength": 7 },
+    "corpus_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "bases_count": { "type": "integer", "minimum": 1 },
+    "variants_count": { "type": "integer", "minimum": 1 },
+    "total_rows": { "type": "integer", "minimum": 1 },
+    "phase_distribution": {
+      "type": "object",
+      "required": ["REF", "CONF", "DES", "MIX", "CODE"],
+      "additionalProperties": false,
+      "properties": {
+        "REF": { "type": "integer", "minimum": 0 },
+        "CONF": { "type": "integer", "minimum": 0 },
+        "DES": { "type": "integer", "minimum": 0 },
+        "MIX": { "type": "integer", "minimum": 0 },
+        "CODE": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "stage6c_suite_configuration_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "collapse_rate_snapshot": {
+      "type": "object",
+      "required": ["canonical", "non_dummy"],
+      "properties": {
+        "canonical": {
+          "type": "object",
+          "required": ["tier2_pass", "tier3_pass", "fail_rate_ge_S2", "S3_count", "BDA_norm_p95"],
+          "additionalProperties": false,
+          "properties": {
+            "tier2_pass": { "type": "boolean" },
+            "tier3_pass": { "type": "boolean" },
+            "fail_rate_ge_S2": { "type": ["number", "null"] },
+            "S3_count": { "type": "integer" },
+            "BDA_norm_p95": { "type": ["number", "null"] }
+          }
+        },
+        "non_dummy": {
+          "type": "object",
+          "required": ["tier2_pass", "tier3_pass", "fail_rate_ge_S2", "S3_count", "BDA_norm_p95"],
+          "additionalProperties": false,
+          "properties": {
+            "tier2_pass": { "type": "boolean" },
+            "tier3_pass": { "type": "boolean" },
+            "fail_rate_ge_S2": { "type": ["number", "null"] },
+            "S3_count": { "type": "integer" },
+            "BDA_norm_p95": { "type": ["number", "null"] }
+          }
+        }
+      }
+    },
+    "mutation_taxonomy_version": { "type": "string" },
+    "adapter_param_signature_snapshot": { "type": ["string", "null"] },
+    "generated_at_utc": { "type": "string", "pattern": "Z$" },
+    "stage6c_pass_reference": {
+      "type": "object",
+      "required": ["pass", "ledger_path", "ledger_sha256"],
+      "properties": {
+        "pass": { "type": "boolean" },
+        "ledger_path": { "type": "string" },
+        "ledger_sha256": { "type": "string" }
+      }
+    },
+    "freeze_block_reason": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "split_hashes": {
+      "type": "object",
+      "required": ["train_hash", "val_hash"],
+      "properties": {
+        "train_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "val_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "test_hash": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

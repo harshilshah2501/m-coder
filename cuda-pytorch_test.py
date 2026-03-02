@@ -3,8 +3,9 @@
 CUDA + PyTorch compatibility check.
 Verifies driver vs PyTorch CUDA build and tests bf16 support.
 
-Run with Phase-08 training venv (no system pip):
-  ml/training/phase08/training/venv/bin/python cuda-pytorch_test.py
+Run with Stage-08 training venv (no system pip):
+  ml/training/pipeline/stage6/.venv/bin/python cuda-pytorch_test.py
+  # Or project root: .venv/bin/python cuda-pytorch_test.py
 
 PyTorch: use a build matching your GPU. Blackwell (sm_120) needs CUDA 12.8 or 13.0;
   cu126 supports up to sm_90. See https://pytorch.org/get-started/locally

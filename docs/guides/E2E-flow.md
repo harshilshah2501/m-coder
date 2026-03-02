@@ -704,12 +704,14 @@ ml/training/
 ├── datasets/
 ├── evaluation/
 ├── pipeline/
-│   ├── stage6/
-│   ├── stage6a/
-│   ├── stage6b/
-│   └── stage6c/
+│   ├── stage6/
+│   │   ├── stage6a/
+│   │   ├── stage6b/
+│   │   ├── stage6c/
+│   │   └── mutation/
+│   └── stage08/
 ├── generated/
-└── training/
+└── ...
 Artifact classes:
 Artifact
 Purpose

@@ -14,7 +14,7 @@ Layer-2 (ML Compilation) owns:
 
 ## Invariants
 
-- **Numeric stage directories are forbidden.** No `stage6c/`, `stage7/`, `stage8/`.
+- **Numeric stage directories as direct children of ml/training are forbidden.** Stage-6 and Stage-08 live under `pipeline/` (`pipeline/stage6/`, `pipeline/stage08/`).
 - **Vendor mirror is read-only upstream code.** No STAGE*.md, no .jsonl in vendor.
 - **Compiler outputs only to `generated/`.** No stage7/ references.
 - **Manifests must be repo-relative.** No absolute paths (e.g. /root/).

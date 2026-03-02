@@ -54,7 +54,7 @@ def _validate_rows(rows: Iterable[LedgerRow]) -> None:
 
 def load_ledger(path: str | Path) -> List[LedgerRow]:
     """
-    Load phase6c_ledger.jsonl into a list of LedgerRow dicts.
+    Load stage6c_ledger.jsonl into a list of LedgerRow dicts.
 
     Raises LedgerValidationError if required fields are missing.
     """

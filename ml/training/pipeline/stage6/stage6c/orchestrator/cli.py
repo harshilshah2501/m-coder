@@ -114,7 +114,7 @@ def main() -> None:
     else:
         raise SystemExit(
             f"Model adapter '{args.model}' not implemented yet. "
-            "Implement phase6c/model/{args.model}.py and wire it into the orchestrator CLI."
+            "Implement stage6c/model/{args.model}.py and wire it into the orchestrator CLI."
         )
     runner = LoopRunner(
         registry,
@@ -137,7 +137,7 @@ def main() -> None:
         return
 
     # Amplification based on current ledger
-    ledger_path = out_dir / "phase6c_ledger.jsonl"
+    ledger_path = out_dir / "stage6c_ledger.jsonl"
     print("\nAnalyzing ledger for amplification opportunities...")
     amp_plan = analyze_ledger_for_amplification(ledger_path, exp_cfg)
 

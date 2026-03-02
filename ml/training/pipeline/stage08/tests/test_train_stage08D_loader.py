@@ -5,8 +5,13 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
-SCRIPT_DIR = REPO_ROOT / "ml" / "training" / "training"
-DATASET_DIR = REPO_ROOT / "ml" / "training" / "datasets" / "sft"
+SCRIPT_DIR = REPO_ROOT / "ml" / "training" / "pipeline" / "stage08"
+
+# Use canonical path helper; no hardcoded datasets/sft
+sys.path.insert(0, str(SCRIPT_DIR))
+from _path_utils import get_canonical_sft_dataset_dir
+
+DATASET_DIR = get_canonical_sft_dataset_dir()
 FROZEN = DATASET_DIR / "golden_exemplars_v1_frozen.jsonl"
 
 

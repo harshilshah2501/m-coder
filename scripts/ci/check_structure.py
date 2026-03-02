@@ -23,10 +23,11 @@ STAGE_DIR_RE = re.compile(r"stage[0-9]+")
 def main():
     errors = []
 
-    # 1. No top-level stage directories (stage6c, stage7, stage8) under ml/training
+    # 1. No numeric stage dirs as direct children of ml/training.
+    #    Stage-6 and Stage-08 live under pipeline/ (pipeline/stage6/, pipeline/stage08/).
     for p in TRAINING.iterdir():
         if p.is_dir() and STAGE_DIR_RE.search(p.name):
-            errors.append(f"Numeric stage directory forbidden: ml/training/{p.name}")
+            errors.append(f"Numeric stage directory forbidden at ml/training root: ml/training/{p.name}")
 
     # 2. No STAGE*.md in vendor
     if VENDOR.exists():

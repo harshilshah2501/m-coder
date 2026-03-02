@@ -230,7 +230,7 @@ Each run is one row. Required and optional fields:
 | pass | boolean | Yes | Run-level pass (severity ∈ {S0,S1} and no other fail conditions). |
 
 **File formats:** JSONL (one JSON object per line); optional Parquet.  
-**Directory layout:** Optional repo path `phase6/phase6c/` (or `phase6c/`); config, ledger, reports, schemas. Implementations may use a **FileSeedRegistry** and **local taxonomy mapping** so that repo paths are not required.
+**Directory layout:** Optional repo path `stage6/stage6c/` (or `stage6c/`); config, ledger, reports, schemas. Implementations may use a **FileSeedRegistry** and **local taxonomy mapping** so that repo paths are not required.
 
 ---
 

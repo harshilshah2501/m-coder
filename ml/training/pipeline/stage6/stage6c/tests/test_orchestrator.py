@@ -231,7 +231,7 @@ def test_execute_plan_writes_files(tmp_path: Path) -> None:
     )
     assert summary.runs_executed == 1
     traces_path = out_dir / "suite_traces.jsonl"
-    ledger_path = out_dir / "phase6c_ledger.jsonl"
+    ledger_path = out_dir / "stage6c_ledger.jsonl"
     assert traces_path.exists()
     assert ledger_path.exists()
     rows = read_ledger_rows(ledger_path)
@@ -267,7 +267,7 @@ def test_execute_plan_resume_idempotent(tmp_path: Path) -> None:
         [plan_item], reg, runner, model_adapter=DummyModelAdapter(), out_dir=out_dir, resume=True
     )
     assert summary2.runs_executed == 0
-    ledger_path = out_dir / "phase6c_ledger.jsonl"
+    ledger_path = out_dir / "stage6c_ledger.jsonl"
     rows = read_ledger_rows(ledger_path)
     assert len(rows) == 1
 
@@ -316,7 +316,7 @@ def test_execute_mode_blocks_summary_compressed(tmp_path: Path, monkeypatch) -> 
     cfg_path.write_text("seeds_dir: ignored\n", encoding="utf-8")
     out_dir = tmp_path / "out_exec"
     argv = [
-        "phase6c-run-suite",
+        "stage6c-run-suite",
         "--config",
         str(cfg_path),
         "--out",

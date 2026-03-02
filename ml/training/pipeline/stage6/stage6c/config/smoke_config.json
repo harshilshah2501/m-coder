@@ -1,5 +1,5 @@
 {
-  "seeds_dir": "phase6c/seeds_sample",
+  "seeds_dir": "stage6/stage6c/seeds_sample",
   "horizons": [3, 6],
   "shapes": ["linear", "retry_biased"],
   "carryover_modes": ["cold_start", "full_transcript"],

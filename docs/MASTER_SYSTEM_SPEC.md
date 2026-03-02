@@ -43,7 +43,6 @@ Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CON
 
 ## Canonical Specifications
 
-
 | Document                                                                                                | Layer | Description                                                   |
 | ------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------- |
 | [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md)             | L1    | Phase definitions, dominance hierarchy, structural invariants |
@@ -58,6 +57,11 @@ Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CON
 | [JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md)                                          | L3    | IDE contracts, R-IDE1..R-IDE3                                 |
 | [SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md)                                            | L3/L4 | Shadow rules S-1..S-6                                         |
 | [ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md)                                                              | L2–L4 | Milestone entry/exit/failure conditions                       |
+| [LAYER1_GOVERNANCE_SPEC.md](LAYER1_GOVERNANCE_SPEC.md)                                                  | L1    | Layer-1 comprehensive governance spec                         |
+| [LAYER2_COMPILATION_SPEC.md](LAYER2_COMPILATION_SPEC.md)                                                | L2    | Layer-2 comprehensive ML compilation spec                     |
+| [LAYER3_RUNTIME_SPEC.md](LAYER3_RUNTIME_SPEC.md)                                                        | L3    | Layer-3 comprehensive runtime enforcement spec                |
+| [LAYER4_OBSERVATION_SPEC.md](LAYER4_OBSERVATION_SPEC.md)                                                | L4    | Layer-4 comprehensive observation and drift spec              |
+| [SYSTEM_EXECUTION_ROADMAP.md](SYSTEM_EXECUTION_ROADMAP.md)                                              | All   | End-to-end roadmap, artifact matrix, live progress tracker    |
 | [ml/training/pipeline/STAGE6_MUTATION_TAXONOMY.md](../ml/training/pipeline/STAGE6_MUTATION_TAXONOMY.md) | L2    | Stage-6 mutation classes; doctrine-locked                     |
 
 

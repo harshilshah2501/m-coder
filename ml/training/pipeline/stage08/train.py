@@ -2,12 +2,17 @@
 """
 Stage-08 LoRA SFT training harness.
 Single-GPU, constitution-locked. No DeepSpeed/FSDP/QLoRA/TRL/DPO/gradient_checkpointing.
-Dataset: SCRIPT_DIR/dataset or phase08/datasets/sft (Golden Exemplars). Fields: input, output, phase.
+Dataset: SCRIPT_DIR/dataset or ml/training/datasets/sft (Golden Exemplars). Fields: input, output, phase.
 
 Training runs on GPU only. Use a PyTorch build that supports your GPU (e.g. sm_120).
 """
 from pathlib import Path
 import json
+
+try:
+    from ._path_utils import get_canonical_sft_dataset_dir
+except ImportError:
+    from _path_utils import get_canonical_sft_dataset_dir
 import os
 import yaml
 import torch
@@ -27,7 +32,7 @@ from datasets import Dataset
 from sklearn.model_selection import train_test_split
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parent.parent.parent.parent  # training->phase08->training->ml->repo
+REPO_ROOT = SCRIPT_DIR.parent.parent.parent.parent  # stage08->pipeline->training->ml->repo
 MAX_LENGTH = 4096
 VALID_PHASES = {"REF", "CONF", "DES", "MIX", "CODE"}
 EARLY_STOP_DIVERGENCE = 1.15
@@ -67,7 +72,7 @@ def discover_dataset_dir():
         jsonl_files = list(local.glob("*.jsonl"))
         if jsonl_files:
             return local
-    canonical = SCRIPT_DIR.parent / "datasets" / "sft"
+    canonical = get_canonical_sft_dataset_dir()
     if canonical.exists():
         jsonl_files = list(canonical.glob("*.jsonl"))
         if jsonl_files:
@@ -304,7 +309,7 @@ def main():
     if not records:
         raise RuntimeError(
             f"No valid JSONL records with input/output/phase in {dataset_dir}. "
-            "Use SCRIPT_DIR/dataset or phase08/datasets/sft."
+            "Use SCRIPT_DIR/dataset or ml/training/datasets/sft."
         )
 
     if config.get("balanced_val_split"):

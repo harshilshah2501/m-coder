@@ -290,7 +290,7 @@ def test_cli_console_no_hot_clusters(capsys, tmp_path: Path, monkeypatch) -> Non
     ]
     ledger = _write_ledger(tmp_path, rows)
     out_dir = tmp_path / "out"
-    argv = ["phase6c-report", "--ledger", str(ledger), "--out", str(out_dir)]
+    argv = ["stage6c-report", "--ledger", str(ledger), "--out", str(out_dir)]
     monkeypatch.setattr(sys, "argv", argv)
     reporting_cli.main()
     captured = capsys.readouterr().out
@@ -306,7 +306,7 @@ def test_cli_console_hot_clusters_suppress_no_hot(capsys, tmp_path: Path, monkey
     ]
     ledger = _write_ledger(tmp_path, rows)
     out_dir = tmp_path / "out2"
-    argv = ["phase6c-report", "--ledger", str(ledger), "--out", str(out_dir)]
+    argv = ["stage6c-report", "--ledger", str(ledger), "--out", str(out_dir)]
     monkeypatch.setattr(sys, "argv", argv)
     reporting_cli.main()
     captured = capsys.readouterr().out

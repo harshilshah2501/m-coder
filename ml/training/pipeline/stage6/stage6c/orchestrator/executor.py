@@ -118,7 +118,7 @@ def execute_plan(
     """
     out_path = Path(out_dir)
     traces_path = out_path / "suite_traces.jsonl"
-    ledger_path = out_path / "phase6c_ledger.jsonl"
+    ledger_path = out_path / "stage6c_ledger.jsonl"
 
     metrics_engine = MetricsEngine()
     config_digest, seeds_digest = _compute_digests(plan)

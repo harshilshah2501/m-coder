@@ -110,6 +110,7 @@ def write_markdown_report(
     lines.append("")
     lines.append("### Run metadata")
     lines.append(f"- **Input ledger**: `{ledger_path}`")
+    lines.append("- **Note**: Paths in this report may be absolute or historical; canonical layout uses stage6/stage6c.")
     lines.append(f"- **Total runs**: {n_runs}")
     lines.append(f"- **Time range**: {start_ts or 'n/a'} → {end_ts or 'n/a'}")
     lines.append(f"- **Canonical runs**: {meta.get('canonical_runs_count', 'n/a')}")
