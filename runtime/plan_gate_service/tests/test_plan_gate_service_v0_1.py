@@ -17,6 +17,8 @@ REPO = Path(__file__).resolve().parents[3]
 STUB_EXAMPLES = REPO / "runtime" / "plan_gate_stub" / "examples"
 STUB_GOLDEN_PR = REPO / "runtime" / "plan_gate_stub" / "golden_outputs" / "pr_merge_shadow"
 STUB_GOLDEN_CFG = REPO / "runtime" / "plan_gate_stub" / "golden_outputs" / "config_change_shadow"
+STUB_GOLDEN_PR_RESOLVED = REPO / "runtime" / "plan_gate_stub" / "golden_outputs_resolved" / "pr_merge_shadow_resolved"
+STUB_GOLDEN_CFG_RESOLVED = REPO / "runtime" / "plan_gate_stub" / "golden_outputs_resolved" / "config_change_shadow_resolved"
 INGEST_GOLDEN = REPO / "observation" / "ingest" / "golden_reports"
 
 
@@ -192,6 +194,44 @@ class TestPlanGateService(unittest.TestCase):
                     golden = (golden_dir / name).read_bytes()
                     svc = (svc_dir / name).read_bytes()
                     self.assertEqual(svc, golden, f"{name} byte mismatch for {req_id}")
+
+
+class TestPlanGateServiceResolved(unittest.TestCase):
+    """Service with lineage index; byte-for-byte match vs golden_outputs_resolved."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tmp = tempfile.mkdtemp()
+        cls.spool = Path(cls.tmp) / "spool"
+        lineage_idx = str(REPO / "ml" / "lineage" / "schemas" / "examples" / "lineage_index_valid.json")
+        os.environ["PLAN_GATE_LINEAGE_INDEX"] = lineage_idx
+        os.environ["PLAN_GATE_SPOOL_DIR"] = str(cls.spool)
+        from runtime.plan_gate_service.app import run_server
+
+        cls.server = run_server(port=0, spool_dir=cls.spool)
+        cls.port = cls.server.server_address[1]
+        cls.base_url = f"http://127.0.0.1:{cls.port}"
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.server.shutdown()
+        cls.thread.join(timeout=2)
+
+    def test_service_artifacts_byte_match_stub_with_lineage_resolved(self) -> None:
+        """With lineage index, service output matches golden_outputs_resolved byte-for-byte."""
+        for example_path, req_id, golden_dir in [
+            (STUB_EXAMPLES / "input_plan_request_pr_merge_shadow.json", "req-pr-merge-shadow", STUB_GOLDEN_PR_RESOLVED),
+            (STUB_EXAMPLES / "input_plan_request_config_change_shadow.json", "req-config-change-shadow", STUB_GOLDEN_CFG_RESOLVED),
+        ]:
+            req = json.loads(example_path.read_text())
+            post_plan(f"{self.base_url}/v0/plan", req)
+            svc_dir = self.spool / "2026-03-01T00:00:00Z" / req_id
+            for name in ["plan.json", "decision_response.json", "ledger_row.json", "shadow_run_record.json", "ingestion_batch.json"]:
+                golden = (golden_dir / name).read_bytes()
+                svc = (svc_dir / name).read_bytes()
+                self.assertEqual(svc, golden, f"{name} byte mismatch for {req_id} (resolved)")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 ## Golden Exemplars — Dominance Grammar
 
-This document is the **canonical reference** for the dominance grammar used in Golden Exemplars.
+> **Non-Canonical:** Explanatory only. Canonical phase and dominance semantics in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../../governance/CONSTITUTIONAL_MANIFEST_v1.0.md); [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md).
+
+This document is a **reference** for the dominance grammar used in Golden Exemplars.
 
 - **Purpose**: define the stress surfaces and override hierarchy that govern judgment.
 - **Audience**: exemplar authors, reviewers, and system designers.

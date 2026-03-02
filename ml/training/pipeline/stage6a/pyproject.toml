@@ -19,5 +19,5 @@ phase6c-report = "phase6c.reporting.cli:main"
 phase6c-run-suite = "phase6c.orchestrator.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["phase6c*"]
+where = [".."]
+include = ["stage6*", "phase6c*"]

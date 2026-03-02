@@ -1,0 +1,26 @@
+{
+  "schema_version": "shadow_run_record.v0.1",
+  "run_id": "run-1b636505a41e81bd53a6620a2bba9f01",
+  "session_id": "m-coder-sess",
+  "request_id": "req-config-change-shadow",
+  "plan_hash": "395b694602b8b439f6e1f626fd39fd7dec6f89e4c605cba0051ce2e570bd9bec",
+  "transport_status": "ok",
+  "decision": "REFUSAL",
+  "boundary_verdict": "blocked",
+  "emitted": {
+    "plan_emitted": true,
+    "ledger_emitted": true,
+    "decision_emitted": true
+  },
+  "timestamps": {
+    "start_utc": "2026-03-01T00:00:00Z",
+    "end_utc": "2026-03-01T00:00:00Z"
+  },
+  "links": {
+    "ledger_event_id": "evt-1b636505a41e81bd53a6620a2bba9f01"
+  },
+  "reason_codes": [
+    "MISSING_AUTHORITY",
+    "REF_ENFORCED"
+  ]
+}

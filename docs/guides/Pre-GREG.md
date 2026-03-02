@@ -1,3 +1,5 @@
+> **Non-Canonical:** Explanatory only. Canonical specs in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md).
+
 Good. This is exactly the right kind of discomfort to surface.
 
 Let’s go line by line and be ruthless about irreversibility.

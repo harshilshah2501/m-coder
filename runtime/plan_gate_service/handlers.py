@@ -8,6 +8,8 @@ from typing import Any
 
 from runtime.plan_gate_stub.rules import stub_decide
 
+from . import config
+
 REPO = Path(__file__).resolve().parents[2]  # runtime/
 IDE_SCHEMAS = REPO / "runtime" / "ide" / "schemas"
 
@@ -44,7 +46,11 @@ def handle_plan_request(
         plan_request = dict(plan_request)
         plan_request["timestamp_utc"] = fixed_time
 
-    artifacts = stub_decide(plan_request, mode, fixed_time, REPO)
+    lineage_path = config.get_lineage_index()
+    artifacts = stub_decide(
+        plan_request, mode, fixed_time, REPO,
+        lineage_index_path=str(lineage_path) if lineage_path else None,
+    )
     req_id = artifacts["plan"]["request"]["request_id"]
 
     outdir = spool_root / date_or_id / req_id

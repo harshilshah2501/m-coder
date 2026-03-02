@@ -1,0 +1,35 @@
+{
+  "schema_version": "ledger_row.v0.1",
+  "event": {
+    "event_id": "evt-1b636505a41e81bd53a6620a2bba9f01",
+    "timestamp_utc": "2026-03-01T00:00:00Z",
+    "request_id": "req-config-change-shadow",
+    "session_id": "m-coder-sess",
+    "mode": "shadow",
+    "runtime_version": "0.1"
+  },
+  "plan_link": {
+    "plan_hash": "395b694602b8b439f6e1f626fd39fd7dec6f89e4c605cba0051ce2e570bd9bec",
+    "plan_schema_version": "plan.v0.1"
+  },
+  "verdicts": {
+    "phase_emitted": "REF",
+    "terminal_posture": "refuse",
+    "authority_verdict": "unknown",
+    "boundary_verdict": "blocked",
+    "ref_enforced": true
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "apply config change affecting production",
+    "boundary_cross_attempted": false,
+    "boundary_crossed": false
+  },
+  "actions": {
+    "tool_calls_attempted": [],
+    "execution_intents": []
+  },
+  "reason_codes": [
+    "MISSING_AUTHORITY",
+    "REF_ENFORCED"
+  ]
+}

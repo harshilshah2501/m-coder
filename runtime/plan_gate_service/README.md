@@ -34,6 +34,7 @@ python -m runtime.plan_gate_service.app
 | PLAN_GATE_MODE | shadow | shadow or live |
 | PLAN_GATE_FIXED_TIME | — | Fixed timestamp for determinism |
 | PLAN_GATE_DETERMINISTIC | true | Deterministic IDs when true |
+| PLAN_GATE_LINEAGE_INDEX | — | Path to lineage index (enables resolved lineage) |
 
 ## Spool Layout
 

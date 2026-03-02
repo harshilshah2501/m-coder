@@ -1,0 +1,25 @@
+{
+  "schema_version": "shadow_run_record.v0.1",
+  "run_id": "run-b355568f03585789f496fcddbff3cd87",
+  "session_id": "m-coder-sess",
+  "request_id": "req-pr-merge-shadow",
+  "plan_hash": "216805274084f9c12b7fc15b01241ab19775e694f2dfdfb85ac9b4a0c2453466",
+  "transport_status": "ok",
+  "decision": "BOUNDING",
+  "boundary_verdict": "allowed_pre_boundary_only",
+  "emitted": {
+    "plan_emitted": true,
+    "ledger_emitted": true,
+    "decision_emitted": true
+  },
+  "timestamps": {
+    "start_utc": "2026-03-01T00:00:00Z",
+    "end_utc": "2026-03-01T00:00:00Z"
+  },
+  "links": {
+    "ledger_event_id": "evt-b355568f03585789f496fcddbff3cd87"
+  },
+  "reason_codes": [
+    "SAFE_PREBOUNDARY_ONLY"
+  ]
+}

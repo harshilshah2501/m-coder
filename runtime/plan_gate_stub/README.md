@@ -27,6 +27,10 @@ python -m runtime.plan_gate_stub.cli \
 
 Use `--fixed-time "2026-03-01T00:00:00Z"` for identical outputs across runs. IDs are derived from sha256(canonical_json(input)).
 
+## Lineage Index (Optional)
+
+Use `--lineage-index <path>` to resolve provenance via lineage index. When provided, ingestion_batch items include lineage_refs with base_id/variant_id when the boundary_phrase_hash is found in the index. See `golden_outputs_resolved/` for deterministic output with lineage resolution.
+
 ## Generating Batches for Observation Ingest
 
 The stub produces `ingestion_batch.json` and `ingestion_batch.jsonl`. These can be fed to the observation ingest CLI:

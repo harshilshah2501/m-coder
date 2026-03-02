@@ -17,6 +17,7 @@ def main() -> int:
     ap.add_argument("--outdir", required=True, help="Output directory")
     ap.add_argument("--mode", default="shadow", choices=["shadow", "live"])
     ap.add_argument("--fixed-time", default=None, help="Fixed timestamp for determinism")
+    ap.add_argument("--lineage-index", default=None, help="Path to lineage index (optional)")
     ap.add_argument("--validate", type=bool, default=True, help="Validate outputs (default True)")
     args = ap.parse_args()
 
@@ -29,7 +30,8 @@ def main() -> int:
     outdir.mkdir(parents=True, exist_ok=True)
     repo_root = Path(__file__).resolve().parents[3]
 
-    artifacts = stub_decide(plan_request, args.mode, args.fixed_time, repo_root)
+    lineage_path = Path(args.lineage_index) if args.lineage_index else None
+    artifacts = stub_decide(plan_request, args.mode, args.fixed_time, repo_root, lineage_path)
 
     if args.validate:
         schema_errs = validate_schemas(

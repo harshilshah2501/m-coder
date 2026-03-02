@@ -13,6 +13,7 @@ Observation detects drift, tracks collapse vectors, reconciles ledgers, and prod
 ## Contents
 
 - **Ingest** — [observation/ingest/](ingest/README.md) — CLI to consume ingestion batches, validate, reconcile, and report
+- **Baseline Runner** — [observation/baseline/](baseline/README.md) — Day-0 baseline report and drift comparison
 - Drift probes
 - Collapse vector tracking
 - Ledger reconciliation

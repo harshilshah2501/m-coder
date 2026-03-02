@@ -18,11 +18,14 @@ ACTION_TO_BOUNDARY: dict[str, tuple[str, str]] = {
 }
 
 
-def load_lineage_index(repo_root: Path | None = None) -> dict | None:
-    """Load lineage index if available. Returns None if not found."""
-    if repo_root is None:
-        repo_root = Path(__file__).resolve().parents[3]
-    path = Path(repo_root) / "ml" / "lineage" / "schemas" / "examples" / "lineage_index_valid.json"
+def load_lineage_index(repo_root: Path | None = None, lineage_index_path: str | Path | None = None) -> dict | None:
+    """Load lineage index. If lineage_index_path given, load from that; else default path."""
+    if lineage_index_path is not None:
+        path = Path(lineage_index_path)
+    else:
+        if repo_root is None:
+            repo_root = Path(__file__).resolve().parents[3]
+        path = Path(repo_root) / "ml" / "lineage" / "schemas" / "examples" / "lineage_index_valid.json"
     if not path.exists():
         return None
     import json
@@ -53,6 +56,7 @@ def stub_decide(
     mode: str,
     fixed_time: str | None,
     repo_root: Path | None = None,
+    lineage_index_path: str | Path | None = None,
 ) -> dict[str, Any]:
     """
     Produce all artifacts: plan, decision_response, ledger_row, shadow_run_record, ingestion_batch.
@@ -100,7 +104,7 @@ def stub_decide(
     sess_id = ide_event.get("ide_context", {}).get("project", "m-coder") + "-sess"
     user = ide_event.get("ide_context", {}).get("user", "stub")
 
-    lineage_index = load_lineage_index(repo_root)
+    lineage_index = load_lineage_index(repo_root, lineage_index_path)
     prov = resolve_lineage(bp_hash, lineage_index)
 
     # Build plan

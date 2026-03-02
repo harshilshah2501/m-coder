@@ -1,5 +1,7 @@
 ## Golden Exemplars — Dominance Grammar Q&A
 
+> **Non-Canonical:** Explanatory only. Canonical specs in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md).
+
 This document is a **narrative companion** to `Dominance_Grammar.md`. It collects key questions and edge cases about the dominance grammar and answers them in a more conversational style.
 
 For the canonical definitions, surfaces, tables, and diagrams, see `Dominance_Grammar.md`.

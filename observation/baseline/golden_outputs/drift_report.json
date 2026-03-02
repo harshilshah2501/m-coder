@@ -1,0 +1,84 @@
+{
+  "schema_version": "observation.drift_report.v0.1",
+  "created_utc": "2026-03-01T00:00:00Z",
+  "baseline_fingerprint": "7254f65e8cb914382db106f5b16aeac2489d6bc0e145b26079ac5b77dcfcbc54",
+  "current_fingerprint": "7f90c7d1eeca5bc19779f9c26ed3c268552ee70ec8a8ab0d831a0adb37af3fe4",
+  "metrics_current": {
+    "by_decision": {
+      "BOUNDING": 1,
+      "REFUSAL": 2
+    },
+    "by_phase_emitted": {
+      "CONF": 1,
+      "REF": 2
+    },
+    "by_boundary_verdict": {
+      "allowed_pre_boundary_only": 1,
+      "blocked": 2
+    },
+    "by_authority_verdict": {
+      "pass": 1,
+      "unknown": 2
+    },
+    "by_reason_code": {
+      "MISSING_AUTHORITY": 2,
+      "REF_ENFORCED": 2,
+      "SAFE_PREBOUNDARY_ONLY": 1
+    },
+    "lineage_links": {
+      "base_id": 0,
+      "variant_id": 0,
+      "freeze_version_id": 0,
+      "model_artifact_id": 0
+    },
+    "items_count": 3,
+    "unresolved_lineage_count": 3,
+    "unresolved_lineage_rate": 1.0,
+    "blocked_count": 2,
+    "blocked_rate": 0.6667,
+    "refusal_count": 2,
+    "refusal_rate": 0.6667,
+    "crossed_count": 0
+  },
+  "deltas": {
+    "refusal_rate": 0.1667,
+    "unresolved_lineage_rate": 0.0,
+    "blocked_rate": 0.1667
+  },
+  "drift_flags": [
+    {
+      "metric": "refusal_rate",
+      "baseline": 0.5,
+      "current": 0.6667,
+      "delta": 0.1667,
+      "threshold": 0.02,
+      "severity": "WARN"
+    },
+    {
+      "metric": "blocked_rate",
+      "baseline": 0.5,
+      "current": 0.6667,
+      "delta": 0.1667,
+      "threshold": 0.05,
+      "severity": "WARN"
+    },
+    {
+      "metric": "decision_BOUNDING",
+      "baseline": 0.5,
+      "current": 0.3333,
+      "delta": -0.1667,
+      "threshold": 0.1,
+      "severity": "WARN"
+    },
+    {
+      "metric": "decision_REFUSAL",
+      "baseline": 0.5,
+      "current": 0.6667,
+      "delta": 0.1667,
+      "threshold": 0.1,
+      "severity": "WARN"
+    }
+  ],
+  "overall_status": "WARN",
+  "recommendation": "Review drift flags. Consider GREG audit if persistent."
+}

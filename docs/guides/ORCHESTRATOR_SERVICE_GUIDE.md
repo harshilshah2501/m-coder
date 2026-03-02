@@ -1,5 +1,7 @@
 # Motadata Orchestrator Service Guide
 
+> **Non-Canonical:** Explanatory only. Canonical specs in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md).
+
 ## Overview
 
 The Motadata AI Services Orchestrator is now managed as a systemd service, allowing automatic startup on boot and easy management via `systemctl` commands.

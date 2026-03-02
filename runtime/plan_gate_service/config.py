@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[2]  # runtime/
+ROOT = Path(__file__).resolve().parents[3]  # repo root
 DEFAULT_SPOOL = REPO / ".spool" / "plan_gate"
 
 
@@ -27,6 +28,16 @@ def get_mode() -> str:
 
 def get_fixed_time() -> str | None:
     return os.environ.get("PLAN_GATE_FIXED_TIME") or None
+
+
+def get_lineage_index() -> Path | None:
+    s = os.environ.get("PLAN_GATE_LINEAGE_INDEX")
+    if not s:
+        return None
+    p = Path(s)
+    if p.is_absolute():
+        return p if p.exists() else None
+    return (ROOT / p) if (ROOT / p).exists() else None
 
 
 def get_deterministic() -> bool:

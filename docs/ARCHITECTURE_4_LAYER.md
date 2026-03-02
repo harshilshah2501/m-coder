@@ -1,5 +1,7 @@
 # 4-Layer Architecture — Directory Philosophy
 
+**Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
+
 ## Purpose & Scope
 
 This document provides **structural clarity** for the m-coder repository layout. It defines the four layers, directory mapping, allowed/forbidden boundaries, and axis separation between constitutional phases and pipeline stages. **No doctrine change.** Constitutional semantics (REF, CONF, DES, MIX, CODE, REACH), dominance rules, exemplar counts, and policy gates remain defined in canonical sources only.

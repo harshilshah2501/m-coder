@@ -1,5 +1,7 @@
 # Motadata AI Services Orchestrator - Unified Management
 
+> **Non-Canonical:** Explanatory only. Canonical specs in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md).
+
 ## Overview
 
 The **orchestrator_unified.sh** script manages all AI services in the correct chronological order with proper health checks and dependencies. It can be run directly for manual service management.

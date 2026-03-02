@@ -1,0 +1,36 @@
+{
+  "schema_version": "decision_response.v0.1",
+  "request_id": "req-config-change-shadow",
+  "decision": "REFUSAL",
+  "constitutional_phase_emitted": "REF",
+  "dominance_source": "REF",
+  "irreversible_boundary_phrase": "apply config change affecting production",
+  "boundary_phrase_hash": "831f36fba87f7c2a5c37a698655aa238f676a2fdaab821f5dfd4fb200dfe3ac5",
+  "boundary_type": "config_rollout",
+  "authority_verdict": "unknown",
+  "missing_evidence": [
+    "approval"
+  ],
+  "allowed_pre_boundary_actions": [
+    "read",
+    "review",
+    "run_tests"
+  ],
+  "blocked_actions": [
+    "apply"
+  ],
+  "reason_codes": [
+    "MISSING_AUTHORITY",
+    "REF_ENFORCED"
+  ],
+  "plan_hash": "395b694602b8b439f6e1f626fd39fd7dec6f89e4c605cba0051ce2e570bd9bec",
+  "ui": {
+    "title": "REFUSAL",
+    "message": "REF REFUSAL",
+    "severity": "info"
+  },
+  "provenance_resolution": {
+    "resolved_via": "unresolved",
+    "reason": "hash not in lineage index"
+  }
+}

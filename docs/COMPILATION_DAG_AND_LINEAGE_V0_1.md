@@ -43,7 +43,7 @@ flowchart LR
 
 ## Deterministic Identity Rules
 
-- **boundary_phrase_hash** = sha256(exact boundary string)
+- **boundary_phrase_hash** = sha256(phrase) per [runtime/ide/schemas/boundary_hashing.v0.1.json](../runtime/ide/schemas/boundary_hashing.v0.1.json) canonicalization rules
 - **node_id** = sha256(canonical_json(node_without_node_id))
 - **Canonicalization:** Stable JSON with sorted keys, UTF-8 encoding (same as plan/ledger).
 
@@ -62,7 +62,7 @@ Collapse vectors (REF_SOFTENING, CONF_TO_DES, BOUNDARY_ALIASING, etc.) propagate
 
 ## Failure States (Hard Stops)
 
-- R-L1: `boundary_phrase_hash` ≠ sha256(boundary_phrase) → invalid node.
+- R-L1: `boundary_phrase_hash` ≠ sha256(phrase) per boundary_hashing.v0.1.json → invalid node.
 - R-L2: `dataset_row.phase_semantic_label` does not match referenced variant/base → invalid.
 - R-L3: `dataset_row` missing `base_id` or `variant_id` → invalid.
 - R-L4: `freeze_allowed` true with `fail_count` > 0 → invalid manifest.
@@ -81,6 +81,6 @@ Collapse vectors (REF_SOFTENING, CONF_TO_DES, BOUNDARY_ALIASING, etc.) propagate
 
 | File | Target Rule | Violation |
 |------|-------------|-----------|
-| `invalid_boundary_hash_mismatch_schema_valid.json` | R-L1 | boundary_phrase_hash ≠ sha256(boundary_phrase) |
+| `invalid_boundary_hash_mismatch_schema_valid.json` | R-L1 | boundary_phrase_hash ≠ sha256(phrase) per boundary_hashing.v0.1 |
 | `invalid_freeze_non_deterministic_schema_valid.json` | R-L4 | freeze_allowed true with fail_count > 0 |
 | `invalid_semantic_label_mismatch_schema_valid.json` | R-L2 | dataset_row phase label does not match referenced variant |

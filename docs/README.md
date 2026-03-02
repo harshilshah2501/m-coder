@@ -105,7 +105,7 @@ Canonical command to run all tests (runtime, ide, shadow, lineage, observation):
 cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 ```
 
-**Expected total test count:** 173 (as of this commit)
+**Expected total test count:** 186 (as of this commit)
 
 ### 🏛️ Core Architecture Docs
 
@@ -171,6 +171,9 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 ### 📚 Historical Documentation
 - **[iterations/](iterations/)** - Per-iteration notes and progress
 - **[archive/](archive/)** - Historical and deprecated documentation
+
+### 📌 4-Layer Architecture (Golden Exemplars)
+- **[MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)** - Canonical entry point; Doctrine Immutability; links to GOVERNANCE, COMPILATION, RUNTIME, OBSERVATION, CONTRACTS
 
 ### 📌 Core References
 - **[reference/IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details

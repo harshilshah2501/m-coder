@@ -10,6 +10,8 @@
 
 ## A. Overview
 
+**Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
+
 This roadmap defines **entry**, **exit**, and **failure** conditions for milestones across Layers 2 (ML Compilation), 3 (Runtime), and 4 (Observation). It does **not** alter phase semantics, dominance rules, exemplar counts, or policy. Constitutional semantics (REF, CONF, DES, MIX, CODE, REACH) and the pipeline stage axis (base → variants → stability → Stage-6 mutation → freeze → SFT) remain as defined in canonical sources.
 
 ---
@@ -39,7 +41,7 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 | **M3.5 Runtime ledger emission** | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields; inconsistent format |
 | **M3.6 Shadow mode validation** | M3.5 complete | Shadow mode runs without user impact; ledger captures behavior; no REF violations | REF violations in shadow; ledger gaps |
 
-**M3.4 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.4 / M3.5:** CI Backstop Gate (`runtime/ci_gate/`) and Plan-Gate Service (`runtime/plan_gate_service/`) implement the local gate and HTTP endpoint. **M3.6 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch.
+**M3.4 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.4 / M3.5:** CI Backstop Gate (`runtime/ci_gate/`) and Plan-Gate Service (`runtime/plan_gate_service/`) implement the local gate and HTTP endpoint. **M3.6 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch. **M4.1 Drift baseline:** [observation/baseline/](../observation/baseline/README.md) — Shadow Baseline Runner.
 
 ### What Cannot Ship Without REF Enforcement
 
