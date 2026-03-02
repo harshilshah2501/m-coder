@@ -1,12 +1,16 @@
 """
-Carryover plumbing: cold_start, full_transcript, summary_compressed (stub).
+Carryover plumbing: cold_start, full_transcript, full_transcript_saturated (test-only), summary_compressed (stub).
 Message ordering: governance → seed → wrappers → carryover → step_query.
 """
 from __future__ import annotations
 
 from typing import Any, List, Literal
 
-CarryoverMode = Literal["cold_start", "full_transcript", "summary_compressed"]
+CarryoverMode = Literal["cold_start", "full_transcript", "full_transcript_saturated", "summary_compressed"]
+
+# Test/simulation mode: full_transcript_saturated dilutes context with deterministic filler
+_SATURATION_FILLER_LINES = 5
+_SATURATION_FILLER_TEMPLATE = "[Context filler block for saturation simulation - line {i}]"
 
 
 def get_carryover_messages(
@@ -27,6 +31,8 @@ def get_carryover_messages(
       - Always include assistant responses as assistant turns.
       - Never include governance or seed in carryover.
     For summary_compressed: raise NotImplementedError (M2 stub; no summarizer).
+    For full_transcript_saturated: same as full_transcript but inserts deterministic filler
+    between turns to simulate long-context dilution. TEST/SIMULATION MODE.
     """
     if mode == "cold_start":
         return []
@@ -35,15 +41,27 @@ def get_carryover_messages(
             "summary_compressed carryover is not implemented in M2; "
             "no summarizer. Use cold_start or full_transcript."
         )
-    if mode != "full_transcript":
+    if mode not in ("full_transcript", "full_transcript_saturated"):
         raise ValueError(f"Unknown carryover mode: {mode!r}")
 
+    saturated = mode == "full_transcript_saturated"
     include_wrappers = full_transcript_policy == "include_wrappers"
     out: List[dict] = []
     total_chars = 0
+    rec_idx = 0
     for rec in step_history:
         prompt_messages = rec.get("prompt_messages") or []
         response = rec.get("response") or {}
+        # Optional filler block before this step's content (saturation simulation)
+        if saturated and rec_idx > 0:
+            filler_content = "\n".join(
+                _SATURATION_FILLER_TEMPLATE.format(i=i)
+                for i in range(rec_idx * _SATURATION_FILLER_LINES, (rec_idx + 1) * _SATURATION_FILLER_LINES)
+            )
+            out.append({"role": "user", "content": filler_content, "origin": "carryover"})
+            total_chars += len(filler_content)
+            if max_chars is not None and total_chars >= max_chars:
+                return out
         # User turns from this step: optionally wrapper messages (chronological), then step_query. Never governance/seed.
         if include_wrappers:
             for m in prompt_messages:
@@ -70,6 +88,7 @@ def get_carryover_messages(
             total_chars += len(resp_content)
             if max_chars is not None and total_chars >= max_chars:
                 return out
+        rec_idx += 1
     return out
 
 

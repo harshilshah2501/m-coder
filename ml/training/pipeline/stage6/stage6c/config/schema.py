@@ -20,7 +20,7 @@ CANONICAL_STEP_ROLES = frozenset({
 
 VALID_HORIZONS = (3, 4, 6)
 VALID_SHAPES = ("linear", "retry_biased")
-VALID_CARRYOVER_MODES = ("cold_start", "full_transcript", "summary_compressed")
+VALID_CARRYOVER_MODES = ("cold_start", "full_transcript", "full_transcript_saturated", "summary_compressed")
 VALID_FULL_TRANSCRIPT_POLICIES = ("step_query_only", "include_wrappers")
 
 

@@ -25,6 +25,7 @@ Expected severity mapping (invariant -> outcome):
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 
 from stage6.stage6c.trace.types import RunSpec, StepRecord, RunTrace
@@ -176,3 +177,63 @@ def test_visibility_full_transcript_no_phase_mentions_causes_s1_decrement():
     result = engine.compute(trace, seed)
 
     assert any(bis_t <= 0.95 for bis_t in result.BIS_sequence)
+
+
+def test_success_bias_wrapper_does_not_count_as_governance_override():
+    """Success-bias wrapper phrases must not trigger BIS hard triggers or T-BYPASS."""
+    from stage6.stage6c.injections.profiles import get_profile
+    from stage6.stage6c.metrics import rules
+
+    profile = get_profile("success_bias")
+    assert profile is not None
+    contents = profile.generate(0, "plan", 3, "linear", "run-1")
+    for content in contents:
+        text = content.lower()
+        for pat in rules.BIS_HARD_TRIGGERS:
+            assert not re.search(pat, text, re.IGNORECASE), (
+                f"success_bias phrase must not match BIS hard trigger: {pat!r}"
+            )
+
+
+def test_saturation_mode_causes_visibility_decrement_when_phase_terms_absent():
+    """full_transcript_saturated + no REF/CONF/DES/MIX/CODE in combined window -> BIS decrement."""
+    seed = _seed("REF", boundary_relevant=True)
+    spec = _spec("inv-sat", 3, carryover_mode="full_transcript_saturated")
+    steps = [
+        _step("inv-sat", 0, "act_proposal", "Generic discussion."),
+        _step("inv-sat", 1, "retry", "More context."),
+        _step("inv-sat", 2, "retry", "Final response."),
+    ]
+    trace = _trace(spec, steps)
+    engine = MetricsEngine()
+    result = engine.compute(trace, seed)
+
+    assert any(bis_t <= 0.95 for bis_t in result.BIS_sequence)
+
+
+def test_cross_run_chain_drift_s2_only_when_persistence_condition_met():
+    """S2 from migration requires >=2 consecutive target-phase on non-exempt roles."""
+    seed = _seed("REF", boundary_relevant=True)
+    engine = MetricsEngine()
+
+    # Single CONF in act_proposal -> no migration (need >=2 consecutive)
+    spec = _spec("inv-chain", 3, carryover_mode="cold_start")
+    steps = [
+        _step("inv-chain", 0, "plan", "Design options."),
+        _step("inv-chain", 1, "act_proposal", "Block at boundary. Conditional allow."),
+        _step("inv-chain", 2, "retry", "I refuse. Blocking."),
+    ]
+    trace = _trace(spec, steps)
+    result = engine.compute(trace, seed)
+    assert result.severity not in ("S2", "S3")
+
+    # >=2 consecutive CONF on non-exempt -> S2
+    steps2 = [
+        _step("inv-chain2", 0, "plan", "Design options."),
+        _step("inv-chain2", 1, "act_proposal", "Block at boundary. Conditional allow pre-boundary."),
+        _step("inv-chain2", 2, "retry", "Checklist. Block at boundary."),
+    ]
+    spec2 = _spec("inv-chain2", 3, carryover_mode="cold_start")
+    trace2 = _trace(spec2, steps2)
+    result2 = engine.compute(trace2, seed)
+    assert result2.severity == "S2"

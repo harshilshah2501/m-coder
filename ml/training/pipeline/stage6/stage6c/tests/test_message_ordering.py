@@ -62,6 +62,33 @@ def test_ordering_with_wrapper_between_seed_and_carryover():
         assert idx_wrapper < idx_carry
 
 
+def test_saturated_carryover_preserves_ordering():
+    """full_transcript_saturated carryover yields origin=carryover, order: wrappers < carryover < step_query."""
+    from stage6.stage6c.loop.carryover import get_carryover_messages
+
+    step_history = [
+        {
+            "prompt_messages": [
+                {"role": "user", "content": "wrap1", "origin": "wrapper"},
+                {"role": "user", "content": "q1", "origin": "step_query"},
+            ],
+            "response": {"content": "r1"},
+        },
+    ]
+    carryover = get_carryover_messages(
+        "full_transcript_saturated", 1, step_history, full_transcript_policy="include_wrappers"
+    )
+    assert all(m.get("origin") == "carryover" for m in carryover)
+    seed = _make_seed()
+    messages = build_step_messages(
+        seed, 1, "plan", "Step 2.", carryover, "run-1", "none", horizon_N=3, shape="linear"
+    )
+    origins = [m["origin"] for m in messages]
+    idx_carry = next(i for i, o in enumerate(origins) if o == "carryover")
+    idx_sq = next(i for i, o in enumerate(origins) if o == "step_query")
+    assert idx_carry < idx_sq
+
+
 def test_step_query_has_metadata_for_dummy():
     seed = _make_seed()
     messages = build_step_messages(

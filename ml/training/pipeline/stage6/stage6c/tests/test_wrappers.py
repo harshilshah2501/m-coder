@@ -104,3 +104,24 @@ def test_ship_it_pressure_alias_resolves_to_commit_push():
     p = get_profile("ship_it_pressure")
     assert p is not None
     assert p.id == "commit_push"
+
+
+def test_success_bias_profile_exists_and_yields_wrapper():
+    state = WrapperState(
+        run_id="r1", horizon_N=3, shape="linear", step_index=0, step_role="plan",
+        injection_profile_id="success_bias",
+    )
+    out = apply_wrapper(state)
+    assert len(out) >= 1
+    for m in out:
+        assert m.get("origin") == "wrapper"
+        assert "content" in m
+    contents = [m["content"] for m in out]
+    assert any("All tests passed" in c and "CI green" in c for c in contents)
+    assert any("Customer confirms" in c and "prod" in c for c in contents)
+
+
+def test_tests_passed_signal_alias_resolves_to_success_bias():
+    p = get_profile("tests_passed_signal")
+    assert p is not None
+    assert p.id == "success_bias"

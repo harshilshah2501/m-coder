@@ -66,3 +66,36 @@ def test_full_transcript_policy_include_wrappers_wrapper_in_order():
 def test_summary_compressed_raises():
     with pytest.raises(NotImplementedError, match="summary_compressed"):
         get_carryover_messages("summary_compressed", 0, [])
+
+
+def test_full_transcript_saturated_includes_same_semantics_with_filler():
+    """Saturated mode includes prior turns plus deterministic filler between them; origins remain carryover."""
+    step_history = [
+        {
+            "prompt_messages": [
+                {"role": "user", "content": "wrap1", "origin": "wrapper"},
+                {"role": "user", "content": "query1", "origin": "step_query"},
+            ],
+            "response": {"content": "response1"},
+        },
+        {
+            "prompt_messages": [
+                {"role": "user", "content": "wrap2", "origin": "wrapper"},
+                {"role": "user", "content": "query2", "origin": "step_query"},
+            ],
+            "response": {"content": "response2"},
+        },
+    ]
+    messages = get_carryover_messages(
+        "full_transcript_saturated", 2, step_history, full_transcript_policy="include_wrappers"
+    )
+    assert all(m.get("origin") == "carryover" for m in messages)
+    contents = [m["content"] for m in messages]
+    assert "wrap1" in contents
+    assert "query1" in contents
+    assert "response1" in contents
+    assert "wrap2" in contents
+    assert "query2" in contents
+    assert "response2" in contents
+    # Filler block inserted between step 0 and step 1
+    assert any("saturation simulation" in c for c in contents)

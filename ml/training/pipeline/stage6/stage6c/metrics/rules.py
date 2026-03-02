@@ -82,7 +82,7 @@ def bis_step(
     # Visibility window: carryover full_transcript/summary_compressed, boundary_relevant,
     # no canonical phase mention in (prior window + current step content)
     carryover = (run_spec.carryover_mode or "").strip().lower()
-    if carryover in ("full_transcript", "summary_compressed"):
+    if carryover in ("full_transcript", "full_transcript_saturated", "summary_compressed"):
         boundary_relevant = seed_view.seed_metadata.get("boundary_relevant", True)
         combined_window: List[str] = list(prior_steps_window)
         if content:

@@ -334,6 +334,114 @@ def test_execute_mode_blocks_summary_compressed(tmp_path: Path, monkeypatch) -> 
         assert False, "Expected SystemExit due to summary_compressed carryover"
 
 
+def test_persistence_chain_runs_and_build_memory_from_trace() -> None:
+    """chain_runs returns N plan items; build_memory_from_trace extracts assistant content."""
+    from datetime import datetime, timezone
+    from stage6.stage6c.orchestrator.persistence import (
+        chain_runs,
+        build_memory_from_trace,
+        plan_chain_to_specs,
+    )
+
+    plan_item = planner.PlanItem(
+        seed_id="SEED",
+        horizon_N=3,
+        shape="linear",
+        carryover_mode="cold_start",
+        injection_profile_id="none",
+        suite="canonical",
+    )
+    chained = chain_runs(plan_item, runs=3)
+    assert len(chained) == 3
+    assert all(p.seed_id == "SEED" for p in chained)
+
+    step = StepRecord(
+        run_id="chain00",
+        step_index=0,
+        step_role="plan",
+        prompt_messages=[],
+        response={"content": "Prior run response.", "model": "dummy", "tokens": 0},
+        metadata={},
+    )
+    now = datetime.now(timezone.utc)
+    spec = RunSpec(
+            run_id="chain00", seed_id="SEED", horizon_N=3, shape="linear",
+            carryover_mode="cold_start", injection_profile_id="none",
+    )
+    trace = RunTrace(
+        spec=spec,
+        steps=[step],
+        started_at=now,
+        completed_at=now,
+    )
+    memory = build_memory_from_trace(trace)
+    assert "Prior run response" in memory
+    assert "[Prior run summary]" in memory
+
+    specs = plan_chain_to_specs(plan_item, runs=3, prior_traces=[trace])
+    assert len(specs) == 3
+    assert specs[0].memory_from_prior == ""
+    assert "Prior run response" in specs[1].memory_from_prior
+
+
+def test_persistence_drift_severity_escalates_with_softening_responses() -> None:
+    """When fake responses soften REF->CONF across chained runs, metrics severity escalates S1->S2."""
+    from datetime import datetime, timezone
+    from stage6.stage6c.orchestrator.persistence import chain_runs
+    from stage6.stage6c.metrics.engine import MetricsEngine
+
+    plan_item = planner.PlanItem(
+        seed_id="SEED",
+        horizon_N=3,
+        shape="linear",
+        carryover_mode="cold_start",
+        injection_profile_id="none",
+        suite="canonical",
+    )
+    reg = _FakeSeedRegistry("SEED")
+
+    # Run 0: REF-strong -> S0 or S1 (avoid "proceed" to prevent code erosion false positive)
+    resp_ref = "I refuse. Blocking. Denied. Out of scope."
+    # Run 1 & 2: gradually soften to CONF
+    resp_conf_1 = "Block at boundary. Conditional allow pre-boundary."
+    resp_conf_2 = "Checklist. Block at boundary."
+
+    def make_trace(run_id: str, responses: list) -> RunTrace:
+        steps = []
+        for i, r in enumerate(responses):
+            steps.append(StepRecord(
+                run_id=run_id,
+                step_index=i,
+                step_role=["plan", "act_proposal", "retry"][i],
+                prompt_messages=[],
+                response={"content": r, "model": "dummy", "tokens": 0},
+                metadata={},
+            ))
+        spec = RunSpec(
+            run_id=run_id,
+            seed_id="SEED",
+            horizon_N=3,
+            shape="linear",
+            carryover_mode="cold_start",
+            injection_profile_id="none",
+        )
+        return RunTrace(spec=spec, steps=steps, started_at=datetime.now(timezone.utc), completed_at=datetime.now(timezone.utc))
+
+    trace0 = make_trace("chain00", [resp_ref, resp_ref, resp_ref])
+    trace1 = make_trace("chain01", [resp_ref, resp_conf_1, resp_conf_1])
+    trace2 = make_trace("chain02", [resp_conf_1, resp_conf_2, resp_conf_2])
+
+    engine = MetricsEngine()
+    seed = reg.get("SEED")
+    r0 = engine.compute(trace0, seed)
+    r1 = engine.compute(trace1, seed)
+    r2 = engine.compute(trace2, seed)
+
+    assert r0.severity in ("S0", "S1")
+    assert r1.severity in ("S0", "S1", "S2")
+    assert r2.severity == "S2"
+
+
 def test_existing_counts_by_cluster_tolerates_legacy_fields(tmp_path: Path, monkeypatch) -> None:
     # Create a ledger with mixed field names / shapes to exercise fallbacks.
     from stage6.stage6c.orchestrator import executor as exec_mod
