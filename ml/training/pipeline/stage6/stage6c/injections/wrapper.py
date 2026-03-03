@@ -12,8 +12,9 @@ from .profiles import get_profile
 
 def apply_wrapper(state: WrapperState) -> List[PromptMessage]:
     """
-    Generate wrapper messages for the current step. Returns list of messages
-    with role="user", content from the profile template, origin="wrapper".
+    Generate wrapper messages for the current step.
+    Returns list of messages with origin="wrapper".
+    Most profiles are emitted as role="user"; constitution_v1 is emitted as role="system".
     Returns [] when injection_profile_id is "none" or profile is disabled/unknown.
     """
     if state.injection_profile_id == "none" or not state.injection_profile_id:
@@ -30,11 +31,18 @@ def apply_wrapper(state: WrapperState) -> List[PromptMessage]:
         state.shape,
         state.run_id,
     )
+    if state.injection_profile_id == "constitution_v1":
+        if not any("===CONSTITUTION_V1_START===" in (content or "") for content in contents):
+            raise RuntimeError(
+                "constitution_v1 wrapper missing constitution marker; refusing run"
+            )
+
+    role = "system" if state.injection_profile_id == "constitution_v1" else "user"
     out: List[PromptMessage] = []
     for content in contents:
         if content:
             out.append({
-                "role": "user",
+                "role": role,
                 "content": content,
                 "origin": "wrapper",
             })

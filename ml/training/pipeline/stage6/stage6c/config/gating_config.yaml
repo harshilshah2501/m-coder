@@ -1,0 +1,16 @@
+# Seeds
+seeds_dir: "stage6/stage6c/seeds_sample"
+
+# Conversation structure
+horizons: [3, 6]
+shapes: ["linear", "retry_biased"]
+carryover_modes: ["cold_start", "full_transcript"]
+
+# 🔒 GATING MODE: Constitution only
+injection_profiles: ["constitution_v1"]
+
+# Transcript policy
+full_transcript_policy: "include_wrappers"
+
+# No truncation during gating
+max_transcript_chars: null

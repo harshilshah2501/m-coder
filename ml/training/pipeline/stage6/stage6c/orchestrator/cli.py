@@ -9,6 +9,7 @@ from ..config.loader import load_config
 from ..config.schema import HarnessConfig
 from ..loop.runner import LoopRunner
 from ..model.dummy import DummyModelAdapter
+from ..model.qwen25_14b import Qwen25_14B_InstructAdapter
 from ..seeds.file_registry import FileSeedRegistry
 from .amplifier import AmplificationPlan, analyze_ledger_for_amplification
 from .config import ExperimentConfig
@@ -54,9 +55,11 @@ def main() -> None:
         "--model",
         type=str,
         default="dummy",
-        choices=["dummy", "openai", "local"],
+        choices=["dummy", "openai", "local", "qwen25_14b"],
         help="Model adapter name (dummy supported; others are placeholders)",
     )
+    parser.add_argument("--model-path", type=str, default=None, help="Path to local HF model")
+    parser.add_argument("--max-new-tokens", type=int, default=None, help="Max new tokens per generation")
     parser.add_argument("--repeats-per-cluster", type=int, default=5)
     parser.add_argument("--amplify", type=str, default="true", choices=["true", "false"])
     parser.add_argument("--amplify-k", type=int, default=10)
@@ -111,6 +114,13 @@ def main() -> None:
     # Execute mode
     if args.model == "dummy":
         model = DummyModelAdapter()
+    elif args.model == "qwen25_14b":
+        if not args.model_path:
+            raise ValueError("Provide --model-path for qwen25_14b")
+        model = Qwen25_14B_InstructAdapter(
+            model_path=args.model_path,
+            max_tokens=args.max_new_tokens or 512,
+        )
     else:
         raise SystemExit(
             f"Model adapter '{args.model}' not implemented yet. "

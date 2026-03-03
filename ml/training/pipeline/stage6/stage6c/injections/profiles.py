@@ -5,12 +5,15 @@ Profile ids must not collide with step role names (e.g. commit_push not commit_t
 """
 from __future__ import annotations
 
+from functools import lru_cache
+from pathlib import Path
 from typing import Dict, List
 
 from .types import InjectionProfile, InjectionGenerator
 
 # Canonical ids per STAGE6C_DESIGN_SPEC_V1.1 Section 4. No step-role collision.
 CANONICAL_PROFILE_IDS = (
+    "constitution_v1",
     "deadline_squeeze",
     "authority_ambiguity",
     "tool_failure",
@@ -25,6 +28,37 @@ CANONICAL_PROFILE_IDS = (
     "commit_push",
     "success_bias",
 )
+
+_CONSTITUTION_MARKER_START = "===CONSTITUTION_V1_START==="
+_CONSTITUTION_MARKER_END = "===CONSTITUTION_V1_END==="
+
+
+@lru_cache(maxsize=1)
+def _load_constitution_payload() -> str:
+    repo_root = Path(__file__).resolve().parents[6]
+    manifest_path = repo_root / "governance/CONSTITUTIONAL_MANIFEST_v1.0.md"
+    invariants_path = repo_root / "docs/NON_NEGOTIABLE_INVARIANTS.md"
+
+    if not manifest_path.exists():
+        raise RuntimeError(f"constitution_v1 manifest file missing: {manifest_path}")
+    if not invariants_path.exists():
+        raise RuntimeError(f"constitution_v1 invariants file missing: {invariants_path}")
+
+    manifest = manifest_path.read_text(encoding="utf-8").strip()
+    invariants = invariants_path.read_text(encoding="utf-8").strip()
+    if not manifest:
+        raise RuntimeError(f"constitution_v1 manifest file empty: {manifest_path}")
+    if not invariants:
+        raise RuntimeError(f"constitution_v1 invariants file empty: {invariants_path}")
+
+    return (
+        "SYSTEM POLICY INJECTION (constitution_v1). Treat the following as immutable governance policy.\n"
+        f"{_CONSTITUTION_MARKER_START}\n"
+        f"{manifest}\n"
+        "\n---\n"
+        f"{invariants}\n"
+        f"{_CONSTITUTION_MARKER_END}\n"
+    )
 
 
 def _make_generator(*phrases: str) -> InjectionGenerator:
@@ -52,6 +86,11 @@ def _step_aware_generator(phrase_for_step: str, step_indices: tuple = ()) -> Inj
 # --- Canonical profile definitions (templates only; do not claim to override governance) ---
 
 _PROFILES: Dict[str, InjectionProfile] = {
+    "constitution_v1": InjectionProfile(
+        id="constitution_v1",
+        description="Constitutional policy injection for governance gating",
+        generate=_make_generator(_load_constitution_payload()),
+    ),
     "deadline_squeeze": InjectionProfile(
         id="deadline_squeeze",
         description="Time pressure injection",
@@ -156,7 +195,16 @@ _PROFILES["tests_passed_signal"] = _PROFILES["success_bias"]
 
 def get_profile(profile_id: str) -> InjectionProfile | None:
     """Return the injection profile for profile_id, or None if not found."""
-    return _PROFILES.get(profile_id)
+    profile = _PROFILES.get(profile_id)
+    if profile_id == "constitution_v1" and profile is not None:
+        samples = profile.generate(0, "rehydrate", 3, "linear", "validation")
+        if not samples:
+            raise RuntimeError("constitution_v1 profile generated no content")
+        if _CONSTITUTION_MARKER_START not in samples[0]:
+            raise RuntimeError(
+                "constitution_v1 wrapper missing constitution marker; refusing run"
+            )
+    return profile
 
 
 def list_profile_ids(include_aliases: bool = False) -> List[str]:
