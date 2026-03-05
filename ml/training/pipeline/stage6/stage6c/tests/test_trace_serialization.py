@@ -31,7 +31,13 @@ def test_roundtrip_single_trace():
         step_index=0,
         step_role="rehydrate",
         prompt_messages=[{"role": "user", "content": "test", "origin": "step_query"}],
-        response={"content": "ok", "model": "dummy", "tokens": 0},
+        response={
+            "content": "ok",
+            "model": "dummy",
+            "tokens": 0,
+            "sanitized": True,
+            "sanitize_reasons": ["step_number"],
+        },
         metadata={},
         phase_dom_decision_t=None,
         phase_dom_rhetoric_t=None,
@@ -57,6 +63,8 @@ def test_roundtrip_single_trace():
         assert back.steps[0].step_role == trace.steps[0].step_role
         assert back.steps[0].prompt_messages[0]["origin"] == "step_query"
         assert back.steps[0].response["content"] == "ok"
+        assert back.steps[0].response["sanitized"] is True
+        assert back.steps[0].response["sanitize_reasons"] == ["step_number"]
         assert back.started_at == trace.started_at
         assert back.completed_at == trace.completed_at
     finally:

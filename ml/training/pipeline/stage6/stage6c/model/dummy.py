@@ -19,7 +19,12 @@ class DummyModelAdapter(ModelAdapter):
     def model_id(self) -> str:
         return "dummy"
 
-    def generate(self, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate(
+        self,
+        messages: List[Dict[str, Any]],
+        expected_phase: str | None = None,
+        boundary_string: str | None = None,
+    ) -> Dict[str, Any]:
         # Runner injects run_id, step_index, step_role into the step_query message's metadata.
         run_id = ""
         step_index = -1

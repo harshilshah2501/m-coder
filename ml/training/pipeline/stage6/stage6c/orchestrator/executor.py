@@ -102,6 +102,56 @@ def _compute_digests(plan: List[PlanItem]) -> tuple[str, str]:
     return config_digest, seeds_digest
 
 
+def _collect_ref_sanitizer_telemetry(trace, seed_view) -> tuple[bool, list[str], str | None, str]:
+    applied = False
+    reasons: set[str] = set()
+    gate_path = "disabled"
+    expected_phase_seen: str | None = seed_view.expected_phase()
+
+    for step in trace.steps:
+        response = step.response or {}
+        if bool(response.get("sanitized")):
+            applied = True
+        response_reasons = response.get("sanitize_reasons")
+        if isinstance(response_reasons, list):
+            for reason in response_reasons:
+                if isinstance(reason, str) and reason:
+                    reasons.add(reason)
+        response_gate = response.get("ref_gate_path")
+        if isinstance(response_gate, str) and response_gate:
+            gate_path = response_gate
+        response_expected = response.get("expected_phase_seen")
+        if isinstance(response_expected, str) and response_expected:
+            expected_phase_seen = response_expected
+
+    return applied, sorted(reasons), expected_phase_seen, gate_path
+
+
+def _collect_conf_sanitizer_telemetry(trace, seed_view) -> tuple[bool, list[str], str | None, str]:
+    applied = False
+    reasons: set[str] = set()
+    gate_path = "disabled"
+    expected_phase_seen: str | None = seed_view.expected_phase()
+
+    for step in trace.steps:
+        response = step.response or {}
+        if bool(response.get("conf_sanitizer_applied")):
+            applied = True
+        response_reasons = response.get("conf_sanitize_reasons")
+        if isinstance(response_reasons, list):
+            for reason in response_reasons:
+                if isinstance(reason, str) and reason:
+                    reasons.add(reason)
+        response_gate = response.get("conf_gate_path")
+        if isinstance(response_gate, str) and response_gate:
+            gate_path = response_gate
+        response_expected = response.get("expected_phase_seen_conf") or response.get("expected_phase_seen")
+        if isinstance(response_expected, str) and response_expected:
+            expected_phase_seen = response_expected
+
+    return applied, sorted(reasons), expected_phase_seen, gate_path
+
+
 def execute_plan(
     plan: List[PlanItem],
     seed_registry: SeedRegistry,
@@ -190,6 +240,22 @@ def execute_plan(
             else:
                 row["adapter_params"] = {}
         row["adapter_retries"] = 0
+        sanitizer_applied, sanitize_reasons, expected_phase_seen, gate_path = _collect_ref_sanitizer_telemetry(
+            trace,
+            seed_view,
+        )
+        row["ref_sanitizer_applied"] = sanitizer_applied
+        row["ref_sanitize_reasons"] = sanitize_reasons
+        row["expected_phase_seen"] = expected_phase_seen
+        row["ref_gate_path"] = gate_path
+        conf_applied, conf_reasons, conf_expected_phase_seen, conf_gate_path = _collect_conf_sanitizer_telemetry(
+            trace,
+            seed_view,
+        )
+        row["conf_sanitizer_applied"] = conf_applied
+        row["conf_sanitize_reasons"] = conf_reasons
+        row["conf_gate_path"] = conf_gate_path
+        row["conf_expected_phase_seen"] = conf_expected_phase_seen
 
         append_run_trace_jsonl(trace, traces_path)
         append_ledger_row(row, ledger_path)

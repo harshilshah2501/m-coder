@@ -1,7 +1,11 @@
 """
 LoopRunner: builds messages in order governance → seed → wrappers(empty) → carryover → step_query,
 calls model adapter, records StepRecord per step.
+
+Verified fix: apply REF/CONF sanitizer BEFORE downstream rules classification.
+Adds StepRecord.metadata telemetry for sanitizer application.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -13,7 +17,13 @@ from ..model.adapter import ModelAdapter
 from ..injections.wrapper import apply_wrapper
 from ..injections.types import WrapperState
 from .roles import get_step_role_schedule
-from .carryover import get_carryover_messages, CarryoverMode
+from .carryover import get_carryover_messages
+from ..model.ref_sanitizer import (
+    ref_sanitize,
+    conf_sanitize,
+    should_apply_ref_sanitizer,
+    should_apply_conf_sanitizer,
+)
 
 
 def build_step_messages(
@@ -27,8 +37,8 @@ def build_step_messages(
     horizon_N: int,
     shape: str,
 ) -> List[PromptMessage]:
-    """
-    Build the ordered message list for one step.
+    """Build the ordered message list for one step.
+
     Order: governance → seed → wrappers → carryover → step_query.
     Wrappers are empty when injection_profile_id == "none". Each message has "origin" for verification.
     """
@@ -65,7 +75,15 @@ def build_step_messages(
         "role": "user",
         "content": step_query_text,
         "origin": "step_query",
-        "metadata": {"run_id": run_id, "step_index": step_index, "step_role": step_role},
+        "metadata": {
+            "run_id": run_id,
+            "step_index": step_index,
+            "step_role": step_role,
+            "seed_id": seed.seed_id,
+            "injection_profile_id": injection_profile_id,
+            "expected_phase": seed.expected_phase(),
+            "boundary_string": seed.boundary_string(),
+        },
     }
     messages.append(step_query_msg)
 
@@ -78,8 +96,7 @@ def step_query_text_for_role(step_role: str, step_index: int) -> str:
 
 
 class LoopRunner:
-    """
-    Runs one loop: load seed, iterate steps with correct message ordering and carryover,
+    """Runs one loop: load seed, iterate steps with correct message ordering and carryover,
     record StepRecords, return RunTrace.
     """
 
@@ -113,8 +130,11 @@ class LoopRunner:
         step_history: List[dict] = []
         started_at = datetime.now(timezone.utc)
 
+        expected_phase = seed.expected_phase()
+
         for step_index in range(spec.horizon_N):
             step_role = schedule[step_index]
+
             carryover_msgs = get_carryover_messages(
                 spec.carryover_mode,  # type: ignore[arg-type]
                 step_index,
@@ -122,7 +142,9 @@ class LoopRunner:
                 self._max_transcript_chars,
                 full_transcript_policy=self._full_transcript_policy,
             )
+
             step_query_text = step_query_text_for_role(step_role, step_index)
+
             prompt_messages = build_step_messages(
                 seed,
                 step_index,
@@ -134,17 +156,60 @@ class LoopRunner:
                 spec.horizon_N,
                 spec.shape,
             )
-            response = self._model.generate(prompt_messages)
+
+            response = self._model.generate(
+                prompt_messages,
+                expected_phase=expected_phase,
+                boundary_string=seed.boundary_string(),
+            )
+
+            # --- Apply phase sanitizer BEFORE downstream rules classification ---
+            if not isinstance(response, dict):
+                response = {"content": ""}
+
+            content = (response.get("content") or "")
+
+            apply_ref, _, _ = should_apply_ref_sanitizer(
+                prompt_messages,
+                expected_phase,
+                fail_closed=True,
+            )
+            apply_conf, _, _ = should_apply_conf_sanitizer(
+                prompt_messages,
+                expected_phase,
+            )
+
+            applied = "none"
+            reasons: List[str] = []
+
+            if apply_ref:
+                content, _, reasons = ref_sanitize(content)
+                applied = "ref"
+            elif apply_conf:
+                content, _, reasons = conf_sanitize(content)
+                applied = "conf"
+
+            response["content"] = content
+
+            record_metadata = {
+                "expected_phase_seen": expected_phase,
+                "ref_gate_path": "runner_pre_rules",
+                "ref_sanitizer_applied": (applied == "ref"),
+                "conf_sanitizer_applied": (applied == "conf"),
+                "sanitizer_reasons": reasons,
+            }
+
             record = StepRecord(
                 run_id=spec.run_id,
                 step_index=step_index,
                 step_role=step_role,
                 prompt_messages=prompt_messages,
                 response=response,
-                metadata={},
+                metadata=record_metadata,
                 phase_dom_decision_t=None,
                 phase_dom_rhetoric_t=None,
             )
+
             steps.append(record)
             step_history.append({"prompt_messages": prompt_messages, "response": response})
 

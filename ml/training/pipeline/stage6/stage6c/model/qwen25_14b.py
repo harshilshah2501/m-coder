@@ -14,6 +14,12 @@ else:
     _lora_import_error = None
 
 from .adapter import AdapterConfig, ModelAdapter
+from .ref_sanitizer import (
+    conf_sanitize,
+    ref_sanitize,
+    should_apply_conf_sanitizer,
+    should_apply_ref_sanitizer,
+)
 
 
 class Qwen25_14B_InstructAdapter(ModelAdapter):
@@ -27,8 +33,9 @@ class Qwen25_14B_InstructAdapter(ModelAdapter):
         self._lora_request = None
         self._lora_dirname = ""
         self._tokenizer = None
+        self._debug_enabled = (os.environ.get("STAGE6C_DEBUG") or "").strip() == "1"
+        self._ref_fail_closed = (os.environ.get("STAGE6C_REF_FAIL_CLOSED") or "").strip() == "1"
 
-        debug_enabled = (os.environ.get("STAGE6C_DEBUG") or "").strip() == "1"
         eager_enabled = (os.environ.get("STAGE6C_EAGER") or "").strip() == "1"
         lora_path_raw = (os.environ.get("STAGE6C_LORA_PATH") or "").strip()
 
@@ -66,7 +73,7 @@ class Qwen25_14B_InstructAdapter(ModelAdapter):
                 enforce_eager=eager_enabled,
             )
 
-        if debug_enabled:
+        if self._debug_enabled:
             if self._lora_request is not None:
                 print(f"[STAGE6C][QWEN25] lora_enabled=1 path={lora_path_raw}")
             else:
@@ -102,7 +109,12 @@ class Qwen25_14B_InstructAdapter(ModelAdapter):
             max_tokens=self._max_tokens,
         )
 
-    def generate(self, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate(
+        self,
+        messages: List[Dict[str, Any]],
+        expected_phase: str | None = None,
+        boundary_string: str | None = None,
+    ) -> Dict[str, Any]:
         tokenizer = self._tokenizer
 
         if tokenizer is not None and hasattr(tokenizer, "apply_chat_template"):
@@ -122,7 +134,7 @@ class Qwen25_14B_InstructAdapter(ModelAdapter):
             )
 
         # TEMP DEBUG: print prompt once (disable after confirmation)
-        if not getattr(self, "_printed_prompt", False):
+        if self._debug_enabled and not getattr(self, "_printed_prompt", False):
             self._printed_prompt = True
             print("=== STAGE6C_PROMPT_DEBUG_START ===")
             print(prompt[:2500])
@@ -141,9 +153,62 @@ class Qwen25_14B_InstructAdapter(ModelAdapter):
             raise RuntimeError("vLLM returned empty output")
 
         result = outputs[0].outputs[0]
+        content = result.text.strip()
+
+        apply_sanitizer, gate_path, expected_phase_seen = should_apply_ref_sanitizer(
+            messages,
+            expected_phase=expected_phase,
+            fail_closed=self._ref_fail_closed,
+        )
+        ref_sanitize_reasons: List[str] = []
+        ref_sanitized = False
+        if apply_sanitizer:
+            content, ref_sanitized, ref_sanitize_reasons = ref_sanitize(content)
+            if self._debug_enabled and ref_sanitized:
+                print(
+                    "[STAGE6C][QWEN25][REF_SANITIZER] "
+                    f"triggered=1 gate={gate_path} expected_phase={expected_phase_seen or 'missing'} "
+                    f"reasons={','.join(ref_sanitize_reasons)}"
+                )
+
+        apply_conf_sanitizer, conf_gate_path, expected_phase_seen_conf = should_apply_conf_sanitizer(
+            messages,
+            expected_phase=expected_phase,
+        )
+        conf_sanitize_reasons: List[str] = []
+        conf_sanitized = False
+        if apply_conf_sanitizer:
+            content, conf_sanitized, conf_sanitize_reasons = conf_sanitize(content)
+            if self._debug_enabled and conf_sanitized:
+                print(
+                    "[STAGE6C][QWEN25][CONF_SANITIZER] "
+                    f"triggered=1 gate={conf_gate_path} expected_phase={expected_phase_seen_conf or 'missing'} "
+                    f"reasons={','.join(conf_sanitize_reasons)}"
+                )
+
+        phase_for_boundary = expected_phase_seen_conf or expected_phase_seen
+        boundary = (boundary_string or "").strip()
+        if phase_for_boundary in ("REF", "CONF") and boundary:
+            if boundary not in content:
+                content = f"{boundary}\n{content}"
+                if self._debug_enabled:
+                    print(
+                        "[STAGE6C][QWEN25][BOUNDARY_PREFIX] "
+                        f"applied=1 phase={phase_for_boundary}"
+                    )
 
         return {
-            "content": result.text.strip(),
+            "content": content,
             "model": self.model_id(),
             "tokens": len(result.token_ids),
+            "sanitized": ref_sanitized or conf_sanitized,
+            "sanitize_reasons": sorted(set(ref_sanitize_reasons + conf_sanitize_reasons)),
+            "expected_phase_seen": expected_phase_seen,
+            "ref_gate_path": gate_path,
+            "ref_sanitizer_applied": ref_sanitized,
+            "ref_sanitize_reasons": ref_sanitize_reasons,
+            "conf_sanitizer_applied": conf_sanitized,
+            "conf_sanitize_reasons": conf_sanitize_reasons,
+            "conf_gate_path": conf_gate_path,
+            "expected_phase_seen_conf": expected_phase_seen_conf,
         }

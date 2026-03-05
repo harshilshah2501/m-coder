@@ -11,6 +11,7 @@ from stage6.stage6c.trace.types import RunSpec, StepRecord, RunTrace
 from stage6.stage6c.metrics.ledger import read_ledger_rows
 from stage6.stage6c.config.schema import HarnessConfig
 from stage6.stage6c.model.dummy import DummyModelAdapter
+from stage6.stage6c.model.adapter import ModelAdapter, AdapterConfig
 
 
 def _make_cfg() -> ExperimentConfig:
@@ -185,7 +186,7 @@ class _FakeSeedRegistry(SeedRegistry):
             governance_system_messages=["gov"],
             seed_system_messages=["seed"],
             seed_user_messages=["user"],
-            seed_metadata={"expected_phase": "REF"},
+            seed_metadata={"expected_phase": "REF", "boundary_string": "BLOCK AT BOUNDARY"},
         )
 
     def get(self, seed_id: str):
@@ -239,10 +240,83 @@ def test_execute_plan_writes_files(tmp_path: Path) -> None:
     assert rows[0]["seed_id"] == "SEED"
     assert rows[0]["model_id"] == "dummy"
     assert "adapter_params" in rows[0]
+    assert "ref_sanitizer_applied" in rows[0]
+    assert rows[0]["ref_sanitizer_applied"] is False
+    assert "ref_sanitize_reasons" in rows[0]
+    assert rows[0]["ref_sanitize_reasons"] == []
+    assert rows[0]["expected_phase_seen"] == "REF"
+    assert rows[0]["ref_gate_path"] == "disabled"
+    assert "conf_sanitizer_applied" in rows[0]
+    assert rows[0]["conf_sanitizer_applied"] is False
+    assert "conf_sanitize_reasons" in rows[0]
+    assert rows[0]["conf_sanitize_reasons"] == []
+    assert rows[0]["conf_gate_path"] == "disabled"
     ap = rows[0]["adapter_params"]
     assert "temperature" in ap
     assert "top_p" in ap
     assert "max_tokens" in ap
+
+
+class _SpyModelAdapter(ModelAdapter):
+    def __init__(self) -> None:
+        self.expected_phases: list[str | None] = []
+        self.boundaries: list[str | None] = []
+
+    def model_id(self) -> str:
+        return "spy"
+
+    def get_config(self) -> AdapterConfig:
+        return AdapterConfig()
+
+    def generate(self, messages, expected_phase=None, boundary_string=None):
+        self.expected_phases.append(expected_phase)
+        self.boundaries.append(boundary_string)
+        return {
+            "content": "I need more context before confirming.",
+            "model": "spy",
+            "tokens": 0,
+            "ref_sanitizer_applied": False,
+            "ref_sanitize_reasons": [],
+            "ref_gate_path": "disabled",
+            "conf_sanitizer_applied": False,
+            "conf_sanitize_reasons": [],
+            "conf_gate_path": "disabled",
+            "expected_phase_seen": expected_phase,
+            "expected_phase_seen_conf": expected_phase,
+        }
+
+
+def test_orchestrator_wires_expected_phase_into_adapter(tmp_path: Path) -> None:
+    from stage6.stage6c.loop.runner import LoopRunner
+
+    plan_item = planner.PlanItem(
+        seed_id="SEED",
+        horizon_N=3,
+        shape="linear",
+        carryover_mode="cold_start",
+        injection_profile_id="none",
+        suite="canonical",
+    )
+    reg = _FakeSeedRegistry("SEED")
+    spy = _SpyModelAdapter()
+    runner = LoopRunner(reg, spy)
+    out_dir = tmp_path / "out_spy"
+
+    summary = executor.execute_plan(
+        [plan_item],
+        reg,
+        runner,
+        model_adapter=spy,
+        out_dir=out_dir,
+        resume=False,
+    )
+
+    assert summary.runs_executed == 1
+    assert len(spy.expected_phases) == 3
+    assert all(p == "REF" for p in spy.expected_phases)
+    assert len(spy.boundaries) == 3
+    assert all(b == "BLOCK AT BOUNDARY" for b in spy.boundaries)
+
 
 
 def test_execute_plan_resume_idempotent(tmp_path: Path) -> None:

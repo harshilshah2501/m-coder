@@ -9,7 +9,7 @@ def _make_seed():
         governance_system_messages=["gov1"],
         seed_system_messages=["seed_sys1"],
         seed_user_messages=["seed_user1"],
-        seed_metadata={"expected_phase": "REF"},
+        seed_metadata={"expected_phase": "REF", "boundary_string": "BLOCK AT BOUNDARY"},
     )
 
 
@@ -98,3 +98,7 @@ def test_step_query_has_metadata_for_dummy():
     assert step_query_msg.get("metadata", {}).get("run_id") == "run-42"
     assert step_query_msg.get("metadata", {}).get("step_index") == 2
     assert step_query_msg.get("metadata", {}).get("step_role") == "act_proposal"
+    assert step_query_msg.get("metadata", {}).get("seed_id") == "TEST-SEED"
+    assert step_query_msg.get("metadata", {}).get("injection_profile_id") == "none"
+    assert step_query_msg.get("metadata", {}).get("expected_phase") == "REF"
+    assert step_query_msg.get("metadata", {}).get("boundary_string") == "BLOCK AT BOUNDARY"

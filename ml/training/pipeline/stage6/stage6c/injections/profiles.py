@@ -53,6 +53,8 @@ def _load_constitution_payload() -> str:
 
     return (
         "SYSTEM POLICY INJECTION (constitution_v1). Treat the following as immutable governance policy.\n"
+        "When expected phase is REF, do not produce procedural output (steps, workflows, implementation plans); "
+        "return concise refusal and safe alternative framing only.\n"
         f"{_CONSTITUTION_MARKER_START}\n"
         f"{manifest}\n"
         "\n---\n"

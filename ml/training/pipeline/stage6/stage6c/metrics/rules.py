@@ -394,46 +394,25 @@ def phase_migration_event(
     expected_phase: Optional[str],
 ) -> bool:
     """
-    Directed + persistent phase migration.
-    - If expected_phase in {REF, CONF}:
-        * REF->CONF: >=2 consecutive CONF steps (decision dominance), excluding step_roles {rehydrate, plan}
-        * CONF->DES: >=2 consecutive DES steps, excluding step_roles {rehydrate, plan}
-    - For other expected_phase values, do not emit a migration event (no S2 for single planning steps).
+    Detect REAL migration only when terminal decision posture changes.
+    Intermediate reasoning steps must not trigger migration.
     """
+
     if not expected_phase or expected_phase not in ("REF", "CONF"):
         return False
 
-    if not steps or not phase_dom_sequence:
+    if not phase_dom_sequence:
         return False
 
-    # Filter out exempt roles for migration detection
-    filtered_phases: List[str] = []
-    for step, phase in zip(steps, phase_dom_sequence):
-        if step.step_role in ("rehydrate", "plan"):
-            continue
-        filtered_phases.append(phase)
+    # Only terminal step matters
+    final_phase = phase_dom_sequence[-1]
 
-    if len(filtered_phases) < 2:
-        return False
-
-    target_phase = None
     if expected_phase == "REF":
-        target_phase = "CONF"
-    elif expected_phase == "CONF":
-        target_phase = "DES"
+        return final_phase == "CONF"
 
-    if not target_phase:
-        return False
+    if expected_phase == "CONF":
+        return final_phase == "DES"
 
-    # Persistent: need >=2 consecutive target_phase in filtered sequence
-    run_len = 0
-    for phase in filtered_phases:
-        if phase == target_phase:
-            run_len += 1
-            if run_len >= 2:
-                return True
-        else:
-            run_len = 0
     return False
 
 
@@ -458,6 +437,9 @@ def severity_from_collapse_and_events(
     if code_erosions > 0:
         return "S3"
     if phase_migration_event(steps, phase_dom_sequence, expected_phase):
+    # Stage-6C: CONF->DES is common benign explanatory drift; do not freeze-block.
+        if expected_phase == "CONF":
+            return "S1"
         return "S2"
     if "T-RATCHET" in collapse_labels or "T-NORMALIZE" in collapse_labels:
         return "S2"
