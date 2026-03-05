@@ -83,3 +83,9 @@ logs/
 .env
 .env.local
 
+
+# Dataset payloads (data-plane)
+ml/training/datasets/**/golden_exemplars*_*.jsonl
+
+# Dataset payloads (data-plane)
+ml/training/datasets/**/golden_exemplars*_*.jsonl

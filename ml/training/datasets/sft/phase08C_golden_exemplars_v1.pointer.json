@@ -1,0 +1,10 @@
+{
+  "dataset_id": "phase08C_golden_exemplars_v1",
+  "artifact_dir": "/home/harshil/Harshil-PoCs/m-coder_artifacts/datasets/sft/phase08C_golden_exemplars_v1",
+  "files": [
+    "golden_exemplars_v1_frozen.jsonl",
+    "golden_exemplars_v1_train_frozen.jsonl",
+    "golden_exemplars_v1_val_frozen.jsonl",
+    "SHA256SUMS.txt"
+  ]
+}
