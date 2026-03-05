@@ -18,6 +18,7 @@ stage6c-smoke-run = "stage6.stage6c.cli.main:main"
 stage6c-report = "stage6.stage6c.reporting.cli:main"
 stage6c-run-suite = "stage6.stage6c.orchestrator.cli:main"
 stage6c-freeze = "stage6.stage6c.freeze.cli:main"
+artifacts = "stage6.stage6c.artifacts.cli:main"
 
 [tool.setuptools.packages.find]
 where = [".."]
