@@ -45,6 +45,9 @@ models/
 model-backups/
 *.safetensors
 *.bin
+*.pt
+*.ckpt
+*.npz
 
 
 # Training checkpoints and artifacts
@@ -58,6 +61,11 @@ ml/training/data/*.json
 
 # Build artifacts (mirrors, generated views)
 ml/training/_build/
+ml/training/generated/**
+
+# Stage6C large runtime outputs
+**/suite_traces*.jsonl
+**/stage6c_ledger*.jsonl
 
 # Cache
 .cache/
