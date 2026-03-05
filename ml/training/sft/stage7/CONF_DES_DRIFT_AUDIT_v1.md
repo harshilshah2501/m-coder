@@ -12,8 +12,8 @@
 
 - `golden_exemplars_v1.jsonl` SHA256: `0f57db5ae487bd59aed7b004ed21c29b5ea2cf09038ee482f5731f0f0b770b00`
 - `conf_to_des_drift.jsonl` SHA256: `fe645c9bb0e2619e77fe0de6acc1529d5c5b3a1aa240dc04ad8dcdbddba85dab`
-- `conf_drift_corrections.jsonl` SHA256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
-- `golden_exemplars_v1_conf_patch1.jsonl` SHA256: `0f57db5ae487bd59aed7b004ed21c29b5ea2cf09038ee482f5731f0f0b770b00`
+- `conf_drift_corrections.jsonl` SHA256: `15732eaca33147efdde5d2fd0d8889eaeec0930ff275464b2bd351ad93378c96`
+- `golden_exemplars_v1_conf_patch1.jsonl` SHA256: `38fbd10dc61012eaf9d9d2c11aad034efc37bb6cf840a89f4fe6d9de640adc1d`
 
 ## 3. Drift Metrics
 
@@ -23,11 +23,13 @@
 
 ## 4. Training & Evaluation Commands
 
-### Stage-8 training
+### Stage-8 training (patched dataset)
 
 ```bash
 cd /home/harshil/Harshil-PoCs/m-coder
-python -m ml.training.pipeline.stage08.train_stage08D
+python3 -m ml.training.pipeline.stage08.train_stage08D \
+  --dataset-file golden_exemplars_v1_conf_patch1.jsonl \
+  --freeze-cert ml/training/pipeline/stage08/FREEZE_CERTIFICATE_STAGE8_CONF_PATCH1.json
 ```
 
 ### Stage-6C evaluation run (using patched adapter)

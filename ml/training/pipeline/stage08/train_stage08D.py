@@ -18,7 +18,7 @@ try:
     from ._path_utils import get_canonical_sft_dataset_dir
 except ImportError:
     from _path_utils import get_canonical_sft_dataset_dir
-MAX_LENGTH = 4096
+MAX_LENGTH = 3072
 VALID_PHASES = {"REF", "CONF", "DES", "MIX", "CODE"}
 LABEL_PAD_ID = -100
 
@@ -432,9 +432,10 @@ def main():
     from datasets import Dataset
 
     globals()["torch"] = torch
-    torch.backends.cuda.enable_flash_sdp(False)
-    torch.backends.cuda.enable_mem_efficient_sdp(False)
-    torch.backends.cuda.enable_math_sdp(True)
+    # Prefer memory-efficient attention backends
+    torch.backends.cuda.enable_flash_sdp(True)
+    torch.backends.cuda.enable_mem_efficient_sdp(True)
+    torch.backends.cuda.enable_math_sdp(True)  # keep as fallback
 
     class TrainEvalLogCallback(TrainerCallback):
         def __init__(self, log_dir):
@@ -466,6 +467,7 @@ def main():
     print(f"Split: {len(train_records)} train, {len(val_records)} val")
     
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, trust_remote_code=True)
+
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
@@ -504,6 +506,8 @@ def main():
         device_map=device_map,
         trust_remote_code=True,
     )
+    # Enable gradient checkpointing before PEFT wrapping
+    model.gradient_checkpointing_enable()
     
     peft_config = LoraConfig(
         r=config["lora_rank"],
@@ -541,8 +545,21 @@ def main():
         load_best_model_at_end=False,  # Stage-08D: No early stop, train full 2 epochs
         bf16=use_bf16,
         fp16=use_fp16,
-        gradient_checkpointing=False,
+        gradient_checkpointing=True,
+        gradient_accumulation_steps=config.get("gradient_accumulation_steps", 1),
         report_to=[],  # No wandb/tensorboard
+    )
+    # Log effective SDP and training configuration once
+    print(
+        f"SDP backends: flash={torch.backends.cuda.flash_sdp_enabled()} "
+        f"mem_eff={torch.backends.cuda.mem_efficient_sdp_enabled()} "
+        f"math={torch.backends.cuda.math_sdp_enabled()}"
+    )
+    print(
+        f"TrainArgs: bs={training_args.per_device_train_batch_size} "
+        f"grad_accum={training_args.gradient_accumulation_steps} "
+        f"grad_ckpt={training_args.gradient_checkpointing} "
+        f"max_len={MAX_LENGTH}"
     )
     
     callbacks = [TrainEvalLogCallback(log_dir)]
