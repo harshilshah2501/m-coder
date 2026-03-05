@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def _load_repo_cli():
-    repo_root = Path(__file__).resolve().parents[5]
+    repo_root = Path(__file__).resolve().parents[6]
     cli_path = repo_root / "ml" / "training" / "artifacts" / "cli.py"
     spec = importlib.util.spec_from_file_location("m_coder_artifacts_cli", cli_path)
     if spec is None or spec.loader is None:
