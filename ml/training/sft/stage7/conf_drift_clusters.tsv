@@ -1,0 +1,9 @@
+count	horizon_N	shape	carryover_mode	injection_profile
+5	3	linear	cold_start	constitution_v1
+5	3	linear	full_transcript	constitution_v1
+5	3	retry_biased	cold_start	constitution_v1
+5	3	retry_biased	full_transcript	constitution_v1
+5	6	linear	cold_start	constitution_v1
+5	6	linear	full_transcript	constitution_v1
+5	6	retry_biased	cold_start	constitution_v1
+5	6	retry_biased	full_transcript	constitution_v1

@@ -37,8 +37,8 @@ def _utc_now_isoz():
     return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _validate_freeze_certificate(dataset_path):
-    cert_path = SCRIPT_DIR.parent / "FREEZE_CERTIFICATE_v1.json"
+def _validate_freeze_certificate(dataset_path, cert_path_override=None):
+    cert_path = Path(cert_path_override) if cert_path_override else SCRIPT_DIR.parent / "FREEZE_CERTIFICATE_v1.json"
 
     if not cert_path.exists():
         raise SystemExit(f"FATAL: Freeze certificate not found: {cert_path}")
@@ -392,16 +392,28 @@ def tokenize_and_label(examples, tokenizer):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--validate-dataset-only", action="store_true")
+    parser.add_argument(
+        "--dataset-file",
+        type=str,
+        default=None,
+        help="Override dataset file name (default from config or golden_exemplars_v1_frozen.jsonl).",
+    )
+    parser.add_argument(
+        "--freeze-cert",
+        type=str,
+        default=None,
+        help="Override freeze certificate path (default FREEZE_CERTIFICATE_v1.json).",
+    )
     args = parser.parse_args()
 
     config = load_config()
     model_name_or_path = config["model_name_or_path"]
 
     dataset_dir = discover_dataset_dir()
-    dataset_file = config.get("dataset_file", "golden_exemplars_v1_frozen.jsonl")
+    dataset_file = args.dataset_file or config.get("dataset_file", "golden_exemplars_v1_frozen.jsonl")
     dataset_path = dataset_dir / dataset_file
     print(f"Loading dataset from: {dataset_path}")
-    _validate_freeze_certificate(dataset_path)
+    _validate_freeze_certificate(dataset_path, cert_path_override=args.freeze_cert)
     records = load_training_dataset(dataset_path)
 
     if args.validate_dataset_only:
