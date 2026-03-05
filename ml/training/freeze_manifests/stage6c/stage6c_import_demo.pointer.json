@@ -1,0 +1,28 @@
+{
+  "artifact_backend": {
+    "bucket": null,
+    "kind": "local",
+    "prefix": null,
+    "root_uri": "file:///home/harshil/Harshil-PoCs/m-coder_artifacts"
+  },
+  "files": [
+    {
+      "artifact_relpath": "stage6c/suites/stage6c_import_demo/stage6c_ledger.jsonl",
+      "logical_name": "stage6c_ledger"
+    },
+    {
+      "artifact_relpath": "stage6c/suites/stage6c_import_demo/suite_traces.jsonl",
+      "logical_name": "suite_traces"
+    },
+    {
+      "artifact_relpath": "stage7/freeze/stage6c_import_demo_freeze/golden_exemplars_v1.jsonl",
+      "logical_name": "stage7_golden_exemplars"
+    },
+    {
+      "artifact_relpath": "stage7/freeze/stage6c_import_demo_freeze/freeze_manifest.json",
+      "logical_name": "stage7_freeze_manifest"
+    }
+  ],
+  "manifest": "ml/training/freeze_manifests/stage6c/stage6c_import_demo.manifest.json",
+  "suite_id": "stage6c_import_demo"
+}
