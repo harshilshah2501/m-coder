@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
@@ -163,32 +163,108 @@ def cmd_import_stage6c_run(args: argparse.Namespace) -> int:
         raise SystemExit(f"run dir not found: {run_dir}")
 
     suite_id = run_dir.name
-    ledger_path = run_dir / "stage6c_ledger.jsonl"
-    traces_path = run_dir / "suite_traces.jsonl"
-    rows = _load_ledger_rows(ledger_path)
-
     artifact_root = resolve_artifact_root()
+    suite_dest = artifact_root / "stage6c" / "suites" / suite_id
+    suite_dest.mkdir(parents=True, exist_ok=True)
+
+    def move_file(src: Path, dst: Path) -> None:
+        if not src.exists():
+            return
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if dst.exists():
+            dst.unlink()
+        shutil.move(str(src), str(dst))
+
+    def move_dir(src: Path, dst: Path) -> None:
+        if not src.exists() or not src.is_dir():
+            return
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.move(str(src), str(dst))
+
+    ledger_src = run_dir / "stage6c_ledger.jsonl"
+    traces_src = run_dir / "suite_traces.jsonl"
+    plots_src = run_dir / "plots"
+    ledger_dst = suite_dest / "stage6c_ledger.jsonl"
+    traces_dst = suite_dest / "suite_traces.jsonl"
+    plots_dst = suite_dest / "plots"
+
+    move_file(ledger_src, ledger_dst)
+    move_file(traces_src, traces_dst)
+    move_dir(plots_src, plots_dst)
+
+    final_dir = run_dir / "final"
+    freeze_manifest_src = final_dir / "freeze_manifest.json"
+    if not freeze_manifest_src.exists():
+        alt = final_dir / "stage7_freeze_manifest.json"
+        if alt.exists():
+            freeze_manifest_src = alt
+    golden_src = final_dir / "golden_exemplars_v1.jsonl"
+    freeze_id = f"{suite_id}_freeze"
+    freeze_dest = artifact_root / "stage7" / "freeze" / freeze_id
+    freeze_dest.mkdir(parents=True, exist_ok=True)
+    freeze_manifest_dst = freeze_dest / "freeze_manifest.json"
+    golden_dst = freeze_dest / "golden_exemplars_v1.jsonl"
+
+    move_file(freeze_manifest_src, freeze_manifest_dst)
+    move_file(golden_src, golden_dst)
+
+    rows = _load_ledger_rows(ledger_dst)
     files: List[Dict[str, Any]] = []
-    if ledger_path.exists():
+    if ledger_dst.exists():
         files.append(
             {
                 "logical_name": "stage6c_ledger",
                 "artifact_relpath": f"stage6c/suites/{suite_id}/stage6c_ledger.jsonl",
                 "repo_pointer": f"ml/training/freeze_manifests/stage6c/{suite_id}.pointer.json",
-                "size_bytes": ledger_path.stat().st_size,
-                "sha256": sha256_file(ledger_path),
+                "size_bytes": ledger_dst.stat().st_size,
+                "sha256": sha256_file(ledger_dst),
                 "media_type": "application/x-ndjson",
             }
         )
-    if traces_path.exists():
+    if traces_dst.exists():
         files.append(
             {
                 "logical_name": "suite_traces",
                 "artifact_relpath": f"stage6c/suites/{suite_id}/suite_traces.jsonl",
                 "repo_pointer": f"ml/training/freeze_manifests/stage6c/{suite_id}.pointer.json",
-                "size_bytes": traces_path.stat().st_size,
-                "sha256": sha256_file(traces_path),
+                "size_bytes": traces_dst.stat().st_size,
+                "sha256": sha256_file(traces_dst),
                 "media_type": "application/x-ndjson",
+            }
+        )
+    if plots_dst.exists():
+        files.append(
+            {
+                "logical_name": "plots_dir",
+                "artifact_relpath": f"stage6c/suites/{suite_id}/plots",
+                "repo_pointer": f"ml/training/freeze_manifests/stage6c/{suite_id}.pointer.json",
+                "size_bytes": sum(p.stat().st_size for p in plots_dst.rglob("*") if p.is_file()),
+                "sha256": None,
+                "media_type": "inode/directory",
+            }
+        )
+    if golden_dst.exists():
+        files.append(
+            {
+                "logical_name": "stage7_golden_exemplars",
+                "artifact_relpath": f"stage7/freeze/{freeze_id}/golden_exemplars_v1.jsonl",
+                "repo_pointer": f"ml/training/freeze_manifests/stage6c/{suite_id}.pointer.json",
+                "size_bytes": golden_dst.stat().st_size,
+                "sha256": sha256_file(golden_dst),
+                "media_type": "application/x-ndjson",
+            }
+        )
+    if freeze_manifest_dst.exists():
+        files.append(
+            {
+                "logical_name": "stage7_freeze_manifest",
+                "artifact_relpath": f"stage7/freeze/{freeze_id}/freeze_manifest.json",
+                "repo_pointer": f"ml/training/freeze_manifests/stage6c/{suite_id}.pointer.json",
+                "size_bytes": freeze_manifest_dst.stat().st_size,
+                "sha256": sha256_file(freeze_manifest_dst),
+                "media_type": "application/json",
             }
         )
 
@@ -197,13 +273,15 @@ def cmd_import_stage6c_run(args: argparse.Namespace) -> int:
         rows=rows,
         files=files,
         artifact_root=artifact_root,
-        notes="Manifest generated from run directory; relocation status handled by import command.",
+        notes="Artifacts relocated to store; repo retains manifest, summary, and pointer only.",
     )
-    if manifest["expected_counts"]["trace_rows"] == 0 and traces_path.exists():
-        manifest["expected_counts"]["trace_rows"] = _line_count(traces_path)
+    if manifest["expected_counts"]["trace_rows"] == 0 and traces_dst.exists():
+        manifest["expected_counts"]["trace_rows"] = _line_count(traces_dst)
     manifest_path, pointer_path, summary_path = _write_control_plane_outputs(suite_id, manifest)
 
     print(f"suite_id={suite_id}")
+    print(f"artifact_suite_dir={suite_dest}")
+    print(f"artifact_freeze_dir={freeze_dest}")
     print(f"manifest={manifest_path}")
     print(f"pointer={pointer_path}")
     print(f"summary={summary_path}")
@@ -237,8 +315,12 @@ def cmd_verify_manifest(args: argparse.Namespace) -> int:
         if not p.exists():
             failures.append(f"missing file: {p}")
             continue
-        size = p.stat().st_size
-        sha = sha256_file(p)
+        if p.is_dir():
+            size = sum(fp.stat().st_size for fp in p.rglob("*") if fp.is_file())
+            sha = None
+        else:
+            size = p.stat().st_size
+            sha = sha256_file(p)
         if expected_size is not None and int(expected_size) != size:
             failures.append(f"size mismatch for {p}: expected={expected_size} got={size}")
         if expected_sha and expected_sha != sha:
@@ -272,6 +354,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and len(argv) > 0 and argv[0] == "artifacts":
+        argv = argv[1:]
     parser = _build_parser()
     args = parser.parse_args(argv)
     return int(args.func(args))
