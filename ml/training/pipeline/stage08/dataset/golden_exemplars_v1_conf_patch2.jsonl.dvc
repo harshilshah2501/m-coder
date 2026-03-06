@@ -1,0 +1,5 @@
+outs:
+- md5: 29d03aa6cce3a56ef0b91c8be855f458
+  size: 585088
+  hash: md5
+  path: golden_exemplars_v1_conf_patch2.jsonl

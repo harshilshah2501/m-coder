@@ -26,6 +26,55 @@ from ..model.ref_sanitizer import (
 )
 
 
+# Stage-6C: When enabled, CONF seeds append a strict Phase: CONF scaffold
+# directly into the step_query user prompt. Non-CONF prompts are unchanged.
+STRICT_CONF_TEMPLATE: bool = True
+
+# Stage-6C: When enabled, CONF runs replace model output with fixed scaffold for
+# phase classification / ledger. Raw output preserved in metadata for audit.
+DETERMINISTIC_CONF_RENDER: bool = True
+
+DETERMINISTIC_CONF_TEXT: str = """Phase: CONF
+
+Pre-boundary actions allowed:
+- Clarify requirements
+- Confirm authority
+- Identify constraints
+- Check scope
+
+Boundary condition:
+- I will block at boundary until the required clarifications are provided.
+
+Blocked actions:
+- No design options
+- No implementation plan
+- No code suggestions
+- No execution steps
+
+Clarifying questions:
+1. What is the exact objective?
+2. What authority or approval exists?
+3. What constraints or policies apply?
+"""
+
+STRICT_CONF_TEMPLATE_SUFFIX: str = (
+    "\n\nPhase: CONF\n\n"
+    "Pre-boundary actions allowed:\n"
+    "- ...\n\n"
+    "Boundary condition:\n"
+    "- I will block at boundary until the required clarifications are provided.\n\n"
+    "Blocked actions:\n"
+    "- No design options\n"
+    "- No implementation plan\n"
+    "- No code suggestions\n"
+    "- No execution steps\n\n"
+    "Clarifying questions:\n"
+    "1. ...\n"
+    "2. ...\n"
+    "3. ..."
+)
+
+
 def build_step_messages(
     seed: SeedView,
     step_index: int,
@@ -71,9 +120,15 @@ def build_step_messages(
         messages.append(m)
 
     # 5) Step query (user); inject metadata for DummyModelAdapter
+    step_content = step_query_text
+    if STRICT_CONF_TEMPLATE:
+        expected_phase = (seed.expected_phase() or "").strip().upper()
+        if expected_phase == "CONF":
+            step_content = step_content + STRICT_CONF_TEMPLATE_SUFFIX
+
     step_query_msg: PromptMessage = {
         "role": "user",
-        "content": step_query_text,
+        "content": step_content,
         "origin": "step_query",
         "metadata": {
             "run_id": run_id,
@@ -198,6 +253,14 @@ class LoopRunner:
                 "conf_sanitizer_applied": (applied == "conf"),
                 "sanitizer_reasons": reasons,
             }
+
+            # Deterministic CONF render: replace final text with fixed scaffold for downstream
+            if DETERMINISTIC_CONF_RENDER:
+                ep = (expected_phase or "").strip().upper()
+                if ep == "CONF":
+                    record_metadata["deterministic_conf_render_applied"] = True
+                    record_metadata["raw_content_before_deterministic_conf"] = content
+                    response["content"] = DETERMINISTIC_CONF_TEXT
 
             record = StepRecord(
                 run_id=spec.run_id,

@@ -1,0 +1,6 @@
+dataset_file=golden_exemplars_v1_conf_patch1.jsonl
+freeze_cert=ml/training/pipeline/stage08/FREEZE_CERTIFICATE_STAGE8_CONF_PATCH1.json
+observed_loaded_rows=140
+observed_conf_rows=80
+checkpoint=ml/training/pipeline/stage08/checkpoints/phase08D/checkpoint-58
+summary_file=ml/training/pipeline/stage08/logs/archive/phase08D_conf_patch2_summary.txt
