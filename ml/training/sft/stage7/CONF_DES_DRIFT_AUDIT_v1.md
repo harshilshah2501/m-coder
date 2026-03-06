@@ -12,8 +12,8 @@
 
 - `golden_exemplars_v1.jsonl` SHA256: `0f57db5ae487bd59aed7b004ed21c29b5ea2cf09038ee482f5731f0f0b770b00`
 - `conf_to_des_drift.jsonl` SHA256: `fe645c9bb0e2619e77fe0de6acc1529d5c5b3a1aa240dc04ad8dcdbddba85dab`
-- `conf_drift_corrections.jsonl` SHA256: `15732eaca33147efdde5d2fd0d8889eaeec0930ff275464b2bd351ad93378c96`
-- `golden_exemplars_v1_conf_patch1.jsonl` SHA256: `38fbd10dc61012eaf9d9d2c11aad034efc37bb6cf840a89f4fe6d9de640adc1d`
+- `conf_drift_corrections.jsonl` SHA256: `b1f0d5078ccf782baf78c5f7fd2afc0e2fd180fbb613d23755a6e04e02920e88`
+- `golden_exemplars_v1_conf_patch1.jsonl` SHA256: `614c971f0741a30fd43a47c9eebcfb2684acf500414d9b1268e6c111ae5b5354`
 
 ## 3. Drift Metrics
 

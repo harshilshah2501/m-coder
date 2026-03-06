@@ -1,4 +1,4 @@
 {
-  "dataset_sha256": "6655bddebd803f992366b5022476ff6470fff7202dc483bb244cf602026ba5ed",
+  "dataset_sha256": "614c971f0741a30fd43a47c9eebcfb2684acf500414d9b1268e6c111ae5b5354",
   "frozen_dataset_path": "ml/training/pipeline/stage08/dataset/golden_exemplars_v1_conf_patch1.jsonl"
 }
