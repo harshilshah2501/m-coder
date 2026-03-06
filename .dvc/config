@@ -1,0 +1,7 @@
+[core]
+    remote = localstore
+['remote "localstore"']
+    url = /home/harshil/Harshil-PoCs/m-coder_artifacts/dvc
+['remote "r2"']
+    url = s3://motadataed/dvc
+    endpointurl = https://<ACCOUNT_ID>.r2.cloudflarestorage.com

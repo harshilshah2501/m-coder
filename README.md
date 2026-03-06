@@ -34,6 +34,21 @@ The m-coder repository follows a 4-layer structure (Governance, ML Compilation, 
 
 ---
 
+## Model/Dataset artifact storage (DVC + Local Disk)
+
+Prototype/evaluation stage: Git stores only source, config, and DVC pointer files. Large artifacts are tracked by **DVC** and stored on **local disk**. No cloud credentials required. R2 deferred for later.
+
+- **[docs/DVC_ARTIFACTS_README.md](docs/DVC_ARTIFACTS_README.md)** — Setup and end-to-end usage
+- **[ml/artifacts/REGISTRY.md](ml/artifacts/REGISTRY.md)** — Artifact contracts and naming
+
+```bash
+./scripts/setup_dvc_local.sh
+make dvc-pull-checkpoints RUN_ID=<run_id>
+make dvc-pull-dataset FREEZE_ID=<freeze_id>
+```
+
+---
+
 # H100 Backup System
 
 Automated backup system for H100 server data using Unison sync.

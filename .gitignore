@@ -49,6 +49,15 @@ model-backups/
 *.ckpt
 *.npz
 
+# DVC cache and temp (do not commit)
+.dvc/cache/
+.dvc/tmp/
+.dvc/state*
+
+# DVC-tracked artifact dirs: only .dvc pointer files and .gitkeep are committed
+ml/artifacts/checkpoints/*/*
+ml/artifacts/datasets/*/*
+ml/artifacts/exports/*/*
 
 # Training checkpoints and artifacts
 ml/training/checkpoints/
