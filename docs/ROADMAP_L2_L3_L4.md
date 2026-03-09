@@ -34,14 +34,18 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 
 | Milestone | Entry | Exit | Failure |
 |-----------|-------|------|---------|
-| **M3.1 Plan object spec** | M2.7 complete; frozen adapter | Plan object schema defined; authority/irreversibility hooks specified | Spec incomplete; hooks undefined |
-| **M3.2 Authority validator implementation** | M3.1 complete | Authority checks enforce REF/ownership; no bypass paths | Bypass paths; REF not enforced |
-| **M3.3 Irreversibility detector** | M3.2 complete | Irreversibility detector blocks at boundaries; Phase-05 CODE semantics honored | Boundary bypass; detector silent on crossing |
-| **M3.4 IDE plugin integration** | M3.3 complete | Plan/Judge/Authority integrated in IDE flow; tool calls gated | Integration incomplete; gates bypassed |
-| **M3.5 Runtime ledger emission** | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields; inconsistent format |
-| **M3.6 Shadow mode validation** | M3.5 complete | Shadow mode runs without user impact; ledger captures behavior; no REF violations | REF violations in shadow; ledger gaps |
+| **M3.0 Plan-Gate Runtime** | M2.7 complete; frozen adapter | Plan object and decision contracts wired into a running runtime service; IDE/CLI/CI can call it; schemas plan.v0.1 and decision_response.v0.1 enforced | Plan/decision contracts incomplete; gate unreachable or fail-open; schema or rule validation missing |
+| **M3.1 Runtime Governor** | M3.0 complete | Central Runtime Governor owns loop control and REF/CONF/CODE routing; all decisions pass governance invariants; no uncontrolled recursion | Any path bypasses governor; REF/CONF routing can be skipped; fail-open behavior under gate failure |
+| **M3.2 Task State Store** | M3.1 complete | Deterministic per-task state store in place (task ids, stages, checkpoints); runtime behavior replayable from task state + ledger | Task state incomplete or lossy; behavior not reconstructable; divergence between state store and ledger |
+| **M3.3 Deterministic Agent Loop** | M3.2 complete | Runtime-owned propose/evaluate/execute loop implemented; loop termination conditions explicit; no model-controlled recursion or self-triggering | Agent loop can diverge or hang; model can trigger its own calls; termination depends solely on model text ending |
+| **M3.4 Repository Context Engine** | M3.3 complete | Runtime-owned context retrieval for repositories/code/RAG; model only sees curated bundles; context is versioned and reproducible | Model can self-fetch context or tools; non-deterministic context; context cannot be tied back to source revision |
+| **M3.5 Execution Sandbox** | M3.4 complete | Isolated sandbox executor for tools/tests/commands under runtime control; irreversible actions guarded by authority/boundary checks and ledgered | Irreversible effects can occur outside sandbox or without ledger emission; sandbox not clearly separated from live environments |
+| **M3.6 Model Worker Interface** | M3.5 complete | Narrow, versioned interface between runtime and model worker with bounded prompts, budgets, and structured outputs; model cannot mutate task state or environment directly | Model can affect control flow or environment directly; unbounded prompts; ad-hoc free-form responses without contracts |
+| **M3.7 IDE Plugin Bridge** | M3.6 complete | IDE plugins route developer actions through Plan-Gate Runtime and Runtime Governor; plugin honors runtime decisions (block/allow/bound) | IDE actions can bypass the governor; inconsistent enforcement between IDE and non-IDE flows |
+| **M3.8 Ledger Emission** | M3.7 complete | Ledger_row.v0.1 emitted for every runtime decision; links to plan_hash; end-to-end decisions observable by Layer-4 | Any runtime path executes without a ledger row; missing fields; inability to join runtime behavior to plans |
+| **M3.9 Shadow Mode Validation** | M3.8 complete | Full runtime-governed agent loop runs in shadow mode; REF/CONF invariants hold; coverage across key workflows; deviations surfaced for governance review | Shadow mode missing or partial; REF/CONF violations; coverage gaps; no systematic comparison between current and governed behavior |
 
-**M3.4 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.4 / M3.5:** CI Backstop Gate (`runtime/ci_gate/`) and Plan-Gate Service (`runtime/plan_gate_service/`) implement the local gate and HTTP endpoint. **M3.6 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch. **M4.1 Drift baseline:** [observation/baseline/](../observation/baseline/README.md) — Shadow Baseline Runner.
+**M3.7 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.0 / M3.8:** CI Backstop Gate (`runtime/ci_gate/`) and Plan-Gate Service (`runtime/plan_gate_service/`) implement the local gate and HTTP endpoint and emit ledger rows. **M3.9 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch. **M4.1 Drift baseline:** [observation/baseline/](../observation/baseline/README.md) — Shadow Baseline Runner.
 
 ### What Cannot Ship Without REF Enforcement
 
@@ -97,6 +101,10 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 - Shadow mode and ledger emission
 - Observation drift baseline and GREG automation
 
+### CONF→DES Issue Closed (Patch-2)
+
+The CONF→DES drift issue is **closed**. Multiple SFT patch attempts did not collapse drift; the cure was **deterministic CONF runtime rendering** in Stage-6C. Result: severity 80 S0, CONF→DES 0, S2/S3 0. Lesson: Some policy phases (REF, CONF) belong in runtime governance, not in unconstrained generation. Stage-6C now enforces CONF as a governed runtime phase.
+
 ### Critical Risk Zone
 
 - **Pre-freeze gap:** Dataset not yet frozen; any change to bases/variants invalidates downstream. Mutation harness must pass before freeze.
@@ -109,9 +117,10 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 2. M2.5 Deterministic dataset freeze
 3. M2.6 SFT training
 4. M2.7 Post-SFT mutation revalidation
-5. M3.1 Plan object spec
-6. M3.2–M3.6 Runtime implementation and shadow mode
-7. M4.1–M4.5 Observation baseline, tracking, GREG automation
+5. M3.0–M3.3 Plan-Gate Runtime, Runtime Governor, Task State Store, Deterministic Agent Loop
+6. M3.4–M3.8 Repository Context Engine, Execution Sandbox, Model Worker Interface, IDE Plugin Bridge, Ledger Emission
+7. M3.9 Shadow Mode Validation
+8. M4.1–M4.5 Observation baseline, tracking, GREG automation
 
 ---
 
@@ -135,11 +144,16 @@ flowchart TB
   end
 
   subgraph L3 [Layer-3: Runtime]
-    SM[Shadow Mode]
-    RV[REF Validator]
-    IV[Irreversibility Detector]
-    LE[Ledger Emission]
-    RL[Runtime Live]
+    PGRT[Plan-Gate Runtime]
+    RG[Runtime Governor]
+    TS[Task State Store]
+    DAL[Deterministic Agent Loop]
+    RCE[Repository Context Engine]
+    SBX[Execution Sandbox]
+    MW[Model Worker Interface]
+    IDE[IDE Plugin Bridge]
+    LED[Ledger Emission]
+    SHD[Shadow Mode Validation]
   end
 
   subgraph L4 [Layer-4: Observation]
@@ -151,9 +165,9 @@ flowchart TB
 
   G --> B
   B --> V --> ST --> MUT --> FZ --> SFT --> PSFT
-  PSFT --> SM
-  SM --> RV --> IV --> LE --> RL
-  RL --> DB --> CV --> LR --> GA
+  PSFT --> PGRT
+  PGRT --> RG --> TS --> DAL --> RCE --> MW --> SBX --> IDE --> LED --> SHD
+  SHD --> DB --> CV --> LR --> GA
   GA -->|Evidence| GREG
   GREG -->|Pass or Revise| G
 ```

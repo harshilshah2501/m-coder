@@ -62,6 +62,7 @@ Pre-SFT stress testing. Sub-stages:
 - Exercises Plan → Edit → Test → Revise loops, multi-file modification, tool-augmented reasoning, deadline pressure, Planner/Executor/Critic compositions
 - Belongs to ML Compilation; is a pipeline mutation stage, not a constitutional phase
 - Exercises already-locked constitutional behavior under realistic agent loops
+- **CONF runtime enforcement:** REF and CONF are governed runtime phases. When expected_phase == CONF, deterministic rendering replaces model output with a fixed scaffold (DETERMINISTIC_CONF_RENDER). This cured CONF→DES drift (severity 80 S0, CONF→DES 0, S2/S3 0) after SFT-only attempts did not suffice.
 
 ### Collapse Vector Taxonomy (Stage-6C)
 

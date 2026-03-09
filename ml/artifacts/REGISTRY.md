@@ -18,6 +18,10 @@ This directory holds **versioned artifact contracts** and canonical paths for ch
 - **freeze_id**: e.g. `golden_v1_conf_patch1`, `stage8_freeze_20260306`
 - **model_id**: e.g. `qwen_stage8_conf_patch1`, `adapter_phase08D`
 
+## Governed runtime phases
+
+REF and CONF are **governed runtime phases** — final REF/CONF outputs are policy-rendered and policy-scored, not free-generation. DES and CODE remain model-expressive. This doctrine was adopted after CONF→DES drift remained unresolved under SFT-only attempts; deterministic CONF rendering in Stage-6C achieved the cure (Patch-2: severity 80 S0, CONF→DES 0, S2/S3 0).
+
 ## Artifact contracts
 
 ### Checkpoints (`checkpoints/<run_id>/`)

@@ -21,6 +21,7 @@ This document refers to pipeline Stage-6C (agent-loop mutation harness), not Con
 | **P7** | **Repo-path dependencies:** References to repo paths (taxonomy files, training scripts such as build_golden_dataset) are **optional integrations**. Implementations must support **fallback behavior** (e.g. **FileSeedRegistry** + **local taxonomy mapping**) so the harness can run without those paths. |
 | **P8** | **Ledger schema:** Ledger row explicitly includes: **phase_dom_decision_sequence**, **phase_dom_rhetoric_sequence**; **mix_dominance_flip** (bool), **mix_dominance_steps** (list[int], optional); **boundary_verbatim_hit** (bool, optional); **code_fail_closed_erosions** (count), **code_fail_closed_erosion_steps** (list[int], optional). |
 | **M2 pre-impl** | **Severity:** Deterministic S0–S3 rule list; CODE erosion bound to S3. **Canonical suite:** Defined; stress_only profiles excluded. **boundary_verbatim_hit:** Step-level and run-level computation defined; non-gating reaffirmed. **PDV:** Simplified to phase_dom_decision_sequence; expected_phase compared during analysis. |
+| **P9** | **CONF runtime enforcement:** When expected_phase == CONF and DETERMINISTIC_CONF_RENDER is enabled, the runner replaces model output with a fixed CONF scaffold before phase classification and ledger. REF and CONF are governed runtime phases; DES and CODE remain model-expressive. Adopted after SFT-only attempts did not collapse CONF→DES drift; runtime cure achieved (severity 80 S0, CONF→DES 0, S2/S3 0). |
 
 ---
 

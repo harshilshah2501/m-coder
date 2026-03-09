@@ -13,16 +13,17 @@ Single entry point for the m-coder 4-layer specification. Canonical specs live i
 - **Collapse taxonomy definitions:** REF_SOFTENING, CONF_TO_DES, BOUNDARY_ALIASING, MIX_SINGLE_PRESSURE, etc.; their meanings and propagation rules
 - **Freeze determinism and lineage rules:** R-L1 through R-L5; stable JSON canonicalization; boundary_phrase_hash and boundary_set_hash computation
 
-Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md) and is referenced by all layers. No layer may reinterpret it.
+Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md) and is referenced by all layers. No layer may reinterpret it. The runtime-governed agent architecture described below implements this doctrine at Layer-3; it does not modify or relax it.
 
 ---
 
 ## Table of Contents
 
 1. [Layer Overview](#layer-overview)
-2. [Canonical Specifications](#canonical-specifications)
-3. [Supporting Documents](#supporting-documents)
-4. [Quick Links](#quick-links)
+2. [Runtime-Governed Agent Architecture (Layer-3)](#runtime-governed-agent-architecture-layer-3)
+3. [Canonical Specifications](#canonical-specifications)
+4. [Supporting Documents](#supporting-documents)
+5. [Quick Links](#quick-links)
 
 ---
 
@@ -38,6 +39,27 @@ Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CON
 
 
 **Axis separation:** Constitutional phases (REF, CONF, DES, MIX, CODE, REACH) are **orthogonal** to pipeline stages (Stage-1 through Stage-8). Stage-6 (mutation harness) ≠ Constitutional Phase-6 (REACH). See [PHASE_ALIGNMENT_TABLE_V0_1.md](PHASE_ALIGNMENT_TABLE_V0_1.md).
+
+---
+
+## Runtime-Governed Agent Architecture (Layer-3)
+
+The Layer-3 runtime turns constitutional doctrine into hard enforcement for day-to-day developer workflows: **the model proposes, the runtime decides**. The model is treated as a bounded cognitive worker that can suggest plans, edits, or explanations, while the runtime owns all control over execution and irreversible effects.
+
+- **Runtime-owned responsibilities**
+  - **Control flow:** The Runtime Governor decides when to call the model, when to enter tools/sandboxes, and when to terminate the loop.
+  - **State transitions:** A Task State Store maintains deterministic task state (plan received, authority checked, boundary evaluated, sandboxed, completed, ledgered) so behavior is replayable from logs.
+  - **Authority enforcement:** Authority validators must block illegitimate or under-approved actions; REF dominance is enforced mechanically and cannot be overridden by model output.
+  - **Boundary enforcement:** Irreversibility detectors and boundary rules prevent crossing irreversible boundaries without explicit, governed approval; boundary phrases remain character-for-character invariant.
+  - **Completion criteria:** Only the runtime may declare a task complete (for example, when task state reaches `done` under governance rules); model text termination alone never defines completion.
+
+- **Model responsibilities (bounded worker)**
+  - Propose structured plans, code edits, tests, and explanations under a narrow **Model Worker Interface**.
+  - Operate only on curated, runtime-owned context from the **Repository Context Engine** (the model never self-fetches arbitrary context or tools).
+  - Respect token/step budgets and output schemas defined by Layer-3 contracts.
+  - Never execute tools, mutate repositories, or change task state directly; all such effects are mediated by the runtime and logged via ledger emission.
+
+Key components of the runtime-governed agent architecture are elaborated in [RUNTIME/RUNTIME_AGENT_ARCHITECTURE.md](RUNTIME/RUNTIME_AGENT_ARCHITECTURE.md): Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, and Model Worker Interface.
 
 ---
 

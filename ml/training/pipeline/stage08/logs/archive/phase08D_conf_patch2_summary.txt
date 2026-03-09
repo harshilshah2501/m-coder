@@ -21,3 +21,6 @@ Per-phase val row counts:
 
 Runtime errors: None
 Confirmation: Training completed successfully
+
+---
+Runtime cure note: CONF→DES drift was not cured by SFT alone. Deterministic CONF rendering (Stage-6C DETERMINISTIC_CONF_RENDER) achieved the cure: severity 80 S0, CONF→DES 0, S2/S3 0.

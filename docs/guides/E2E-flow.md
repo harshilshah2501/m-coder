@@ -23,6 +23,38 @@ Their failure modes
 No execution mechanics here.
 Only doctrine.
 
+---
+
+## Runtime-Governed Agent Architecture (Narrative)
+
+At runtime, the system behaves as a governed agent loop: **the model proposes, the runtime decides.** The runtime is the only component that owns control flow, state transitions, authority and boundary enforcement, and completion criteria; the model is a bounded worker that provides proposals over runtime-owned context.
+
+High-level end-to-end flow:
+
+```mermaid
+flowchart TB
+  Dev[Developer Action]
+  IDE[IDE Plugin]
+  PG[Plan Gate]
+  RG[Runtime Governor]
+  TS[Task State Store]
+  DAL[Deterministic Agent Loop]
+  RCE[Repository Context Engine]
+  MW[Model Worker]
+  SBX[Sandbox Executor]
+  RD[Runtime Decision]
+  LED[Ledger Emission]
+  OBS[Observation Layer]
+
+  Dev --> IDE --> PG --> RG --> TS --> DAL --> RCE --> MW --> SBX --> RD --> LED --> OBS
+```
+
+- **Runtime Governor:** Orchestrates the loop, deciding when to query the model, when to invoke tools/tests in the sandbox, and when to terminate. REF and CONF remain governed runtime phases; the governor enforces their dominance and fail-closed behavior.
+- **Task State Store:** Tracks per-task state (plan received, authority checked, boundary evaluated, proposals made, sandbox runs, finalized decision) so that the agent loop is deterministic and replayable from state + ledger.
+- **Repository Context Engine:** Owns all code/repo/RAG context retrieval; the model only ever sees curated context bundles handed to it by the runtime.
+- **Model Worker:** A bounded model interface that produces structured proposals (plans, diffs, explanations) but never executes tools or mutates state directly.
+- **Execution Sandbox:** Runs tools, tests, and commands under runtime control; any irreversible operation must pass authority + boundary checks and is always ledgered before Layer-4 observes it.
+
 
 
 

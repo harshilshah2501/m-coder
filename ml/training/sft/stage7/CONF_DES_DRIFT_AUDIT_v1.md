@@ -79,3 +79,7 @@ jq -c 'select(.expected_phase == "CONF" and .final_phase == "DES")' \
 - **Drift**: CONF→DES drift count decreases relative to the original run (target `0`).
 - **Provenance**: Original freeze artifacts and `golden_exemplars_v1.jsonl` remain immutable;
   all changes flow through the `_conf_patch1` dataset + Stage-8 certificate and adapter alias.
+
+## 7. Runtime Cure (Patch-2)
+
+Multiple SFT patch attempts (Patch-1, Patch-2 with 40 contrastive exemplars) did not collapse CONF→DES drift. The decisive cure was **deterministic CONF runtime rendering** in Stage-6C (`DETERMINISTIC_CONF_RENDER`): when expected_phase == CONF, the final text used for phase classification and ledger is policy-rendered, not model-generated. After the runtime cure: severity 80 S0, CONF→DES 0, S2/S3 0. **Lesson:** The CONF→DES drift problem was ultimately a runtime contract failure, not primarily a model-capability failure. REF and CONF are governed runtime phases; DES and CODE remain model-expressive.

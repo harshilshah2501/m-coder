@@ -1,0 +1,16 @@
+{
+  "layer": "Layer-2",
+  "status": "PASS",
+  "dataset_path": "/home/harshil/Harshil-PoCs/m-coder/ml/training/pipeline/stage08/dataset/golden_exemplars_v1_conf_patch2.jsonl",
+  "dataset_sha256": "d20647ede405b002539fbcb1661a2c4ef6cd0fb9ea89268572fc7f180fbed9f8",
+  "freeze_certificate_valid": true,
+  "checkpoint_path": "/home/harshil/Harshil-PoCs/m-coder/ml/artifacts/checkpoints/phase08D_conf_patch2/checkpoint-58",
+  "checkpoint_valid": true,
+  "release_metadata_valid": true,
+  "conf_drift_result": {
+    "S0": 80,
+    "conf_to_des": 0,
+    "s2_s3": 0
+  },
+  "errors": []
+}

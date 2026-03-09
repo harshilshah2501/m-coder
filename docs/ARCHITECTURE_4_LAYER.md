@@ -21,7 +21,7 @@ This document provides **structural clarity** for the m-coder repository layout.
 |-------|-----------|------|
 | 1 | `governance/` | Constitution, phases 01–06, GREG ratification, golden exemplar doctrine |
 | 2 | `ml/` | Compilation bases, variants, mutation harness, dataset compiler, freeze artifacts, SFT |
-| 3 | `runtime/` | Enforcement stack; integrations; Phase-05 CODE semantics |
+| 3 | `runtime/` | Enforcement stack; Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface; Phase-05 CODE semantics |
 | 4 | `observation/` | Drift probes; collapse vector tracking; ledger reconciliation; GREG audit evidence |
 
 ## Allowed vs Forbidden per Layer
@@ -42,13 +42,20 @@ This document provides **structural clarity** for the m-coder repository layout.
 
 ### Layer-3: runtime/
 
-**Allowed:** Plan gate, judge gate, authority validator, irreversibility detector, execution control, ledger emission, RAG/orchestrator integrations.
+**Allowed:** Plan gate, judge gate, authority validator, irreversibility detector, execution control, ledger emission, RAG/orchestrator integrations, **Runtime Governor**, **Task State Store**, **Deterministic Agent Loop**, **Repository Context Engine**, **Execution Sandbox**, **Model Worker Interface**.
 
 **Forbidden:** Redefining doctrine; training pipelines; dataset compilation.
 
 **Plan and ledger schemas:** See [docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md](RUNTIME_PLAN_AND_LEDGER_V0_1.md) for v0.1 schema spec.
 
 **IDE integration:** See [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) for plugin plan-gate contracts.
+
+#### Runtime-Governed Agent Architecture
+
+- **Runtime owns loop control and enforcement:** A central Runtime Governor drives the Deterministic Agent Loop, deciding when to call tools, when to query the model, and when to stop. REF and CONF remain governed runtime phases; the governor enforces their routing and fail-closed behavior.
+- **Task State Store as source of truth:** Task state (including authority check status, boundary evaluation, model proposals, sandbox runs, and completion) is persisted so that behavior is deterministic and replayable from plans and ledger rows.
+- **Model as bounded worker:** Through the Model Worker Interface the model provides structured proposals only (plans, diffs, explanations) over runtime-owned context from the Repository Context Engine; it never owns control flow, state transitions, or execution.
+- **Execution Sandbox for side effects:** All external actions (tests, tools, commands) run inside an Execution Sandbox owned by the runtime; irreversible effects are guarded by authority and boundary checks and are always ledgered for Layer-4 observation.
 
 ### Layer-4: observation/
 
@@ -64,12 +71,14 @@ Two orthogonal axes must not be conflated:
 
 These phases define **how judgment must behave** (Layer-1 semantics):
 
-- Phase-1 (REF) — Legitimacy refusal
-- Phase-2 (CONF) — Bounded allowance
-- Phase-3 (DES) — Design reasoning only
+- Phase-1 (REF) — Legitimacy refusal (governed runtime phase)
+- Phase-2 (CONF) — Bounded allowance (governed runtime phase)
+- Phase-3 (DES) — Design reasoning only (model-expressive)
 - Phase-4 (MIX) — Collision arbitration
-- Phase-5 (CODE) — Enforcement encoding
+- Phase-5 (CODE) — Enforcement encoding (model-expressive)
 - Phase-6 (REACH) — Endurance proof (governance-level)
+
+**Governed runtime phases:** REF and CONF are policy-rendered and policy-scored at runtime. The model may assist, but final REF/CONF output is governed. DES and CODE remain model-expressive. This doctrine was adopted after CONF→DES drift remained unresolved under SFT-only attempts; deterministic CONF rendering in Stage-6C achieved the cure.
 
 ### Pipeline Stage Axis (Operational)
 

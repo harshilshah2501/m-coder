@@ -32,6 +32,8 @@ The m-coder repository follows a 4-layer structure (Governance, ML Compilation, 
 - **[docs/architecture/Golden_Exemplars_Architecture_Map.md](docs/architecture/Golden_Exemplars_Architecture_Map.md)** — Golden Exemplars system map
 - **[observation/README.md](observation/README.md)** — Layer-4 (Observation) boundaries
 
+The system uses hybrid control: **policy-governed rendering** for REF and CONF (final outputs are policy-rendered and policy-scored), and **model-expressive generation** for DES and CODE. This doctrine was adopted after CONF→DES drift remained unresolved under SFT-only attempts; deterministic CONF runtime rendering achieved the cure.
+
 ---
 
 ## Model/Dataset artifact storage (DVC + Local Disk)

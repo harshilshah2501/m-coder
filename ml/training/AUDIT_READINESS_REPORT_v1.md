@@ -59,5 +59,11 @@
 
 ---
 
+## 7. Post-Audit Addendum: CONF Runtime Cure (Patch-2)
+
+Multiple SFT patch attempts (Patch-1, Patch-2) did not collapse CONF→DES drift. The decisive cure was **deterministic CONF runtime rendering** in Stage-6C: when expected_phase == CONF, the final scored text is policy-rendered (not model-generated). Result after runtime cure: severity 80 S0, CONF→DES 0, S2/S3 0. Lesson: CONF→DES drift was a runtime contract failure, not primarily a model-capability failure. REF and CONF are governed runtime phases; DES and CODE remain model-expressive.
+
+---
+
 Audit Status: READY FOR GPU EXECUTION  
 Date: 2026-02-27T00:00:00Z
