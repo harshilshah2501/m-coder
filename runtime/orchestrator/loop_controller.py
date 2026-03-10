@@ -8,11 +8,15 @@ No model calls. No sandbox. Just state load, validate, apply, persist, journal.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 from datetime import datetime, timezone
 from typing import Any, Callable
 
 from runtime.state.store import TaskState, TaskStateStore
 from runtime.state.transitions import TransitionResult, TransitionValidator
+from runtime.context.contracts import ContextRequest
+from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
 
 
 @dataclass
@@ -45,6 +49,7 @@ class LoopController:
         store: TaskStateStore | None = None,
         validator: TransitionValidator | None = None,
         journal_callback: Callable[[TransitionJournalEntry], None] | None = None,
+        context_engine: ContextEngine | None = None,
     ):
         """
         Initialize loop controller.
@@ -56,6 +61,7 @@ class LoopController:
         """
         self.store = store or TaskStateStore()
         self.validator = validator or TransitionValidator()
+        self.context_engine = context_engine or ContextEngine()
         self.journal_callback = journal_callback
         self._journal: list[TransitionJournalEntry] = []
         self.max_consecutive_same_transition_id = 5
@@ -166,6 +172,22 @@ class LoopController:
         # (e.g., REVIEW_DECIDED -> BLOCKED with stop_reason=iteration_limit) when such transitions
         # are added to the transition matrix.
 
+        # If this is the GOVERNANCE_CLASSIFIED -> CONTEXT_FETCHED path, invoke ContextEngine
+        # before applying the transition, so that CONTEXT_FETCHED implies a context bundle
+        # has been constructed and persisted.
+        if transition_id == "governance_to_context":
+            try:
+                self._attach_context_bundle(task_id, state)
+            except (ContextEngineError, MissingExplicitFilesError) as e:
+                return TransitionResult(
+                    valid=False,
+                    transition_id=transition_id,
+                    from_state=from_state,
+                    to_state=resolved.to_state,
+                    stop_reason="validation_failed",
+                    reason=str(e),
+                )
+
         to_state_final = resolved.to_state or ""
 
         # Apply transition.
@@ -211,3 +233,70 @@ class LoopController:
     def get_journal(self) -> list[TransitionJournalEntry]:
         """Return journal of applied transitions for this controller instance."""
         return list(self._journal)
+
+    def _build_context_request(self, task_id: str, state: TaskState) -> ContextRequest:
+        """
+        Construct a ContextRequest from TaskState metadata.
+
+        Expected metadata keys:
+        - root_path or repo_root
+        - revision (optional; defaults to 'unknown-revision')
+        - context_files (optional list[str])
+        - symbol_hints (optional list[str])
+        - context_max_files (optional int)
+        - context_max_bytes (optional int)
+        - context_selectors (optional list[str])
+        """
+        meta = state.metadata or {}
+        root_path = meta.get("root_path") or meta.get("repo_root")
+        if not root_path:
+            raise ContextEngineError("Missing root_path/repo_root in task metadata for context engine")
+
+        revision = str(meta.get("revision", "unknown-revision"))
+        files = list(meta.get("context_files", []))
+        symbol_hints = list(meta.get("symbol_hints", []))
+        max_files = int(meta.get("context_max_files", 50))
+        max_bytes = int(meta.get("context_max_bytes", 512_000))
+        selectors = list(meta.get("context_selectors", ["direct", "siblings", "imports", "symbols"]))
+
+        return ContextRequest(
+            task_id=task_id,
+            revision=revision,
+            root_path=str(root_path),
+            files=files,
+            symbol_hints=symbol_hints,
+            max_files=max_files,
+            max_bytes=max_bytes,
+            selectors=selectors,
+        )
+
+    def _attach_context_bundle(self, task_id: str, state: TaskState) -> None:
+        """
+        Build a context bundle via ContextEngine and persist minimal metadata into task state.
+
+        Persisted metadata (under metadata['context_bundle']):
+        - bundle_id (deterministic hash of revision, paths, truncated)
+        - revision
+        - paths
+        - truncated
+        """
+        request = self._build_context_request(task_id, state)
+        bundle = self.context_engine.build_context_bundle(request)
+
+        paths = [item.path for item in bundle.items]
+        info = {
+            "task_id": bundle.task_id,
+            "revision": bundle.revision,
+            "paths": paths,
+            "truncated": bundle.limits.truncated,
+        }
+        bundle_id = hashlib.sha256(
+            json.dumps(info, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+
+        meta = state.metadata or {}
+        meta["context_bundle"] = {
+            "bundle_id": bundle_id,
+            **info,
+        }
+        state.metadata = meta

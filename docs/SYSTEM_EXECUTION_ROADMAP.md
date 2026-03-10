@@ -55,24 +55,24 @@ flowchart TB
 
 | Milestone | Layer | Entry | Exit | Failure | Status | Owner | Evidence |
 |-----------|-------|-------|------|---------|--------|-------|----------|
-| M2.1 Base exemplar completion | L2 | Constitutional lock; GREG readiness | All bases mapped; Phase-3 summary PASS; boundary anchors locked | Bases incomplete; validation fails; boundary mismatch | — | — | — |
-| M2.2 Variant stability | L2 | M2.1 complete | Phase-4 variant summary PASS; no softened language; boundary exact | Variants fail stability; phase drift | — | — | — |
-| M2.3 Mutation harness v1 | L2 | M2.2 complete | Stage-6A/6B harness runs; ledger populated; taxonomy coverage | Harness crashes; ledger schema invalid; coverage gap | — | — | — |
-| M2.4 Collapse vector validation | L2 | M2.3 complete | Stage-6C agent-loop harness passes; collapse vectors classified; pass rate ≥ threshold | Collapse rate exceeds gate; unclassified collapses | — | — | — |
-| M2.5 Deterministic dataset freeze | L2 | M2.4 complete | Freeze checklist passes; dataset compiled; manifest locked | Freeze blocked; phase balance fails; dominance coverage gap | — | — | — |
-| M2.6 SFT training | L2 | M2.5 complete | Adapter trained; loss stable; structural invariance audit passes | Training divergence; invariance collapse | — | — | — |
-| M2.7 Post-SFT mutation revalidation | L2 | M2.6 complete | Post-SFT ledger vs pre-SFT diff acceptable; no rollback criteria | REF collapse; boundary relocation; MIX-to-CONF collapse | — | — | — |
-| M3.1 Plan object spec | L3 | M2.7 complete; frozen adapter | Plan object schema defined; authority/irreversibility hooks specified | Spec incomplete; hooks undefined | — | — | — |
-| M3.2 Authority validator | L3 | M3.1 complete | Authority checks enforce REF; no bypass paths | Bypass paths; REF not enforced | — | — | — |
-| M3.3 Irreversibility detector | L3 | M3.2 complete | Detector blocks at boundaries; Phase-05 CODE semantics honored | Boundary bypass; detector silent | — | — | — |
-| M3.4 IDE plugin integration | L3 | M3.3 complete | Plan/Judge/Authority integrated; tool calls gated | Integration incomplete; gates bypassed | — | — | — |
-| M3.5 Runtime ledger emission | L3 | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields | — | — | — |
-| M3.6 Shadow mode validation | L3 | M3.5 complete | Shadow mode runs; ledger captures behavior; no REF violations | REF violations; ledger gaps | — | — | — |
-| M4.1 Drift baseline capture | L4 | M3.6 complete | Baseline verdict distribution captured; per-phase, per-surface metrics | Baseline incomplete; missing phases | — | — | — |
-| M4.2 Collapse vector live tracking | L4 | M4.1 complete | Collapse vectors tracked in production; probes running | Probes fail; tracking gaps | — | — | — |
-| M4.3 Ledger reconciliation dashboard | L4 | M4.2 complete | Pre/post ledgers reconciled; diff visible; anomalies flagged | Reconciliation fails | — | — | — |
-| M4.4 GREG audit automation | L4 | M4.3 complete | GREG-trigger automation on drift thresholds; evidence package produced | Automation missing; thresholds wrong | — | — | — |
-| M4.5 Constitutional version lock signal | L4 | M4.4 complete | Lock signal emitted when evidence suffices; no drift above threshold | Signal blocked; evidence insufficient | — | — | — |
+| M2.1 Base exemplar completion | L2 | Constitutional lock; GREG readiness | All bases mapped; Phase-3 summary PASS; boundary anchors locked | Bases incomplete; validation fails; boundary mismatch | LOCKED | L2 / Governance | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1 (S1–S3 complete); `motadata-coder-a-complete-guide_v1.7.md` §10.2 |
+| M2.2 Variant stability | L2 | M2.1 complete | Phase-4 variant summary PASS; no softened language; boundary exact | Variants fail stability; phase drift | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1; variant stability gate evidence |
+| M2.3 Mutation harness v1 | L2 | M2.2 complete | Stage-6A/6B harness runs; ledger populated; taxonomy coverage | Harness crashes; ledger schema invalid; coverage gap | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 (Stage-6 mutation taxonomy); Stage-6A/6B harness artifacts |
+| M2.4 Collapse vector validation | L2 | M2.3 complete | Stage-6C agent-loop harness passes; collapse vectors classified; pass rate ≥ threshold | Collapse rate exceeds gate; unclassified collapses | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 and §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json` (`conf_to_des = 0`) |
+| M2.5 Deterministic dataset freeze | L2 | M2.4 complete | Freeze checklist passes; dataset compiled; manifest locked | Freeze blocked; phase balance fails; dominance coverage gap | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §6.1; `ml/training/FREEZE_CERTIFICATE_v1.json` (Stage-7 compiler output) |
+| M2.6 SFT training | L2 | M2.5 complete | Adapter trained; loss stable; structural invariance audit passes | Training divergence; invariance collapse | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 and §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json` |
+| M2.7 Post-SFT mutation revalidation | L2 | M2.6 complete | Post-SFT ledger vs pre-SFT diff acceptable; no rollback criteria | REF collapse; boundary relocation; MIX-to-CONF collapse | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 and §6.1 (Layer-2 release verification PASS) |
+| M3.1 Plan object spec | L3 | M2.7 complete; frozen adapter | Plan object schema defined; authority/irreversibility hooks specified | Spec incomplete; hooks undefined | IN PROGRESS | L3 / Runtime | `docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md`; `docs/LIVE_ROADMAP_TRACKER.md` §4.3 (M3.E0, M3.T0) |
+| M3.2 Authority validator | L3 | M3.1 complete | Authority checks enforce REF; no bypass paths | Bypass paths; REF not enforced | NOT STARTED | L3 / Runtime | — |
+| M3.3 Irreversibility detector | L3 | M3.2 complete | Detector blocks at boundaries; Phase-05 CODE semantics honored | Boundary bypass; detector silent | NOT STARTED | L3 / Runtime | — |
+| M3.4 IDE plugin integration | L3 | M3.3 complete | Plan/Judge/Authority integrated; tool calls gated | Integration incomplete; gates bypassed | NOT STARTED | L3 / Runtime | — |
+| M3.5 Runtime ledger emission | L3 | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields | NOT STARTED | L3 / Runtime | — |
+| M3.6 Shadow mode validation | L3 | M3.5 complete | Shadow mode runs; ledger captures behavior; no REF violations | REF violations; ledger gaps | NOT STARTED | L3 / Runtime | — |
+| M4.1 Drift baseline capture | L4 | M3.6 complete | Baseline verdict distribution captured; per-phase, per-surface metrics | Baseline incomplete; missing phases | NOT STARTED | L4 / Observation | — |
+| M4.2 Collapse vector live tracking | L4 | M4.1 complete | Collapse vectors tracked in production; probes running | Probes fail; tracking gaps | NOT STARTED | L4 / Observation | — |
+| M4.3 Ledger reconciliation dashboard | L4 | M4.2 complete | Pre/post ledgers reconciled; diff visible; anomalies flagged | Reconciliation fails | NOT STARTED | L4 / Observation | — |
+| M4.4 GREG audit automation | L4 | M4.3 complete | GREG-trigger automation on drift thresholds; evidence package produced | Automation missing; thresholds wrong | NOT STARTED | L4 / Observation | — |
+| M4.5 Constitutional version lock signal | L4 | M4.4 complete | Lock signal emitted when evidence suffices; no drift above threshold | Signal blocked; evidence insufficient | NOT STARTED | L4 / Observation | — |
 
 ---
 
@@ -96,8 +96,8 @@ flowchart TB
 
 ## D. Critical Risk Zones
 
-- **Pre-freeze gap:** Dataset not frozen; any change to bases/variants invalidates downstream. Mutation harness must pass before freeze.
-- **Post-SFT invariance risk:** Training may introduce phase drift, boundary softening, or REF collapse. Post-SFT revalidation is mandatory.
+- **Pre-freeze gap:** **Closed for the Golden Exemplars corpus.** Dataset is frozen and immutable (`FREEZE_CERTIFICATE_v1.json`); any change to bases/variants requires a new freeze.
+- **Post-SFT invariance risk:** Training may introduce phase drift, boundary softening, or REF collapse. Post-SFT revalidation is mandatory (covered by `LAYER2_RELEASE_VERIFICATION.json` for the current adapter).
 - **Runtime bypass risk:** No REF enforcement at execution; model could act under illegitimacy. Production cannot ship without REF enforcement.
 - **Drift detection blind spots:** No production drift baseline; GREG cannot run on live evidence until M4.1 complete.
 
@@ -107,17 +107,12 @@ flowchart TB
 
 | Layer | Milestone | Status | % Complete | Evidence Link | Blockers | Next Action |
 |-------|-----------|--------|------------|---------------|----------|-------------|
-| L1 | Governance lock | Complete | 100 | GREG ratification | — | — |
-| L2 | M2.1 Base completion | In Progress | — | — | — | — |
-| L2 | M2.2 Variant stability | Not Started | 0 | — | — | — |
-| L2 | M2.3 Mutation harness | In Progress | — | Stage-6A/6B | — | — |
-| L2 | M2.4 Collapse validation | In Progress | — | Stage-6C | — | — |
-| L2 | M2.5 Dataset freeze | Not Started | 0 | — | M2.4 | — |
-| L2 | M2.6 SFT training | Not Started | 0 | — | M2.5 | — |
-| L2 | M2.7 Post-SFT revalidation | Not Started | 0 | — | M2.6 | — |
-| L3 | M3.1 Plan spec | Not Started | 0 | — | M2.7 | — |
-| L3 | M3.2–M3.6 Runtime | Not Started | 0 | — | M3.1 | — |
-| L4 | M4.1–M4.5 Observation | Not Started | 0 | — | M3.6 | — |
+| L1 | Governance lock | COMPLETE / LOCKED | 100 | GREG ratification; `governance/CONSTITUTIONAL_MANIFEST_v1.0.md` | — | — |
+| L2 | M2.1–M2.7 Layer-2 ML Compilation | COMPLETE / LOCKED | 100 | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1, §4.2.2, §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`; `ml/training/FREEZE_CERTIFICATE_v1.json` | — | Hand-off to Layer-3 runtime implementation |
+| L3 | M3.0–M3.3 Plan-Gate Runtime, Runtime Governor, Task State Store, Deterministic Agent Loop | IN PROGRESS | — | `docs/LIVE_ROADMAP_TRACKER.md` §4.3 (M3.E0, M3.T0, M3.1 scaffold); `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` | Finalizing sandbox strategy; ledger storage/replay infra | Complete M3.E0 validation; proceed with M3.1 orchestrator spec and implementation |
+| L3 | M3.4–M3.8 Runtime Context, Sandbox, Model Worker, IDE/CI, Ledger Emission | NOT STARTED | 0 | — | Depends on M3.0–M3.3 | Design and implement Repository Context Engine and Execution Sandbox contracts |
+| L3 | M3.9 Shadow Mode Validation | NOT STARTED | 0 | — | Depends on M3.4–M3.8 | Define baseline scenarios and shadow replay harness |
+| L4 | M4.1–M4.5 Observation | NOT STARTED | 0 | — | Depends on M3.9 | Implement ledger ingestion, drift baseline, collapse tracking, reconciliation, and GREG automation |
 
 **Status key:** Not Started | In Progress | Complete | Blocked
 

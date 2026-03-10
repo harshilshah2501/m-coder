@@ -10,7 +10,7 @@
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - Layer-3 runtime is the **next active execution layer**.  
-  - Layer-4 observation is **PARTIAL / PENDING EXPANSION**.  
+  - Layer-4 observation is **PARTIAL / PENDING EXPANSION**.
 
 ---
 
@@ -31,23 +31,27 @@
 
 ### 2.1 Status markers
 
-| Status        | Meaning                                                                 |
-|--------------|-------------------------------------------------------------------------|
-| **NOT_STARTED** | Milestone defined, no substantive work begun                           |
-| **IN_PROGRESS** | Active engineering work underway                                       |
-| **BLOCKED**     | Work paused due to dependency or risk                                  |
-| **VALIDATING**  | Implementation complete; in testing / verification / hardening phase   |
-| **COMPLETE**    | Implementation done; exit criteria met, but not doctrinally locked     |
-| **LOCKED**      | Completed and ratified; further changes require explicit governance    |
+
+| Status          | Meaning                                                              |
+| --------------- | -------------------------------------------------------------------- |
+| **NOT_STARTED** | Milestone defined, no substantive work begun                         |
+| **IN_PROGRESS** | Active engineering work underway                                     |
+| **BLOCKED**     | Work paused due to dependency or risk                                |
+| **VALIDATING**  | Implementation complete; in testing / verification / hardening phase |
+| **COMPLETE**    | Implementation done; exit criteria met, but not doctrinally locked   |
+| **LOCKED**      | Completed and ratified; further changes require explicit governance  |
+
 
 ### 2.2 Priority markers
 
-| Priority    | Meaning                               |
-|------------|----------------------------------------|
-| **CRITICAL** | Must be addressed immediately          |
-| **HIGH**     | Near-term priority                     |
-| **MEDIUM**   | Important but not urgent               |
-| **LOW**      | Nice-to-have or long-term             |
+
+| Priority     | Meaning                       |
+| ------------ | ----------------------------- |
+| **CRITICAL** | Must be addressed immediately |
+| **HIGH**     | Near-term priority            |
+| **MEDIUM**   | Important but not urgent      |
+| **LOW**      | Nice-to-have or long-term     |
+
 
 Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
@@ -55,12 +59,14 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 3. Executive Progress Snapshot
 
-| Layer | Scope                                | Status                | Notes                                                                 |
-|-------|--------------------------------------|-----------------------|-----------------------------------------------------------------------|
-| **L1** | Governance (Constitution)           | **LOCKED**            | Constitutional manifest, phase doctrine, dominance rules locked.      |
-| **L2** | ML Compilation (Stages 1–8)         | **COMPLETE / LOCKED** | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
-| **L3** | Runtime Enforcement / Execution     | **IN_PROGRESS**       | Architecture and runtime MVP buildout next; IDE integration later.    |
-| **L4** | Observation / Drift Detection       | **PARTIAL**           | Governance-level drift suite exists; production wiring pending.       |
+
+| Layer  | Scope                           | Status                | Notes                                                                                     |
+| ------ | ------------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
+| **L1** | Governance (Constitution)       | **LOCKED**            | Constitutional manifest, phase doctrine, dominance rules locked.                          |
+| **L2** | ML Compilation (Stages 1–8)     | **COMPLETE / LOCKED** | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
+| **L3** | Runtime Enforcement / Execution | **IN_PROGRESS**       | Architecture and runtime MVP buildout next; IDE integration later.                        |
+| **L4** | Observation / Drift Detection   | **PARTIAL**           | Governance-level drift suite exists; production wiring pending.                           |
+
 
 ---
 
@@ -72,13 +78,15 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Current status**: **LOCKED**
 
-| ID   | Milestone                                   | Status  | Dependencies | Exit criteria                                                                 |
-|------|---------------------------------------------|---------|--------------|-------------------------------------------------------------------------------|
-| L1.1 | Constitutional Manifest v1.0 locked         | LOCKED  | —            | Manifest ratified by GREG; phase semantics and dominance hierarchy explicit. |
-| L1.2 | Boundary Doctrine locked                    | LOCKED  | L1.1         | Irreversible boundary definitions and phrase equality rules finalized.       |
-| L1.3 | Collapse Taxonomy locked                    | LOCKED  | L1.1         | Collapse types (REF_SOFTENING, CONF_TO_DES, etc.) defined and immutable.    |
-| L1.4 | Golden Exemplars corpus locked              | LOCKED  | L1.1–L1.3    | Governance exemplars set finalized; D.N.A validation protocol enforced.      |
-| L1.5 | Governance escalation (GREG) protocol locked| LOCKED  | L1.1–L1.4    | Process for constitutional change defined; versioning rules in force.        |
+
+| ID   | Milestone                                    | Status | Dependencies | Exit criteria                                                                |
+| ---- | -------------------------------------------- | ------ | ------------ | ---------------------------------------------------------------------------- |
+| L1.1 | Constitutional Manifest v1.0 locked          | LOCKED | —            | Manifest ratified by GREG; phase semantics and dominance hierarchy explicit. |
+| L1.2 | Boundary Doctrine locked                     | LOCKED | L1.1         | Irreversible boundary definitions and phrase equality rules finalized.       |
+| L1.3 | Collapse Taxonomy locked                     | LOCKED | L1.1         | Collapse types (REF_SOFTENING, CONF_TO_DES, etc.) defined and immutable.     |
+| L1.4 | Golden Exemplars corpus locked               | LOCKED | L1.1–L1.3    | Governance exemplars set finalized; D.N.A validation protocol enforced.      |
+| L1.5 | Governance escalation (GREG) protocol locked | LOCKED | L1.1–L1.4    | Process for constitutional change defined; versioning rules in force.        |
+
 
 **Dependencies**: None for new runtime work (Layer-1 is already locked).  
 **Layer exit criteria**: All governance artifacts locked with version IDs; changes require formal GREG escalation and ratification.
@@ -93,16 +101,18 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 #### 4.2.1 Stages and Status
 
-| Stage | Name                         | Status            | Dependencies | Exit criteria                                                                 |
-|-------|------------------------------|-------------------|--------------|-------------------------------------------------------------------------------|
-| S1    | Structural mapping           | LOCKED            | L1.*         | Governance exemplars mapped to product surfaces; no new semantics introduced. |
-| S2    | Artifact extraction          | LOCKED            | S1           | Instructions, context, reasoning, boundaries, postures extracted losslessly.  |
-| S3    | Base stabilization           | LOCKED            | S2           | Bases pass D.N.A; boundaries and phases stable; REF dominance preserved.      |
-| S4    | Variant generation           | LOCKED            | S3           | 4 variants per base; same boundary, phase, posture; single mutation axis.     |
-| S5    | Variant stability gate       | LOCKED            | S4           | All variants pass POST-DRAFT D.N.A; no optimism drift or boundary aliasing.   |
-| S6    | Mutation harness (6A/6B/6C)  | LOCKED            | S5           | Stage-6C PASS; collapse vectors fully classified; freeze unblocked.           |
-| S7    | Dataset freeze               | LOCKED            | S6           | Freeze manifest locked; corpus hash, variant counts, phase distribution set.  |
-| S8    | SFT training                 | LOCKED            | S7           | SFT / adapter training complete; invariance audit PASS; release approved.     |
+
+| Stage | Name                        | Status | Dependencies | Exit criteria                                                                 |
+| ----- | --------------------------- | ------ | ------------ | ----------------------------------------------------------------------------- |
+| S1    | Structural mapping          | LOCKED | L1.*         | Governance exemplars mapped to product surfaces; no new semantics introduced. |
+| S2    | Artifact extraction         | LOCKED | S1           | Instructions, context, reasoning, boundaries, postures extracted losslessly.  |
+| S3    | Base stabilization          | LOCKED | S2           | Bases pass D.N.A; boundaries and phases stable; REF dominance preserved.      |
+| S4    | Variant generation          | LOCKED | S3           | 4 variants per base; same boundary, phase, posture; single mutation axis.     |
+| S5    | Variant stability gate      | LOCKED | S4           | All variants pass POST-DRAFT D.N.A; no optimism drift or boundary aliasing.   |
+| S6    | Mutation harness (6A/6B/6C) | LOCKED | S5           | Stage-6C PASS; collapse vectors fully classified; freeze unblocked.           |
+| S7    | Dataset freeze              | LOCKED | S6           | Freeze manifest locked; corpus hash, variant counts, phase distribution set.  |
+| S8    | SFT training                | LOCKED | S7           | SFT / adapter training complete; invariance audit PASS; release approved.     |
+
 
 #### 4.2.2 Layer-2 Closure Evidence (Summary)
 
@@ -131,17 +141,19 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 #### 4.3.1 Milestones
 
-| ID     | Milestone                                | Status        | Owner       | Dependencies                              | Deliverable                                                                 | Artifacts | Evidence | Next unblocker                    | Exit criteria                                                                 |
-|--------|------------------------------------------|---------------|------------|-------------------------------------------|----------------------------------------------------------------------------|-----------|----------|-----------------------------------|-------------------------------------------------------------------------------|
-| M3.E0  | Deterministic Runtime Emulator           | VALIDATING    | Shared      | L2.* (LOCKED), existing L3 runtime contracts | Deterministic plan-gate runtime emulator + shadow runner + invariant tests. | 6/6       | see §6.2 | — | REF/CONF/approval invariants enforced in emulator; sample IDE events execute end-to-end with deterministic hashes and ledger rows. |
-| M3.T0  | Deterministic Agent State Transition Table | COMPLETE      | Architect   | Plan-Gate runtime contract                | Deterministic runtime transition spec + schemas for agent state machine.   | 3/3       | see §6.3 | —                                 | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented. |
-| M3.0   | Repository Context Engine                | IN_PROGRESS   | Shared      | L2.*                                     | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 0/4       | none     | design-stage context architecture doc | Context for runtime decisions is deterministic, revision-tied, and independently auditable. |
-| M3.1   | Agent Loop Orchestrator                 | IN_PROGRESS   | Architect   | M3.0, M3.T0                               | Deterministic agent loop controller (Runtime Governor + loop control semantics). | 0/4       | see §6.4 | write M3.1 spec artifacts          | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined. |
-| M3.2   | Execution Sandbox                       | NOT_STARTED   | Architect   | M3.0–M3.1                                 | Isolated executor for tools/tests/commands under runtime control.          | 0/4       | none     | sandbox contract doc              | Irreversible effects can only occur through the sandbox with authority/boundary checks and ledger emission. |
-| M3.3   | Plan-Gate Integration                   | NOT_STARTED   | Shared      | M3.0–M3.2                                 | Wiring between Plan objects, decision contracts, and runtime agent loop.   | 0/3       | none     | integration contract doc          | All relevant requests flow through Plan-Gate before execution; fail-closed behavior enforced. |
-| M3.4   | IDE Plugin Integration                  | NOT_STARTED   | Cursor/IDE  | M3.3                                      | IDE plugins that route developer actions through Plan-Gate and agent loop. | 0/3       | none     | plugin bridge doc                 | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound. |
-| M3.5   | Ledger Emission                         | NOT_STARTED   | Architect   | M3.3                                      | Reliable ledger_row.v0.1 emission for every runtime decision.              | 0/3       | none     | transition-to-ledger map          | Every decision that affects execution has a corresponding ledger row linking to plan_hash; append-only semantics defined. |
-| M3.6   | Shadow Mode Validation                  | NOT_STARTED   | Shared      | M3.0–M3.5                                 | Full runtime-governed agent loop running in shadow mode.                   | 0/3       | none     | shadow protocol note              | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows. |
+
+| ID    | Milestone                                             | Status      | Owner      | Dependencies                                 | Deliverable                                                                          | Artifacts | Evidence | Next unblocker                      | Exit criteria                                                                                                                      |
+| ----- | ----------------------------------------------------- | ----------- | ---------- | -------------------------------------------- | ------------------------------------------------------------------------------------ | --------- | -------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| M3.E0 | Deterministic Runtime Emulator                        | VALIDATING  | Shared     | L2.* (LOCKED), existing L3 runtime contracts | Deterministic plan-gate runtime emulator + shadow runner + invariant tests.          | 6/6       | see §6.2 | —                                   | REF/CONF/approval invariants enforced in emulator; sample IDE events execute end-to-end with deterministic hashes and ledger rows. |
+| M3.T0 | Deterministic Agent State Transition Table (Contract) | COMPLETE    | Architect  | Plan-Gate runtime contract                   | Deterministic runtime transition spec + schemas for agent state machine.             | 3/3       | see §6.3 | —                                   | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented.             |
+| M3.0  | Repository Context Engine                             | VALIDATING  | Shared     | L2.*                                         | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 4/4       | see §6.5 | wire LoopController → ContextEngine | Context for runtime decisions is deterministic, revision-tied, and independently auditable.                                        |
+| M3.1  | Agent Loop Orchestrator                               | IN_PROGRESS | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
+| M3.2  | Execution Sandbox                                     | NOT_STARTED | Architect  | M3.0–M3.1                                    | Isolated executor for tools/tests/commands under runtime control.                    | 0/4       | none     | sandbox contract doc                | Irreversible effects can only occur through the sandbox with authority/boundary checks and ledger emission.                        |
+| M3.3  | Plan-Gate Integration                                 | NOT_STARTED | Shared     | M3.0–M3.2                                    | Wiring between Plan objects, decision contracts, and runtime agent loop.             | 0/3       | none     | integration contract doc            | All relevant requests flow through Plan-Gate before execution; fail-closed behavior enforced.                                      |
+| M3.4  | IDE Plugin Integration                                | IN_PROGRESS | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 1/3       | see §6.7 | plugin bridge doc                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
+| M3.5  | Ledger Emission                                       | NOT_STARTED | Architect  | M3.3                                         | Reliable ledger_row.v0.1 emission for every runtime decision.                        | 0/3       | none     | transition-to-ledger map            | Every decision that affects execution has a corresponding ledger row linking to plan_hash; append-only semantics defined.          |
+| M3.6  | Shadow Mode Validation                                | NOT_STARTED | Shared     | M3.0–M3.5                                    | Full runtime-governed agent loop running in shadow mode.                             | 0/3       | none     | shadow protocol note                | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows.                              |
+
 
 > Note: These Layer-3 milestones are **execution milestones** and do not redefine doctrine. They implement the runtime-governed agent architecture described in the Layer-3 specs.
 
@@ -218,7 +230,20 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Evidence**
 
-- none yet
+- **Artifacts**:
+  - `docs/RUNTIME/REPOSITORY_CONTEXT_ENGINE.md` — repository context engine responsibilities, contracts, determinism rules, and out-of-scope guarantees.
+  - `runtime/context/contracts.py` — `ContextRequest`, `SelectedContextRef`, `ContextItem`, `ContextBundle` contracts.
+  - `runtime/context/selectors.py` — deterministic direct/sibling/import/symbol selectors (selection-only, no content).
+  - `runtime/context/engine.py` — `ContextEngine.build_context_bundle()` with selection vs materialization split, caps, and fail-closed behavior.
+  - `runtime/tests/test_context_engine.py` — determinism, caps, missing-file, symbol-hint, and provenance tests.
+- **Determinism & caps**:
+  - Same `ContextRequest` + same repo contents at a given revision → same `ContextBundle.items` ordering and `selection_reason` values (ignoring `created_at_utc`).
+  - `max_files` and `max_bytes` caps enforced with `limits.truncated` set when caps are hit.
+- **Fail-closed behavior**:
+  - Explicitly requested missing files cause `MissingExplicitFilesError` (no silent partial bundles).
+  - Selected-but-missing files during materialization raise `ContextEngineError`.
+- **Tests**:
+  - pytest (`python3 -m pytest runtime/tests/test_context_engine.py -v`): 6 passed
 
 ##### M3.1 — Agent Loop Orchestrator
 
@@ -331,8 +356,9 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 - none yet
 
 **Dependencies**:  
+
 - Upstream: Layer-1 and Layer-2 must remain locked; no changes to doctrine or compilation while runtime is being implemented.  
-- Lateral: IDE plugin and CI systems for integration; infrastructure for sandboxing and ledger storage.  
+- Lateral: IDE plugin and CI systems for integration; infrastructure for sandboxing and ledger storage.
 
 **Relationship between emulator and broader runtime architecture**:
 
@@ -357,14 +383,16 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 #### 4.4.1 Milestones
 
-| ID   | Milestone                 | Status      | Dependencies | Deliverable                                                   | Exit criteria                                                                 |
-|------|---------------------------|-------------|--------------|----------------------------------------------------------------|-------------------------------------------------------------------------------|
-| M4.1 | Ledger Ingestion          | NOT_STARTED | M3.5         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.  |
-| M4.2 | Drift Baseline            | NOT_STARTED | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors. | Baselines established for key metrics; thresholds approved by governance stakeholders. |
-| M4.3 | Collapse Vector Tracking  | NOT_STARTED | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior. | All detected collapses are classified; unclassified collapses trigger alerts. |
-| M4.4 | Ledger Reconciliation     | NOT_STARTED | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.    | Ability to trace changes in behavior across releases and runtime environments. |
-| M4.5 | GREG Governance Escalation| NOT_STARTED | M4.1–M4.4    | Automated pathways for generating evidence packages and triggering GREG. | Drift above threshold results in deterministic escalation with complete evidence bundles. |
-| M4.6 | Runtime Performance Metrics| NOT_STARTED| M4.1–M4.4    | Metrics and dashboards for runtime performance and invariance. | Key runtime and invariance metrics available to stakeholders; alerts wired into operations. |
+
+| ID   | Milestone                   | Status      | Dependencies | Deliverable                                                              | Exit criteria                                                                               |
+| ---- | --------------------------- | ----------- | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| M4.1 | Ledger Ingestion            | NOT_STARTED | M3.5         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
+| M4.2 | Drift Baseline              | NOT_STARTED | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors.      | Baselines established for key metrics; thresholds approved by governance stakeholders.      |
+| M4.3 | Collapse Vector Tracking    | NOT_STARTED | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior.           | All detected collapses are classified; unclassified collapses trigger alerts.               |
+| M4.4 | Ledger Reconciliation       | NOT_STARTED | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.               | Ability to trace changes in behavior across releases and runtime environments.              |
+| M4.5 | GREG Governance Escalation  | NOT_STARTED | M4.1–M4.4    | Automated pathways for generating evidence packages and triggering GREG. | Drift above threshold results in deterministic escalation with complete evidence bundles.   |
+| M4.6 | Runtime Performance Metrics | NOT_STARTED | M4.1–M4.4    | Metrics and dashboards for runtime performance and invariance.           | Key runtime and invariance metrics available to stakeholders; alerts wired into operations. |
+
 
 **Dependencies**: Layer-3 ledger emission and runtime invariants; Layer-1 doctrine for drift definitions; Layer-2 for pre-SFT invariance baselines.  
 **Layer exit criteria**: Drift detection and escalation loop closed: anomalies go from detection → evidence → GREG escalation in a repeatable, auditable way.
@@ -375,7 +403,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 - **Current objective**: **Layer-3 architecture and runtime MVP buildout**  
   - Define and stabilize Runtime Governor and Deterministic Agent Loop.  
-  - Stand up Repository Context Engine and Execution Sandbox scaffolding.  
+  - Stand up Repository Context Engine and Execution Sandbox scaffolding.
 - **Active tasks**:
   - Implement **M3.E0 Deterministic Runtime Emulator**: plan_gate stub, authority/boundary/ledger helpers, shadow runner CLI, and invariant tests.
   - Deliver **M3.T0 Deterministic Agent State Transition Table**: runtime-owned control contract + state enums + transition matrix (see §6.3).
@@ -383,13 +411,13 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
   - Finalize high-level architecture docs for Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface.
 - **Next 3 milestones**:
   1. **M3.E0 Deterministic Runtime Emulator** — VALIDATING (all artifacts implemented, invariant tests passing)
-  2. **M3.1 Agent Loop Orchestrator** — IN_PROGRESS (transition executor scaffold in place; spec artifacts pending)  
-  3. **M3.0 Repository Context Engine** — IN_PROGRESS (design-stage context architecture)  
+  2. **M3.0 Repository Context Engine** — VALIDATING (deterministic context engine implemented; tests passing)
+  3. **M3.1 Agent Loop Orchestrator** — IN_PROGRESS (transition executor scaffold in place; spec artifacts pending)
 - **Current blockers**:
   - Final decision on sandboxing strategy (e.g., process isolation, containerization) and resource constraints.
   - Tooling and infra selection for ledger storage and replay (shared with Layer-4 needs).
 - **Immediate next action**:
-  - **Complete M3.E0 validation; proceed with M3.1 orchestrator spec artifacts (loop controller spec, transition executor design, budgets, stop conditions).**
+  - **Complete M3.E0 validation; wire M3.1 LoopController to call M3.0 ContextEngine at CONTEXT_FETCHED and flesh out remaining M3.1 spec artifacts.**
 
 ---
 
@@ -407,7 +435,7 @@ This section records **evidence of completed milestones**. Entries should be **a
     - `conf_to_des = 0`
     - `s2_s3 = 0`
   - Deterministic CONF runtime rendering adopted as part of governance-aligned runtime enforcement.
-  - `LAYER2_RELEASE_VERIFICATION.json = PASS` (location documented in Layer-2 artifacts).  
+  - `LAYER2_RELEASE_VERIFICATION.json = PASS` (location documented in Layer-2 artifacts).
 
 ### 6.2 M3.E0 — Deterministic Runtime Emulator
 
@@ -450,8 +478,8 @@ This section records **evidence of completed milestones**. Entries should be **a
 - **Artifacts (scaffold)**:
   - `runtime/state/store.py` — Task state store (in-memory + optional JSON persistence)
   - `runtime/state/transitions.py` — transition validator enforcing `transition_matrix.v0.1.json`
-  - `runtime/orchestrator/loop_controller.py` — deterministic transition executor (load → validate → apply → persist → journal)
-  - `runtime/tests/test_transition_executor.py` — transition executor tests (valid transitions succeed; invalid transitions refused; terminal non-escaping enforced; iteration/repetition/no-op guards)
+  - `runtime/orchestrator/loop_controller.py` — deterministic transition executor (load → validate → apply → persist → journal), wired to `ContextEngine` at `governance_to_context` (CONTEXT_FETCHED)
+  - `runtime/tests/test_transition_executor.py` — transition executor tests (valid transitions succeed; invalid transitions refused; terminal non-escaping enforced; iteration/repetition/no-op guards; context wiring at CONTEXT_FETCHED)
 - **Evidence**:
   - Store load refreshes in-memory view when reading from disk (prevents subtle divergence in long-lived processes)
   - Loop safety guards enforced:
@@ -459,7 +487,33 @@ This section records **evidence of completed milestones**. Entries should be **a
     - excessive consecutive repetition of the same `transition_id` is rejected
     - no-op transitions are rejected unless explicitly defined in the matrix
     - guard blocks return explicit `stop_reason` (e.g., `iteration_limit`) without forcing terminal state yet (future evolution: explicit terminal transition like `REVIEW_DECIDED -> BLOCKED`)
-  - pytest (`python3 -m pytest runtime/tests/test_transition_executor.py -v`): 20 passed
+  - Context wiring at `CONTEXT_FETCHED`:
+    - `LoopController` now constructs a `ContextRequest` from `TaskState.metadata` and calls `ContextEngine.build_context_bundle()` on the `governance_to_context` path
+    - Minimal context metadata persisted in `TaskState.metadata['context_bundle']` (bundle_id, revision, paths, truncated)
+    - Engine errors (`MissingExplicitFilesError` / `ContextEngineError`) are fail-closed: transition is refused with `stop_reason=\"validation_failed\"` and state remains `GOVERNANCE_CLASSIFIED`
+  - pytest (`python3 -m pytest runtime/tests/test_transition_executor.py -v`): 23 passed
+
+### 6.7 M3.4 — IDE Plugin Integration (MVP Shadow-Mode + Repo-Aware Ask)
+
+- **Milestone**: M3.4 IDE Plugin Integration — IN_PROGRESS (2026-03-10)
+- **Artifacts**:
+  - `jetbrains-plugin/` — IntelliJ Platform plugin module with:
+    - Commit interception (shadow-mode): `PlanGateClient`, `MotadataCheckinHandler`, `DecisionLogger`, `PlanGateClientTest`.
+    - Repo-aware Ask (PLAN ONLY): `AskClient`, `AskMotadataAiAction` (Tools → “Ask Motadata AI”), Ask UI surface showing PLAN ONLY badge, context bundle, selectors used, and plan summary.
+  - Runtime ask path:
+    - `runtime/ide/schemas/ask_request.v0.1.schema.json` — AskRequest schema.
+    - `runtime/ide/schemas/plan_only_response.v0.1.schema.json` — PlanOnlyResponse schema (execution=false, governance_posture=PLAN_ONLY).
+    - `runtime/ask_service/handlers.py` — `/v0/ask` handler (AskRequest → ContextRequest → `ContextEngine.build_context_bundle()` → PlanOnlyResponse).
+    - `runtime/ask_service/planner.py` — `PlanOnlyPlanner` (deterministic, bounded 3–6 read/inspect-only steps; no execution, no tool calls, no model autonomy).
+    - `runtime/tests/test_ask_service.py` — unit test asserting `execution is False`, `governance_posture == \"PLAN_ONLY\"`, and 3–6 steps.
+  - Documentation:
+    - `docs/runtime/JETBRAINS_PLUGIN_MVP_SPIKE.md` — extended with “Repo-Aware Ask / Safe Planning (PLAN ONLY)” section (architecture flow, runtime interaction, context bundle explanation, demo steps).
+- **Evidence**:
+  - Manual verification that `/v0/ask` accepts AskRequest v0.1, calls `ContextEngine`, returns PlanOnlyResponse v0.1 with deterministic `context_bundle.files[].selection_reason`, `governance_posture=PLAN_ONLY`, and `execution=false`.
+  - Sandbox IDE flow:
+    - Tools → “Ask Motadata AI” sends AskRequest with repo_root + revision + query.
+    - Response dialog shows PLAN ONLY badge, context bundle file list with selection reasons, selectors used, and 3–6 deterministic plan steps.
+    - No execution, sandboxing, or code edits are performed; failure cases are surfaced as non-blocking warnings without client-side fallback planning.
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
@@ -470,47 +524,39 @@ This section records **evidence of completed milestones**. Entries should be **a
 This file is the **single live progress dashboard** for the Motadata AI Coding Assistant roadmap. Future updates (including by automated tools such as Cursor) must follow these rules:
 
 1. **Only update statuses when evidence exists**
-   - Do not mark a milestone as `COMPLETE` or `LOCKED` without a corresponding evidence entry in **Section 6**.
-   - Prefer moving milestones through `IN_PROGRESS → VALIDATING → COMPLETE → LOCKED` explicitly.
-
+  - Do not mark a milestone as `COMPLETE` or `LOCKED` without a corresponding evidence entry in **Section 6**.
+  - Prefer moving milestones through `IN_PROGRESS → VALIDATING → COMPLETE → LOCKED` explicitly.
 2. **Do not advance milestones without required artifacts and evidence**
-   - A milestone may **not** be marked `VALIDATING`, `COMPLETE`, or `LOCKED` unless:
-     - Its **required artifacts exist** (as listed in the milestone detail sections), and
-     - Its **Evidence** section contains at least one concrete validation entry (file, metric, or report).
-   - “Started coding” or partial implementation without artifacts and validation does **not** qualify.
-
+  - A milestone may **not** be marked `VALIDATING`, `COMPLETE`, or `LOCKED` unless:
+    - Its **required artifacts exist** (as listed in the milestone detail sections), and
+    - Its **Evidence** section contains at least one concrete validation entry (file, metric, or report).
+  - “Started coding” or partial implementation without artifacts and validation does **not** qualify.
 3. **Append to the evidence log instead of rewriting history**
-   - When a milestone completes, add a new subsection under **Section 6** with:
-     - Milestone ID and name.
-     - Bullet list of concrete evidence artifacts (files, metrics, reports).
-   - Do **not** remove or rewrite prior evidence entries.
-
+  - When a milestone completes, add a new subsection under **Section 6** with:
+    - Milestone ID and name.
+    - Bullet list of concrete evidence artifacts (files, metrics, reports).
+  - Do **not** remove or rewrite prior evidence entries.
 4. **Update current focus when the active milestone changes**
-   - Keep **Section 5 (Current Sprint / Current Focus)** aligned with the actual active work.
-   - Update:
-     - `Current objective`
-     - `Active tasks`
-     - `Next 3 milestones`
-     - `Current blockers`
-     - `Immediate next action`
-
+  - Keep **Section 5 (Current Sprint / Current Focus)** aligned with the actual active work.
+  - Update:
+    - `Current objective`
+    - `Active tasks`
+    - `Next 3 milestones`
+    - `Current blockers`
+    - `Immediate next action`
 5. **Do not alter constitutional doctrine**
-   - Do **not** change phase semantics (REF, CONF, DES, MIX, CODE, REACH).
-   - Do **not** change dominance hierarchy or irreversible boundary definitions.
-   - Do **not** rename or reinterpret pipeline stages (Stage-1 through Stage-8).
-   - If a documentation change appears to affect doctrine, it must be made in governance documents via a separate GREG process, **not** here.
-
+  - Do **not** change phase semantics (REF, CONF, DES, MIX, CODE, REACH).
+  - Do **not** change dominance hierarchy or irreversible boundary definitions.
+  - Do **not** rename or reinterpret pipeline stages (Stage-1 through Stage-8).
+  - If a documentation change appears to affect doctrine, it must be made in governance documents via a separate GREG process, **not** here.
 6. **Preserve milestone IDs and naming**
-   - Do not change milestone IDs (e.g., `M3.0`, `M4.1`) once created.
-   - If a milestone is superseded, mark it as such in the **Notes** or **Exit criteria**, but keep the row for historical context.
-
+  - Do not change milestone IDs (e.g., `M3.0`, `M4.1`) once created.
+  - If a milestone is superseded, mark it as such in the **Notes** or **Exit criteria**, but keep the row for historical context.
 7. **Keep tables and structure intact**
-   - Maintain the section ordering and table structures defined in this file.
-   - When adding new milestones (if ever necessary), place them in the appropriate layer section with a clear ID and description.
-
+  - Maintain the section ordering and table structures defined in this file.
+  - When adding new milestones (if ever necessary), place them in the appropriate layer section with a clear ID and description.
 8. **Be concise but operational**
-   - Avoid marketing language.
-   - Focus on concrete status, dependencies, exit criteria, and evidence.
+  - Avoid marketing language.
+  - Focus on concrete status, dependencies, exit criteria, and evidence.
 
 Following this protocol ensures that this tracker remains a durable, engineering-grade artifact that Cursor and humans can rely on for roadmap execution reviews.
-

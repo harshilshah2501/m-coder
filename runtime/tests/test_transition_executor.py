@@ -14,6 +14,7 @@ from pathlib import Path
 from runtime.state.store import TaskStateStore
 from runtime.state.transitions import TransitionValidator
 from runtime.orchestrator.loop_controller import LoopController
+from runtime.context.engine import ContextEngine, MissingExplicitFilesError, ContextEngineError
 
 
 class TestTransitionValidator(unittest.TestCase):
@@ -173,6 +174,137 @@ class TestLoopController(unittest.TestCase):
         state = self.store.load("task-006")
         self.assertEqual(state.current_state, "COMPLETED")
         self.assertEqual(len(state.transition_journal), 3)
+
+    def test_governance_to_context_wires_context_engine_and_persists_metadata(self) -> None:
+        # Use a temporary directory as repo root.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / "a.py").write_text("print('a')\n", encoding="utf-8")
+
+            store = TaskStateStore()
+            controller = LoopController(store=store, validator=self.validator)
+            controller.create_task(
+                "task-ctx-1",
+                metadata={
+                    "root_path": str(repo_root),
+                    "revision": "rev-123",
+                    "context_files": ["a.py"],
+                    "context_max_files": 5,
+                    "context_max_bytes": 1024,
+                },
+            )
+
+            # Drive state to GOVERNANCE_CLASSIFIED (CONF or DES path).
+            controller.apply_transition(
+                "task-ctx-1",
+                transition_id="task_to_plan_eval",
+                guard_inputs={"event_valid": True},
+            )
+            controller.apply_transition(
+                "task-ctx-1",
+                transition_id="plan_eval_to_governance",
+            )
+
+            r = controller.apply_transition(
+                "task-ctx-1",
+                transition_id="governance_to_context",
+                guard_inputs={"phase": "CONF"},
+            )
+            self.assertTrue(r.valid)
+
+            state = store.load("task-ctx-1")
+            assert state is not None
+            self.assertEqual(state.current_state, "CONTEXT_FETCHED")
+            ctx = state.metadata.get("context_bundle")
+            self.assertIsNotNone(ctx)
+            self.assertEqual(ctx["revision"], "rev-123")
+            self.assertEqual(ctx["paths"], ["a.py"])
+            self.assertIn("bundle_id", ctx)
+            self.assertIsInstance(ctx["bundle_id"], str)
+            self.assertIsInstance(ctx["truncated"], bool)
+
+    def test_governance_to_context_missing_file_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            # Only create one file; the other will be missing.
+            (repo_root / "a.py").write_text("print('a')\n", encoding="utf-8")
+
+            store = TaskStateStore()
+            controller = LoopController(store=store, validator=self.validator)
+            controller.create_task(
+                "task-ctx-2",
+                metadata={
+                    "root_path": str(repo_root),
+                    "revision": "rev-123",
+                    "context_files": ["missing.py"],
+                },
+            )
+
+            controller.apply_transition(
+                "task-ctx-2",
+                transition_id="task_to_plan_eval",
+                guard_inputs={"event_valid": True},
+            )
+            controller.apply_transition(
+                "task-ctx-2",
+                transition_id="plan_eval_to_governance",
+            )
+
+            r = controller.apply_transition(
+                "task-ctx-2",
+                transition_id="governance_to_context",
+                guard_inputs={"phase": "CONF"},
+            )
+            self.assertFalse(r.valid)
+            self.assertEqual(r.stop_reason, "validation_failed")
+            state = store.load("task-ctx-2")
+            assert state is not None
+            # State should remain GOVERNANCE_CLASSIFIED.
+            self.assertEqual(state.current_state, "GOVERNANCE_CLASSIFIED")
+            self.assertNotIn("context_bundle", state.metadata)
+
+    def test_context_bundle_metadata_deterministic_for_same_request(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / "a.py").write_text("print('a')\n", encoding="utf-8")
+
+            store = TaskStateStore()
+            controller = LoopController(store=store, validator=self.validator)
+
+            for task_id in ["task-ctx-3a", "task-ctx-3b"]:
+                controller.create_task(
+                    task_id,
+                    metadata={
+                        "root_path": str(repo_root),
+                        "revision": "rev-xyz",
+                        "context_files": ["a.py"],
+                        "context_max_files": 5,
+                        "context_max_bytes": 1024,
+                    },
+                )
+                controller.apply_transition(
+                    task_id,
+                    transition_id="task_to_plan_eval",
+                    guard_inputs={"event_valid": True},
+                )
+                controller.apply_transition(
+                    task_id,
+                    transition_id="plan_eval_to_governance",
+                )
+                controller.apply_transition(
+                    task_id,
+                    transition_id="governance_to_context",
+                    guard_inputs={"phase": "CONF"},
+                )
+
+            state_a = store.load("task-ctx-3a")
+            state_b = store.load("task-ctx-3b")
+            assert state_a is not None and state_b is not None
+            ctx_a = state_a.metadata.get("context_bundle")
+            ctx_b = state_b.metadata.get("context_bundle")
+            self.assertEqual(ctx_a["revision"], ctx_b["revision"])
+            self.assertEqual(ctx_a["paths"], ctx_b["paths"])
+            self.assertEqual(ctx_a["truncated"], ctx_b["truncated"])
 
     def test_retry_path_review_to_model_proposal_ready_works(self) -> None:
         self.controller.create_task("task-007", max_iterations=3)

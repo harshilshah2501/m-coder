@@ -28,15 +28,14 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     "ledger": "v0.1",
                     "shadow_run_record": "v0.1",
                     "ingestion_batch": "v0.1",
+                    "ask_request": "v0.1",
+                    "plan_only_response": "v0.1"
                 },
             })
             return
         self._send_json(404, {"error": "Not found"})
 
     def do_POST(self) -> None:
-        if self.path != "/v0/plan":
-            self._send_json(404, {"error": "Not found"})
-            return
         try:
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8")
@@ -45,24 +44,44 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": f"Invalid JSON: {e}"})
             return
 
-        errs = handlers.validate_plan_request(data)
-        if errs:
-            self._send_json(400, {"error": "Schema validation failed", "details": errs})
+        if self.path == "/v0/plan":
+            errs = handlers.validate_plan_request(data)
+            if errs:
+                self._send_json(400, {"error": "Schema validation failed", "details": errs})
+                return
+
+            mode = config.get_mode()
+            fixed_time = config.get_fixed_time()
+            spool_root = config.get_spool_dir()
+            spool_root.mkdir(parents=True, exist_ok=True)
+            date_or_id = fixed_time or "2026-03-01T00:00:00Z"  # fallback for grouping
+
+            try:
+                decision, _ = handlers.handle_plan_request(
+                    data, mode, fixed_time, spool_root, date_or_id
+                )
+                self._send_json(200, decision)
+            except Exception as e:
+                self._send_json(500, {"error": str(e)})
             return
 
-        mode = config.get_mode()
-        fixed_time = config.get_fixed_time()
-        spool_root = config.get_spool_dir()
-        spool_root.mkdir(parents=True, exist_ok=True)
-        date_or_id = fixed_time or "2026-03-01T00:00:00Z"  # fallback for grouping
+        if self.path == "/v0/ask":
+            from runtime.ask_service.handlers import validate_ask_request, handle_ask_request
 
-        try:
-            decision, _ = handlers.handle_plan_request(
-                data, mode, fixed_time, spool_root, date_or_id
-            )
-            self._send_json(200, decision)
-        except Exception as e:
-            self._send_json(500, {"error": str(e)})
+            errs = validate_ask_request(data)
+            if errs:
+                self._send_json(400, {"error": "Schema validation failed", "details": errs})
+                return
+
+            try:
+                response = handle_ask_request(data)
+                self._send_json(200, response)
+            except Exception as e:
+                # Even on handler failure, preserve execution=false semantics inside handler.
+                self._send_json(500, {"error": str(e)})
+            return
+
+        self._send_json(404, {"error": "Not found"})
 
     def _send_json(self, status: int, obj: object) -> None:
         self.send_response(status)

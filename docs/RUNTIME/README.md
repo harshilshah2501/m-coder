@@ -10,6 +10,7 @@ Enforcement stack: plan-gate, judge-gate, authority validator, irreversibility d
 |----------|-------------|
 | [RUNTIME_STATE_TRANSITIONS.md](RUNTIME_STATE_TRANSITIONS.md) | M3.T0 agent state machine, transition matrix, ledger semantics |
 | [RUNTIME_AGENT_ARCHITECTURE.md](RUNTIME_AGENT_ARCHITECTURE.md) | Runtime-governed agent loop, model worker interface |
+| [REPOSITORY_CONTEXT_ENGINE.md](REPOSITORY_CONTEXT_ENGINE.md) | M3.0 deterministic repository context engine (contracts, selectors, engine) |
 | [RUNTIME_PLAN_AND_LEDGER_V0_1.md](../RUNTIME_PLAN_AND_LEDGER_V0_1.md) | Plan/ledger spec, rules R1-R5, L1-L5 |
 | [JETBRAINS_PLUGIN_FLOW_V0_1.md](../JETBRAINS_PLUGIN_FLOW_V0_1.md) | IDE contracts, R-IDE1..R-IDE3 |
 | [SHADOW_MODE_PROTOCOL_V0_1.md](../SHADOW_MODE_PROTOCOL_V0_1.md) | Shadow rules S-1..S-6 |

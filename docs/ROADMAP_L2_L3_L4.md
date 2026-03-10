@@ -105,7 +105,7 @@ The CONF→DES drift issue is **closed**. Multiple SFT patch attempts did not co
 
 ### Critical Risk Zone
 
-- **Pre-freeze gap:** Dataset not yet frozen; any change to bases/variants invalidates downstream. Mutation harness must pass before freeze.
+- **Pre-freeze gap:** **Closed for the current Golden Exemplars corpus.** Dataset is frozen and immutable (`FREEZE_CERTIFICATE_v1.json`); any change to bases/variants requires a new freeze.
 - **Runtime gap:** No REF enforcement at execution; model could act under illegitimacy.
 - **Observation gap:** No production drift baseline; GREG cannot run on live evidence.
 
