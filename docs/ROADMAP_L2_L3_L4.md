@@ -88,18 +88,16 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 | Layer | Status |
 |-------|--------|
 | **Governance** | Locked (Phases 01–05; Phase-06 hardening defined) |
-| **Compilation** | Pre-freeze (bases mapped; variants in progress; Stage-6 harness built; not yet frozen) |
-| **Runtime** | Architected, not implemented |
-| **Observation** | Governance-level only (drift suite exists; production observation not yet wired) |
+| **Compilation** | Complete / Locked (Stage-6C cure validated; dataset frozen; SFT training and post-SFT revalidation complete; see `docs/LIVE_ROADMAP_TRACKER.md`) |
+| **Runtime** | In progress (runtime emulator and state machine contracts implemented; broader runtime stack under active buildout; see `docs/LIVE_ROADMAP_TRACKER.md`) |
+| **Observation** | Partial (governance-level drift suite exists; production observation not yet wired) |
 
 ### What Is Left
 
-- Stage-6 mutation harness full validation and pass-rate gates
-- Deterministic dataset freeze and manifest lock
-- SFT training (Stage-8) and post-SFT revalidation
-- Runtime Plan/Judge/Authority/Irreversibility implementation
-- Shadow mode and ledger emission
-- Observation drift baseline and GREG automation
+- Runtime Plan/Judge/Authority/Irreversibility implementation (Layer-3)
+- Repository Context Engine, Execution Sandbox, Model Worker Interface, IDE/CI integration
+- Shadow mode validation and ledger emission wired through the runtime loop
+- Observation drift baseline, collapse vector tracking, ledger reconciliation, and GREG automation (Layer-4)
 
 ### CONF→DES Issue Closed (Patch-2)
 
@@ -113,14 +111,10 @@ The CONF→DES drift issue is **closed**. Multiple SFT patch attempts did not co
 
 ### Estimated Sequencing Order
 
-1. M2.4 Collapse vector validation (Stage-6C pass)
-2. M2.5 Deterministic dataset freeze
-3. M2.6 SFT training
-4. M2.7 Post-SFT mutation revalidation
-5. M3.0–M3.3 Plan-Gate Runtime, Runtime Governor, Task State Store, Deterministic Agent Loop
-6. M3.4–M3.8 Repository Context Engine, Execution Sandbox, Model Worker Interface, IDE Plugin Bridge, Ledger Emission
-7. M3.9 Shadow Mode Validation
-8. M4.1–M4.5 Observation baseline, tracking, GREG automation
+1. M3.0–M3.3 Plan-Gate Runtime, Runtime Governor, Task State Store, Deterministic Agent Loop
+2. M3.4–M3.8 Repository Context Engine, Execution Sandbox, Model Worker Interface, IDE Plugin Bridge, Ledger Emission
+3. M3.9 Shadow Mode Validation
+4. M4.1–M4.5 Observation baseline, tracking, GREG automation
 
 ---
 

@@ -8,6 +8,8 @@ Layer-3 enforces constitutional judgment at execution time. It implements Phase-
 
 **Directory:** `runtime/`
 
+Deterministic runtime state machine semantics are defined in `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` and the associated schemas in `runtime/state/schemas/`.
+
 ---
 
 ## Plan-Gate Architecture
@@ -32,7 +34,7 @@ Blocks at boundaries. Phase-05 CODE semantics honored. Boundary crossing attempt
 
 ## Judge Gate
 
-Applies dominance hierarchy. Terminal posture must align with constitutional phase expected. REF → refuse; DES → not safe_execute; CODE → execution_mode shadow or live.
+Applies dominance hierarchy. Terminal posture must align with constitutional phase expected. REF → refuse; DES → not safe_execute; CODE → execution_mode shadow or live. DES is a **proposal-only** phase; `safe_execute` is a runtime terminal posture, not a DES semantic authorization.
 
 ---
 
