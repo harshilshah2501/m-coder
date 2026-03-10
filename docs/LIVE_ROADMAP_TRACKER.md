@@ -133,7 +133,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 | ID     | Milestone                                | Status        | Owner       | Dependencies                              | Deliverable                                                                 | Artifacts | Evidence | Next unblocker                    | Exit criteria                                                                 |
 |--------|------------------------------------------|---------------|------------|-------------------------------------------|----------------------------------------------------------------------------|-----------|----------|-----------------------------------|-------------------------------------------------------------------------------|
-| M3.E0  | Deterministic Runtime Emulator           | IN_PROGRESS   | Shared      | L2.* (LOCKED), existing L3 runtime contracts | Deterministic plan-gate runtime emulator + shadow runner + invariant tests. | 0/6       | none     | implement plan_gate.evaluate_plan() | REF/CONF/approval invariants enforced in emulator; sample IDE events execute end-to-end with deterministic hashes and ledger rows. |
+| M3.E0  | Deterministic Runtime Emulator           | VALIDATING    | Shared      | L2.* (LOCKED), existing L3 runtime contracts | Deterministic plan-gate runtime emulator + shadow runner + invariant tests. | 6/6       | see §6.2 | — | REF/CONF/approval invariants enforced in emulator; sample IDE events execute end-to-end with deterministic hashes and ledger rows. |
 | M3.T0  | Deterministic Agent State Transition Table | NOT_STARTED   | Architect   | Plan-Gate runtime contract                | Deterministic runtime transition spec + schemas for agent state machine.   | 0/3       | none     | define state enum                 | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented. |
 | M3.0   | Repository Context Engine                | IN_PROGRESS   | Shared      | L2.*                                     | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 0/4       | none     | design-stage context architecture doc | Context for runtime decisions is deterministic, revision-tied, and independently auditable. |
 | M3.1   | Agent Loop Orchestrator                 | BLOCKED       | Architect   | M3.0, M3.T0                               | Deterministic agent loop controller (Runtime Governor + loop control semantics). | 0/4       | none     | waiting on M3.T0                  | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined. |
@@ -169,7 +169,17 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Evidence**
 
-- none yet
+- All 6 required artifacts implemented and verified.
+- Shadow runner demo executed successfully with all 3 scenarios passing:
+  - `merge_without_approval` → REF → refuse (PASS)
+  - `commit_prod_change` → CONF → bounded_allow (PASS)
+  - `safe_commit` → DES → safe_execute (PASS)
+- Invariant tests (28 tests) all passing:
+  - `authority_fail never produces safe_execute` (PASS)
+  - `boundary_present never produces defer` (PASS)
+  - `shadow mode never emits boundary_verdict=crossed` (PASS)
+- Deterministic hashing verified (same event → same plan_hash).
+- Ledger emission with schema_version `ledger_row.v0.1` verified.
 
 ##### M3.T0 — Deterministic Agent State Transition Table
 
@@ -371,14 +381,14 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
   - In parallel, define **M3.T0 Deterministic Agent State Transition Table** and related state schemas.
   - Finalize high-level architecture docs for Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface.
 - **Next 3 milestones**:
-  1. **M3.E0 Deterministic Runtime Emulator** — IN_PROGRESS  
+  1. **M3.E0 Deterministic Runtime Emulator** — VALIDATING (all artifacts implemented, invariant tests passing)
   2. **M3.T0 Deterministic Agent State Transition Table** — NOT_STARTED  
   3. **M3.0 Repository Context Engine** — IN_PROGRESS (design-stage context architecture)  
 - **Current blockers**:
   - Final decision on sandboxing strategy (e.g., process isolation, containerization) and resource constraints.
   - Tooling and infra selection for ledger storage and replay (shared with Layer-4 needs).
 - **Immediate next action**:
-  - **Implement M3.E0 deterministic runtime emulator while defining M3.T0 transition-table artifacts in parallel.**
+  - **Complete M3.E0 validation and begin M3.T0 transition-table artifacts.**
 
 ---
 
@@ -397,6 +407,29 @@ This section records **evidence of completed milestones**. Entries should be **a
     - `s2_s3 = 0`
   - Deterministic CONF runtime rendering adopted as part of governance-aligned runtime enforcement.
   - `LAYER2_RELEASE_VERIFICATION.json = PASS` (location documented in Layer-2 artifacts).  
+
+### 6.2 M3.E0 — Deterministic Runtime Emulator
+
+- **Milestone**: M3.E0 Deterministic Runtime Emulator — VALIDATING (2026-03-09)
+- **Artifacts** (6/6):
+  - `runtime/plan_gate_stub/plan_gate.py` — PlanGate class with `evaluate_plan()` method
+  - `runtime/emulator/authority.py` — AuthorityChecker with deterministic rule-based validation
+  - `runtime/emulator/boundary.py` — BoundaryDetector with irreversible boundary detection
+  - `runtime/emulator/ledger.py` — LedgerEmitter producing `ledger_row.v0.1` records
+  - `runtime/shadow_runner/run_demo.py` — Shadow runner with 3 demo scenarios
+  - `runtime/tests/test_emulator_invariants.py` — 28 invariant tests
+- **Evidence**:
+  - Shadow runner demo (`python3 -m runtime.shadow_runner.run_demo`): ALL PASS
+    - `merge_without_approval` → Phase: REF, Decision: REFUSAL, Posture: refuse
+    - `commit_prod_change` → Phase: CONF, Decision: BOUNDED_ALLOW, Posture: bounded_allow
+    - `safe_commit` → Phase: DES, Decision: SAFE_EXECUTE, Posture: safe_execute
+  - Invariant validation: ALL PASS
+    - `authority_fail never produces safe_execute`
+    - `boundary_present never produces defer`
+    - `shadow mode never emits boundary_verdict=crossed`
+  - pytest (`python3 -m pytest runtime/tests/test_emulator_invariants.py`): 28 passed
+  - Deterministic hashing verified: same event produces identical `plan_hash` and `boundary_phrase_hash`
+  - Ledger rows emitted with `schema_version: ledger_row.v0.1`
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
