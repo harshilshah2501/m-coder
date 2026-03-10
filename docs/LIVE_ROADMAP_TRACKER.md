@@ -134,9 +134,9 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | ID     | Milestone                                | Status        | Owner       | Dependencies                              | Deliverable                                                                 | Artifacts | Evidence | Next unblocker                    | Exit criteria                                                                 |
 |--------|------------------------------------------|---------------|------------|-------------------------------------------|----------------------------------------------------------------------------|-----------|----------|-----------------------------------|-------------------------------------------------------------------------------|
 | M3.E0  | Deterministic Runtime Emulator           | VALIDATING    | Shared      | L2.* (LOCKED), existing L3 runtime contracts | Deterministic plan-gate runtime emulator + shadow runner + invariant tests. | 6/6       | see §6.2 | — | REF/CONF/approval invariants enforced in emulator; sample IDE events execute end-to-end with deterministic hashes and ledger rows. |
-| M3.T0  | Deterministic Agent State Transition Table | NOT_STARTED   | Architect   | Plan-Gate runtime contract                | Deterministic runtime transition spec + schemas for agent state machine.   | 0/3       | none     | define state enum                 | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented. |
+| M3.T0  | Deterministic Agent State Transition Table | COMPLETE      | Architect   | Plan-Gate runtime contract                | Deterministic runtime transition spec + schemas for agent state machine.   | 3/3       | see §6.3 | —                                 | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented. |
 | M3.0   | Repository Context Engine                | IN_PROGRESS   | Shared      | L2.*                                     | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 0/4       | none     | design-stage context architecture doc | Context for runtime decisions is deterministic, revision-tied, and independently auditable. |
-| M3.1   | Agent Loop Orchestrator                 | BLOCKED       | Architect   | M3.0, M3.T0                               | Deterministic agent loop controller (Runtime Governor + loop control semantics). | 0/4       | none     | waiting on M3.T0                  | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined. |
+| M3.1   | Agent Loop Orchestrator                 | IN_PROGRESS   | Architect   | M3.0, M3.T0                               | Deterministic agent loop controller (Runtime Governor + loop control semantics). | 0/4       | see §6.4 | write M3.1 spec artifacts          | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined. |
 | M3.2   | Execution Sandbox                       | NOT_STARTED   | Architect   | M3.0–M3.1                                 | Isolated executor for tools/tests/commands under runtime control.          | 0/4       | none     | sandbox contract doc              | Irreversible effects can only occur through the sandbox with authority/boundary checks and ledger emission. |
 | M3.3   | Plan-Gate Integration                   | NOT_STARTED   | Shared      | M3.0–M3.2                                 | Wiring between Plan objects, decision contracts, and runtime agent loop.   | 0/3       | none     | integration contract doc          | All relevant requests flow through Plan-Gate before execution; fail-closed behavior enforced. |
 | M3.4   | IDE Plugin Integration                  | NOT_STARTED   | Cursor/IDE  | M3.3                                      | IDE plugins that route developer actions through Plan-Gate and agent loop. | 0/3       | none     | plugin bridge doc                 | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound. |
@@ -185,7 +185,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Required Artifacts**
 
-- `docs/runtime/RUNTIME_STATE_TRANSITIONS.md`
+- `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md`
 - `runtime/state/schemas/state_enums.v0.1.json`
 - `runtime/state/schemas/transition_matrix.v0.1.json`
 
@@ -378,17 +378,18 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
   - Stand up Repository Context Engine and Execution Sandbox scaffolding.  
 - **Active tasks**:
   - Implement **M3.E0 Deterministic Runtime Emulator**: plan_gate stub, authority/boundary/ledger helpers, shadow runner CLI, and invariant tests.
-  - In parallel, define **M3.T0 Deterministic Agent State Transition Table** and related state schemas.
+  - Deliver **M3.T0 Deterministic Agent State Transition Table**: runtime-owned control contract + state enums + transition matrix (see §6.3).
+  - Begin **M3.1 Agent Loop Orchestrator** spec + deterministic transition-executor scaffold: task state store + transition validation + loop controller (see §6.4).
   - Finalize high-level architecture docs for Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface.
 - **Next 3 milestones**:
   1. **M3.E0 Deterministic Runtime Emulator** — VALIDATING (all artifacts implemented, invariant tests passing)
-  2. **M3.T0 Deterministic Agent State Transition Table** — NOT_STARTED  
+  2. **M3.1 Agent Loop Orchestrator** — IN_PROGRESS (transition executor scaffold in place; spec artifacts pending)  
   3. **M3.0 Repository Context Engine** — IN_PROGRESS (design-stage context architecture)  
 - **Current blockers**:
   - Final decision on sandboxing strategy (e.g., process isolation, containerization) and resource constraints.
   - Tooling and infra selection for ledger storage and replay (shared with Layer-4 needs).
 - **Immediate next action**:
-  - **Complete M3.E0 validation and begin M3.T0 transition-table artifacts.**
+  - **Complete M3.E0 validation; proceed with M3.1 orchestrator spec artifacts (loop controller spec, transition executor design, budgets, stop conditions).**
 
 ---
 
@@ -430,6 +431,35 @@ This section records **evidence of completed milestones**. Entries should be **a
   - pytest (`python3 -m pytest runtime/tests/test_emulator_invariants.py`): 28 passed
   - Deterministic hashing verified: same event produces identical `plan_hash` and `boundary_phrase_hash`
   - Ledger rows emitted with `schema_version: ledger_row.v0.1`
+
+### 6.3 M3.T0 — Deterministic Agent State Transition Table
+
+- **Milestone**: M3.T0 Deterministic Agent State Transition Table — COMPLETE (2026-03-10)
+- **Artifacts** (3/3):
+  - `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` — deterministic runtime state transition contract (runtime-owned control, terminal states, stop reasons, plan-gate checkpoints, decision-boundary ledger semantics)
+  - `runtime/state/schemas/state_enums.v0.1.json` — state + stop_reason enums (13 states including `PLAN_EVALUATED`)
+  - `runtime/state/schemas/transition_matrix.v0.1.json` — allowed transitions only, terminal non-escaping states, `transition_id`, plan-gate checkpoints, decision-boundary ledger semantics (anti-double-ledger guidance)
+- **Evidence**:
+  - Terminal states documented as non-escaping; invalid transitions defined as reject-by-default
+  - Ledger semantics are **decision-boundary based** with explicit anti-double-ledger rule for simple REF refusal flows
+  - DES explicitly constrained to **model-proposal semantics only**; execution remains runtime-owned
+
+### 6.4 M3.1 — Agent Loop Orchestrator (Scaffold)
+
+- **Milestone**: M3.1 Agent Loop Orchestrator — IN_PROGRESS (2026-03-10)
+- **Artifacts (scaffold)**:
+  - `runtime/state/store.py` — Task state store (in-memory + optional JSON persistence)
+  - `runtime/state/transitions.py` — transition validator enforcing `transition_matrix.v0.1.json`
+  - `runtime/orchestrator/loop_controller.py` — deterministic transition executor (load → validate → apply → persist → journal)
+  - `runtime/tests/test_transition_executor.py` — transition executor tests (valid transitions succeed; invalid transitions refused; terminal non-escaping enforced; iteration/repetition/no-op guards)
+- **Evidence**:
+  - Store load refreshes in-memory view when reading from disk (prevents subtle divergence in long-lived processes)
+  - Loop safety guards enforced:
+    - retry-path iteration cap (currently applies to `review_to_proposal` only)
+    - excessive consecutive repetition of the same `transition_id` is rejected
+    - no-op transitions are rejected unless explicitly defined in the matrix
+    - guard blocks return explicit `stop_reason` (e.g., `iteration_limit`) without forcing terminal state yet (future evolution: explicit terminal transition like `REVIEW_DECIDED -> BLOCKED`)
+  - pytest (`python3 -m pytest runtime/tests/test_transition_executor.py -v`): 20 passed
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
