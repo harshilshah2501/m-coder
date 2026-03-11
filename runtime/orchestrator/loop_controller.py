@@ -2,7 +2,7 @@
 Loop Controller — M3.1 orchestration substrate.
 
 Deterministic transition executor that obeys transition_matrix.v0.1.json.
-No model calls. No sandbox. Just state load, validate, apply, persist, journal.
+Integrates ContextEngine (governance_to_context) and SandboxExecutor (validated_to_sandbox).
 """
 
 from __future__ import annotations
@@ -11,12 +11,21 @@ from dataclasses import dataclass
 import hashlib
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable
 
 from runtime.state.store import TaskState, TaskStateStore
 from runtime.state.transitions import TransitionResult, TransitionValidator
 from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
+
+try:
+    from runtime.sandbox.sandbox_executor import SandboxAction, SandboxExecutor
+    from runtime.sandbox.sandbox_errors import SandboxError
+except ImportError:
+    SandboxAction = None  # type: ignore[misc, assignment]
+    SandboxExecutor = None  # type: ignore[misc, assignment]
+    SandboxError = Exception  # type: ignore[misc, assignment]
 
 
 @dataclass
@@ -50,6 +59,7 @@ class LoopController:
         validator: TransitionValidator | None = None,
         journal_callback: Callable[[TransitionJournalEntry], None] | None = None,
         context_engine: ContextEngine | None = None,
+        sandbox_executor: Any = None,
     ):
         """
         Initialize loop controller.
@@ -58,10 +68,13 @@ class LoopController:
             store: Task state store. If None, create in-memory store.
             validator: Transition validator. If None, load default matrix.
             journal_callback: Optional callback for each applied transition.
+            context_engine: Used for governance_to_context transition.
+            sandbox_executor: Optional SandboxExecutor for validated_to_sandbox (PROPOSAL_VALIDATED -> SANDBOX_EXECUTED).
         """
         self.store = store or TaskStateStore()
         self.validator = validator or TransitionValidator()
         self.context_engine = context_engine or ContextEngine()
+        self.sandbox_executor = sandbox_executor
         self.journal_callback = journal_callback
         self._journal: list[TransitionJournalEntry] = []
         self.max_consecutive_same_transition_id = 5
@@ -188,6 +201,20 @@ class LoopController:
                     reason=str(e),
                 )
 
+        # If this is PROPOSAL_VALIDATED -> SANDBOX_EXECUTED, run sandbox and persist result
+        # so downstream transitions (sandbox_to_tests / sandbox_to_failed) can use guard_inputs.
+        if transition_id == "validated_to_sandbox":
+            err = self._run_sandbox_and_persist(task_id, state, guard_inputs)
+            if err:
+                return TransitionResult(
+                    valid=False,
+                    transition_id=transition_id,
+                    from_state=from_state,
+                    to_state=resolved.to_state,
+                    stop_reason="validation_failed",
+                    reason=err,
+                )
+
         to_state_final = resolved.to_state or ""
 
         # Apply transition.
@@ -233,6 +260,47 @@ class LoopController:
     def get_journal(self) -> list[TransitionJournalEntry]:
         """Return journal of applied transitions for this controller instance."""
         return list(self._journal)
+
+    def _run_sandbox_and_persist(
+        self, task_id: str, state: TaskState, guard_inputs: dict[str, Any]
+    ) -> str | None:
+        """
+        Run sandbox for validated_to_sandbox transition and persist result in state.metadata.
+
+        guard_inputs must contain:
+        - command: list[str]
+        - working_dir: str | Path
+
+        Optional: timeout_seconds, env.
+        Persists last_sandbox_success and last_sandbox_ledger_id for downstream guards.
+        Returns error message string on failure, None on success.
+        """
+        if self.sandbox_executor is None or SandboxAction is None:
+            return "Sandbox executor not configured for PROPOSAL_VALIDATED -> SANDBOX_EXECUTED"
+        command = guard_inputs.get("command")
+        working_dir = guard_inputs.get("working_dir") or state.metadata.get("working_dir")
+        if not command or not isinstance(command, list):
+            return "guard_inputs must provide command (list[str]) for validated_to_sandbox"
+        if not working_dir:
+            return "guard_inputs must provide working_dir for validated_to_sandbox"
+        working_dir = Path(working_dir) if isinstance(working_dir, str) else working_dir
+        action = SandboxAction(
+            task_id=task_id,
+            command=command,
+            working_dir=working_dir,
+            timeout_seconds=guard_inputs.get("timeout_seconds"),
+            env=guard_inputs.get("env"),
+            metadata=state.metadata,
+        )
+        try:
+            result = self.sandbox_executor.execute_sandbox_action(action)
+        except SandboxError as e:
+            return str(e)
+        meta = state.metadata or {}
+        meta["last_sandbox_success"] = result.success
+        meta["last_sandbox_ledger_id"] = result.ledger_entry.event_id
+        state.metadata = meta
+        return None
 
     def _build_context_request(self, task_id: str, state: TaskState) -> ContextRequest:
         """

@@ -167,6 +167,10 @@ This spike instantiates the IDE side of M3.4 (“IDE Plugin Integration”) agai
 
 ### 7. Demo steps
 
+**Full walkthrough:** See [JETBRAINS_PLUGIN_DEMO_GUIDE.md](JETBRAINS_PLUGIN_DEMO_GUIDE.md) for prerequisites, step-by-step instructions, verification checklist, and troubleshooting.
+
+Summary:
+
 1. **Start Plan-Gate service** (from repo root):
    - Ensure Python dependencies for runtime are installed.
    - Run:
@@ -403,6 +407,10 @@ This demo path validates the end-to-end wiring from JetBrains commit → `ide_ev
 ---
 
 ### 6. Demo steps (Ask / Safe Planning)
+
+**Full walkthrough:** See [JETBRAINS_PLUGIN_DEMO_GUIDE.md](JETBRAINS_PLUGIN_DEMO_GUIDE.md) §5–§6 (Demo 1 commit flow, Demo 2 Ask flow), §7 verification, §8 troubleshooting.
+
+Summary:
 
 1. **Start Plan-Gate / Ask service** (from repo root):
    - `python3 -m runtime.plan_gate_service.app`

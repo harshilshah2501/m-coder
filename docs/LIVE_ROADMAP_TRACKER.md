@@ -417,7 +417,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
   - Final decision on sandboxing strategy (e.g., process isolation, containerization) and resource constraints.
   - Tooling and infra selection for ledger storage and replay (shared with Layer-4 needs).
 - **Immediate next action**:
-  - **Complete M3.2 sandbox integration with LoopController; wire sandbox execution at PROPOSAL_VALIDATED → SANDBOX_EXECUTED transition.**
+  - **M3.2 sandbox ↔ LoopController wiring done:** transition `validated_to_sandbox` (PROPOSAL_VALIDATED → SANDBOX_EXECUTED) now invokes SandboxExecutor when guard_inputs provide `command` and `working_dir`; result persisted in state metadata for downstream guards. Next: JetBrains plugin CommitContext resolution so plugin compiles and runs for demos; ledger storage/replay tooling (Layer-4).
 
 ---
 
@@ -507,7 +507,7 @@ This section records **evidence of completed milestones**. Entries should be **a
     - `runtime/ask_service/planner.py` — `PlanOnlyPlanner` (deterministic, bounded 3–6 read/inspect-only steps; no execution, no tool calls, no model autonomy).
     - `runtime/tests/test_ask_service.py` — unit test asserting `execution is False`, `governance_posture == \"PLAN_ONLY\"`, and 3–6 steps.
   - Documentation:
-    - `docs/runtime/JETBRAINS_PLUGIN_MVP_SPIKE.md` — extended with “Repo-Aware Ask / Safe Planning (PLAN ONLY)” section (architecture flow, runtime interaction, context bundle explanation, demo steps).
+    - `docs/RUNTIME/JETBRAINS_PLUGIN_MVP_SPIKE.md` — extended with “Repo-Aware Ask / Safe Planning (PLAN ONLY)” section (architecture flow, runtime interaction, context bundle explanation, demo steps).
 - **Evidence**:
   - Manual verification that `/v0/ask` accepts AskRequest v0.1, calls `ContextEngine`, returns PlanOnlyResponse v0.1 with deterministic `context_bundle.files[].selection_reason`, `governance_posture=PLAN_ONLY`, and `execution=false`.
   - Sandbox IDE flow:
@@ -535,6 +535,7 @@ This section records **evidence of completed milestones**. Entries should be **a
   - Environment filtering: blocklist strips secrets (AWS_*, GITHUB_TOKEN, etc.)
   - Ledger emission with deterministic event_id (sha256-based)
   - Orchestrator integration via `execute_sandbox_action()` convenience function
+  - **LoopController wiring:** transition `validated_to_sandbox` (PROPOSAL_VALIDATED → SANDBOX_EXECUTED) invokes SandboxExecutor when `guard_inputs` provide `command` and `working_dir`; result (`last_sandbox_success`, `last_sandbox_ledger_id`) persisted in task state for downstream guards (`sandbox_to_tests` / `sandbox_to_failed`). Tests in `runtime/tests/test_transition_executor.py::TestLoopControllerSandboxIntegration`.
   - pytest (`python3 -m pytest runtime/tests/test_sandbox_runner.py -v`): 37 passed
 - **Architecture**:
   - DES → propose

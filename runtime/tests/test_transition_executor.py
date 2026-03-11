@@ -422,6 +422,44 @@ class TestLoopController(unittest.TestCase):
         self.assertFalse(r.valid)
 
 
+class TestLoopControllerSandboxIntegration(unittest.TestCase):
+    """Tests for PROPOSAL_VALIDATED -> SANDBOX_EXECUTED (validated_to_sandbox) wiring."""
+
+    def test_validated_to_sandbox_without_executor_refused(self) -> None:
+        controller = LoopController(sandbox_executor=None)
+        controller.create_task("t-no-exec")
+        state = controller.store.load("t-no-exec")
+        state.current_state = "PROPOSAL_VALIDATED"
+        controller.store.save(state)
+        r = controller.apply_transition(
+            "t-no-exec",
+            transition_id="validated_to_sandbox",
+            guard_inputs={"command": ["true"], "working_dir": "/tmp"},
+        )
+        self.assertFalse(r.valid)
+        self.assertIn("Sandbox executor not configured", r.reason)
+
+    def test_validated_to_sandbox_runs_sandbox_and_persists_result(self) -> None:
+        from runtime.sandbox.sandbox_executor import SandboxExecutor
+
+        with tempfile.TemporaryDirectory() as tmp:
+            controller = LoopController(sandbox_executor=SandboxExecutor())
+            controller.create_task("t-sandbox")
+            state = controller.store.load("t-sandbox")
+            state.current_state = "PROPOSAL_VALIDATED"
+            controller.store.save(state)
+            r = controller.apply_transition(
+                "t-sandbox",
+                transition_id="validated_to_sandbox",
+                guard_inputs={"command": ["echo", "ok"], "working_dir": tmp},
+            )
+            self.assertTrue(r.valid, r.reason)
+            state = controller.store.load("t-sandbox")
+            self.assertEqual(state.current_state, "SANDBOX_EXECUTED")
+            self.assertTrue(state.metadata.get("last_sandbox_success"))
+            self.assertIn("last_sandbox_ledger_id", state.metadata)
+
+
 class TestLoopControllerPersistence(unittest.TestCase):
     """Tests for state persistence."""
 
