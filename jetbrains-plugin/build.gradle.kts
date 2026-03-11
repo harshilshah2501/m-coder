@@ -13,6 +13,7 @@ repositories {
 intellij {
     version.set("2023.3")
     type.set("IC") // IntelliJ IDEA Community
+    plugins.set(listOf("Git4Idea"))
 }
 
 dependencies {
@@ -26,5 +27,14 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 

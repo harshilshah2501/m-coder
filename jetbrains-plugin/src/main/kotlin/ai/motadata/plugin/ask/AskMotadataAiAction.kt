@@ -48,7 +48,7 @@ class AskMotadataAiAction : AnAction() {
         }
         sb.appendLine()
         if (result.selectorsUsed.isNotEmpty()) {
-            sb.appendLine("Selectors used: ${result.selectorsUsed.joinToString(\", \")}")
+            sb.appendLine("Selectors used: ${result.selectorsUsed.joinToString(", ")}")
             sb.appendLine()
         }
         sb.appendLine("Plan:")

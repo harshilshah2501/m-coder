@@ -6,13 +6,14 @@ import ai.motadata.plugin.logging.DecisionLogger
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vcs.CheckinProjectPanel
+import com.intellij.openapi.vcs.changes.CommitContext
 import com.intellij.openapi.vcs.checkin.CheckinHandler
 import com.intellij.openapi.vcs.checkin.CheckinHandlerFactory
-import com.intellij.openapi.vcs.checkin.CheckinProjectPanel
 import git4idea.repo.GitRepositoryManager
 
 class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
-    override fun createHandler(panel: CheckinProjectPanel): CheckinHandler {
+    override fun createHandler(panel: CheckinProjectPanel, commitContext: CommitContext): CheckinHandler {
         return MotadataCheckinHandler(panel.project)
     }
 }

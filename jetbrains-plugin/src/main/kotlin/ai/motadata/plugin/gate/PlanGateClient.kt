@@ -87,7 +87,7 @@ class PlanGateClient(
                 "repo_root" to (project.basePath ?: ""),
                 "branch" to branch,
                 "revision" to revision,
-                "user" to System.getProperty("user.name") ?: "unknown-user"
+                "user" to (System.getProperty("user.name") ?: "unknown-user")
             ),
             "action" to mapOf(
                 "action_type" to "VCS_COMMIT_INTENT",
