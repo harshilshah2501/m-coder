@@ -88,15 +88,56 @@ Invariants:
 
 ---
 
-## Execution Sandbox
+## Execution Sandbox (CODE Phase)
 
-The **Execution Sandbox** is the only place where tools, tests, and code can run with side effects:
+The **Execution Sandbox** (M3.2) is the **CODE phase** of the constitutional runtime. It is the only place where tools, tests, and code can run with side effects:
 
-- All executions (test runs, build commands, code formatters, analyzers) are invoked by the Runtime Governor through sandbox interfaces.
-- Sandboxed actions are associated with:
-  - The current task and loop state.
-  - The plan and decision that authorized them.
-  - Any relevant authority/boundary context.
+```
+DES → propose
+CONF → authorize
+CODE → execute (sandboxed)
+```
+
+Execution must **never happen outside the sandbox**.
+
+### Sandbox Architecture
+
+The sandbox is implemented as a local deterministic runner with strict guardrails:
+
+- **SandboxRunner**: Executes commands in isolated working directories using subprocess with `shell=False`
+- **SandboxPolicy**: Defines allowed commands, time limits, and environment restrictions
+- **SandboxResult**: Captures stdout/stderr, exit codes, artifacts, and execution time
+- **SandboxLedgerEmitter**: Emits ledger entries for every execution
+
+All executions (test runs, build commands, code formatters, analyzers) are invoked by the Runtime Governor through sandbox interfaces:
+
+```python
+from runtime.sandbox import execute_sandbox_action
+
+result = execute_sandbox_action(
+    task_id="task-123",
+    command=["pytest", "tests/"],
+    working_dir=Path("/repo"),
+)
+```
+
+### Sandbox Constraints
+
+Sandboxed actions are associated with:
+
+- The current task and loop state.
+- The plan and decision that authorized them.
+- Any relevant authority/boundary context.
+
+The sandbox enforces:
+
+- **Command allowlist**: Only pre-approved commands can execute (pytest, python, ruff, black, mypy, etc.)
+- **Timeout limits**: Maximum execution time enforced (default 30s)
+- **Environment filtering**: Secrets and sensitive env vars are stripped
+- **Output capture**: stdout/stderr captured with size limits
+- **Artifact tracking**: New files created during execution are recorded
+
+### Irreversible Actions
 
 Irreversible or high-risk actions must:
 
@@ -104,10 +145,66 @@ Irreversible or high-risk actions must:
 - Pass authority checks before execution.
 - Be recorded via ledger_row.v0.1, including boundary phrase and plan_hash linkage.
 
-Sandbox properties:
+### Fail-Closed Behavior
 
-- Isolated from production environments except through governed, logged channels.
-- Configured so that failures are fail-closed for governance (for example, failure to obtain boundary classification blocks execution).
+Sandbox properties are fail-closed:
+
+- **Policy violations** raise `SandboxPolicyViolation` before execution starts
+- **Timeouts** raise `SandboxTimeout` and kill the process
+- **Execution errors** raise `SandboxExecutionError` with original error preserved
+- Missing boundary classification blocks execution
+
+### Ledger Integration
+
+Every sandbox execution emits a ledger entry:
+
+```json
+{
+  "schema_version": "sandbox_execution.v0.1",
+  "event": {
+    "event_id": "sbx-abc123...",
+    "event_type": "sandbox_execution",
+    "timestamp_utc": "2026-03-11T12:00:00Z",
+    "task_id": "task-123"
+  },
+  "execution": {
+    "command": ["pytest", "tests/"],
+    "exit_code": 0,
+    "execution_time_ms": 4231,
+    "success": true,
+    "artifact_count": 2
+  },
+  "policy": {
+    "policy_name": "default"
+  }
+}
+```
+
+### Orchestrator Integration
+
+The sandbox integrates with the **Agent Loop Orchestrator** via state transitions:
+
+```
+CONF_APPROVED
+     ↓
+CODE_EXECUTION (via SandboxExecutor)
+     ↓
+SANDBOX_RESULT
+```
+
+The orchestrator calls `execute_sandbox_action()` after CONF approval:
+
+```python
+executor = SandboxExecutor()
+action = SandboxAction(
+    task_id=task_id,
+    command=["pytest", "tests/"],
+    working_dir=working_dir,
+)
+result = executor.execute_sandbox_action(action)
+```
+
+Results are recorded in both the task state and ledger for deterministic replay.
 
 ---
 

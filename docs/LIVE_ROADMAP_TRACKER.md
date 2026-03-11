@@ -148,7 +148,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.T0 | Deterministic Agent State Transition Table (Contract) | COMPLETE    | Architect  | Plan-Gate runtime contract                   | Deterministic runtime transition spec + schemas for agent state machine.             | 3/3       | see §6.3 | —                                   | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented.             |
 | M3.0  | Repository Context Engine                             | VALIDATING  | Shared     | L2.*                                         | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 4/4       | see §6.5 | wire LoopController → ContextEngine | Context for runtime decisions is deterministic, revision-tied, and independently auditable.                                        |
 | M3.1  | Agent Loop Orchestrator                               | IN_PROGRESS | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
-| M3.2  | Execution Sandbox                                     | NOT_STARTED | Architect  | M3.0–M3.1                                    | Isolated executor for tools/tests/commands under runtime control.                    | 0/4       | none     | sandbox contract doc                | Irreversible effects can only occur through the sandbox with authority/boundary checks and ledger emission.                        |
+| M3.2  | Execution Sandbox                                     | IN_PROGRESS | Architect  | M3.0–M3.1                                    | Isolated executor for tools/tests/commands under runtime control.                    | 4/4       | see §6.8 | orchestrator full integration       | Irreversible effects can only occur through the sandbox with authority/boundary checks and ledger emission.                        |
 | M3.3  | Plan-Gate Integration                                 | NOT_STARTED | Shared     | M3.0–M3.2                                    | Wiring between Plan objects, decision contracts, and runtime agent loop.             | 0/3       | none     | integration contract doc            | All relevant requests flow through Plan-Gate before execution; fail-closed behavior enforced.                                      |
 | M3.4  | IDE Plugin Integration                                | IN_PROGRESS | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 1/3       | see §6.7 | plugin bridge doc                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
 | M3.5  | Ledger Emission                                       | NOT_STARTED | Architect  | M3.3                                         | Reliable ledger_row.v0.1 emission for every runtime decision.                        | 0/3       | none     | transition-to-ledger map            | Every decision that affects execution has a corresponding ledger row linking to plan_hash; append-only semantics defined.          |
@@ -412,12 +412,12 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 - **Next 3 milestones**:
   1. **M3.E0 Deterministic Runtime Emulator** — VALIDATING (all artifacts implemented, invariant tests passing)
   2. **M3.0 Repository Context Engine** — VALIDATING (deterministic context engine implemented; tests passing)
-  3. **M3.1 Agent Loop Orchestrator** — IN_PROGRESS (transition executor scaffold in place; spec artifacts pending)
+  3. **M3.2 Execution Sandbox** — IN_PROGRESS (sandbox runner, policy, ledger integration implemented; tests passing)
 - **Current blockers**:
   - Final decision on sandboxing strategy (e.g., process isolation, containerization) and resource constraints.
   - Tooling and infra selection for ledger storage and replay (shared with Layer-4 needs).
 - **Immediate next action**:
-  - **Complete M3.E0 validation; wire M3.1 LoopController to call M3.0 ContextEngine at CONTEXT_FETCHED and flesh out remaining M3.1 spec artifacts.**
+  - **Complete M3.2 sandbox integration with LoopController; wire sandbox execution at PROPOSAL_VALIDATED → SANDBOX_EXECUTED transition.**
 
 ---
 
@@ -514,6 +514,33 @@ This section records **evidence of completed milestones**. Entries should be **a
     - Tools → “Ask Motadata AI” sends AskRequest with repo_root + revision + query.
     - Response dialog shows PLAN ONLY badge, context bundle file list with selection reasons, selectors used, and 3–6 deterministic plan steps.
     - No execution, sandboxing, or code edits are performed; failure cases are surfaced as non-blocking warnings without client-side fallback planning.
+
+### 6.8 M3.2 — Execution Sandbox (CODE Phase)
+
+- **Milestone**: M3.2 Execution Sandbox — IN_PROGRESS (2026-03-11)
+- **Artifacts** (4/4):
+  - `runtime/sandbox/sandbox_runner.py` — SandboxRunner with subprocess execution, timeout enforcement, artifact capture
+  - `runtime/sandbox/sandbox_policy.py` — SandboxPolicy with command allowlist, time limits, env filtering
+  - `runtime/sandbox/sandbox_result.py` — SandboxResult dataclass for execution outputs
+  - `runtime/sandbox/sandbox_errors.py` — SandboxPolicyViolation, SandboxTimeout, SandboxExecutionError
+  - `runtime/sandbox/sandbox_executor.py` — Orchestrator integration with SandboxAction and SandboxExecutionResult
+  - `runtime/sandbox/sandbox_ledger.py` — SandboxLedgerEmitter for ledger_row.v0.1 emission
+  - `runtime/tests/test_sandbox_runner.py` — 37 tests covering runner, policy, result, ledger, executor
+- **Evidence**:
+  - Sandbox runner validates commands against policy before execution (fail-closed)
+  - Allowed commands include: pytest, python, ruff, black, mypy, npm, go, cargo, etc.
+  - Timeout enforcement via subprocess with configurable limits (default 30s)
+  - stdout/stderr captured with size limits (default 1MB)
+  - Artifact detection via pre/post file scanning
+  - Environment filtering: blocklist strips secrets (AWS_*, GITHUB_TOKEN, etc.)
+  - Ledger emission with deterministic event_id (sha256-based)
+  - Orchestrator integration via `execute_sandbox_action()` convenience function
+  - pytest (`python3 -m pytest runtime/tests/test_sandbox_runner.py -v`): 37 passed
+- **Architecture**:
+  - DES → propose
+  - CONF → authorize
+  - CODE → execute (sandboxed) ← M3.2
+  - Execution must never happen outside the sandbox
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
