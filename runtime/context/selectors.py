@@ -104,7 +104,7 @@ def _python_import_neighbors(root: Path, rel_path: str) -> List[str]:
         return []
 
     try:
-        source = file_path.read_text(encoding="utf-8")
+        source = file_path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return []
 
@@ -184,7 +184,7 @@ def select_symbol_hints(root_path: str, symbol_hints: Iterable[str]) -> List[Sel
         selected_path: str | None = None
         for f in all_files:
             try:
-                text = f.read_text(encoding="utf-8")
+                text = f.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
             if hint in text:

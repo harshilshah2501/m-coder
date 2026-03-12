@@ -12,7 +12,7 @@ Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit 
 |-------------|--------|
 | **Repo root** | Clone or use `m-coder` with `runtime/` and `jetbrains-plugin/` at the same level. |
 | **Python 3** | Used to run the Plan-Gate service. No strict version; 3.9+ typical. |
-| **JDK 17** | Required for building and running the plugin. |
+| **JDK 17** | Required for building and running the plugin. **For `runIde`:** use JDK 17 as `JAVA_HOME`; if your system has JDK 25 (or 24), the sandbox IDE can crash (see §8 troubleshooting). |
 | **Gradle** | Use the wrapper in `jetbrains-plugin/`: `./gradlew` (no global Gradle needed). |
 
 Optional: a Python venv at repo root if you prefer isolated runtime deps.
@@ -157,6 +157,8 @@ Before considering the demo complete:
 | **Commit fails with “Unresolved reference: CommitContext”** | Known IDE/Gradle classpath issue with the VCS API. See spike doc and plugin README; fix is in progress (e.g. correct IntelliJ platform / bundled module for your IDE version). |
 | **Ask shows “error” or no context** | Ensure `/v0/ask` is served (same process as `/v0/plan`). Check `curl http://127.0.0.1:8089/version` lists `ask_request` and `plan_only_response`. Check runtime logs for Python tracebacks. |
 | **Log file missing** | Plugin creates `~/.motadata-ai/plugin-decisions.log` on first decision. Ensure you have write permission to `~/.motadata-ai` (plugin may create the directory). |
+| **runIde fails: GradleJvmSupportMatrix / IllegalArgumentException: 25** | IntelliJ 2023.3’s Gradle plugin cannot parse Java 25. **Workaround:** (1) Run with JDK 17: `export JAVA_HOME=/path/to/jdk17` then `./gradlew runIde`. (2) If the system has JDK 25, point `JAVA_HOME` to JDK 17 before running. (3) Clear the sandbox: `rm -rf jetbrains-plugin/build/idea-sandbox` then run `./gradlew runIde` again. |
+| **runIde fails: libsecret-1.so / PasswordSafeSettings** | On Linux (e.g. WSL, minimal containers) the credential store native library may be missing. The IDE often continues with a fallback; if it still exits, install `libsecret-1-dev` (e.g. `apt install libsecret-1-dev`) or ignore if you do not need stored passwords in the sandbox. |
 
 ---
 

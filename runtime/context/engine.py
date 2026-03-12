@@ -138,7 +138,7 @@ class ContextEngine:
                 break
             file_path = (root / r.path).resolve()
             try:
-                content = file_path.read_text(encoding="utf-8")
+                content = file_path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 # If a selected file goes missing between selection and materialization,
                 # fail-closed rather than silently continue.
