@@ -15,6 +15,7 @@ External PlanGateService contract is unchanged.
 """
 
 from runtime.plangate.authority_validator import AuthorityValidator
+from runtime.plangate.command_utils import extract_command_name
 from runtime.plangate.contracts import AuthorityResult, IrreversibilityResult, JudgeInput
 from runtime.plangate.irreversibility_detector import IrreversibilityDetector
 from runtime.plangate.judge_gate import JudgeGate
@@ -33,4 +34,6 @@ __all__ = [
     "IrreversibilityResult",
     "JudgeGate",
     "JudgeInput",
+    # Shared utilities
+    "extract_command_name",
 ]

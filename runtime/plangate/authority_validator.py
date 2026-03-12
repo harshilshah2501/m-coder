@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from runtime.plangate.command_utils import extract_command_name
 from runtime.plangate.contracts import AuthorityResult
 
 
@@ -60,14 +61,13 @@ class AuthorityValidator:
 
         # Check for dangerous command (authority-denying command class)
         command = request.get("command")
-        if command and isinstance(command, (list, tuple)):
-            cmd_name = self._extract_command_name(command)
-            if cmd_name in self.AUTHORITY_DENYING_COMMANDS:
-                return AuthorityResult(
-                    authority_ok=False,
-                    authority_reason=f"Authority denied: command '{cmd_name}' is not authorized",
-                    authority_source="dangerous_command_rule",
-                )
+        cmd_name = extract_command_name(command)
+        if cmd_name and cmd_name in self.AUTHORITY_DENYING_COMMANDS:
+            return AuthorityResult(
+                authority_ok=False,
+                authority_reason=f"Authority denied: command '{cmd_name}' is not authorized",
+                authority_source="dangerous_command_rule",
+            )
 
         # Default: authority granted
         return AuthorityResult(
@@ -75,13 +75,3 @@ class AuthorityValidator:
             authority_reason="Authority granted: no denial conditions met",
             authority_source="default",
         )
-
-    def _extract_command_name(self, command: list | tuple) -> str:
-        """Extract the base command name from a command list/tuple."""
-        if not command:
-            return ""
-        cmd_name = str(command[0] or "").strip()
-        # Handle paths like /usr/bin/curl → curl
-        if "/" in cmd_name:
-            cmd_name = cmd_name.split("/")[-1]
-        return cmd_name

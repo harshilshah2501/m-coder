@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from runtime.plangate.command_utils import extract_command_name
 from runtime.plangate.contracts import IrreversibilityResult
 
 
@@ -66,15 +67,14 @@ class IrreversibilityDetector:
 
         # Check for dangerous command
         command = request.get("command")
-        if command and isinstance(command, (list, tuple)):
-            cmd_name = self._extract_command_name(command)
-            if cmd_name in self.DANGEROUS_COMMANDS:
-                return IrreversibilityResult(
-                    boundary_detected=True,
-                    irreversible=True,
-                    boundary_reason=f"Command '{cmd_name}' classified as dangerous/irreversible",
-                    boundary_class="dangerous_command",
-                )
+        cmd_name = extract_command_name(command)
+        if cmd_name and cmd_name in self.DANGEROUS_COMMANDS:
+            return IrreversibilityResult(
+                boundary_detected=True,
+                irreversible=True,
+                boundary_reason=f"Command '{cmd_name}' classified as dangerous/irreversible",
+                boundary_class="dangerous_command",
+            )
 
         # Default: no boundary, reversible
         return IrreversibilityResult(
@@ -83,13 +83,3 @@ class IrreversibilityDetector:
             boundary_reason="No boundary or irreversibility detected",
             boundary_class=None,
         )
-
-    def _extract_command_name(self, command: list | tuple) -> str:
-        """Extract the base command name from a command list/tuple."""
-        if not command:
-            return ""
-        cmd_name = str(command[0] or "").strip()
-        # Handle paths like /usr/bin/curl → curl
-        if "/" in cmd_name:
-            cmd_name = cmd_name.split("/")[-1]
-        return cmd_name
