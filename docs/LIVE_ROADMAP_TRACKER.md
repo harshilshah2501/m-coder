@@ -5,7 +5,7 @@
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
 - **Last updated**: 2026-03-12  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **M3.3 Plan-Gate Integration** (all execution paths through Plan-Gate before sandbox; M3.2 Execution Sandbox closed for MVP)  
+- **Current active milestone focus**: **M3.4 IDE Plugin Integration** (plugin wiring to Plan-Gate and agent loop; M3.3 Plan-Gate Integration COMPLETE)  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -150,7 +150,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.0  | Repository Context Engine                             | <span style="color:#e65100">VALIDATING</span>  | Shared     | L2.*                                         | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 4/4       | see §6.5 | wire LoopController → ContextEngine | Context for runtime decisions is deterministic, revision-tied, and independently auditable.                                        |
 | M3.1  | Agent Loop Orchestrator                               | <span style="color:#e65100">IN_PROGRESS</span> | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
 | M3.2  | Execution Sandbox                                     | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | M3.0–M3.1                                    | Isolated executor + unified result contract + local ledger persistence (REFUSED/BLOCKED/EXECUTED). | 6/6       | see §6.8 | —                                   | Irreversible effects only through sandbox; all three outcomes produce durable ledger rows; CLI/test-harness demo closure.             |
-| M3.3  | Plan-Gate Integration                                 | <span style="color:#e65100">VALIDATING</span>  | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
+| M3.3  | Plan-Gate Integration                                 | <span style="color:#2e7d32">COMPLETE</span>    | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
 | M3.4  | IDE Plugin Integration                                | <span style="color:#e65100">IN_PROGRESS</span> | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 1/3       | see §6.7 | plugin bridge doc                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
 | M3.5  | Ledger Emission                                       | <span style="color:#757575">NOT_STARTED</span> | Architect  | M3.3                                         | Broader ledger completeness / replay / observation bridge (beyond M3.2 local evidence). | 0/3       | none     | transition-to-ledger map            | Full runtime decision ledger; join/replay contract; Layer-4 observation ingestion. M3.2 delivers local sandbox evidence only.     |
 | M3.6  | Shadow Mode Validation                                | <span style="color:#757575">NOT_STARTED</span> | Shared     | M3.0–M3.5                                    | Full runtime-governed agent loop running in shadow mode.                             | 0/3       | none     | shadow protocol note                | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows.                              |
@@ -407,20 +407,21 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **M3.3 Plan-Gate Integration**  
-  - Guarantee all execution paths flow through the governed Plan-Gate decision pipeline before any sandbox execution.  
-  - Execution chain: request → Plan-Gate → runtime decision → LoopController transition → sandbox (if allowed) → ledger evidence.
+- **Current objective**: **M3.4 IDE Plugin Integration**  
+  - Wire IDE plugins to route developer actions through Plan-Gate and agent loop.  
+  - No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.
 - **Active tasks**:
-  - **M3.3** implemented: PlanGateDecision + PlanGateService, LoopController integration, all four postures (refuse, defer, bounded_allow, safe_execute); Plan-Gate ledger events (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute); demo (five cases including BOUNDED_ALLOW); tests prove bounded_allow distinct from defer. Validating and documenting.
+  - **M3.3** Plan-Gate Integration **COMPLETE**: PlanGateDecision + PlanGateService, LoopController integration, all four postures (refuse, defer, bounded_allow, safe_execute); Plan-Gate ledger events; demo (five cases); M3.3B internal decomposition complete (AuthorityValidator, IrreversibilityDetector, JudgeGate).
+  - **M3.4** IDE Plugin Integration **IN_PROGRESS**: Plugin bridge doc, intercepted action map, local runtime invocation path.
   - M3.2 Execution Sandbox **closed for MVP** (unified contract, local ledger, CLI demo).
 - **Next 3 milestones**:
-  1. **M3.3 Plan-Gate Integration** — <span style="color:#e65100">VALIDATING</span> (Plan-Gate mandatory before sandbox; decisions ledgered; CLI demo)
-  2. **M3.4 IDE Plugin Integration** — <span style="color:#e65100">IN_PROGRESS</span>
-  3. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
+  1. **M3.4 IDE Plugin Integration** — <span style="color:#e65100">IN_PROGRESS</span> (plugin wiring to Plan-Gate and agent loop)
+  2. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
+  3. **M3.6 Shadow Mode Validation** — <span style="color:#757575">NOT_STARTED</span>
 - **Current blockers**:
-  - None. M3.3 implementation complete; evidence and docs in place.
+  - None. M3.3 complete; M3.4 unblocked.
 - **Immediate next action**:
-  - Harden M3.3 (tests, demo, docs); then M3.4 plugin wiring to Plan-Gate and agent loop.
+  - M3.4 plugin bridge doc; intercepted action map; local runtime invocation path.
 
 ---
 
@@ -547,7 +548,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.9 M3.3 — Plan-Gate Integration
 
-- **Milestone**: M3.3 Plan-Gate Integration — <span style="color:#e65100">VALIDATING</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
+- **Milestone**: M3.3 Plan-Gate Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
 - **Artifacts** (6/6):
   - `runtime/plangate/plangate_decision.py` — PlanGateDecision (posture: refuse | defer | bounded_allow | safe_execute; authority_ok, boundary_detected, irreversible, reason); to_dict/from_dict.
   - `runtime/plangate/plangate_service.py` — PlanGateService.evaluate(request) → PlanGateDecision; deterministic rule-based (REFUSED_COMMANDS, plan_gate_defer, plan_gate_refuse, plan_gate_bounded_allow); no LLM.
