@@ -59,6 +59,22 @@
         "fail_closed_if_gate_unreachable": { "type": "boolean" },
         "mode": { "type": "string", "enum": ["shadow", "enforcing"] }
       }
+    },
+    "ledger_path": {
+      "type": "string",
+      "description": "Optional path for SQLite ledger store; when set, Plan-Gate decision and sandbox outcome are persisted"
+    },
+    "plan_gate_refuse": {
+      "type": "boolean",
+      "description": "Test/demo only: force Plan-Gate posture to refuse. Do not use for production policy."
+    },
+    "plan_gate_defer": {
+      "type": "boolean",
+      "description": "Test/demo only: force Plan-Gate posture to defer. Do not use for production policy."
+    },
+    "plan_gate_bounded_allow": {
+      "type": "boolean",
+      "description": "Test/demo only: force Plan-Gate posture to bounded_allow. Do not use for production policy."
     }
   }
 }

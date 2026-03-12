@@ -1,12 +1,20 @@
 """Tests for M3.4 Execute Service — /v0/execute endpoint."""
 
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+
 import pytest
+
 from runtime.execute_service.handlers import (
     validate_execute_request,
     handle_execute_request,
+    _parse_command,
     EXECUTE_REQUEST_SCHEMA,
     EXECUTE_RESPONSE_SCHEMA,
 )
+from runtime.sandbox.sandbox_ledger_store import SandboxLedgerStore
 
 
 class TestValidateExecuteRequest:
@@ -58,8 +66,31 @@ class TestValidateExecuteRequest:
         assert "schema_version" in errors[0]
 
 
+class TestParseCommand:
+    """Tests for command parsing (shlex)."""
+
+    def test_simple_command(self):
+        assert _parse_command("echo hello") == ["echo", "hello"]
+
+    def test_quoted_argument(self):
+        assert _parse_command('echo "hello world"') == ["echo", "hello world"]
+
+    def test_single_quoted_argument(self):
+        assert _parse_command("echo 'foo bar'") == ["echo", "foo bar"]
+
+    def test_multiple_arguments(self):
+        assert _parse_command("pytest tests/ -v") == ["pytest", "tests/", "-v"]
+
+    def test_empty_returns_empty_list(self):
+        assert _parse_command("") == []
+        assert _parse_command("   ") == []
+
+    def test_invalid_unclosed_quote_returns_empty_list(self):
+        assert _parse_command('echo "unclosed') == []
+
+
 class TestHandleExecuteRequest:
-    """Tests for execute request handling."""
+    """Tests for execute request handling. Governance via explicit request fields only."""
 
     def test_response_has_correct_schema(self):
         data = {
@@ -71,36 +102,39 @@ class TestHandleExecuteRequest:
         assert response["schema_version"] == EXECUTE_RESPONSE_SCHEMA
         assert response["request_id"] == "req-test-schema"
 
-    def test_refuse_keyword_triggers_refusal(self):
-        """Commands with 'refuse' keyword should be refused."""
+    def test_explicit_plan_gate_refuse_triggers_refusal(self):
+        """Explicit plan_gate_refuse=True must be refused; no keyword in command."""
         data = {
             "request_id": "req-refuse",
             "repo_root": "/tmp",
-            "command": "refuse this command",
+            "command": "echo hello",
+            "plan_gate_refuse": True,
         }
         response = handle_execute_request(data)
         assert response["outcome"] == "REFUSED"
         assert response["executed"] is False
         assert response["posture"] == "refuse"
 
-    def test_defer_keyword_triggers_deferral(self):
-        """Commands with 'defer' keyword should be deferred."""
+    def test_explicit_plan_gate_defer_triggers_deferral(self):
+        """Explicit plan_gate_defer=True must be deferred."""
         data = {
             "request_id": "req-defer",
             "repo_root": "/tmp",
-            "command": "defer this action",
+            "command": "echo hello",
+            "plan_gate_defer": True,
         }
         response = handle_execute_request(data)
         assert response["outcome"] == "DEFERRED"
         assert response["executed"] is False
         assert response["posture"] == "defer"
 
-    def test_bound_keyword_triggers_bounded_allow(self):
-        """Commands with 'bound' keyword should get bounded allowance."""
+    def test_explicit_plan_gate_bounded_allow_triggers_bounded_allow(self):
+        """Explicit plan_gate_bounded_allow=True must get bounded allowance."""
         data = {
             "request_id": "req-bound",
             "repo_root": "/tmp",
-            "command": "bound this execution",
+            "command": "echo hello",
+            "plan_gate_bounded_allow": True,
         }
         response = handle_execute_request(data)
         assert response["outcome"] == "BOUNDED_ALLOW"
@@ -108,11 +142,11 @@ class TestHandleExecuteRequest:
         assert response["posture"] == "bounded_allow"
 
     def test_response_includes_ui_block(self):
-        """Response should include UI information."""
         data = {
             "request_id": "req-ui",
             "repo_root": "/tmp",
-            "command": "refuse test",
+            "command": "echo test",
+            "plan_gate_refuse": True,
         }
         response = handle_execute_request(data)
         assert "ui" in response
@@ -121,18 +155,17 @@ class TestHandleExecuteRequest:
         assert "severity" in response["ui"]
 
     def test_response_includes_plan_hash(self):
-        """Response should include plan hash for audit."""
         data = {
             "request_id": "req-hash",
             "repo_root": "/tmp",
-            "command": "refuse test",
+            "command": "echo test",
+            "plan_gate_refuse": True,
         }
         response = handle_execute_request(data)
         assert "plan_hash" in response
-        assert len(response["plan_hash"]) == 64  # SHA256 hex
+        assert len(response["plan_hash"]) == 64
 
     def test_nonexistent_repo_root_blocked(self):
-        """Execution with nonexistent repo root should be blocked."""
         data = {
             "request_id": "req-nopath",
             "repo_root": "/this/path/does/not/exist/at/all",
@@ -143,7 +176,6 @@ class TestHandleExecuteRequest:
         assert response["executed"] is False
 
     def test_empty_command_blocked(self):
-        """Empty command should be blocked."""
         data = {
             "request_id": "req-empty",
             "repo_root": "/tmp",
@@ -154,41 +186,149 @@ class TestHandleExecuteRequest:
         assert response["executed"] is False
 
     def test_request_id_echoed_back(self):
-        """Request ID should be echoed back in response."""
         data = {
             "request_id": "req-echo-test-12345",
             "repo_root": "/tmp",
-            "command": "refuse test",
+            "command": "echo x",
+            "plan_gate_refuse": True,
         }
         response = handle_execute_request(data)
         assert response["request_id"] == "req-echo-test-12345"
 
-    def test_outcome_is_not_collapsed(self):
-        """Different outcomes should be distinct (no SUCCESS/FAILURE collapse)."""
-        outcomes_seen = set()
-
-        for keyword, expected in [
-            ("refuse", "REFUSED"),
-            ("defer", "DEFERRED"),
-            ("bound", "BOUNDED_ALLOW"),
+    def test_outcomes_distinct_via_explicit_flags(self):
+        """Different outcomes via explicit flags only; no command keyword dependency."""
+        for flag_key, expected_outcome in [
+            ("plan_gate_refuse", "REFUSED"),
+            ("plan_gate_defer", "DEFERRED"),
+            ("plan_gate_bounded_allow", "BOUNDED_ALLOW"),
         ]:
             data = {
-                "request_id": f"req-{keyword}",
+                "request_id": f"req-{flag_key}",
                 "repo_root": "/tmp",
-                "command": f"{keyword} test",
+                "command": "echo same command",
+                flag_key: True,
             }
             response = handle_execute_request(data)
-            outcomes_seen.add(response["outcome"])
-            assert response["outcome"] == expected
+            assert response["outcome"] == expected_outcome
 
-        assert len(outcomes_seen) == 3
+
+class TestExecuteServiceDecisionLedgering:
+    """Plan-Gate decision must be ledgered when ledger_path is provided."""
+
+    def test_decision_ledger_row_id_present_when_ledger_path_provided(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger_path = Path(tmp) / "ledger.db"
+            data = {
+                "request_id": "req-ledger",
+                "repo_root": "/tmp",
+                "command": "echo ok",
+                "plan_gate_refuse": True,
+                "ledger_path": str(ledger_path),
+            }
+            response = handle_execute_request(data)
+        assert response["outcome"] == "REFUSED"
+        assert "decision_ledger_row_id" in response
+        assert response["decision_ledger_row_id"] is not None
+        assert response["decision_ledger_row_id"].startswith("plangate-")
+
+    def test_refused_path_persists_plangate_refused_row(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger_path = Path(tmp) / "ledger.db"
+            data = {
+                "request_id": "req-refused-ledger",
+                "repo_root": "/tmp",
+                "command": "echo x",
+                "plan_gate_refuse": True,
+                "ledger_path": str(ledger_path),
+            }
+            handle_execute_request(data)
+            store = SandboxLedgerStore(ledger_path)
+            rows = store.list_all()
+        assert len(rows) >= 1
+        assert any(r.event_type == "plangate_refused" for r in rows)
+
+    def test_deferred_path_persists_plangate_deferred_row(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger_path = Path(tmp) / "ledger.db"
+            data = {
+                "request_id": "req-deferred-ledger",
+                "repo_root": "/tmp",
+                "command": "echo x",
+                "plan_gate_defer": True,
+                "ledger_path": str(ledger_path),
+            }
+            handle_execute_request(data)
+            store = SandboxLedgerStore(ledger_path)
+            rows = store.list_all()
+        assert any(r.event_type == "plangate_deferred" for r in rows)
+
+    def test_bounded_allow_path_persists_plangate_bounded_allow_row(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger_path = Path(tmp) / "ledger.db"
+            data = {
+                "request_id": "req-bounded-ledger",
+                "repo_root": "/tmp",
+                "command": "echo x",
+                "plan_gate_bounded_allow": True,
+                "ledger_path": str(ledger_path),
+            }
+            handle_execute_request(data)
+            store = SandboxLedgerStore(ledger_path)
+            rows = store.list_all()
+        assert any(r.event_type == "plangate_bounded_allow" for r in rows)
+
+    def test_safe_execute_path_persists_decision_and_sandbox_rows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger_path = Path(tmp) / "ledger.db"
+            data = {
+                "request_id": "req-executed-ledger",
+                "repo_root": tmp,
+                "command": "echo success",
+                "ledger_path": str(ledger_path),
+            }
+            response = handle_execute_request(data)
+            assert response["outcome"] == "EXECUTED"
+            assert response["executed"] is True
+            assert response.get("decision_ledger_row_id")
+            assert response.get("ledger_row_id")
+            store = SandboxLedgerStore(ledger_path)
+            rows = store.list_all()
+            assert any(r.event_type == "plangate_safe_execute" for r in rows)
+            assert any(r.event_type == "sandbox_executed" for r in rows)
+
+    def test_no_ledger_path_omits_decision_ledger_row_id(self):
+        data = {
+            "request_id": "req-no-ledger",
+            "repo_root": "/tmp",
+            "command": "echo x",
+            "plan_gate_refuse": True,
+        }
+        response = handle_execute_request(data)
+        assert response["outcome"] == "REFUSED"
+        assert response.get("decision_ledger_row_id") is None
+
+    def test_ledger_path_provided_but_persistence_fails_returns_blocked_fail_closed(self):
+        """When ledger_path is explicitly provided but store creation or persist fails, return BLOCKED; no execution."""
+        with tempfile.TemporaryDirectory() as tmp:
+            # Pass a directory as ledger_path so SQLite cannot open it as a DB file → store creation fails
+            ledger_path_as_dir = Path(tmp)
+            data = {
+                "request_id": "req-fail-persist",
+                "repo_root": tmp,
+                "command": "echo would-run",
+                "ledger_path": str(ledger_path_as_dir),
+            }
+            response = handle_execute_request(data)
+        assert response["outcome"] == "BLOCKED"
+        assert response["executed"] is False
+        assert "could not be persisted" in (response.get("reason") or "")
+        assert response["ui"]["severity"] == "error"
 
 
 class TestExecuteServiceIntegration:
     """Integration tests for execute service."""
 
-    def test_full_refuse_flow(self):
-        """Test complete refusal flow."""
+    def test_full_refuse_flow_with_explicit_flag(self):
         data = {
             "schema_version": EXECUTE_REQUEST_SCHEMA,
             "request_id": "req-full-refuse",
@@ -196,47 +336,37 @@ class TestExecuteServiceIntegration:
             "repo_root": "/tmp",
             "revision": "abc123",
             "branch": "main",
-            "command": "refuse dangerous operation",
-            "ide_context": {
-                "product": "jetbrains",
-                "ide": "intellij",
-                "project": "test-project",
-                "user": "testuser",
-            },
-            "client_policy": {
-                "fail_closed_if_gate_unreachable": True,
-                "mode": "enforcing",
-            },
+            "command": "echo dangerous",
+            "plan_gate_refuse": True,
+            "ide_context": {"product": "jetbrains", "ide": "intellij"},
+            "client_policy": {"fail_closed_if_gate_unreachable": True, "mode": "enforcing"},
         }
         response = handle_execute_request(data)
-
         assert response["outcome"] == "REFUSED"
         assert response["executed"] is False
         assert "plan_hash" in response
         assert response["ui"]["severity"] == "error"
 
-    def test_full_defer_flow(self):
-        """Test complete deferral flow."""
+    def test_full_defer_flow_with_explicit_flag(self):
         data = {
             "request_id": "req-full-defer",
             "repo_root": "/tmp",
-            "command": "approval needed for this",
+            "command": "echo hello",
+            "plan_gate_defer": True,
         }
         response = handle_execute_request(data)
-
         assert response["outcome"] == "DEFERRED"
         assert response["executed"] is False
         assert response["ui"]["severity"] == "warning"
 
-    def test_full_bounded_allow_flow(self):
-        """Test complete bounded allow flow."""
+    def test_full_bounded_allow_flow_with_explicit_flag(self):
         data = {
             "request_id": "req-full-bounded",
             "repo_root": "/tmp",
-            "command": "restrict this operation",
+            "command": "echo hello",
+            "plan_gate_bounded_allow": True,
         }
         response = handle_execute_request(data)
-
         assert response["outcome"] == "BOUNDED_ALLOW"
         assert response["executed"] is False
         assert response["ui"]["severity"] == "warning"

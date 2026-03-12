@@ -40,9 +40,13 @@
       "type": "string",
       "description": "Plan hash for audit trail"
     },
+    "decision_ledger_row_id": {
+      "type": "string",
+      "description": "Plan-Gate decision ledger row ID when ledger_path was provided"
+    },
     "ledger_row_id": {
       "type": "string",
-      "description": "Ledger row ID if recorded"
+      "description": "Sandbox execution ledger row ID if executed and recorded"
     },
     "exit_code": {
       "type": "integer",

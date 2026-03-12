@@ -60,7 +60,7 @@ class RuntimeBridge(
 |--------|----------|---------|
 | `evaluateCommit(request)` | `POST /v0/plan` | Evaluate VCS commit governance |
 | `askPlan(request)` | `POST /v0/ask` | Plan-only Ask request |
-| `requestExecution(request)` | `POST /v0/execute` | Request governed execution |
+| `requestExecution(request)` | `POST /v0/execute` | Request governed execution (Plan-Gate → ledger decision → sandbox if safe_execute → ledger outcome) |
 | `validateAction(request)` | `POST /v0/plan?validate_only` | Validate without execution |
 | `isRuntimeAvailable()` | `GET /healthz` | Check runtime health |
 | `getRuntimeVersion()` | `GET /version` | Get supported schemas |
@@ -173,6 +173,12 @@ data class RuntimeResponse(
 |--------|---------|
 | `RuntimeResponse.runtimeUnavailable(requestId, error)` | Unavailable response |
 | `RuntimeResponse.unknown(requestId, error)` | Unknown response |
+
+## /v0/execute endpoint behavior
+
+- **Plan-Gate decision ledgering:** When the request includes `ledger_path` (or the server has `MOTADATA_EXECUTE_LEDGER_PATH` set), the runtime persists the Plan-Gate decision (plangate_refused, plangate_deferred, plangate_bounded_allow, or plangate_safe_execute) **before** sandbox execution or early return. The response may include `decision_ledger_row_id` (Plan-Gate row) and `ledger_row_id` (sandbox outcome when executed). Decision evidence and execution evidence are separate.
+- **Production governance:** Posture is determined only by `PlanGateService.evaluate(request)`. Explicit request fields `plan_gate_refuse`, `plan_gate_defer`, `plan_gate_bounded_allow` are for test/demo control only, not command-string heuristics.
+- **Command parsing:** The runtime parses the command string with `shlex.split()` so quoted arguments are handled correctly; execution remains non-shell.
 
 ## Usage Examples
 
