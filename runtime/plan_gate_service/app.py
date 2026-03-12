@@ -29,7 +29,9 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     "shadow_run_record": "v0.1",
                     "ingestion_batch": "v0.1",
                     "ask_request": "v0.1",
-                    "plan_only_response": "v0.1"
+                    "plan_only_response": "v0.1",
+                    "execute_request": "v0.1",
+                    "execute_response": "v0.1"
                 },
             })
             return
@@ -78,6 +80,21 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                 self._send_json(200, response)
             except Exception as e:
                 # Even on handler failure, preserve execution=false semantics inside handler.
+                self._send_json(500, {"error": str(e)})
+            return
+
+        if self.path == "/v0/execute":
+            from runtime.execute_service.handlers import validate_execute_request, handle_execute_request
+
+            errs = validate_execute_request(data)
+            if errs:
+                self._send_json(400, {"error": "Schema validation failed", "details": errs})
+                return
+
+            try:
+                response = handle_execute_request(data)
+                self._send_json(200, response)
+            except Exception as e:
                 self._send_json(500, {"error": str(e)})
             return
 
