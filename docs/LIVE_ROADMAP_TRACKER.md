@@ -151,7 +151,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.1  | Agent Loop Orchestrator                               | <span style="color:#e65100">IN_PROGRESS</span> | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
 | M3.2  | Execution Sandbox                                     | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | M3.0–M3.1                                    | Isolated executor + unified result contract + local ledger persistence (REFUSED/BLOCKED/EXECUTED). | 6/6       | see §6.8 | —                                   | Irreversible effects only through sandbox; all three outcomes produce durable ledger rows; CLI/test-harness demo closure.             |
 | M3.3  | Plan-Gate Integration                                 | <span style="color:#2e7d32">COMPLETE</span>    | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
-| M3.4  | IDE Plugin Integration                                | <span style="color:#e65100">IN_PROGRESS</span> | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 1/3       | see §6.7 | plugin bridge doc                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
+| M3.4  | IDE Plugin Integration                                | <span style="color:#e65100">VALIDATING</span>  | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 3/3       | see §6.7 | Kotlin tests, E2E                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
 | M3.5  | Ledger Emission                                       | <span style="color:#757575">NOT_STARTED</span> | Architect  | M3.3                                         | Broader ledger completeness / replay / observation bridge (beyond M3.2 local evidence). | 0/3       | none     | transition-to-ledger map            | Full runtime decision ledger; join/replay contract; Layer-4 observation ingestion. M3.2 delivers local sandbox evidence only.     |
 | M3.6  | Shadow Mode Validation                                | <span style="color:#757575">NOT_STARTED</span> | Shared     | M3.0–M3.5                                    | Full runtime-governed agent loop running in shadow mode.                             | 0/3       | none     | shadow protocol note                | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows.                              |
 
@@ -412,16 +412,16 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
   - No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.
 - **Active tasks**:
   - **M3.3** Plan-Gate Integration **COMPLETE**: PlanGateDecision + PlanGateService, LoopController integration, all four postures (refuse, defer, bounded_allow, safe_execute); Plan-Gate ledger events; demo (five cases); M3.3B internal decomposition complete (AuthorityValidator, IrreversibilityDetector, JudgeGate).
-  - **M3.4** IDE Plugin Integration **IN_PROGRESS**: Plugin bridge doc, intercepted action map, local runtime invocation path.
+  - **M3.4** IDE Plugin Integration **VALIDATING**: RuntimeBridge abstraction (single integration point), 7 distinct outcomes (no collapsing), 3 governed actions (commit, ask, submit to runtime), fail-closed semantics, /v0/execute endpoint, milestone + bridge docs.
   - M3.2 Execution Sandbox **closed for MVP** (unified contract, local ledger, CLI demo).
 - **Next 3 milestones**:
-  1. **M3.4 IDE Plugin Integration** — <span style="color:#e65100">IN_PROGRESS</span> (plugin wiring to Plan-Gate and agent loop)
+  1. **M3.4 IDE Plugin Integration** — <span style="color:#e65100">VALIDATING</span> (RuntimeBridge + governed actions; pending Kotlin compilation tests and E2E)
   2. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
   3. **M3.6 Shadow Mode Validation** — <span style="color:#757575">NOT_STARTED</span>
 - **Current blockers**:
-  - None. M3.3 complete; M3.4 unblocked.
+  - None. M3.4 pending final Kotlin compilation tests.
 - **Immediate next action**:
-  - M3.4 plugin bridge doc; intercepted action map; local runtime invocation path.
+  - Run Kotlin tests via Gradle (requires JDK/Gradle setup); E2E integration test with running IDE sandbox.
 
 ---
 
@@ -497,27 +497,40 @@ This section records **evidence of completed milestones**. Entries should be **a
     - Engine errors (`MissingExplicitFilesError` / `ContextEngineError`) are fail-closed: transition is refused with `stop_reason=\"validation_failed\"` and state remains `GOVERNANCE_CLASSIFIED`
   - pytest (`python3 -m pytest runtime/tests/test_transition_executor.py -v`): 23 passed
 
-### 6.7 M3.4 — IDE Plugin Integration (MVP Shadow-Mode + Repo-Aware Ask)
+### 6.7 M3.4 — IDE Plugin Integration (RuntimeBridge + Governed Actions)
 
-- **Milestone**: M3.4 IDE Plugin Integration — <span style="color:#e65100">IN_PROGRESS</span> (2026-03-10)
-- **Artifacts**:
-  - `jetbrains-plugin/` — IntelliJ Platform plugin module with:
-    - Commit interception (shadow-mode): `PlanGateClient`, `MotadataCheckinHandler`, `DecisionLogger`, `PlanGateClientTest`.
-    - Repo-aware Ask (PLAN ONLY): `AskClient`, `AskMotadataAiAction` (Tools → “Ask Motadata AI”), Ask UI surface showing PLAN ONLY badge, context bundle, selectors used, and plan summary.
-  - Runtime ask path:
-    - `runtime/ide/schemas/ask_request.v0.1.schema.json` — AskRequest schema.
-    - `runtime/ide/schemas/plan_only_response.v0.1.schema.json` — PlanOnlyResponse schema (execution=false, governance_posture=PLAN_ONLY).
-    - `runtime/ask_service/handlers.py` — `/v0/ask` handler (AskRequest → ContextRequest → `ContextEngine.build_context_bundle()` → PlanOnlyResponse).
-    - `runtime/ask_service/planner.py` — `PlanOnlyPlanner` (deterministic, bounded 3–6 read/inspect-only steps; no execution, no tool calls, no model autonomy).
-    - `runtime/tests/test_ask_service.py` — unit test asserting `execution is False`, `governance_posture == \"PLAN_ONLY\"`, and 3–6 steps.
-  - Documentation:
-    - `docs/RUNTIME/JETBRAINS_PLUGIN_MVP_SPIKE.md` — extended with “Repo-Aware Ask / Safe Planning (PLAN ONLY)” section (architecture flow, runtime interaction, context bundle explanation, demo steps).
+- **Milestone**: M3.4 IDE Plugin Integration — <span style="color:#e65100">VALIDATING</span> (2026-03-12)
+- **Artifacts** (11+):
+  - **Plugin RuntimeBridge abstraction**:
+    - `jetbrains-plugin/.../bridge/RuntimeBridge.kt` — Single integration point for all runtime calls.
+    - `jetbrains-plugin/.../bridge/RuntimeOutcome.kt` — 7 distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED, RUNTIME_UNAVAILABLE, UNKNOWN). No collapsing.
+    - `jetbrains-plugin/.../bridge/RuntimeRequest.kt` — Unified request envelope.
+    - `jetbrains-plugin/.../bridge/RuntimeResponse.kt` — Response contract with outcome, ui, reason, wasExecuted, ledgerRowId.
+  - **Governed actions**:
+    - `jetbrains-plugin/.../vcs/MotadataCheckinHandler.kt` — Refactored; shadow/enforcing modes; fail-closed.
+    - `jetbrains-plugin/.../ask/AskMotadataAiAction.kt` — Refactored; PLAN ONLY semantics.
+    - `jetbrains-plugin/.../actions/SubmitToRuntimeAction.kt` — New explicit code-intent action.
+  - **Runtime execute endpoint**:
+    - `runtime/execute_service/handlers.py` — `/v0/execute` handler; routes through Plan-Gate.
+    - `runtime/ide/schemas/execute_request.v0.1.schema.json` — Execute request schema.
+    - `runtime/ide/schemas/execute_response.v0.1.schema.json` — Execute response schema.
+  - **Tests**:
+    - `jetbrains-plugin/.../bridge/*Test.kt` — Outcome, response, request tests.
+    - `runtime/tests/test_execute_service.py` — Execute service tests (18 tests).
+  - **Documentation**:
+    - `docs/RUNTIME/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md` — Milestone document.
+    - `docs/RUNTIME/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md` — Plugin bridge architecture document.
 - **Evidence**:
-  - Manual verification that `/v0/ask` accepts AskRequest v0.1, calls `ContextEngine`, returns PlanOnlyResponse v0.1 with deterministic `context_bundle.files[].selection_reason`, `governance_posture=PLAN_ONLY`, and `execution=false`.
-  - Sandbox IDE flow:
-    - Tools → “Ask Motadata AI” sends AskRequest with repo_root + revision + query.
-    - Response dialog shows PLAN ONLY badge, context bundle file list with selection reasons, selectors used, and 3–6 deterministic plan steps.
-    - No execution, sandboxing, or code edits are performed; failure cases are surfaced as non-blocking warnings without client-side fallback planning.
+  - **RuntimeBridge architecture**: Single integration point; plugin does NOT make governance decisions; no bypass.
+  - **7 distinct outcomes**: REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED, RUNTIME_UNAVAILABLE, UNKNOWN — no collapsing.
+  - **Fail-closed semantics**: In enforcing mode, runtime unavailable → action blocked; no local fallback.
+  - **3 governed actions**: Commit (shadow/enforcing), Ask (PLAN ONLY), Submit to Runtime (full governed path).
+  - **Tests**: pytest `runtime/tests/test_execute_service.py` — 18 passed; `runtime/tests/` — 211 passed.
+- **Remaining gaps**:
+  - Push interception (not in MVP scope)
+  - Full Kotlin compilation tests (requires Gradle/IDE setup)
+  - E2E integration test with running IDE sandbox
+
 
 ### 6.8 M3.2 — Execution Sandbox (CODE Phase)
 
