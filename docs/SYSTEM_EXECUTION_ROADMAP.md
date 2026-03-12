@@ -62,13 +62,8 @@ flowchart TB
 | M2.5 Deterministic dataset freeze | L2 | M2.4 complete | Freeze checklist passes; dataset compiled; manifest locked | Freeze blocked; phase balance fails; dominance coverage gap | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §6.1; `ml/training/FREEZE_CERTIFICATE_v1.json` (Stage-7 compiler output) |
 | M2.6 SFT training | L2 | M2.5 complete | Adapter trained; loss stable; structural invariance audit passes | Training divergence; invariance collapse | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 and §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json` |
 | M2.7 Post-SFT mutation revalidation | L2 | M2.6 complete | Post-SFT ledger vs pre-SFT diff acceptable; no rollback criteria | REF collapse; boundary relocation; MIX-to-CONF collapse | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 and §6.1 (Layer-2 release verification PASS) |
-| M3.1 Plan object spec | L3 | M2.7 complete; frozen adapter | Plan object schema defined; authority/irreversibility hooks specified | Spec incomplete; hooks undefined | IN PROGRESS | L3 / Runtime | `docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md`; `docs/LIVE_ROADMAP_TRACKER.md` §4.3 (M3.E0, M3.T0) |
-| M3.2 Authority validator | L3 | M3.1 complete | Authority checks enforce REF; no bypass paths | Bypass paths; REF not enforced | NOT STARTED | L3 / Runtime | — |
-| M3.3 Irreversibility detector | L3 | M3.2 complete | Detector blocks at boundaries; Phase-05 CODE semantics honored | Boundary bypass; detector silent | NOT STARTED | L3 / Runtime | — |
-| M3.4 IDE plugin integration | L3 | M3.3 complete | Plan/Judge/Authority integrated; tool calls gated | Integration incomplete; gates bypassed | NOT STARTED | L3 / Runtime | — |
-| M3.5 Runtime ledger emission | L3 | M3.4 complete | Ledger rows emitted per run; phase + boundary + allow/block recorded | No emission; missing fields | NOT STARTED | L3 / Runtime | — |
-| M3.6 Shadow mode validation | L3 | M3.5 complete | Shadow mode runs; ledger captures behavior; no REF violations | REF violations; ledger gaps | NOT STARTED | L3 / Runtime | — |
-| M4.1 Drift baseline capture | L4 | M3.6 complete | Baseline verdict distribution captured; per-phase, per-surface metrics | Baseline incomplete; missing phases | NOT STARTED | L4 / Observation | — |
+| *Layer-3 (Runtime)* | L3 | — | — | — | — | — | **Layer-3 milestone IDs, status, and evidence:** see [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3 and §6 (M3.E0, M3.T0, M3.0 Context Engine, M3.1 Orchestrator, M3.2 Sandbox, M3.3 Plan-Gate Integration, M3.4 IDE Plugin). |
+| M4.1 Drift baseline capture | L4 | M3.9 complete | Baseline verdict distribution captured; per-phase, per-surface metrics | Baseline incomplete; missing phases | NOT STARTED | L4 / Observation | — |
 | M4.2 Collapse vector live tracking | L4 | M4.1 complete | Collapse vectors tracked in production; probes running | Probes fail; tracking gaps | NOT STARTED | L4 / Observation | — |
 | M4.3 Ledger reconciliation dashboard | L4 | M4.2 complete | Pre/post ledgers reconciled; diff visible; anomalies flagged | Reconciliation fails | NOT STARTED | L4 / Observation | — |
 | M4.4 GREG audit automation | L4 | M4.3 complete | GREG-trigger automation on drift thresholds; evidence package produced | Automation missing; thresholds wrong | NOT STARTED | L4 / Observation | — |
@@ -109,9 +104,7 @@ flowchart TB
 |-------|-----------|--------|------------|---------------|----------|-------------|
 | L1 | Governance lock | COMPLETE / LOCKED | 100 | GREG ratification; `governance/CONSTITUTIONAL_MANIFEST_v1.0.md` | — | — |
 | L2 | M2.1–M2.7 Layer-2 ML Compilation | COMPLETE / LOCKED | 100 | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1, §4.2.2, §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`; `ml/training/FREEZE_CERTIFICATE_v1.json` | — | Hand-off to Layer-3 runtime implementation |
-| L3 | M3.0–M3.3 Plan-Gate Runtime, Runtime Governor, Task State Store, Deterministic Agent Loop | IN PROGRESS | — | `docs/LIVE_ROADMAP_TRACKER.md` §4.3 (M3.E0, M3.T0, M3.1 scaffold); `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` | Finalizing sandbox strategy; ledger storage/replay infra | Complete M3.E0 validation; proceed with M3.1 orchestrator spec and implementation |
-| L3 | M3.4–M3.8 Runtime Context, Sandbox, Model Worker, IDE/CI, Ledger Emission | NOT STARTED | 0 | — | Depends on M3.0–M3.3 | Design and implement Repository Context Engine and Execution Sandbox contracts |
-| L3 | M3.9 Shadow Mode Validation | NOT STARTED | 0 | — | Depends on M3.4–M3.8 | Define baseline scenarios and shadow replay harness |
+| L3 | Layer-3 Runtime (M3.E0, M3.T0, M3.0–M3.4) | — | — | **See [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3 and §6** for milestone IDs, status, evidence, and next actions. | — | — |
 | L4 | M4.1–M4.5 Observation | NOT STARTED | 0 | — | Depends on M3.9 | Implement ledger ingestion, drift baseline, collapse tracking, reconciliation, and GREG automation |
 
 **Status key:** Not Started | In Progress | Complete | Blocked
@@ -128,6 +121,6 @@ flowchart TB
 
 3. **Layer-4 immune system active:** Drift baseline captured; collapse vectors tracked in production; ledger reconciliation operational; GREG-trigger automation runs on thresholds; lock signal emitted when evidence suffices.
 
-4. **System eligible for production lock:** All milestones M2.1–M2.7, M3.1–M3.6, M4.1–M4.5 complete; GREG has admissible evidence; no drift above threshold; constitutional version lock signal emitted.
+4. **System eligible for production lock:** All milestones M2.1–M2.7, Layer-3 per [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3 and §6, M4.1–M4.5 complete; GREG has admissible evidence; no drift above threshold; constitutional version lock signal emitted.
 
 At constitutional completion, the system may proceed to production deployment with continuous drift monitoring and GREG-triggered governance review on threshold violation.

@@ -89,7 +89,7 @@ Reviewer behavior, calibration, and adversarial testing are defined in the **Rev
 
 The Reviewer Pack must conform strictly to the semantics defined in this guide. If there is any conflict between documents, **this Production Guide always wins**.
 
-**For comprehensive system navigation,** see `JUDGMENT_SYSTEM_README.md` in the guides directory.
+**For comprehensive system navigation,** see [JUDGMENT_SYSTEM_README.md](ml/training/sft/exemplars/guides/JUDGMENT_SYSTEM_README.md) in the exemplar guides directory.
 
 ---
 

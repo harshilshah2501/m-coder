@@ -94,6 +94,7 @@ Key components of the runtime-governed agent architecture are elaborated in [RUN
 
 | Document                                                     | Purpose                                                    |
 | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)           | Single live progress dashboard; milestone status and evidence |
 | [GLOSSARY.md](GLOSSARY.md)                                   | CIM term definitions and schema references                 |
 | [NON_NEGOTIABLE_INVARIANTS.md](NON_NEGOTIABLE_INVARIANTS.md) | Fail-closed semantics, gate-down→block, append-only ledger |
 | [CONTRACTS/README.md](CONTRACTS/README.md)                   | Contract and schema index                                  |

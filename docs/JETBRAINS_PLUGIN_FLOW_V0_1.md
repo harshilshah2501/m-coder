@@ -77,6 +77,7 @@ CLI client (`runtime/ci_gate/cli.py`) calls Plan-Gate Service and fails the buil
 HTTP endpoint for plugin clients:
 
 - **POST /v0/plan** — Request body: PlanRequest v0.1 JSON. Response: DecisionResponse v0.1 JSON.
+- **POST /v0/ask** — Repo-aware, plan-only queries (no execution). Request body: AskRequest v0.1 JSON. Response: PlanOnlyResponse v0.1 (context bundle, plan summary, `governance_posture=PLAN_ONLY`, `execution=false`). See [docs/RUNTIME/JETBRAINS_PLUGIN_MVP_SPIKE.md](RUNTIME/JETBRAINS_PLUGIN_MVP_SPIKE.md) and schemas `runtime/ide/schemas/ask_request.v0.1.schema.json`, `runtime/ide/schemas/plan_only_response.v0.1.schema.json`.
 - Default port: 8089 (env `PLAN_GATE_PORT`)
 - Run: `python -m runtime.plan_gate_service.app`
 - Health check: GET `/healthz` (returns `{"status":"ok"}`) — used by plugin for liveness
@@ -88,6 +89,8 @@ HTTP endpoint for plugin clients:
 - runtime/ide/schemas/decision_response.v0.1.schema.json
 - runtime/ide/schemas/ide_event.v0.1.schema.json
 - runtime/ide/schemas/boundary_hashing.v0.1.json
+- runtime/ide/schemas/ask_request.v0.1.schema.json
+- runtime/ide/schemas/plan_only_response.v0.1.schema.json
 
 ## Rules R-IDE1 to R-IDE3
 

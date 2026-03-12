@@ -47,6 +47,8 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 
 **M3.7 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.0 / M3.8:** CI Backstop Gate (`runtime/ci_gate/`) and Plan-Gate Service (`runtime/plan_gate_service/`) implement the local gate and HTTP endpoint and emit ledger rows. **M3.9 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch. **M4.1 Drift baseline:** [observation/baseline/](../observation/baseline/README.md) — Shadow Baseline Runner.
 
+*Implementation build order and current status use different IDs; see [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3 and §6 (e.g. M3.0 Context Engine, M3.1 Orchestrator, M3.2 Sandbox, M3.3 Plan-Gate Integration, M3.4 IDE Plugin).*
+
 ### What Cannot Ship Without REF Enforcement
 
 - Production execution **cannot** ship if REF (refusal under illegitimacy or missing authority) is not enforced at runtime. Authority validator must block action when scope is invalid or authority is missing. No “best-effort” or advisory-only REF.
