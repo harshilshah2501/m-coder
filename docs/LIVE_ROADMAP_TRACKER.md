@@ -563,6 +563,33 @@ This section records **evidence of completed milestones**. Entries should be **a
   - **Demo:** `python3 -m runtime.sandbox.demo_governed_execution` prints five outcomes including BOUNDED_ALLOW with ledger_row_id; 7 ledger rows (plangate_safe_execute, sandbox_executed, plangate_refused, sandbox_refused, sandbox_refused, plangate_deferred, plangate_bounded_allow).
   - **Tests:** pytest `runtime/tests/test_plangate_integration.py` (14 tests), `runtime/tests/test_sandbox_demo_e2e.py` (12 tests): bounded_allow proved end-to-end; distinct from defer (stop_reason, event_type).
 
+### 6.10 M3.3B — Internal Plan-Gate Decomposition
+
+- **Milestone**: M3.3B Internal Plan-Gate Decomposition — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **Plan-Gate internally decomposed into explicit first-class subcomponents; external contract unchanged.**
+- **Artifacts** (7/7):
+  - `runtime/plangate/contracts.py` — AuthorityResult, IrreversibilityResult, JudgeInput dataclasses.
+  - `runtime/plangate/authority_validator.py` — AuthorityValidator component; validates requester authority.
+  - `runtime/plangate/irreversibility_detector.py` — IrreversibilityDetector component; classifies boundaries and irreversibility.
+  - `runtime/plangate/judge_gate.py` — JudgeGate posture-decider; combines authority + irreversibility + hints → PlanGateDecision.
+  - `runtime/tests/test_plangate_authority_validator.py` — AuthorityValidator unit tests (16 tests).
+  - `runtime/tests/test_plangate_irreversibility_detector.py` — IrreversibilityDetector unit tests (18 tests).
+  - `runtime/tests/test_plangate_judge_gate.py` — JudgeGate unit tests (15 tests).
+- **Evidence**:
+  - **Internal architecture:**
+    ```
+    PlanGateService
+     ├─ AuthorityValidator  → AuthorityResult
+     ├─ IrreversibilityDetector → IrreversibilityResult
+     └─ JudgeGate → PlanGateDecision
+    ```
+  - **Flow:** request → AuthorityValidator → IrreversibilityDetector → JudgeGate → PlanGateDecision.
+  - **External contract unchanged:** `PlanGateService.evaluate(request) → PlanGateDecision`.
+  - **Fields now explicit:**
+    - `authority_ok` backed by `AuthorityResult` from `AuthorityValidator`.
+    - `boundary_detected` / `irreversible` backed by `IrreversibilityResult` from `IrreversibilityDetector`.
+  - **Tests:** 49 new subcomponent tests (all pass); 14 integration tests (all pass); 12 E2E demo tests (all pass); demo unchanged.
+  - **Nature:** Architectural hardening / decomposition, not a doctrine change. Not yet full enterprise RBAC or production-grade boundary policy.
+
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
 ---
