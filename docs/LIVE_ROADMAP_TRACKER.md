@@ -3,9 +3,9 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-10  
+- **Last updated**: 2026-03-12  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **Layer-3 architecture and runtime MVP buildout (Repository Context Engine, Agent Loop Orchestrator, Execution Sandbox)**  
+- **Current active milestone focus**: **M3.3 Plan-Gate Integration** (all execution paths through Plan-Gate before sandbox; M3.2 Execution Sandbox closed for MVP)  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -149,10 +149,10 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.T0 | Deterministic Agent State Transition Table (Contract) | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | Plan-Gate runtime contract                   | Deterministic runtime transition spec + schemas for agent state machine.             | 3/3       | see §6.3 | —                                   | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented.             |
 | M3.0  | Repository Context Engine                             | <span style="color:#e65100">VALIDATING</span>  | Shared     | L2.*                                         | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 4/4       | see §6.5 | wire LoopController → ContextEngine | Context for runtime decisions is deterministic, revision-tied, and independently auditable.                                        |
 | M3.1  | Agent Loop Orchestrator                               | <span style="color:#e65100">IN_PROGRESS</span> | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
-| M3.2  | Execution Sandbox                                     | <span style="color:#e65100">IN_PROGRESS</span> | Architect  | M3.0–M3.1                                    | Isolated executor for tools/tests/commands under runtime control.                    | 4/4       | see §6.8 | orchestrator full integration       | Irreversible effects can only occur through the sandbox with authority/boundary checks and ledger emission.                        |
-| M3.3  | Plan-Gate Integration                                 | <span style="color:#757575">NOT_STARTED</span> | Shared     | M3.0–M3.2                                    | Wiring between Plan objects, decision contracts, and runtime agent loop.             | 0/3       | none     | integration contract doc            | All relevant requests flow through Plan-Gate before execution; fail-closed behavior enforced.                                      |
+| M3.2  | Execution Sandbox                                     | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | M3.0–M3.1                                    | Isolated executor + unified result contract + local ledger persistence (REFUSED/BLOCKED/EXECUTED). | 6/6       | see §6.8 | —                                   | Irreversible effects only through sandbox; all three outcomes produce durable ledger rows; CLI/test-harness demo closure.             |
+| M3.3  | Plan-Gate Integration                                 | <span style="color:#e65100">VALIDATING</span>  | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
 | M3.4  | IDE Plugin Integration                                | <span style="color:#e65100">IN_PROGRESS</span> | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 1/3       | see §6.7 | plugin bridge doc                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
-| M3.5  | Ledger Emission                                       | <span style="color:#757575">NOT_STARTED</span> | Architect  | M3.3                                         | Reliable ledger_row.v0.1 emission for every runtime decision.                        | 0/3       | none     | transition-to-ledger map            | Every decision that affects execution has a corresponding ledger row linking to plan_hash; append-only semantics defined.          |
+| M3.5  | Ledger Emission                                       | <span style="color:#757575">NOT_STARTED</span> | Architect  | M3.3                                         | Broader ledger completeness / replay / observation bridge (beyond M3.2 local evidence). | 0/3       | none     | transition-to-ledger map            | Full runtime decision ledger; join/replay contract; Layer-4 observation ingestion. M3.2 delivers local sandbox evidence only.     |
 | M3.6  | Shadow Mode Validation                                | <span style="color:#757575">NOT_STARTED</span> | Shared     | M3.0–M3.5                                    | Full runtime-governed agent loop running in shadow mode.                             | 0/3       | none     | shadow protocol note                | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows.                              |
 
 
@@ -288,19 +288,24 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Required Artifacts**
 
-- Integration contract doc (mapping between runtime agent loop and Plan-Gate service).
-- Runtime-to-plan-gate request mapping (how runtime constructs plan_request/plan objects).
-- Authority / boundary handoff spec (how authority and irreversibility results feed into runtime decisions).
+- `runtime/plangate/plangate_decision.py` — PlanGateDecision (posture: refuse | defer | bounded_allow | safe_execute; authority_ok, boundary_detected, irreversible, reason).
+- `runtime/plangate/plangate_service.py` — PlanGateService.evaluate(request) → PlanGateDecision (deterministic, rule-based; no LLM).
+- LoopController integration: Plan-Gate evaluated before validated_to_sandbox; only safe_execute may reach sandbox.
+- Ledger event types: plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute (request_id, plan_hash, decision_posture, reason).
+- Demo extension: SAFE_EXECUTE → execution, REFUSE → refusal, DEFER → deferred, BOUNDED_ALLOW → bounded_allow; decision + outcome printed.
+- `runtime/tests/test_plangate_integration.py` — refusal/defer/bounded_allow prevent sandbox; safe_execute allows; bounded_allow distinct from defer; decision persists.
+- `docs/RUNTIME/milestones/M3.3_PLAN_GATE_INTEGRATION.md` — milestone doc.
 
 **Exit Criteria**
 
-- REF path defined (illegitimacy and missing authority lead to refusal).
-- CONF boundary-block path defined (conditional allowance up to boundary; block at irreversible crossing).
-- Request/response mapping documented for Plan, DecisionResponse, and ledger linkage.
+- Every sandbox execution requires Plan-Gate approval; no path may bypass Plan-Gate.
+- All four postures (refuse, defer, bounded_allow, safe_execute) are first-class: refuse/defer/bounded_allow prevent sandbox; only safe_execute allows transition to sandbox; bounded_allow distinct from defer (stop_reason, plangate_bounded_allow).
+- Plan-Gate decisions are ledgered (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute); linkage via request_id.
+- CLI demo shows five cases (SAFE_EXECUTE, REFUSE, REFUSED no gate, DEFER, BOUNDED_ALLOW); tests verify refusal, defer, and bounded_allow paths.
 
 **Evidence**
 
-- none yet
+- see §6.9
 
 ##### M3.4 — IDE Plugin Integration
 
@@ -402,23 +407,20 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Layer-3 architecture and runtime MVP buildout**  
-  - Define and stabilize Runtime Governor and Deterministic Agent Loop.  
-  - Stand up Repository Context Engine and Execution Sandbox scaffolding.
+- **Current objective**: **M3.3 Plan-Gate Integration**  
+  - Guarantee all execution paths flow through the governed Plan-Gate decision pipeline before any sandbox execution.  
+  - Execution chain: request → Plan-Gate → runtime decision → LoopController transition → sandbox (if allowed) → ledger evidence.
 - **Active tasks**:
-  - Implement **M3.E0 Deterministic Runtime Emulator**: plan_gate stub, authority/boundary/ledger helpers, shadow runner CLI, and invariant tests.
-  - Deliver **M3.T0 Deterministic Agent State Transition Table**: runtime-owned control contract + state enums + transition matrix (see §6.3).
-  - Begin **M3.1 Agent Loop Orchestrator** spec + deterministic transition-executor scaffold: task state store + transition validation + loop controller (see §6.4).
-  - Finalize high-level architecture docs for Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface.
+  - **M3.3** implemented: PlanGateDecision + PlanGateService, LoopController integration, all four postures (refuse, defer, bounded_allow, safe_execute); Plan-Gate ledger events (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute); demo (five cases including BOUNDED_ALLOW); tests prove bounded_allow distinct from defer. Validating and documenting.
+  - M3.2 Execution Sandbox **closed for MVP** (unified contract, local ledger, CLI demo).
 - **Next 3 milestones**:
-  1. **M3.E0 Deterministic Runtime Emulator** — <span style="color:#e65100">VALIDATING</span> (all artifacts implemented, invariant tests passing)
-  2. **M3.0 Repository Context Engine** — <span style="color:#e65100">VALIDATING</span> (deterministic context engine implemented; tests passing)
-  3. **M3.2 Execution Sandbox** — <span style="color:#e65100">IN_PROGRESS</span> (sandbox runner, policy, ledger integration implemented; tests passing)
+  1. **M3.3 Plan-Gate Integration** — <span style="color:#e65100">VALIDATING</span> (Plan-Gate mandatory before sandbox; decisions ledgered; CLI demo)
+  2. **M3.4 IDE Plugin Integration** — <span style="color:#e65100">IN_PROGRESS</span>
+  3. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
 - **Current blockers**:
-  - Final decision on sandboxing strategy (e.g., process isolation, containerization) and resource constraints.
-  - Tooling and infra selection for ledger storage and replay (shared with Layer-4 needs).
+  - None. M3.3 implementation complete; evidence and docs in place.
 - **Immediate next action**:
-  - **M3.2 sandbox ↔ LoopController wiring done:** transition `validated_to_sandbox` (PROPOSAL_VALIDATED → SANDBOX_EXECUTED) now invokes SandboxExecutor when guard_inputs provide `command` and `working_dir`; result persisted in state metadata for downstream guards. Next: JetBrains plugin CommitContext resolution so plugin compiles and runs for demos; ledger storage/replay tooling (Layer-4).
+  - Harden M3.3 (tests, demo, docs); then M3.4 plugin wiring to Plan-Gate and agent loop.
 
 ---
 
@@ -518,31 +520,48 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.8 M3.2 — Execution Sandbox (CODE Phase)
 
-- **Milestone**: M3.2 Execution Sandbox — <span style="color:#e65100">IN_PROGRESS</span> (2026-03-11)
-- **Artifacts** (4/4):
+- **Milestone**: M3.2 Execution Sandbox — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **closed for MVP; demo closure and local evidence complete.**
+- **Artifacts** (6/6):
   - `runtime/sandbox/sandbox_runner.py` — SandboxRunner with subprocess execution, timeout enforcement, artifact capture
   - `runtime/sandbox/sandbox_policy.py` — SandboxPolicy with command allowlist, time limits, env filtering
-  - `runtime/sandbox/sandbox_result.py` — SandboxResult dataclass for execution outputs
+  - `runtime/sandbox/sandbox_result.py` — SandboxResult + **GovernedExecutionResult** (unified REFUSED/BLOCKED/EXECUTED contract)
   - `runtime/sandbox/sandbox_errors.py` — SandboxPolicyViolation, SandboxTimeout, SandboxExecutionError
-  - `runtime/sandbox/sandbox_executor.py` — Orchestrator integration with SandboxAction and SandboxExecutionResult
-  - `runtime/sandbox/sandbox_ledger.py` — SandboxLedgerEmitter for ledger_row.v0.1 emission
-  - `runtime/tests/test_sandbox_runner.py` — 37 tests covering runner, policy, result, ledger, executor
+  - `runtime/sandbox/sandbox_executor.py` — Returns GovernedExecutionResult; BLOCKED/EXECUTED with optional ledger_store
+  - `runtime/sandbox/sandbox_ledger.py` — SandboxLedgerEmitter (in-memory)
+  - `runtime/sandbox/sandbox_ledger_store.py` — **SandboxLedgerStore** (SQLite WAL, append-only) for all three outcomes
+  - `runtime/sandbox/demo_governed_execution.py` — **Canonical CLI/test-harness demo** (EXECUTED, BLOCKED, REFUSED)
+  - `runtime/tests/test_sandbox_runner.py`, `runtime/tests/test_sandbox_demo_e2e.py`, `runtime/tests/test_sandbox_ledger_store.py`
+  - `docs/demo/M3.2_PROOF_PACK.md` — Proof pack for MVP walkthrough
 - **Evidence**:
-  - Sandbox runner validates commands against policy before execution (fail-closed)
-  - Allowed commands include: pytest, python, ruff, black, mypy, npm, go, cargo, etc.
-  - Timeout enforcement via subprocess with configurable limits (default 30s)
-  - stdout/stderr captured with size limits (default 1MB)
-  - Artifact detection via pre/post file scanning
-  - Environment filtering: blocklist strips secrets (AWS_*, GITHUB_TOKEN, etc.)
-  - Ledger emission with deterministic event_id (sha256-based)
-  - Orchestrator integration via `execute_sandbox_action()` convenience function
-  - **LoopController wiring:** transition `validated_to_sandbox` (PROPOSAL_VALIDATED → SANDBOX_EXECUTED) invokes SandboxExecutor when `guard_inputs` provide `command` and `working_dir`; result (`last_sandbox_success`, `last_sandbox_ledger_id`) persisted in task state for downstream guards (`sandbox_to_tests` / `sandbox_to_failed`). Tests in `runtime/tests/test_transition_executor.py::TestLoopControllerSandboxIntegration`.
-  - pytest (`python3 -m pytest runtime/tests/test_sandbox_runner.py -v`): 37 passed
+  - **Three canonical outcomes:** REFUSED (runtime denies before sandbox; refusal ledger row persisted), BLOCKED (policy blocks; blocked row persisted), EXECUTED (command runs; execution row persisted).
+  - Refusal events produce ledger rows (LoopController + ledger_store when validated_to_sandbox refused).
+  - Unified contract: GovernedExecutionResult with outcome_type, request_id, plan_hash, sandbox_id, ledger_row_id, refusal_reason, blocked_reason, commands_executed/blocked, artifacts, duration_ms, exit_code, stdout_summary, stderr_summary.
+  - Local ledger: SQLite append-only; get_by_request_id, get_by_ledger_row_id; persistence failure raises LedgerStoreError (fail-closed).
+  - Demo: `python3 -m runtime.sandbox.demo_governed_execution` runs all three cases; pytest `runtime/tests/test_sandbox_demo_e2e.py` (7 tests) + `runtime/tests/test_sandbox_ledger_store.py` (8 tests).
+  - LoopController wiring: validated_to_sandbox uses result.success and result.ledger_row_id (GovernedExecutionResult); optional ledger_store for refusal rows.
+  - pytest (`python3 -m pytest runtime/tests/test_sandbox_runner.py runtime/tests/test_sandbox_demo_e2e.py runtime/tests/test_sandbox_ledger_store.py runtime/tests/test_transition_executor.py -v`): 77 passed
+- **M3.2 vs M3.5:** M3.2 covers sandbox execution evidence and **local deterministic persistence** sufficient for MVP demo. M3.5 covers broader ledger completeness, replay/join contract, and observation-bridge (Layer-4).
 - **Architecture**:
-  - DES → propose
-  - CONF → authorize
-  - CODE → execute (sandboxed) ← M3.2
-  - Execution must never happen outside the sandbox
+  - DES → propose; CONF → authorize; CODE → execute (sandboxed) ← M3.2
+  - Execution must never happen outside the sandbox; no bypass path.
+
+### 6.9 M3.3 — Plan-Gate Integration
+
+- **Milestone**: M3.3 Plan-Gate Integration — <span style="color:#e65100">VALIDATING</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
+- **Artifacts** (6/6):
+  - `runtime/plangate/plangate_decision.py` — PlanGateDecision (posture: refuse | defer | bounded_allow | safe_execute; authority_ok, boundary_detected, irreversible, reason); to_dict/from_dict.
+  - `runtime/plangate/plangate_service.py` — PlanGateService.evaluate(request) → PlanGateDecision; deterministic rule-based (REFUSED_COMMANDS, plan_gate_defer, plan_gate_refuse, plan_gate_bounded_allow); no LLM.
+  - `runtime/orchestrator/loop_controller.py` — Plan-Gate evaluated before validated_to_sandbox; refuse → REFUSED + ledger; defer → valid=False, stop_reason=deferred + plangate_deferred; bounded_allow → valid=False, stop_reason=bounded_allow + plangate_bounded_allow (distinct branch); safe_execute → sandbox; Plan-Gate not configured → refuse.
+  - `runtime/sandbox/sandbox_ledger_store.py` — EVENT_PLANGATE_REFUSED, EVENT_PLANGATE_DEFERRED, EVENT_PLANGATE_BOUNDED_ALLOW, EVENT_PLANGATE_SAFE_EXECUTE; same store persists plangate_* and sandbox_*; linkage via request_id.
+  - `runtime/sandbox/demo_governed_execution.py` — PlanGateService() in controller; five cases: SAFE_EXECUTE → EXECUTED, REFUSE (curl), REFUSED (no gate), DEFER → deferred, BOUNDED_ALLOW → bounded_allow; decision + outcome printed.
+  - `runtime/tests/test_plangate_integration.py` — PlanGateDecision/PlanGateService (incl. force_bounded_allow, bounded_allow distinct from defer); LoopController: refusal/defer/bounded_allow prevent sandbox, safe_execute allows; decision persists; plangate_bounded_allow ledger row.
+  - `docs/RUNTIME/milestones/M3.3_PLAN_GATE_INTEGRATION.md` — milestone document; bounded_allow MVP meaning; future follow-up note (no bounded sandbox profile yet).
+- **Evidence**:
+  - **Execution chain:** request → Plan-Gate → runtime decision → LoopController transition → sandbox (if allowed) → ledger evidence. No execution path may bypass Plan-Gate.
+  - **Postures (all four exercised):** refuse → REFUSED + plangate_refused + sandbox_refused; defer → valid=False, stop_reason=deferred + plangate_deferred; bounded_allow → valid=False, stop_reason=bounded_allow + plangate_bounded_allow (no sandbox); safe_execute → _run_sandbox_and_persist + plangate_safe_execute + sandbox_executed. Only safe_execute reaches sandbox in MVP.
+  - **Governance:** DES → reasoning only; CONF → bounded safe action; CODE → execution via sandbox only. bounded_allow is first-class, non-sandbox, distinct from defer; richer bounded execution (e.g. read-only sandbox profile) is future work.
+  - **Demo:** `python3 -m runtime.sandbox.demo_governed_execution` prints five outcomes including BOUNDED_ALLOW with ledger_row_id; 7 ledger rows (plangate_safe_execute, sandbox_executed, plangate_refused, sandbox_refused, sandbox_refused, plangate_deferred, plangate_bounded_allow).
+  - **Tests:** pytest `runtime/tests/test_plangate_integration.py` (14 tests), `runtime/tests/test_sandbox_demo_e2e.py` (12 tests): bounded_allow proved end-to-end; distinct from defer (stop_reason, event_type).
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 

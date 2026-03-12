@@ -26,11 +26,13 @@ from runtime.sandbox.sandbox_ledger import (
     SandboxLedgerEmitter,
     SandboxLedgerEntry,
 )
+from runtime.sandbox.sandbox_ledger_store import SandboxLedgerStore
 from runtime.sandbox.sandbox_policy import SandboxPolicy
-from runtime.sandbox.sandbox_result import SandboxResult
+from runtime.sandbox.sandbox_result import GovernedExecutionResult, SandboxResult
 from runtime.sandbox.sandbox_runner import SandboxRunner
 
 __all__ = [
+    "GovernedExecutionResult",
     "SandboxAction",
     "SandboxError",
     "SandboxExecutionError",
@@ -38,6 +40,7 @@ __all__ = [
     "SandboxExecutor",
     "SandboxLedgerEmitter",
     "SandboxLedgerEntry",
+    "SandboxLedgerStore",
     "SandboxPolicy",
     "SandboxPolicyViolation",
     "SandboxResult",

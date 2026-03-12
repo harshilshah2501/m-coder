@@ -437,13 +437,41 @@ class TestLoopControllerSandboxIntegration(unittest.TestCase):
             guard_inputs={"command": ["true"], "working_dir": "/tmp"},
         )
         self.assertFalse(r.valid)
-        self.assertIn("Sandbox executor not configured", r.reason)
+        self.assertIn("Plan-Gate not configured", r.reason)
+
+    def test_refusal_ledger_failure_surfaces_fail_closed(self) -> None:
+        """When refusal ledger append fails, reason must include persistence failure (no silent swallow)."""
+        from runtime.sandbox.sandbox_ledger_store import LedgerStoreError
+
+        class FailingStore:
+            def append(self, **kwargs):  # noqa: ANN002, ANN003
+                raise LedgerStoreError("disk full")
+
+        controller = LoopController(sandbox_executor=None, ledger_store=FailingStore())
+        controller.create_task("t-refuse-fail")
+        state = controller.store.load("t-refuse-fail")
+        self.assertIsNotNone(state)
+        state.current_state = "PROPOSAL_VALIDATED"
+        controller.store.save(state)
+        with tempfile.TemporaryDirectory() as tmp:
+            r = controller.apply_transition(
+                "t-refuse-fail",
+                transition_id="validated_to_sandbox",
+                guard_inputs={"command": ["echo", "x"], "working_dir": tmp},
+            )
+        self.assertFalse(r.valid)
+        self.assertIn("could not be persisted", r.reason)
+        self.assertIsNone(r.ledger_row_id)
 
     def test_validated_to_sandbox_runs_sandbox_and_persists_result(self) -> None:
         from runtime.sandbox.sandbox_executor import SandboxExecutor
+        from runtime.plangate.plangate_service import PlanGateService
 
         with tempfile.TemporaryDirectory() as tmp:
-            controller = LoopController(sandbox_executor=SandboxExecutor())
+            controller = LoopController(
+                sandbox_executor=SandboxExecutor(),
+                plan_gate_service=PlanGateService(),
+            )
             controller.create_task("t-sandbox")
             state = controller.store.load("t-sandbox")
             state.current_state = "PROPOSAL_VALIDATED"

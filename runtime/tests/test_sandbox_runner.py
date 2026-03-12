@@ -31,8 +31,9 @@ from runtime.sandbox.sandbox_executor import (
     execute_sandbox_action,
 )
 from runtime.sandbox.sandbox_ledger import SandboxLedgerEmitter
+from runtime.sandbox.sandbox_ledger_store import SandboxLedgerStore
 from runtime.sandbox.sandbox_policy import SandboxPolicy
-from runtime.sandbox.sandbox_result import SandboxResult
+from runtime.sandbox.sandbox_result import GovernedExecutionResult, SandboxResult
 from runtime.sandbox.sandbox_runner import SandboxRunner
 
 
@@ -368,7 +369,7 @@ class TestSandboxExecutor:
     """Tests for SandboxExecutor integration class."""
 
     def test_execute_sandbox_action(self) -> None:
-        """SandboxExecutor executes action with ledger integration."""
+        """SandboxExecutor executes action and returns GovernedExecutionResult."""
         executor = SandboxExecutor()
         with tempfile.TemporaryDirectory() as tmpdir:
             action = SandboxAction(
@@ -377,12 +378,13 @@ class TestSandboxExecutor:
                 working_dir=tmpdir,
             )
             result = executor.execute_sandbox_action(action)
+            assert result.outcome_type == "executed"
             assert result.success is True
-            assert result.result.exit_code == 0
-            assert result.ledger_entry.task_id == "task-123"
+            assert result.exit_code == 0
+            assert result.request_id == "task-123"
 
     def test_convenience_function(self) -> None:
-        """execute_sandbox_action convenience function works."""
+        """execute_sandbox_action convenience function returns GovernedExecutionResult."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = execute_sandbox_action(
                 task_id="task-456",
@@ -390,7 +392,8 @@ class TestSandboxExecutor:
                 working_dir=tmpdir,
             )
             assert result.success is True
-            assert result.action.task_id == "task-456"
+            assert result.request_id == "task-456"
+            assert result.outcome_type == "executed"
 
     def test_execution_history(self) -> None:
         """Executor maintains execution history."""
@@ -426,10 +429,10 @@ class TestSandboxExecutor:
             assert is_valid is False
 
     def test_execution_callback(self) -> None:
-        """Execution callback is invoked."""
-        results: list[SandboxResult] = []
+        """Execution callback is invoked with GovernedExecutionResult."""
+        results: list = []
 
-        def callback(result: SandboxResult) -> None:
+        def callback(result) -> None:
             results.append(result)
 
         executor = SandboxExecutor(execution_callback=callback)
@@ -438,6 +441,7 @@ class TestSandboxExecutor:
             executor.execute_sandbox_action(action)
 
         assert len(results) == 1
+        assert results[0].outcome_type == "executed"
 
 
 class TestSandboxErrors:

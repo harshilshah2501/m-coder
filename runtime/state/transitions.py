@@ -25,6 +25,8 @@ class TransitionResult:
     decision_boundary: bool = False
     stop_reason: str | None = None
     reason: str = ""
+    # When valid=False and transition is validated_to_sandbox, refusal ledger row id if persisted.
+    ledger_row_id: str | None = None
 
     def __bool__(self) -> bool:
         return self.valid

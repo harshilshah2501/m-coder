@@ -33,7 +33,7 @@ stateDiagram-v2
   BoundaryEvaluated --> Completed: REF refusal / hard block
 
   LoopActive --> AwaitingProposal: request to Model Worker
-  AwaitingProposal --> SandboxExecuting: proposal accepted by governor
+  AwaitingProposal --> SandboxExecuting: proposal accepted by governor (Plan-Gate safe_execute)
   SandboxExecuting --> LoopActive: more work required
   SandboxExecuting --> Completed: runtime completion criteria met
 
@@ -85,6 +85,42 @@ Invariants:
 - The model **cannot** mutate task state or environment directly.
 - The model **cannot** decide completion; it can only recommend that a task might be done.
 - All outputs must be machine-validated by the runtime before they affect state or trigger sandbox execution.
+
+---
+
+## Plan-Gate (M3.3)
+
+The **Plan-Gate** is the mandatory pre-sandbox decision gate. No execution path may bypass it. The execution chain is:
+
+```
+request → Plan-Gate → runtime decision → LoopController transition → sandbox (if allowed) → ledger evidence
+```
+
+### Postures
+
+Plan-Gate determines the runtime posture for each request:
+
+- **refuse** — Governance/runtime denies before sandbox; sandbox must not run; refusal ledger row persisted.
+- **defer** — Request deferred; transition returns `valid=False`, `stop_reason="deferred"`; plangate_deferred persisted; sandbox does not run.
+- **bounded_allow** — First-class Plan-Gate posture: governed, non-sandbox, bounded-safe outcome; transition returns `valid=False`, `stop_reason="bounded_allow"`; plangate_bounded_allow persisted; sandbox does not run. Distinct from defer; reserved for future CONF-phase bounded execution semantics. In MVP, no dedicated bounded sandbox profile yet — richer bounded execution (e.g. read-only, test-only) is future work.
+- **safe_execute** — Request allowed; transition to sandbox proceeds; plangate_safe_execute persisted, then sandbox runs.
+
+Only **safe_execute** may reach the Execution Sandbox.
+
+### Governance Alignment
+
+- **DES** → reasoning only.
+- **CONF** → bounded safe action.
+- **CODE** → execution via sandbox only, and only after Plan-Gate returns safe_execute.
+
+### Implementation
+
+- **PlanGateDecision** (`runtime/plangate/plangate_decision.py`): posture, authority_ok, boundary_detected, irreversible, reason.
+- **PlanGateService** (`runtime/plangate/plangate_service.py`): `evaluate(request)` → PlanGateDecision; deterministic rule-based (no LLM).
+- **LoopController**: Before `validated_to_sandbox`, calls `PlanGateService.evaluate()`; refuses if Plan-Gate not configured; persists plangate_* and (when applicable) sandbox_* ledger rows.
+- **Ledger**: Event types `plangate_refused`, `plangate_deferred`, `plangate_bounded_allow`, `plangate_safe_execute`; linkage to sandbox rows via `request_id`.
+
+**Future follow-up:** `bounded_allow` may later map to a restricted sandbox profile (e.g. read-only inspection, test-only execution, limited command set); that is explicitly out of scope for the current M3.3 scope.
 
 ---
 
@@ -224,6 +260,30 @@ The **Task State Store** is the persistent record of the agent loop for each tas
   - **Aligned with contracts:** States must be compatible with plan.v0.1, decision_response.v0.1, and ledger_row.v0.1.
 
 The Task State Store is the backbone that turns the agent from a loose collection of calls into a **governed state machine**.
+
+---
+
+## M3.2 Constitutional Audit Note
+
+**What M3.2 now proves**
+
+- **REFUSED**: Governance/runtime denies before sandbox; sandbox is not launched; a refusal ledger row is persisted (LoopController + SandboxLedgerStore).
+- **BLOCKED**: Request reaches sandbox path; policy disallows command/path; command does not execute; a blocked ledger row is persisted.
+- **EXECUTED**: Request is allowed; command runs inside sandbox; artifacts captured; an execution ledger row is persisted.
+
+**Mapping to governance-first runtime**
+
+- REFUSED = runtime/orchestrator refusal (e.g. no executor, invalid guard_inputs); first-class outcome with ledger evidence.
+- BLOCKED = sandbox policy enforcement; distinct from refusal; evidence in same local store.
+- EXECUTED = CODE phase under runtime control; no bypass path.
+
+**Out of scope for MVP**
+
+- Production-grade container isolation; full M3.5 ledger/replay/observation bridge; IDE plugin-first demo (plugin follows CLI).
+
+**Why CLI-first demo**
+
+- Canonical demo starts from runtime CLI and/or test harness so that governed correctness (quality, accuracy, reliability) is proven in the runtime layer before layering plugin UX. Plugin-first would risk hiding gaps behind UI; CLI-first keeps evidence and linkage explicit.
 
 ---
 
