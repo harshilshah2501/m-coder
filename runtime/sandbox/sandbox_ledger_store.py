@@ -76,8 +76,10 @@ class SandboxLedgerStore:
         sandbox_id TEXT NOT NULL,
         timestamp_utc TEXT NOT NULL,
         payload TEXT NOT NULL,
-        artifact_manifest_ref TEXT NOT NULL DEFAULT ''
+        artifact_manifest_ref TEXT NOT NULL DEFAULT '',
+        canonical_hash TEXT NOT NULL DEFAULT ''
     );
+    CREATE INDEX IF NOT EXISTS idx_canonical_hash ON sandbox_ledger(canonical_hash);
     """
 
     def __init__(self, path: Path | str, *, fixed_time: str | None = None):
@@ -115,8 +117,10 @@ class SandboxLedgerStore:
     ) -> LedgerRow:
         """
         Append one row. Raises LedgerStoreError on failure (no silent success).
+        Rows without canonical_hash in payload store empty string (backward compatible).
         """
         timestamp = self._timestamp()
+        canonical_hash = payload.get("canonical_hash", "") or ""
         payload_json = json.dumps(payload, sort_keys=True, ensure_ascii=False)
         row = LedgerRow(
             ledger_row_id=ledger_row_id,
@@ -136,8 +140,8 @@ class SandboxLedgerStore:
                     INSERT INTO sandbox_ledger (
                         ledger_row_id, event_type, outcome_type,
                         request_id, plan_hash, sandbox_id, timestamp_utc,
-                        payload, artifact_manifest_ref
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        payload, artifact_manifest_ref, canonical_hash
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         ledger_row_id,
@@ -149,6 +153,7 @@ class SandboxLedgerStore:
                         timestamp,
                         payload_json,
                         artifact_manifest_ref or "",
+                        canonical_hash,
                     ),
                 )
         except sqlite3.Error as e:
@@ -190,6 +195,38 @@ class SandboxLedgerStore:
                 cur = conn.execute(
                     "SELECT * FROM sandbox_ledger WHERE request_id = ? ORDER BY timestamp_utc",
                     (request_id,),
+                )
+                rows = cur.fetchall()
+        except sqlite3.Error:
+            return []
+        out = []
+        for row in rows:
+            payload = json.loads(row["payload"])
+            out.append(
+                LedgerRow(
+                    ledger_row_id=row["ledger_row_id"],
+                    event_type=row["event_type"],
+                    outcome_type=row["outcome_type"],
+                    request_id=row["request_id"],
+                    plan_hash=row["plan_hash"] or "",
+                    sandbox_id=row["sandbox_id"] or "",
+                    timestamp_utc=row["timestamp_utc"],
+                    payload=payload,
+                    artifact_manifest_ref=row["artifact_manifest_ref"] or "",
+                )
+            )
+        return out
+
+    def get_by_canonical_hash(self, canonical_hash: str) -> list[LedgerRow]:
+        """Return all rows with the given canonical_hash (order by timestamp)."""
+        if not canonical_hash:
+            return []
+        try:
+            with sqlite3.connect(self.path) as conn:
+                conn.row_factory = sqlite3.Row
+                cur = conn.execute(
+                    "SELECT * FROM sandbox_ledger WHERE canonical_hash = ? ORDER BY timestamp_utc",
+                    (canonical_hash,),
                 )
                 rows = cur.fetchall()
         except sqlite3.Error:
