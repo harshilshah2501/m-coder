@@ -125,7 +125,7 @@ class TestPlanGateInvariants(unittest.TestCase):
             user_context={"user_id": "u1", "role": "developer"},
             boundary_phrase="merge to main",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.authority_verdict, AuthorityVerdict.FAIL)
         self.assertNotEqual(decision.decision, Decision.SAFE_EXECUTE)
@@ -138,7 +138,7 @@ class TestPlanGateInvariants(unittest.TestCase):
             user_context={"user_id": "u1", "role": "admin"},
             boundary_phrase="production",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.authority_verdict, AuthorityVerdict.FAIL)
         self.assertNotEqual(decision.decision, Decision.SAFE_EXECUTE)
@@ -149,7 +149,7 @@ class TestPlanGateInvariants(unittest.TestCase):
             action_type="safe_commit",
             user_context={"user_id": "u1"},
         )
-        decision, _ = self.gate.evaluate_plan(event)
+        decision, _, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.authority_verdict, AuthorityVerdict.FAIL)
         self.assertNotEqual(decision.decision, Decision.SAFE_EXECUTE)
@@ -165,7 +165,7 @@ class TestPlanGateInvariants(unittest.TestCase):
             },
             boundary_phrase="production config change",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertIn(decision.boundary_verdict, [BoundaryVerdict.PRESENT, BoundaryVerdict.DETECTED])
         self.assertNotEqual(ledger.terminal_posture, "defer")
@@ -178,7 +178,7 @@ class TestPlanGateInvariants(unittest.TestCase):
             user_context={"user_id": "u1", "role": "admin"},
             boundary_phrase="merge changes to production",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.boundary_verdict, BoundaryVerdict.DETECTED)
         self.assertNotEqual(ledger.terminal_posture, "defer")
@@ -196,7 +196,7 @@ class TestPlanGateInvariants(unittest.TestCase):
             boundary_phrase="deploy to production",
             mode="shadow",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertNotEqual(decision.boundary_verdict, BoundaryVerdict.CROSSED)
         self.assertNotEqual(ledger.boundary_verdict, "crossed")
@@ -216,7 +216,7 @@ class TestExpectedScenarios(unittest.TestCase):
             user_context={"user_id": "u1", "role": "developer"},
             boundary_phrase="merge to production branch",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.phase, Phase.REF)
         self.assertEqual(decision.decision, Decision.REFUSAL)
@@ -234,7 +234,7 @@ class TestExpectedScenarios(unittest.TestCase):
             },
             boundary_phrase="commit changes to production config",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.phase, Phase.CONF)
         self.assertEqual(decision.decision, Decision.BOUNDED_ALLOW)
@@ -247,7 +247,7 @@ class TestExpectedScenarios(unittest.TestCase):
             user_context={"user_id": "u1", "role": "developer"},
             boundary_phrase="",
         )
-        decision, ledger = self.gate.evaluate_plan(event)
+        decision, ledger, _ = self.gate.evaluate_plan(event)
         
         self.assertEqual(decision.phase, Phase.DES)
         self.assertEqual(decision.decision, Decision.SAFE_EXECUTE)
@@ -261,7 +261,7 @@ class TestLedgerEmitter(unittest.TestCase):
         """Test that all required ledger fields are populated."""
         gate = PlanGate(mode="shadow")
         event = make_event(request_id="req-123", session_id="sess-456")
-        decision, ledger = gate.evaluate_plan(event)
+        decision, ledger, _ = gate.evaluate_plan(event)
         
         self.assertTrue(ledger.event_id.startswith("evt-"))
         self.assertEqual(ledger.request_id, "req-123")
@@ -277,7 +277,7 @@ class TestLedgerEmitter(unittest.TestCase):
         """Test ledger to_dict produces valid schema."""
         gate = PlanGate(mode="shadow")
         event = make_event()
-        _, ledger = gate.evaluate_plan(event)
+        _, ledger, _ = gate.evaluate_plan(event)
         
         d = ledger.to_dict()
         
@@ -302,8 +302,8 @@ class TestDeterministicHashing(unittest.TestCase):
             request_id="req-deterministic",
         )
         
-        decision1, _ = gate.evaluate_plan(event)
-        decision2, _ = gate.evaluate_plan(event)
+        decision1, _, _ = gate.evaluate_plan(event)
+        decision2, _, _ = gate.evaluate_plan(event)
         
         self.assertEqual(decision1.plan_hash, decision2.plan_hash)
         self.assertEqual(decision1.boundary_phrase_hash, decision2.boundary_phrase_hash)
@@ -315,8 +315,8 @@ class TestDeterministicHashing(unittest.TestCase):
         event1 = make_event(request_id="req-001")
         event2 = make_event(request_id="req-002")
         
-        decision1, _ = gate.evaluate_plan(event1)
-        decision2, _ = gate.evaluate_plan(event2)
+        decision1, _, _ = gate.evaluate_plan(event1)
+        decision2, _, _ = gate.evaluate_plan(event2)
         
         self.assertNotEqual(decision1.plan_hash, decision2.plan_hash)
 
@@ -330,7 +330,7 @@ class TestReasonCodes(unittest.TestCase):
             action_type="merge_without_approval",
             user_context={"user_id": "u1", "role": "dev"},
         )
-        decision, _ = gate.evaluate_plan(event)
+        decision, _, _ = gate.evaluate_plan(event)
         
         self.assertIn("AUTHORITY_FAIL", decision.reason_codes)
     
@@ -345,7 +345,7 @@ class TestReasonCodes(unittest.TestCase):
             },
             boundary_phrase="production",
         )
-        decision, _ = gate.evaluate_plan(event)
+        decision, _, _ = gate.evaluate_plan(event)
         
         self.assertIn("BOUNDARY_DETECTED", decision.reason_codes)
     
@@ -356,7 +356,7 @@ class TestReasonCodes(unittest.TestCase):
             user_context={"user_id": "u1", "role": "admin"},
             boundary_phrase="",
         )
-        decision, _ = gate.evaluate_plan(event)
+        decision, _, _ = gate.evaluate_plan(event)
         
         self.assertIn("NO_BOUNDARY", decision.reason_codes)
 
