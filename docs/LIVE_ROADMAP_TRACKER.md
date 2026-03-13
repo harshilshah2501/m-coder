@@ -5,11 +5,11 @@
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
 - **Last updated**: 2026-03-13  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **Layer-3 M3.0–M3.9 complete on main** (tag `layer3-runtime-governed-v1`). **M3.10–M3.11 validated on branch, pending merge.** Next: merge then M3.12 or M4.1.  
+- **Current active milestone focus**: **Layer-3 M3.0–M3.11 complete on main.** Next: M3.12 or M4.1.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
-  - **Layer-3 M3.0–M3.9 are COMPLETE on main**; M3.10 (Sandbox driver abstraction) and M3.11 (Container sandbox runtime) are **VALIDATING** on branch, pending merge. Follow-on M3.12–M3.18 NOT_STARTED.  
+  - **Layer-3 M3.0–M3.11 are COMPLETE on main.** Follow-on M3.12–M3.18 NOT_STARTED.  
   - Layer-4 observation is **PARTIAL / PENDING EXPANSION**.
 
 ---
@@ -65,7 +65,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | ------ | ------------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
 | **L1** | Governance (Constitution)       | <span style="color:#2e7d32">**LOCKED**</span>            | Constitutional manifest, phase doctrine, dominance rules locked.                          |
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
-| **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.9) | M3.0–M3.9 on main; M3.10–M3.11 VALIDATING on branch (driver abstraction + container runtime), pending merge; M3.12–M3.18 follow-on. |
+| **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | **PARTIAL**           | Governance-level drift suite exists; production wiring pending.                           |
 
 
@@ -137,7 +137,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Enforce constitutional judgment at runtime. REF and CONF are governed runtime phases; DES and CODE remain model-expressive but are orchestrated by the runtime. Layer-3 owns control flow, state transitions, authority and boundary enforcement, and completion criteria. The model proposes; the runtime decides.
 
-**Current status**: **M3.0–M3.9 COMPLETE on main** (tag `layer3-runtime-governed-v1`). **M3.10–M3.11 VALIDATING on branch, pending merge.** M3.12–M3.18 are follow-on milestones.  
+**Current status**: **M3.0–M3.11 COMPLETE on main.** M3.12–M3.18 are follow-on milestones.  
 **Priority**: **CRITICAL**
 
 **Canonical Layer-3 numbering:** This document uses a single canonical model M3.0–M3.18. No alternate naming (e.g. M3.E0, M3X.*) is used in live roadmap tables.
@@ -156,8 +156,8 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.7  | IDE Plugin Integration             | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | Plugin → Plan-Gate → ledger; /v0/execute; 30 tests. see §6.7.                                          |
 | M3.8  | Ledger Emission / Replay            | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | Ledger completeness, replay, join contract. see §6.12.                                                |
 | M3.9  | Shadow Mode Validation              | <span style="color:#2e7d32">COMPLETE</span>    | M3.0–M3.8      | Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.                                |
-| M3.10 | Sandbox driver abstraction         | <span style="color:#e65100">VALIDATING</span>  | M3.4           | Abstraction layer for sandbox execution drivers. On branch; see §6.13. After merge → COMPLETE.      |
-| M3.11 | Container sandbox runtime           | <span style="color:#e65100">VALIDATING</span>  | M3.10          | Container-based sandbox implementing driver abstraction. On branch; see §6.14. After merge → COMPLETE. |
+| M3.10 | Sandbox driver abstraction         | <span style="color:#2e7d32">COMPLETE</span>    | M3.4           | Abstraction layer for sandbox execution drivers. see §6.13.                                          |
+| M3.11 | Container sandbox runtime           | <span style="color:#2e7d32">COMPLETE</span>    | M3.10          | Container-based sandbox implementing driver abstraction. see §6.14.                                  |
 | M3.12 | Documentation ingestion            | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest documentation into observation/context.                                           |
 | M3.13 | Jira ingestion                     | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest Jira data.                                                                         |
 | M3.14 | PR ingestion                       | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest PR data.                                                                           |
@@ -431,18 +431,17 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Layer-3 M3.0–M3.9 complete on main.** **M3.10–M3.11 validated on branch, pending merge.** Next: merge branch, then **M3.12** or **M4.1**.  
-  - M3.10 (sandbox driver abstraction) and M3.11 (container sandbox runtime) implemented and verified on branch; evidence in §6.13, §6.14.
+- **Current objective**: **Layer-3 M3.0–M3.11 complete on main.** Next: **M3.12** or **M4.1**.
 - **Active tasks**:
-  - M3.0–M3.9 complete on main; M3.10–M3.11 VALIDATING (on branch, pending merge).
+  - M3.0–M3.11 complete on main as documented in §4.3.1 and §6.
 - **Next 3 milestones** (actual upcoming work):
-  1. **Merge M3.10–M3.11 branch** — then set M3.10/M3.11 to COMPLETE and fill commit SHA/branch in §6.14
-  2. **M3.12** Documentation ingestion — NOT_STARTED
-  3. **M4.1** Ledger Ingestion — NOT_STARTED
+  1. **M3.12** Documentation ingestion — NOT_STARTED
+  2. **M4.1** Ledger Ingestion — NOT_STARTED
+  3. **M3.13** Jira ingestion — NOT_STARTED
 - **Current blockers**:
   - None.
 - **Immediate next action**:
-  - Commit/push branch; merge; then update tracker VALIDATING → COMPLETE and fill §6.14 commit SHA + branch name.
+  - Proceed to M3.12 or M4.1.
 
 ---
 
@@ -634,7 +633,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.13 M3.10 — Sandbox Driver Abstraction
 
-- **Milestone**: M3.10 Sandbox Driver Abstraction — <span style="color:#e65100">VALIDATING</span> (on branch, pending merge; after merge → COMPLETE).
+- **Milestone**: M3.10 Sandbox Driver Abstraction — <span style="color:#2e7d32">COMPLETE</span> (merged to main).
 - **Artifacts**:
   - `runtime/sandbox/sandbox_driver.py` — SandboxDriver protocol, BaseSandboxDriver(ABC), LocalProcessSandboxDriver; driver_name for observability.
   - `runtime/sandbox/sandbox_executor.py` — Optional `driver` parameter; delegates to `_driver.run` / `_driver.validate_only`; default LocalProcessSandboxDriver.
@@ -647,18 +646,17 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.14 M3.11 — Container Sandbox Runtime
 
-- **Milestone**: M3.11 Container Sandbox Runtime — <span style="color:#e65100">VALIDATING</span> (on branch, pending merge; after merge → COMPLETE).
+- **Milestone**: M3.11 Container Sandbox Runtime — <span style="color:#2e7d32">COMPLETE</span> (merged to main).
 - **Container driver file**: `runtime/sandbox/container_sandbox_driver.py` — ContainerSandboxDriver(BaseSandboxDriver), driver_name = "container"; run/validate_only via podman/docker; workspace mount, exec form, timeout, --rm.
 - **Tests passed**: pytest `runtime/tests/test_sandbox_runner.py` (37), `runtime/tests/test_sandbox_driver.py` (12), `runtime/tests/test_transition_executor.py` (26), `runtime/tests/test_sandbox_demo_e2e.py` (12), `runtime/tests/test_container_sandbox_driver.py` (17 passed, 1 skipped when no runtime). **Total: 105 passed, 1 skipped.**
 - **Demo result**: `python3 -m runtime.sandbox.demo_governed_execution` — 7 ledger rows; refused / blocked / executed semantics preserved; DES → CODE execution and governance unchanged.
 - **Fail-closed note**: Missing container runtime (podman/docker), invalid runtime path, or container run failure → SandboxExecutionError; executor returns EXECUTED (failed). No silent fallback to host or local process.
 - **Opt-in backend selection**: Container backend only active when explicitly configured (e.g. `SandboxExecutor(driver=ContainerSandboxDriver())` or `create_sandbox_driver("container")`). Default remains LocalProcessSandboxDriver.
-- **Commit / merge summary** (fill after merge):
-  - **Commit SHA**: _TBD_ (fill after merge)
-  - **Branch name**: _TBD_ (fill after merge)
-  - **Tests run**: as above (105 passed, 1 skipped).
-  - **Demo result**: as above (7 ledger rows; governance semantics preserved).
-  - **Before merge**: M3.10 and M3.11 remain VALIDATING in tracker. **After merge**: set both to COMPLETE and fill SHA + branch name here.
+- **Commit / merge summary**:
+  - **Branch name**: feature/m3.10-m3.11-execution-isolation
+  - **Merge commit SHA**: 302fae2681fbfd07c732445674c988b957f170c6 (short: 302fae2)
+  - **Tests run**: 105 passed, 1 skipped (test_container_sandbox_driver live test when no podman/docker).
+  - **Demo result**: 7 ledger rows; refused / blocked / executed semantics preserved.
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
