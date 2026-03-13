@@ -89,7 +89,7 @@ class PlanGate:
         self.boundary_detector = BoundaryDetector()
         self.ledger_emitter = LedgerEmitter()
     
-    def evaluate_plan(self, event: dict[str, Any]) -> tuple[PlanDecision, LedgerRow]:
+    def evaluate_plan(self, event: dict[str, Any]) -> tuple[PlanDecision, LedgerRow, dict[str, Any]]:
         """
         Evaluate an IDE event and produce a governed decision.
         
@@ -97,7 +97,7 @@ class PlanGate:
             event: IDE event dict with action_type, user context, etc.
         
         Returns:
-            Tuple of (PlanDecision, LedgerRow)
+            Tuple of (PlanDecision, LedgerRow, plan_dict) for shadow artifact plumbing.
         
         Invariants enforced:
         - REF phase always produces REFUSAL
@@ -146,7 +146,7 @@ class PlanGate:
             plan=plan,
         )
         
-        return plan_decision, ledger_row
+        return plan_decision, ledger_row, plan
     
     def _route_decision(
         self,
