@@ -135,7 +135,10 @@ class TestExecutorWithContainerDriver:
             executor = SandboxExecutor(driver=driver)
             with tempfile.TemporaryDirectory() as tmp:
                 result = executor.execute_sandbox_action(
-                    SandboxAction(task_id="t1", command=["echo", "x"], working_dir=tmp)
+                    SandboxAction(
+                        task_id="t1", command=["echo", "x"], working_dir=tmp,
+                        metadata={"canonical_hash": "test-derived"},
+                    )
                 )
             assert result.outcome_type == "executed"
             assert result.final_status == "executed_failed"
@@ -148,7 +151,10 @@ class TestExecutorWithContainerDriver:
             executor = SandboxExecutor(driver=driver)
             with tempfile.TemporaryDirectory() as tmp:
                 result = executor.execute_sandbox_action(
-                    SandboxAction(task_id="t1", command=["curl", "http://x.com"], working_dir=tmp)
+                    SandboxAction(
+                        task_id="t1", command=["curl", "http://x.com"], working_dir=tmp,
+                        metadata={"canonical_hash": "test-derived"},
+                    )
                 )
             assert result.outcome_type == "blocked"
             assert result.success is False

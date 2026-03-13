@@ -2,7 +2,7 @@
 
 | Architecture Freeze Version | v1 |
 |-----------------------------|----|
-| Repository State            | main@03acb511cc0ee723a5f6bbbb4b8275ffe069062d |
+| Repository State            | main@465a586e6bab072c1626580238e031dd11829b71 |
 | Milestone Baseline          | M3.11 |
 
 This freeze is immutable for this repository state. Changes to the codebase that contradict the freeze require an explicit architecture decision and a new freeze revision (v2) tied to the new commit.

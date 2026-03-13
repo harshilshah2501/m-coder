@@ -1,19 +1,11 @@
 """
 Execute Service Handlers — M3.4 Plugin-Facing Execution Endpoint.
 
-Routes execution requests through the governed runtime path:
-  Plugin → /v0/execute → Plan-Gate decision → ledger decision → Sandbox (if safe_execute) → ledger outcome → response
+Routes execution requests through the governed runtime path (M4.1):
+  request → CommandNormalizer → CanonicalExecutionIntent → DeterministicGuard
+  → Plan-Gate → Sandbox (if safe_execute) → ledger outcome → response
 
-All execution requests must flow through this endpoint.
-No bypass, no local fallback, no silent failure.
-Production governance comes from PlanGateService.evaluate().
-
-Test/demo posture overrides: Request fields plan_gate_refuse, plan_gate_defer, and
-plan_gate_bounded_allow are non-production controls for testing and demos only. They
-force the Plan-Gate posture (refuse/defer/bounded_allow); they are not governance
-bypasses—Plan-Gate still runs. Production clients must not send these fields. The
-runtime does not enforce a test-mode boundary (no config or env restricts their use);
-reliance is on client contract and deployment.
+Normalization happens once; no downstream re-parsing of raw command.
 """
 
 from __future__ import annotations
@@ -21,13 +13,15 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import shlex
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 try:
+    from runtime.integrity import CommandNormalizer, NormalizationError
+    from runtime.integrity.plangate_bridge import intent_to_plangate_request
+    from runtime.plangate.pre_gate import DeterministicGuard
     from runtime.plangate.plangate_service import PlanGateService
     from runtime.sandbox.sandbox_executor import SandboxAction, SandboxExecutor
     from runtime.sandbox.sandbox_ledger_store import (
@@ -39,6 +33,10 @@ try:
         SandboxLedgerStore,
     )
 except ImportError:
+    CommandNormalizer = None  # type: ignore[misc, assignment]
+    NormalizationError = Exception  # type: ignore[misc, assignment]
+    intent_to_plangate_request = None  # type: ignore[misc, assignment]
+    DeterministicGuard = None  # type: ignore[misc, assignment]
     PlanGateService = None  # type: ignore[misc, assignment]
     SandboxExecutor = None  # type: ignore[misc, assignment]
     SandboxLedgerStore = None  # type: ignore[misc, assignment]
@@ -78,33 +76,74 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
     """
     Handle an execution request from the IDE plugin.
 
-    Flow:
-    1. Validate request
-    2. Build Plan-Gate request
-    3. Evaluate with Plan-Gate
-    4. If safe_execute: run in sandbox
-    5. Return structured response with outcome
-
-    Response outcomes:
-    - EXECUTED: Action executed through governed sandbox
-    - REFUSED: Plan-Gate refused the action
-    - DEFERRED: Action deferred pending approval
-    - BOUNDED_ALLOW: Bounded allowance, no sandbox execution (MVP)
-    - BLOCKED: Execution blocked by policy
+    M4.1 flow: validate → normalize once → DeterministicGuard → Plan-Gate → sandbox (if safe_execute).
+    No downstream re-parsing of raw command; SandboxAction built from CanonicalExecutionIntent only.
     """
     request_id = data.get("request_id", f"req-{uuid.uuid4()}")
-    timestamp_utc = datetime.now(timezone.utc).isoformat()
-
-    repo_root = data.get("repo_root", "")
+    repo_root = data.get("repo_root", "") or str(Path.cwd())
     revision = data.get("revision", "unknown-revision")
     branch = data.get("branch", "unknown")
     command = data.get("command", "")
-    task_id = data.get("task_id")
     plan_hash = data.get("plan_hash", "")
-    ide_context = data.get("ide_context", {})
-    client_policy = data.get("client_policy", {})
+    plan_hash_final = plan_hash or _compute_plan_hash(
+        command if isinstance(command, str) else " ".join(str(c) for c in command),
+        repo_root,
+        revision,
+    )
+    task_id = data.get("task_id")
 
-    plan_hash_final = plan_hash or _compute_plan_hash(command, repo_root, revision)
+    if CommandNormalizer is None or intent_to_plangate_request is None or DeterministicGuard is None:
+        return _build_response(
+            request_id=request_id,
+            outcome="BLOCKED",
+            posture="refuse",
+            executed=False,
+            reason="M4.1 integrity (normalizer/guard) not available; execution path blocked.",
+            ui_title="Execution Blocked",
+            ui_message="Runtime integrity layer is not configured.",
+            ui_severity="error",
+            plan_hash=plan_hash_final,
+        )
+
+    # 1. Normalize once → CanonicalExecutionIntent (single source of truth)
+    request_for_norm = {
+        **data,
+        "request_id": request_id,
+        "repo_root": repo_root,
+        "plan_hash": plan_hash_final,
+        "branch": branch,
+    }
+    try:
+        normalizer = CommandNormalizer(default_working_dir=repo_root or str(Path.cwd()))
+        intent = normalizer.normalize(request_for_norm)
+    except NormalizationError as e:
+        return _build_response(
+            request_id=request_id,
+            outcome="BLOCKED",
+            posture="refuse",
+            executed=False,
+            reason=str(e),
+            ui_title="Execution Blocked",
+            ui_message="Request could not be normalized.",
+            ui_severity="error",
+            plan_hash=plan_hash_final,
+        )
+
+    # 2. DeterministicGuard: hard-fail before Plan-Gate
+    guard = DeterministicGuard()
+    guard_result = guard.evaluate(intent)
+    if guard_result.refused:
+        return _build_response(
+            request_id=request_id,
+            outcome="REFUSED",
+            posture="refuse",
+            executed=False,
+            reason=guard_result.reason or f"Pre-gate refusal: {guard_result.category}",
+            ui_title="Execution Refused",
+            ui_message=guard_result.reason or "Request refused by deterministic guard.",
+            ui_severity="error",
+            plan_hash=plan_hash_final,
+        )
 
     if PlanGateService is None:
         return _build_response(
@@ -120,29 +159,18 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
         )
 
     plan_gate = PlanGateService()
-
-    # Production governance: posture from PlanGateService.evaluate() only; do not derive from command keywords.
-    # Non-production: plan_gate_refuse / plan_gate_defer / plan_gate_bounded_allow are test/demo-only posture
-    # overrides. Production clients must not send them. No server-side enforcement of test mode—client/deployment responsibility.
-    pg_request = {
-        "request_id": request_id,
-        "plan_hash": plan_hash_final,
-        "command": command,
-        "repo_root": repo_root,
+    # Plan-Gate evaluates the same artifact (lossless projection: command=intent.argv)
+    pg_request = intent_to_plangate_request(intent, overrides={
+        "plan_gate_refuse": data.get("plan_gate_refuse"),
+        "plan_gate_defer": data.get("plan_gate_defer"),
+        "plan_gate_bounded_allow": data.get("plan_gate_bounded_allow"),
         "revision": revision,
-        "branch": branch,
-        "ide_context": ide_context,
-    }
-    if data.get("plan_gate_refuse") is True:
-        pg_request["plan_gate_refuse"] = True
-    if data.get("plan_gate_defer") is True:
-        pg_request["plan_gate_defer"] = True
-    if data.get("plan_gate_bounded_allow") is True:
-        pg_request["plan_gate_bounded_allow"] = True
-
+        "ide_context": data.get("ide_context", {}),
+    })
     decision = plan_gate.evaluate(pg_request)
     posture = decision.posture
     reason = decision.reason
+    plan_hash_final = intent.plan_hash
 
     # Ledger Plan-Gate decision when ledger path is available (before sandbox or early return).
     ledger_path = data.get("ledger_path") or os.environ.get("MOTADATA_EXECUTE_LEDGER_PATH")
@@ -152,7 +180,12 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
         try:
             ledger_store = SandboxLedgerStore(Path(ledger_path))
             decision_ledger_row_id = _persist_plangate_decision(
-                ledger_store, request_id, plan_hash_final, decision
+                ledger_store,
+                request_id,
+                plan_hash_final,
+                decision,
+                canonical_hash=intent.canonical_hash,
+                intent_id=intent.intent_id,
             )
         except Exception:
             ledger_store = None
@@ -228,7 +261,7 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
             decision_ledger_row_id=decision_ledger_row_id,
         )
 
-    working_dir = Path(repo_root) if repo_root else Path.cwd()
+    working_dir = Path(intent.working_dir)
     if not working_dir.exists():
         return _build_response(
             request_id=request_id,
@@ -243,34 +276,21 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
             decision_ledger_row_id=decision_ledger_row_id,
         )
 
-    cmd_list = _parse_command(command)
-    if not cmd_list:
-        return _build_response(
-            request_id=request_id,
-            outcome="BLOCKED",
-            posture=posture,
-            executed=False,
-            reason="Empty or invalid command.",
-            ui_title="Execution Blocked",
-            ui_message="Command is empty or invalid.",
-            ui_severity="error",
-            plan_hash=plan_hash_final,
-            decision_ledger_row_id=decision_ledger_row_id,
-        )
-
+    # Build action from intent only (no re-parsing of command)
     executor = SandboxExecutor(ledger_store=ledger_store)
-
     action = SandboxAction(
         task_id=task_id or request_id,
-        command=cmd_list,
+        command=list(intent.argv),
         working_dir=working_dir,
-        timeout_seconds=30,
-        env=None,
+        timeout_seconds=intent.timeout_seconds if intent.timeout_seconds is not None else 30,
+        env=dict(intent.env_delta) if intent.env_delta else None,
         metadata={
             "request_id": request_id,
             "plan_hash": plan_hash_final,
             "revision": revision,
             "branch": branch,
+            "canonical_hash": intent.canonical_hash,
+            "intent_id": intent.intent_id,
         },
     )
 
@@ -384,26 +404,18 @@ def _compute_plan_hash(command: str, repo_root: str, revision: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
-def _parse_command(command: str) -> list[str]:
-    """Parse command string into a list suitable for subprocess (shell=False).
-    Uses shlex.split for correct handling of quoted arguments.
-    Returns empty list for empty, whitespace-only, or invalid (e.g. unclosed quote) input.
-    """
-    if not command or not command.strip():
-        return []
-    try:
-        return shlex.split(command.strip())
-    except ValueError:
-        return []
-
-
 def _persist_plangate_decision(
     ledger_store: Any,
     request_id: str,
     plan_hash: str,
     decision: Any,
+    *,
+    canonical_hash: str | None = None,
+    intent_id: str | None = None,
 ) -> str | None:
-    """Persist Plan-Gate decision to ledger. Returns ledger_row_id or None on failure."""
+    """Persist Plan-Gate decision to ledger. Returns ledger_row_id or None on failure.
+    When intent is available, pass canonical_hash and intent_id for identity propagation.
+    """
     posture = getattr(decision, "posture", "safe_execute")
     event_type = {
         "refuse": EVENT_PLANGATE_REFUSED,
@@ -417,6 +429,10 @@ def _persist_plangate_decision(
         "decision_posture": posture,
         "reason": getattr(decision, "reason", ""),
     }
+    if canonical_hash is not None:
+        payload["canonical_hash"] = canonical_hash
+    if intent_id is not None:
+        payload["intent_id"] = intent_id
     if hasattr(decision, "to_dict"):
         payload.update(decision.to_dict())
     lid = f"plangate-{request_id}-{posture}-{hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:12]}"

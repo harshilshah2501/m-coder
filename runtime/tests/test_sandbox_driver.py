@@ -96,6 +96,7 @@ class TestExecutorThroughDriver:
                 task_id="t1",
                 command=["echo", "default"],
                 working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
             )
             result = executor.execute_sandbox_action(action)
         assert result.outcome_type == "executed"
@@ -109,6 +110,7 @@ class TestExecutorThroughDriver:
                 task_id="t1",
                 command=["curl", "http://x.com"],
                 working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
             )
             result = executor.execute_sandbox_action(action)
         assert result.outcome_type == "blocked"
@@ -168,6 +170,7 @@ class TestExecutorWithCustomDriver:
                 task_id="t1",
                 command=["custom", "cmd"],
                 working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
             )
             result = executor.execute_sandbox_action(action)
         assert result.outcome_type == "executed"
@@ -212,6 +215,7 @@ class TestExecutorWithCustomDriver:
                 task_id="task-ledger",
                 command=["stub"],
                 working_dir=tmp,
+                metadata={"canonical_hash": "test-derived"},
             )
             result = executor.execute_sandbox_action(action)
             assert result.outcome_type == "executed"

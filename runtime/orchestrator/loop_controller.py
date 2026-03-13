@@ -20,6 +20,9 @@ from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
 
 try:
+    from runtime.integrity import CommandNormalizer, NormalizationError
+    from runtime.integrity.plangate_bridge import intent_to_plangate_request
+    from runtime.plangate.pre_gate import DeterministicGuard
     from runtime.sandbox.sandbox_executor import SandboxAction, SandboxExecutor
     from runtime.sandbox.sandbox_errors import SandboxError
     from runtime.sandbox.sandbox_ledger_store import (
@@ -42,6 +45,10 @@ except ImportError:
     EVENT_PLANGATE_BOUNDED_ALLOW = "plangate_bounded_allow"  # type: str
     EVENT_PLANGATE_SAFE_EXECUTE = "plangate_safe_execute"  # type: str
     PlanGateService = None  # type: ignore[misc, assignment]
+    CommandNormalizer = None  # type: ignore[misc, assignment]
+    NormalizationError = Exception  # type: ignore[misc, assignment]
+    intent_to_plangate_request = None  # type: ignore[misc, assignment]
+    DeterministicGuard = None  # type: ignore[misc, assignment]
 
 
 @dataclass
@@ -223,17 +230,72 @@ class LoopController:
                     reason=str(e),
                 )
 
-        # If this is PROPOSAL_VALIDATED -> SANDBOX_EXECUTED, Plan-Gate must approve before sandbox (M3.3).
+        # If this is PROPOSAL_VALIDATED -> SANDBOX_EXECUTED, normalize once → guard → Plan-Gate → sandbox (M4.1).
         if transition_id == "validated_to_sandbox":
-            # Plan-Gate: mandatory gate; no execution path may bypass.
-            pg_request = {
+            meta = state.metadata or {}
+            req_for_norm = {
                 "request_id": task_id,
-                "plan_hash": (state.metadata or {}).get("plan_hash", ""),
+                "plan_hash": meta.get("plan_hash", ""),
                 "command": guard_inputs.get("command"),
+                "working_dir": guard_inputs.get("working_dir") or meta.get("working_dir") or meta.get("repo_root", ""),
+                "repo_root": meta.get("repo_root") or guard_inputs.get("working_dir") or "",
+                "branch": meta.get("branch", ""),
                 "plan_gate_defer": guard_inputs.get("plan_gate_defer"),
                 "plan_gate_refuse": guard_inputs.get("plan_gate_refuse"),
                 "plan_gate_bounded_allow": guard_inputs.get("plan_gate_bounded_allow"),
             }
+            if CommandNormalizer is None or intent_to_plangate_request is None or DeterministicGuard is None:
+                err = "M4.1 integrity not available; normalization/guard required"
+                lid_val, res = self._apply_plangate_refusal(
+                    task_id, state, transition_id, from_state, resolved, err
+                )
+                if res is not None:
+                    return res
+                return TransitionResult(
+                    valid=False,
+                    transition_id=transition_id,
+                    from_state=from_state,
+                    to_state=resolved.to_state,
+                    stop_reason="validation_failed",
+                    reason=err,
+                    ledger_row_id=lid_val,
+                )
+            try:
+                normalizer = CommandNormalizer(default_working_dir=req_for_norm.get("repo_root") or str(Path.cwd()))
+                intent = normalizer.normalize(req_for_norm)
+            except NormalizationError as e:
+                lid_val, res = self._apply_plangate_refusal(
+                    task_id, state, transition_id, from_state, resolved, str(e)
+                )
+                if res is not None:
+                    return res
+                return TransitionResult(
+                    valid=False,
+                    transition_id=transition_id,
+                    from_state=from_state,
+                    to_state=resolved.to_state,
+                    stop_reason="validation_failed",
+                    reason=str(e),
+                    ledger_row_id=lid_val,
+                )
+            guard = DeterministicGuard()
+            guard_result = guard.evaluate(intent)
+            if guard_result.refused:
+                err = guard_result.reason or f"Pre-gate refusal: {guard_result.category}"
+                lid_val, res = self._apply_plangate_refusal(
+                    task_id, state, transition_id, from_state, resolved, err
+                )
+                if res is not None:
+                    return res
+                return TransitionResult(
+                    valid=False,
+                    transition_id=transition_id,
+                    from_state=from_state,
+                    to_state=resolved.to_state,
+                    stop_reason="validation_failed",
+                    reason=err,
+                    ledger_row_id=lid_val,
+                )
             if self.plan_gate_service is None or PlanGateService is None:
                 err = "Plan-Gate not configured; execution path must not bypass Plan-Gate"
                 lid_val, res = self._apply_plangate_refusal(
@@ -250,9 +312,14 @@ class LoopController:
                     reason=err,
                     ledger_row_id=lid_val,
                 )
+            pg_request = intent_to_plangate_request(intent, overrides={
+                "plan_gate_refuse": guard_inputs.get("plan_gate_refuse"),
+                "plan_gate_defer": guard_inputs.get("plan_gate_defer"),
+                "plan_gate_bounded_allow": guard_inputs.get("plan_gate_bounded_allow"),
+            })
             decision = self.plan_gate_service.evaluate(pg_request)
-            # Persist Plan-Gate decision to ledger (linkage via request_id).
-            lid_pg = self._persist_plangate_decision(task_id, state, decision)
+            # Persist Plan-Gate decision to ledger (linkage via request_id; identity from intent).
+            lid_pg = self._persist_plangate_decision(task_id, state, decision, intent=intent)
             if decision.posture == "refuse":
                 err = decision.reason or "Plan-Gate refused"
                 _, res = self._apply_plangate_refusal(task_id, state, transition_id, from_state, resolved, err)
@@ -289,8 +356,8 @@ class LoopController:
                     reason=reason,
                     ledger_row_id=lid_pg,
                 )
-            # safe_execute: proceed to sandbox.
-            err = self._run_sandbox_and_persist(task_id, state, guard_inputs)
+            # safe_execute: proceed to sandbox from intent (no re-parse).
+            err = self._run_sandbox_and_persist(task_id, state, guard_inputs=None, intent=intent)
             if err:
                 ledger_row_id_val: str | None = None
                 if self.ledger_store and SandboxLedgerStore is not None:
@@ -381,9 +448,16 @@ class LoopController:
         return list(self._journal)
 
     def _persist_plangate_decision(
-        self, task_id: str, state: TaskState, decision: Any
+        self,
+        task_id: str,
+        state: TaskState,
+        decision: Any,
+        *,
+        intent: Any = None,
     ) -> str | None:
-        """Persist Plan-Gate decision to ledger. Returns ledger_row_id or None."""
+        """Persist Plan-Gate decision to ledger. Returns ledger_row_id or None.
+        When intent is provided, canonical_hash and intent_id are included for identity propagation.
+        """
         if not self.ledger_store or SandboxLedgerStore is None:
             return None
         plan_hash_val = (state.metadata or {}).get("plan_hash", "")
@@ -400,6 +474,9 @@ class LoopController:
             "decision_posture": posture,
             "reason": getattr(decision, "reason", ""),
         }
+        if intent is not None:
+            payload["canonical_hash"] = getattr(intent, "canonical_hash", "") or ""
+            payload["intent_id"] = getattr(intent, "intent_id", "") or ""
         if hasattr(decision, "to_dict"):
             payload.update(decision.to_dict())
         lid = f"plangate-{task_id}-{posture}-{hashlib.sha256(str(payload).encode()).hexdigest()[:12]}"
@@ -465,36 +542,47 @@ class LoopController:
         return (ledger_row_id_val, None)
 
     def _run_sandbox_and_persist(
-        self, task_id: str, state: TaskState, guard_inputs: dict[str, Any]
+        self,
+        task_id: str,
+        state: TaskState,
+        guard_inputs: dict[str, Any] | None = None,
+        intent: Any = None,
     ) -> str | None:
         """
         Run sandbox for validated_to_sandbox transition and persist result in state.metadata.
 
-        guard_inputs must contain:
-        - command: list[str]
-        - working_dir: str | Path
-
-        Optional: timeout_seconds, env.
-        Persists last_sandbox_success and last_sandbox_ledger_id for downstream guards.
+        M4.1: When intent (CanonicalExecutionIntent) is provided, action is built from intent only.
+        Otherwise guard_inputs must contain command (list[str]) and working_dir.
         Returns error message string on failure, None on success.
         """
         if self.sandbox_executor is None or SandboxAction is None:
             return "Sandbox executor not configured for PROPOSAL_VALIDATED -> SANDBOX_EXECUTED"
-        command = guard_inputs.get("command")
-        working_dir = guard_inputs.get("working_dir") or state.metadata.get("working_dir")
-        if not command or not isinstance(command, list):
-            return "guard_inputs must provide command (list[str]) for validated_to_sandbox"
-        if not working_dir:
-            return "guard_inputs must provide working_dir for validated_to_sandbox"
-        working_dir = Path(working_dir) if isinstance(working_dir, str) else working_dir
-        action = SandboxAction(
-            task_id=task_id,
-            command=command,
-            working_dir=working_dir,
-            timeout_seconds=guard_inputs.get("timeout_seconds"),
-            env=guard_inputs.get("env"),
-            metadata=state.metadata,
-        )
+        if intent is not None:
+            action = SandboxAction(
+                task_id=task_id,
+                command=list(intent.argv),
+                working_dir=Path(intent.working_dir),
+                timeout_seconds=intent.timeout_seconds,
+                env=dict(intent.env_delta) if intent.env_delta else None,
+                metadata={**(state.metadata or {}), "canonical_hash": intent.canonical_hash, "intent_id": intent.intent_id},
+            )
+        else:
+            guard_inputs = guard_inputs or {}
+            command = guard_inputs.get("command")
+            working_dir = guard_inputs.get("working_dir") or (state.metadata or {}).get("working_dir")
+            if not command or not isinstance(command, list):
+                return "guard_inputs must provide command (list[str]) for validated_to_sandbox"
+            if not working_dir:
+                return "guard_inputs must provide working_dir for validated_to_sandbox"
+            working_dir = Path(working_dir) if isinstance(working_dir, str) else working_dir
+            action = SandboxAction(
+                task_id=task_id,
+                command=command,
+                working_dir=working_dir,
+                timeout_seconds=guard_inputs.get("timeout_seconds"),
+                env=guard_inputs.get("env"),
+                metadata=state.metadata,
+            )
         try:
             result = self.sandbox_executor.execute_sandbox_action(action)
         except SandboxError as e:

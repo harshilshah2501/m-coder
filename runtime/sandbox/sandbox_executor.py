@@ -137,6 +137,35 @@ def _stable_ledger_id(
     return f"{prefix}-{request_id}-{h}"
 
 
+def _ledger_payload_with_identity(
+    base_payload: dict[str, Any],
+    action: SandboxAction,
+    backend_name: str | None = None,
+) -> dict[str, Any]:
+    """
+    Merge identity from action.metadata into payload for ledger rows.
+    When metadata contains canonical_hash, the ledger row MUST include it (M4.1 invariant).
+    """
+    out = dict(base_payload)
+    if not action.metadata:
+        if backend_name is not None:
+            out["backend"] = backend_name
+        return out
+    if action.metadata.get("canonical_hash") is not None:
+        out["canonical_hash"] = action.metadata["canonical_hash"]
+    if action.metadata.get("intent_id") is not None:
+        out["intent_id"] = action.metadata["intent_id"]
+    if action.metadata.get("request_id") is not None:
+        out["request_id"] = action.metadata["request_id"]
+    if action.metadata.get("plan_hash") is not None:
+        out["plan_hash"] = action.metadata["plan_hash"]
+    if backend_name is not None:
+        out["backend"] = backend_name
+    if action.metadata.get("execution_surface") is not None:
+        out["execution_surface"] = action.metadata["execution_surface"]
+    return out
+
+
 class SandboxExecutor:
     """
     Orchestrator integration for sandbox execution.
@@ -177,12 +206,45 @@ class SandboxExecutor:
     ) -> GovernedExecutionResult:
         """
         Execute a sandbox action. Returns unified GovernedExecutionResult.
-        BLOCKED when policy disallows; EXECUTED when command runs (success or failure).
+        BLOCKED when policy disallows or when canonical_hash is missing (only
+        CanonicalExecutionIntent-derived actions may run). EXECUTED when command runs.
         Persists to ledger_store when provided.
         """
         req_id = action.request_id or action.task_id
         plan_hash = action.plan_hash or ""
         sandbox_id = action.sandbox_id or action.task_id
+
+        # Only CanonicalExecutionIntent-derived actions may run (canonical_hash in metadata)
+        if not action.metadata or not action.metadata.get("canonical_hash"):
+            blocked_result = GovernedExecutionResult(
+                outcome_type="blocked",
+                request_id=req_id,
+                plan_hash=plan_hash,
+                sandbox_id=sandbox_id,
+                success=False,
+                final_status="blocked",
+                blocked_reason="Execution refused: only CanonicalExecutionIntent-derived actions may run; canonical_hash is missing.",
+                policy_violation_type="missing_canonical_identity",
+                commands_blocked=[],
+                ledger_row_id="",
+            )
+            if self.ledger_store:
+                cmd_canonical = " ".join(action.command) if action.command else ""
+                lid = _stable_ledger_id("blocked", req_id, plan_hash, sandbox_id, "missing_canonical_hash", cmd_canonical)
+                self.ledger_store.append(
+                    ledger_row_id=lid,
+                    event_type=EVENT_BLOCKED,
+                    outcome_type="blocked",
+                    request_id=req_id,
+                    plan_hash=plan_hash,
+                    sandbox_id=sandbox_id,
+                    payload=_ledger_payload_with_identity(blocked_result.to_dict(), action),
+                )
+                blocked_result.ledger_row_id = lid
+            self._execution_history.append(blocked_result)
+            if self.execution_callback:
+                self.execution_callback(blocked_result)
+            return blocked_result
 
         # Run command via driver; policy violation → BLOCKED (command does not run)
         try:
@@ -215,7 +277,7 @@ class SandboxExecutor:
                     request_id=req_id,
                     plan_hash=plan_hash,
                     sandbox_id=sandbox_id,
-                    payload=blocked_result.to_dict(),
+                    payload=_ledger_payload_with_identity(blocked_result.to_dict(), action),
                 )
                 blocked_result.ledger_row_id = lid
             self._execution_history.append(blocked_result)
@@ -245,7 +307,9 @@ class SandboxExecutor:
                     request_id=req_id,
                     plan_hash=plan_hash,
                     sandbox_id=sandbox_id,
-                    payload=executed_result.to_dict(),
+                    payload=_ledger_payload_with_identity(
+                        executed_result.to_dict(), action, backend_name=self._driver.driver_name
+                    ),
                 )
                 executed_result.ledger_row_id = lid
             self._execution_history.append(executed_result)
@@ -284,7 +348,9 @@ class SandboxExecutor:
                 request_id=req_id,
                 plan_hash=plan_hash,
                 sandbox_id=sandbox_id,
-                payload=executed_result.to_dict(),
+                payload=_ledger_payload_with_identity(
+                    executed_result.to_dict(), action, backend_name=self._driver.driver_name
+                ),
                 artifact_manifest_ref="",  # optional: path to manifest
             )
             executed_result.ledger_row_id = lid

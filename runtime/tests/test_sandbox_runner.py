@@ -376,6 +376,7 @@ class TestSandboxExecutor:
                 task_id="task-123",
                 command=["echo", "hello"],
                 working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
             )
             result = executor.execute_sandbox_action(action)
             assert result.outcome_type == "executed"
@@ -384,23 +385,29 @@ class TestSandboxExecutor:
             assert result.request_id == "task-123"
 
     def test_convenience_function(self) -> None:
-        """execute_sandbox_action convenience function returns GovernedExecutionResult."""
+        """execute_sandbox_action convenience function returns GovernedExecutionResult (blocked without canonical_hash)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = execute_sandbox_action(
                 task_id="task-456",
                 command=["echo", "test"],
                 working_dir=tmpdir,
             )
-            assert result.success is True
-            assert result.request_id == "task-456"
-            assert result.outcome_type == "executed"
+            # Convenience function builds action without metadata.canonic al_hash → executor refuses
+            assert result.outcome_type == "blocked"
+            assert "canonical_hash" in (result.blocked_reason or "").lower()
 
     def test_execution_history(self) -> None:
         """Executor maintains execution history."""
         executor = SandboxExecutor()
         with tempfile.TemporaryDirectory() as tmpdir:
-            action1 = SandboxAction(task_id="task-1", command=["echo", "1"], working_dir=tmpdir)
-            action2 = SandboxAction(task_id="task-2", command=["echo", "2"], working_dir=tmpdir)
+            action1 = SandboxAction(
+                task_id="task-1", command=["echo", "1"], working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
+            )
+            action2 = SandboxAction(
+                task_id="task-2", command=["echo", "2"], working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
+            )
 
             executor.execute_sandbox_action(action1)
             executor.execute_sandbox_action(action2)
@@ -437,7 +444,10 @@ class TestSandboxExecutor:
 
         executor = SandboxExecutor(execution_callback=callback)
         with tempfile.TemporaryDirectory() as tmpdir:
-            action = SandboxAction(task_id="task-123", command=["echo", "test"], working_dir=tmpdir)
+            action = SandboxAction(
+                task_id="task-123", command=["echo", "test"], working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
+            )
             executor.execute_sandbox_action(action)
 
         assert len(results) == 1
@@ -533,6 +543,7 @@ class TestIntegrationScenarios:
                 task_id="task-flow-1",
                 command=["echo", "step 1"],
                 working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
             )
             result1 = executor.execute_sandbox_action(action1)
             assert result1.success is True
@@ -542,6 +553,7 @@ class TestIntegrationScenarios:
                 task_id="task-flow-1",
                 command=["python3", "-c", "print('step 2')"],
                 working_dir=tmpdir,
+                metadata={"canonical_hash": "test-derived"},
             )
             result2 = executor.execute_sandbox_action(action2)
             assert result2.success is True

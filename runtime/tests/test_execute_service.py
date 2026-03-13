@@ -10,7 +10,6 @@ import pytest
 from runtime.execute_service.handlers import (
     validate_execute_request,
     handle_execute_request,
-    _parse_command,
     EXECUTE_REQUEST_SCHEMA,
     EXECUTE_RESPONSE_SCHEMA,
 )
@@ -64,29 +63,6 @@ class TestValidateExecuteRequest:
         errors = validate_execute_request(data)
         assert len(errors) == 1
         assert "schema_version" in errors[0]
-
-
-class TestParseCommand:
-    """Tests for command parsing (shlex)."""
-
-    def test_simple_command(self):
-        assert _parse_command("echo hello") == ["echo", "hello"]
-
-    def test_quoted_argument(self):
-        assert _parse_command('echo "hello world"') == ["echo", "hello world"]
-
-    def test_single_quoted_argument(self):
-        assert _parse_command("echo 'foo bar'") == ["echo", "foo bar"]
-
-    def test_multiple_arguments(self):
-        assert _parse_command("pytest tests/ -v") == ["pytest", "tests/", "-v"]
-
-    def test_empty_returns_empty_list(self):
-        assert _parse_command("") == []
-        assert _parse_command("   ") == []
-
-    def test_invalid_unclosed_quote_returns_empty_list(self):
-        assert _parse_command('echo "unclosed') == []
 
 
 class TestHandleExecuteRequest:
