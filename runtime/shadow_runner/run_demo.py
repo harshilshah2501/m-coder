@@ -75,7 +75,8 @@ def scenario_merge_without_approval(gate: PlanGate) -> tuple[PlanDecision, Ledge
         boundary_phrase="merge to production branch",
         request_id="req-merge-001",
     )
-    return gate.evaluate_plan(event)
+    decision, ledger, _ = gate.evaluate_plan(event)
+    return decision, ledger
 
 
 def scenario_commit_prod_change(gate: PlanGate) -> tuple[PlanDecision, LedgerRow]:
@@ -98,7 +99,8 @@ def scenario_commit_prod_change(gate: PlanGate) -> tuple[PlanDecision, LedgerRow
         boundary_phrase="commit changes to production config",
         request_id="req-commit-001",
     )
-    return gate.evaluate_plan(event)
+    decision, ledger, _ = gate.evaluate_plan(event)
+    return decision, ledger
 
 
 def scenario_safe_commit(gate: PlanGate) -> tuple[PlanDecision, LedgerRow]:
@@ -119,7 +121,8 @@ def scenario_safe_commit(gate: PlanGate) -> tuple[PlanDecision, LedgerRow]:
         boundary_phrase="",
         request_id="req-safe-001",
     )
-    return gate.evaluate_plan(event)
+    decision, ledger, _ = gate.evaluate_plan(event)
+    return decision, ledger
 
 
 def validate_invariants(
