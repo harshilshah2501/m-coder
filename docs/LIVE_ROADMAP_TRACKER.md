@@ -3,13 +3,13 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-12  
+- **Last updated**: 2026-03-13  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **M3.4 COMPLETE** (IDE Plugin Integration closed for MVP; next: M3.5 / M3.6)  
+- **Current active milestone focus**: **M3.5 Ledger completeness / replay** (Layer-3 baseline M3.2–M3.4 integrated on main; tag `layer3-runtime-baseline`).  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
-  - Layer-3 runtime is the **next active execution layer**.  
+  - Layer-3 runtime **baseline integration complete on main** (M3.2–M3.4); next: M3.5 / M3.6.  
   - Layer-4 observation is **PARTIAL / PENDING EXPANSION**.
 
 ---
@@ -65,7 +65,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | ------ | ------------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
 | **L1** | Governance (Constitution)       | <span style="color:#2e7d32">**LOCKED**</span>            | Constitutional manifest, phase doctrine, dominance rules locked.                          |
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
-| **L3** | Runtime Enforcement / Execution | <span style="color:#e65100">**IN_PROGRESS**</span>       | Architecture and runtime MVP buildout next; IDE integration later.                        |
+| **L3** | Runtime Enforcement / Execution | <span style="color:#e65100">**IN_PROGRESS**</span>       | Baseline (M3.2–M3.4) integrated on main; next M3.5 Ledger completeness / replay.          |
 | **L4** | Observation / Drift Detection   | **PARTIAL**           | Governance-level drift suite exists; production wiring pending.                           |
 
 
