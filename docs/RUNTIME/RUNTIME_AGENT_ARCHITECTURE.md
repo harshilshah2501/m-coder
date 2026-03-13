@@ -120,6 +120,49 @@ Only **safe_execute** may reach the Execution Sandbox.
 - **LoopController**: Before `validated_to_sandbox`, calls `PlanGateService.evaluate()`; refuses if Plan-Gate not configured; persists plangate_* and (when applicable) sandbox_* ledger rows.
 - **Ledger**: Event types `plangate_refused`, `plangate_deferred`, `plangate_bounded_allow`, `plangate_safe_execute`; linkage to sandbox rows via `request_id`.
 
+### Internal Decomposition (M3.3B)
+
+As of M3.3B, Plan-Gate is internally decomposed into explicit first-class subcomponents:
+
+```
+PlanGateService
+ ├─ AuthorityValidator  → AuthorityResult
+ ├─ IrreversibilityDetector → IrreversibilityResult
+ └─ JudgeGate → PlanGateDecision
+```
+
+**Flow:**
+```
+request → AuthorityValidator → IrreversibilityDetector → JudgeGate → PlanGateDecision
+```
+
+**Subcomponents:**
+
+1. **AuthorityValidator** (`runtime/plangate/authority_validator.py`)
+   - Validates whether the requester has sufficient authority for the action.
+   - Output: `AuthorityResult` (authority_ok, authority_reason, authority_source).
+   - MVP: Explicit request hints, dangerous command detection, default authorization.
+
+2. **IrreversibilityDetector** (`runtime/plangate/irreversibility_detector.py`)
+   - Classifies whether the request involves a boundary or irreversible action.
+   - Output: `IrreversibilityResult` (boundary_detected, irreversible, boundary_reason, boundary_class).
+   - MVP: Dangerous command detection, explicit hints, safe default.
+
+3. **JudgeGate** (`runtime/plangate/judge_gate.py`)
+   - The posture-deciding component combining authority + irreversibility + hints.
+   - Output: `PlanGateDecision` (posture: refuse | defer | bounded_allow | safe_execute).
+   - Decision priority: refuse hint > defer hint > bounded_allow hint > authority failure > irreversibility > safe_execute.
+
+4. **Contracts** (`runtime/plangate/contracts.py`)
+   - `AuthorityResult`, `IrreversibilityResult`, `JudgeInput` dataclasses.
+
+**Key properties:**
+- External contract is unchanged: `PlanGateService.evaluate(request) → PlanGateDecision`.
+- `authority_ok` is now backed by `AuthorityResult` from `AuthorityValidator`.
+- `boundary_detected` / `irreversible` are now backed by `IrreversibilityResult` from `IrreversibilityDetector`.
+- This is architectural hardening / decomposition, not a doctrine change.
+- Not yet full enterprise authority or production-grade boundary policy.
+
 **Future follow-up:** `bounded_allow` may later map to a restricted sandbox profile (e.g. read-only inspection, test-only execution, limited command set); that is explicitly out of scope for the current M3.3 scope.
 
 ---

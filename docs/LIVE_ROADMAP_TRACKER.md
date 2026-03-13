@@ -5,7 +5,7 @@
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
 - **Last updated**: 2026-03-12  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **M3.3 Plan-Gate Integration** (all execution paths through Plan-Gate before sandbox; M3.2 Execution Sandbox closed for MVP)  
+- **Current active milestone focus**: **M3.4 COMPLETE** (IDE Plugin Integration closed for MVP; next: M3.5 / M3.6)  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -150,8 +150,8 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.0  | Repository Context Engine                             | <span style="color:#e65100">VALIDATING</span>  | Shared     | L2.*                                         | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 4/4       | see §6.5 | wire LoopController → ContextEngine | Context for runtime decisions is deterministic, revision-tied, and independently auditable.                                        |
 | M3.1  | Agent Loop Orchestrator                               | <span style="color:#e65100">IN_PROGRESS</span> | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
 | M3.2  | Execution Sandbox                                     | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | M3.0–M3.1                                    | Isolated executor + unified result contract + local ledger persistence (REFUSED/BLOCKED/EXECUTED). | 6/6       | see §6.8 | —                                   | Irreversible effects only through sandbox; all three outcomes produce durable ledger rows; CLI/test-harness demo closure.             |
-| M3.3  | Plan-Gate Integration                                 | <span style="color:#e65100">VALIDATING</span>  | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
-| M3.4  | IDE Plugin Integration                                | <span style="color:#e65100">IN_PROGRESS</span> | Cursor/IDE | M3.3                                         | IDE plugins that route developer actions through Plan-Gate and agent loop.           | 1/3       | see §6.7 | plugin bridge doc                   | No IDE action of interest can bypass runtime enforcement; consistent UX for block/allow/bound.                                     |
+| M3.3  | Plan-Gate Integration                                 | <span style="color:#2e7d32">COMPLETE</span>    | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
+| M3.4  | IDE Plugin Integration                                | <span style="color:#2e7d32">COMPLETE</span>    | Cursor/IDE | M3.3                                         | Plugin → Plan-Gate → ledger decision → sandbox; decision ledgering; governance from PlanGateService only; shlex command parsing. | 3/3       | see §6.7 | —                                   | No bypass; /v0/execute persists Plan-Gate decisions; no keyword heuristics; 30 tests.                                               |
 | M3.5  | Ledger Emission                                       | <span style="color:#757575">NOT_STARTED</span> | Architect  | M3.3                                         | Broader ledger completeness / replay / observation bridge (beyond M3.2 local evidence). | 0/3       | none     | transition-to-ledger map            | Full runtime decision ledger; join/replay contract; Layer-4 observation ingestion. M3.2 delivers local sandbox evidence only.     |
 | M3.6  | Shadow Mode Validation                                | <span style="color:#757575">NOT_STARTED</span> | Shared     | M3.0–M3.5                                    | Full runtime-governed agent loop running in shadow mode.                             | 0/3       | none     | shadow protocol note                | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows.                              |
 
@@ -407,20 +407,19 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **M3.3 Plan-Gate Integration**  
-  - Guarantee all execution paths flow through the governed Plan-Gate decision pipeline before any sandbox execution.  
-  - Execution chain: request → Plan-Gate → runtime decision → LoopController transition → sandbox (if allowed) → ledger evidence.
+- **Current objective**: **M3.4 COMPLETE for MVP; next Layer-3 milestones**  
+  - M3.4 IDE Plugin Integration closed: /v0/execute persists Plan-Gate decisions; governance from PlanGateService only (no keyword heuristics); shlex command parsing; 30 tests.
 - **Active tasks**:
-  - **M3.3** implemented: PlanGateDecision + PlanGateService, LoopController integration, all four postures (refuse, defer, bounded_allow, safe_execute); Plan-Gate ledger events (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute); demo (five cases including BOUNDED_ALLOW); tests prove bounded_allow distinct from defer. Validating and documenting.
-  - M3.2 Execution Sandbox **closed for MVP** (unified contract, local ledger, CLI demo).
+  - **M3.3** Plan-Gate Integration **COMPLETE**; **M3.4** IDE Plugin Integration **COMPLETE**: RuntimeBridge, 7 outcomes, 3 governed actions; /v0/execute decision ledgering, explicit plan_gate_* flags, shlex parsing; 30 execute-service tests.
+  - M3.2 Execution Sandbox **closed for MVP**.
 - **Next 3 milestones**:
-  1. **M3.3 Plan-Gate Integration** — <span style="color:#e65100">VALIDATING</span> (Plan-Gate mandatory before sandbox; decisions ledgered; CLI demo)
-  2. **M3.4 IDE Plugin Integration** — <span style="color:#e65100">IN_PROGRESS</span>
-  3. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
+  1. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
+  2. **M3.6 Shadow Mode Validation** — <span style="color:#757575">NOT_STARTED</span>
+  3. (M3.4 COMPLETE)
 - **Current blockers**:
-  - None. M3.3 implementation complete; evidence and docs in place.
+  - None.
 - **Immediate next action**:
-  - Harden M3.3 (tests, demo, docs); then M3.4 plugin wiring to Plan-Gate and agent loop.
+  - Proceed to M3.5 or M3.6 as prioritized.
 
 ---
 
@@ -496,27 +495,33 @@ This section records **evidence of completed milestones**. Entries should be **a
     - Engine errors (`MissingExplicitFilesError` / `ContextEngineError`) are fail-closed: transition is refused with `stop_reason=\"validation_failed\"` and state remains `GOVERNANCE_CLASSIFIED`
   - pytest (`python3 -m pytest runtime/tests/test_transition_executor.py -v`): 23 passed
 
-### 6.7 M3.4 — IDE Plugin Integration (MVP Shadow-Mode + Repo-Aware Ask)
+### 6.7 M3.4 — IDE Plugin Integration (RuntimeBridge + Governed Actions)
 
-- **Milestone**: M3.4 IDE Plugin Integration — <span style="color:#e65100">IN_PROGRESS</span> (2026-03-10)
-- **Artifacts**:
-  - `jetbrains-plugin/` — IntelliJ Platform plugin module with:
-    - Commit interception (shadow-mode): `PlanGateClient`, `MotadataCheckinHandler`, `DecisionLogger`, `PlanGateClientTest`.
-    - Repo-aware Ask (PLAN ONLY): `AskClient`, `AskMotadataAiAction` (Tools → “Ask Motadata AI”), Ask UI surface showing PLAN ONLY badge, context bundle, selectors used, and plan summary.
-  - Runtime ask path:
-    - `runtime/ide/schemas/ask_request.v0.1.schema.json` — AskRequest schema.
-    - `runtime/ide/schemas/plan_only_response.v0.1.schema.json` — PlanOnlyResponse schema (execution=false, governance_posture=PLAN_ONLY).
-    - `runtime/ask_service/handlers.py` — `/v0/ask` handler (AskRequest → ContextRequest → `ContextEngine.build_context_bundle()` → PlanOnlyResponse).
-    - `runtime/ask_service/planner.py` — `PlanOnlyPlanner` (deterministic, bounded 3–6 read/inspect-only steps; no execution, no tool calls, no model autonomy).
-    - `runtime/tests/test_ask_service.py` — unit test asserting `execution is False`, `governance_posture == \"PLAN_ONLY\"`, and 3–6 steps.
-  - Documentation:
-    - `docs/RUNTIME/JETBRAINS_PLUGIN_MVP_SPIKE.md` — extended with “Repo-Aware Ask / Safe Planning (PLAN ONLY)” section (architecture flow, runtime interaction, context bundle explanation, demo steps).
+- **Milestone**: M3.4 IDE Plugin Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **MVP scope: commit interception, ask flow, /v0/execute with decision ledgering and production governance.**
+- **Artifacts** (11+):
+  - **Plugin RuntimeBridge abstraction**:
+    - `jetbrains-plugin/.../bridge/RuntimeBridge.kt` — Single integration point for all runtime calls.
+    - `jetbrains-plugin/.../bridge/RuntimeOutcome.kt` — 7 distinct outcomes. No collapsing.
+    - `jetbrains-plugin/.../bridge/RuntimeRequest.kt` — Unified request envelope.
+    - `jetbrains-plugin/.../bridge/RuntimeResponse.kt` — Response contract with outcome, ui, reason, wasExecuted, ledgerRowId.
+  - **Governed actions**:
+    - `jetbrains-plugin/.../vcs/MotadataCheckinHandler.kt` — Shadow/enforcing; fail-closed.
+    - `jetbrains-plugin/.../ask/AskMotadataAiAction.kt` — PLAN ONLY semantics.
+    - `jetbrains-plugin/.../actions/SubmitToRuntimeAction.kt` — Explicit execution action.
+  - **Runtime execute endpoint**:
+    - `runtime/execute_service/handlers.py` — `/v0/execute`: Plan-Gate → ledger decision → sandbox (if safe_execute) → ledger outcome. Governance from PlanGateService only; explicit request fields (plan_gate_refuse, plan_gate_defer, plan_gate_bounded_allow) for test/demo; command parsed with shlex.split(); decision_ledger_row_id and ledger_row_id in response.
+    - `runtime/ide/schemas/execute_request.v0.1.schema.json` — Optional ledger_path, plan_gate_* (test/demo).
+    - `runtime/ide/schemas/execute_response.v0.1.schema.json` — decision_ledger_row_id, ledger_row_id.
+  - **Tests**: `runtime/tests/test_execute_service.py` — 30 tests (validation, explicit flags, decision ledgering, shlex parsing).
+  - **Documentation**: `docs/RUNTIME/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md`, `docs/RUNTIME/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md`.
 - **Evidence**:
-  - Manual verification that `/v0/ask` accepts AskRequest v0.1, calls `ContextEngine`, returns PlanOnlyResponse v0.1 with deterministic `context_bundle.files[].selection_reason`, `governance_posture=PLAN_ONLY`, and `execution=false`.
-  - Sandbox IDE flow:
-    - Tools → “Ask Motadata AI” sends AskRequest with repo_root + revision + query.
-    - Response dialog shows PLAN ONLY badge, context bundle file list with selection reasons, selectors used, and 3–6 deterministic plan steps.
-    - No execution, sandboxing, or code edits are performed; failure cases are surfaced as non-blocking warnings without client-side fallback planning.
+  - **Plan-Gate decision ledgering in /v0/execute:** When ledger_path (request or MOTADATA_EXECUTE_LEDGER_PATH) is set, Plan-Gate decision is persisted (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute) before sandbox or return. Response includes decision_ledger_row_id; ledger_row_id when executed. Decision and execution evidence are separate.
+  - **Production governance:** No command-string keyword heuristics. Posture from PlanGateService.evaluate(request) only; test/demo control via explicit plan_gate_refuse, plan_gate_defer, plan_gate_bounded_allow.
+  - **Command parsing:** shlex.split() for quoted args; invalid/empty command rejected; shell=False downstream.
+  - **RuntimeBridge:** Single integration point; 7 distinct outcomes; fail-closed; 3 governed actions (commit, ask, submit to runtime).
+  - **Tests:** pytest `runtime/tests/test_execute_service.py` — 30 passed (decision ledgering, explicit flags, shlex, no keyword path).
+- **Scope (MVP):** Commit interception, ask flow, explicit runtime execution, fail-closed bridge. Not in MVP: push interception, full IDE coverage, plugin E2E in running IDE.
+
 
 ### 6.8 M3.2 — Execution Sandbox (CODE Phase)
 
@@ -547,7 +552,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.9 M3.3 — Plan-Gate Integration
 
-- **Milestone**: M3.3 Plan-Gate Integration — <span style="color:#e65100">VALIDATING</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
+- **Milestone**: M3.3 Plan-Gate Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
 - **Artifacts** (6/6):
   - `runtime/plangate/plangate_decision.py` — PlanGateDecision (posture: refuse | defer | bounded_allow | safe_execute; authority_ok, boundary_detected, irreversible, reason); to_dict/from_dict.
   - `runtime/plangate/plangate_service.py` — PlanGateService.evaluate(request) → PlanGateDecision; deterministic rule-based (REFUSED_COMMANDS, plan_gate_defer, plan_gate_refuse, plan_gate_bounded_allow); no LLM.
@@ -562,6 +567,33 @@ This section records **evidence of completed milestones**. Entries should be **a
   - **Governance:** DES → reasoning only; CONF → bounded safe action; CODE → execution via sandbox only. bounded_allow is first-class, non-sandbox, distinct from defer; richer bounded execution (e.g. read-only sandbox profile) is future work.
   - **Demo:** `python3 -m runtime.sandbox.demo_governed_execution` prints five outcomes including BOUNDED_ALLOW with ledger_row_id; 7 ledger rows (plangate_safe_execute, sandbox_executed, plangate_refused, sandbox_refused, sandbox_refused, plangate_deferred, plangate_bounded_allow).
   - **Tests:** pytest `runtime/tests/test_plangate_integration.py` (14 tests), `runtime/tests/test_sandbox_demo_e2e.py` (12 tests): bounded_allow proved end-to-end; distinct from defer (stop_reason, event_type).
+
+### 6.10 M3.3B — Internal Plan-Gate Decomposition
+
+- **Milestone**: M3.3B Internal Plan-Gate Decomposition — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **Plan-Gate internally decomposed into explicit first-class subcomponents; external contract unchanged.**
+- **Artifacts** (7/7):
+  - `runtime/plangate/contracts.py` — AuthorityResult, IrreversibilityResult, JudgeInput dataclasses.
+  - `runtime/plangate/authority_validator.py` — AuthorityValidator component; validates requester authority.
+  - `runtime/plangate/irreversibility_detector.py` — IrreversibilityDetector component; classifies boundaries and irreversibility.
+  - `runtime/plangate/judge_gate.py` — JudgeGate posture-decider; combines authority + irreversibility + hints → PlanGateDecision.
+  - `runtime/tests/test_plangate_authority_validator.py` — AuthorityValidator unit tests (16 tests).
+  - `runtime/tests/test_plangate_irreversibility_detector.py` — IrreversibilityDetector unit tests (18 tests).
+  - `runtime/tests/test_plangate_judge_gate.py` — JudgeGate unit tests (15 tests).
+- **Evidence**:
+  - **Internal architecture:**
+    ```
+    PlanGateService
+     ├─ AuthorityValidator  → AuthorityResult
+     ├─ IrreversibilityDetector → IrreversibilityResult
+     └─ JudgeGate → PlanGateDecision
+    ```
+  - **Flow:** request → AuthorityValidator → IrreversibilityDetector → JudgeGate → PlanGateDecision.
+  - **External contract unchanged:** `PlanGateService.evaluate(request) → PlanGateDecision`.
+  - **Fields now explicit:**
+    - `authority_ok` backed by `AuthorityResult` from `AuthorityValidator`.
+    - `boundary_detected` / `irreversible` backed by `IrreversibilityResult` from `IrreversibilityDetector`.
+  - **Tests:** 49 new subcomponent tests (all pass); 14 integration tests (all pass); 12 E2E demo tests (all pass); demo unchanged.
+  - **Nature:** Architectural hardening / decomposition, not a doctrine change. Not yet full enterprise RBAC or production-grade boundary policy.
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 

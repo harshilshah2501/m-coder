@@ -1,7 +1,6 @@
 package ai.motadata.plugin.vcs
 
-import ai.motadata.plugin.gate.PlanGateClient
-import ai.motadata.plugin.gate.PlanGateClient.DecisionType
+import ai.motadata.plugin.bridge.*
 import ai.motadata.plugin.logging.DecisionLogger
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -18,81 +17,173 @@ class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
     }
 }
 
+/**
+ * Governed commit interception handler.
+ *
+ * M3.4 Architecture:
+ * - Uses RuntimeBridge as the single integration point
+ * - Routes ALL commits through runtime governance
+ * - Surfaces distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED)
+ * - Fails closed if runtime unavailable in enforcing mode
+ * - Shadow mode: logs decisions but allows commits to proceed
+ * - Enforcing mode: blocks commits based on runtime decision
+ *
+ * NO BYPASS ALLOWED:
+ * - Plugin does NOT make governance decisions
+ * - Plugin does NOT reinterpret postures
+ * - Plugin does NOT fallback to local execution
+ */
 class MotadataCheckinHandler(
     private val project: Project,
-    private val client: PlanGateClient = PlanGateClient()
+    private val bridge: RuntimeBridge = RuntimeBridge(),
+    private val enforcingMode: Boolean = false
 ) : CheckinHandler() {
 
     override fun beforeCheckin(): ReturnResult {
-        val decisionResult = client.evaluateCommit(project)
-
         val repoManager = GitRepositoryManager.getInstance(project)
         val repo = repoManager.repositories.firstOrNull()
         val branch = repo?.currentBranchName ?: "unknown"
         val revision = repo?.currentRevision ?: "unknown-revision"
         val repoRoot = project.basePath ?: ""
 
-        val decision = decisionResult.decision
+        val request = RuntimeRequest(
+            actionType = RuntimeActionType.VCS_COMMIT,
+            repoRoot = repoRoot,
+            revision = revision,
+            branch = branch,
+            ideContext = IdeContext(
+                projectName = project.name
+            ),
+            clientPolicy = ClientPolicy(
+                failClosedIfUnreachable = enforcingMode,
+                mode = if (enforcingMode) "enforcing" else "shadow"
+            )
+        )
 
-        when {
-            decisionResult.error != null -> {
-                // Shadow mode: warn but do not block.
-                notify(
-                    project,
-                    title = "Plan-Gate unavailable (shadow mode)",
-                    content = "Runtime gate could not be reached; proceeding without enforcement.\n${decisionResult.error}",
-                    type = NotificationType.WARNING
-                )
-            }
-            decision == DecisionType.REFUSAL -> {
-                notify(
-                    project,
-                    title = decisionResult.ui?.title ?: "Runtime would block this commit",
-                    content = decisionResult.ui?.message
-                        ?: "Plan-Gate decision: REFUSAL (shadow mode). Runtime would block this commit.",
-                    type = NotificationType.ERROR
-                )
-            }
-            decision == DecisionType.CONDITIONAL_BLOCK || decision == DecisionType.BOUNDING -> {
-                notify(
-                    project,
-                    title = decisionResult.ui?.title ?: "Runtime would conditionally block this commit",
-                    content = decisionResult.ui?.message
-                        ?: "Plan-Gate decision: CONDITIONAL_BLOCK (shadow mode). Runtime would conditionally block / bounded-allow this commit.",
-                    type = NotificationType.WARNING
-                )
-            }
-            decision == DecisionType.APPROVE -> {
-                // Optional info; can be disabled later if noisy.
-                notify(
-                    project,
-                    title = decisionResult.ui?.title ?: "Runtime would allow this commit",
-                    content = decisionResult.ui?.message
-                        ?: "Plan-Gate decision: APPROVE (shadow mode). Runtime would allow this commit.",
-                    type = NotificationType.INFORMATION
-                )
-            }
-            else -> {
-                // Unknown decision: warn but proceed.
-                notify(
-                    project,
-                    title = "Plan-Gate returned unknown decision (shadow mode)",
-                    content = "Decision type: $decision. Proceeding without enforcement.",
-                    type = NotificationType.WARNING
-                )
-            }
-        }
+        val response = bridge.evaluateCommit(request)
 
+        logDecision(response, repoRoot, branch, revision)
+        showNotification(response)
+
+        return determineResult(response)
+    }
+
+    private fun logDecision(response: RuntimeResponse, repoRoot: String, branch: String, revision: String) {
+        val outcomeStr = buildOutcomeLogString(response)
         DecisionLogger.log(
             action = "commit",
-            decision = decision.name,
+            decision = outcomeStr,
             repoRoot = repoRoot,
             branch = branch,
             revision = revision
         )
+    }
 
-        // Shadow mode: commit must always proceed.
-        return ReturnResult.COMMIT
+    private fun buildOutcomeLogString(response: RuntimeResponse): String {
+        return buildString {
+            append(response.outcome.name)
+            if (enforcingMode) {
+                append(" [ENFORCING]")
+            } else {
+                append(" [SHADOW]")
+            }
+            response.ledgerRowId?.let { append(" ledger=$it") }
+            response.planHash?.let { append(" plan=${it.take(16)}...") }
+        }
+    }
+
+    private fun showNotification(response: RuntimeResponse) {
+        val (title, content, notificationType) = when (response.outcome) {
+            RuntimeOutcome.RUNTIME_UNAVAILABLE -> {
+                if (enforcingMode) {
+                    Triple(
+                        "Runtime unavailable — Commit blocked",
+                        "Runtime service could not be reached. Commit cannot proceed in enforcing mode.\n${response.error ?: ""}",
+                        NotificationType.ERROR
+                    )
+                } else {
+                    Triple(
+                        "Runtime unavailable (shadow mode)",
+                        "Runtime service could not be reached. Proceeding without enforcement.\n${response.error ?: ""}",
+                        NotificationType.WARNING
+                    )
+                }
+            }
+
+            RuntimeOutcome.REFUSED -> {
+                val modeLabel = if (enforcingMode) "BLOCKED" else "shadow mode"
+                Triple(
+                    response.ui?.title ?: "Commit refused by runtime ($modeLabel)",
+                    response.ui?.message
+                        ?: "Runtime governance refused this commit.${if (!enforcingMode) " Would block in enforcing mode." else ""}",
+                    NotificationType.ERROR
+                )
+            }
+
+            RuntimeOutcome.DEFERRED -> {
+                val modeLabel = if (enforcingMode) "BLOCKED" else "shadow mode"
+                Triple(
+                    response.ui?.title ?: "Commit deferred ($modeLabel)",
+                    response.ui?.message
+                        ?: "This commit requires additional approval. Deferred by runtime.${if (!enforcingMode) " Would block in enforcing mode." else ""}",
+                    NotificationType.WARNING
+                )
+            }
+
+            RuntimeOutcome.BOUNDED_ALLOW -> {
+                Triple(
+                    response.ui?.title ?: "Commit bounded-allowed (shadow mode)",
+                    response.ui?.message
+                        ?: "Runtime granted bounded allowance. No sandbox execution in this MVP path.",
+                    NotificationType.WARNING
+                )
+            }
+
+            RuntimeOutcome.BLOCKED -> {
+                val modeLabel = if (enforcingMode) "BLOCKED" else "shadow mode"
+                Triple(
+                    response.ui?.title ?: "Commit blocked by policy ($modeLabel)",
+                    response.ui?.message
+                        ?: "Runtime/sandbox policy blocked this commit.${if (!enforcingMode) " Would block in enforcing mode." else ""}",
+                    NotificationType.ERROR
+                )
+            }
+
+            RuntimeOutcome.EXECUTED -> {
+                Triple(
+                    response.ui?.title ?: "Commit allowed by runtime",
+                    response.ui?.message
+                        ?: "Runtime governance approved this commit.",
+                    NotificationType.INFORMATION
+                )
+            }
+
+            RuntimeOutcome.UNKNOWN -> {
+                Triple(
+                    "Runtime returned unknown decision (shadow mode)",
+                    "Decision could not be interpreted. Proceeding without enforcement.\n${response.error ?: ""}",
+                    NotificationType.WARNING
+                )
+            }
+        }
+
+        notify(project, title, content, notificationType)
+    }
+
+    private fun determineResult(response: RuntimeResponse): ReturnResult {
+        if (!enforcingMode) {
+            return ReturnResult.COMMIT
+        }
+
+        return when (response.outcome) {
+            RuntimeOutcome.EXECUTED -> ReturnResult.COMMIT
+            RuntimeOutcome.BOUNDED_ALLOW -> ReturnResult.COMMIT
+            RuntimeOutcome.RUNTIME_UNAVAILABLE -> ReturnResult.CANCEL
+            RuntimeOutcome.REFUSED -> ReturnResult.CANCEL
+            RuntimeOutcome.DEFERRED -> ReturnResult.CANCEL
+            RuntimeOutcome.BLOCKED -> ReturnResult.CANCEL
+            RuntimeOutcome.UNKNOWN -> ReturnResult.CANCEL
+        }
     }
 
     private fun notify(project: Project, title: String, content: String, type: NotificationType) {
@@ -100,4 +191,3 @@ class MotadataCheckinHandler(
         group.createNotification(title, content, type).notify(project)
     }
 }
-
