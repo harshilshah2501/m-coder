@@ -30,9 +30,9 @@ from runtime.sandbox.sandbox_ledger_store import (
     LedgerStoreError,
     SandboxLedgerStore,
 )
+from runtime.sandbox.sandbox_driver import LocalProcessSandboxDriver, SandboxDriver
 from runtime.sandbox.sandbox_policy import SandboxPolicy
 from runtime.sandbox.sandbox_result import GovernedExecutionResult, SandboxResult
-from runtime.sandbox.sandbox_runner import SandboxRunner
 
 
 @dataclass
@@ -152,18 +152,20 @@ class SandboxExecutor:
         ledger_emitter: SandboxLedgerEmitter | None = None,
         ledger_store: SandboxLedgerStore | None = None,
         execution_callback: Callable[[GovernedExecutionResult], None] | None = None,
+        driver: SandboxDriver | None = None,
     ):
         """
         Initialize sandbox executor.
-        
+
         Args:
             policy: Execution policy. If None, uses default policy.
             ledger_emitter: Ledger emitter for in-memory entries. If None, creates new.
             ledger_store: Optional persistent store; when set, blocked/executed rows are appended.
             execution_callback: Optional callback invoked with GovernedExecutionResult.
+            driver: Sandbox execution backend. If None, uses LocalProcessSandboxDriver(policy).
         """
         self.policy = policy or SandboxPolicy()
-        self.runner = SandboxRunner(policy=self.policy)
+        self._driver: SandboxDriver = driver if driver is not None else LocalProcessSandboxDriver(policy=self.policy)
         self.ledger_emitter = ledger_emitter or SandboxLedgerEmitter()
         self.ledger_store = ledger_store
         self.execution_callback = execution_callback
@@ -182,9 +184,9 @@ class SandboxExecutor:
         plan_hash = action.plan_hash or ""
         sandbox_id = action.sandbox_id or action.task_id
 
-        # Run command; policy violation → BLOCKED (command does not run)
+        # Run command via driver; policy violation → BLOCKED (command does not run)
         try:
-            result = self.runner.run(
+            result = self._driver.run(
                 command=action.command,
                 working_dir=action.working_dir,
                 timeout_seconds=action.timeout_seconds,
@@ -300,7 +302,7 @@ class SandboxExecutor:
         Returns:
             Tuple of (is_valid, reason).
         """
-        return self.runner.validate_only(action.command, action.working_dir)
+        return self._driver.validate_only(action.command, action.working_dir)
 
     def _get_policy_name(self) -> str:
         """Derive policy name for ledger entries."""

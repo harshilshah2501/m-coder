@@ -30,24 +30,33 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 
 ---
 
-## C. Layer-3 Milestones (Runtime)
+## C. Layer-3 Milestones (Runtime) — Canonical numbering
+
+**Source of truth:** [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3.1. This table uses the same canonical M3.0–M3.18 model.
 
 | Milestone | Entry | Exit | Failure |
 |-----------|-------|------|---------|
-| **M3.0 Plan-Gate Runtime** | M2.7 complete; frozen adapter | Plan object and decision contracts wired into a running runtime service; IDE/CLI/CI can call it; schemas plan.v0.1 and decision_response.v0.1 enforced | Plan/decision contracts incomplete; gate unreachable or fail-open; schema or rule validation missing |
-| **M3.1 Runtime Governor** | M3.0 complete | Central Runtime Governor owns loop control and REF/CONF/CODE routing; all decisions pass governance invariants; no uncontrolled recursion | Any path bypasses governor; REF/CONF routing can be skipped; fail-open behavior under gate failure |
-| **M3.2 Task State Store** | M3.1 complete | Deterministic per-task state store in place (task ids, stages, checkpoints); runtime behavior replayable from task state + ledger | Task state incomplete or lossy; behavior not reconstructable; divergence between state store and ledger |
-| **M3.3 Deterministic Agent Loop** | M3.2 complete | Runtime-owned propose/evaluate/execute loop implemented; loop termination conditions explicit; no model-controlled recursion or self-triggering | Agent loop can diverge or hang; model can trigger its own calls; termination depends solely on model text ending |
-| **M3.4 Repository Context Engine** | M3.3 complete | Runtime-owned context retrieval for repositories/code/RAG; model only sees curated bundles; context is versioned and reproducible | Model can self-fetch context or tools; non-deterministic context; context cannot be tied back to source revision |
-| **M3.5 Execution Sandbox** | M3.4 complete | Isolated sandbox executor for tools/tests/commands under runtime control; irreversible actions guarded by authority/boundary checks and ledgered | Irreversible effects can occur outside sandbox or without ledger emission; sandbox not clearly separated from live environments |
-| **M3.6 Model Worker Interface** | M3.5 complete | Narrow, versioned interface between runtime and model worker with bounded prompts, budgets, and structured outputs; model cannot mutate task state or environment directly | Model can affect control flow or environment directly; unbounded prompts; ad-hoc free-form responses without contracts |
-| **M3.7 IDE Plugin Bridge** | M3.6 complete | IDE plugins route developer actions through Plan-Gate Runtime and Runtime Governor; plugin honors runtime decisions (block/allow/bound) | IDE actions can bypass the governor; inconsistent enforcement between IDE and non-IDE flows |
-| **M3.8 Ledger Emission** | M3.7 complete | Ledger_row.v0.1 emitted for every runtime decision; links to plan_hash; end-to-end decisions observable by Layer-4 | Any runtime path executes without a ledger row; missing fields; inability to join runtime behavior to plans |
-| **M3.9 Shadow Mode Validation** | M3.8 complete | Full runtime-governed agent loop runs in shadow mode; REF/CONF invariants hold; coverage across key workflows; deviations surfaced for governance review | Shadow mode missing or partial; REF/CONF violations; coverage gaps; no systematic comparison between current and governed behavior |
+| **M3.0** Deterministic Runtime Emulator | L2.* | Plan-gate emulator + shadow runner + invariant tests | Emulator incomplete; invariants violated |
+| **M3.1** Deterministic Agent State Transition Table | Plan-Gate contract | State enum, terminal states, stop reasons, transition matrix | State/transition spec missing or inconsistent |
+| **M3.2** Repository Context Engine | L2.* | Context bundles versioned and reproducible | Non-deterministic context; missing provenance |
+| **M3.3** Agent Loop Orchestrator | M3.2, M3.1 | Loop controller; no model-controlled recursion | Bypass path; uncontrolled recursion |
+| **M3.4** Execution Sandbox | M3.2–M3.3 | Isolated executor; REFUSED/BLOCKED/EXECUTED; ledger | Execution outside sandbox; no ledger |
+| **M3.5** Plan-Gate Integration | M3.2–M3.4 | All paths through Plan-Gate; four postures; decisions ledgered | Bypass; posture missing |
+| **M3.6** Internal Plan-Gate Decomposition | M3.5 | AuthorityValidator, IrreversibilityDetector, JudgeGate | External contract changed |
+| **M3.7** IDE Plugin Integration | M3.5 | Plugin → Plan-Gate → ledger; /v0/execute | Bypass; no decision ledgering |
+| **M3.8** Ledger Emission / Replay | M3.5 | Ledger completeness; replay; join contract | Missing ledger path; no replay |
+| **M3.9** Shadow Mode Validation | M3.0–M3.8 | Shadow runner; no boundary crossed; plan and ledger per run | boundary_verdict=crossed; missing plan/ledger |
+| **M3.10** Sandbox driver abstraction | M3.4 | Driver interface; pluggable backends | — |
+| **M3.11** Container sandbox runtime | M3.10 | Container-based sandbox | — |
+| **M3.12** Documentation ingestion | M3.0–M3.9 | Ingest documentation into observation/context | — |
+| **M3.13** Jira ingestion | M3.0–M3.9 | Ingest Jira data | — |
+| **M3.14** PR ingestion | M3.0–M3.9 | Ingest PR data | — |
+| **M3.15** Jira cleaning pipeline | M3.13 | Clean and normalize Jira data | — |
+| **M3.16** PR signal extraction | M3.14 | Extract signals from PR data | — |
+| **M3.17** Task schema | M3.0–M3.9 | Task representation schema | — |
+| **M3.18** Task evaluation harness | M3.17 | Harness for task evaluation | — |
 
-**M3.7 reference:** [docs/JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md) — IDE plan-gate contracts. **M3.0 / M3.8:** CI Backstop Gate (`runtime/ci_gate/`) and Plan-Gate Service (`runtime/plan_gate_service/`) implement the local gate and HTTP endpoint and emit ledger rows. **M3.9 / M4.3:** [docs/SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md) — shadow mode and ingestion batch. **M4.1 Drift baseline:** [observation/baseline/](../observation/baseline/README.md) — Shadow Baseline Runner.
-
-*Implementation build order and current status use different IDs; see [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3 and §6 (e.g. M3.0 Context Engine, M3.1 Orchestrator, M3.2 Sandbox, M3.3 Plan-Gate Integration, M3.4 IDE Plugin).*
+*M3.0–M3.9 are complete on main (tag `layer3-runtime-governed-v1`). M3.10–M3.18 are follow-on. See LIVE_ROADMAP_TRACKER.md §4.3 and §6 for status and evidence.*
 
 ### What Cannot Ship Without REF Enforcement
 
@@ -63,7 +72,7 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 
 | Milestone | Entry | Exit | Failure |
 |-----------|-------|------|---------|
-| **M4.1 Drift baseline capture** | M3.6 complete; runtime in shadow | Baseline verdict distribution captured; per-phase, per-surface metrics | Baseline incomplete; missing phases |
+| **M4.1 Drift baseline capture** | M3.9 complete; runtime in shadow | Baseline verdict distribution captured; per-phase, per-surface metrics | Baseline incomplete; missing phases |
 | **M4.2 Collapse vector live tracking** | M4.1 complete | Collapse vectors tracked in production; drift probes running | Probes fail; tracking gaps |
 | **M4.3 Ledger reconciliation dashboard** | M4.2 complete | Pre/post ledgers reconciled; diff visible; anomalies flagged | Reconciliation fails; dashboard incomplete |
 | **M4.4 GREG audit automation** | M4.3 complete | GREG-trigger automation runs on drift thresholds; evidence package produced | Automation missing; thresholds wrong |
@@ -91,7 +100,7 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 |-------|--------|
 | **Governance** | Locked (Phases 01–05; Phase-06 hardening defined) |
 | **Compilation** | Complete / Locked (Stage-6C cure validated; dataset frozen; SFT training and post-SFT revalidation complete; see `docs/LIVE_ROADMAP_TRACKER.md`) |
-| **Runtime** | In progress (runtime emulator and state machine contracts implemented; broader runtime stack under active buildout; see `docs/LIVE_ROADMAP_TRACKER.md`) |
+| **Runtime** | **M3.0–M3.9 complete on main** (tag `layer3-runtime-governed-v1`); M3.10–M3.18 follow-on. See `docs/LIVE_ROADMAP_TRACKER.md` §4.3. |
 | **Observation** | Partial (governance-level drift suite exists; production observation not yet wired) |
 
 ### What Is Left
@@ -111,12 +120,11 @@ The CONF→DES drift issue is **closed**. Multiple SFT patch attempts did not co
 - **Runtime gap:** No REF enforcement at execution; model could act under illegitimacy.
 - **Observation gap:** No production drift baseline; GREG cannot run on live evidence.
 
-### Estimated Sequencing Order
+### Estimated Sequencing Order (canonical M3.0–M3.18)
 
-1. M3.0–M3.3 Plan-Gate Runtime, Runtime Governor, Task State Store, Deterministic Agent Loop
-2. M3.4–M3.8 Repository Context Engine, Execution Sandbox, Model Worker Interface, IDE Plugin Bridge, Ledger Emission
-3. M3.9 Shadow Mode Validation
-4. M4.1–M4.5 Observation baseline, tracking, GREG automation
+1. M3.0–M3.9 (complete on main; see LIVE_ROADMAP_TRACKER.md)
+2. M3.10–M3.18 follow-on (sandbox driver, container, ingestion, task schema, harness)
+3. M4.1–M4.5 Observation baseline, tracking, GREG automation
 
 ---
 

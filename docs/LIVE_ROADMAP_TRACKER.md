@@ -5,11 +5,11 @@
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
 - **Last updated**: 2026-03-13  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **M3.5 Ledger completeness / replay** (Layer-3 baseline M3.2–M3.4 integrated on main; tag `layer3-runtime-baseline`).  
+- **Current active milestone focus**: **Layer-3 M3.0–M3.9 complete on main** (tag `layer3-runtime-governed-v1`). **M3.10–M3.11 validated on branch, pending merge.** Next: merge then M3.12 or M4.1.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
-  - Layer-3 runtime **baseline integration complete on main** (M3.2–M3.4); next: M3.5 / M3.6.  
+  - **Layer-3 M3.0–M3.9 are COMPLETE on main**; M3.10 (Sandbox driver abstraction) and M3.11 (Container sandbox runtime) are **VALIDATING** on branch, pending merge. Follow-on M3.12–M3.18 NOT_STARTED.  
   - Layer-4 observation is **PARTIAL / PENDING EXPANSION**.
 
 ---
@@ -65,7 +65,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | ------ | ------------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
 | **L1** | Governance (Constitution)       | <span style="color:#2e7d32">**LOCKED**</span>            | Constitutional manifest, phase doctrine, dominance rules locked.                          |
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
-| **L3** | Runtime Enforcement / Execution | <span style="color:#e65100">**IN_PROGRESS**</span>       | Baseline (M3.2–M3.4) integrated on main; next M3.5 Ledger completeness / replay.          |
+| **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.9) | M3.0–M3.9 on main; M3.10–M3.11 VALIDATING on branch (driver abstraction + container runtime), pending merge; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | **PARTIAL**           | Governance-level drift suite exists; production wiring pending.                           |
 
 
@@ -137,30 +137,40 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Enforce constitutional judgment at runtime. REF and CONF are governed runtime phases; DES and CODE remain model-expressive but are orchestrated by the runtime. Layer-3 owns control flow, state transitions, authority and boundary enforcement, and completion criteria. The model proposes; the runtime decides.
 
-**Current status**: <span style="color:#e65100">**IN_PROGRESS**</span> (architecture and MVP runtime)  
+**Current status**: **M3.0–M3.9 COMPLETE on main** (tag `layer3-runtime-governed-v1`). **M3.10–M3.11 VALIDATING on branch, pending merge.** M3.12–M3.18 are follow-on milestones.  
 **Priority**: **CRITICAL**
 
-#### 4.3.1 Milestones
+**Canonical Layer-3 numbering:** This document uses a single canonical model M3.0–M3.18. No alternate naming (e.g. M3.E0, M3X.*) is used in live roadmap tables.
 
+#### 4.3.1 Layer-3 Milestones (canonical M3.0–M3.18)
 
-| ID    | Milestone                                             | Status      | Owner      | Dependencies                                 | Deliverable                                                                          | Artifacts | Evidence | Next unblocker                      | Exit criteria                                                                                                                      |
-| ----- | ----------------------------------------------------- | ----------- | ---------- | -------------------------------------------- | ------------------------------------------------------------------------------------ | --------- | -------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| M3.E0 | Deterministic Runtime Emulator                        | <span style="color:#e65100">VALIDATING</span>  | Shared     | L2.* (LOCKED), existing L3 runtime contracts | Deterministic plan-gate runtime emulator + shadow runner + invariant tests.          | 6/6       | see §6.2 | —                                   | REF/CONF/approval invariants enforced in emulator; sample IDE events execute end-to-end with deterministic hashes and ledger rows. |
-| M3.T0 | Deterministic Agent State Transition Table (Contract) | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | Plan-Gate runtime contract                   | Deterministic runtime transition spec + schemas for agent state machine.             | 3/3       | see §6.3 | —                                   | State enum, terminal states, stop reasons, and invalid transitions finalized; runtime-only state ownership documented.             |
-| M3.0  | Repository Context Engine                             | <span style="color:#e65100">VALIDATING</span>  | Shared     | L2.*                                         | Runtime-owned service for repo/code/RAG context bundles, versioned and reproducible. | 4/4       | see §6.5 | wire LoopController → ContextEngine | Context for runtime decisions is deterministic, revision-tied, and independently auditable.                                        |
-| M3.1  | Agent Loop Orchestrator                               | <span style="color:#e65100">IN_PROGRESS</span> | Architect  | M3.0, M3.T0                                  | Deterministic agent loop controller (Runtime Governor + loop control semantics).     | 0/4       | see §6.4 | write M3.1 spec artifacts           | All runtime flows pass through orchestrator; no model-controlled recursion or bypass; deterministic replay path defined.           |
-| M3.2  | Execution Sandbox                                     | <span style="color:#2e7d32">COMPLETE</span>    | Architect  | M3.0–M3.1                                    | Isolated executor + unified result contract + local ledger persistence (REFUSED/BLOCKED/EXECUTED). | 6/6       | see §6.8 | —                                   | Irreversible effects only through sandbox; all three outcomes produce durable ledger rows; CLI/test-harness demo closure.             |
-| M3.3  | Plan-Gate Integration                                 | <span style="color:#2e7d32">COMPLETE</span>    | Shared     | M3.0–M3.2                                    | Mandatory Plan-Gate; all four postures (refuse/defer/bounded_allow/safe_execute) wired; only safe_execute reaches sandbox; decisions ledgered. | 6/6       | see §6.9 | —                                   | All execution paths through Plan-Gate; refuse/defer/bounded_allow prevent sandbox; bounded_allow distinct (stop_reason, plangate_bounded_allow); CLI demo shows five cases. |
-| M3.4  | IDE Plugin Integration                                | <span style="color:#2e7d32">COMPLETE</span>    | Cursor/IDE | M3.3                                         | Plugin → Plan-Gate → ledger decision → sandbox; decision ledgering; governance from PlanGateService only; shlex command parsing. | 3/3       | see §6.7 | —                                   | No bypass; /v0/execute persists Plan-Gate decisions; no keyword heuristics; 30 tests.                                               |
-| M3.5  | Ledger Emission                                       | <span style="color:#757575">NOT_STARTED</span> | Architect  | M3.3                                         | Broader ledger completeness / replay / observation bridge (beyond M3.2 local evidence). | 0/3       | none     | transition-to-ledger map            | Full runtime decision ledger; join/replay contract; Layer-4 observation ingestion. M3.2 delivers local sandbox evidence only.     |
-| M3.6  | Shadow Mode Validation                                | <span style="color:#757575">NOT_STARTED</span> | Shared     | M3.0–M3.5                                    | Full runtime-governed agent loop running in shadow mode.                             | 0/3       | none     | shadow protocol note                | REF/CONF invariants hold in shadow; deviations detected and explained; coverage across key workflows.                              |
-
+| ID    | Milestone                          | Status      | Dependencies   | Deliverable / exit criteria summary                                                                 |
+| ----- | ---------------------------------- | ----------- | -------------- | ---------------------------------------------------------------------------------------------------- |
+| M3.0  | Deterministic Runtime Emulator     | <span style="color:#e65100">VALIDATING</span>  | L2.*           | Plan-gate emulator + shadow runner + invariant tests. see §6.2.                                       |
+| M3.1  | Deterministic Agent State Transition Table | <span style="color:#2e7d32">COMPLETE</span>    | Plan-Gate contract | State enum, terminal states, stop reasons, transition matrix. see §6.3.                               |
+| M3.2  | Repository Context Engine          | <span style="color:#e65100">VALIDATING</span>  | L2.*           | Context bundles, versioned and reproducible. see §4.3.2 (M3.2).                                       |
+| M3.3  | Agent Loop Orchestrator            | <span style="color:#2e7d32">COMPLETE</span>    | M3.2, M3.1     | Loop controller, transition executor, no model-controlled recursion. see §6.4, §6.12.                 |
+| M3.4  | Execution Sandbox                  | <span style="color:#2e7d32">COMPLETE</span>    | M3.2–M3.3      | Isolated executor, REFUSED/BLOCKED/EXECUTED, ledger. see §6.8.                                         |
+| M3.5  | Plan-Gate Integration              | <span style="color:#2e7d32">COMPLETE</span>    | M3.2–M3.4      | All paths through Plan-Gate; four postures; decisions ledgered. see §6.9.                            |
+| M3.6  | Internal Plan-Gate Decomposition   | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | AuthorityValidator, IrreversibilityDetector, JudgeGate. see §6.10.                                    |
+| M3.7  | IDE Plugin Integration             | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | Plugin → Plan-Gate → ledger; /v0/execute; 30 tests. see §6.7.                                          |
+| M3.8  | Ledger Emission / Replay            | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | Ledger completeness, replay, join contract. see §6.12.                                                |
+| M3.9  | Shadow Mode Validation              | <span style="color:#2e7d32">COMPLETE</span>    | M3.0–M3.8      | Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.                                |
+| M3.10 | Sandbox driver abstraction         | <span style="color:#e65100">VALIDATING</span>  | M3.4           | Abstraction layer for sandbox execution drivers. On branch; see §6.13. After merge → COMPLETE.      |
+| M3.11 | Container sandbox runtime           | <span style="color:#e65100">VALIDATING</span>  | M3.10          | Container-based sandbox implementing driver abstraction. On branch; see §6.14. After merge → COMPLETE. |
+| M3.12 | Documentation ingestion            | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest documentation into observation/context.                                           |
+| M3.13 | Jira ingestion                     | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest Jira data.                                                                         |
+| M3.14 | PR ingestion                       | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest PR data.                                                                           |
+| M3.15 | Jira cleaning pipeline             | <span style="color:#757575">NOT_STARTED</span> | M3.13          | Clean and normalize Jira data.                                                                        |
+| M3.16 | PR signal extraction               | <span style="color:#757575">NOT_STARTED</span> | M3.14          | Extract signals from PR data.                                                                         |
+| M3.17 | Task schema                        | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Schema and contract for task representation.                                                         |
+| M3.18 | Task evaluation harness            | <span style="color:#757575">NOT_STARTED</span> | M3.17          | Harness to evaluate tasks against governance and runtime contracts.                                   |
 
 > Note: These Layer-3 milestones are **execution milestones** and do not redefine doctrine. They implement the runtime-governed agent architecture described in the Layer-3 specs.
 
 #### 4.3.2 Artifact-Driven Milestone Details
 
-##### M3.E0 — Deterministic Runtime Emulator
+##### M3.0 — Deterministic Runtime Emulator
 
 **Required Artifacts**
 
@@ -194,7 +204,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 - Deterministic hashing verified (same event → same plan_hash).
 - Ledger emission with schema_version `ledger_row.v0.1` verified.
 
-##### M3.T0 — Deterministic Agent State Transition Table
+##### M3.1 — Deterministic Agent State Transition Table
 
 **Required Artifacts**
 
@@ -214,7 +224,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 - none yet
 
-##### M3.0 — Repository Context Engine
+##### M3.2 — Repository Context Engine
 
 **Required Artifacts**
 
@@ -246,7 +256,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 - **Tests**:
   - pytest (`python3 -m pytest runtime/tests/test_context_engine.py -v`): 6 passed
 
-##### M3.1 — Agent Loop Orchestrator
+##### M3.3 — Agent Loop Orchestrator
 
 **Required Artifacts**
 
@@ -263,9 +273,9 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Evidence**
 
-- none yet
+- see §6.12
 
-##### M3.2 — Execution Sandbox
+##### M3.4 — Execution Sandbox
 
 **Required Artifacts**
 
@@ -284,7 +294,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 - none yet
 
-##### M3.3 — Plan-Gate Integration
+##### M3.5 — Plan-Gate Integration
 
 **Required Artifacts**
 
@@ -307,7 +317,21 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 - see §6.9
 
-##### M3.4 — IDE Plugin Integration
+##### M3.6 — Internal Plan-Gate Decomposition
+
+**Required Artifacts**
+
+- AuthorityValidator, IrreversibilityDetector, JudgeGate; PlanGateService unchanged.
+
+**Exit Criteria**
+
+- Plan-Gate internally decomposed; external contract unchanged.
+
+**Evidence**
+
+- see §6.10
+
+##### M3.7 — IDE Plugin Integration
 
 **Required Artifacts**
 
@@ -325,7 +349,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 - none yet
 
-##### M3.5 — Ledger Emission
+##### M3.8 — Ledger Emission / Replay
 
 **Required Artifacts**
 
@@ -341,9 +365,9 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Evidence**
 
-- none yet
+- see §6.12
 
-##### M3.6 — Shadow Mode Validation
+##### M3.9 — Shadow Mode Validation
 
 **Required Artifacts**
 
@@ -359,7 +383,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Evidence**
 
-- none yet
+- see §6.12
 
 **Dependencies**:  
 
@@ -368,13 +392,13 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Relationship between emulator and broader runtime architecture**:
 
-- **M3.E0** is the first executable governance-enforcement slice for Layer-3: a deterministic runtime emulator for Plan-Gate + ledger, including authority validation, boundary detection, decision contracts, ledger emission, and shadow runner with IDE event simulation.
-- **M3.T0 and M3.0+** define the broader runtime-governed agent architecture (state machine, context engine, orchestrator, sandbox, IDE integration, full shadow mode) that builds on top of the emulator.
-- The deterministic runtime emulator is **not** replaced by the later architecture; it becomes the governance-aligned kernel and precursor for subsequent Layer-3 work.
+- **M3.0** is the first executable governance-enforcement slice: deterministic runtime emulator for Plan-Gate + ledger, authority validation, boundary detection, decision contracts, ledger emission, shadow runner.
+- **M3.1–M3.9** define the broader runtime-governed agent architecture (state machine, context engine, orchestrator, sandbox, Plan-Gate, IDE integration, ledger, shadow) that builds on top of the emulator.
+- The emulator is not replaced; it remains the governance-aligned kernel for Layer-3.
 
 **Layer exit criteria**:
 
-- All M3.0–M3.6 milestones at least **COMPLETE**, with M3.5 (Ledger Emission) and M3.6 (Shadow Mode Validation) **VALIDATING** or **LOCKED**.
+- **M3.0–M3.9** are **COMPLETE** (or VALIDATING where noted) on main; tag `layer3-runtime-governed-v1`. M3.10–M3.18 are follow-on milestones.
 - No fail-open paths: when enforcement infrastructure is unavailable, default posture is REF/REFUSAL.
 - Observation layer (L4) has sufficient ledger data to begin drift tracking.
 
@@ -392,7 +416,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 | ID   | Milestone                   | Status      | Dependencies | Deliverable                                                              | Exit criteria                                                                               |
 | ---- | --------------------------- | ----------- | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| M4.1 | Ledger Ingestion            | <span style="color:#757575">NOT_STARTED</span> | M3.5         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
+| M4.1 | Ledger Ingestion            | <span style="color:#757575">NOT_STARTED</span> | M3.8         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
 | M4.2 | Drift Baseline              | <span style="color:#757575">NOT_STARTED</span> | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors.      | Baselines established for key metrics; thresholds approved by governance stakeholders.      |
 | M4.3 | Collapse Vector Tracking    | <span style="color:#757575">NOT_STARTED</span> | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior.           | All detected collapses are classified; unclassified collapses trigger alerts.               |
 | M4.4 | Ledger Reconciliation       | <span style="color:#757575">NOT_STARTED</span> | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.               | Ability to trace changes in behavior across releases and runtime environments.              |
@@ -407,19 +431,18 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **M3.4 COMPLETE for MVP; next Layer-3 milestones**  
-  - M3.4 IDE Plugin Integration closed: /v0/execute persists Plan-Gate decisions; governance from PlanGateService only (no keyword heuristics); shlex command parsing; 30 tests.
+- **Current objective**: **Layer-3 M3.0–M3.9 complete on main.** **M3.10–M3.11 validated on branch, pending merge.** Next: merge branch, then **M3.12** or **M4.1**.  
+  - M3.10 (sandbox driver abstraction) and M3.11 (container sandbox runtime) implemented and verified on branch; evidence in §6.13, §6.14.
 - **Active tasks**:
-  - **M3.3** Plan-Gate Integration **COMPLETE**; **M3.4** IDE Plugin Integration **COMPLETE**: RuntimeBridge, 7 outcomes, 3 governed actions; /v0/execute decision ledgering, explicit plan_gate_* flags, shlex parsing; 30 execute-service tests.
-  - M3.2 Execution Sandbox **closed for MVP**.
-- **Next 3 milestones**:
-  1. **M3.5 Ledger Emission** — <span style="color:#757575">NOT_STARTED</span>
-  2. **M3.6 Shadow Mode Validation** — <span style="color:#757575">NOT_STARTED</span>
-  3. (M3.4 COMPLETE)
+  - M3.0–M3.9 complete on main; M3.10–M3.11 VALIDATING (on branch, pending merge).
+- **Next 3 milestones** (actual upcoming work):
+  1. **Merge M3.10–M3.11 branch** — then set M3.10/M3.11 to COMPLETE and fill commit SHA/branch in §6.14
+  2. **M3.12** Documentation ingestion — NOT_STARTED
+  3. **M4.1** Ledger Ingestion — NOT_STARTED
 - **Current blockers**:
   - None.
 - **Immediate next action**:
-  - Proceed to M3.5 or M3.6 as prioritized.
+  - Commit/push branch; merge; then update tracker VALIDATING → COMPLETE and fill §6.14 commit SHA + branch name.
 
 ---
 
@@ -439,9 +462,9 @@ This section records **evidence of completed milestones**. Entries should be **a
   - Deterministic CONF runtime rendering adopted as part of governance-aligned runtime enforcement.
   - `LAYER2_RELEASE_VERIFICATION.json = PASS` (location documented in Layer-2 artifacts).
 
-### 6.2 M3.E0 — Deterministic Runtime Emulator
+### 6.2 M3.0 — Deterministic Runtime Emulator
 
-- **Milestone**: M3.E0 Deterministic Runtime Emulator — <span style="color:#e65100">VALIDATING</span> (2026-03-09)
+- **Milestone**: M3.0 Deterministic Runtime Emulator — <span style="color:#e65100">VALIDATING</span> (2026-03-09)
 - **Artifacts** (6/6):
   - `runtime/plan_gate_stub/plan_gate.py` — PlanGate class with `evaluate_plan()` method
   - `runtime/emulator/authority.py` — AuthorityChecker with deterministic rule-based validation
@@ -462,9 +485,9 @@ This section records **evidence of completed milestones**. Entries should be **a
   - Deterministic hashing verified: same event produces identical `plan_hash` and `boundary_phrase_hash`
   - Ledger rows emitted with `schema_version: ledger_row.v0.1`
 
-### 6.3 M3.T0 — Deterministic Agent State Transition Table
+### 6.3 M3.1 — Deterministic Agent State Transition Table
 
-- **Milestone**: M3.T0 Deterministic Agent State Transition Table — <span style="color:#2e7d32">COMPLETE</span> (2026-03-10)
+- **Milestone**: M3.1 Deterministic Agent State Transition Table — <span style="color:#2e7d32">COMPLETE</span> (2026-03-10)
 - **Artifacts** (3/3):
   - `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` — deterministic runtime state transition contract (runtime-owned control, terminal states, stop reasons, plan-gate checkpoints, decision-boundary ledger semantics)
   - `runtime/state/schemas/state_enums.v0.1.json` — state + stop_reason enums (13 states including `PLAN_EVALUATED`)
@@ -474,9 +497,9 @@ This section records **evidence of completed milestones**. Entries should be **a
   - Ledger semantics are **decision-boundary based** with explicit anti-double-ledger rule for simple REF refusal flows
   - DES explicitly constrained to **model-proposal semantics only**; execution remains runtime-owned
 
-### 6.4 M3.1 — Agent Loop Orchestrator (Scaffold)
+### 6.4 M3.3 — Agent Loop Orchestrator (Scaffold)
 
-- **Milestone**: M3.1 Agent Loop Orchestrator — <span style="color:#e65100">IN_PROGRESS</span> (2026-03-10)
+- **Milestone**: M3.3 Agent Loop Orchestrator — <span style="color:#2e7d32">COMPLETE</span> (2026-03-13); **final integration via §6.12.**
 - **Artifacts (scaffold)**:
   - `runtime/state/store.py` — Task state store (in-memory + optional JSON persistence)
   - `runtime/state/transitions.py` — transition validator enforcing `transition_matrix.v0.1.json`
@@ -494,10 +517,11 @@ This section records **evidence of completed milestones**. Entries should be **a
     - Minimal context metadata persisted in `TaskState.metadata['context_bundle']` (bundle_id, revision, paths, truncated)
     - Engine errors (`MissingExplicitFilesError` / `ContextEngineError`) are fail-closed: transition is refused with `stop_reason=\"validation_failed\"` and state remains `GOVERNANCE_CLASSIFIED`
   - pytest (`python3 -m pytest runtime/tests/test_transition_executor.py -v`): 23 passed
+  - **Final integration evidence**: see §6.12 (Layer-3 governed runtime merge; 346 runtime tests; tag `layer3-runtime-governed-v1`).
 
-### 6.7 M3.4 — IDE Plugin Integration (RuntimeBridge + Governed Actions)
+### 6.7 M3.7 — IDE Plugin Integration (RuntimeBridge + Governed Actions)
 
-- **Milestone**: M3.4 IDE Plugin Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **MVP scope: commit interception, ask flow, /v0/execute with decision ledgering and production governance.**
+- **Milestone**: M3.7 IDE Plugin Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **MVP scope: commit interception, ask flow, /v0/execute with decision ledgering and production governance.**
 - **Artifacts** (11+):
   - **Plugin RuntimeBridge abstraction**:
     - `jetbrains-plugin/.../bridge/RuntimeBridge.kt` — Single integration point for all runtime calls.
@@ -523,9 +547,9 @@ This section records **evidence of completed milestones**. Entries should be **a
 - **Scope (MVP):** Commit interception, ask flow, explicit runtime execution, fail-closed bridge. Not in MVP: push interception, full IDE coverage, plugin E2E in running IDE.
 
 
-### 6.8 M3.2 — Execution Sandbox (CODE Phase)
+### 6.8 M3.4 — Execution Sandbox (CODE Phase)
 
-- **Milestone**: M3.2 Execution Sandbox — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **closed for MVP; demo closure and local evidence complete.**
+- **Milestone**: M3.4 Execution Sandbox — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **closed for MVP; demo closure and local evidence complete.**
 - **Artifacts** (6/6):
   - `runtime/sandbox/sandbox_runner.py` — SandboxRunner with subprocess execution, timeout enforcement, artifact capture
   - `runtime/sandbox/sandbox_policy.py` — SandboxPolicy with command allowlist, time limits, env filtering
@@ -545,14 +569,14 @@ This section records **evidence of completed milestones**. Entries should be **a
   - Demo: `python3 -m runtime.sandbox.demo_governed_execution` runs all three cases; pytest `runtime/tests/test_sandbox_demo_e2e.py` (7 tests) + `runtime/tests/test_sandbox_ledger_store.py` (8 tests).
   - LoopController wiring: validated_to_sandbox uses result.success and result.ledger_row_id (GovernedExecutionResult); optional ledger_store for refusal rows.
   - pytest (`python3 -m pytest runtime/tests/test_sandbox_runner.py runtime/tests/test_sandbox_demo_e2e.py runtime/tests/test_sandbox_ledger_store.py runtime/tests/test_transition_executor.py -v`): 77 passed
-- **M3.2 vs M3.5:** M3.2 covers sandbox execution evidence and **local deterministic persistence** sufficient for MVP demo. M3.5 covers broader ledger completeness, replay/join contract, and observation-bridge (Layer-4).
+- **M3.4 vs M3.8:** M3.4 covers sandbox execution evidence and **local deterministic persistence** sufficient for MVP demo. M3.8 covers broader ledger completeness, replay/join contract, and observation-bridge (Layer-4).
 - **Architecture**:
-  - DES → propose; CONF → authorize; CODE → execute (sandboxed) ← M3.2
+  - DES → propose; CONF → authorize; CODE → execute (sandboxed) ← M3.4
   - Execution must never happen outside the sandbox; no bypass path.
 
-### 6.9 M3.3 — Plan-Gate Integration
+### 6.9 M3.5 — Plan-Gate Integration
 
-- **Milestone**: M3.3 Plan-Gate Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
+- **Milestone**: M3.5 Plan-Gate Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
 - **Artifacts** (6/6):
   - `runtime/plangate/plangate_decision.py` — PlanGateDecision (posture: refuse | defer | bounded_allow | safe_execute; authority_ok, boundary_detected, irreversible, reason); to_dict/from_dict.
   - `runtime/plangate/plangate_service.py` — PlanGateService.evaluate(request) → PlanGateDecision; deterministic rule-based (REFUSED_COMMANDS, plan_gate_defer, plan_gate_refuse, plan_gate_bounded_allow); no LLM.
@@ -568,9 +592,9 @@ This section records **evidence of completed milestones**. Entries should be **a
   - **Demo:** `python3 -m runtime.sandbox.demo_governed_execution` prints five outcomes including BOUNDED_ALLOW with ledger_row_id; 7 ledger rows (plangate_safe_execute, sandbox_executed, plangate_refused, sandbox_refused, sandbox_refused, plangate_deferred, plangate_bounded_allow).
   - **Tests:** pytest `runtime/tests/test_plangate_integration.py` (14 tests), `runtime/tests/test_sandbox_demo_e2e.py` (12 tests): bounded_allow proved end-to-end; distinct from defer (stop_reason, event_type).
 
-### 6.10 M3.3B — Internal Plan-Gate Decomposition
+### 6.10 M3.6 — Internal Plan-Gate Decomposition
 
-- **Milestone**: M3.3B Internal Plan-Gate Decomposition — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **Plan-Gate internally decomposed into explicit first-class subcomponents; external contract unchanged.**
+- **Milestone**: M3.6 Internal Plan-Gate Decomposition — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **Plan-Gate internally decomposed into explicit first-class subcomponents; external contract unchanged.**
 - **Artifacts** (7/7):
   - `runtime/plangate/contracts.py` — AuthorityResult, IrreversibilityResult, JudgeInput dataclasses.
   - `runtime/plangate/authority_validator.py` — AuthorityValidator component; validates requester authority.
@@ -594,6 +618,47 @@ This section records **evidence of completed milestones**. Entries should be **a
     - `boundary_detected` / `irreversible` backed by `IrreversibilityResult` from `IrreversibilityDetector`.
   - **Tests:** 49 new subcomponent tests (all pass); 14 integration tests (all pass); 12 E2E demo tests (all pass); demo unchanged.
   - **Nature:** Architectural hardening / decomposition, not a doctrine change. Not yet full enterprise RBAC or production-grade boundary policy.
+
+### 6.12 Layer-3 Integration (M3.3, M3.8, M3.9)
+
+- **Milestone**: M3.3 Agent Loop Orchestrator, M3.8 Ledger Emission/Replay, M3.9 Shadow Mode Validation — <span style="color:#2e7d32">COMPLETE</span> (2026-03-13). This section documents the final integration of these milestones on main (tag `layer3-runtime-governed-v1`).
+- **Merge**:
+  - Branch merged: `integration/layer3-next-verification` (merged into `main` with `--no-ff`)
+  - Merge commit: `23395b60bb72d70d01fbb6750c1ffb70760c3dcd`
+- **Validation evidence**:
+  - **Runtime tests**: `python3 -m pytest runtime/tests` — **346 passed**
+  - **Ledger demo**: `python3 -m runtime.ledger.demo_trace` — passed (all invariants satisfied)
+  - **Shadow demo**: `python3 -m runtime.shadow_runner.run_demo` — passed (all scenarios, invariants held)
+- **Tag**: `layer3-runtime-governed-v1` (created and pushed to origin)
+- **Artifacts (summary)**: M3.3 — stop_conditions, budget_policy, transition_executor, replay, orchestrator_test_suite; M3.8 — runtime/ledger/* (contracts, emitter, store, replay, demo_trace), test_ledger_completeness; M3.9 — runtime/shadow/* (runner, harness, ingestion_batch, baseline_scenarios), shadow_runner_test, shadow_harness_test, test_emulator_invariants updates.
+
+### 6.13 M3.10 — Sandbox Driver Abstraction
+
+- **Milestone**: M3.10 Sandbox Driver Abstraction — <span style="color:#e65100">VALIDATING</span> (on branch, pending merge; after merge → COMPLETE).
+- **Artifacts**:
+  - `runtime/sandbox/sandbox_driver.py` — SandboxDriver protocol, BaseSandboxDriver(ABC), LocalProcessSandboxDriver; driver_name for observability.
+  - `runtime/sandbox/sandbox_executor.py` — Optional `driver` parameter; delegates to `_driver.run` / `_driver.validate_only`; default LocalProcessSandboxDriver.
+  - `runtime/tests/test_sandbox_driver.py` — Driver and executor-through-driver tests.
+  - `docs/RUNTIME/milestones/M3.10_SANDBOX_DRIVER_ABSTRACTION.md`, `docs/runtime/branch_execution_notes/` (M3.10 note).
+- **Evidence**:
+  - Pluggable driver seam: executor owns governance and ledger; driver only runs/validates.
+  - Default `SandboxExecutor()` uses LocalProcessSandboxDriver; backward compatible.
+  - driver_name exposed for observability (e.g. sandbox_driver=local_process).
+
+### 6.14 M3.11 — Container Sandbox Runtime
+
+- **Milestone**: M3.11 Container Sandbox Runtime — <span style="color:#e65100">VALIDATING</span> (on branch, pending merge; after merge → COMPLETE).
+- **Container driver file**: `runtime/sandbox/container_sandbox_driver.py` — ContainerSandboxDriver(BaseSandboxDriver), driver_name = "container"; run/validate_only via podman/docker; workspace mount, exec form, timeout, --rm.
+- **Tests passed**: pytest `runtime/tests/test_sandbox_runner.py` (37), `runtime/tests/test_sandbox_driver.py` (12), `runtime/tests/test_transition_executor.py` (26), `runtime/tests/test_sandbox_demo_e2e.py` (12), `runtime/tests/test_container_sandbox_driver.py` (17 passed, 1 skipped when no runtime). **Total: 105 passed, 1 skipped.**
+- **Demo result**: `python3 -m runtime.sandbox.demo_governed_execution` — 7 ledger rows; refused / blocked / executed semantics preserved; DES → CODE execution and governance unchanged.
+- **Fail-closed note**: Missing container runtime (podman/docker), invalid runtime path, or container run failure → SandboxExecutionError; executor returns EXECUTED (failed). No silent fallback to host or local process.
+- **Opt-in backend selection**: Container backend only active when explicitly configured (e.g. `SandboxExecutor(driver=ContainerSandboxDriver())` or `create_sandbox_driver("container")`). Default remains LocalProcessSandboxDriver.
+- **Commit / merge summary** (fill after merge):
+  - **Commit SHA**: _TBD_ (fill after merge)
+  - **Branch name**: _TBD_ (fill after merge)
+  - **Tests run**: as above (105 passed, 1 skipped).
+  - **Demo result**: as above (7 ledger rows; governance semantics preserved).
+  - **Before merge**: M3.10 and M3.11 remain VALIDATING in tracker. **After merge**: set both to COMPLETE and fill SHA + branch name here.
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
