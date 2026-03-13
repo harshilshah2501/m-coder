@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "boundary_hashing.v0.1",
+  "title": "Boundary Hashing Canonicalization v0.1",
+  "description": "Normative specification for deterministic boundary phrase hashing. R-L1. All clients (plugin, plan-gate, compiler) must follow this.",
+  "canonicalization_rules": {
+    "encoding": "UTF-8",
+    "line_endings": "normalize to \\n",
+    "whitespace": "preserve (no trim)",
+    "case_folding": "none",
+    "unicode_normalization": "none (or NFC if used; default: none)",
+    "hash_algorithm": "SHA-256",
+    "output_format": "hex lowercase"
+  },
+  "compliance": "R-L1: boundary_phrase_hash MUST equal sha256(phrase) after applying above rules."
+}

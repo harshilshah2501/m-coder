@@ -1,0 +1,26 @@
+{
+  "schema_version": "decision_response.v0.1",
+  "request_id": "req-inv2",
+  "decision": "APPROVE",
+  "constitutional_phase_emitted": "REF",
+  "dominance_source": "REF",
+  "irreversible_boundary_phrase": "merge to main",
+  "boundary_phrase_hash": "8e2a7b39ed9a4c87102643f1fd4dfb717ac6f29d39e6eabfef1658ed22c77c18",
+  "boundary_type": "merge",
+  "authority_verdict": "fail",
+  "missing_evidence": [],
+  "allowed_pre_boundary_actions": [],
+  "blocked_actions": [],
+  "reason_codes": [],
+  "plan_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "ui": {
+    "title": "x",
+    "message": "x",
+    "severity": "info"
+  },
+  "provenance_resolution": {
+    "resolved_via": "lineage_index",
+    "base_id": "b",
+    "variant_id": "v"
+  }
+}

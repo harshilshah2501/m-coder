@@ -68,6 +68,8 @@ Comprehensive documentation for the Motadata AI system including model training,
 │   ├── README.md                # Documentation index (this file)
 │   ├── architecture/            # System architecture
 │   ├── guides/                  # How-to guides
+│   ├── reference/               # Canonical technical references
+│   ├── status/                  # Status, incidents, and session summaries
 │   ├── api/                     # API documentation
 │   ├── troubleshooting/         # Troubleshooting guides
 │   ├── iterations/              # Iteration notes
@@ -95,6 +97,21 @@ Comprehensive documentation for the Motadata AI system including model training,
 
 ## Documentation by Component
 
+### Full Test Command
+
+Canonical command to run all tests (runtime, ide, shadow, lineage, observation):
+
+```bash
+cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
+```
+
+**Expected total test count:** 186 (as of this commit)
+
+### 🏛️ Core Architecture Docs
+
+- **[ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation
+- **[ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md)** — L2/L3/L4 milestone roadmap, snapshot, sequencing
+
 ### 📊 Evaluation & Benchmarking
 - **[evaluation/](evaluation/)** - Model evaluation reports and analysis
   - Comprehensive evaluation reports
@@ -118,7 +135,7 @@ Comprehensive documentation for the Motadata AI system including model training,
   - Audit reports
 
 ### 🔌 RAG System
-- **[rag/](rag/)** - RAG system documentation
+- **[runtime/rag/](../runtime/rag/)** - RAG system documentation
   - Implementation details
   - System iterations and analysis
 
@@ -154,6 +171,14 @@ Comprehensive documentation for the Motadata AI system including model training,
 ### 📚 Historical Documentation
 - **[iterations/](iterations/)** - Per-iteration notes and progress
 - **[archive/](archive/)** - Historical and deprecated documentation
+
+### 📌 4-Layer Architecture (Golden Exemplars)
+- **[MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)** - Canonical entry point; Doctrine Immutability; links to GOVERNANCE, COMPILATION, RUNTIME, OBSERVATION, CONTRACTS
+
+### 📌 Core References
+- **[reference/IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
+- **[reference/MODEL_VERIFICATION_REPORT.md](reference/MODEL_VERIFICATION_REPORT.md)** - Model verification and rollback decisions
+- **[reference/DIRECTORY_STRUCTURE_ANALYSIS.md](reference/DIRECTORY_STRUCTURE_ANALYSIS.md)** - Repository structure and disk usage analysis
 
 ## V16 Documentation
 
@@ -200,11 +225,11 @@ journalctl -u motadata-orchestrator -f
 
 ### Manual Service Management (Legacy)
 ```bash
-# If you need to run the orchestrator script directly:
-bash rag/scripts/orchestrator_unified.sh start
-bash rag/scripts/orchestrator_unified.sh stop
-bash rag/scripts/orchestrator_unified.sh restart
-bash rag/scripts/orchestrator_unified.sh status
+# If you need to run the orchestrator script directly from the repo:
+bash runtime/rag/scripts/orchestrator_unified.sh start
+bash runtime/rag/scripts/orchestrator_unified.sh stop
+bash runtime/rag/scripts/orchestrator_unified.sh restart
+bash runtime/rag/scripts/orchestrator_unified.sh status
 ```
 
 ### Auto-Start on Boot

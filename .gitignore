@@ -4,10 +4,16 @@ env/
 ENV/
 .venv/
 
+# Vendor mirror (embedded git; use submodule if needed)
+ml/training/vendor/
+
 backup_complete_v16_2.sh
 backup_local_v16_2.sh
 backup_to_github.sh
 backup_v16_2_to_hf.py
+
+# Plan-gate spool (runtime output)
+.spool/
 
 # Python cache
 __pycache__/
@@ -39,13 +45,36 @@ models/
 model-backups/
 *.safetensors
 *.bin
+*.pt
+*.ckpt
+*.npz
 
+# DVC cache and temp (do not commit)
+.dvc/cache/
+.dvc/tmp/
+.dvc/state*
+
+# DVC-tracked artifact dirs: only .dvc pointer files and .gitkeep are committed
+ml/artifacts/checkpoints/*/*
+ml/artifacts/datasets/*/*
+ml/artifacts/exports/*/*
 
 # Training checkpoints and artifacts
-training/checkpoints/
-training/artifacts/results/
-training/data/*.jsonl
-training/data/*.json
+ml/training/checkpoints/
+ml/training/pipeline/stage08/base_model/
+ml/training/pipeline/stage08/checkpoints/
+ml/training/pipeline/stage08/logs/
+ml/training/artifacts/results/
+ml/training/data/*.jsonl
+ml/training/data/*.json
+
+# Build artifacts (mirrors, generated views)
+ml/training/_build/
+ml/training/generated/**
+
+# Stage6C large runtime outputs
+**/suite_traces*.jsonl
+**/stage6c_ledger*.jsonl
 
 # Cache
 .cache/
@@ -63,3 +92,9 @@ logs/
 .env
 .env.local
 
+
+# Dataset payloads (data-plane)
+ml/training/datasets/**/golden_exemplars*_*.jsonl
+
+# Dataset payloads (data-plane)
+ml/training/datasets/**/golden_exemplars*_*.jsonl

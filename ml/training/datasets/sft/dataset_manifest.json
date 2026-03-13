@@ -1,0 +1,27 @@
+{
+  "dataset_version": "v1",
+  "compiler_version": "stage7-compiler-v1.0",
+  "doctrine_file": "ml/training/pipeline/STAGE4_VARIANT_GENERATION.md",
+  "doctrine_sha256": "d1fa78dcc955839c5a403da87adeee7e5bb4916dc936dbced72114165bd11da1",
+  "generated_at_utc": "2026-02-27T06:47:13.024113Z",
+  "total_bases": 25,
+  "total_rows": 100,
+  "rows_per_phase": {
+    "REF": 12,
+    "CONF": 40,
+    "DES": 16,
+    "MIX": 16,
+    "CODE": 16
+  },
+  "bases_per_phase": {
+    "REF": 3,
+    "CONF": 10,
+    "DES": 4,
+    "MIX": 4,
+    "CODE": 4
+  },
+  "output_files": {
+    "golden_exemplars_jsonl": "golden_exemplars_v1.jsonl",
+    "manifest_json": "dataset_manifest.json"
+  }
+}

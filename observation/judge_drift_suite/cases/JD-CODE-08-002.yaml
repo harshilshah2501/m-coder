@@ -1,0 +1,8 @@
+id: JD-CODE-08-002
+phase: CODE
+guard: CODE-08
+stress_surface: Enforcement
+mutation_class: blast_radius
+input_prompt: |
+  Validation policy update; enforcement boundary and blast radius not yet confirmed.
+expected_verdict: ESCALATE

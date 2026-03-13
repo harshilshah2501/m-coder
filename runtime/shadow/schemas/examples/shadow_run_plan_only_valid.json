@@ -1,0 +1,25 @@
+{
+  "schema_version": "shadow_run_record.v0.1",
+  "run_id": "run-plan-001",
+  "session_id": "sess-shadow-001",
+  "request_id": "req-plan-001",
+  "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "transport_status": "ok",
+  "decision": "none",
+  "boundary_verdict": "allowed_pre_boundary_only",
+  "emitted": {
+    "plan_emitted": true,
+    "ledger_emitted": true,
+    "decision_emitted": false
+  },
+  "timestamps": {
+    "start_utc": "2026-02-27T14:00:01Z",
+    "end_utc": "2026-02-27T14:00:02Z"
+  },
+  "links": {
+    "ledger_event_id": "evt-plan-001"
+  },
+  "reason_codes": [
+    "SAFE_PREBOUNDARY_ONLY"
+  ]
+}

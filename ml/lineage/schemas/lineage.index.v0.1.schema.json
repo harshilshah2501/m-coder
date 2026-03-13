@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "lineage.index.v0.1",
+  "title": "Lineage Index v0.1",
+  "description": "Deterministic mapping for plan-gate R-L2 semantic resolution. Avoids guessing.",
+  "type": "object",
+  "required": ["schema_version", "created_utc", "source_commit_hash", "boundary_phrase_hash_index", "base_index", "variant_index"],
+  "properties": {
+    "schema_version": {"const": "lineage.index.v0.1"},
+    "created_utc": {"type": "string", "format": "date-time"},
+    "source_commit_hash": {"type": "string", "minLength": 1},
+    "boundary_phrase_hash_index": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["phase_semantic_label"],
+        "properties": {
+          "base_id": {"type": "string"},
+          "variant_id": {"type": "string"},
+          "phase_semantic_label": {"type": "string", "enum": ["REF", "CONF", "DES", "MIX", "CODE", "REACH"]},
+          "node_ids": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "base_index": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "variant_index": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    }
+  }
+}

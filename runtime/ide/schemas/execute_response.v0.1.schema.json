@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteResponse v0.1",
+  "description": "M3.4 IDE Plugin execution response. Contains governed outcome.",
+  "type": "object",
+  "required": ["request_id", "outcome", "executed"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "execute_response.v0.1"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "Request ID echoed back for correlation"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Response timestamp in ISO-8601 UTC"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["EXECUTED", "REFUSED", "DEFERRED", "BOUNDED_ALLOW", "BLOCKED"],
+      "description": "Governed execution outcome"
+    },
+    "posture": {
+      "type": "string",
+      "enum": ["refuse", "defer", "bounded_allow", "safe_execute"],
+      "description": "Plan-Gate posture"
+    },
+    "executed": {
+      "type": "boolean",
+      "description": "Whether the action was actually executed"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason for the outcome"
+    },
+    "plan_hash": {
+      "type": "string",
+      "description": "Plan hash for audit trail"
+    },
+    "decision_ledger_row_id": {
+      "type": "string",
+      "description": "Plan-Gate decision ledger row ID when ledger_path was provided"
+    },
+    "ledger_row_id": {
+      "type": "string",
+      "description": "Sandbox execution ledger row ID if executed and recorded"
+    },
+    "exit_code": {
+      "type": "integer",
+      "description": "Exit code if executed"
+    },
+    "stdout_summary": {
+      "type": "string",
+      "description": "Truncated stdout if executed"
+    },
+    "stderr_summary": {
+      "type": "string",
+      "description": "Truncated stderr if executed"
+    },
+    "ui": {
+      "type": "object",
+      "description": "UX information for IDE display",
+      "properties": {
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": { "type": "string", "enum": ["info", "warning", "error"] }
+      }
+    }
+  }
+}

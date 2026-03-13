@@ -1,0 +1,34 @@
+{
+  "schema_version": "ledger_row.v0.1",
+  "event": {
+    "event_id": "evt-b355568f03585789f496fcddbff3cd87",
+    "timestamp_utc": "2026-03-01T00:00:00Z",
+    "request_id": "req-pr-merge-shadow",
+    "session_id": "m-coder-sess",
+    "mode": "shadow",
+    "runtime_version": "0.1"
+  },
+  "plan_link": {
+    "plan_hash": "216805274084f9c12b7fc15b01241ab19775e694f2dfdfb85ac9b4a0c2453466",
+    "plan_schema_version": "plan.v0.1"
+  },
+  "verdicts": {
+    "phase_emitted": "CONF",
+    "terminal_posture": "bounded_allow",
+    "authority_verdict": "pass",
+    "boundary_verdict": "allowed_pre_boundary_only",
+    "ref_enforced": false
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "merge to main",
+    "boundary_cross_attempted": false,
+    "boundary_crossed": false
+  },
+  "actions": {
+    "tool_calls_attempted": [],
+    "execution_intents": []
+  },
+  "reason_codes": [
+    "SAFE_PREBOUNDARY_ONLY"
+  ]
+}

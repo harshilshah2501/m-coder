@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "decision_response.v0.1",
+  "title": "Decision Response v0.1",
+  "description": "Plan-gate -> plugin response. Compatible with runtime plan + ledger.",
+  "type": "object",
+  "required": [
+    "schema_version", "request_id", "decision", "constitutional_phase_emitted",
+    "dominance_source", "irreversible_boundary_phrase", "boundary_phrase_hash",
+    "boundary_type", "authority_verdict", "missing_evidence", "allowed_pre_boundary_actions",
+    "blocked_actions", "reason_codes", "plan_hash", "ui"
+  ],
+  "properties": {
+    "schema_version": {"const": "decision_response.v0.1"},
+    "request_id": {"type": "string"},
+    "decision": {"type": "string", "enum": ["APPROVE", "CONDITIONAL_BLOCK", "REFUSAL", "BOUNDING"]},
+    "constitutional_phase_emitted": {"type": "string", "enum": ["REF", "CONF", "DES", "MIX", "CODE"]},
+    "dominance_source": {"type": "string", "enum": ["REF", "CONF", "DES"]},
+    "irreversible_boundary_phrase": {"type": "string", "minLength": 1},
+    "boundary_phrase_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "boundary_type": {"type": "string", "enum": ["merge", "deploy", "prod_write", "security_change", "data_delete", "config_rollout", "notification", "other"]},
+    "authority_verdict": {"type": "string", "enum": ["pass", "fail", "unknown"]},
+    "missing_evidence": {"type": "array", "items": {"type": "string"}},
+    "allowed_pre_boundary_actions": {"type": "array", "items": {"type": "string"}},
+    "blocked_actions": {"type": "array", "items": {"type": "string"}},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "plan_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "ui": {
+      "type": "object",
+      "required": ["title", "message", "severity"],
+      "properties": {
+        "title": {"type": "string"},
+        "message": {"type": "string"},
+        "severity": {"type": "string", "enum": ["info", "warning", "error"]}
+      }
+    },
+    "provenance_resolution": {
+      "type": "object",
+      "required": ["resolved_via"],
+      "properties": {
+        "resolved_via": {"type": "string", "enum": ["lineage_index", "unresolved", "guessed"]},
+        "base_id": {"type": "string"},
+        "variant_id": {"type": "string"},
+        "reason": {"type": "string"}
+      }
+    }
+  }
+}

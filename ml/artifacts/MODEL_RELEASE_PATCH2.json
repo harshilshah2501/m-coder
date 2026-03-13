@@ -1,0 +1,11 @@
+{
+  "model": "qwen2.5-14b",
+  "training_dataset": "ml/training/pipeline/stage08/dataset/golden_exemplars_v1_conf_patch2.jsonl",
+  "dataset_sha256": "d20647ede405b002539fbcb1661a2c4ef6cd0fb9ea89268572fc7f180fbed9f8",
+  "checkpoint": "ml/artifacts/checkpoints/phase08D_conf_patch2/checkpoint-58",
+  "conf_drift_result": {
+    "severity": {"S0": 80},
+    "conf_to_des": 0,
+    "s2_s3": 0
+  }
+}

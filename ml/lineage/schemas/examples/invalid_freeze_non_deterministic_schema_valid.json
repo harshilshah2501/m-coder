@@ -1,0 +1,36 @@
+{
+  "schema_version": "freeze.manifest.v0.1",
+  "freeze_version_id": "freeze-invalid",
+  "dataset_hash": "sha256:ds1",
+  "compiler_hash": "sha256:comp1",
+  "boundary_set_hash": "sha256:bs1",
+  "row_count": 50,
+  "created_utc": "2026-02-27T10:25:00Z",
+  "source_commit_hash": "abc123def",
+  "upstream": {
+    "base_exemplars": [
+      "sha256:base1"
+    ],
+    "variants": [
+      "sha256:var1"
+    ],
+    "mutation_results": [
+      "sha256:mut1"
+    ]
+  },
+  "excluded": {
+    "excluded_variant_ids": [],
+    "reason": "none"
+  },
+  "determinism": {
+    "canonical_row_sort_key": "phase",
+    "canonicalization": "stable_json_sorted_keys_utf8",
+    "manifest_hash": "sha256:m1"
+  },
+  "policy_summary": {
+    "fail_count": 2,
+    "warn_count": 1,
+    "allow_warn_threshold": 10,
+    "freeze_allowed": true
+  }
+}

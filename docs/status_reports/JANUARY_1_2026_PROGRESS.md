@@ -26,7 +26,7 @@
 | Code Evaluator | POST | Not Started | 1-2 hours |
 
 **Architecture**: LangGraph-based state machine with 10 states, retry logic (max 3 attempts)
-**Location**: `rag/src/orchestrator/`
+**Location**: `runtime/rag/src/orchestrator/`
 
 ---
 

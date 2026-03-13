@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "plan_request.v0.1",
+  "title": "Plan Request v0.1",
+  "description": "Plugin -> local plan-gate request.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request_id",
+    "timestamp_utc",
+    "mode",
+    "ide_event",
+    "requested_capabilities",
+    "client_policy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "plan_request.v0.1"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "shadow",
+        "live"
+      ]
+    },
+    "ide_event": {
+      "type": "object"
+    },
+    "requested_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "plan_only",
+          "plan_and_decide"
+        ]
+      },
+      "minItems": 1
+    },
+    "client_policy": {
+      "type": "object",
+      "required": [
+        "fail_closed_if_gate_unreachable"
+      ],
+      "properties": {
+        "fail_closed_if_gate_unreachable": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

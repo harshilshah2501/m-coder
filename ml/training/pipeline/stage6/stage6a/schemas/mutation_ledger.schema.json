@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://golden-exemplars/mutation-ledger.schema.json",
+  "title": "Stage-6 Mutation Ledger",
+  "description": "Coverage tracking for Stage-6 Mutation Harness: phase coverage, mutation coverage, guard coverage, collapse vector flags.",
+  "type": "object",
+  "required": [
+    "ledger_version",
+    "phase_coverage",
+    "mutation_coverage",
+    "guard_coverage",
+    "collapse_vector_flags"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "ledger_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "Schema version for the ledger (e.g. 1.0)."
+    },
+    "phase_coverage": {
+      "type": "object",
+      "description": "Per-phase counts of mutation cases and pass/fail.",
+      "required": ["REF", "CONF", "DES", "MIX", "CODE"],
+      "additionalProperties": false,
+      "properties": {
+        "REF": { "$ref": "#/definitions/phase_coverage_entry" },
+        "CONF": { "$ref": "#/definitions/phase_coverage_entry" },
+        "DES": { "$ref": "#/definitions/phase_coverage_entry" },
+        "MIX": { "$ref": "#/definitions/phase_coverage_entry" },
+        "CODE": { "$ref": "#/definitions/phase_coverage_entry" }
+      }
+    },
+    "mutation_coverage": {
+      "type": "object",
+      "description": "Per-mutation-type counts and outcomes.",
+      "required": [
+        "authority_mutation",
+        "irreversibility_mutation",
+        "ambiguity_injection",
+        "pressure_amplification",
+        "cross_phase_collapse_attempt",
+        "boundary_relocation_attempt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "authority_mutation": { "$ref": "#/definitions/mutation_coverage_entry" },
+        "irreversibility_mutation": { "$ref": "#/definitions/mutation_coverage_entry" },
+        "ambiguity_injection": { "$ref": "#/definitions/mutation_coverage_entry" },
+        "pressure_amplification": { "$ref": "#/definitions/mutation_coverage_entry" },
+        "cross_phase_collapse_attempt": { "$ref": "#/definitions/mutation_coverage_entry" },
+        "boundary_relocation_attempt": { "$ref": "#/definitions/mutation_coverage_entry" }
+      }
+    },
+    "guard_coverage": {
+      "type": "object",
+      "description": "Coverage of dominance-rule and boundary-anchor checks.",
+      "required": ["dominance_rules", "boundary_anchors", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "dominance_rules": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["total_cases", "passed", "failed"],
+            "properties": {
+              "total_cases": { "type": "integer", "minimum": 0 },
+              "passed": { "type": "integer", "minimum": 0 },
+              "failed": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "description": "Per-rule (e.g. REF_dominates_ambiguity) case counts and pass/fail."
+        },
+        "boundary_anchors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["total_cases", "preserved", "relocated_or_softened"],
+            "properties": {
+              "total_cases": { "type": "integer", "minimum": 0 },
+              "preserved": { "type": "integer", "minimum": 0 },
+              "relocated_or_softened": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "description": "Per-boundary (e.g. base_id + boundary phrase hash) preservation vs relocation/softening."
+        },
+        "summary": {
+          "type": "object",
+          "required": ["total_guard_checks", "passed", "failed"],
+          "properties": {
+            "total_guard_checks": { "type": "integer", "minimum": 0 },
+            "passed": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "collapse_vector_flags": {
+      "type": "object",
+      "description": "Flags indicating whether collapse vectors were tested and outcome.",
+      "required": [
+        "CONF_to_DES",
+        "DES_to_recommendation",
+        "MIX_to_CONF",
+        "REF_to_conditional",
+        "CODE_to_abstract",
+        "boundary_relocation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "CONF_to_DES": { "$ref": "#/definitions/collapse_flag" },
+        "DES_to_recommendation": { "$ref": "#/definitions/collapse_flag" },
+        "MIX_to_CONF": { "$ref": "#/definitions/collapse_flag" },
+        "REF_to_conditional": { "$ref": "#/definitions/collapse_flag" },
+        "CODE_to_abstract": { "$ref": "#/definitions/collapse_flag" },
+        "boundary_relocation": { "$ref": "#/definitions/collapse_flag" }
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when ledger was produced."
+    }
+  },
+  "definitions": {
+    "phase_coverage_entry": {
+      "type": "object",
+      "required": ["total_cases", "passed", "failed", "base_ids"],
+      "properties": {
+        "total_cases": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "base_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^BASE-[0-9]{3}$" },
+          "description": "Base exemplar IDs covered by mutation cases for this phase."
+        }
+      }
+    },
+    "mutation_coverage_entry": {
+      "type": "object",
+      "required": ["total_cases", "passed", "failed"],
+      "properties": {
+        "total_cases": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "collapse_flag": {
+      "type": "object",
+      "required": ["tested", "collapse_prevented"],
+      "properties": {
+        "tested": { "type": "boolean", "description": "Whether this collapse vector was exercised." },
+        "collapse_prevented": {
+          "type": "boolean",
+          "description": "When tested, whether model preserved correct phase (no collapse)."
+        },
+        "case_count": { "type": "integer", "minimum": 0, "description": "Number of cases targeting this vector." }
+      }
+    }
+  }
+}

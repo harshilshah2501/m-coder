@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://m-coder/ml/training/compiler/manifest_schema.json",
+  "title": "Stage-7 Dataset Manifest",
+  "description": "Manifest produced by Stage-7 compiler.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_version",
+    "compiler_version",
+    "doctrine_file",
+    "doctrine_sha256",
+    "generated_at_utc",
+    "total_bases",
+    "total_rows",
+    "rows_per_phase",
+    "bases_per_phase",
+    "output_files"
+  ],
+  "properties": {
+    "dataset_version": { "type": "string" },
+    "compiler_version": { "type": "string" },
+    "doctrine_file": { "type": "string" },
+    "doctrine_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "generated_at_utc": { "type": "string", "pattern": "Z$" },
+    "total_bases": { "type": "integer" },
+    "total_rows": { "type": "integer" },
+    "rows_per_phase": {
+      "type": "object",
+      "required": ["REF", "CONF", "DES", "MIX", "CODE"],
+      "additionalProperties": false,
+      "properties": {
+        "REF": { "type": "integer" },
+        "CONF": { "type": "integer" },
+        "DES": { "type": "integer" },
+        "MIX": { "type": "integer" },
+        "CODE": { "type": "integer" }
+      }
+    },
+    "bases_per_phase": {
+      "type": "object",
+      "required": ["REF", "CONF", "DES", "MIX", "CODE"],
+      "additionalProperties": false,
+      "properties": {
+        "REF": { "type": "integer" },
+        "CONF": { "type": "integer" },
+        "DES": { "type": "integer" },
+        "MIX": { "type": "integer" },
+        "CODE": { "type": "integer" }
+      }
+    },
+    "output_files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["golden_exemplars_jsonl", "manifest_json"],
+      "properties": {
+        "golden_exemplars_jsonl": { "type": "string" },
+        "manifest_json": { "type": "string" }
+      }
+    }
+  }
+}

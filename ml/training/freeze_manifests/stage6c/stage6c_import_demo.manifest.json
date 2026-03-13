@@ -1,0 +1,60 @@
+{
+  "artifact_backend": {
+    "bucket": null,
+    "kind": "local",
+    "prefix": null,
+    "root_uri": "file:///home/harshil/Harshil-PoCs/m-coder_artifacts"
+  },
+  "config_digest": "6e10660dbbc57bdb",
+  "config_path": "ml/training/pipeline/stage6/stage6c/config/gating_config.yaml",
+  "created_at": "2026-03-05T08:30:56.962171+00:00",
+  "expected_counts": {
+    "executed_runs": 80,
+    "ledger_rows": 80,
+    "planned_runs": 80,
+    "trace_rows": 80
+  },
+  "files": [
+    {
+      "artifact_relpath": "stage6c/suites/stage6c_import_demo/stage6c_ledger.jsonl",
+      "logical_name": "stage6c_ledger",
+      "media_type": "application/x-ndjson",
+      "repo_pointer": "ml/training/freeze_manifests/stage6c/stage6c_import_demo.pointer.json",
+      "sha256": "c23927912e3bfd6413400539c4072e5a714aca2eddaadd124eeda83f3ba3471c",
+      "size_bytes": 130590
+    },
+    {
+      "artifact_relpath": "stage6c/suites/stage6c_import_demo/suite_traces.jsonl",
+      "logical_name": "suite_traces",
+      "media_type": "application/x-ndjson",
+      "repo_pointer": "ml/training/freeze_manifests/stage6c/stage6c_import_demo.pointer.json",
+      "sha256": "f5ca81901365fb079a382251a11339488d52b63a52e784624289553760045524",
+      "size_bytes": 3611624
+    },
+    {
+      "artifact_relpath": "stage7/freeze/stage6c_import_demo_freeze/golden_exemplars_v1.jsonl",
+      "logical_name": "stage7_golden_exemplars",
+      "media_type": "application/x-ndjson",
+      "repo_pointer": "ml/training/freeze_manifests/stage6c/stage6c_import_demo.pointer.json",
+      "sha256": "0f57db5ae487bd59aed7b004ed21c29b5ea2cf09038ee482f5731f0f0b770b00",
+      "size_bytes": 239328
+    },
+    {
+      "artifact_relpath": "stage7/freeze/stage6c_import_demo_freeze/freeze_manifest.json",
+      "logical_name": "stage7_freeze_manifest",
+      "media_type": "application/json",
+      "repo_pointer": "ml/training/freeze_manifests/stage6c/stage6c_import_demo.pointer.json",
+      "sha256": "45909dbbef938f7a2a751db7c17f6b9f48a20825bb94199799733b1b69ee0cfd",
+      "size_bytes": 1412
+    }
+  ],
+  "freeze_certificate_ref": "ml/training/pipeline/FREEZE_CERTIFICATE_v1.json",
+  "git_commit": "08d7293",
+  "model_id": "qwen2.5-14b-instruct|vllm|bf16|max=512|base",
+  "notes": "Artifacts relocated to store; repo retains manifest, summary, and pointer only.",
+  "run_count": 80,
+  "schema_version": "stage6c-artifact-manifest/v1",
+  "seeds_digest": "c0fab47a3180e714",
+  "suite": "canonical",
+  "suite_id": "stage6c_import_demo"
+}

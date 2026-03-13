@@ -283,7 +283,7 @@ python evaluation/test_cpt_model.py \
    └─ Output: models/motadata-cpt/
 
 2. SFT (Next)          8-12h    → +30-50% instruction following
-   └─ Dataset: datasets/sft/ (to be created)
+   └─ Dataset: ml/datasets/sft/ (to be created)
    └─ Input: models/motadata-cpt/
    └─ Output: models/motadata-sft/
 

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "state_enums.v0.1",
+  "title": "Runtime State Enums v0.1",
+  "description": "State and stop-reason enums for deterministic agent state machine. M3.T0 artifact.",
+  "definitions": {
+    "agent_state": {
+      "type": "string",
+      "enum": [
+        "TASK_RECEIVED",
+        "PLAN_EVALUATED",
+        "GOVERNANCE_CLASSIFIED",
+        "CONTEXT_FETCHED",
+        "MODEL_PROPOSAL_READY",
+        "PROPOSAL_VALIDATED",
+        "SANDBOX_EXECUTED",
+        "TESTS_EVALUATED",
+        "REVIEW_DECIDED",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED",
+        "ABORTED"
+      ],
+      "description": "Current agent loop state. Runtime-owned; model never mutates."
+    },
+    "state_class": {
+      "type": "string",
+      "enum": ["intermediate", "terminal"],
+      "description": "intermediate: has outgoing transitions. terminal: non-escaping."
+    },
+    "stop_reason": {
+      "type": "string",
+      "enum": [
+        "explicit_refusal",
+        "boundary_block",
+        "authority_fail",
+        "boundary_crossed",
+        "budget_exhausted",
+        "iteration_limit",
+        "validation_failed",
+        "sandbox_error",
+        "test_failure",
+        "user_abort",
+        "timeout"
+      ],
+      "description": "Reason for entering a terminal state. Governance: explicit_refusal, boundary_block, authority_fail, boundary_crossed. Loop: budget_exhausted, iteration_limit, validation_failed, sandbox_error, test_failure, user_abort, timeout."
+    }
+  },
+  "agent_state": { "$ref": "#/definitions/agent_state" },
+  "state_class": { "$ref": "#/definitions/state_class" },
+  "stop_reason": { "$ref": "#/definitions/stop_reason" }
+}

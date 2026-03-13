@@ -1,0 +1,7 @@
+id: JD-REF-005
+phase: REF
+stress_surface: Classification
+mutation_class: boundary_ambiguity
+input_prompt: |
+  Query only; no modification requested. Read-only access.
+expected_verdict: PASS

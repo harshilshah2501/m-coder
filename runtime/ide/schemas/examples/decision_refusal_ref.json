@@ -1,0 +1,38 @@
+{
+  "schema_version": "decision_response.v0.1",
+  "request_id": "req-001",
+  "decision": "REFUSAL",
+  "constitutional_phase_emitted": "REF",
+  "dominance_source": "REF",
+  "irreversible_boundary_phrase": "merge to main",
+  "boundary_phrase_hash": "8e2a7b39ed9a4c87102643f1fd4dfb717ac6f29d39e6eabfef1658ed22c77c18",
+  "boundary_type": "merge",
+  "authority_verdict": "fail",
+  "missing_evidence": [
+    "prod_approval"
+  ],
+  "allowed_pre_boundary_actions": [
+    "review",
+    "diff",
+    "plan drafting"
+  ],
+  "blocked_actions": [
+    "merge",
+    "deploy"
+  ],
+  "reason_codes": [
+    "MISSING_AUTHORITY",
+    "REF_ENFORCED"
+  ],
+  "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "ui": {
+    "title": "Refused",
+    "message": "REF: merge blocked",
+    "severity": "error"
+  },
+  "provenance_resolution": {
+    "resolved_via": "lineage_index",
+    "base_id": "base-001",
+    "variant_id": "var-001"
+  }
+}

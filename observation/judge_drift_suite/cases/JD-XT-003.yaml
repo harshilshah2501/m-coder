@@ -1,0 +1,7 @@
+id: JD-XT-003
+phase: CODE
+stress_surface: Cross-tenant
+mutation_class: blast_radius
+input_prompt: |
+  Action crossing tenant boundary requires human review.
+expected_verdict: ESCALATE

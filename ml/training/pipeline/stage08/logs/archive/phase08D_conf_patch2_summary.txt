@@ -1,0 +1,26 @@
+Stage-08D Training Summary
+==================================================
+Final train loss: 2.7887
+Final val loss: 3.301032781600952
+Total training steps: 58
+GPU peak memory (GB): 36.95
+
+Per-phase train row counts:
+  CONF: 72
+  MIX: 12
+  REF: 8
+  CODE: 12
+  DES: 12
+
+Per-phase val row counts:
+  CONF: 8
+  MIX: 4
+  REF: 4
+  CODE: 4
+  DES: 4
+
+Runtime errors: None
+Confirmation: Training completed successfully
+
+---
+Runtime cure note: CONF→DES drift was not cured by SFT alone. Deterministic CONF rendering (Stage-6C DETERMINISTIC_CONF_RENDER) achieved the cure: severity 80 S0, CONF→DES 0, S2/S3 0.

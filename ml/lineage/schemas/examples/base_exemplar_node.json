@@ -1,0 +1,20 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:base1",
+  "node_type": "BASE_EXEMPLAR",
+  "created_utc": "2026-02-27T10:00:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [],
+  "semantic": {
+    "phase_semantic_label": "REF",
+    "boundary_phrase": "Base exemplar boundary REF",
+    "boundary_phrase_hash": "a07bfa5a81b6dd7f68e21af88f29bd021bbafeafaf9aa93d4734bfc71a689bc3"
+  },
+  "collapse": {
+    "collapse_vector_result": "PASS",
+    "collapse_vectors": [],
+    "surface_coverage": ["AuthorityOwnership"]
+  },
+  "provenance": {"repo": "m-coder", "branch": "main", "build_id": "b1", "actor": "compiler"},
+  "base": {"base_id": "base-001", "canonical_text_hash": "sha256:canon1", "locked": true}
+}

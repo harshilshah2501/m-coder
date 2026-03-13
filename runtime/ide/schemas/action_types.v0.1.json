@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "action_types.v0.1",
+  "title": "Action Types v0.1",
+  "description": "IDE action types captured by plugin.",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": ["PR_MERGE", "CONFIG_CHANGE", "DEPLOY_INTENT", "PROD_WRITE_INTENT", "OTHER"]
+  }
+}

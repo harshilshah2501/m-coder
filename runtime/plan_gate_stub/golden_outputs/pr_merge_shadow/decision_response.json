@@ -1,0 +1,34 @@
+{
+  "schema_version": "decision_response.v0.1",
+  "request_id": "req-pr-merge-shadow",
+  "decision": "BOUNDING",
+  "constitutional_phase_emitted": "CONF",
+  "dominance_source": "CONF",
+  "irreversible_boundary_phrase": "merge to main",
+  "boundary_phrase_hash": "8e2a7b39ed9a4c87102643f1fd4dfb717ac6f29d39e6eabfef1658ed22c77c18",
+  "boundary_type": "merge",
+  "authority_verdict": "pass",
+  "missing_evidence": [],
+  "allowed_pre_boundary_actions": [
+    "read",
+    "review",
+    "run_tests"
+  ],
+  "blocked_actions": [
+    "merge",
+    "deploy"
+  ],
+  "reason_codes": [
+    "SAFE_PREBOUNDARY_ONLY"
+  ],
+  "plan_hash": "216805274084f9c12b7fc15b01241ab19775e694f2dfdfb85ac9b4a0c2453466",
+  "ui": {
+    "title": "BOUNDING",
+    "message": "CONF BOUNDING",
+    "severity": "info"
+  },
+  "provenance_resolution": {
+    "resolved_via": "unresolved",
+    "reason": "lineage_index not available"
+  }
+}

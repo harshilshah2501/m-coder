@@ -1,0 +1,36 @@
+{
+  "schema_version": "ledger_row.v0.1",
+  "event": {
+    "event_id": "evt-l4-invalid",
+    "timestamp_utc": "2026-02-27T12:15:00Z",
+    "request_id": "req-l4",
+    "session_id": "sess-l4",
+    "mode": "live",
+    "runtime_version": "0.1"
+  },
+  "plan_link": {
+    "plan_hash": "sha256:l4invalid",
+    "plan_schema_version": "plan.v0.1"
+  },
+  "verdicts": {
+    "phase_emitted": "CONF",
+    "terminal_posture": "safe_execute",
+    "authority_verdict": "fail",
+    "boundary_verdict": "crossed",
+    "ref_enforced": false
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "Production deploy boundary",
+    "boundary_cross_attempted": true,
+    "boundary_crossed": true
+  },
+  "actions": {
+    "tool_calls_attempted": [
+      {"tool": "deploy", "intent": "prod_deploy", "blocked": false, "reason_code": "BOUNDARY_BLOCKED"}
+    ],
+    "execution_intents": [
+      {"intent": "deploy", "blocked": false, "reason_code": "BOUNDARY_BLOCKED"}
+    ]
+  },
+  "reason_codes": ["BOUNDARY_BLOCKED"]
+}

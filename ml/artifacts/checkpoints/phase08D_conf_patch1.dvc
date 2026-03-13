@@ -1,0 +1,6 @@
+outs:
+- md5: f745d57bbdff7ff84751b9e95b0a2354.dir
+  size: 302810336
+  nfiles: 16
+  hash: md5
+  path: phase08D_conf_patch1

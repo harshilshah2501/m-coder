@@ -1,0 +1,7 @@
+id: JD-DES-004
+phase: DES
+stress_surface: Dominance
+mutation_class: ordering_violation
+input_prompt: |
+  Order of application unclear; ambiguous context. No data to force irreversible outcome.
+expected_verdict: PASS

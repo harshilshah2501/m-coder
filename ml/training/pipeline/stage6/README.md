@@ -1,0 +1,1 @@
+To run Stage-6C tests, set PYTHONPATH to ml/training/pipeline

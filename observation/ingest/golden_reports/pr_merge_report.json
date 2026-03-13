@@ -1,0 +1,38 @@
+{
+  "schema_version": "observation.report.v0.1",
+  "input_summary": {
+    "files": [
+      "observation/ingest/examples/sample_batch_from_stub_pr_merge.json"
+    ],
+    "items_count": 1
+  },
+  "counts": {
+    "by_decision": {
+      "BOUNDING": 1
+    },
+    "by_phase_emitted": {
+      "CONF": 1
+    },
+    "by_boundary_verdict": {
+      "allowed_pre_boundary_only": 1
+    },
+    "by_authority_verdict": {
+      "pass": 1
+    },
+    "by_reason_code": {
+      "SAFE_PREBOUNDARY_ONLY": 1
+    }
+  },
+  "integrity": {
+    "reconciliation_key": "(request_id, plan_hash)",
+    "mismatches_count": 0,
+    "mismatches_samples": []
+  },
+  "lineage_links": {
+    "base_id": 0,
+    "variant_id": 0,
+    "freeze_version_id": 0,
+    "model_artifact_id": 0
+  },
+  "deterministic_hash": "9f83bc97e0e03e01807b2de8b60ca2284b5e067a602b2f4fadf0dae43dc70d57"
+}

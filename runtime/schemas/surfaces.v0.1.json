@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "surfaces.v0.1",
+  "title": "Stress Surfaces v0.1",
+  "description": "Enumerated stress surfaces. Orthogonal to constitutional phases; phases and surfaces are not 1:1. A scenario may involve multiple surfaces.",
+  "type": "array",
+  "items": { "type": "string", "enum": [
+    "SignalIntegrity",
+    "BaselinesHistory",
+    "ChangeBlastRadius",
+    "AuthorityOwnership",
+    "TimePressure",
+    "Compositional",
+    "ImplementationIrreversibility",
+    "ContextDrift"
+  ]},
+  "minItems": 1
+}
