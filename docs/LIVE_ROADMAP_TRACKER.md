@@ -146,9 +146,9 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 | ID    | Milestone                          | Status      | Dependencies   | Deliverable / exit criteria summary                                                                 |
 | ----- | ---------------------------------- | ----------- | -------------- | ---------------------------------------------------------------------------------------------------- |
-| M3.0  | Deterministic Runtime Emulator     | <span style="color:#e65100">VALIDATING</span>  | L2.*           | Plan-gate emulator + shadow runner + invariant tests. see §6.2.                                       |
+| M3.0  | Deterministic Runtime Emulator     | <span style="color:#2e7d32">COMPLETE</span>    | L2.*           | Plan-gate emulator + shadow runner + invariant tests. see §6.2.                                       |
 | M3.1  | Deterministic Agent State Transition Table | <span style="color:#2e7d32">COMPLETE</span>    | Plan-Gate contract | State enum, terminal states, stop reasons, transition matrix. see §6.3.                               |
-| M3.2  | Repository Context Engine          | <span style="color:#e65100">VALIDATING</span>  | L2.*           | Context bundles, versioned and reproducible. see §4.3.2 (M3.2).                                       |
+| M3.2  | Repository Context Engine          | <span style="color:#2e7d32">COMPLETE</span>    | L2.*           | Context bundles, versioned and reproducible. see §4.3.2 (M3.2).                                       |
 | M3.3  | Agent Loop Orchestrator            | <span style="color:#2e7d32">COMPLETE</span>    | M3.2, M3.1     | Loop controller, transition executor, no model-controlled recursion. see §6.4, §6.12.                 |
 | M3.4  | Execution Sandbox                  | <span style="color:#2e7d32">COMPLETE</span>    | M3.2–M3.3      | Isolated executor, REFUSED/BLOCKED/EXECUTED, ledger. see §6.8.                                         |
 | M3.5  | Plan-Gate Integration              | <span style="color:#2e7d32">COMPLETE</span>    | M3.2–M3.4      | All paths through Plan-Gate; four postures; decisions ledgered. see §6.9.                            |
@@ -398,7 +398,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Layer exit criteria**:
 
-- **M3.0–M3.9** are **COMPLETE** (or VALIDATING where noted) on main; tag `layer3-runtime-governed-v1`. M3.10–M3.18 are follow-on milestones.
+- **M3.0–M3.11** are **COMPLETE** on main; tag `layer3-runtime-governed-v1`. M3.12–M3.18 are follow-on milestones.
 - No fail-open paths: when enforcement infrastructure is unavailable, default posture is REF/REFUSAL.
 - Observation layer (L4) has sufficient ledger data to begin drift tracking.
 
@@ -463,7 +463,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.2 M3.0 — Deterministic Runtime Emulator
 
-- **Milestone**: M3.0 Deterministic Runtime Emulator — <span style="color:#e65100">VALIDATING</span> (2026-03-09)
+- **Milestone**: M3.0 Deterministic Runtime Emulator — <span style="color:#2e7d32">COMPLETE</span> (2026-03-09)
 - **Artifacts** (6/6):
   - `runtime/plan_gate_stub/plan_gate.py` — PlanGate class with `evaluate_plan()` method
   - `runtime/emulator/authority.py` — AuthorityChecker with deterministic rule-based validation

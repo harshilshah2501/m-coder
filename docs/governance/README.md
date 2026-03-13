@@ -8,6 +8,7 @@ Layer-1 defines what judgment means. It is semantic authority. Nothing below may
 
 | Document | Description |
 |----------|-------------|
+| [AGENT_EXECUTION_RULES.md](../../AGENT_EXECUTION_RULES.md) (root) | **Canonical.** Mandatory agent execution rules; branch discipline, file safety, runtime invariants. Do not use `docs/governance/AGENT_EXECUTION_RULES.md` for authority—it is a pointer only. |
 | [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../../governance/CONSTITUTIONAL_MANIFEST_v1.0.md) | Phase definitions (REF, CONF, DES, MIX, CODE), dominance hierarchy, structural invariants |
 
 ---

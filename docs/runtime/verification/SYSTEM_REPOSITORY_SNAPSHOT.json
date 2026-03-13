@@ -1,0 +1,42 @@
+{
+  "generated_at_utc": "2026-03-13T09:29:15Z",
+  "main_head_sha": "03acb511cc0ee723a5f6bbbb4b8275ffe069062d",
+  "current_head_sha": "03acb511cc0ee723a5f6bbbb4b8275ffe069062d",
+  "current_branch": "main",
+  "tags": [
+    "GE_SFT_DATASET_v1_FROZEN",
+    "layer3-runtime-baseline",
+    "layer3-runtime-governed-v1",
+    "stage6c-checkpoint-2026-03-03"
+  ],
+  "tag_shas": {
+    "layer3-runtime-baseline": "0283a2ed8eb77c21fda07a1c8f696dcc39508db1",
+    "layer3-runtime-governed-v1": "23395b60bb72d70d01fbb6750c1ffb70760c3dcd"
+  },
+  "local_branches": [
+    "Layer-2-ML-Compilation-Stage-8-Controlled-SFT",
+    "feature/m3.10-m3.11-execution-isolation",
+    "feature/m3.6-shadow",
+    "integration/layer3-next-verification",
+    "integration/layer3-runtime-stack",
+    "layer3-plangate-decomposition",
+    "layer3-plugin-runtime-bridge",
+    "layer3-runtime-docs-emulator",
+    "main"
+  ],
+  "top_level_directories": [
+    "archive",
+    "docs",
+    "governance",
+    "jetbrains-plugin",
+    "ml",
+    "observation",
+    "runtime",
+    "scripts",
+    "tests"
+  ],
+  "audit_plan_file": "forensic_architectural_audit_plan_256cdb89.plan.md",
+  "canonical_tracker_file": "docs/LIVE_ROADMAP_TRACKER.md",
+  "file_inventory_sha256": "7bd053cc911b27fa9c989070b86b3b64e7cb8d17b1265eb109ac9bb0fc91e775",
+  "file_inventory_note": "Hash of sorted file list excluding .git, .venv, .dvc/cache, .cursor, jetbrains-plugin/build, __pycache__, .gradle"
+}

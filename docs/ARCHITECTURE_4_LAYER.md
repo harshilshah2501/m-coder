@@ -59,6 +59,8 @@ This document provides **structural clarity** for the m-coder repository layout.
 - **Model as bounded worker:** Through the Model Worker Interface the model provides structured proposals only (plans, diffs, explanations) over runtime-owned context from the Repository Context Engine; it never owns control flow, state transitions, or execution.
 - **Execution Sandbox for side effects:** All external actions (tests, tools, commands) run inside an Execution Sandbox owned by the runtime; irreversible effects are guarded by authority and boundary checks and are always ledgered for Layer-4 observation.
 
+**Governed execution boundary:** User-triggered or agent-triggered governed execution **must** flow through SandboxExecutor (Plan-Gate → sandbox → ledger). Subprocess or command execution in `runtime/rag/` (e.g. compiler tools, API helpers) is **out-of-band tooling** only. It must not be used for governed execution and must not be treated as part of the Plan-Gate / SandboxExecutor path.
+
 ### Layer-4: observation/
 
 **Allowed:** Drift probes, collapse vector tracking, ledger reconciliation, coverage analytics, GREG audit evidence.
