@@ -3,6 +3,8 @@
 **Date:** 2026-03-13  
 **Status:** Layer-3 baseline integration complete on `main`.
 
+*This report predates canonical Layer-3 milestone renumbering; the milestones below correspond to M3.4, M3.5, M3.6, M3.7 in the current canonical model. See LIVE_ROADMAP_TRACKER.md §4.3.1 for M3.0–M3.18.*
+
 ---
 
 ## 1. What was finalized
