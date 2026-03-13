@@ -6,8 +6,14 @@ Routes execution requests through the governed runtime path:
 
 All execution requests must flow through this endpoint.
 No bypass, no local fallback, no silent failure.
-Production governance comes from PlanGateService.evaluate(); only explicit request
-fields (plan_gate_refuse, plan_gate_defer, plan_gate_bounded_allow) may override for test/demo.
+Production governance comes from PlanGateService.evaluate().
+
+Test/demo posture overrides: Request fields plan_gate_refuse, plan_gate_defer, and
+plan_gate_bounded_allow are non-production controls for testing and demos only. They
+force the Plan-Gate posture (refuse/defer/bounded_allow); they are not governance
+bypasses—Plan-Gate still runs. Production clients must not send these fields. The
+runtime does not enforce a test-mode boundary (no config or env restricts their use);
+reliance is on client contract and deployment.
 """
 
 from __future__ import annotations
@@ -115,8 +121,9 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
 
     plan_gate = PlanGateService()
 
-    # Production governance: only explicit request fields for test/demo control.
-    # Do NOT derive posture from command string keywords.
+    # Production governance: posture from PlanGateService.evaluate() only; do not derive from command keywords.
+    # Non-production: plan_gate_refuse / plan_gate_defer / plan_gate_bounded_allow are test/demo-only posture
+    # overrides. Production clients must not send them. No server-side enforcement of test mode—client/deployment responsibility.
     pg_request = {
         "request_id": request_id,
         "plan_hash": plan_hash_final,

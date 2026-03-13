@@ -177,7 +177,7 @@ data class RuntimeResponse(
 ## /v0/execute endpoint behavior
 
 - **Plan-Gate decision ledgering:** When the request includes `ledger_path` (or the server has `MOTADATA_EXECUTE_LEDGER_PATH` set), the runtime persists the Plan-Gate decision (plangate_refused, plangate_deferred, plangate_bounded_allow, or plangate_safe_execute) **before** sandbox execution or early return. The response may include `decision_ledger_row_id` (Plan-Gate row) and `ledger_row_id` (sandbox outcome when executed). Decision evidence and execution evidence are separate.
-- **Production governance:** Posture is determined only by `PlanGateService.evaluate(request)`. Explicit request fields `plan_gate_refuse`, `plan_gate_defer`, `plan_gate_bounded_allow` are for test/demo control only, not command-string heuristics.
+- **Production governance:** Posture is determined only by `PlanGateService.evaluate(request)`. Explicit request fields `plan_gate_refuse`, `plan_gate_defer`, `plan_gate_bounded_allow` are **non-production, test/demo-only** posture overrides—they are not governance bypasses (Plan-Gate still runs). Production plugin clients must not send them. The runtime does not enforce a test-mode boundary; restricting these to test/demo environments is a client and deployment responsibility.
 - **Command parsing:** The runtime parses the command string with `shlex.split()` so quoted arguments are handled correctly; execution remains non-shell.
 
 ## Usage Examples

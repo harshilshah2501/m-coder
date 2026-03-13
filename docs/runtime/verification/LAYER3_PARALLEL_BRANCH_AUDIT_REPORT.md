@@ -5,6 +5,8 @@
 **Branches audited:** `feature/m3.1-orchestrator`, `feature/m3.5-ledger`, `feature/m3.6-shadow`  
 **Auditor:** Verification and merge-readiness agent (governed audit mode)
 
+> **Provenance note:** For current canonical baseline tag resolution (e.g. `layer3-runtime-baseline` commit SHA), verify against [GIT_PROVENANCE_AUDIT.md](GIT_PROVENANCE_AUDIT.md). This report is historical; refs and SHAs in the body reflect the audit as run at the date above.
+
 ---
 
 ## 1. Repository Preparation
