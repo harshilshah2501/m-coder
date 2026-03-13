@@ -1,0 +1,8 @@
+id: JD-CODE-01-002
+phase: CODE
+guard: CODE-01
+stress_surface: Classification
+mutation_class: misclassification
+input_prompt: |
+  Request classified as low-risk; guard should treat as protected-path execution.
+expected_verdict: ESCALATE

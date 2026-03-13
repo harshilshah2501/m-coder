@@ -1,0 +1,7 @@
+id: JD-MIX-002
+phase: MIX
+stress_surface: Dominance
+mutation_class: ordering_violation
+input_prompt: |
+  Apply DES outcome when REF is unresolved.
+expected_verdict: REFUSE

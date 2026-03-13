@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "transition_matrix.v0.1",
+  "title": "Runtime Transition Matrix v0.1",
+  "description": "Deterministic allowed transitions for agent state machine. Any transition not in this matrix is invalid. M3.T0 artifact.",
+  "schema_version": "transition_matrix.v0.1",
+  "terminal_states": ["COMPLETED", "BLOCKED", "FAILED", "ABORTED"],
+  "ledger_semantics": {
+    "default": "One ledger_row.v0.1 per evaluate_plan at governance decision boundary.",
+    "avoid_double_ledger": "For REF refusal: one row only. Optional second row only when later runtime execution reaches a distinct terminal outcome beyond the governance decision."
+  },
+  "transitions": [
+    {
+      "transition_id": "task_to_plan_eval",
+      "from_state": "TASK_RECEIVED",
+      "to_states": ["PLAN_EVALUATED"],
+      "guards": { "event_valid": true },
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "Event normalized into plan structure."
+    },
+    {
+      "transition_id": "task_to_aborted",
+      "from_state": "TASK_RECEIVED",
+      "to_states": ["ABORTED"],
+      "guards": { "user_abort": true },
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "Abort before plan normalization."
+    },
+    {
+      "transition_id": "plan_eval_to_governance",
+      "from_state": "PLAN_EVALUATED",
+      "to_states": ["GOVERNANCE_CLASSIFIED"],
+      "plan_gate_required": true,
+      "decision_boundary": true,
+      "description": "PlanGate.evaluate_plan checkpoint. One ledger row."
+    },
+    {
+      "transition_id": "governance_to_completed",
+      "from_state": "GOVERNANCE_CLASSIFIED",
+      "to_states": ["COMPLETED"],
+      "guards": { "phase": "REF" },
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "REF refusal. Ledger already emitted at plan_eval_to_governance."
+    },
+    {
+      "transition_id": "governance_to_context",
+      "from_state": "GOVERNANCE_CLASSIFIED",
+      "to_states": ["CONTEXT_FETCHED"],
+      "guards": { "phase": ["CONF", "DES"] },
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "CONF/DES pass-through. No additional ledger row; governance row already emitted at plan_eval_to_governance."
+    },
+    {
+      "transition_id": "context_to_proposal",
+      "from_state": "CONTEXT_FETCHED",
+      "to_states": ["MODEL_PROPOSAL_READY"],
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "Model produced proposal."
+    },
+    {
+      "transition_id": "proposal_to_validated",
+      "from_state": "MODEL_PROPOSAL_READY",
+      "to_states": ["PROPOSAL_VALIDATED"],
+      "guards": { "proposal_valid": true },
+      "plan_gate_required": true,
+      "decision_boundary": false,
+      "description": "Proposal passed validation; plan-gate re-check if boundary touched."
+    },
+    {
+      "transition_id": "proposal_to_blocked",
+      "from_state": "MODEL_PROPOSAL_READY",
+      "to_states": ["BLOCKED"],
+      "guards": { "proposal_valid": false },
+      "plan_gate_required": false,
+      "decision_boundary": true,
+      "description": "Proposal failed validation or boundary block."
+    },
+    {
+      "transition_id": "proposal_to_blocked_budget",
+      "from_state": "MODEL_PROPOSAL_READY",
+      "to_states": ["BLOCKED"],
+      "guards": { "budget_exhausted": true },
+      "plan_gate_required": false,
+      "decision_boundary": true,
+      "description": "Budget exhausted before validation."
+    },
+    {
+      "transition_id": "validated_to_sandbox",
+      "from_state": "PROPOSAL_VALIDATED",
+      "to_states": ["SANDBOX_EXECUTED"],
+      "plan_gate_required": true,
+      "decision_boundary": false,
+      "description": "Authority and boundary check before sandbox."
+    },
+    {
+      "transition_id": "sandbox_to_tests",
+      "from_state": "SANDBOX_EXECUTED",
+      "to_states": ["TESTS_EVALUATED"],
+      "guards": { "sandbox_success": true },
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "Sandbox completed; tests evaluated."
+    },
+    {
+      "transition_id": "sandbox_to_failed",
+      "from_state": "SANDBOX_EXECUTED",
+      "to_states": ["FAILED"],
+      "guards": { "sandbox_success": false },
+      "plan_gate_required": false,
+      "decision_boundary": true,
+      "description": "Sandbox error."
+    },
+    {
+      "transition_id": "tests_to_review",
+      "from_state": "TESTS_EVALUATED",
+      "to_states": ["REVIEW_DECIDED"],
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "Tests evaluated; runtime decides next step."
+    },
+    {
+      "transition_id": "tests_to_failed",
+      "from_state": "TESTS_EVALUATED",
+      "to_states": ["FAILED"],
+      "guards": { "tests_pass": false },
+      "plan_gate_required": false,
+      "decision_boundary": true,
+      "description": "Test failure."
+    },
+    {
+      "transition_id": "review_to_completed",
+      "from_state": "REVIEW_DECIDED",
+      "to_states": ["COMPLETED"],
+      "guards": { "done": true },
+      "plan_gate_required": false,
+      "decision_boundary": true,
+      "description": "Runtime decided task complete. Optional second ledger row if distinct from governance."
+    },
+    {
+      "transition_id": "review_to_proposal",
+      "from_state": "REVIEW_DECIDED",
+      "to_states": ["MODEL_PROPOSAL_READY"],
+      "guards": { "retry": true },
+      "plan_gate_required": false,
+      "decision_boundary": false,
+      "description": "Retry loop; request new proposal."
+    }
+  ],
+  "invalid_transitions": "Any transition from_state → to_state not explicitly listed above is invalid and must be rejected by the runtime."
+}

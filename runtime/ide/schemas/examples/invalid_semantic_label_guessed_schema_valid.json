@@ -1,0 +1,31 @@
+{
+  "schema_version": "decision_response.v0.1",
+  "request_id": "req-inv3",
+  "decision": "BOUNDING",
+  "constitutional_phase_emitted": "CONF",
+  "dominance_source": "CONF",
+  "irreversible_boundary_phrase": "deploy to production",
+  "boundary_phrase_hash": "d6e9998982cdb5addfd74c2dbfaa1df37694db4dc12de220ff71ce8678151157",
+  "boundary_type": "deploy",
+  "authority_verdict": "pass",
+  "missing_evidence": [],
+  "allowed_pre_boundary_actions": [
+    "read"
+  ],
+  "blocked_actions": [
+    "deploy"
+  ],
+  "reason_codes": [
+    "SAFE_PREBOUNDARY_ONLY"
+  ],
+  "plan_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "ui": {
+    "title": "x",
+    "message": "x",
+    "severity": "info"
+  },
+  "provenance_resolution": {
+    "resolved_via": "guessed",
+    "reason": "inferred from context"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "repo": "m-coder",
+  "branch": "main",
+  "action_type": "PR_MERGE",
+  "target": "main",
+  "evidence_refs": [{"type": "pr", "ref": "https://github.com/org/repo/pull/42"}]
+}

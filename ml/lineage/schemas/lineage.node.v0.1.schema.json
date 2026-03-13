@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "lineage.node.v0.1",
+  "title": "Lineage Node v0.1",
+  "description": "Provenance node for compilation DAG. Forward-only; no semantic rewriting loops.",
+  "type": "object",
+  "required": ["schema_version", "node_id", "node_type", "created_utc", "source_commit_hash", "inputs", "semantic", "collapse", "provenance"],
+  "properties": {
+    "schema_version": {"const": "lineage.node.v0.1"},
+    "node_id": {"type": "string", "minLength": 1},
+    "node_type": {"type": "string", "enum": ["BASE_EXEMPLAR", "LOCKED_VARIANT", "MUTATION_RESULT", "DATASET_ROW", "FREEZE_ARTIFACT", "SFT_CHECKPOINT", "RUNTIME_MODEL_ARTIFACT", "LEDGER_RECORD"]},
+    "created_utc": {"type": "string", "format": "date-time"},
+    "source_commit_hash": {"type": "string", "minLength": 1},
+    "inputs": {"type": "array", "items": {"type": "object", "required": ["node_id", "node_type"], "properties": {"node_id": {"type": "string"}, "node_type": {"type": "string"}}}},
+    "semantic": {"type": "object", "required": ["phase_semantic_label", "boundary_phrase", "boundary_phrase_hash"], "properties": {"phase_semantic_label": {"type": "string", "enum": ["REF", "CONF", "DES", "MIX", "CODE", "REACH"]}, "boundary_phrase": {"type": "string"}, "boundary_phrase_hash": {"type": "string"}}},
+    "collapse": {"type": "object", "required": ["collapse_vector_result", "collapse_vectors", "surface_coverage"], "properties": {"collapse_vector_result": {"type": "string", "enum": ["PASS", "FAIL", "WARN", "NA"]}, "collapse_vectors": {"type": "array", "items": {"type": "string"}}, "surface_coverage": {"type": "array", "items": {"type": "string"}}}},
+    "provenance": {"type": "object", "required": ["repo", "branch", "build_id", "actor"], "properties": {"repo": {"type": "string"}, "branch": {"type": "string"}, "build_id": {"type": "string"}, "actor": {"type": "string"}}},
+    "base": {"type": "object", "required": ["base_id", "canonical_text_hash", "locked"], "properties": {"base_id": {"type": "string"}, "canonical_text_hash": {"type": "string"}, "locked": {"type": "boolean"}}},
+    "variant": {"type": "object", "required": ["variant_id", "base_id", "variant_text_hash", "locked"], "properties": {"variant_id": {"type": "string"}, "base_id": {"type": "string"}, "variant_text_hash": {"type": "string"}, "locked": {"type": "boolean"}}},
+    "mutation": {"type": "object", "required": ["stage6_run_id", "harness_version", "results_hash", "canonical_pass"], "properties": {"stage6_run_id": {"type": "string"}, "harness_version": {"type": "string"}, "results_hash": {"type": "string"}, "canonical_pass": {"type": "boolean"}}},
+    "dataset_row": {"type": "object", "required": ["row_id", "base_id", "variant_id", "jsonl_line_hash", "maps_to_base_exactly"], "properties": {"row_id": {"type": "string"}, "base_id": {"type": "string"}, "variant_id": {"type": "string"}, "jsonl_line_hash": {"type": "string"}, "maps_to_base_exactly": {"type": "boolean"}}},
+    "freeze_artifact": {"type": "object", "required": ["freeze_version_id", "dataset_hash", "boundary_set_hash", "row_count", "deterministic"], "properties": {"freeze_version_id": {"type": "string"}, "dataset_hash": {"type": "string"}, "boundary_set_hash": {"type": "string"}, "row_count": {"type": "integer"}, "deterministic": {"type": "boolean"}}},
+    "checkpoint": {"type": "object", "required": ["checkpoint_id", "freeze_version_id", "train_config_hash", "trainer_version"], "properties": {"checkpoint_id": {"type": "string"}, "freeze_version_id": {"type": "string"}, "train_config_hash": {"type": "string"}, "trainer_version": {"type": "string"}}},
+    "runtime_model": {"type": "object", "required": ["model_artifact_id", "checkpoint_id", "adapter_hash", "serving_bundle_hash"], "properties": {"model_artifact_id": {"type": "string"}, "checkpoint_id": {"type": "string"}, "adapter_hash": {"type": "string"}, "serving_bundle_hash": {"type": "string"}}},
+    "ledger": {"type": "object", "required": ["ledger_row_id", "plan_hash", "model_artifact_id", "request_id"], "properties": {"ledger_row_id": {"type": "string"}, "plan_hash": {"type": "string"}, "model_artifact_id": {"type": "string"}, "request_id": {"type": "string"}}}
+  },
+  "allOf": [
+    {"if": {"properties": {"node_type": {"const": "BASE_EXEMPLAR"}}, "required": ["node_type"]}, "then": {"required": ["base"]}},
+    {"if": {"properties": {"node_type": {"const": "LOCKED_VARIANT"}}, "required": ["node_type"]}, "then": {"required": ["variant"]}},
+    {"if": {"properties": {"node_type": {"const": "MUTATION_RESULT"}}, "required": ["node_type"]}, "then": {"required": ["mutation"]}},
+    {"if": {"properties": {"node_type": {"const": "DATASET_ROW"}}, "required": ["node_type"]}, "then": {"required": ["dataset_row"]}},
+    {"if": {"properties": {"node_type": {"const": "FREEZE_ARTIFACT"}}, "required": ["node_type"]}, "then": {"required": ["freeze_artifact"]}},
+    {"if": {"properties": {"node_type": {"const": "SFT_CHECKPOINT"}}, "required": ["node_type"]}, "then": {"required": ["checkpoint"]}},
+    {"if": {"properties": {"node_type": {"const": "RUNTIME_MODEL_ARTIFACT"}}, "required": ["node_type"]}, "then": {"required": ["runtime_model"]}},
+    {"if": {"properties": {"node_type": {"const": "LEDGER_RECORD"}}, "required": ["node_type"]}, "then": {"required": ["ledger"]}}
+  ]
+}

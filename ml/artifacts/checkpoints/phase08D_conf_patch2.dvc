@@ -1,0 +1,6 @@
+outs:
+- md5: 61ee56429eb285f772598ff13b1de800.dir
+  size: 151405551
+  nfiles: 8
+  hash: md5
+  path: phase08D_conf_patch2

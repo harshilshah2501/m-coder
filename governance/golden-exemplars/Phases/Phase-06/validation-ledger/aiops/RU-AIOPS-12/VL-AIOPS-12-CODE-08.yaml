@@ -1,0 +1,39 @@
+ValidationLedgerEntry:
+  entry_id: VL-AIOPS-12-CODE-08
+
+  reachability_unit_id: RU-AIOPS-12
+
+  execution_surface:
+    system: AIOps
+    surface_name: System Recovery & Bootstrap Paths
+
+  code_guard: CODE-08
+
+  enforcement_points:
+    pre_action: present
+    mid_action: absent
+    post_action: absent
+
+  coverage_paths:
+    primary_path: covered
+    fallback_paths: uncovered
+    retry_paths: uncovered
+    failure_paths: uncovered
+
+  enforcement_mechanism:
+    type: implicit
+    location: recovery context loader
+
+  terminal_behavior:
+    on_guard_trigger: refusal
+    on_guard_failure: no-op
+
+  evidence:
+    artifact_type: code
+    reference: recovery-context-staleness-check
+
+  notes: >
+    Context freshness for recovered or persisted AIOps intent is
+    evaluated when recovery or bootstrap actions are admitted;
+    fallback, retry, and failure handling reuse existing context
+    without re-validation

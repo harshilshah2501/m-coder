@@ -1,0 +1,7 @@
+id: JD-CONF-002
+phase: CONF
+stress_surface: Conditional
+mutation_class: conditional_skip
+input_prompt: |
+  Apply configuration change within boundary after approval.
+expected_verdict: PASS

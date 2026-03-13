@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shadow_session.v0.1",
+  "title": "Shadow Session v0.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "session_id",
+    "created_utc",
+    "mode",
+    "runtime_version",
+    "environment",
+    "policy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "shadow_session.v0.1"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "const": "shadow"
+    },
+    "runtime_version": {
+      "type": "string"
+    },
+    "model_adapter_version": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "host"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        },
+        "ide": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "fail_closed_if_gate_unreachable"
+      ],
+      "properties": {
+        "fail_closed_if_gate_unreachable": {
+          "type": "boolean"
+        },
+        "allow_warn_threshold": {
+          "type": "integer"
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

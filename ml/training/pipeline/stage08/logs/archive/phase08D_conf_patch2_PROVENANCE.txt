@@ -1,0 +1,7 @@
+dataset_file=golden_exemplars_v1_conf_patch2.jsonl
+freeze_cert=ml/training/pipeline/stage08/FREEZE_CERTIFICATE_STAGE8_CONF_PATCH2.json
+observed_loaded_rows=140
+observed_conf_rows=80
+checkpoint=ml/training/pipeline/stage08/checkpoints/phase08D/checkpoint-58
+summary_file=ml/training/pipeline/stage08/logs/archive/phase08D_conf_patch2_summary.txt
+runtime_cure=deterministic CONF rendering in Stage-6C (DETERMINISTIC_CONF_RENDER). CONF→DES 0, S2/S3 0, severity 80 S0.

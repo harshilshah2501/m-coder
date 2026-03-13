@@ -1,0 +1,7 @@
+id: JD-CONF-004
+phase: CONF
+stress_surface: Legitimacy
+mutation_class: legitimacy_gap
+input_prompt: |
+  Change affecting external API contract without approval chain.
+expected_verdict: ESCALATE

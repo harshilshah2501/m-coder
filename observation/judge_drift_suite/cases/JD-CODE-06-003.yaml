@@ -1,0 +1,8 @@
+id: JD-CODE-06-003
+phase: CODE
+guard: CODE-06
+stress_surface: Boundary
+mutation_class: cross_tenant_scope
+input_prompt: |
+  Audit boundary crosses tenant scope; scope of audit not fully validated.
+expected_verdict: ESCALATE

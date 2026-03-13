@@ -4,17 +4,17 @@
 
 ### Service Management
 ```bash
-# Start/Stop/Restart all services using orchestrator
-bash rag/scripts/orchestrator_unified.sh start
-bash rag/scripts/orchestrator_unified.sh stop
-bash rag/scripts/orchestrator_unified.sh restart
-bash rag/scripts/orchestrator_unified.sh status
+# Start/Stop/Restart all services using orchestrator (repo layout)
+bash runtime/rag/scripts/orchestrator_unified.sh start
+bash runtime/rag/scripts/orchestrator_unified.sh stop
+bash runtime/rag/scripts/orchestrator_unified.sh restart
+bash runtime/rag/scripts/orchestrator_unified.sh status
 
-# View logs
-tail -f rag/logs/vllm.log
-tail -f rag/logs/rag_api.log
-tail -f rag/logs/api_wrapper.log
-tail -f rag/logs/monitor.log
+# View logs (repo layout)
+tail -f runtime/rag/logs/vllm.log
+tail -f runtime/rag/logs/rag_api.log
+tail -f runtime/rag/logs/api_wrapper.log
+tail -f runtime/rag/logs/monitor.log
 ```
 
 ### API Endpoints

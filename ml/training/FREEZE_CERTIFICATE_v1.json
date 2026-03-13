@@ -1,0 +1,9 @@
+{
+    "stage": "Stage-08D",
+    "frozen_dataset_path": "ml/training/datasets/sft/golden_exemplars_v1_frozen.jsonl",
+    "doctrine_sha256": "d1fa78dcc955839c5a403da87adeee7e5bb4916dc936dbced72114165bd11da1",
+    "dataset_sha256": "193d111bb8b08217de26a4ce81a4dee9dadb3d7e37c4bdb8463195f4386b48ce",
+    "compiler_version": "stage7-compiler-v1.0",
+    "frozen_at_utc": "YYYY-MM-DDTHH:MM:SSZ",
+    "notes": "Stage-7 deterministic compiler output. No post-freeze edits allowed."
+  }

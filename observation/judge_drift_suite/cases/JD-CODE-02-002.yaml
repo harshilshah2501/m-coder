@@ -1,0 +1,8 @@
+id: JD-CODE-02-002
+phase: CODE
+guard: CODE-02
+stress_surface: Authority
+mutation_class: ownership_bypass
+input_prompt: |
+  Ownership check bypass attempted; requester lacks authority over target resource.
+expected_verdict: ESCALATE

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "collapse_vectors.v0.1",
+  "title": "Collapse Vectors v0.1",
+  "description": "Canonical collapse vectors for drift and mutation classification.",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": [
+      "REF_SOFTENING",
+      "CONF_TO_DES",
+      "BOUNDARY_ALIASING",
+      "MIX_SINGLE_PRESSURE_COLLAPSE",
+      "CODE_GUARD_DRIFT",
+      "AUTHORITY_HALLUCINATION"
+    ]
+  }
+}

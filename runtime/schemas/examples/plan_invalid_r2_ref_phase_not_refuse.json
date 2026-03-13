@@ -1,0 +1,38 @@
+{
+  "schema_version": "plan.v0.1",
+  "request": {
+    "request_id": "req-r2-invalid",
+    "session_id": "sess-r2",
+    "timestamp_utc": "2026-02-27T12:10:00Z",
+    "actor": {"user_id": "u3"},
+    "artifacts": []
+  },
+  "constitutional_phase_expected": "REF",
+  "stress_surfaces": ["AuthorityOwnership"],
+  "authority": {
+    "claimed": {"requester_role": "developer", "approvals": [], "scope": "read"},
+    "validation_requirements": [],
+    "validated": {"verdict": "pass", "missing": [], "validator": "authority_validator_v1"}
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "Read-only boundary",
+    "boundary_type": "other",
+    "rollback_unilateral": false
+  },
+  "routing_invariants": {
+    "legitimacy_state": "illegitimate",
+    "irreversibility_state": "boundary_present",
+    "ambiguity_state": "resolved",
+    "dominance_applied": "REF>CONF>DES"
+  },
+  "policy_posture": {
+    "allowed_pre_boundary_actions": [],
+    "blocked_actions": [],
+    "terminal_posture": "safe_execute"
+  },
+  "tooling_intent": {
+    "tools_may_be_used": [],
+    "tools_must_not_be_used": [],
+    "execution_mode": "live"
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "schema_version": "ingestion_batch.v0.1",
+  "batch_id": "batch-1b636505a41e81bd53a6620a2bba9f01",
+  "created_utc": "2026-03-01T00:00:00Z",
+  "source": {
+    "component": "runtime_plan_gate",
+    "host": "stub"
+  },
+  "items": [
+    {
+      "request_id": "req-config-change-shadow",
+      "plan": {
+        "schema_version": "plan.v0.1",
+        "request": {
+          "request_id": "req-config-change-shadow",
+          "session_id": "m-coder-sess",
+          "timestamp_utc": "2026-03-01T00:00:00Z",
+          "actor": {
+            "user_id": "dev1"
+          },
+          "artifacts": []
+        },
+        "constitutional_phase_expected": "REF",
+        "stress_surfaces": [
+          "AuthorityOwnership"
+        ],
+        "authority": {
+          "claimed": {},
+          "validation_requirements": [],
+          "validated": {
+            "verdict": "unknown",
+            "validator": "stub_v1"
+          }
+        },
+        "boundary": {
+          "irreversible_boundary_phrase": "apply config change affecting production",
+          "boundary_type": "config_rollout",
+          "rollback_unilateral": false
+        },
+        "routing_invariants": {
+          "legitimacy_state": "unknown",
+          "irreversibility_state": "pre_boundary",
+          "ambiguity_state": "resolved",
+          "dominance_applied": "REF>CONF>DES"
+        },
+        "policy_posture": {
+          "allowed_pre_boundary_actions": [
+            "read",
+            "review",
+            "run_tests"
+          ],
+          "blocked_actions": [
+            "merge",
+            "deploy",
+            "apply"
+          ],
+          "terminal_posture": "refuse"
+        },
+        "tooling_intent": {
+          "tools_may_be_used": [
+            "read"
+          ],
+          "tools_must_not_be_used": [
+            "deploy",
+            "merge"
+          ],
+          "execution_mode": "shadow"
+        }
+      },
+      "ledger_row": {
+        "schema_version": "ledger_row.v0.1",
+        "event": {
+          "event_id": "evt-1b636505a41e81bd53a6620a2bba9f01",
+          "timestamp_utc": "2026-03-01T00:00:00Z",
+          "request_id": "req-config-change-shadow",
+          "session_id": "m-coder-sess",
+          "mode": "shadow",
+          "runtime_version": "0.1"
+        },
+        "plan_link": {
+          "plan_hash": "395b694602b8b439f6e1f626fd39fd7dec6f89e4c605cba0051ce2e570bd9bec",
+          "plan_schema_version": "plan.v0.1"
+        },
+        "verdicts": {
+          "phase_emitted": "REF",
+          "terminal_posture": "refuse",
+          "authority_verdict": "unknown",
+          "boundary_verdict": "blocked",
+          "ref_enforced": true
+        },
+        "boundary": {
+          "irreversible_boundary_phrase": "apply config change affecting production",
+          "boundary_cross_attempted": false,
+          "boundary_crossed": false
+        },
+        "actions": {
+          "tool_calls_attempted": [],
+          "execution_intents": []
+        },
+        "reason_codes": [
+          "MISSING_AUTHORITY",
+          "REF_ENFORCED"
+        ]
+      },
+      "decision_response": {
+        "schema_version": "decision_response.v0.1",
+        "request_id": "req-config-change-shadow",
+        "decision": "REFUSAL",
+        "constitutional_phase_emitted": "REF",
+        "dominance_source": "REF",
+        "irreversible_boundary_phrase": "apply config change affecting production",
+        "boundary_phrase_hash": "831f36fba87f7c2a5c37a698655aa238f676a2fdaab821f5dfd4fb200dfe3ac5",
+        "boundary_type": "config_rollout",
+        "authority_verdict": "unknown",
+        "missing_evidence": [
+          "approval"
+        ],
+        "allowed_pre_boundary_actions": [
+          "read",
+          "review",
+          "run_tests"
+        ],
+        "blocked_actions": [
+          "apply"
+        ],
+        "reason_codes": [
+          "MISSING_AUTHORITY",
+          "REF_ENFORCED"
+        ],
+        "plan_hash": "395b694602b8b439f6e1f626fd39fd7dec6f89e4c605cba0051ce2e570bd9bec",
+        "ui": {
+          "title": "REFUSAL",
+          "message": "REF REFUSAL",
+          "severity": "info"
+        },
+        "provenance_resolution": {
+          "resolved_via": "unresolved",
+          "reason": "lineage_index not available"
+        }
+      },
+      "lineage_refs": {
+        "boundary_phrase_hash": "831f36fba87f7c2a5c37a698655aa238f676a2fdaab821f5dfd4fb200dfe3ac5"
+      }
+    }
+  ]
+}

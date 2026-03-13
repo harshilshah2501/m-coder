@@ -1,0 +1,35 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:ckpt1",
+  "node_type": "SFT_CHECKPOINT",
+  "created_utc": "2026-02-27T11:00:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [
+    {
+      "node_id": "sha256:freeze1",
+      "node_type": "FREEZE_ARTIFACT"
+    }
+  ],
+  "semantic": {
+    "phase_semantic_label": "CODE",
+    "boundary_phrase": "SFT checkpoint boundary",
+    "boundary_phrase_hash": "65c36b2113eb7c554f8bbfc8cf39519bf1e07c755552738efe209d90bb1f39fb"
+  },
+  "collapse": {
+    "collapse_vector_result": "NA",
+    "collapse_vectors": [],
+    "surface_coverage": []
+  },
+  "provenance": {
+    "repo": "m-coder",
+    "branch": "main",
+    "build_id": "sft-1",
+    "actor": "trainer"
+  },
+  "checkpoint": {
+    "checkpoint_id": "ckpt-001",
+    "freeze_version_id": "freeze-v1",
+    "train_config_hash": "sha256:cfg1",
+    "trainer_version": "1.0"
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://m-coder/ml/training/compiler/dataset_schema.json",
+  "title": "Stage-7 Training Sample (One JSONL Row)",
+  "description": "Strict JSON Schema for one training sample emitted by the deterministic compiler (governance → JSONL).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "base_id",
+    "variant_id",
+    "phase",
+    "instruction",
+    "response",
+    "boundary_phrase",
+    "invariants",
+    "source",
+    "ids"
+  ],
+  "properties": {
+    "base_id": {
+      "type": "string",
+      "pattern": "^BASE-[0-9]{3}$",
+      "description": "Base exemplar identifier (e.g. BASE-001)."
+    },
+    "variant_id": {
+      "oneOf": [
+        { "type": "string", "pattern": "^V[1-4]$" }
+      ],
+      "description": "Variant identifier: V1..V4."
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["REF", "CONF", "DES", "MIX", "CODE"],
+      "description": "Constitutional phase of the exemplar."
+    },
+    "instruction": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Non-empty instruction text (user/system prompt portion)."
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["posture", "allow", "block", "validation"],
+      "properties": {
+        "posture": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Response posture (e.g. CONDITIONAL ALLOWANCE)."
+        },
+        "allow": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Non-empty allowed actions description."
+        },
+        "block": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Non-empty blocked actions at boundary."
+        },
+        "validation": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Non-empty validation criteria."
+        }
+      },
+      "description": "Structured response fields required for training."
+    },
+    "boundary_phrase": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Exact boundary phrase (character-for-character match required)."
+    },
+    "boundary_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 of boundary_phrase for normalized comparisons."
+    },
+    "invariants": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "List of invariant constraints (at least one required)."
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["doctrine_file", "doctrine_sha256", "compiler_version", "compiled_at_utc"],
+      "properties": {
+        "doctrine_file": {
+          "type": "string",
+          "description": "Path to source doctrine file."
+        },
+        "doctrine_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA256 hex digest of doctrine file (64 hex chars)."
+        },
+        "compiler_version": {
+          "type": "string",
+          "description": "Compiler version string."
+        },
+        "compiled_at_utc": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "description": "Compilation timestamp (ISO 8601 UTC, must end with Z)."
+        }
+      },
+      "description": "Provenance and audit metadata."
+    },
+    "ids": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_id", "phase_id"],
+      "properties": {
+        "sample_id": {
+          "type": "string",
+          "pattern": "^BASE-[0-9]{3}-(V[1-4])$",
+          "description": "Unique sample identifier (recommended: BASE-XXX-VY)."
+        },
+        "phase_id": {
+          "type": "string",
+          "pattern": "^(REF|CONF|DES|MIX|CODE)$",
+          "description": "Phase identifier (matches phase enum)."
+        }
+      },
+      "description": "Stable identifiers for deduplication and tracking."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" , "minLength": 1},
+      "uniqueItems": true,
+      "description": "Optional tags for filtering or grouping."
+    },
+    "notes": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional human notes."
+    }
+  }
+}

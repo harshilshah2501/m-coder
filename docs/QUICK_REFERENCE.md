@@ -200,8 +200,8 @@ GET /health
 ## Service Management Documentation
 
 For detailed information about the orchestrator service, see:
-- **[ORCHESTRATOR_SERVICE_GUIDE.md](../ORCHESTRATOR_SERVICE_GUIDE.md)** - Complete service management guide
-- **[IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
+- **[ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** - Complete service management guide
+- **[IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
 
 ## Contact & Resources
 

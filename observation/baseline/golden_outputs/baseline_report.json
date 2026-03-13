@@ -1,0 +1,50 @@
+{
+  "schema_version": "observation.baseline_report.v0.1",
+  "created_utc": "2026-03-01T00:00:00Z",
+  "input_summary": {
+    "files_count": 3,
+    "items_count": 4
+  },
+  "metrics": {
+    "by_decision": {
+      "BOUNDING": 2,
+      "REFUSAL": 2
+    },
+    "by_phase_emitted": {
+      "CONF": 2,
+      "REF": 2
+    },
+    "by_boundary_verdict": {
+      "allowed_pre_boundary_only": 2,
+      "blocked": 2
+    },
+    "by_authority_verdict": {
+      "pass": 2,
+      "unknown": 2
+    },
+    "by_reason_code": {
+      "MISSING_AUTHORITY": 2,
+      "REF_ENFORCED": 2,
+      "SAFE_PREBOUNDARY_ONLY": 2
+    },
+    "lineage_links": {
+      "base_id": 0,
+      "variant_id": 0,
+      "freeze_version_id": 0,
+      "model_artifact_id": 0
+    },
+    "items_count": 4,
+    "unresolved_lineage_count": 4,
+    "unresolved_lineage_rate": 1.0,
+    "blocked_count": 2,
+    "blocked_rate": 0.5,
+    "refusal_count": 2,
+    "refusal_rate": 0.5,
+    "crossed_count": 0
+  },
+  "integrity": {
+    "reconciliation_key": "(request_id, plan_hash)",
+    "mismatches_count": 0
+  },
+  "fingerprint": "7254f65e8cb914382db106f5b16aeac2489d6bc0e145b26079ac5b77dcfcbc54"
+}

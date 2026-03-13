@@ -1,0 +1,194 @@
+{
+  "schema_version": "ingestion_batch.v0.1",
+  "batch_id": "batch-001",
+  "created_utc": "2026-02-27T14:05:00Z",
+  "source": {
+    "component": "runtime_plan_gate",
+    "host": "devhost"
+  },
+  "items": [
+    {
+      "request_id": "req-batch-1",
+      "plan": {
+        "schema_version": "plan.v0.1",
+        "request": {
+          "request_id": "req-batch-1",
+          "session_id": "sess-1",
+          "timestamp_utc": "2026-02-27T14:00:00Z",
+          "actor": {
+            "user_id": "u1"
+          },
+          "artifacts": []
+        },
+        "constitutional_phase_expected": "CONF",
+        "stress_surfaces": [
+          "AuthorityOwnership"
+        ],
+        "authority": {
+          "claimed": {},
+          "validation_requirements": [],
+          "validated": {
+            "verdict": "pass",
+            "validator": "v1"
+          }
+        },
+        "boundary": {
+          "irreversible_boundary_phrase": "Deploy to production environment",
+          "boundary_type": "deploy",
+          "rollback_unilateral": false
+        },
+        "routing_invariants": {
+          "legitimacy_state": "legitimate",
+          "irreversibility_state": "pre_boundary",
+          "ambiguity_state": "resolved",
+          "dominance_applied": "REF>CONF>DES"
+        },
+        "policy_posture": {
+          "allowed_pre_boundary_actions": [
+            "read"
+          ],
+          "blocked_actions": [
+            "deploy"
+          ],
+          "terminal_posture": "bounded_allow"
+        },
+        "tooling_intent": {
+          "tools_may_be_used": [],
+          "tools_must_not_be_used": [],
+          "execution_mode": "shadow"
+        }
+      },
+      "ledger_row": {
+        "schema_version": "ledger_row.v0.1",
+        "event": {
+          "event_id": "evt-b1",
+          "timestamp_utc": "2026-02-27T14:00:01Z",
+          "request_id": "req-batch-1",
+          "session_id": "sess-1",
+          "mode": "shadow",
+          "runtime_version": "0.1"
+        },
+        "plan_link": {
+          "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "plan_schema_version": "plan.v0.1"
+        },
+        "verdicts": {
+          "phase_emitted": "CONF",
+          "terminal_posture": "bounded_allow",
+          "authority_verdict": "pass",
+          "boundary_verdict": "allowed_pre_boundary_only",
+          "ref_enforced": false
+        },
+        "boundary": {
+          "irreversible_boundary_phrase": "Deploy to production environment",
+          "boundary_cross_attempted": false,
+          "boundary_crossed": false
+        },
+        "actions": {
+          "tool_calls_attempted": [],
+          "execution_intents": []
+        },
+        "reason_codes": [
+          "SAFE_PREBOUNDARY_ONLY"
+        ]
+      },
+      "lineage_refs": {
+        "boundary_phrase_hash": "e328df676bd402719535e524b5e019b5f60dbb4e001341dce7cd6ef9ad236547"
+      }
+    },
+    {
+      "request_id": "req-batch-2",
+      "plan": {
+        "schema_version": "plan.v0.1",
+        "request": {
+          "request_id": "req-batch-2",
+          "session_id": "sess-1",
+          "timestamp_utc": "2026-02-27T14:00:00Z",
+          "actor": {
+            "user_id": "u1"
+          },
+          "artifacts": []
+        },
+        "constitutional_phase_expected": "CONF",
+        "stress_surfaces": [
+          "AuthorityOwnership"
+        ],
+        "authority": {
+          "claimed": {},
+          "validation_requirements": [],
+          "validated": {
+            "verdict": "pass",
+            "validator": "v1"
+          }
+        },
+        "boundary": {
+          "irreversible_boundary_phrase": "Deploy to production environment",
+          "boundary_type": "deploy",
+          "rollback_unilateral": false
+        },
+        "routing_invariants": {
+          "legitimacy_state": "legitimate",
+          "irreversibility_state": "pre_boundary",
+          "ambiguity_state": "resolved",
+          "dominance_applied": "REF>CONF>DES"
+        },
+        "policy_posture": {
+          "allowed_pre_boundary_actions": [
+            "read"
+          ],
+          "blocked_actions": [
+            "deploy"
+          ],
+          "terminal_posture": "bounded_allow"
+        },
+        "tooling_intent": {
+          "tools_may_be_used": [],
+          "tools_must_not_be_used": [],
+          "execution_mode": "shadow"
+        }
+      },
+      "ledger_row": {
+        "schema_version": "ledger_row.v0.1",
+        "event": {
+          "event_id": "evt-b2",
+          "timestamp_utc": "2026-02-27T14:00:02Z",
+          "request_id": "req-batch-2",
+          "session_id": "sess-1",
+          "mode": "shadow",
+          "runtime_version": "0.1"
+        },
+        "plan_link": {
+          "plan_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "plan_schema_version": "plan.v0.1"
+        },
+        "verdicts": {
+          "phase_emitted": "REF",
+          "terminal_posture": "refuse",
+          "authority_verdict": "fail",
+          "boundary_verdict": "blocked",
+          "ref_enforced": true
+        },
+        "boundary": {
+          "irreversible_boundary_phrase": "Merge to main",
+          "boundary_cross_attempted": true,
+          "boundary_crossed": false
+        },
+        "actions": {
+          "tool_calls_attempted": [
+            {
+              "tool": "git",
+              "intent": "merge",
+              "blocked": true,
+              "reason_code": "REF_ENFORCED"
+            }
+          ],
+          "execution_intents": []
+        },
+        "reason_codes": [
+          "MISSING_AUTHORITY",
+          "REF_ENFORCED"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "doctrine_sha256": "d1fa78dcc955839c5a403da87adeee7e5bb4916dc936dbced72114165bd11da1",
+  "dataset_sha256": "193d111bb8b08217de26a4ce81a4dee9dadb3d7e37c4bdb8463195f4386b48ce",
+  "compiler_version": "stage7-compiler-v1.0",
+  "total_rows": 100,
+  "total_bases": 25,
+  "split_manifest_path": "training/logs/stage08D_split_manifest.json",
+  "stage6c_metrics_snapshot": "",
+  "frozen_at_utc": "2026-02-27T06:49:00.248635Z"
+}

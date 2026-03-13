@@ -1,0 +1,29 @@
+{
+  "schema_version": "lineage.index.v0.1",
+  "created_utc": "2026-02-27T12:00:00Z",
+  "source_commit_hash": "abc123def",
+  "boundary_phrase_hash_index": {
+    "8e2a7b39ed9a4c87102643f1fd4dfb717ac6f29d39e6eabfef1658ed22c77c18": {
+      "base_id": "base-001",
+      "variant_id": "var-001",
+      "phase_semantic_label": "REF",
+      "node_ids": [
+        "sha256:base1"
+      ]
+    },
+    "d6e9998982cdb5addfd74c2dbfaa1df37694db4dc12de220ff71ce8678151157": {
+      "base_id": "base-002",
+      "variant_id": "var-002",
+      "phase_semantic_label": "CONF",
+      "node_ids": [
+        "sha256:var2"
+      ]
+    }
+  },
+  "base_index": {
+    "base-001": "sha256:base1"
+  },
+  "variant_index": {
+    "var-001": "sha256:var1"
+  }
+}

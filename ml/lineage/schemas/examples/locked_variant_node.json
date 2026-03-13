@@ -1,0 +1,38 @@
+{
+  "schema_version": "lineage.node.v0.1",
+  "node_id": "sha256:var1",
+  "node_type": "LOCKED_VARIANT",
+  "created_utc": "2026-02-27T10:05:00Z",
+  "source_commit_hash": "abc123def",
+  "inputs": [
+    {
+      "node_id": "sha256:base1",
+      "node_type": "BASE_EXEMPLAR"
+    }
+  ],
+  "semantic": {
+    "phase_semantic_label": "CONF",
+    "boundary_phrase": "Variant stress CONF",
+    "boundary_phrase_hash": "7a4793dcbcf46155193e2eb688f0211533a20bc9e43678aacf6cd803edfb876e"
+  },
+  "collapse": {
+    "collapse_vector_result": "PASS",
+    "collapse_vectors": [],
+    "surface_coverage": [
+      "AuthorityOwnership",
+      "ImplementationIrreversibility"
+    ]
+  },
+  "provenance": {
+    "repo": "m-coder",
+    "branch": "main",
+    "build_id": "b1",
+    "actor": "compiler"
+  },
+  "variant": {
+    "variant_id": "var-001",
+    "base_id": "base-001",
+    "variant_text_hash": "sha256:varhash1",
+    "locked": true
+  }
+}

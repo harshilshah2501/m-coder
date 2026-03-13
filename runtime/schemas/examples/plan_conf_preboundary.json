@@ -1,0 +1,38 @@
+{
+  "schema_version": "plan.v0.1",
+  "request": {
+    "request_id": "req-002",
+    "session_id": "sess-002",
+    "timestamp_utc": "2026-02-27T12:05:00Z",
+    "actor": {"user_id": "u2", "tenant": "t1", "channel": "ide"},
+    "artifacts": []
+  },
+  "constitutional_phase_expected": "CONF",
+  "stress_surfaces": ["AuthorityOwnership", "ChangeBlastRadius", "TimePressure"],
+  "authority": {
+    "claimed": {"requester_role": "developer", "approvals": [{"type": "staging_approval", "ref": "apr-001"}], "scope": "staging_deploy"},
+    "validation_requirements": ["staging_approval"],
+    "validated": {"verdict": "pass", "missing": [], "validator": "authority_validator_v1"}
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "Deploy to production environment",
+    "boundary_type": "deploy",
+    "rollback_unilateral": false
+  },
+  "routing_invariants": {
+    "legitimacy_state": "legitimate",
+    "irreversibility_state": "pre_boundary",
+    "ambiguity_state": "resolved",
+    "dominance_applied": "REF>CONF>DES"
+  },
+  "policy_posture": {
+    "allowed_pre_boundary_actions": ["run_tests", "build_staging", "validate_config"],
+    "blocked_actions": ["deploy_prod"],
+    "terminal_posture": "bounded_allow"
+  },
+  "tooling_intent": {
+    "tools_may_be_used": ["run_tests", "build"],
+    "tools_must_not_be_used": ["deploy_prod"],
+    "execution_mode": "shadow"
+  }
+}

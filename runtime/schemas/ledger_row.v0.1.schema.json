@@ -1,0 +1,281 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ledger_row.v0.1",
+  "title": "Runtime Ledger Row v0.1",
+  "description": "Ledger row for runtime verdicts and drift telemetry. Links to plan via plan_hash.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event",
+    "plan_link",
+    "verdicts",
+    "boundary",
+    "actions",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ledger_row.v0.1"
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "timestamp_utc",
+        "request_id",
+        "session_id",
+        "mode",
+        "runtime_version"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "shadow",
+            "live"
+          ]
+        },
+        "runtime_version": {
+          "type": "string"
+        },
+        "model_adapter_version": {
+          "type": "string"
+        }
+      }
+    },
+    "plan_link": {
+      "type": "object",
+      "required": [
+        "plan_hash",
+        "plan_schema_version"
+      ],
+      "properties": {
+        "plan_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "plan_schema_version": {
+          "type": "string",
+          "const": "plan.v0.1"
+        }
+      }
+    },
+    "verdicts": {
+      "type": "object",
+      "required": [
+        "phase_emitted",
+        "terminal_posture",
+        "authority_verdict",
+        "boundary_verdict",
+        "ref_enforced"
+      ],
+      "properties": {
+        "phase_emitted": {
+          "type": "string",
+          "enum": [
+            "REF",
+            "CONF",
+            "DES",
+            "MIX",
+            "CODE"
+          ]
+        },
+        "terminal_posture": {
+          "type": "string",
+          "enum": [
+            "refuse",
+            "defer",
+            "bounded_allow",
+            "safe_execute"
+          ]
+        },
+        "authority_verdict": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "boundary_verdict": {
+          "type": "string",
+          "enum": [
+            "blocked",
+            "not_reached",
+            "allowed_pre_boundary_only",
+            "crossed"
+          ]
+        },
+        "ref_enforced": {
+          "type": "boolean"
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "required": [
+        "irreversible_boundary_phrase",
+        "boundary_cross_attempted",
+        "boundary_crossed"
+      ],
+      "properties": {
+        "irreversible_boundary_phrase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundary_cross_attempted": {
+          "type": "boolean"
+        },
+        "boundary_crossed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "required": [
+        "tool_calls_attempted",
+        "execution_intents"
+      ],
+      "properties": {
+        "tool_calls_attempted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "tool",
+              "intent",
+              "blocked",
+              "reason_code"
+            ],
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "intent": {
+                "type": "string"
+              },
+              "blocked": {
+                "type": "boolean"
+              },
+              "reason_code": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "execution_intents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "intent",
+              "blocked",
+              "reason_code"
+            ],
+            "properties": {
+              "intent": {
+                "type": "string"
+              },
+              "blocked": {
+                "type": "boolean"
+              },
+              "reason_code": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "MISSING_AUTHORITY",
+          "AUTHORITY_UNKNOWN",
+          "BOUNDARY_BLOCKED",
+          "BOUNDARY_RELOCATED_DETECTED",
+          "PHASE_MISMATCH_PREVENTED",
+          "REF_ENFORCED",
+          "INSUFFICIENT_EVIDENCE",
+          "TOOL_NOT_PERMITTED",
+          "SAFE_PREBOUNDARY_ONLY"
+        ]
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "latency_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tokens_in": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tokens_out": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "routing_invariants": {
+      "type": "object",
+      "description": "Optional mirror of plan.routing_invariants for drift audits",
+      "properties": {
+        "legitimacy_state": {
+          "type": "string",
+          "enum": [
+            "legitimate",
+            "illegitimate",
+            "unknown"
+          ]
+        },
+        "irreversibility_state": {
+          "type": "string",
+          "enum": [
+            "pre_boundary",
+            "boundary_present",
+            "boundary_cross_attempted",
+            "boundary_crossed"
+          ]
+        },
+        "ambiguity_state": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "unresolved",
+            "conflicting"
+          ]
+        },
+        "dominance_applied": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "_runtime_validation_rules": [
+    "L1: If verdicts.ref_enforced == true -> phase_emitted MUST be REF or MIX (MIX only when dominance applied is REF)",
+    "L2: If boundary.boundary_crossed == true -> boundary_verdict MUST be 'crossed'",
+    "L3: If boundary_cross_attempted == true AND boundary_crossed == false -> boundary_verdict MUST be 'blocked'",
+    "L4: If authority_verdict != 'pass' AND boundary_verdict == 'crossed' -> INVALID (runtime invariant violation)",
+    "L5: boundary.irreversible_boundary_phrase must match plan exactly; plan_hash links to source plan"
+  ]
+}

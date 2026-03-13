@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shadow_run_record.v0.1",
+  "title": "Shadow Run Record v0.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "session_id",
+    "request_id",
+    "plan_hash",
+    "transport_status",
+    "boundary_verdict",
+    "emitted",
+    "timestamps",
+    "links",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "shadow_run_record.v0.1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "plan_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "transport_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "gate_unreachable",
+        "timeout",
+        "error"
+      ]
+    },
+    "decision": {
+      "type": "string"
+    },
+    "boundary_verdict": {
+      "type": "string",
+      "enum": [
+        "blocked",
+        "not_reached",
+        "allowed_pre_boundary_only",
+        "crossed"
+      ]
+    },
+    "emitted": {
+      "type": "object",
+      "required": [
+        "plan_emitted",
+        "ledger_emitted",
+        "decision_emitted"
+      ],
+      "properties": {
+        "plan_emitted": {
+          "type": "boolean"
+        },
+        "ledger_emitted": {
+          "type": "boolean"
+        },
+        "decision_emitted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "required": [
+        "start_utc",
+        "end_utc"
+      ],
+      "properties": {
+        "start_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_utc": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": [
+        "ledger_event_id"
+      ],
+      "properties": {
+        "ledger_event_id": {
+          "type": "string"
+        },
+        "model_artifact_id": {
+          "type": "string"
+        },
+        "freeze_version_id": {
+          "type": "string"
+        }
+      }
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

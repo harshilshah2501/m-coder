@@ -1,0 +1,8 @@
+id: JD-CODE-06-002
+phase: CODE
+guard: CODE-06
+stress_surface: Cross-tenant
+mutation_class: cross_tenant_no_token
+input_prompt: |
+  Audit scope spans tenant; requester has no token for target tenant audit.
+expected_verdict: ESCALATE

@@ -75,21 +75,21 @@ Monitor V16 model performance in production and identify optimization opportunit
 ## Monitoring Tools
 
 ### Automated Monitoring
-- **Script**: `rag/scripts/performance_monitor.py`
-- **Metrics File**: `rag/logs/v16_performance_metrics.json`
+- **Script**: `runtime/rag/scripts/performance_monitor.py`
+- **Metrics File**: `runtime/rag/logs/v16_performance_metrics.json`
 - **Update Frequency**: Every 60 seconds
 - **History**: Last 1,000 entries (~16 hours)
 
 ### Manual Checks
 ```bash
 # Check current status
-bash rag/scripts/orchestrator_unified.sh status
+bash runtime/rag/scripts/orchestrator_unified.sh status
 
 # View vLLM logs
-tail -f rag/logs/vllm.log
+tail -f runtime/rag/logs/vllm.log
 
 # View RAG API logs
-tail -f rag/logs/rag_api.log
+tail -f runtime/rag/logs/rag_api.log
 
 # Check GPU stats
 nvidia-smi

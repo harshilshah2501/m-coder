@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "plan.v0.1",
+  "title": "Runtime Plan Object v0.1",
+  "description": "Plan object for runtime enforcement. Constitutional phase and stress surfaces are orthogonal; no bijection. Routing invariants enforce harmony.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request",
+    "constitutional_phase_expected",
+    "stress_surfaces",
+    "authority",
+    "boundary",
+    "routing_invariants",
+    "policy_posture",
+    "tooling_intent"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "plan.v0.1"
+    },
+    "request": {
+      "type": "object",
+      "required": ["request_id", "session_id", "timestamp_utc", "actor", "artifacts"],
+      "properties": {
+        "request_id": { "type": "string", "minLength": 1 },
+        "session_id": { "type": "string", "minLength": 1 },
+        "timestamp_utc": { "type": "string", "format": "date-time" },
+        "actor": {
+          "type": "object",
+          "required": ["user_id"],
+          "properties": {
+            "user_id": { "type": "string" },
+            "tenant": { "type": "string" },
+            "channel": { "type": "string" }
+          }
+        },
+        "prompt_excerpt": { "type": "string" },
+        "artifacts": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "constitutional_phase_expected": {
+      "type": "string",
+      "enum": ["REF", "CONF", "DES", "MIX", "CODE"]
+    },
+    "stress_surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "SignalIntegrity",
+          "BaselinesHistory",
+          "ChangeBlastRadius",
+          "AuthorityOwnership",
+          "TimePressure",
+          "Compositional",
+          "ImplementationIrreversibility",
+          "ContextDrift"
+        ]
+      }
+    },
+    "authority": {
+      "type": "object",
+      "required": ["claimed", "validation_requirements", "validated"],
+      "properties": {
+        "claimed": {
+          "type": "object",
+          "properties": {
+            "requester_role": { "type": "string" },
+            "approvals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "ref": { "type": "string" }
+                }
+              }
+            },
+            "scope": { "type": "string" }
+          }
+        },
+        "validation_requirements": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "validated": {
+          "type": "object",
+          "required": ["verdict", "validator"],
+          "properties": {
+            "verdict": { "type": "string", "enum": ["pass", "fail", "unknown"] },
+            "missing": { "type": "array", "items": { "type": "string" } },
+            "validator": { "type": "string" }
+          }
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "required": ["irreversible_boundary_phrase", "boundary_type", "rollback_unilateral"],
+      "properties": {
+        "irreversible_boundary_phrase": { "type": "string", "minLength": 1 },
+        "boundary_type": {
+          "type": "string",
+          "enum": ["merge", "deploy", "prod_write", "security_change", "data_delete", "config_rollout", "notification", "other"]
+        },
+        "rollback_unilateral": { "type": "boolean" }
+      }
+    },
+    "routing_invariants": {
+      "type": "object",
+      "required": ["legitimacy_state", "irreversibility_state", "ambiguity_state", "dominance_applied"],
+      "properties": {
+        "legitimacy_state": { "type": "string", "enum": ["legitimate", "illegitimate", "unknown"] },
+        "irreversibility_state": {
+          "type": "string",
+          "enum": ["pre_boundary", "boundary_present", "boundary_cross_attempted", "boundary_crossed"]
+        },
+        "ambiguity_state": { "type": "string", "enum": ["resolved", "unresolved", "conflicting"] },
+        "dominance_applied": { "type": "string" }
+      }
+    },
+    "policy_posture": {
+      "type": "object",
+      "required": ["allowed_pre_boundary_actions", "blocked_actions", "terminal_posture"],
+      "properties": {
+        "allowed_pre_boundary_actions": { "type": "array", "items": { "type": "string" } },
+        "blocked_actions": { "type": "array", "items": { "type": "string" } },
+        "terminal_posture": {
+          "type": "string",
+          "enum": ["refuse", "defer", "bounded_allow", "safe_execute"]
+        }
+      }
+    },
+    "tooling_intent": {
+      "type": "object",
+      "required": ["tools_may_be_used", "tools_must_not_be_used", "execution_mode"],
+      "properties": {
+        "tools_may_be_used": { "type": "array", "items": { "type": "string" } },
+        "tools_must_not_be_used": { "type": "array", "items": { "type": "string" } },
+        "execution_mode": { "type": "string", "enum": ["no_exec", "shadow", "live"] }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "properties": {
+        "plan_hash": { "type": "string" },
+        "canonicalization": { "type": "string", "const": "stable_json_sorted_keys_utf8" }
+      }
+    }
+  },
+  "_runtime_validation_rules": [
+    "R1: If authority.validated.verdict != 'pass' AND boundary.boundary_type in {merge,deploy,prod_write,security_change,data_delete,config_rollout} -> terminal_posture MUST be 'refuse' OR 'defer'",
+    "R2: If constitutional_phase_expected == 'REF' -> terminal_posture MUST be 'refuse'",
+    "R3: If constitutional_phase_expected == 'DES' -> terminal_posture MUST NOT be 'safe_execute'",
+    "R4: If constitutional_phase_expected == 'CODE' -> execution_mode must be 'shadow' or 'live' (exception: design-only plans documented)",
+    "R5: boundary.irreversible_boundary_phrase must match exactly between plan and ledger; ledger references plan_hash"
+  ]
+}

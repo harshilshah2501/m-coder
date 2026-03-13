@@ -1,0 +1,29 @@
+{
+  "schema_version": "ide_event.v0.1",
+  "event_id": "550e8400-e29b-41d4-a716-446655440001",
+  "timestamp_utc": "2026-02-27T14:00:00Z",
+  "ide_context": {
+    "product": "jetbrains",
+    "ide": "intellij",
+    "project": "m-coder",
+    "repo_root": "/home/user/m-coder",
+    "branch": "main",
+    "user": "dev1"
+  },
+  "action": {
+    "action_type": "PR_MERGE",
+    "target": "main",
+    "diff_refs": [
+      "refs/heads/feature-x"
+    ],
+    "files_touched": [
+      "src/app.py"
+    ]
+  },
+  "evidence_refs": [
+    {
+      "type": "pr",
+      "ref": "https://github.com/org/repo/pull/42"
+    }
+  ]
+}

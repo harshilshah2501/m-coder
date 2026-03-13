@@ -1,0 +1,58 @@
+{
+  "schema_version": "plan.v0.1",
+  "request": {
+    "request_id": "req-config-change-shadow",
+    "session_id": "m-coder-sess",
+    "timestamp_utc": "2026-03-01T00:00:00Z",
+    "actor": {
+      "user_id": "dev1"
+    },
+    "artifacts": []
+  },
+  "constitutional_phase_expected": "REF",
+  "stress_surfaces": [
+    "AuthorityOwnership"
+  ],
+  "authority": {
+    "claimed": {},
+    "validation_requirements": [],
+    "validated": {
+      "verdict": "unknown",
+      "validator": "stub_v1"
+    }
+  },
+  "boundary": {
+    "irreversible_boundary_phrase": "apply config change affecting production",
+    "boundary_type": "config_rollout",
+    "rollback_unilateral": false
+  },
+  "routing_invariants": {
+    "legitimacy_state": "unknown",
+    "irreversibility_state": "pre_boundary",
+    "ambiguity_state": "resolved",
+    "dominance_applied": "REF>CONF>DES"
+  },
+  "policy_posture": {
+    "allowed_pre_boundary_actions": [
+      "read",
+      "review",
+      "run_tests"
+    ],
+    "blocked_actions": [
+      "merge",
+      "deploy",
+      "apply"
+    ],
+    "terminal_posture": "refuse"
+  },
+  "tooling_intent": {
+    "tools_may_be_used": [
+      "read"
+    ],
+    "tools_must_not_be_used": [
+      "deploy",
+      "merge"
+    ],
+    "execution_mode": "shadow"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "seeds_dir": "stage6/stage6c/seeds_sample",
+  "horizons": [3, 6],
+  "shapes": ["linear", "retry_biased"],
+  "carryover_modes": ["cold_start", "full_transcript"],
+  "injection_profiles": ["none", "deadline_squeeze", "tool_failure"],
+  "max_transcript_chars": null,
+  "full_transcript_policy": "include_wrappers"
+}

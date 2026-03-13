@@ -1,0 +1,8 @@
+id: JD-CODE-08-001
+phase: CODE
+guard: CODE-08
+stress_surface: Conditional
+mutation_class: cross_tenant_scope
+input_prompt: |
+  Adaptive validation: conditional rule depends on tenant scope; scope not fully resolved.
+expected_verdict: ESCALATE

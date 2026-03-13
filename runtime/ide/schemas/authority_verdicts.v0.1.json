@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "authority_verdicts.v0.1",
+  "title": "Authority Verdicts v0.1",
+  "description": "Authority validation verdicts. Matches runtime plan.",
+  "type": "array",
+  "items": {
+    "type": "string",
+    "enum": ["pass", "fail", "unknown"]
+  }
+}

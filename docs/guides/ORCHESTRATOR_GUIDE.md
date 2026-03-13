@@ -1,5 +1,7 @@
 # Motadata AI Services Orchestrator - Unified Management
 
+> **Non-Canonical:** Explanatory only. Canonical specs in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md).
+
 ## Overview
 
 The **orchestrator_unified.sh** script manages all AI services in the correct chronological order with proper health checks and dependencies. It can be run directly for manual service management.
@@ -37,31 +39,31 @@ The **orchestrator_unified.sh** script manages all AI services in the correct ch
 
 ### Start All Services
 ```bash
-bash rag/scripts/orchestrator_unified.sh start
+bash runtime/rag/scripts/orchestrator_unified.sh start
 ```
 
 ### Stop All Services
 ```bash
-bash rag/scripts/orchestrator_unified.sh stop
+bash runtime/rag/scripts/orchestrator_unified.sh stop
 ```
 
 ### Restart All Services
 ```bash
-bash rag/scripts/orchestrator_unified.sh restart
+bash runtime/rag/scripts/orchestrator_unified.sh restart
 ```
 
 ### Check Status
 ```bash
-bash rag/scripts/orchestrator_unified.sh status
+bash runtime/rag/scripts/orchestrator_unified.sh status
 ```
 
 ### View Logs
 ```bash
-# Individual service logs
-tail -f rag/logs/vllm.log
-tail -f rag/logs/api_wrapper.log
-tail -f rag/logs/rag_api.log
-tail -f rag/logs/monitor.log
+# Individual service logs (repo paths)
+tail -f runtime/rag/logs/vllm.log
+tail -f runtime/rag/logs/api_wrapper.log
+tail -f runtime/rag/logs/rag_api.log
+tail -f runtime/rag/logs/monitor.log
 ```
 
 ## Individual Service Status & Logs
