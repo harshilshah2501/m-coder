@@ -9,7 +9,7 @@ Production-ready AI services deployment with version-agnostic model naming and s
 - **Layer-2 — ML Compilation (Stages 1–8)**: **COMPLETE / LOCKED**  
   - Base→variants→Stage-6 mutation→freeze→SFT pipeline is closed. Stage-6C agent-loop mutation harness PASS, deterministic dataset freeze, SFT training and post-SFT revalidation PASS. See `docs/LIVE_ROADMAP_TRACKER.md` (§4.2.1, §4.2.2, §6.1), `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`, and `ml/training/FREEZE_CERTIFICATE_v1.json`.
 - **Layer-3 — Runtime Enforcement / Execution**: **IN PROGRESS**  
-  - Runtime emulator (M3.E0) and deterministic state machine contracts (M3.T0) are implemented; broader Runtime Governor / Repository Context Engine / Execution Sandbox / IDE integration are under active development. See `docs/LAYER3_RUNTIME_SPEC.md`, `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md`, and `docs/LIVE_ROADMAP_TRACKER.md` (§4.3).
+  - Runtime emulator (M3.E0) and deterministic state machine contracts (M3.T0) are implemented; broader Runtime Governor / Repository Context Engine / Execution Sandbox / IDE integration are under active development. See `docs/LAYER3_RUNTIME_SPEC.md`, `docs/runtime/RUNTIME_STATE_TRANSITIONS.md`, and `docs/LIVE_ROADMAP_TRACKER.md` (§4.3).
 - **Layer-4 — Observation / Drift Detection**: **PARTIAL**  
   - Governance-level drift suite and mutation taxonomy exist; production drift baselines, live collapse tracking, and GREG automation are pending. See `docs/ROADMAP_L2_L3_L4.md` and `observation/README.md`.
 

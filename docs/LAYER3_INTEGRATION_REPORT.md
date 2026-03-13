@@ -36,7 +36,7 @@ Merge commit history on the integration branch:
 - **Strategy:** `ort` merge strategy; normal merge commit.
 - **Conflict files:** None.
 - **Files brought in (representative):**  
-  `runtime/execute_service/handlers.py`, `runtime/ide/schemas/execute_request.v0.1.schema.json`, `runtime/ide/schemas/execute_response.v0.1.schema.json`, `runtime/plangate/` (authority_validator, command_utils, contracts, irreversibility_detector, judge_gate), `runtime/tests/test_execute_service.py`, `runtime/tests/test_plangate_*.py`, `jetbrains-plugin/.../bridge/*`, `jetbrains-plugin/.../actions/SubmitToRuntimeAction.kt`, `docs/RUNTIME/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md`, `docs/RUNTIME/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md`, `docs/LIVE_ROADMAP_TRACKER.md`, and related updates.
+  `runtime/execute_service/handlers.py`, `runtime/ide/schemas/execute_request.v0.1.schema.json`, `runtime/ide/schemas/execute_response.v0.1.schema.json`, `runtime/plangate/` (authority_validator, command_utils, contracts, irreversibility_detector, judge_gate), `runtime/tests/test_execute_service.py`, `runtime/tests/test_plangate_*.py`, `jetbrains-plugin/.../bridge/*`, `jetbrains-plugin/.../actions/SubmitToRuntimeAction.kt`, `docs/runtime/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md`, `docs/runtime/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md`, `docs/LIVE_ROADMAP_TRACKER.md`, and related updates.
 
 **Conflict resolution:** N/A — both merges were conflict-free.
 

@@ -8,7 +8,7 @@ Layer-3 enforces constitutional judgment at execution time. It implements Phase-
 
 **Directory:** `runtime/`
 
-Deterministic runtime state machine semantics are defined in `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` and the associated schemas in `runtime/state/schemas/`.
+Deterministic runtime state machine semantics are defined in `docs/runtime/RUNTIME_STATE_TRANSITIONS.md` and the associated schemas in `runtime/state/schemas/`.
 
 ---
 

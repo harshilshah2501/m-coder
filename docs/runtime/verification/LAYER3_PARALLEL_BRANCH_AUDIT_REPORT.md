@@ -41,7 +41,7 @@
 
 | File | Classification | Notes |
 |------|----------------|-------|
-| docs/RUNTIME/milestones/M3.1_AGENT_LOOP_ORCHESTRATOR.md | Allowed | Docs |
+| docs/runtime/milestones/M3.1_AGENT_LOOP_ORCHESTRATOR.md | Allowed | Docs |
 | docs/runtime/branch_execution_notes/feature-m3.1-orchestrator.md | Allowed | Docs |
 | runtime/orchestrator/__init__.py | Allowed | M3.1 allowed runtime/orchestrator/** |
 | runtime/orchestrator/budget_policy.py | Allowed | M3.1 allowed |

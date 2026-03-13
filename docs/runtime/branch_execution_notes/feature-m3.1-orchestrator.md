@@ -45,7 +45,7 @@ Core design rule: **The model proposes; the runtime decides.**
 - `governance/**`
 - `ml/**`
 - `docs/CONSTITUTION*`
-- `docs/GOVERNANCE/**`
+- `docs/governance/**`
 - `docs/MASTER_SYSTEM_SPEC.md`
 - `runtime/ide/schemas/plan_request.v0.1.schema.json`
 - `runtime/ide/schemas/decision_response.v0.1.schema.json`
@@ -112,7 +112,7 @@ runtime/tests/ (full suite): 253 passed, 10 skipped
 | `runtime/orchestrator/transition_executor.py` | Transition execution with handlers and hooks |
 | `runtime/orchestrator/replay.py` | Deterministic replay utilities |
 | `runtime/tests/orchestrator_test_suite.py` | Comprehensive orchestrator test suite (48 tests) |
-| `docs/RUNTIME/milestones/M3.1_AGENT_LOOP_ORCHESTRATOR.md` | Loop controller spec and design |
+| `docs/runtime/milestones/M3.1_AGENT_LOOP_ORCHESTRATOR.md` | Loop controller spec and design |
 
 ### Key Capabilities Implemented
 
@@ -138,7 +138,7 @@ runtime/tests/ (full suite): 253 passed, 10 skipped
 - `runtime/orchestrator/transition_executor.py`
 - `runtime/orchestrator/replay.py`
 - `runtime/tests/orchestrator_test_suite.py`
-- `docs/RUNTIME/milestones/M3.1_AGENT_LOOP_ORCHESTRATOR.md`
+- `docs/runtime/milestones/M3.1_AGENT_LOOP_ORCHESTRATOR.md`
 
 ### Modified Files (2)
 

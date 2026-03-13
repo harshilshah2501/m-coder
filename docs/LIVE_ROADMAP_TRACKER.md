@@ -208,7 +208,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Required Artifacts**
 
-- `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md`
+- `docs/runtime/RUNTIME_STATE_TRANSITIONS.md`
 - `runtime/state/schemas/state_enums.v0.1.json`
 - `runtime/state/schemas/transition_matrix.v0.1.json`
 
@@ -242,7 +242,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 **Evidence**
 
 - **Artifacts**:
-  - `docs/RUNTIME/REPOSITORY_CONTEXT_ENGINE.md` — repository context engine responsibilities, contracts, determinism rules, and out-of-scope guarantees.
+  - `docs/runtime/REPOSITORY_CONTEXT_ENGINE.md` — repository context engine responsibilities, contracts, determinism rules, and out-of-scope guarantees.
   - `runtime/context/contracts.py` — `ContextRequest`, `SelectedContextRef`, `ContextItem`, `ContextBundle` contracts.
   - `runtime/context/selectors.py` — deterministic direct/sibling/import/symbol selectors (selection-only, no content).
   - `runtime/context/engine.py` — `ContextEngine.build_context_bundle()` with selection vs materialization split, caps, and fail-closed behavior.
@@ -304,7 +304,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 - Ledger event types: plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute (request_id, plan_hash, decision_posture, reason).
 - Demo extension: SAFE_EXECUTE → execution, REFUSE → refusal, DEFER → deferred, BOUNDED_ALLOW → bounded_allow; decision + outcome printed.
 - `runtime/tests/test_plangate_integration.py` — refusal/defer/bounded_allow prevent sandbox; safe_execute allows; bounded_allow distinct from defer; decision persists.
-- `docs/RUNTIME/milestones/M3.3_PLAN_GATE_INTEGRATION.md` — milestone doc.
+- `docs/runtime/milestones/M3.3_PLAN_GATE_INTEGRATION.md` — milestone doc.
 
 **Exit Criteria**
 
@@ -488,7 +488,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 - **Milestone**: M3.1 Deterministic Agent State Transition Table — <span style="color:#2e7d32">COMPLETE</span> (2026-03-10)
 - **Artifacts** (3/3):
-  - `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` — deterministic runtime state transition contract (runtime-owned control, terminal states, stop reasons, plan-gate checkpoints, decision-boundary ledger semantics)
+  - `docs/runtime/RUNTIME_STATE_TRANSITIONS.md` — deterministic runtime state transition contract (runtime-owned control, terminal states, stop reasons, plan-gate checkpoints, decision-boundary ledger semantics)
   - `runtime/state/schemas/state_enums.v0.1.json` — state + stop_reason enums (13 states including `PLAN_EVALUATED`)
   - `runtime/state/schemas/transition_matrix.v0.1.json` — allowed transitions only, terminal non-escaping states, `transition_id`, plan-gate checkpoints, decision-boundary ledger semantics (anti-double-ledger guidance)
 - **Evidence**:
@@ -536,7 +536,7 @@ This section records **evidence of completed milestones**. Entries should be **a
     - `runtime/ide/schemas/execute_request.v0.1.schema.json` — Optional ledger_path, plan_gate_* (test/demo).
     - `runtime/ide/schemas/execute_response.v0.1.schema.json` — decision_ledger_row_id, ledger_row_id.
   - **Tests**: `runtime/tests/test_execute_service.py` — 30 tests (validation, explicit flags, decision ledgering, shlex parsing).
-  - **Documentation**: `docs/RUNTIME/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md`, `docs/RUNTIME/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md`.
+  - **Documentation**: `docs/runtime/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md`, `docs/runtime/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md`.
 - **Evidence**:
   - **Plan-Gate decision ledgering in /v0/execute:** When ledger_path (request or MOTADATA_EXECUTE_LEDGER_PATH) is set, Plan-Gate decision is persisted (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute) before sandbox or return. Response includes decision_ledger_row_id; ledger_row_id when executed. Decision and execution evidence are separate.
   - **Production governance:** No command-string keyword heuristics. Posture from PlanGateService.evaluate(request) only; test/demo control via explicit plan_gate_refuse, plan_gate_defer, plan_gate_bounded_allow.
@@ -583,7 +583,7 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `runtime/sandbox/sandbox_ledger_store.py` — EVENT_PLANGATE_REFUSED, EVENT_PLANGATE_DEFERRED, EVENT_PLANGATE_BOUNDED_ALLOW, EVENT_PLANGATE_SAFE_EXECUTE; same store persists plangate_* and sandbox_*; linkage via request_id.
   - `runtime/sandbox/demo_governed_execution.py` — PlanGateService() in controller; five cases: SAFE_EXECUTE → EXECUTED, REFUSE (curl), REFUSED (no gate), DEFER → deferred, BOUNDED_ALLOW → bounded_allow; decision + outcome printed.
   - `runtime/tests/test_plangate_integration.py` — PlanGateDecision/PlanGateService (incl. force_bounded_allow, bounded_allow distinct from defer); LoopController: refusal/defer/bounded_allow prevent sandbox, safe_execute allows; decision persists; plangate_bounded_allow ledger row.
-  - `docs/RUNTIME/milestones/M3.3_PLAN_GATE_INTEGRATION.md` — milestone document; bounded_allow MVP meaning; future follow-up note (no bounded sandbox profile yet).
+  - `docs/runtime/milestones/M3.3_PLAN_GATE_INTEGRATION.md` — milestone document; bounded_allow MVP meaning; future follow-up note (no bounded sandbox profile yet).
 - **Evidence**:
   - **Execution chain:** request → Plan-Gate → runtime decision → LoopController transition → sandbox (if allowed) → ledger evidence. No execution path may bypass Plan-Gate.
   - **Postures (all four exercised):** refuse → REFUSED + plangate_refused + sandbox_refused; defer → valid=False, stop_reason=deferred + plangate_deferred; bounded_allow → valid=False, stop_reason=bounded_allow + plangate_bounded_allow (no sandbox); safe_execute → _run_sandbox_and_persist + plangate_safe_execute + sandbox_executed. Only safe_execute reaches sandbox in MVP.
@@ -638,7 +638,7 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `runtime/sandbox/sandbox_driver.py` — SandboxDriver protocol, BaseSandboxDriver(ABC), LocalProcessSandboxDriver; driver_name for observability.
   - `runtime/sandbox/sandbox_executor.py` — Optional `driver` parameter; delegates to `_driver.run` / `_driver.validate_only`; default LocalProcessSandboxDriver.
   - `runtime/tests/test_sandbox_driver.py` — Driver and executor-through-driver tests.
-  - `docs/RUNTIME/milestones/M3.10_SANDBOX_DRIVER_ABSTRACTION.md`, `docs/runtime/branch_execution_notes/` (M3.10 note).
+  - `docs/runtime/milestones/M3.10_SANDBOX_DRIVER_ABSTRACTION.md`, `docs/runtime/branch_execution_notes/` (M3.10 note).
 - **Evidence**:
   - Pluggable driver seam: executor owns governance and ledger; driver only runs/validates.
   - Default `SandboxExecutor()` uses LocalProcessSandboxDriver; backward compatible.

@@ -9,9 +9,9 @@
 | [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md) | Single entry point; TOC; Doctrine Immutability Clause |
 | [GLOSSARY.md](GLOSSARY.md) | CIM term definitions and schema references |
 | [NON_NEGOTIABLE_INVARIANTS.md](NON_NEGOTIABLE_INVARIANTS.md) | Fail-closed semantics (gate-down→block, append-only ledger, boundary invariance) |
-| [GOVERNANCE/README.md](GOVERNANCE/README.md) | Layer-1 index |
+| [governance/README.md](governance/README.md) | Layer-1 index |
 | [COMPILATION/README.md](COMPILATION/README.md) | Layer-2 index |
-| [RUNTIME/README.md](RUNTIME/README.md) | Layer-3 index |
+| [runtime/README.md](runtime/README.md) | Layer-3 index |
 | [OBSERVATION/README.md](OBSERVATION/README.md) | Layer-4 index |
 | [CONTRACTS/README.md](CONTRACTS/README.md) | Contract and schema index |
 

@@ -60,7 +60,7 @@ Never modify protected surfaces unless explicitly instructed:
 - governance/**
 - ml/**
 - docs/CONSTITUTION*
-- docs/GOVERNANCE/**
+- docs/governance/**
 - runtime/schemas/**
 - runtime/ide/schemas/**
 - core doctrine / invariant documents

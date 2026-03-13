@@ -1,4 +1,4 @@
-> **⚠️ Non-Canonical:** Explanatory walkthrough only. Canonical specs live in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md) and [docs/GOVERNANCE/](../GOVERNANCE/), [docs/COMPILATION/](../COMPILATION/), [docs/RUNTIME/](../RUNTIME/), [docs/OBSERVATION/](../OBSERVATION/), [docs/CONTRACTS/](../CONTRACTS/).
+> **⚠️ Non-Canonical:** Explanatory walkthrough only. Canonical specs live in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md) and [docs/governance/](../governance/), [docs/COMPILATION/](../COMPILATION/), [docs/runtime/](../runtime/), [docs/OBSERVATION/](../OBSERVATION/), [docs/CONTRACTS/](../CONTRACTS/).
 
 
 Good. Now we go to the root.

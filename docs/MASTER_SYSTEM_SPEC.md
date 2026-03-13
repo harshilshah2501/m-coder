@@ -59,7 +59,7 @@ The Layer-3 runtime turns constitutional doctrine into hard enforcement for day-
   - Respect token/step budgets and output schemas defined by Layer-3 contracts.
   - Never execute tools, mutate repositories, or change task state directly; all such effects are mediated by the runtime and logged via ledger emission.
 
-Key components of the runtime-governed agent architecture are elaborated in [RUNTIME/RUNTIME_AGENT_ARCHITECTURE.md](RUNTIME/RUNTIME_AGENT_ARCHITECTURE.md): Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, and Model Worker Interface.
+Key components of the runtime-governed agent architecture are elaborated in [runtime/RUNTIME_AGENT_ARCHITECTURE.md](runtime/RUNTIME_AGENT_ARCHITECTURE.md): Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, and Model Worker Interface.
 
 ---
 
@@ -70,9 +70,9 @@ Key components of the runtime-governed agent architecture are elaborated in [RUN
 | [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md)             | L1    | Phase definitions, dominance hierarchy, structural invariants |
 | [ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)                                                      | All   | 4-layer directory mapping, axis separation, allowed/forbidden |
 | [PHASE_ALIGNMENT_TABLE_V0_1.md](PHASE_ALIGNMENT_TABLE_V0_1.md)                                          | All   | Phase↔stage alignment (non-bijection)                         |
-| [GOVERNANCE/README.md](GOVERNANCE/README.md)                                                            | L1    | Layer-1 index                                                 |
+| [governance/README.md](governance/README.md)                                                            | L1    | Layer-1 index                                                 |
 | [COMPILATION/README.md](COMPILATION/README.md)                                                          | L2    | Layer-2 index; DAG, lineage, Stage-6, freeze                  |
-| [RUNTIME/README.md](RUNTIME/README.md)                                                                  | L3    | Layer-3 index; plan/ledger, IDE, shadow                       |
+| [runtime/README.md](runtime/README.md)                                                                  | L3    | Layer-3 index; plan/ledger, IDE, shadow                       |
 | [OBSERVATION/README.md](OBSERVATION/README.md)                                                          | L4    | Layer-4 index; ingest, baseline, drift                        |
 | [COMPILATION_DAG_AND_LINEAGE_V0_1.md](COMPILATION_DAG_AND_LINEAGE_V0_1.md)                              | L2    | DAG spec, lineage rules R-L1..R-L5                            |
 | [RUNTIME_PLAN_AND_LEDGER_V0_1.md](RUNTIME_PLAN_AND_LEDGER_V0_1.md)                                      | L3    | Plan/ledger spec, rules R1-R5, L1-L5                          |

@@ -19,7 +19,7 @@ The core principle is simple: **the model proposes, the runtime decides.** The r
 
 Layer-3 is implemented as a deterministic state machine that drives the agent loop. States and transitions are runtime-owned; the model cannot introduce new states or transitions.
 
-Canonical state and transition definitions live in `docs/RUNTIME/RUNTIME_STATE_TRANSITIONS.md` and the schemas `runtime/state/schemas/state_enums.v0.1.json` and `runtime/state/schemas/transition_matrix.v0.1.json`. The diagram below is illustrative only; if there is any discrepancy, the canonical spec and schemas win.
+Canonical state and transition definitions live in `docs/runtime/RUNTIME_STATE_TRANSITIONS.md` and the schemas `runtime/state/schemas/state_enums.v0.1.json` and `runtime/state/schemas/transition_matrix.v0.1.json`. The diagram below is illustrative only; if there is any discrepancy, the canonical spec and schemas win.
 
 Example high-level state machine:
 

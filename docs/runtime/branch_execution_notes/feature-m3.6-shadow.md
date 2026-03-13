@@ -26,7 +26,7 @@ Shadow is **log-only enforcement**.
 - `runtime/plan_gate_service/**` only for shadow artifact plumbing
 - `runtime/tests/**` for shadow tests (`shadow_*`)
 - `observation/ingest/**` only if required to support ingestion batch validation
-- `docs/RUNTIME/**` and `docs/runtime/**`
+- `docs/runtime/**` and `docs/runtime/**`
 - `docs/runtime/branch_execution_notes/feature-m3.6-shadow.md`
 
 ## Forbidden files
