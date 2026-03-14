@@ -45,15 +45,15 @@ Detect and classify governance/runtime collapse vectors deterministically from r
 
 ---
 
-## 4. Files Added
+## 4. Files Changed
 
-| File | Purpose |
-|------|---------|
-| `runtime/observation/__init__.py` | Package init; exports models, classifier, queries |
-| `runtime/observation/collapse_models.py` | `CollapseClass`, `CollapseEvent`, `CollapseEvidence`, `CollapseSeverity`, `CollapseSummary` |
-| `runtime/observation/collapse_vectors.py` | `CollapseClassifier`, `ClassificationResult` |
-| `runtime/observation/collapse_queries.py` | `CollapseQueryService`, `CollapseFilter`, query helpers |
-| `runtime/tests/test_collapse_vectors.py` | Comprehensive tests for all components |
+| File | Change Type | Purpose |
+|------|-------------|---------|
+| `runtime/observation/__init__.py` | Updated | Added M4.3 exports to existing package (preserves M4.1, M4.2, M4.4 exports) |
+| `runtime/observation/collapse_models.py` | Added | `CollapseClass`, `CollapseEvent`, `CollapseEvidence`, `CollapseSeverity`, `CollapseSummary` |
+| `runtime/observation/collapse_vectors.py` | Added | `CollapseClassifier`, `ClassificationResult` |
+| `runtime/observation/collapse_queries.py` | Added | `CollapseQueryService`, `CollapseFilter`, query helpers |
+| `runtime/tests/test_collapse_vectors.py` | Added | Comprehensive tests for all components |
 
 ---
 
@@ -202,19 +202,19 @@ matching = service.query(filter_)
 | Documentation complete | ✓ |
 
 **Merge dependencies:**
-- M4.1 (Observability closure) — for `canonical_hash` identity checks
-- M4.2 (Drift baseline) — optional; for baseline drift detection
+- M4.1 (Observability closure) — for `canonical_hash` identity checks (already merged)
+- M4.2 (Drift baseline) — for baseline drift detection (already merged)
+- M4.4 (Ledger reconciliation) — coexists in observation package (already merged)
 
-**Recommended merge order:**
-1. M4.1 (if not already merged)
-2. M4.2 (if not already merged)
-3. M4.3 (this milestone)
+**Integration notes:**
+- M4.1, M4.2, and M4.4 are already merged into `integration/m4x-program`
+- M4.3 exports are additive over existing observation package
+- All existing exports preserved; no breaking changes
 
 ---
 
 ## 12. Follow-up Work
 
-- **M4.4 (Ledger reconciliation)**: Use collapse events for reconciliation evidence
 - **M4.5 (GREG escalation)**: Trigger GREG audit on critical collapses
 - **M4.6 (Runtime metrics)**: Include collapse counts in metrics
 
