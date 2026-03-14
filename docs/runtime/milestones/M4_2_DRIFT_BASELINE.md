@@ -56,16 +56,24 @@ The following dimensions are tracked for behavioral baselining:
 
 | File | Purpose |
 |------|---------|
-| `runtime/observation/__init__.py` | Package init; exports all baseline types |
 | `runtime/observation/baseline_models.py` | `BaselineDimension`, `DimensionDistribution`, `BaselineSnapshot`, `BaselineMetadata` |
 | `runtime/observation/drift_baseline.py` | `BaselineBuilder`, `BaselineBuildError` |
 | `runtime/observation/baseline_store.py` | `BaselineStore`, `BaselineStoreError` |
 | `runtime/tests/test_drift_baseline.py` | Comprehensive test suite |
 | `docs/runtime/milestones/M4_2_DRIFT_BASELINE.md` | This milestone note |
 
-### Files Unchanged
+### Modified Files
 
-No existing files were modified. All implementation is additive.
+| File | Change |
+|------|--------|
+| `runtime/observation/__init__.py` | Added M4.2 exports additively to existing M4.1 and M4.4 exports |
+
+M4.2 exports added:
+- `BaselineDimension`, `DimensionDistribution`, `BaselineSnapshot`, `BaselineMetadata`
+- `BaselineBuilder`, `BaselineBuildError`
+- `BaselineStore`, `BaselineStoreError`
+
+Preserved exports from M4.1 and M4.4 unchanged.
 
 ---
 
