@@ -1,5 +1,5 @@
 """
-Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.3 Collapse Tracking + M4.4 Ledger Reconciliation.
+Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.3 Collapse Tracking + M4.4 Ledger Reconciliation + M4.5 GREG Escalation.
 
 This package provides:
 
@@ -27,6 +27,17 @@ M4.4 Ledger Reconciliation:
 - MismatchClassification, MismatchSeverity: Mismatch types and severity
 - ReconciliationMismatch, ReconciliationResult, ReconciliationStatus: Results
 - RowLinkage: Ledger row linkage evidence
+
+M4.5 GREG Governance Escalation:
+- EscalationPolicy: Threshold-based escalation decision logic
+- EscalationThresholds: Configurable thresholds for escalation triggers
+- EscalationDecision: Result of escalation evaluation
+- EscalationType, EscalationSeverity: Escalation classification
+- GREGBundle: Evidence bundle for governance escalation
+- EscalationEvidence: Aggregated evidence structures
+- BundleBuilder: Constructs bundles from observation data
+- EscalationMismatchType: Mismatch types for escalation (distinct from M4.4)
+- CollapseClassification: Collapse vector classification for escalation
 
 Rules:
 - Deterministic only (no LLMs, no randomness)
@@ -107,7 +118,35 @@ from runtime.observation.reconciliation import (
     ReconciliationConfig,
 )
 
+# =============================================================================
+# M4.5 GREG Governance Escalation exports
+# =============================================================================
+
+from runtime.observation.greg_escalation import (
+    EscalationPolicy,
+    EscalationThresholds,
+    EscalationDecision,
+    EscalationType,
+    EscalationSeverity,
+)
+from runtime.observation.greg_bundle import (
+    GREGBundle,
+    EscalationEvidence,
+    EscalationMismatchType,
+    CollapseClassification,
+    MismatchEvidence,
+    CollapseEvidence as GREGCollapseEvidence,
+    DriftEvidence,
+    IntegrityEvidence,
+    LedgerReference,
+    BundleSummary,
+)
+from runtime.observation.bundle_builder import BundleBuilder
+
 __all__ = [
+    # =========================================================================
+    # M4.1 Observability Closure
+    # =========================================================================
     # M4.1 Models
     "TraceEvent",
     "ExecutionTrace",
@@ -122,6 +161,9 @@ __all__ = [
     "RuntimeSummaryQueries",
     # M4.1 Explanation
     "ExplanationBuilder",
+    # =========================================================================
+    # M4.2 Drift Baseline
+    # =========================================================================
     # M4.2 Baseline models
     "BaselineDimension",
     "DimensionDistribution",
@@ -133,6 +175,9 @@ __all__ = [
     # M4.2 BaselineStore
     "BaselineStore",
     "BaselineStoreError",
+    # =========================================================================
+    # M4.3 Collapse Vector Tracking
+    # =========================================================================
     # M4.3 Collapse models
     "CollapseClass",
     "CollapseEvent",
@@ -145,6 +190,9 @@ __all__ = [
     # M4.3 CollapseQueryService
     "CollapseQueryService",
     "CollapseFilter",
+    # =========================================================================
+    # M4.4 Ledger Reconciliation
+    # =========================================================================
     # M4.4 Reconciliation service
     "LedgerReconciliationService",
     "ReconciliationConfig",
@@ -157,4 +205,26 @@ __all__ = [
     "ReconciliationStatus",
     # M4.4 Linkage evidence
     "RowLinkage",
+    # =========================================================================
+    # M4.5 GREG Governance Escalation
+    # =========================================================================
+    # M4.5 Escalation policy
+    "EscalationPolicy",
+    "EscalationThresholds",
+    "EscalationDecision",
+    "EscalationType",
+    "EscalationSeverity",
+    # M4.5 GREG bundle
+    "GREGBundle",
+    "EscalationEvidence",
+    "EscalationMismatchType",
+    "CollapseClassification",
+    "MismatchEvidence",
+    "GREGCollapseEvidence",
+    "DriftEvidence",
+    "IntegrityEvidence",
+    "LedgerReference",
+    "BundleSummary",
+    # M4.5 Bundle builder
+    "BundleBuilder",
 ]
