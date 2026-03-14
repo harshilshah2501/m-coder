@@ -1,9 +1,9 @@
 # M4.6 Runtime Performance Metrics — Implementation Note
 
 **Milestone:** M4.6  
-**Branch:** feature/m4.6-runtime-metrics  
-**Status:** Implementation complete  
-**Base commit:** cd2e74df7bb8174881e9957daa8582f231780c10 (M4.1 Slice-4)
+**Branch:** cursor/runtime-performance-metrics-6710  
+**Status:** Implementation complete, integrated with M4.1-M4.5  
+**Base commit:** Aligned with origin/integration/m4x-program (M4.1-M4.5 integrated)
 
 ## Purpose
 
@@ -19,22 +19,44 @@ Provide deterministic operational visibility into runtime health and invariance 
 
 | Milestone | Dependency Type | Description |
 |-----------|-----------------|-------------|
-| M4.1 | Required | canonical_hash indexed column, ledger identity propagation |
+| M4.1 | Required | canonical_hash indexed column, ledger identity propagation, observation package |
+| M4.2 | Integrated | Drift baseline (now part of observation package) |
+| M4.3 | Integrated | Collapse tracking (now part of observation package) |
+| M4.4 | Integrated | Ledger reconciliation (now part of observation package) |
+| M4.5 | Integrated | GREG escalation (now part of observation package) |
 | M3.2 | Required | SandboxLedgerStore append-only persistence |
 | M3.5 | Required | LedgerStore with ledger_row.v0.1 schema |
-| M4.2 | Optional | Drift baseline metrics (not yet implemented) |
-| M4.3 | Optional | Collapse tracking metrics (not yet implemented) |
-| M4.4 | Optional | Ledger reconciliation metrics (not yet implemented) |
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `runtime/observation/__init__.py` | **New.** Module init; exports all metrics types and service. |
-| `runtime/observation/metrics_models.py` | **New.** Data structures for metrics reports: PostureCounts, ExecutionCounts, BackendDistribution, CanonicalHashReuse, LatencySummary, ReplayCounts, CollapseSummary, InvariantHealth, RuntimeMetricsReport. |
+| `runtime/observation/__init__.py` | **Modified.** Extended existing M4.1-M4.5 package init with M4.6 exports. Additive change only. |
+| `runtime/observation/metrics_models.py` | **New.** Data structures for metrics reports: PostureCounts, ExecutionCounts, MetricsBackendDistribution, CanonicalHashReuse, LatencySummary, ReplayCounts, MetricsCollapseSummary, InvariantHealth, RuntimeMetricsReport. |
 | `runtime/observation/runtime_metrics.py` | **New.** RuntimeMetricsService query layer; reads from SandboxLedgerStore and LedgerStore. |
 | `runtime/tests/test_runtime_metrics.py` | **New.** Comprehensive tests for metrics models and service. |
 | `docs/runtime/milestones/M4_6_RUNTIME_METRICS.md` | **New.** This implementation note. |
+
+## Integration Notes
+
+### Naming Disambiguation
+
+To avoid conflicts with existing M4.1 and M4.3 exports, M4.6 uses distinct names:
+
+| M4.6 Export | Distinct From | Rationale |
+|-------------|---------------|-----------|
+| `MetricsBackendDistribution` | M4.1 `BackendDistribution` | M4.6 version includes `counts` dict and `increment()` method; M4.1 version is simpler |
+| `MetricsCollapseSummary` | M4.3 `CollapseSummary` | M4.6 version is aggregate counts; M4.3 version is event-level detail |
+
+### Preserved Exports
+
+All M4.1-M4.5 exports are preserved unchanged:
+
+- **M4.1:** TraceEvent, ExecutionTrace, PostureDistribution, RefusalSummary, BackendDistribution, RuntimeSummary, ExplanationPayload, TraceBuilder, RuntimeSummaryQueries, ExplanationBuilder
+- **M4.2:** BaselineDimension, DimensionDistribution, BaselineSnapshot, BaselineMetadata, BaselineBuilder, BaselineBuildError, BaselineStore, BaselineStoreError
+- **M4.3:** CollapseClass, CollapseEvent, CollapseEvidence, CollapseSeverity, CollapseSummary, CollapseClassifier, ClassificationResult, CollapseQueryService, CollapseFilter
+- **M4.4:** LedgerReconciliationService, ReconciliationConfig, MismatchClassification, MismatchSeverity, ReconciliationMismatch, ReconciliationResult, ReconciliationStatus, RowLinkage
+- **M4.5:** EscalationPolicy, EscalationThresholds, EscalationDecision, EscalationType, EscalationSeverity, GREGBundle, EscalationEvidence, EscalationMismatchType, CollapseClassification, MismatchEvidence, GREGCollapseEvidence, DriftEvidence, IntegrityEvidence, LedgerReference, BundleSummary, BundleBuilder
 
 ## Metrics Provided
 
@@ -128,11 +150,7 @@ report.to_dict()  # JSON-serializable dictionary
 
 1. **Latency data availability:** Latency metrics depend on payload.metrics.latency_ms being populated in ledger_rows. If not present, latency summary will be empty.
 
-2. **M4.3 collapse metrics:** Collapse/mismatch counting is prepared but depends on M4.3 implementation to populate the relevant event types.
-
-3. **M4.4 reconciliation:** Ledger reconciliation metrics are not yet implemented; awaits M4.4.
-
-4. **No streaming:** Metrics are computed on-demand via full scan. For large ledgers, consider pagination or incremental updates in future.
+2. **No streaming:** Metrics are computed on-demand via full scan. For large ledgers, consider pagination or incremental updates in future.
 
 ## Merge Readiness
 
@@ -144,5 +162,7 @@ report.to_dict()  # JSON-serializable dictionary
 | No bypass paths introduced | ✅ |
 | Append-only preserved | ✅ |
 | Documentation complete | ✅ |
+| M4.1-M4.5 exports preserved | ✅ |
+| Integration compatibility verified | ✅ |
 
-**Merge dependencies:** None. M4.6 is read-only over M4.1 outputs and can merge independently.
+**Merge dependencies:** Aligned with origin/integration/m4x-program. M4.6 is additive over integrated M4.1-M4.5 observation package.

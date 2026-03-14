@@ -19,9 +19,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from runtime.observation.metrics_models import (
-    BackendDistribution,
+    MetricsBackendDistribution,
     CanonicalHashReuse,
-    CollapseSummary,
+    MetricsCollapseSummary,
     ExecutionCounts,
     InvariantHealth,
     LatencySummary,
@@ -423,7 +423,7 @@ class RuntimeMetricsService:
                 sandbox_conn.close()
         return report.execution_counts
     
-    def get_backend_distribution(self) -> BackendDistribution:
+    def get_backend_distribution(self) -> MetricsBackendDistribution:
         """Get backend distribution only."""
         report = RuntimeMetricsReport()
         sandbox_conn = self._get_sandbox_connection()

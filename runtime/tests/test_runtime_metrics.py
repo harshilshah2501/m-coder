@@ -15,9 +15,9 @@ from pathlib import Path
 import pytest
 
 from runtime.observation.metrics_models import (
-    BackendDistribution,
+    MetricsBackendDistribution,
     CanonicalHashReuse,
-    CollapseSummary,
+    MetricsCollapseSummary,
     ExecutionCounts,
     InvariantHealth,
     LatencySummary,
@@ -82,18 +82,18 @@ class TestExecutionCounts:
         assert d["total"] == 10
 
 
-class TestBackendDistribution:
-    """Tests for BackendDistribution model."""
+class TestMetricsBackendDistribution:
+    """Tests for MetricsBackendDistribution model."""
     
     def test_empty_backend_distribution(self) -> None:
-        """Empty BackendDistribution has zero total."""
-        bd = BackendDistribution()
+        """Empty MetricsBackendDistribution has zero total."""
+        bd = MetricsBackendDistribution()
         assert bd.total == 0
         assert bd.counts == {}
     
     def test_backend_distribution_increment(self) -> None:
-        """BackendDistribution.increment updates counts."""
-        bd = BackendDistribution()
+        """MetricsBackendDistribution.increment updates counts."""
+        bd = MetricsBackendDistribution()
         bd.increment("local_process")
         bd.increment("local_process")
         bd.increment("container")
@@ -102,8 +102,8 @@ class TestBackendDistribution:
         assert bd.total == 3
     
     def test_backend_distribution_to_dict(self) -> None:
-        """BackendDistribution.to_dict includes counts and total."""
-        bd = BackendDistribution(counts={"local_process": 5, "container": 3})
+        """MetricsBackendDistribution.to_dict includes counts and total."""
+        bd = MetricsBackendDistribution(counts={"local_process": 5, "container": 3})
         d = bd.to_dict()
         assert d["counts"]["local_process"] == 5
         assert d["counts"]["container"] == 3
@@ -540,19 +540,19 @@ class TestInvariantHealth:
         assert d["boundary_cross_blocked"] == 3
 
 
-class TestCollapseSummary:
-    """Tests for CollapseSummary model."""
+class TestMetricsCollapseSummary:
+    """Tests for MetricsCollapseSummary model."""
     
     def test_collapse_summary_defaults(self) -> None:
-        """CollapseSummary has zero defaults."""
-        cs = CollapseSummary()
+        """MetricsCollapseSummary has zero defaults."""
+        cs = MetricsCollapseSummary()
         assert cs.mismatch_count == 0
         assert cs.collapse_count == 0
         assert cs.boundary_blocked == 0
     
     def test_collapse_summary_to_dict(self) -> None:
-        """CollapseSummary.to_dict includes all fields."""
-        cs = CollapseSummary(
+        """MetricsCollapseSummary.to_dict includes all fields."""
+        cs = MetricsCollapseSummary(
             mismatch_count=2,
             collapse_count=1,
             boundary_blocked=3,

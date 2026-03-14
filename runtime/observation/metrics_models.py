@@ -68,11 +68,12 @@ class ExecutionCounts:
 
 
 @dataclass
-class BackendDistribution:
+class MetricsBackendDistribution:
     """
-    Distribution of execution across sandbox backends.
+    Distribution of execution across sandbox backends (M4.6 metrics).
     
     Tracks which backend (local_process, container, etc.) handled each execution.
+    Distinct from M4.1 BackendDistribution which is a simpler count structure.
     """
     
     counts: dict[str, int] = field(default_factory=dict)
@@ -169,13 +170,15 @@ class ReplayCounts:
 
 
 @dataclass
-class CollapseSummary:
+class MetricsCollapseSummary:
     """
-    Summary of mismatch/collapse events (if tracked by M4.3).
+    Summary of mismatch/collapse events for M4.6 metrics aggregation.
     
     mismatch_count: times canonical_hash mismatch was detected
     collapse_count: times execution collapsed due to invariant violation
     boundary_blocked: times boundary crossing was blocked
+    
+    Distinct from M4.3 CollapseSummary which provides detailed event-level tracking.
     """
     
     mismatch_count: int = 0
@@ -231,11 +234,11 @@ class RuntimeMetricsReport:
     unique_request_ids: int = 0
     posture_counts: PostureCounts = field(default_factory=PostureCounts)
     execution_counts: ExecutionCounts = field(default_factory=ExecutionCounts)
-    backend_distribution: BackendDistribution = field(default_factory=BackendDistribution)
+    backend_distribution: MetricsBackendDistribution = field(default_factory=MetricsBackendDistribution)
     canonical_hash_reuse: CanonicalHashReuse = field(default_factory=CanonicalHashReuse)
     latency_summary: LatencySummary = field(default_factory=LatencySummary)
     replay_counts: ReplayCounts = field(default_factory=ReplayCounts)
-    collapse_summary: CollapseSummary = field(default_factory=CollapseSummary)
+    collapse_summary: MetricsCollapseSummary = field(default_factory=MetricsCollapseSummary)
     invariant_health: InvariantHealth = field(default_factory=InvariantHealth)
     ledger_row_count: int = 0
     report_timestamp_utc: str = ""
