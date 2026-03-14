@@ -2,7 +2,8 @@
 M4.1 Observability Models — Data structures for traces, summaries, and explanations.
 
 Invariants:
-- All models are immutable after creation
+- TraceEvent and ExplanationPayload are frozen (immutable after creation)
+- ExecutionTrace and RuntimeSummary are mutable containers for building results
 - Timestamps in UTC ISO-8601 format
 - Deterministic serialization for comparison
 """

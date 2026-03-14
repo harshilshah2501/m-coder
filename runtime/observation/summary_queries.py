@@ -9,6 +9,11 @@ Requirements:
 - Replay count
 - Unique canonical hashes
 - Recent events
+
+NOTE: Posture counts are EVENT-BASED, not request-final-state based.
+A single request may emit multiple events (e.g., plangate_safe_execute + sandbox_executed),
+so the posture distribution reflects event occurrences, not finalized request outcomes.
+For request outcome distribution, group by request_id and take the final event per request.
 """
 
 from __future__ import annotations
