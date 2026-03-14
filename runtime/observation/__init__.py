@@ -1,5 +1,5 @@
 """
-Runtime Observation — M4.1 Observability Closure + M4.4 Ledger Reconciliation.
+Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.4 Ledger Reconciliation.
 
 This package provides:
 
@@ -10,12 +10,22 @@ M4.1 Observability Closure:
 - Models: TraceEvent, ExecutionTrace, PostureDistribution, RefusalSummary,
           BackendDistribution, RuntimeSummary, ExplanationPayload
 
+M4.2 Drift Baseline:
+- BaselineBuilder: Build deterministic baselines from ledger evidence
+- BaselineStore: Persistence for baseline artifacts
+- Models: BaselineDimension, DimensionDistribution, BaselineSnapshot, BaselineMetadata
+
 M4.4 Ledger Reconciliation:
 - LedgerReconciliationService: Reconcile plan, decision, execution evidence
 - ReconciliationConfig: Configuration for reconciliation behavior
 - MismatchClassification, MismatchSeverity: Mismatch types and severity
 - ReconciliationMismatch, ReconciliationResult, ReconciliationStatus: Results
 - RowLinkage: Ledger row linkage evidence
+
+Rules:
+- Deterministic only (no LLMs, no randomness)
+- Read-only over ledger evidence
+- No mutation of runtime behavior
 """
 
 # =============================================================================
@@ -34,6 +44,25 @@ from runtime.observation.models import (
 from runtime.observation.trace_builder import TraceBuilder
 from runtime.observation.summary_queries import RuntimeSummaryQueries
 from runtime.observation.explanation_builder import ExplanationBuilder
+
+# =============================================================================
+# M4.2 Drift Baseline exports
+# =============================================================================
+
+from runtime.observation.baseline_models import (
+    BaselineDimension,
+    DimensionDistribution,
+    BaselineSnapshot,
+    BaselineMetadata,
+)
+from runtime.observation.drift_baseline import (
+    BaselineBuilder,
+    BaselineBuildError,
+)
+from runtime.observation.baseline_store import (
+    BaselineStore,
+    BaselineStoreError,
+)
 
 # =============================================================================
 # M4.4 Ledger Reconciliation exports
@@ -67,6 +96,17 @@ __all__ = [
     "RuntimeSummaryQueries",
     # M4.1 Explanation
     "ExplanationBuilder",
+    # M4.2 Baseline models
+    "BaselineDimension",
+    "DimensionDistribution",
+    "BaselineSnapshot",
+    "BaselineMetadata",
+    # M4.2 BaselineBuilder
+    "BaselineBuilder",
+    "BaselineBuildError",
+    # M4.2 BaselineStore
+    "BaselineStore",
+    "BaselineStoreError",
     # M4.4 Reconciliation service
     "LedgerReconciliationService",
     "ReconciliationConfig",
