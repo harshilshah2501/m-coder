@@ -1,69 +1,42 @@
 """
-Observation module — Runtime observation and ledger reconciliation.
+Runtime Observation — M4.1 Observability Closure + M4.4 Ledger Reconciliation.
 
-This module provides:
-- M4.1: Execution tracing, posture distribution, and runtime summaries
-- M4.4: Ledger reconciliation for verifying consistency between
-        plan, decision, execution, and replay evidence
+This package provides:
 
-M4.1 Observability Closure exports (when available):
-- TraceEvent, ExecutionTrace: Execution event tracing
-- PostureDistribution, RefusalSummary, BackendDistribution: Posture analytics
-- RuntimeSummary, RuntimeSummaryQueries: Runtime statistics
-- ExplanationPayload, ExplanationBuilder: Explanation generation
-- TraceBuilder: Trace construction utilities
+M4.1 Observability Closure:
+- TraceBuilder: Build execution traces by request_id or canonical_hash
+- RuntimeSummaryQueries: Aggregate statistics for observability dashboards
+- ExplanationBuilder: Human-readable explanation payloads for plugin
+- Models: TraceEvent, ExecutionTrace, PostureDistribution, RefusalSummary,
+          BackendDistribution, RuntimeSummary, ExplanationPayload
 
-M4.4 Ledger Reconciliation exports:
-- LedgerReconciliationService, ReconciliationConfig: Reconciliation service
-- MismatchClassification, MismatchSeverity: Mismatch types
+M4.4 Ledger Reconciliation:
+- LedgerReconciliationService: Reconcile plan, decision, execution evidence
+- ReconciliationConfig: Configuration for reconciliation behavior
+- MismatchClassification, MismatchSeverity: Mismatch types and severity
 - ReconciliationMismatch, ReconciliationResult, ReconciliationStatus: Results
 - RowLinkage: Ledger row linkage evidence
 """
 
-__all__: list[str] = []
+# =============================================================================
+# M4.1 Observability Closure exports
+# =============================================================================
+
+from runtime.observation.models import (
+    TraceEvent,
+    ExecutionTrace,
+    PostureDistribution,
+    RefusalSummary,
+    BackendDistribution,
+    RuntimeSummary,
+    ExplanationPayload,
+)
+from runtime.observation.trace_builder import TraceBuilder
+from runtime.observation.summary_queries import RuntimeSummaryQueries
+from runtime.observation.explanation_builder import ExplanationBuilder
 
 # =============================================================================
-# M4.1 Observability Closure exports (conditional import)
-# =============================================================================
-# These symbols will be available when M4.1 observability closure is integrated.
-# Import conditionally to maintain backward and forward compatibility.
-
-try:
-    from runtime.observation.trace import TraceEvent, ExecutionTrace, TraceBuilder
-    __all__.extend(["TraceEvent", "ExecutionTrace", "TraceBuilder"])
-except ImportError:
-    TraceEvent = None  # type: ignore[misc, assignment]
-    ExecutionTrace = None  # type: ignore[misc, assignment]
-    TraceBuilder = None  # type: ignore[misc, assignment]
-
-try:
-    from runtime.observation.posture import (
-        PostureDistribution,
-        RefusalSummary,
-        BackendDistribution,
-    )
-    __all__.extend(["PostureDistribution", "RefusalSummary", "BackendDistribution"])
-except ImportError:
-    PostureDistribution = None  # type: ignore[misc, assignment]
-    RefusalSummary = None  # type: ignore[misc, assignment]
-    BackendDistribution = None  # type: ignore[misc, assignment]
-
-try:
-    from runtime.observation.summary import RuntimeSummary, RuntimeSummaryQueries
-    __all__.extend(["RuntimeSummary", "RuntimeSummaryQueries"])
-except ImportError:
-    RuntimeSummary = None  # type: ignore[misc, assignment]
-    RuntimeSummaryQueries = None  # type: ignore[misc, assignment]
-
-try:
-    from runtime.observation.explanation import ExplanationPayload, ExplanationBuilder
-    __all__.extend(["ExplanationPayload", "ExplanationBuilder"])
-except ImportError:
-    ExplanationPayload = None  # type: ignore[misc, assignment]
-    ExplanationBuilder = None  # type: ignore[misc, assignment]
-
-# =============================================================================
-# M4.4 Ledger Reconciliation exports (always available)
+# M4.4 Ledger Reconciliation exports
 # =============================================================================
 
 from runtime.observation.reconciliation_models import (
@@ -79,17 +52,31 @@ from runtime.observation.reconciliation import (
     ReconciliationConfig,
 )
 
-__all__.extend([
-    # Reconciliation service
+__all__ = [
+    # M4.1 Models
+    "TraceEvent",
+    "ExecutionTrace",
+    "PostureDistribution",
+    "RefusalSummary",
+    "BackendDistribution",
+    "RuntimeSummary",
+    "ExplanationPayload",
+    # M4.1 TraceBuilder
+    "TraceBuilder",
+    # M4.1 Summary queries
+    "RuntimeSummaryQueries",
+    # M4.1 Explanation
+    "ExplanationBuilder",
+    # M4.4 Reconciliation service
     "LedgerReconciliationService",
     "ReconciliationConfig",
-    # Mismatch types
+    # M4.4 Mismatch types
     "MismatchClassification",
     "MismatchSeverity",
-    # Results
+    # M4.4 Results
     "ReconciliationMismatch",
     "ReconciliationResult",
     "ReconciliationStatus",
-    # Linkage evidence
+    # M4.4 Linkage evidence
     "RowLinkage",
-])
+]
