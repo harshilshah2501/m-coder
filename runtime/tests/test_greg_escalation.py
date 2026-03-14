@@ -30,10 +30,10 @@ from runtime.observation.greg_bundle import (
     CollapseEvidence,
     DriftEvidence,
     EscalationEvidence,
+    EscalationMismatchType,
     GREGBundle,
     IntegrityEvidence,
     LedgerReference,
-    MismatchClassification,
     MismatchEvidence,
 )
 from runtime.observation.bundle_builder import (
@@ -295,7 +295,7 @@ class TestMismatchEvidence:
         evidence = MismatchEvidence(
             request_id="req-1",
             canonical_hash="can-hash-1",
-            classification=MismatchClassification.PHASE_MISMATCH,
+            classification=EscalationMismatchType.PHASE_MISMATCH,
             expected_value="REF",
             actual_value="DES",
             context={"note": "unexpected phase"},
@@ -303,7 +303,7 @@ class TestMismatchEvidence:
         )
         d = evidence.to_dict()
         evidence2 = MismatchEvidence.from_dict(d)
-        assert evidence2.classification == MismatchClassification.PHASE_MISMATCH
+        assert evidence2.classification == EscalationMismatchType.PHASE_MISMATCH
         assert evidence2.expected_value == "REF"
         assert len(evidence2.ledger_refs) == 1
 
@@ -335,7 +335,7 @@ class TestEscalationEvidence:
                 MismatchEvidence(
                     request_id="req-1",
                     canonical_hash="",
-                    classification=MismatchClassification.PHASE_MISMATCH,
+                    classification=EscalationMismatchType.PHASE_MISMATCH,
                     expected_value="",
                     actual_value="",
                 ),
@@ -359,21 +359,21 @@ class TestEscalationEvidence:
                 MismatchEvidence(
                     request_id="req-2",
                     canonical_hash="",
-                    classification=MismatchClassification.PHASE_MISMATCH,
+                    classification=EscalationMismatchType.PHASE_MISMATCH,
                     expected_value="",
                     actual_value="",
                 ),
                 MismatchEvidence(
                     request_id="req-1",
                     canonical_hash="",
-                    classification=MismatchClassification.PHASE_MISMATCH,
+                    classification=EscalationMismatchType.PHASE_MISMATCH,
                     expected_value="",
                     actual_value="",
                 ),
                 MismatchEvidence(
                     request_id="req-2",
                     canonical_hash="",
-                    classification=MismatchClassification.POSTURE_MISMATCH,
+                    classification=EscalationMismatchType.POSTURE_MISMATCH,
                     expected_value="",
                     actual_value="",
                 ),
@@ -403,7 +403,7 @@ class TestGREGBundle:
                 MismatchEvidence(
                     request_id="req-1",
                     canonical_hash="hash-1",
-                    classification=MismatchClassification.PHASE_MISMATCH,
+                    classification=EscalationMismatchType.PHASE_MISMATCH,
                     expected_value="REF",
                     actual_value="DES",
                 ),

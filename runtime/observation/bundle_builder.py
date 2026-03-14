@@ -34,10 +34,10 @@ from runtime.observation.greg_bundle import (
     CollapseEvidence,
     DriftEvidence,
     EscalationEvidence,
+    EscalationMismatchType,
     GREGBundle,
     IntegrityEvidence,
     LedgerReference,
-    MismatchClassification,
     MismatchEvidence,
 )
 
@@ -210,12 +210,12 @@ class BundleBuilder:
             canonical_hash=raw.get("canonical_hash", ""),
         )
     
-    def _classification_to_enum(self, cls_str: str) -> MismatchClassification:
+    def _classification_to_enum(self, cls_str: str) -> EscalationMismatchType:
         """Convert classification string to enum."""
         try:
-            return MismatchClassification(cls_str)
+            return EscalationMismatchType(cls_str)
         except ValueError:
-            return MismatchClassification.PHASE_MISMATCH
+            return EscalationMismatchType.PHASE_MISMATCH
     
     def _collapse_to_enum(self, cls_str: str) -> CollapseClassification:
         """Convert collapse type string to enum."""

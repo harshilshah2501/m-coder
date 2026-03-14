@@ -22,8 +22,8 @@ from enum import Enum
 from typing import Any
 
 
-class MismatchClassification(str, Enum):
-    """Classification of mismatches between expected and actual behavior."""
+class EscalationMismatchType(str, Enum):
+    """Classification of mismatches for GREG escalation (distinct from M4.4 reconciliation)."""
     
     PHASE_MISMATCH = "phase_mismatch"
     POSTURE_MISMATCH = "posture_mismatch"
@@ -84,7 +84,7 @@ class MismatchEvidence:
     
     request_id: str
     canonical_hash: str
-    classification: MismatchClassification
+    classification: EscalationMismatchType
     expected_value: str
     actual_value: str
     context: dict[str, Any] = field(default_factory=dict)
@@ -106,7 +106,7 @@ class MismatchEvidence:
         return cls(
             request_id=d.get("request_id", ""),
             canonical_hash=d.get("canonical_hash", ""),
-            classification=MismatchClassification(d.get("classification", "phase_mismatch")),
+            classification=EscalationMismatchType(d.get("classification", "phase_mismatch")),
             expected_value=d.get("expected_value", ""),
             actual_value=d.get("actual_value", ""),
             context=d.get("context", {}),
