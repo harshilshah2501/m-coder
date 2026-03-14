@@ -2,7 +2,6 @@
 
 **Milestone:** M4.4 Ledger Reconciliation  
 **Status:** Complete  
-**Branch:** `feature/m4.4-ledger-reconciliation`  
 **Dependencies:** M4.1 (canonical_hash identity propagation)
 
 ---
@@ -39,11 +38,18 @@ This milestone implements read-only verification of ledger consistency without m
 
 | File | Purpose |
 |------|---------|
-| `runtime/observation/__init__.py` | Package init; exports reconciliation API |
+| `runtime/observation/__init__.py` | Package init; exports M4.4 reconciliation API (forward-compatible with M4.1 exports) |
 | `runtime/observation/reconciliation_models.py` | Data models: MismatchClassification, ReconciliationResult, RowLinkage |
 | `runtime/observation/reconciliation.py` | LedgerReconciliationService with all reconciliation methods |
 | `runtime/tests/test_reconciliation.py` | 28 tests covering all reconciliation paths |
 | `docs/runtime/milestones/M4_4_LEDGER_RECONCILIATION.md` | This implementation note |
+
+### Integration Compatibility
+
+The `runtime/observation/__init__.py` is structured to:
+- **Always export** M4.4 reconciliation symbols
+- **Conditionally import** M4.1 observability symbols when available (TraceEvent, ExecutionTrace, PostureDistribution, RefusalSummary, BackendDistribution, RuntimeSummary, ExplanationPayload, TraceBuilder, RuntimeSummaryQueries, ExplanationBuilder)
+- Maintain backward and forward compatibility across M4.x milestone integration
 
 ---
 
