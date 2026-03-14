@@ -1,5 +1,5 @@
 """
-Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.3 Collapse Tracking + M4.4 Ledger Reconciliation + M4.5 GREG Escalation.
+Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.3 Collapse Tracking + M4.4 Ledger Reconciliation + M4.5 GREG Escalation + M4.6 Runtime Metrics.
 
 This package provides:
 
@@ -38,6 +38,16 @@ M4.5 GREG Governance Escalation:
 - BundleBuilder: Constructs bundles from observation data
 - EscalationMismatchType: Mismatch types for escalation (distinct from M4.4)
 - CollapseClassification: Collapse vector classification for escalation
+
+M4.6 Runtime Performance Metrics:
+- RuntimeMetricsService: Deterministic metrics query layer over ledger evidence
+- RuntimeMetricsReport: Complete runtime performance metrics report
+- PostureCounts, ExecutionCounts: Plan-Gate and sandbox outcome counts
+- MetricsBackendDistribution: Backend execution distribution (distinct from M4.1)
+- CanonicalHashReuse: Hash reuse metrics for replay validation
+- LatencySummary, ReplayCounts: Latency and replay statistics
+- MetricsCollapseSummary: Collapse metrics aggregation (distinct from M4.3)
+- InvariantHealth: Runtime invariant health metrics
 
 Rules:
 - Deterministic only (no LLMs, no randomness)
@@ -143,6 +153,23 @@ from runtime.observation.greg_bundle import (
 )
 from runtime.observation.bundle_builder import BundleBuilder
 
+# =============================================================================
+# M4.6 Runtime Performance Metrics exports
+# =============================================================================
+
+from runtime.observation.metrics_models import (
+    PostureCounts,
+    ExecutionCounts,
+    MetricsBackendDistribution,
+    CanonicalHashReuse,
+    LatencySummary,
+    ReplayCounts,
+    MetricsCollapseSummary,
+    InvariantHealth,
+    RuntimeMetricsReport,
+)
+from runtime.observation.runtime_metrics import RuntimeMetricsService
+
 __all__ = [
     # =========================================================================
     # M4.1 Observability Closure
@@ -227,4 +254,19 @@ __all__ = [
     "BundleSummary",
     # M4.5 Bundle builder
     "BundleBuilder",
+    # =========================================================================
+    # M4.6 Runtime Performance Metrics
+    # =========================================================================
+    # M4.6 Metrics models
+    "PostureCounts",
+    "ExecutionCounts",
+    "MetricsBackendDistribution",
+    "CanonicalHashReuse",
+    "LatencySummary",
+    "ReplayCounts",
+    "MetricsCollapseSummary",
+    "InvariantHealth",
+    "RuntimeMetricsReport",
+    # M4.6 Metrics service
+    "RuntimeMetricsService",
 ]
