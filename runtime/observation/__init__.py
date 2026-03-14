@@ -1,5 +1,5 @@
 """
-Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.4 Ledger Reconciliation.
+Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.3 Collapse Tracking + M4.4 Ledger Reconciliation.
 
 This package provides:
 
@@ -14,6 +14,12 @@ M4.2 Drift Baseline:
 - BaselineBuilder: Build deterministic baselines from ledger evidence
 - BaselineStore: Persistence for baseline artifacts
 - Models: BaselineDimension, DimensionDistribution, BaselineSnapshot, BaselineMetadata
+
+M4.3 Collapse Vector Tracking:
+- CollapseClassifier: Deterministic detection of collapse vectors
+- CollapseQueryService: Query and filter collapse events
+- Models: CollapseClass, CollapseEvent, CollapseEvidence, CollapseSeverity, CollapseSummary
+- ClassificationResult, CollapseFilter
 
 M4.4 Ledger Reconciliation:
 - LedgerReconciliationService: Reconcile plan, decision, execution evidence
@@ -65,6 +71,26 @@ from runtime.observation.baseline_store import (
 )
 
 # =============================================================================
+# M4.3 Collapse Vector Tracking exports
+# =============================================================================
+
+from runtime.observation.collapse_models import (
+    CollapseClass,
+    CollapseEvent,
+    CollapseEvidence,
+    CollapseSeverity,
+    CollapseSummary,
+)
+from runtime.observation.collapse_vectors import (
+    CollapseClassifier,
+    ClassificationResult,
+)
+from runtime.observation.collapse_queries import (
+    CollapseQueryService,
+    CollapseFilter,
+)
+
+# =============================================================================
 # M4.4 Ledger Reconciliation exports
 # =============================================================================
 
@@ -107,6 +133,18 @@ __all__ = [
     # M4.2 BaselineStore
     "BaselineStore",
     "BaselineStoreError",
+    # M4.3 Collapse models
+    "CollapseClass",
+    "CollapseEvent",
+    "CollapseEvidence",
+    "CollapseSeverity",
+    "CollapseSummary",
+    # M4.3 CollapseClassifier
+    "CollapseClassifier",
+    "ClassificationResult",
+    # M4.3 CollapseQueryService
+    "CollapseQueryService",
+    "CollapseFilter",
     # M4.4 Reconciliation service
     "LedgerReconciliationService",
     "ReconciliationConfig",
