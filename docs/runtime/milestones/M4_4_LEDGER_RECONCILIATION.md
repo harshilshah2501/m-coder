@@ -38,18 +38,22 @@ This milestone implements read-only verification of ledger consistency without m
 
 | File | Purpose |
 |------|---------|
-| `runtime/observation/__init__.py` | Package init; exports M4.4 reconciliation API (forward-compatible with M4.1 exports) |
 | `runtime/observation/reconciliation_models.py` | Data models: MismatchClassification, ReconciliationResult, RowLinkage |
 | `runtime/observation/reconciliation.py` | LedgerReconciliationService with all reconciliation methods |
 | `runtime/tests/test_reconciliation.py` | 28 tests covering all reconciliation paths |
 | `docs/runtime/milestones/M4_4_LEDGER_RECONCILIATION.md` | This implementation note |
 
-### Integration Compatibility
+### Integration with M4.1 Observation Package
 
-The `runtime/observation/__init__.py` is structured to:
-- **Always export** M4.4 reconciliation symbols
-- **Conditionally import** M4.1 observability symbols when available (TraceEvent, ExecutionTrace, PostureDistribution, RefusalSummary, BackendDistribution, RuntimeSummary, ExplanationPayload, TraceBuilder, RuntimeSummaryQueries, ExplanationBuilder)
-- Maintain backward and forward compatibility across M4.x milestone integration
+M4.4 extends the integrated M4.1 observation package (`runtime/observation/`):
+
+- **M4.1 exports** (from `models.py`, `trace_builder.py`, `summary_queries.py`, `explanation_builder.py`):
+  TraceEvent, ExecutionTrace, PostureDistribution, RefusalSummary, BackendDistribution, RuntimeSummary, ExplanationPayload, TraceBuilder, RuntimeSummaryQueries, ExplanationBuilder
+
+- **M4.4 exports** (from `reconciliation_models.py`, `reconciliation.py`):
+  LedgerReconciliationService, ReconciliationConfig, MismatchClassification, MismatchSeverity, ReconciliationMismatch, ReconciliationResult, ReconciliationStatus, RowLinkage
+
+The `runtime/observation/__init__.py` exports all 18 symbols from both M4.1 and M4.4
 
 ---
 
