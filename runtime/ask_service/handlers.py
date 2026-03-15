@@ -6,21 +6,24 @@ Ask-service handlers — Repo-Aware Ask / Safe Planning sidecar path.
 Implements:
 - validation for AskRequest v0.1
 - mapping to ContextRequest
+- M3.12: optional manifest + doc_selector for repo-aware selection
 - ContextEngine call
 - PlanOnlyPlanner invocation
 - PlanOnlyResponse v0.1 construction
 
-Option A: sidecar plan-only path, no loop/state-machine integration yet.
+Invariants: PLAN_ONLY, execution=false, no execution from ask path.
 """
 
 import json
-from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
 from runtime.context.contracts import ContextRequest
+from runtime.context.doc_selector import select_from_manifest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
+from runtime.context.manifest_builder import ManifestBuilder
+from runtime.context.manifest_models import IngestionConfig
 
 from .planner import PlanOnlyPlanner
 
@@ -65,7 +68,32 @@ def handle_ask_request(ask_request: dict) -> dict:
     symbol_hints = _extract_symbol_hints(query)
 
     files: List[str] = []
-    if selected_file:
+    repo_aware_notes: List[str] = []
+
+    # M3.12: when repo_root is valid, try manifest + doc_selector for repo-aware selection
+    root_path = Path(repo_root) if repo_root else None
+    if root_path and root_path.exists() and root_path.is_dir():
+        try:
+            config = IngestionConfig.default_docs_and_runtime()
+            manifest = ManifestBuilder().build(repo_root, revision or "HEAD", config)
+            req_for_select = ContextRequest(
+                task_id=request_id or "ask-task",
+                revision=revision or "unknown-revision",
+                root_path=repo_root,
+                files=[str(selected_file)] if selected_file else [],
+                symbol_hints=symbol_hints,
+            )
+            refs = select_from_manifest(manifest, query, req_for_select)
+            if refs:
+                files = [r.path for r in refs]
+                reasons = set(r.selection_reason for r in refs)
+                repo_aware_notes.append(
+                    f"Repo-aware selection: {len(files)} file(s) by " + ", ".join(sorted(reasons)) + "."
+                )
+        except Exception:
+            pass
+
+    if not files and selected_file:
         files = [str(selected_file)]
 
     ctx_request = ContextRequest(
@@ -74,13 +102,13 @@ def handle_ask_request(ask_request: dict) -> dict:
         root_path=repo_root,
         files=files,
         symbol_hints=symbol_hints,
+        selectors=["direct"],
     )
 
     engine = ContextEngine()
     try:
         bundle = engine.build_context_bundle(ctx_request)
     except (ContextEngineError, MissingExplicitFilesError) as e:
-        # Fail-closed on context building; surface structured error but keep execution=false.
         return _build_error_plan_only_response(
             request_id=request_id,
             message=str(e),
@@ -89,10 +117,12 @@ def handle_ask_request(ask_request: dict) -> dict:
     planner = PlanOnlyPlanner()
     plan_summary = planner.plan(query=query, bundle=bundle)
 
+    notes_out = repo_aware_notes if repo_aware_notes else (plan_summary.notes or None)
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
         plan_steps=plan_summary.steps,
+        notes=notes_out,
     )
 
 
@@ -129,6 +159,7 @@ def _build_plan_only_response(
     request_id: str,
     bundle,
     plan_steps: List[str],
+    notes: List[str] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -138,6 +169,9 @@ def _build_plan_only_response(
         for item in bundle.items
     ]
     selectors_used = list(bundle.provenance.selectors)
+    plan_summary_payload: Dict[str, Any] = {"steps": plan_steps}
+    if notes:
+        plan_summary_payload["notes"] = notes
 
     return {
         "schema_version": "plan_only_response.v0.1",
@@ -148,9 +182,7 @@ def _build_plan_only_response(
             "files": files,
             "selectors_used": selectors_used,
         },
-        "plan_summary": {
-            "steps": plan_steps,
-        },
+        "plan_summary": plan_summary_payload,
         "governance_posture": "PLAN_ONLY",
         "execution": False,
         "ui": {
