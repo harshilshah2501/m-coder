@@ -3,14 +3,14 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-13  
+- **Last updated**: 2026-03-15  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **Layer-3 M3.0–M3.11 complete on main.** Next: M3.12 or M4.1.  
+- **Current active milestone focus**: **M4.x observation stack merged to main.** Next: M3.12 (narrow repo-aware slice).  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** Follow-on M3.12–M3.18 NOT_STARTED.  
-  - Layer-4 observation is **PARTIAL / PENDING EXPANSION**.
+  - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
 
 ---
 
@@ -408,21 +408,21 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Observe and validate that runtime behavior continues to match doctrine. Layer-4 detects drift, boundary relocation, and collapse vectors in production, providing structured evidence to governance (GREG). It does not author doctrine or enforce directly.
 
-**Current status**: **M4.1–M4.6 COMPLETE on `integration/m4x-program`** (Phase A verified 2026-03-15). Pending main merge decision.  
+**Current status**: **M4.1–M4.6 COMPLETE on main** (merged 2026-03-15). Observation stack closure achieved.  
 **Priority**: **HIGH** once Layer-3 MVP is stable.
 
 #### 4.4.1 Milestones
 
-*M4.1–M4.6 status below reflects verification on `integration/m4x-program` (Phase A, 2026-03-15). See `docs/reports/M4X_INTEGRATION_VERIFICATION_REPORT.md`.*
+*M4.1–M4.6 merged to main 2026-03-15. See `docs/reports/M4X_MAIN_MERGE_COMPLETION.md`.*
 
 | ID   | Milestone                   | Status      | Dependencies | Deliverable                                                              | Exit criteria                                                                               |
 | ---- | --------------------------- | ----------- | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| M4.1 | Ledger Ingestion            | <span style="color:#2e7d32">**COMPLETE**</span> (integration) | M3.8         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
-| M4.2 | Drift Baseline              | <span style="color:#2e7d32">**COMPLETE**</span> (integration) | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors.      | Baselines established for key metrics; thresholds approved by governance stakeholders.      |
-| M4.3 | Collapse Vector Tracking    | <span style="color:#2e7d32">**COMPLETE**</span> (integration) | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior.           | All detected collapses are classified; unclassified collapses trigger alerts.               |
-| M4.4 | Ledger Reconciliation       | <span style="color:#2e7d32">**COMPLETE**</span> (integration) | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.               | Ability to trace changes in behavior across releases and runtime environments.              |
-| M4.5 | GREG Governance Escalation  | <span style="color:#2e7d32">**COMPLETE**</span> (integration) | M4.1–M4.4    | Automated pathways for generating evidence packages and triggering GREG. | Drift above threshold results in deterministic escalation with complete evidence bundles.   |
-| M4.6 | Runtime Performance Metrics | <span style="color:#2e7d32">**COMPLETE**</span> (integration) | M4.1–M4.4    | Metrics and dashboards for runtime performance and invariance.           | Key runtime and invariance metrics available to stakeholders; alerts wired into operations. |
+| M4.1 | Ledger Ingestion            | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M3.8         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
+| M4.2 | Drift Baseline              | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors.      | Baselines established for key metrics; thresholds approved by governance stakeholders.      |
+| M4.3 | Collapse Vector Tracking    | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior.           | All detected collapses are classified; unclassified collapses trigger alerts.               |
+| M4.4 | Ledger Reconciliation       | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.               | Ability to trace changes in behavior across releases and runtime environments.              |
+| M4.5 | GREG Governance Escalation  | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1–M4.4    | Automated pathways for generating evidence packages and triggering GREG. | Drift above threshold results in deterministic escalation with complete evidence bundles.   |
+| M4.6 | Runtime Performance Metrics | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1–M4.4    | Metrics and dashboards for runtime performance and invariance.           | Key runtime and invariance metrics available to stakeholders; alerts wired into operations. |
 
 
 **Dependencies**: Layer-3 ledger emission and runtime invariants; Layer-1 doctrine for drift definitions; Layer-2 for pre-SFT invariance baselines.  
@@ -432,17 +432,17 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Layer-3 M3.0–M3.11 complete on main.** Next: **M3.12** or **M4.1**.
+- **Current objective**: **M4.x observation stack on main.** Next: **M3.12** (narrow repo-aware slice only).
 - **Active tasks**:
-  - M3.0–M3.11 complete on main as documented in §4.3.1 and §6.
+  - M3.0–M3.11 and M4.1–M4.6 complete on main.
 - **Next 3 milestones** (actual upcoming work):
-  1. **Main merge gate** — M4.x integration branch `integration/m4x-program` verified READY (see docs/reports/M4X_INTEGRATION_VERIFICATION_REPORT.md).
-  2. **M3.12** Documentation ingestion — NOT_STARTED
-  3. **M3.13** Jira ingestion — NOT_STARTED
+  1. **M3.12** Documentation ingestion (narrow repo-aware slice) — NOT_STARTED
+  2. **M3.13** Jira ingestion — NOT_STARTED
+  3. **M3.14** PR ingestion — NOT_STARTED
 - **Current blockers**:
   - None.
 - **Immediate next action**:
-  - Proceed to M3.12 or M4.1.
+  - Cut a fresh branch for M3.12 narrow implementation only after main is updated (done). Begin M3.12 when ready.
 
 ---
 
