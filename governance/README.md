@@ -11,7 +11,7 @@
 
 | Item | Location |
 |------|----------|
-| Primary Guide v1.7 | `motadata-coder-a-complete-guide_v1.7.md` (repo root) |
+| Master System Guide v1.7 | `MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md` (repo root) |
 | Golden Exemplars / Phases | `governance/golden-exemplars/Phases/` |
 | GREG package | `governance/golden-exemplars/GREG/` (Initiation-Ratification, Pre-Review-Package, Pre-Review Attack Result) |
 | Phase-4 variant generation | `governance/golden-exemplars/Phases/Phase-04/` (MIX schema, lifecycle, handoff) |

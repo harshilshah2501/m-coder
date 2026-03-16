@@ -1,5 +1,7 @@
 # 4-Layer Architecture — Directory Philosophy
 
+**Doc status:** canonical-current.
+
 **Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
 
 ## Purpose & Scope
@@ -122,7 +124,7 @@ flowchart LR
 ## References
 
 - [Golden Exemplars Architecture Map](architecture/Golden_Exemplars_Architecture_Map.md) — 4 judgment layers, phases, GREG
-- `motadata-coder-a-complete-guide_v1.7.md` — Appendix H: 4-Layer System Map (Two Phase Axes)
+- `MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md` — Appendix H: 4-Layer System Map (Two Phase Axes); detailed Layer-3 and Layer-4 with demos
 
 ---
 

@@ -23,7 +23,7 @@ Production-ready AI services deployment with version-agnostic model naming and s
   - Live execution tracker: `docs/LIVE_ROADMAP_TRACKER.md` (single source of truth for Layer statuses and evidence)
   - Structural roadmap: `docs/ROADMAP_L2_L3_L4.md`
   - End-to-end execution view: `docs/SYSTEM_EXECUTION_ROADMAP.md`
-- **Golden Exemplars guide**: `motadata-coder-a-complete-guide_v1.7.md`
+- **Master system guide**: `MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md` (master document for judgment, compilation, runtime, and observation including Layer-3/Layer-4 demos; canonical spec entry remains `docs/MASTER_SYSTEM_SPEC.md`)
 
 ## 🚀 Quick Start
 

@@ -21,7 +21,7 @@ Enforcement stack: plan-gate, judge-gate, authority validator, irreversibility d
 
 ## Directory
 
-- `runtime/` — Plan-gate service, IDE schemas, shadow schemas, ledger emission
+- `runtime/` — Plan-gate service, IDE schemas, shadow schemas, ledger emission. For full runtime subpackages (plangate, sandbox, ledger, orchestrator, observation library), see [LAYER3_RUNTIME_SPEC.md](../LAYER3_RUNTIME_SPEC.md).
 
 ---
 
@@ -39,3 +39,5 @@ Enforcement stack: plan-gate, judge-gate, authority validator, irreversibility d
 **Allowed:** Plan gate, judge gate, authority validator, irreversibility detector, execution control, ledger emission, RAG/orchestrator integrations.
 
 **Forbidden:** Redefining doctrine; training pipelines; dataset compilation.
+
+**Model artifacts:** For governance of adapters, checkpoints, and runtime packaging (e.g. Ollama), see [ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](../architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md).

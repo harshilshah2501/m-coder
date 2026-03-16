@@ -179,7 +179,7 @@ from runtime.observation import (
 from runtime.sandbox.sandbox_ledger_store import SandboxLedgerStore
 
 # Initialize
-store = SandboxLedgerStore("ledger.db")
+store = SandboxLedgerStore(".spool/ledger.db")
 service = LedgerReconciliationService(store)
 
 # Reconcile by request_id

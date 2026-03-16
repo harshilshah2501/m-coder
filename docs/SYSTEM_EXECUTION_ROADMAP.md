@@ -55,7 +55,7 @@ flowchart TB
 
 | Milestone | Layer | Entry | Exit | Failure | Status | Owner | Evidence |
 |-----------|-------|-------|------|---------|--------|-------|----------|
-| M2.1 Base exemplar completion | L2 | Constitutional lock; GREG readiness | All bases mapped; Phase-3 summary PASS; boundary anchors locked | Bases incomplete; validation fails; boundary mismatch | LOCKED | L2 / Governance | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1 (S1–S3 complete); `motadata-coder-a-complete-guide_v1.7.md` §10.2 |
+| M2.1 Base exemplar completion | L2 | Constitutional lock; GREG readiness | All bases mapped; Phase-3 summary PASS; boundary anchors locked | Bases incomplete; validation fails; boundary mismatch | LOCKED | L2 / Governance | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1 (S1–S3 complete); `MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md` §10.2 |
 | M2.2 Variant stability | L2 | M2.1 complete | Phase-4 variant summary PASS; no softened language; boundary exact | Variants fail stability; phase drift | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1; variant stability gate evidence |
 | M2.3 Mutation harness v1 | L2 | M2.2 complete | Stage-6A/6B harness runs; ledger populated; taxonomy coverage | Harness crashes; ledger schema invalid; coverage gap | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 (Stage-6 mutation taxonomy); Stage-6A/6B harness artifacts |
 | M2.4 Collapse vector validation | L2 | M2.3 complete | Stage-6C agent-loop harness passes; collapse vectors classified; pass rate ≥ threshold | Collapse rate exceeds gate; unclassified collapses | LOCKED | L2 / Compilation | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.2 and §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json` (`conf_to_des = 0`) |

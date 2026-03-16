@@ -1,5 +1,7 @@
 # LIVE ROADMAP TRACKER — Motadata AI Coding Assistant
 
+**Doc status:** canonical-current. Live progress dashboard; status is artifact-driven.
+
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  

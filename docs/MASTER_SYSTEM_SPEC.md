@@ -1,5 +1,7 @@
 # Master System Spec — Golden Exemplars 4-Layer Architecture
 
+**Doc status:** canonical-current.
+
 Single entry point for the m-coder 4-layer specification. Canonical specs live in the linked documents below; this document provides navigation and the Doctrine Immutability Clause.
 
 ---
@@ -70,7 +72,7 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 | [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md)             | L1    | Phase definitions, dominance hierarchy, structural invariants |
 | [ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)                                                      | All   | 4-layer directory mapping, axis separation, allowed/forbidden |
 | [PHASE_ALIGNMENT_TABLE_V0_1.md](PHASE_ALIGNMENT_TABLE_V0_1.md)                                          | All   | Phase↔stage alignment (non-bijection)                         |
-| [governance/README.md](governance/README.md)                                                            | L1    | Layer-1 index                                                 |
+| [governance/README.md](../governance/README.md)                                                        | L1    | Layer-1 index                                                 |
 | [COMPILATION/README.md](COMPILATION/README.md)                                                          | L2    | Layer-2 index; DAG, lineage, Stage-6, freeze                  |
 | [runtime/README.md](runtime/README.md)                                                                  | L3    | Layer-3 index; plan/ledger, IDE, shadow                       |
 | [OBSERVATION/README.md](OBSERVATION/README.md)                                                          | L4    | Layer-4 index; ingest, baseline, drift                        |
@@ -94,7 +96,9 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 
 | Document                                                     | Purpose                                                    |
 | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md) | Master system guide — judgment, compilation, runtime, observation; Layer-3/Layer-4 demos (Appendix H) |
 | [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)           | Single live progress dashboard; milestone status and evidence |
+| [architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md) | LoRA adapter, checkpoint, merged model, and runtime package governance; DVC/HF/Ollama policy |
 | [GLOSSARY.md](GLOSSARY.md)                                   | CIM term definitions and schema references                 |
 | [NON_NEGOTIABLE_INVARIANTS.md](NON_NEGOTIABLE_INVARIANTS.md) | Fail-closed semantics, gate-down→block, append-only ledger |
 | [CONTRACTS/README.md](CONTRACTS/README.md)                   | Contract and schema index                                  |

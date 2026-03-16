@@ -17,6 +17,7 @@ Deterministic runtime state machine semantics are defined in `docs/runtime/RUNTI
 - **Plan object:** Captures request context, constitutional phase expectation, authority/boundary state, routing invariants. Used at plan-gate and judge-gate.
 - **Decision flow:** Plan Request → Plan Gate → Authority Validator → Irreversibility Detector → Judge Gate → Execution (allow/block)
 - **Fail-closed:** If plan-gate unreachable (timeout, error, network failure) and `fail_closed_if_gate_unreachable` is true, client MUST block execution. No bypass path.
+- **Implementation:** Production plan-gate logic lives in `runtime/plangate/`; `runtime/plan_gate_stub/` is a protocol stub for demos and IDE contract testing. `runtime/policies/` is a function-level authority/irreversibility surface used only by tests; production uses plangate.
 
 ---
 
