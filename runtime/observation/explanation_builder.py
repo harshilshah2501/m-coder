@@ -1,20 +1,23 @@
 """
 M4.1 Explanation Builder — Human-readable explanation payloads.
 
-Requirements:
-- decision / outcome
-- reason
-- canonical_hash
-- backend
-- execution_surface
-- concise human-readable explanation
+C2: Deterministic execution explanation from C1 trace (final outcome, decisive factors, evidence).
+Uses only C1 trace event_type and metadata; no inference, no model.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from runtime.observation.models import ExplanationPayload
+from runtime.observation.models import (
+    ExecutionExplanation,
+    ExplanationNotFoundError,
+    ExplanationPayload,
+)
+
+if TYPE_CHECKING:
+    from runtime.observation.trace_builder import TraceBuilder
+    from runtime.observation.models import ExecutionTrace, TraceEvent
 
 
 # Decision to human-readable outcome mapping
@@ -38,13 +41,102 @@ _EXPLANATION_TEMPLATES = {
 }
 
 
+# C2: event_type -> short factor phrase (deterministic, evidence-backed only)
+_EVENT_TYPE_TO_FACTOR = {
+    "REFUSED": "plan gate refused request",
+    "PLAN_DEFERRED": "plan gate deferred execution",
+    "PLAN_BOUNDED": "bounded allowance issued",
+    "PLAN_APPROVED": "plan gate approved execution",
+    "EXECUTION_BLOCKED": "execution was blocked in sandbox",
+    "EXECUTION_COMPLETED": "sandbox completed execution",
+    "UNKNOWN_EVENT": "unknown event in trace",
+}
+
+
+def _extract_decisive_factors(events: list["TraceEvent"], is_replay: bool) -> tuple[str, ...]:
+    """Derive decisive factors from trace events only; dedupe, stable order."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for ev in events:
+        factor = _EVENT_TYPE_TO_FACTOR.get(ev.event_type)
+        if factor and factor not in seen:
+            seen.add(factor)
+            out.append(factor)
+        # Optional: authority_verdict / boundary_verdict from payload (if present)
+        payload = getattr(ev, "payload", None) or {}
+        auth = payload.get("authority_verdict")
+        if auth and auth != "pass" and (f := f"authority verdict was {auth}") not in seen:
+            seen.add(f)
+            out.append(f)
+        bv = payload.get("boundary_verdict")
+        if bv and (f := f"boundary verdict was {bv}") not in seen:
+            seen.add(f)
+            out.append(f)
+    if is_replay and "request was replayed" not in seen:
+        out.append("request was replayed")
+    return tuple(out)
+
+
+def _build_summary(final_outcome: str, factors: tuple[str, ...]) -> str:
+    """Deterministic summary: <OUTCOME> because <factor1>, <factor2>."""
+    if not factors:
+        return f"{final_outcome} because no decisive factors extracted"
+    return f"{final_outcome} because " + ", ".join(factors)
+
+
 class ExplanationBuilder:
     """
     Build human-readable explanation payloads for plugin / UI consumption.
-    
-    Transforms raw ledger data into concise, actionable explanations.
+    C2: explain_trace / explain_from_request_id / explain_from_canonical_hash produce
+    ExecutionExplanation from C1 trace only (deterministic, evidence-backed).
     """
-    
+
+    def __init__(self, trace_builder: "TraceBuilder | None" = None):
+        """
+        Args:
+            trace_builder: Optional C1 TraceBuilder; required for explain_from_request_id / explain_from_canonical_hash.
+        """
+        self._trace_builder = trace_builder
+
+    def explain_from_request_id(self, request_id: str) -> ExecutionExplanation:
+        """Build execution explanation for a request_id using C1 trace (trace must exist)."""
+        if not self._trace_builder:
+            raise ValueError("TraceBuilder required for explain_from_request_id")
+        trace = self._trace_builder.build_from_request_id(request_id)
+        return self.explain_trace(trace)
+
+    def explain_from_canonical_hash(self, canonical_hash: str) -> ExecutionExplanation:
+        """Build execution explanation by canonical_hash using C1 trace (latest request group only)."""
+        if not self._trace_builder:
+            raise ValueError("TraceBuilder required for explain_from_canonical_hash")
+        trace = self._trace_builder.build_from_canonical_hash(canonical_hash)
+        return self.explain_trace(trace)
+
+    def explain_trace(self, trace: "ExecutionTrace") -> ExecutionExplanation:
+        """
+        Build deterministic ExecutionExplanation from a C1 ExecutionTrace.
+        Raises ExplanationNotFoundError if trace has no events.
+        """
+        events = trace.events or []
+        if not events:
+            raise ExplanationNotFoundError(
+                f"No events in trace (trace_id={trace.trace_id!r}, lookup_type={trace.lookup_type!r})"
+            )
+        last = events[-1]
+        final_outcome = last.event_type
+        factors = _extract_decisive_factors(events, trace.is_replay)
+        summary = _build_summary(final_outcome, factors)
+        evidence_refs = tuple(f"event[{i}]" for i in range(len(events)))
+        return ExecutionExplanation(
+            request_id=trace.request_id or None,
+            canonical_hash=trace.canonical_hash or None,
+            final_outcome=final_outcome,
+            summary=summary,
+            decisive_factors=factors,
+            evidence_refs=evidence_refs,
+            is_replay=trace.is_replay,
+        )
+
     def build_from_trace_event(self, event: Any) -> ExplanationPayload:
         """
         Build explanation from a TraceEvent.
