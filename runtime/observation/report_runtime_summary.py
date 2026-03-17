@@ -23,6 +23,7 @@ from typing import TextIO
 from runtime.observation.trace_builder import TraceBuilder
 from runtime.observation.summary_queries import RuntimeSummaryQueries
 from runtime.observation.explanation_builder import ExplanationBuilder
+from runtime.observation.models import ExplanationNotFoundError
 
 
 def print_summary(
@@ -144,12 +145,15 @@ def print_request_trace(
     if not trace.events:
         output.write("No events found for this request_id.\n")
         return
-    
-    output.write(f"Total events: {trace.total_events}\n")
-    output.write(f"Time range:   {trace.first_event_time} → {trace.last_event_time}\n")
-    output.write(f"Final posture: {trace.final_posture}\n")
+
+    output.write(f"request_id:      {request_id}\n")
     if trace.canonical_hash:
-        output.write(f"Canonical hash: {trace.canonical_hash}\n")
+        output.write(f"canonical_hash:  {trace.canonical_hash}\n")
+    output.write(f"replay:          {trace.is_replay}\n")
+    output.write(f"started_at:      {trace.started_at}\n")
+    output.write(f"ended_at:        {trace.ended_at}\n")
+    output.write(f"Total events:    {trace.total_events}\n")
+    output.write(f"Final posture:   {trace.final_posture}\n")
     output.write("\n")
     
     output.write("EVENTS (chronological order)\n")
@@ -206,15 +210,19 @@ def print_canonical_hash_trace(
     if not trace.events:
         output.write("No events found for this canonical_hash.\n")
         return
-    
+
+    output.write("lookup:          canonical_hash (latest request group)\n")
+    output.write(f"canonical_hash:  {canonical_hash}\n")
+    output.write(f"request_id:     {trace.request_id or ', '.join(trace.request_ids)}\n")
+    output.write(f"replay:         {trace.is_replay}\n")
+    output.write(f"started_at:     {trace.started_at}\n")
+    output.write(f"ended_at:       {trace.ended_at}\n")
     output.write(f"Total events:   {trace.total_events}\n")
-    output.write(f"Request IDs:    {', '.join(trace.request_ids)}\n")
-    output.write(f"Time range:     {trace.first_event_time} → {trace.last_event_time}\n")
     output.write(f"Final posture:  {trace.final_posture}\n")
     output.write("\n")
-    
+
     # Group events by request_id for clearer view
-    output.write("EVENTS BY REQUEST (chronological within each)\n")
+    output.write("EVENTS (chronological order)\n")
     output.write("-" * 40 + "\n")
     
     explainer = ExplanationBuilder()
@@ -230,7 +238,91 @@ def print_canonical_hash_trace(
             output.write(f"    [{event.timestamp_utc}] {event.event_type}: {event.posture}\n")
             explanation = explainer.build_from_trace_event(event)
             output.write(f"      → {explanation.explanation}\n")
-    
+
+    output.write("\n")
+
+
+def print_request_explanation(
+    ledger_path: Path,
+    request_id: str,
+    output: TextIO = sys.stdout,
+    json_output: bool = False,
+) -> None:
+    """
+    Print C2 execution explanation for a request_id.
+
+    Uses C1 trace then C2 explain_trace. Not-found: no events for this request_id.
+    """
+    trace_builder = TraceBuilder.from_path(ledger_path)
+    explainer = ExplanationBuilder(trace_builder=trace_builder)
+    try:
+        expl = explainer.explain_from_request_id(request_id)
+    except ExplanationNotFoundError:
+        if json_output:
+            output.write(json.dumps({"error": "not_found", "request_id": request_id}, indent=2))
+            output.write("\n")
+        else:
+            output.write("No explanation (no events found for this request_id).\n")
+        return
+
+    if json_output:
+        output.write(json.dumps(expl.to_dict(), indent=2))
+        output.write("\n")
+        return
+
+    output.write("=" * 60 + "\n")
+    output.write(f"EXPLANATION: request_id={request_id}\n")
+    output.write("=" * 60 + "\n\n")
+    output.write(f"request_id:        {expl.request_id or request_id}\n")
+    if expl.canonical_hash:
+        output.write(f"canonical_hash:    {expl.canonical_hash}\n")
+    output.write(f"final_outcome:     {expl.final_outcome}\n")
+    output.write(f"summary:           {expl.summary}\n")
+    output.write(f"decisive_factors:  {list(expl.decisive_factors)}\n")
+    output.write(f"evidence_refs:     {list(expl.evidence_refs)}\n")
+    output.write(f"is_replay:         {expl.is_replay}\n")
+    output.write("\n")
+
+
+def print_canonical_hash_explanation(
+    ledger_path: Path,
+    canonical_hash: str,
+    output: TextIO = sys.stdout,
+    json_output: bool = False,
+) -> None:
+    """
+    Print C2 execution explanation for a canonical_hash (latest request group only).
+
+    Not-found: no events for this canonical_hash.
+    """
+    trace_builder = TraceBuilder.from_path(ledger_path)
+    explainer = ExplanationBuilder(trace_builder=trace_builder)
+    try:
+        expl = explainer.explain_from_canonical_hash(canonical_hash)
+    except ExplanationNotFoundError:
+        if json_output:
+            output.write(json.dumps({"error": "not_found", "canonical_hash": canonical_hash}, indent=2))
+            output.write("\n")
+        else:
+            output.write("No explanation (no events found for this canonical_hash).\n")
+        return
+
+    if json_output:
+        output.write(json.dumps(expl.to_dict(), indent=2))
+        output.write("\n")
+        return
+
+    output.write("=" * 60 + "\n")
+    output.write(f"EXPLANATION: canonical_hash={canonical_hash}\n")
+    output.write("=" * 60 + "\n\n")
+    output.write("lookup:            canonical_hash (latest request group)\n")
+    output.write(f"request_id:        {expl.request_id or ''}\n")
+    output.write(f"canonical_hash:    {expl.canonical_hash or canonical_hash}\n")
+    output.write(f"final_outcome:     {expl.final_outcome}\n")
+    output.write(f"summary:           {expl.summary}\n")
+    output.write(f"decisive_factors:  {list(expl.decisive_factors)}\n")
+    output.write(f"evidence_refs:     {list(expl.evidence_refs)}\n")
+    output.write(f"is_replay:         {expl.is_replay}\n")
     output.write("\n")
 
 
@@ -262,14 +354,30 @@ def main(args: list[str] | None = None) -> int:
     mode_group.add_argument(
         "--request-id",
         type=str,
-        help="Print trace for a specific request_id",
+        metavar="ID",
+        help="Print C1 trace for a specific request_id",
+    )
+    mode_group.add_argument(
+        "--request-explanation",
+        type=str,
+        metavar="ID",
+        dest="request_explanation_id",
+        help="Print C2 explanation for a specific request_id",
     )
     mode_group.add_argument(
         "--canonical-hash",
         type=str,
-        help="Print trace for a specific canonical_hash",
+        metavar="HASH",
+        help="Print C1 trace for a specific canonical_hash (latest request group)",
     )
-    
+    mode_group.add_argument(
+        "--canonical-hash-explanation",
+        type=str,
+        metavar="HASH",
+        dest="canonical_hash_explanation",
+        help="Print C2 explanation for a specific canonical_hash (latest request group)",
+    )
+
     parsed = parser.parse_args(args)
     
     # Determine ledger path
@@ -292,8 +400,16 @@ def main(args: list[str] | None = None) -> int:
             print_summary(ledger_path, json_output=parsed.json)
         elif parsed.request_id:
             print_request_trace(ledger_path, parsed.request_id, json_output=parsed.json)
+        elif getattr(parsed, "request_explanation_id", None):
+            print_request_explanation(
+                ledger_path, parsed.request_explanation_id, json_output=parsed.json
+            )
         elif parsed.canonical_hash:
             print_canonical_hash_trace(ledger_path, parsed.canonical_hash, json_output=parsed.json)
+        elif getattr(parsed, "canonical_hash_explanation", None):
+            print_canonical_hash_explanation(
+                ledger_path, parsed.canonical_hash_explanation, json_output=parsed.json
+            )
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
