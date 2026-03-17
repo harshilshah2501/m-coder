@@ -18,35 +18,43 @@ from typing import Any
 class TraceEvent:
     """
     Single event in an execution trace.
-    
+
     Unified representation covering Plan-Gate decisions and sandbox outcomes.
+    event_type uses C1 normalized vocabulary (REFUSED, PLAN_APPROVED, etc.).
+    Raw ledger event type is in metadata["raw_event_type"] when needed.
     """
-    
+
     event_id: str
-    event_type: str
+    event_type: str  # C1 vocabulary: REFUSED, PLAN_DEFERRED, PLAN_BOUNDED, PLAN_APPROVED, EXECUTION_BLOCKED, EXECUTION_COMPLETED, UNKNOWN_EVENT
     timestamp_utc: str
     request_id: str
     plan_hash: str
-    
-    # Posture / outcome
+
+    # Posture / outcome (lowercase for backward compat)
     posture: str  # refuse, defer, bounded_allow, safe_execute, executed, blocked
     reason: str
-    
+
     # Execution identity (M4.1 canonical intent)
     canonical_hash: str = ""
     intent_id: str = ""
-    
-    # Backend / execution surface
+
+    # Optional task id (same as request_id when single-request trace)
+    task_id: str = ""
+
+    # Backend / execution surface (default "normal"; "replay" when replay)
     backend: str = ""
     execution_surface: str = ""
-    
+
     # Outcome details
     exit_code: int | None = None
     duration_ms: int | None = None
-    
+
+    # Minimal metadata (e.g. raw_event_type for unknown events)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
     # Full payload for detailed inspection
     payload: dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "event_id": self.event_id,
@@ -58,10 +66,12 @@ class TraceEvent:
             "reason": self.reason,
             "canonical_hash": self.canonical_hash,
             "intent_id": self.intent_id,
+            "task_id": self.task_id,
             "backend": self.backend,
             "execution_surface": self.execution_surface,
             "exit_code": self.exit_code,
             "duration_ms": self.duration_ms,
+            "metadata": self.metadata,
             "payload": self.payload,
         }
 
@@ -70,24 +80,31 @@ class TraceEvent:
 class ExecutionTrace:
     """
     Complete execution trace for a single request or canonical execution.
-    
-    Events are ordered by timestamp_utc.
+
+    Events are ordered by timestamp_utc (deterministic).
+    C1: request_id, started_at, ended_at, is_replay; first_event_time/last_event_time kept for backward compat.
     """
-    
+
     trace_id: str  # request_id or canonical_hash used for lookup
     lookup_type: str  # "request_id" or "canonical_hash"
     events: list[TraceEvent] = field(default_factory=list)
-    
+
     # Derived summary
     total_events: int = 0
     first_event_time: str = ""
     last_event_time: str = ""
     final_posture: str = ""
-    
+
+    # C1: primary request and time range
+    request_id: str = ""
+    started_at: str = ""
+    ended_at: str = ""
+    is_replay: bool = False
+
     # Execution identity if available
     canonical_hash: str = ""
     request_ids: list[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "trace_id": self.trace_id,
@@ -97,6 +114,10 @@ class ExecutionTrace:
             "first_event_time": self.first_event_time,
             "last_event_time": self.last_event_time,
             "final_posture": self.final_posture,
+            "request_id": self.request_id,
+            "started_at": self.started_at,
+            "ended_at": self.ended_at,
+            "is_replay": self.is_replay,
             "canonical_hash": self.canonical_hash,
             "request_ids": self.request_ids,
         }
