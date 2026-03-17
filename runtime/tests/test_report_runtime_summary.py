@@ -21,6 +21,8 @@ from runtime.observation.report_runtime_summary import (
     print_summary,
     print_request_trace,
     print_canonical_hash_trace,
+    print_request_explanation,
+    print_canonical_hash_explanation,
     main,
 )
 
@@ -118,27 +120,35 @@ class TestPrintRequestTrace:
     """Tests for print_request_trace function."""
     
     def test_request_trace_text_output(self, ledger_path):
-        """Test text format request trace output."""
+        """Test text format request trace output with C1 fields."""
         output = io.StringIO()
         print_request_trace(ledger_path, "req-002", output=output)
-        
+
         result = output.getvalue()
-        
+
         assert "TRACE: request_id=req-002" in result
-        assert "Total events: 2" in result
+        assert "request_id:      req-002" in result
+        assert "replay:" in result
+        assert "started_at:" in result
+        assert "ended_at:" in result
+        assert "Total events:" in result and "2" in result
         assert "PLAN_APPROVED" in result
         assert "EXECUTION_COMPLETED" in result
     
     def test_request_trace_json_output(self, ledger_path):
-        """Test JSON format request trace output."""
+        """Test JSON format request trace output with C1 fields."""
         output = io.StringIO()
         print_request_trace(ledger_path, "req-002", output=output, json_output=True)
-        
+
         result = output.getvalue()
         data = json.loads(result)
-        
+
         assert data["trace_id"] == "req-002"
         assert data["lookup_type"] == "request_id"
+        assert "request_id" in data
+        assert "started_at" in data
+        assert "ended_at" in data
+        assert "is_replay" in data
         assert len(data["events"]) == 2
     
     def test_request_trace_not_found(self, ledger_path):
@@ -166,14 +176,15 @@ class TestPrintCanonicalHashTrace:
     """Tests for print_canonical_hash_trace function."""
     
     def test_canonical_hash_trace_text_output(self, ledger_path):
-        """Test text format canonical hash trace output."""
+        """Test text format canonical hash trace output (latest request group)."""
         output = io.StringIO()
         print_canonical_hash_trace(ledger_path, "hash-def-456", output=output)
-        
+
         result = output.getvalue()
-        
+
         assert "TRACE: canonical_hash=hash-def-456" in result
-        assert "Request IDs:" in result
+        assert "lookup:          canonical_hash (latest request group)" in result
+        assert "canonical_hash:  hash-def-456" in result
         assert "req-002" in result
     
     def test_canonical_hash_trace_json_output(self, ledger_path):
@@ -194,10 +205,124 @@ class TestPrintCanonicalHashTrace:
         """Test trace for non-existent canonical hash."""
         output = io.StringIO()
         print_canonical_hash_trace(ledger_path, "hash-nonexistent", output=output)
-        
+
         result = output.getvalue()
-        
+
         assert "No events found" in result
+
+
+class TestPrintRequestExplanation:
+    """Tests for print_request_explanation (C2 explanation by request_id)."""
+
+    def test_request_explanation_text_output(self, ledger_path):
+        """Test text format request explanation output."""
+        output = io.StringIO()
+        print_request_explanation(ledger_path, "req-002", output=output)
+
+        result = output.getvalue()
+
+        assert "EXPLANATION: request_id=req-002" in result
+        assert "final_outcome:" in result
+        assert "summary:" in result
+        assert "decisive_factors:" in result
+        assert "evidence_refs:" in result
+        assert "is_replay:" in result
+
+    def test_request_explanation_json_output(self, ledger_path):
+        """Test JSON format request explanation output."""
+        output = io.StringIO()
+        print_request_explanation(
+            ledger_path, "req-002", output=output, json_output=True
+        )
+
+        result = output.getvalue()
+        data = json.loads(result)
+
+        assert "request_id" in data
+        assert "final_outcome" in data
+        assert "summary" in data
+        assert "decisive_factors" in data
+        assert "evidence_refs" in data
+        assert "is_replay" in data
+
+    def test_request_explanation_not_found(self, ledger_path):
+        """Test explanation for non-existent request_id."""
+        output = io.StringIO()
+        print_request_explanation(
+            ledger_path, "req-nonexistent", output=output
+        )
+
+        result = output.getvalue()
+        assert "No explanation" in result
+        assert "request_id" in result or "req-nonexistent" in result
+
+    def test_request_explanation_not_found_json(self, ledger_path):
+        """Test explanation not-found JSON output."""
+        output = io.StringIO()
+        print_request_explanation(
+            ledger_path, "req-nonexistent", output=output, json_output=True
+        )
+
+        result = output.getvalue()
+        data = json.loads(result)
+        assert data.get("error") == "not_found"
+        assert data.get("request_id") == "req-nonexistent"
+
+
+class TestPrintCanonicalHashExplanation:
+    """Tests for print_canonical_hash_explanation (C2 by canonical_hash)."""
+
+    def test_canonical_hash_explanation_text_output(self, ledger_path):
+        """Test text format canonical hash explanation output."""
+        output = io.StringIO()
+        print_canonical_hash_explanation(
+            ledger_path, "hash-def-456", output=output
+        )
+
+        result = output.getvalue()
+
+        assert "EXPLANATION: canonical_hash=hash-def-456" in result
+        assert "lookup:            canonical_hash (latest request group)" in result
+        assert "final_outcome:" in result
+        assert "summary:" in result
+        assert "is_replay:" in result
+
+    def test_canonical_hash_explanation_json_output(self, ledger_path):
+        """Test JSON format canonical hash explanation output."""
+        output = io.StringIO()
+        print_canonical_hash_explanation(
+            ledger_path, "hash-def-456", output=output, json_output=True
+        )
+
+        result = output.getvalue()
+        data = json.loads(result)
+
+        assert "final_outcome" in data
+        assert "summary" in data
+        assert "is_replay" in data
+
+    def test_canonical_hash_explanation_not_found(self, ledger_path):
+        """Test explanation for non-existent canonical_hash."""
+        output = io.StringIO()
+        print_canonical_hash_explanation(
+            ledger_path, "hash-nonexistent", output=output
+        )
+
+        result = output.getvalue()
+        assert "No explanation" in result
+        assert "canonical_hash" in result
+
+    def test_canonical_hash_explanation_not_found_json(self, ledger_path):
+        """Test canonical hash explanation not-found JSON output."""
+        output = io.StringIO()
+        print_canonical_hash_explanation(
+            ledger_path, "hash-nonexistent", output=output, json_output=True
+        )
+
+        result = output.getvalue()
+        data = json.loads(result)
+        assert data.get("error") == "not_found"
+        assert data.get("canonical_hash") == "hash-nonexistent"
 
 
 class TestMain:
@@ -219,7 +344,55 @@ class TestMain:
             ["--ledger-path", str(ledger_path), "--canonical-hash", "hash-def-456"]
         )
         assert exit_code == 0
-    
+
+    def test_main_request_explanation(self, ledger_path):
+        """Test main with --request-explanation flag."""
+        exit_code = main(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "--request-explanation",
+                "req-002",
+            ]
+        )
+        assert exit_code == 0
+
+    def test_main_canonical_hash_explanation(self, ledger_path):
+        """Test main with --canonical-hash-explanation flag."""
+        exit_code = main(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "--canonical-hash-explanation",
+                "hash-def-456",
+            ]
+        )
+        assert exit_code == 0
+
+    def test_main_request_explanation_not_found(self, ledger_path):
+        """Test main --request-explanation with missing request_id."""
+        exit_code = main(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "--request-explanation",
+                "req-nonexistent",
+            ]
+        )
+        assert exit_code == 0
+
+    def test_main_canonical_hash_explanation_not_found(self, ledger_path):
+        """Test main --canonical-hash-explanation with missing hash."""
+        exit_code = main(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "--canonical-hash-explanation",
+                "hash-nonexistent",
+            ]
+        )
+        assert exit_code == 0
+
     def test_main_json_output(self, ledger_path):
         """Test main with --json flag."""
         exit_code = main(["--ledger-path", str(ledger_path), "--summary", "--json"])
