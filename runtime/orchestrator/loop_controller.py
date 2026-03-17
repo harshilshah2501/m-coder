@@ -3,6 +3,9 @@ Loop Controller — M3.1 orchestration substrate.
 
 Deterministic transition executor that obeys transition_matrix.v0.1.json.
 Integrates ContextEngine (governance_to_context) and SandboxExecutor (validated_to_sandbox).
+
+M3.17 Slice 4: Optional Task snapshot touchpoints added for observability.
+Task snapshots are non-authoritative and do not affect runtime behavior.
 """
 
 from __future__ import annotations
@@ -12,12 +15,15 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 
 from runtime.state.store import TaskState, TaskStateStore
 from runtime.state.transitions import TransitionResult, TransitionValidator
 from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
+
+if TYPE_CHECKING:
+    from runtime.task.contracts import Task
 
 try:
     from runtime.integrity import CommandNormalizer, NormalizationError
@@ -85,6 +91,8 @@ class LoopController:
         sandbox_executor: Any = None,
         ledger_store: Any = None,
         plan_gate_service: Any = None,
+        task_snapshot_callback: Callable[["Task"], None] | None = None,
+        task_snapshot_source_surface: str = "api_execute",
     ):
         """
         Initialize loop controller.
@@ -97,6 +105,8 @@ class LoopController:
             sandbox_executor: Optional SandboxExecutor for validated_to_sandbox (PROPOSAL_VALIDATED -> SANDBOX_EXECUTED).
             ledger_store: Optional SandboxLedgerStore; when set, refusal/plan-gate rows are persisted.
             plan_gate_service: Optional PlanGateService; when set, validated_to_sandbox requires Plan-Gate approval (safe_execute).
+            task_snapshot_callback: Optional callback for Task snapshots (M3.17). Non-authoritative observability only.
+            task_snapshot_source_surface: Source surface for Task snapshots (default: api_execute).
         """
         self.store = store or TaskStateStore()
         self.validator = validator or TransitionValidator()
@@ -105,11 +115,55 @@ class LoopController:
         self.ledger_store = ledger_store
         self.plan_gate_service = plan_gate_service
         self.journal_callback = journal_callback
+        self.task_snapshot_callback = task_snapshot_callback
+        self.task_snapshot_source_surface = task_snapshot_source_surface
         self._journal: list[TransitionJournalEntry] = []
+        self._last_task_snapshot: "Task | None" = None
         self.max_consecutive_same_transition_id = 5
         # NOTE (scaffold): repetition guard is intentionally coarse (transition_id only).
         # Later revisions may need state-aware or phase-aware repetition logic to avoid
         # blocking legitimate repeated transitions in distinct contexts.
+
+    def _try_emit_task_snapshot(self, state: TaskState) -> None:
+        """
+        Attempt to create and emit a Task snapshot from TaskState.
+
+        M3.17 Slice 4: This is observational only. Failures are silently ignored.
+        Task snapshots are non-authoritative and do not affect runtime behavior.
+        """
+        if not self.task_snapshot_callback:
+            return
+
+        try:
+            from runtime.task.bridge import task_state_to_task, TaskBridgeError
+
+            meta = state.metadata or {}
+            session_id = meta.get("session_id")
+            if not session_id:
+                return
+
+            root_path = meta.get("root_path") or meta.get("repo_root")
+            revision = meta.get("revision")
+            if not root_path or not revision:
+                return
+
+            stop_reason = meta.get("stop_reason")
+
+            task = task_state_to_task(
+                state,
+                source_surface=self.task_snapshot_source_surface,
+                session_id=session_id,
+                stop_reason=stop_reason,
+                validate=False,
+            )
+            self._last_task_snapshot = task
+            self.task_snapshot_callback(task)
+        except Exception:
+            pass
+
+    def get_last_task_snapshot(self) -> "Task | None":
+        """Return the last successfully created Task snapshot, or None."""
+        return self._last_task_snapshot
 
     def create_task(
         self,
@@ -119,7 +173,9 @@ class LoopController:
         max_iterations: int = 10,
     ) -> TaskState:
         """Create a new task in TASK_RECEIVED state."""
-        return self.store.create(task_id, metadata, max_iterations=max_iterations)
+        state = self.store.create(task_id, metadata, max_iterations=max_iterations)
+        self._try_emit_task_snapshot(state)
+        return state
 
     def apply_transition(
         self,
@@ -440,6 +496,8 @@ class LoopController:
         self._journal.append(entry)
         if self.journal_callback:
             self.journal_callback(entry)
+
+        self._try_emit_task_snapshot(state)
 
         return resolved
 
