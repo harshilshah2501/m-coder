@@ -1,4 +1,6 @@
-> **⚠️ Non-Canonical:** Explanatory walkthrough only. Canonical specs live in [docs/MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md) and [docs/governance/](../governance/), [docs/COMPILATION/](../COMPILATION/), [docs/runtime/](../runtime/), [docs/OBSERVATION/](../OBSERVATION/), [docs/CONTRACTS/](../CONTRACTS/).
+> **⚠️ Non-Canonical:** Explanatory walkthrough only. **Revised** to align with current repo layout and canonical specs.
+>
+> **Canonical specs:** [MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md) (entry point), [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md) (master guide; Appendix H has detailed Layer-3 and Layer-4 with demo instructions). **Layer indices:** [governance/](../../governance/) (L1), [docs/COMPILATION/](../COMPILATION/) (L2), [docs/runtime/](../runtime/) (L3), [docs/OBSERVATION/](../OBSERVATION/) (L4), [docs/CONTRACTS/](../CONTRACTS/).
 
 
 Good. Now we go to the root.
@@ -159,9 +161,7 @@ What layers are allowed to do
 
 Artifact
 
-
-governance/CONSTITUTIONAL_MANIFEST.md
-
+**In repo:** [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../../governance/CONSTITUTIONAL_MANIFEST_v1.0.md). Phase doctrine, dominance, boundary, and stress surfaces are defined in this manifest or in [governance/golden-exemplars/](../../governance/golden-exemplars/); GREG is under golden-exemplars/GREG/.
 
 Must contain:
 
@@ -272,8 +272,7 @@ Only stress test existing doctrine
 
 Artifact
 
-
-governance/PHASE_DOCTRINE.md
+*(Defined in CONSTITUTIONAL_MANIFEST_v1.0.md; no separate PHASE_DOCTRINE.md file.)*
 
 
 
@@ -295,8 +294,7 @@ This must be explicitly written.
 
 Artifact
 
-
-governance/DOMINANCE_RULES.md
+*(Defined in CONSTITUTIONAL_MANIFEST_v1.0.md; no separate DOMINANCE_RULES.md file.)*
 
 
 
@@ -320,8 +318,7 @@ Irreversibility = loss of unilateral rollback control
 
 Artifact
 
-
-governance/BOUNDARY_DOCTRINE.md
+*(Defined in CONSTITUTIONAL_MANIFEST_v1.0.md; no separate BOUNDARY_DOCTRINE.md file.)*
 
 
 
@@ -348,8 +345,7 @@ Each exemplar must map to at least one.
 
 Artifact
 
-
-governance/STRESS_SURFACES.md
+*(Stress surfaces defined in master guide §9 and CONSTITUTIONAL_MANIFEST_v1.0.md; no separate STRESS_SURFACES.md file.)*
 
 
 
@@ -384,8 +380,7 @@ They are compressed control artifacts.
 
 Artifact
 
-
-governance/golden-exemplars/
+[governance/golden-exemplars/](../../governance/golden-exemplars/) — Phases/ (Phase-01 … Phase-06), GREG/
 
 
 
@@ -451,8 +446,7 @@ Separate compilation drift from doctrine drift
 
 Artifact
 
-
-governance/GREG_PROTOCOL.md
+*(GREG under [governance/golden-exemplars/GREG/](../../governance/golden-exemplars/GREG/): GREG-Initiation-Ratification-v0.9.md, Pre-Review-Package, etc.)*
 
 
 
@@ -598,21 +592,13 @@ It compresses senior-engineer restraint into machine-encoded doctrine.
 
 governance/
 │
-├── CONSTITUTIONAL_MANIFEST.md
-├── PHASE_DOCTRINE.md
-├── DOMINANCE_RULES.md
-├── BOUNDARY_DOCTRINE.md
-├── STRESS_SURFACES.md
-├── GREG_PROTOCOL.md
-├── VERSION_LOCK.md
-│
-└── golden-exemplars/
-    ├── REF/
-    ├── CONF/
-    ├── DES/
-    ├── MIX/
-    └── CODE/
-Everything else lives in lower layers.
+├── CONSTITUTIONAL_MANIFEST_v1.0.md   (phase doctrine, dominance, boundary, invariants)
+├── README.md
+├── golden-exemplars/
+│   ├── Phases/                        (Phase-01 … Phase-06)
+│   └── GREG/                          (GREG-Initiation-Ratification, Pre-Review-Package, etc.)
+└── review-packages/
+Everything else lives in lower layers. For the canonical registry, see [governance/README.md](../../governance/README.md).
 
 
 
@@ -2205,34 +2191,14 @@ If any invariant fails → Observation system is compromised.
 
 7️⃣ Repository Layout for Layer-4
 
+**Canonical:** [docs/OBSERVATION/README.md](../OBSERVATION/README.md), [observation/README.md](../../observation/README.md), [LAYER4_OBSERVATION_SPEC.md](../LAYER4_OBSERVATION_SPEC.md).
+
 observation/
-│
-├── ingestion/
-│   └── ledger_consumer.py
-│
-├── baseline/
-│   └── baseline_metrics.sql
-│
-├── drift_engine/
-│   ├── distribution_tests.py
-│   ├── collapse_classifier.py
-│   └── invariance_monitor.py
-│
-├── boundary_registry/
-│   └── canonical_boundaries.sql
-│
-├── anomaly_detection/
-│   └── time_series_monitor.py
-│
-├── evidence/
-│   ├── evidence_builder.py
-│   └── signer.py
-│
-├── escalation/
-│   └── greg_trigger.py
-│
-└── dashboards/
-    └── grafana_configs/
+├── ingest/          CLI: validate, reconcile by (request_id, plan_hash), report.json / report.md
+├── baseline/        CLI: baseline mode, compare mode, drift_report.json, drift_report.md
+└── judge_drift_suite/   Governance-level drift suite
+
+
 
 
 

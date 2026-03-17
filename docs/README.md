@@ -2,6 +2,10 @@
 
 Comprehensive documentation for the Motadata AI system including model training, RAG implementation, and evaluation.
 
+**Canonical reading path:** root [README.md](../README.md) → [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md). **Master system guide (long-form, Layer-3/Layer-4 demos):** [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md).
+
+**Artifact governance:** Model/checkpoint and runtime packaging policy is defined in [Artifact Governance — LoRA, Checkpoints, and Runtime](architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md). Do not commit large adapters, checkpoints, or merged model binaries to the repo.
+
 **Current Status:** 🚀 **V16.1 Model - Training In Progress**
 - Model: Qwen/Qwen2.5-Coder-14B-Instruct (Fine-tuning V16.1)
 - Dataset: v16_1_surgical.jsonl (3,912 examples, 100% valid, 0 duplicates)
@@ -95,6 +99,17 @@ Comprehensive documentation for the Motadata AI system including model training,
 └── README.md                    # Project overview
 ```
 
+## Report and verification document placement
+
+**Going-forward convention:** New report-like docs should be placed as follows. Existing documents may remain where they are; do not mass-move historical material without a dedicated migration plan.
+
+- **docs/reports/** — Milestone completion, integration, merge, and freeze reports (e.g. merge readiness, verification, completion).
+- **docs/status/** — Status snapshots, session summaries, and short-term operational context (living journal).
+- **docs/status_reports/** — Periodic progress reports, findings, and planning updates (dated or topic-based).
+- **docs/runtime/verification/** — Runtime and structure verification: audits, E2E validation, constitutional reference, completion reports for Layer-3/runtime.
+
+**Historical tolerance:** Materials already in these locations remain valid; this convention defines placement for new documents only.
+
 ## Documentation by Component
 
 ### Full Test Command
@@ -174,6 +189,7 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 
 ### 📌 4-Layer Architecture (Golden Exemplars)
 - **[MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)** - Canonical entry point; Doctrine Immutability; links to GOVERNANCE, COMPILATION, RUNTIME, OBSERVATION, CONTRACTS
+- **[MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md)** - Master system guide (judgment, compilation, runtime, observation; Appendix H: Layer-3/Layer-4 demos)
 
 ### 📌 Core References
 - **[reference/IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
@@ -367,13 +383,13 @@ tail -f rag/logs/monitor.log
 - **Lesson: Never mix quantization levels between training and deployment**
 
 **Documentation:**
-- 📘 **[ITERATION_9_JOURNAL.md](docs/ITERATION_9_JOURNAL.md)** - Detailed account of 4-bit corruption discovery and resolution
+- 📘 **[ITERATION_9_JOURNAL.md](iterations/ITERATION_9_JOURNAL.md)** - Detailed account of 4-bit corruption discovery and resolution
 - 📊 **[ITER8_AND_ITER9_RESULTS.md](evaluation/ITER8_AND_ITER9_RESULTS.md)** - Comparative performance analysis
 
 
 ## Documentation
 
-- **[docs/README.md](docs/README.md)** - Documentation index
-- **[rag-system/ARCHITECTURE.md](rag-system/ARCHITECTURE.md)** - System architecture
+- **[README.md](README.md)** - This documentation index
+- **[architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)** - System architecture
 - **[evaluation/README.md](evaluation/README.md)** - Evaluation guide
-- **[docs/iterations/ITERATION_9_JOURNAL.md](docs/iterations/ITERATION_9_JOURNAL.md)** - Iter9 4-bit corruption discovery
+- **[iterations/ITERATION_9_JOURNAL.md](iterations/ITERATION_9_JOURNAL.md)** - Iter9 4-bit corruption discovery

@@ -1,5 +1,5 @@
 > ⚠️ **Historical Canonical (Superseded)**
-> Primary guide (canonical): `motadata-coder-a-complete-guide_v1.7.md`
+> Primary guide (canonical): `MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md`
 > Retained for auditability and backward-reference stability.
 > Do not update doctrine here; apply changes only to the primary guide.
 

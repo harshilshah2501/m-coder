@@ -76,6 +76,10 @@ ml/training/generated/**
 **/suite_traces*.jsonl
 **/stage6c_ledger*.jsonl
 
+# Root-generated artifacts (do not commit; use .spool or ml/training/generated)
+ledger.db
+tail_stage6c_ledger.txt
+
 # Cache
 .cache/
 .pytest_cache/

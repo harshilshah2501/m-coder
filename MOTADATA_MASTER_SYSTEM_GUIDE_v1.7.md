@@ -1,8 +1,8 @@
-# Motadata Judgment & Compilation System — Constitution, Exemplars, and Dataset Freeze
+# Motadata Master System Guide — Judgment, Compilation, Runtime, and Observation
 
-**Purpose**: Define and govern Motadata’s constitutional judgment system, its encoding as golden SFT exemplars, and the ML compilation pipeline that carries this judgment to a frozen, training-grade dataset.
+**Purpose**: Define and govern Motadata’s constitutional judgment, its encoding as golden SFT exemplars, the ML compilation pipeline to a frozen dataset, **Layer-3 runtime enforcement (with demos)**, and **Layer-4 observation and drift (with demos)**. All layers and demo flows are described here for a single reference.
 
-**Audience**: Engineers, SREs, architects, and ML practitioners authoring, validating, compiling, and freezing judgment-bearing data
+**Audience:** Engineers, SREs, architects, and ML practitioners authoring, validating, compiling, running, and observing the system.
 
 ## Version Update
 
@@ -17,7 +17,9 @@ This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar 
 
 ## Document Identity
 
-This document is the **complete system guide** for the Motadata Judgment & Compilation System. It spans all four layers — Governance, Compilation, Runtime, Observation — and their artifacts. Golden exemplars are the constitutional encoding at Layer 1; the ML Compilation layer derives product-specific bases (25 Motadata bases, 100 variants) from them.
+**Doc status:** canonical-current for judgment encoding, exemplar authoring, compilation pipeline, and dataset freeze. For governance of LoRA adapters, checkpoints, merged models, and runtime packaging (storage, DVC/HF/Ollama policy), see [docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md).
+
+This document is the **master system guide** for the Motadata system. It spans all four layers — Governance, Compilation, Runtime, Observation — and their artifacts, including **detailed Layer-3 (runtime) and Layer-4 (observation) sections and demo instructions** in Appendix H. Golden exemplars are the constitutional encoding at Layer 1; the ML Compilation layer derives product-specific bases (25 Motadata bases, 100 variants) from them.
 
 ---
 
@@ -49,7 +51,7 @@ This guide spans from constitutional judgment semantics and their encoding as go
 
 This separation preserves constitutional judgment in this document while allowing training mechanics to evolve independently in Phase‑08.
 
-For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For directory structure and milestone roadmaps, see `docs/ARCHITECTURE_4_LAYER.md` and `docs/ROADMAP_L2_L3_L4.md`. For canonical stage→path and CLI mapping (Stage-6A/B/C, Stage-7 freeze, Stage-8), see `docs/STAGE_LAYOUT_CANONICAL.md`.
+For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For the canonical spec entry point, see [docs/MASTER_SYSTEM_SPEC.md](docs/MASTER_SYSTEM_SPEC.md). For directory structure and milestone roadmaps, see [docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md) and [docs/ROADMAP_L2_L3_L4.md](docs/ROADMAP_L2_L3_L4.md). For canonical stage→path and CLI mapping (Stage-6A/B/C, Stage-7 freeze, Stage-8), see [docs/STAGE_LAYOUT_CANONICAL.md](docs/STAGE_LAYOUT_CANONICAL.md). For where to store and promote LoRA adapters, checkpoints, and merged models (DVC, Hugging Face, Ollama), see [docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md).
 
 ### Scope Clarification: Judgment Is Proprietary Capital (Not Commodity)
 
@@ -141,7 +143,7 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 
 **🧱 AXES & LAYERS (System Map):**
 
-* **Appendix H** 4-Layer System Map *(Governance ↔ Compilation ↔ Runtime ↔ Observation; constitutional phases vs pipeline stages)*
+* **Appendix H** 4-Layer System Map *(Governance ↔ Compilation ↔ Runtime ↔ Observation; constitutional phases vs pipeline stages; **detailed Layer-3 and Layer-4 with demo instructions**)*
 * **docs/ARCHITECTURE_4_LAYER.md** — Directory philosophy, layer boundaries, axis separation
 * **docs/ROADMAP_L2_L3_L4.md** — L2/L3/L4 milestone roadmap, snapshot, sequencing
 * **Stage‑6 / Stage‑6C** sections *(how hardening, reachability, and agent-loop mutation live in the compilation layer while preserving Layer‑1 semantics)*
@@ -2072,7 +2074,7 @@ Ensures invariance is not seed-dependent.
 * Lock evaluation harness
 * Promote to Layer-III runtime integration
 
-This is the exit point from ML-Compilation.
+This is the exit point from ML-Compilation. Storage and promotion of adapters/checkpoints (DVC, Hugging Face, Ollama) follow [artifact governance policy](docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md); do not commit large binaries to the repo.
 
 ---
 
@@ -2092,38 +2094,109 @@ Stage‑6C (Agent-Loop Mutation) remains a **workflow stress harness inside ML C
 
 ---
 
-### LAYER 3 — RUNTIME
+### LAYER 3 — RUNTIME (Enforcement)
 
-📁 `runtime/`
+📁 `runtime/`  
+**Canonical specs:** `docs/runtime/README.md`, [docs/runtime/RUNTIME_AGENT_ARCHITECTURE.md](docs/runtime/RUNTIME_AGENT_ARCHITECTURE.md), [docs/LAYER3_RUNTIME_SPEC.md](docs/LAYER3_RUNTIME_SPEC.md)
 
-**What will live here**
-
-* Actor (trained model)
-* Plan gate
-* Judge gate
-* Authority validator
-* Irreversibility detector
-* Execution control
-* Ledger emission
-
-Runtime consumes trained behavior and enforces it.
-
----
-
-### LAYER 4 — OBSERVATION
-
-📁 `observation/`
+**Role:** The runtime turns constitutional doctrine into **hard enforcement** for day-to-day workflows. **The model proposes; the runtime decides.** The model is a bounded worker that produces structured proposals; the runtime owns control flow, state transitions, authority/boundary enforcement, and completion.
 
 **What lives here**
 
-* Mutation harness (post-SFT version)
-* Drift probes
-* Coverage analytics
-* Collapse vector tracking
-* Ledger reconciliation
-* GREG audit evidence
+* **Runtime Governor** — Decides when to call the model, when to enter sandbox/tools, when to terminate. Encodes REF dominance and fail-closed behavior.
+* **Plan-Gate (M3.3)** — Mandatory pre-sandbox gate. No execution path may bypass it. Chain: `request → Plan-Gate → runtime decision → LoopController → sandbox (if allowed) → ledger`.
+* **Authority validator** — Blocks illegitimate or under-approved actions; REF dominance enforced mechanically.
+* **Irreversibility detector / boundary enforcement** — Boundary phrases remain character-for-character invariant; crossing requires governed approval.
+* **Task State Store** — Deterministic task state (plan received, authority checked, boundary evaluated, sandboxed, completed, ledgered) for replay and audit.
+* **Repository Context Engine** — Owns all codebase/RAG context; model never self-fetches. Ensures context is deterministic and tied to a revision.
+* **Model Worker Interface** — Narrow contract: model receives constitutional pins, task metadata, context bundle, budgets; outputs structured proposals only. Model cannot mutate state or decide completion.
+* **Execution Sandbox** — Governed execution with three outcomes: REFUSED, BLOCKED, EXECUTED. All outcomes are ledgered.
+* **Ledger emission** — Append-only ledger (e.g. SQLite WAL); every decision and execution result is persisted with `request_id`, `plan_hash`, `sandbox_id`, `ledger_row_id`.
 
-Observation validates behavior after execution.
+**Demo — M3.2 Proof Pack (Governed Execution)**  
+Canonical evidence for the three runtime outcomes. See [docs/demo/M3.2_PROOF_PACK.md](docs/demo/M3.2_PROOF_PACK.md).
+
+| Outcome   | Meaning | Ledger event type   |
+|----------|--------|---------------------|
+| REFUSED  | Runtime denies before sandbox (e.g. no executor) | `sandbox_refused`   |
+| BLOCKED  | Policy disallows command; command does not run   | `sandbox_blocked`   |
+| EXECUTED | Allowed command runs; artifacts captured        | `sandbox_executed`  |
+
+**Run the demo:**
+```bash
+python3 -m runtime.sandbox.demo_governed_execution
+# Or E2E: python3 -m pytest runtime/tests/test_sandbox_demo_e2e.py -v
+```
+
+**Demo — JetBrains Plugin (Commit Shadow + Repo-Aware Ask)**  
+Step-by-step: [docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md](docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md).
+
+1. **Plan-Gate service** (from repo root): `python3 -m runtime.plan_gate_service.app` (default `127.0.0.1:8089`). Confirm: `curl http://127.0.0.1:8089/healthz`.
+2. **Sandbox IDE:** From `jetbrains-plugin/`: `./gradlew runIde`. Open the m-coder repo in the sandbox.
+3. **Demo 1 — Commit interception (shadow mode):** Make a change, then **Git → Commit**. Observe Motadata AI notification: REFUSAL (red), CONDITIONAL_BLOCK/BOUNDING (yellow), or APPROVE (blue). Commit always proceeds; decision logged to `~/.motadata-ai/plugin-decisions.log`.
+4. **Demo 2 — Repo-Aware Ask (plan-only):** **Tools → Ask Motadata AI**, enter a question. Response shows PLAN ONLY badge, context bundle (files + selection reasons), and a bounded plan; no execution or edits.
+
+**Contracts:** Plan/ledger [RUNTIME_PLAN_AND_LEDGER_V0_1.md](docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md); IDE [JETBRAINS_PLUGIN_FLOW_V0_1.md](docs/JETBRAINS_PLUGIN_FLOW_V0_1.md); Shadow [SHADOW_MODE_PROTOCOL_V0_1.md](docs/SHADOW_MODE_PROTOCOL_V0_1.md).
+
+---
+
+### LAYER 4 — OBSERVATION (Drift & GREG Evidence)
+
+📁 `observation/` (and runtime-consumed library under `runtime/observation/`)  
+**Canonical specs:** [docs/OBSERVATION/README.md](docs/OBSERVATION/README.md), [docs/LAYER4_OBSERVATION_SPEC.md](docs/LAYER4_OBSERVATION_SPEC.md)
+
+**Role:** Layer-4 produces **evidence** of drift and constitutional compliance. It detects divergence from constitutional expectation and triggers GREG when thresholds are exceeded. **Layer-4 never authors doctrine;** it only observes, reconciles, and reports.
+
+**What lives here**
+
+* **Ingest pipeline** — Consumes `ingestion_batch.v0.1` (JSON/JSONL), validates and reconciles by `(request_id, plan_hash)`, produces deterministic `report.json`, `report.md`.
+* **Baseline metrics store** — Captures baseline verdict distribution (per-phase, per-surface). Baseline mode: capture; compare mode: produce drift report.
+* **Drift engine** — Measures divergence: REF collapses, boundary softening, MIX-to-CONF collapse, phase migration in model output. Uses verdict distribution, collapse vectors, ledger diff.
+* **Collapse vector classifier** — Classifies observed collapses into taxonomy (REF_SOFTENING, CONF_TO_DES, BOUNDARY_ALIASING, MIX_SINGLE_PRESSURE, etc.).
+* **Boundary integrity monitor** — Flags when irreversible boundary phrase diverges from freeze manifest.
+* **Phase dominance monitor** — Validates emitted phase vs constitutional expectation; flags REF dominance violations.
+* **Evidence package builder** — Assembles admissible evidence for GREG (exemplars, phase semantics, ledgers, collapse classifications, boundary hashes).
+
+**Demo — Ingest CLI**  
+Validate and reconcile ingestion batches; produce reports. See `observation/ingest/README.md`.
+
+```bash
+python -m observation.ingest.cli \
+  --input <path.json|path.jsonl> \
+  --outdir <dir> \
+  [--fixed-time "2026-03-01T00:00:00Z"] \
+  [--no-strict]
+```
+
+**Outputs in `--outdir`:** `report.json` (observation.report.v0.1), `report.md`, and optionally `reconciliation_errors.json`.
+
+**Demo — Baseline and drift (compare mode)**  
+Build a Day-0 baseline, then compare later runs to flag drift. See `observation/baseline/README.md`.
+
+**Baseline mode:**
+```bash
+python3 -m observation.baseline.cli \
+  --inputs <dir_or_file> [--inputs <dir_or_file> ...] \
+  --outdir <dir> \
+  --mode baseline \
+  [--fixed-time "2026-03-01T00:00:00Z"]
+```
+**Outputs:** `baseline_report.json`, `baseline_report.md`.
+
+**Compare mode (drift report):**
+```bash
+python3 -m observation.baseline.cli \
+  --inputs <dir_or_file> [--inputs ...] \
+  --outdir <dir> \
+  --mode compare \
+  --baseline <path/to/baseline_report.json> \
+  [--fixed-time "..." ] \
+  [--drift-thresholds <json_or_file>]
+```
+**Outputs:** `drift_report.json`, `drift_report.md`. Default drift thresholds include e.g. `decision_delta_abs: 10%`, `refusal_rate_delta_abs: 2%`, `boundary_verdict=crossed: HARD FAIL`.
+
+**Allowed:** Drift probes, collapse vector tracking, ledger reconciliation, coverage analytics, GREG audit evidence.  
+**Forbidden:** Authoring doctrine; relaxing boundaries; redefining phase semantics.
 
 ---
 

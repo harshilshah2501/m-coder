@@ -6,7 +6,7 @@
 
 Layer-4 produces evidence of drift and constitutional compliance. It detects divergence from constitutional expectation and triggers GREG when thresholds are exceeded. **Layer-4 produces evidence only. It never authors doctrine.**
 
-**Directory:** `observation/`
+**Directory:** `observation/` (operator/CLI boundary). The runtime-consumed Layer-4 implementation library lives under `runtime/observation/`; both are Layer-4. Two index entrypoints: `docs/OBSERVATION/README.md` (docs-spine Layer-4 index) and `observation/README.md` (package root).
 
 ---
 

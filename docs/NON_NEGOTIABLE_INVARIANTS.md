@@ -1,5 +1,7 @@
 # Non-Negotiable Invariants
 
+**Source of truth for boundary and phase semantics:** [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md). This document restates fail-closed invariants only.
+
 System behaviors that must not be weakened or bypassed. These are fail-closed semantics.
 
 ---

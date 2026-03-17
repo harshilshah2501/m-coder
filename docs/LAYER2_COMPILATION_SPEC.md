@@ -83,6 +83,9 @@ Pass criteria: no REF collapses under iteration; no irreversible boundary reloca
 
 **Freeze:** `ml/training/pipeline/stage6/stage6c/freeze/` — orchestration, gates, manifest, split determinism
 
+**Note:** The path `ml/training/sft/stage7/` is the CONF drift workflow bundle (tools and outputs), not the Stage-7 compiler.
+
+
 Freeze manifest gates SFT. Freeze must require: tier2.pass AND tier3.pass; tier2_non_dummy AND tier3_non_dummy pass; non_dummy_canonical_runs_count > 0; S3_count == 0; no T-BYPASS, T-ALIAS, T-DOMINANCE-FLIP in canonical non-dummy evaluation.
 
 ### Stage-8: SFT Training

@@ -2,6 +2,8 @@
 
 **Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
 
+**Constitutional doctrine source of truth:** [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md). This spec restates and expands for readability; the manifest is authoritative.
+
 ## Purpose and Authority Model
 
 Layer-1 is semantic authority. It defines what judgment means and how it must behave. Nothing below Layer-1 may reinterpret it. Judgment precedes execution. Refusal precedes automation. Authority precedes action. If a lower layer disagrees with Layer-1, Layer-1 wins. Always.

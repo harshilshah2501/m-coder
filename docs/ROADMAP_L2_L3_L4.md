@@ -1,5 +1,7 @@
 # Layer-2 / Layer-3 / Layer-4 Milestone Roadmap
 
+**Doc status:** canonical-current. Milestone entry/exit/failure conditions are canonical; live status is in [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md).
+
 ## Related Documents
 
 - [docs/ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md) — Directory philosophy, layer boundaries, axis separation
