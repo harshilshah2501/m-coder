@@ -66,6 +66,8 @@ from runtime.observation.models import (
     RefusalSummary,
     BackendDistribution,
     RuntimeSummary,
+    ExplanationNotFoundError,
+    ExecutionExplanation,
     ExplanationPayload,
 )
 from runtime.observation.trace_builder import TraceBuilder
@@ -182,6 +184,8 @@ __all__ = [
     "BackendDistribution",
     "RuntimeSummary",
     "ExplanationPayload",
+    "ExplanationNotFoundError",
+    "ExecutionExplanation",
     # M4.1 TraceBuilder
     "TraceBuilder",
     # M4.1 Summary queries

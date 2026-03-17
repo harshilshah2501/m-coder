@@ -231,6 +231,40 @@ class RuntimeSummary:
         }
 
 
+class ExplanationNotFoundError(Exception):
+    """Raised when an explanation is requested but no trace evidence exists."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class ExecutionExplanation:
+    """
+    C2: Deterministic execution explanation derived from C1 trace evidence only.
+
+    Answers: What was the final outcome? What factors caused it? Was this replay?
+    """
+
+    request_id: str | None
+    canonical_hash: str | None
+    final_outcome: str  # REFUSED, PLAN_DEFERRED, PLAN_BOUNDED, EXECUTION_BLOCKED, EXECUTION_COMPLETED, UNKNOWN_EVENT
+    summary: str
+    decisive_factors: tuple[str, ...]
+    evidence_refs: tuple[str, ...]  # e.g. ("event[0]", "event[1]")
+    is_replay: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "request_id": self.request_id,
+            "canonical_hash": self.canonical_hash,
+            "final_outcome": self.final_outcome,
+            "summary": self.summary,
+            "decisive_factors": list(self.decisive_factors),
+            "evidence_refs": list(self.evidence_refs),
+            "is_replay": self.is_replay,
+        }
+
+
 @dataclass(frozen=True)
 class ExplanationPayload:
     """
