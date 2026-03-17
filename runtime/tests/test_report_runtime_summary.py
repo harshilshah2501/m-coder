@@ -126,8 +126,8 @@ class TestPrintRequestTrace:
         
         assert "TRACE: request_id=req-002" in result
         assert "Total events: 2" in result
-        assert "plangate_safe_execute" in result
-        assert "sandbox_executed" in result
+        assert "PLAN_APPROVED" in result
+        assert "EXECUTION_COMPLETED" in result
     
     def test_request_trace_json_output(self, ledger_path):
         """Test JSON format request trace output."""
