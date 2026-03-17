@@ -1,0 +1,20 @@
+{
+  "schema_version": "task.v0.1",
+  "task_id": "task-no-phase",
+  "task_kind": "execution",
+  "request_id": "req-004",
+  "session_id": "sess-004",
+  "source_surface": "ide_execute",
+  "repo_scope": {
+    "root_path": "/workspace/my-project",
+    "revision": "abc123def456"
+  },
+  "governance_ref": {
+    "plan_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "status": {
+    "current_state": "GOVERNANCE_CLASSIFIED"
+  },
+  "created_at_utc": "2026-03-17T10:00:00Z",
+  "updated_at_utc": "2026-03-17T10:00:00Z"
+}

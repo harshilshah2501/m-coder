@@ -1,0 +1,26 @@
+{
+  "schema_version": "task.v0.1",
+  "task_id": "task-eval001",
+  "task_kind": "evaluation",
+  "request_id": "req-003",
+  "session_id": "sess-003",
+  "source_surface": "ingestion",
+  "repo_scope": {
+    "root_path": "/workspace/evaluated-project",
+    "revision": "111222333444"
+  },
+  "acceptance_criteria": {
+    "description": "Feature X must pass all unit tests and lint checks",
+    "test_refs": ["tests/test_feature_x.py", "tests/test_integration.py"],
+    "success_signals": ["all_tests_pass", "lint_clean"]
+  },
+  "constraints": {
+    "max_iterations": 5,
+    "timeout_seconds": 120
+  },
+  "status": {
+    "current_state": "TASK_RECEIVED"
+  },
+  "created_at_utc": "2026-03-17T10:00:00Z",
+  "updated_at_utc": "2026-03-17T10:00:00Z"
+}

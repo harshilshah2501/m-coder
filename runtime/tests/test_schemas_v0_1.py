@@ -1,8 +1,10 @@
 """
-Schema validation for Plan v0.1 and Ledger Row v0.1.
+Schema validation for Plan v0.1, Ledger Row v0.1, and Task v0.1.
 
 Validates that example JSON files pass schema.
 Validates that invalid examples fail runtime rules R1 and R2.
+Validates Task v0.1 schema validation including required fields,
+optional governance_ref, acceptance_criteria, and constrained metadata.
 """
 
 from __future__ import annotations
@@ -193,3 +195,161 @@ class TestInvalidExamplesTargetRules(unittest.TestCase):
         self.assertEqual(data["authority"]["validated"]["verdict"], "fail")
         self.assertEqual(data["boundary"]["boundary_type"], "prod_write")
         self.assertEqual(data["policy_posture"]["terminal_posture"], "safe_execute")
+
+
+@unittest.skipIf(not HAS_JSONSCHEMA, "jsonschema not installed")
+class TestTaskSchema(unittest.TestCase):
+    """Validate task examples against task.v0.1.schema.json.
+    
+    M3.17 Slice 1: Task schema validation coverage.
+    Tests cover:
+    - Valid minimal task passes
+    - Valid task with optional governance_ref passes
+    - Valid task with optional acceptance_criteria passes
+    - Missing required identity field fails
+    - Wrong schema_version fails
+    - Invalid task_kind fails
+    - Invalid current_state fails
+    - Invalid governance_ref shape fails
+    - Invalid metadata shape fails
+    - expected_phase is optional and non-authoritative
+    """
+
+    def setUp(self) -> None:
+        schema_path = SCHEMAS / "task.v0.1.schema.json"
+        schema = load_json(schema_path)
+        self.task_validator = jsonschema.Draft7Validator(schema)
+
+    def test_task_minimal_valid(self) -> None:
+        """Valid minimal task with only required fields passes validation."""
+        data = load_json(EXAMPLES / "task_minimal_valid.json")
+        self.task_validator.validate(data)
+
+    def test_task_with_governance_ref_valid(self) -> None:
+        """Valid task with optional governance_ref passes validation."""
+        data = load_json(EXAMPLES / "task_with_governance_ref.json")
+        self.task_validator.validate(data)
+        self.assertIn("governance_ref", data)
+        self.assertIn("plan_hash", data["governance_ref"])
+        self.assertIn("expected_phase", data["governance_ref"])
+
+    def test_task_with_acceptance_criteria_valid(self) -> None:
+        """Valid task with optional acceptance_criteria passes validation."""
+        data = load_json(EXAMPLES / "task_with_acceptance_criteria.json")
+        self.task_validator.validate(data)
+        self.assertIn("acceptance_criteria", data)
+        self.assertIn("description", data["acceptance_criteria"])
+        self.assertIn("test_refs", data["acceptance_criteria"])
+        self.assertIn("success_signals", data["acceptance_criteria"])
+
+    def test_task_full_valid(self) -> None:
+        """Valid task with all optional fields passes validation."""
+        data = load_json(EXAMPLES / "task_full_valid.json")
+        self.task_validator.validate(data)
+
+    def test_task_missing_task_id_fails(self) -> None:
+        """Missing required task_id field fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_missing_task_id.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("task_id", str(ctx.exception))
+
+    def test_task_wrong_schema_version_fails(self) -> None:
+        """Wrong schema_version fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_wrong_schema_version.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("schema_version", str(ctx.exception))
+
+    def test_task_invalid_task_kind_fails(self) -> None:
+        """Invalid task_kind enum value fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_task_kind.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("task_kind", str(ctx.exception))
+
+    def test_task_invalid_current_state_fails(self) -> None:
+        """Invalid current_state enum value fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_current_state.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("current_state", str(ctx.exception))
+
+    def test_task_invalid_governance_ref_shape_fails(self) -> None:
+        """Invalid governance_ref shape (bad phase, extra field) fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_governance_ref_shape.json")
+        with self.assertRaises(jsonschema.ValidationError):
+            self.task_validator.validate(data)
+
+    def test_task_invalid_metadata_not_namespaced_fails(self) -> None:
+        """Metadata with non-lowercase namespace key fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_metadata_not_namespaced.json")
+        with self.assertRaises(jsonschema.ValidationError):
+            self.task_validator.validate(data)
+
+    def test_task_invalid_metadata_string_fails(self) -> None:
+        """Metadata as string (not object) fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_metadata_string.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("metadata", str(ctx.exception))
+
+    def test_task_expected_phase_is_optional(self) -> None:
+        """governance_ref without expected_phase is valid (expected_phase is optional hint)."""
+        data = load_json(EXAMPLES / "task_valid_no_expected_phase.json")
+        self.task_validator.validate(data)
+        self.assertIn("governance_ref", data)
+        self.assertIn("plan_hash", data["governance_ref"])
+        self.assertNotIn("expected_phase", data["governance_ref"])
+
+    def test_task_governance_ref_is_optional(self) -> None:
+        """Task without governance_ref is valid (governance_ref is optional)."""
+        data = load_json(EXAMPLES / "task_minimal_valid.json")
+        self.task_validator.validate(data)
+        self.assertNotIn("governance_ref", data)
+
+    def test_task_constraints_is_optional(self) -> None:
+        """Task without constraints is valid (constraints is optional)."""
+        data = load_json(EXAMPLES / "task_minimal_valid.json")
+        self.task_validator.validate(data)
+        self.assertNotIn("constraints", data)
+
+    def test_task_acceptance_criteria_is_optional(self) -> None:
+        """Task without acceptance_criteria is valid."""
+        data = load_json(EXAMPLES / "task_minimal_valid.json")
+        self.task_validator.validate(data)
+        self.assertNotIn("acceptance_criteria", data)
+
+
+class TestTaskSchemaEnumFreeze(unittest.TestCase):
+    """Freeze task enums to prevent silent drift."""
+
+    def test_task_kind_enum_frozen(self) -> None:
+        """task_kind enum must not change without explicit version bump."""
+        schema = load_json(SCHEMAS / "task.v0.1.schema.json")
+        actual = set(schema["properties"]["task_kind"]["enum"])
+        expected = {"execution", "ask", "ingestion", "evaluation"}
+        self.assertEqual(actual, expected, "task_kind enum must not change without explicit version bump")
+
+    def test_task_source_surface_enum_frozen(self) -> None:
+        """source_surface enum must not change without explicit version bump."""
+        schema = load_json(SCHEMAS / "task.v0.1.schema.json")
+        actual = set(schema["properties"]["source_surface"]["enum"])
+        expected = {"ide_execute", "ide_ask", "api_execute", "ingestion", "replay"}
+        self.assertEqual(actual, expected, "source_surface enum must not change without explicit version bump")
+
+    def test_task_current_state_aligns_with_state_enums(self) -> None:
+        """Task status.current_state enum aligns with state_enums.v0.1.agent_state."""
+        task_schema = load_json(SCHEMAS / "task.v0.1.schema.json")
+        state_enums = load_json(REPO_ROOT / "runtime" / "state" / "schemas" / "state_enums.v0.1.json")
+        task_states = set(task_schema["properties"]["status"]["properties"]["current_state"]["enum"])
+        expected_states = set(state_enums["definitions"]["agent_state"]["enum"])
+        self.assertEqual(task_states, expected_states, "Task current_state must align with state_enums.v0.1.agent_state")
+
+    def test_task_stop_reason_aligns_with_state_enums(self) -> None:
+        """Task status.stop_reason enum aligns with state_enums.v0.1.stop_reason."""
+        task_schema = load_json(SCHEMAS / "task.v0.1.schema.json")
+        state_enums = load_json(REPO_ROOT / "runtime" / "state" / "schemas" / "state_enums.v0.1.json")
+        task_reasons = set(task_schema["properties"]["status"]["properties"]["stop_reason"]["enum"])
+        expected_reasons = set(state_enums["definitions"]["stop_reason"]["enum"])
+        self.assertEqual(task_reasons, expected_reasons, "Task stop_reason must align with state_enums.v0.1.stop_reason")
