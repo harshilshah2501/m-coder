@@ -24,9 +24,7 @@
     "success_signals": ["all_tests_pass"]
   },
   "status": {
-    "current_state": "COMPLETED",
-    "stop_reason": "explicit_refusal",
-    "terminal_at_utc": "2026-03-17T10:05:00Z"
+    "current_state": "REVIEW_DECIDED"
   },
   "created_at_utc": "2026-03-17T10:00:00Z",
   "updated_at_utc": "2026-03-17T10:05:00Z",

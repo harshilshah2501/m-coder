@@ -73,9 +73,8 @@ class TestTaskContractConstruction(unittest.TestCase):
         self.assertIsNotNone(task.acceptance_criteria)
         self.assertIsNotNone(task.provenance)
         self.assertIsNotNone(task.metadata)
-        self.assertEqual(task.status.current_state, "COMPLETED")
-        self.assertEqual(task.status.stop_reason, "explicit_refusal")
-        self.assertIsNotNone(task.status.terminal_at_utc)
+        self.assertEqual(task.status.current_state, "REVIEW_DECIDED")
+        self.assertFalse(task.is_terminal())
 
     def test_task_with_governance_ref_succeeds(self) -> None:
         """Task with governance_ref (including expected_phase) succeeds."""
