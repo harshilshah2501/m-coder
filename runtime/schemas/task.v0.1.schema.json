@@ -17,6 +17,26 @@
     "updated_at_utc"
   ],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "properties": {
+              "current_state": { "enum": ["COMPLETED", "BLOCKED", "FAILED", "ABORTED"] }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "required": ["current_state", "stop_reason", "terminal_at_utc"]
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "schema_version": {
       "const": "task.v0.1",
@@ -225,6 +245,11 @@
     "expected_phase": "governance_ref.expected_phase is a NON-AUTHORITATIVE HINT. Authoritative phase is in plan.v0.1.",
     "acceptance_criteria": "DESCRIPTIVE ONLY. Does not encode executable harness config or procedural logic.",
     "metadata": "Constrained to namespaced extension objects. Keys must match ^[a-z][a-z0-9_]*$ pattern.",
-    "boundaries": "Task links to plan via plan_hash; does not contain plan body. Task produces ledger rows; does not contain them."
+    "metadata_reserved_namespaces": "Namespaces 'runtime', 'governance', and 'system' are reserved and must not be used for arbitrary extension payloads. This is a v0.1 convention; enforcement may be added later.",
+    "boundaries": "Task links to plan via plan_hash; does not contain plan body. Task produces ledger rows; does not contain them.",
+    "terminal_state_requirements": "When current_state is COMPLETED, BLOCKED, FAILED, or ABORTED, both stop_reason and terminal_at_utc are required.",
+    "timestamp_monotonicity": "updated_at_utc must be >= created_at_utc. Monotonic timestamp updates are runtime-enforced, not schema-enforced in v0.1.",
+    "root_path_limitation": "repo_scope.root_path is a v0.1 local/runtime path field. Acceptable for current runtime use; portability rationalization may be needed later.",
+    "source_surface_limitation": "source_surface in v0.1 mixes user-facing surfaces and system flows. Accepted for v0.1 minimalism; future versions may separate these concerns."
   }
 }

@@ -320,6 +320,36 @@ class TestTaskSchema(unittest.TestCase):
         self.task_validator.validate(data)
         self.assertNotIn("acceptance_criteria", data)
 
+    def test_task_terminal_state_requires_stop_reason(self) -> None:
+        """Terminal state without stop_reason fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_terminal_no_stop_reason.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("stop_reason", str(ctx.exception))
+
+    def test_task_terminal_state_requires_terminal_at_utc(self) -> None:
+        """Terminal state without terminal_at_utc fails validation."""
+        data = load_json(EXAMPLES / "task_invalid_terminal_no_timestamp.json")
+        with self.assertRaises(jsonschema.ValidationError) as ctx:
+            self.task_validator.validate(data)
+        self.assertIn("terminal_at_utc", str(ctx.exception))
+
+    def test_task_terminal_state_with_required_fields_passes(self) -> None:
+        """Terminal state with both stop_reason and terminal_at_utc passes validation."""
+        data = load_json(EXAMPLES / "task_valid_terminal_complete.json")
+        self.task_validator.validate(data)
+        self.assertEqual(data["status"]["current_state"], "BLOCKED")
+        self.assertIn("stop_reason", data["status"])
+        self.assertIn("terminal_at_utc", data["status"])
+
+    def test_task_non_terminal_state_without_terminal_fields_passes(self) -> None:
+        """Non-terminal state without stop_reason/terminal_at_utc still passes validation."""
+        data = load_json(EXAMPLES / "task_minimal_valid.json")
+        self.task_validator.validate(data)
+        self.assertEqual(data["status"]["current_state"], "TASK_RECEIVED")
+        self.assertNotIn("stop_reason", data["status"])
+        self.assertNotIn("terminal_at_utc", data["status"])
+
 
 class TestTaskSchemaEnumFreeze(unittest.TestCase):
     """Freeze task enums to prevent silent drift."""
