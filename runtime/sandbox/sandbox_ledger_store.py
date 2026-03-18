@@ -64,9 +64,13 @@ class SandboxLedgerStore:
     """
     Append-only local SQLite store for sandbox/runtime evidence.
     WAL mode for durability. Deterministic row creation per outcome.
+
+    Supports two schema shapes (read-only compatibility):
+    - Full schema: top-level canonical_hash column + index.
+    - Legacy/spool schema: canonical_hash only in payload JSON (no column).
     """
 
-    SCHEMA = """
+    SCHEMA_TABLE = """
     CREATE TABLE IF NOT EXISTS sandbox_ledger (
         ledger_row_id TEXT PRIMARY KEY,
         event_type TEXT NOT NULL,
@@ -79,7 +83,6 @@ class SandboxLedgerStore:
         artifact_manifest_ref TEXT NOT NULL DEFAULT '',
         canonical_hash TEXT NOT NULL DEFAULT ''
     );
-    CREATE INDEX IF NOT EXISTS idx_canonical_hash ON sandbox_ledger(canonical_hash);
     """
 
     def __init__(self, path: Path | str, *, fixed_time: str | None = None):
@@ -90,13 +93,21 @@ class SandboxLedgerStore:
         """
         self.path = Path(path)
         self.fixed_time = fixed_time
+        self._has_canonical_hash_column: bool = False
         self._ensure_schema()
 
     def _ensure_schema(self) -> None:
         try:
             with sqlite3.connect(self.path) as conn:
                 conn.execute("PRAGMA journal_mode=WAL")
-                conn.executescript(self.SCHEMA)
+                conn.executescript(self.SCHEMA_TABLE)
+                cur = conn.execute("PRAGMA table_info(sandbox_ledger)")
+                columns = [row[1] for row in cur.fetchall()]
+                self._has_canonical_hash_column = "canonical_hash" in columns
+                if self._has_canonical_hash_column:
+                    conn.execute(
+                        "CREATE INDEX IF NOT EXISTS idx_canonical_hash ON sandbox_ledger(canonical_hash)"
+                    )
         except sqlite3.Error as e:
             raise LedgerStoreError(f"Failed to initialize ledger store: {e}") from e
 
@@ -218,16 +229,26 @@ class SandboxLedgerStore:
         return out
 
     def get_by_canonical_hash(self, canonical_hash: str) -> list[LedgerRow]:
-        """Return all rows with the given canonical_hash (order by timestamp)."""
+        """Return all rows with the given canonical_hash (order by timestamp).
+        Works with both top-level canonical_hash column and payload-only (legacy) schema.
+        """
         if not canonical_hash:
             return []
         try:
             with sqlite3.connect(self.path) as conn:
                 conn.row_factory = sqlite3.Row
-                cur = conn.execute(
-                    "SELECT * FROM sandbox_ledger WHERE canonical_hash = ? ORDER BY timestamp_utc",
-                    (canonical_hash,),
-                )
+                if self._has_canonical_hash_column:
+                    cur = conn.execute(
+                        "SELECT * FROM sandbox_ledger WHERE canonical_hash = ? ORDER BY timestamp_utc",
+                        (canonical_hash,),
+                    )
+                else:
+                    cur = conn.execute(
+                        """SELECT * FROM sandbox_ledger
+                           WHERE json_extract(payload, '$.canonical_hash') = ?
+                           ORDER BY timestamp_utc""",
+                        (canonical_hash,),
+                    )
                 rows = cur.fetchall()
         except sqlite3.Error:
             return []

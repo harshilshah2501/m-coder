@@ -7,10 +7,12 @@ Tests:
 - Canonical hash trace mode
 - JSON output format
 - Error handling
+- Demo ledger compatibility (legacy schema: canonical_hash in payload only)
 """
 
 import io
 import json
+import sqlite3
 import tempfile
 from pathlib import Path
 
@@ -73,6 +75,47 @@ def ledger_path():
     
     yield path
     
+    path.unlink(missing_ok=True)
+
+
+def _create_legacy_ledger_for_report(path: Path) -> None:
+    """Create ledger DB with legacy schema (no canonical_hash column) for report tests."""
+    legacy_schema = """
+    CREATE TABLE sandbox_ledger (
+        ledger_row_id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL,
+        outcome_type TEXT NOT NULL,
+        request_id TEXT NOT NULL,
+        plan_hash TEXT NOT NULL,
+        sandbox_id TEXT NOT NULL,
+        timestamp_utc TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        artifact_manifest_ref TEXT NOT NULL DEFAULT ''
+    );
+    """
+    with sqlite3.connect(path) as conn:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.executescript(legacy_schema)
+        for row_id, event_type, outcome, ts, payload in [
+            ("lr-1", "plangate_safe_execute", "safe_execute", "2026-03-13T10:00:00Z", {"canonical_hash": "hash-def-456"}),
+            ("lr-2", "sandbox_executed", "executed", "2026-03-13T10:00:01Z", {"canonical_hash": "hash-def-456", "exit_code": 0}),
+        ]:
+            conn.execute(
+                """INSERT INTO sandbox_ledger (
+                    ledger_row_id, event_type, outcome_type, request_id, plan_hash,
+                    sandbox_id, timestamp_utc, payload, artifact_manifest_ref
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (row_id, event_type, outcome, "req-002", "plan-002", "", ts, json.dumps(payload), ""),
+            )
+
+
+@pytest.fixture
+def legacy_ledger_path():
+    """Ledger with legacy schema (canonical_hash only in payload) for demo compat tests."""
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        path = Path(f.name)
+    _create_legacy_ledger_for_report(path)
+    yield path
     path.unlink(missing_ok=True)
 
 
@@ -410,20 +453,52 @@ class TestMain:
         assert exit_code == 1
 
 
+class TestReportAgainstLegacySchema:
+    """Report/query surface works when canonical_hash is only in payload (demo ledger compat)."""
+
+    def test_request_id_path_works_against_legacy_schema(self, legacy_ledger_path):
+        """Request trace and explanation by request_id work with legacy schema."""
+        output = io.StringIO()
+        print_request_trace(legacy_ledger_path, "req-002", output=output)
+        result = output.getvalue()
+        assert "TRACE: request_id=req-002" in result
+        assert "hash-def-456" in result or "Total events:" in result
+
+        output2 = io.StringIO()
+        print_request_explanation(legacy_ledger_path, "req-002", output=output2)
+        result2 = output2.getvalue()
+        assert "EXPLANATION: request_id=req-002" in result2
+        assert "final_outcome:" in result2
+
+    def test_canonical_hash_path_works_against_legacy_schema(self, legacy_ledger_path):
+        """Canonical hash trace and explanation work with legacy schema (json_extract)."""
+        output = io.StringIO()
+        print_canonical_hash_trace(legacy_ledger_path, "hash-def-456", output=output)
+        result = output.getvalue()
+        assert "TRACE: canonical_hash=hash-def-456" in result
+        assert "req-002" in result
+
+        output2 = io.StringIO()
+        print_canonical_hash_explanation(legacy_ledger_path, "hash-def-456", output=output2)
+        result2 = output2.getvalue()
+        assert "EXPLANATION: canonical_hash=hash-def-456" in result2
+        assert "final_outcome:" in result2
+
+
 class TestEmptyLedger:
     """Tests with empty ledger."""
-    
+
     def test_summary_empty_ledger(self):
         """Test summary with empty ledger."""
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             path = Path(f.name)
-        
+
         try:
             SandboxLedgerStore(path)
-            
+
             output = io.StringIO()
             print_summary(path, output=output)
-            
+
             result = output.getvalue()
             assert "Total requests:" in result
             assert "0" in result
