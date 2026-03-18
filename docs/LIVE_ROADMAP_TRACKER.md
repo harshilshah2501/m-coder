@@ -5,7 +5,7 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-15  
+- **Last updated**: 2026-03-17  
 - **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
 - **Current active milestone focus**: **M4.x observation stack merged to main.** Next: M3.12 (narrow repo-aware slice).  
 - **Overall status summary**:  
@@ -68,7 +68,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L1** | Governance (Constitution)       | <span style="color:#2e7d32">**LOCKED**</span>            | Constitutional manifest, phase doctrine, dominance rules locked.                          |
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
 | **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
-| **L4** | Observation / Drift Detection   | **PARTIAL**           | Governance-level drift suite exists; production wiring pending.                           |
+| **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
 
 
 ---
@@ -410,12 +410,19 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Observe and validate that runtime behavior continues to match doctrine. Layer-4 detects drift, boundary relocation, and collapse vectors in production, providing structured evidence to governance (GREG). It does not author doctrine or enforce directly.
 
-**Current status**: **M4.1–M4.6 COMPLETE on main** (merged 2026-03-15). Observation stack closure achieved.  
+**Current status**: **M4.1–M4.6 COMPLETE on main** (merged 2026-03-15). **Track-C (C1–C3) COMPLETE** (2026-03-17): runtime observation query layer validated and demo-ready.  
 **Priority**: **HIGH** once Layer-3 MVP is stable.
+
+**Track-C (Runtime Observation Query Layer)**  
+- **C1** Execution Trace Builder: deterministic trace reconstruction by request_id / canonical_hash (latest request group).  
+- **C2** Execution Explanation Builder: deterministic explanation from trace.  
+- **C3** Runtime Query Surface: CLI for summary, request trace/explanation, canonical_hash trace/explanation.  
+- Validated against real runtime ledger (`.spool/ledger.db`; request_id `demo-runtime`; canonical_hash `4b6a08e37bfed4a502029c1b8b1b9500122ff86cc45b15339ac1ff29d6218837`).  
+- Closure: `docs/runtime/TRACK_C_FINAL_CLOSURE.md`.
 
 #### 4.4.1 Milestones
 
-*M4.1–M4.6 merged to main 2026-03-15. See `docs/reports/M4X_MAIN_MERGE_COMPLETION.md`.*
+*M4.1–M4.6 merged to main 2026-03-15. See `docs/reports/M4X_MAIN_MERGE_COMPLETION.md`. Track-C final closure 2026-03-17.*
 
 | ID   | Milestone                   | Status      | Dependencies | Deliverable                                                              | Exit criteria                                                                               |
 | ---- | --------------------------- | ----------- | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
