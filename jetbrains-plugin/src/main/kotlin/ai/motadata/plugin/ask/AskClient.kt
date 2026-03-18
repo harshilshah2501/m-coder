@@ -3,7 +3,7 @@ package ai.motadata.plugin.ask
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.util.GitInfoUtil
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -59,10 +59,9 @@ class AskClient(
         val requestId = "req-ask-${UUID.randomUUID()}"
         val timestamp = Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT)
 
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
 
         val askRequest = mapOf(
             "schema_version" to "ask_request.v0.1",

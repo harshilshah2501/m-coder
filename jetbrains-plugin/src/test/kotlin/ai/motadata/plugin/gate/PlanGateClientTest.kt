@@ -1,12 +1,8 @@
 package ai.motadata.plugin.gate
 
 import com.google.gson.Gson
-import com.intellij.mock.MockProject
-import git4idea.repo.GitRepositoryManager
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 class PlanGateClientTest {
 

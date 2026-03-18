@@ -9,7 +9,7 @@ import com.intellij.openapi.vcs.CheckinProjectPanel
 import com.intellij.openapi.vcs.changes.CommitContext
 import com.intellij.openapi.vcs.checkin.CheckinHandler
 import com.intellij.openapi.vcs.checkin.CheckinHandlerFactory
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.util.GitInfoUtil
 
 class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
     override fun createHandler(panel: CheckinProjectPanel, commitContext: CommitContext): CheckinHandler {
@@ -40,10 +40,9 @@ class MotadataCheckinHandler(
 ) : CheckinHandler() {
 
     override fun beforeCheckin(): ReturnResult {
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
         val repoRoot = project.basePath ?: ""
 
         val request = RuntimeRequest(

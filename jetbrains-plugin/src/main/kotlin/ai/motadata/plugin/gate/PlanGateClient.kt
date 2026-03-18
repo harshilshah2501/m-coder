@@ -3,7 +3,7 @@ package ai.motadata.plugin.gate
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.util.GitInfoUtil
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -71,10 +71,9 @@ class PlanGateClient(
         val requestId = "req-${UUID.randomUUID()}"
         val timestamp = now.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT)
 
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
 
         val ideEvent = mapOf(
             "schema_version" to "ide_event.v0.1",

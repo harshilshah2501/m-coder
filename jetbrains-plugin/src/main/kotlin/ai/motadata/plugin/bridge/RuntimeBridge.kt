@@ -11,6 +11,14 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 /**
+ * Thrown when the runtime returns an HTTP error status (4xx/5xx).
+ * Service was reachable; the request or server state was invalid.
+ * Must NOT be mapped to RUNTIME_UNAVAILABLE.
+ */
+private class RuntimeHttpException(statusCode: Int, body: String) :
+    RuntimeException("Runtime HTTP $statusCode: $body")
+
+/**
  * RuntimeBridge — The single integration point between IDE plugin and runtime.
  *
  * Architectural Principles (M3.4):
@@ -127,6 +135,8 @@ class RuntimeBridge(
         return try {
             val responseJson = postJson("$baseUrl/v0/plan", planRequest)
             parsePlanResponse(request.requestId, responseJson)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
         }
@@ -137,6 +147,8 @@ class RuntimeBridge(
         return try {
             val responseJson = postJson("$baseUrl/v0/ask", askRequest)
             parseAskResponse(request.requestId, responseJson)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
         }
@@ -147,6 +159,8 @@ class RuntimeBridge(
         return try {
             val responseJson = postJson("$baseUrl/v0/execute", executeRequest)
             parseExecuteResponse(request.requestId, responseJson)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
         }
@@ -191,7 +205,10 @@ class RuntimeBridge(
     }
 
     private fun buildAskRequest(request: RuntimeRequest): String {
-        val askRequest = mapOf(
+        val clientContext = mutableMapOf<String, Any?>()
+        request.selection?.let { clientContext["selection"] = it }
+
+        val askRequest = mutableMapOf<String, Any?>(
             "schema_version" to "ask_request.v0.1",
             "request_id" to request.requestId,
             "timestamp_utc" to request.timestampUtc,
@@ -199,9 +216,12 @@ class RuntimeBridge(
             "revision" to (request.revision ?: "unknown-revision"),
             "query" to (request.payload ?: ""),
             "branch" to request.branch
-        ).filterValues { it != null }
+        )
+        if (request.selectedFile != null) askRequest["selected_file"] = request.selectedFile
+        if (request.taskType != null) askRequest["task_type"] = request.taskType
+        if (clientContext.isNotEmpty()) askRequest["client_context"] = clientContext
 
-        return gson.toJson(askRequest)
+        return gson.toJson(askRequest.filterValues { it != null })
     }
 
     private fun buildExecuteRequest(request: RuntimeRequest): String {
@@ -280,6 +300,7 @@ class RuntimeBridge(
 
         val contextBundle = root.getAsJsonObject("context_bundle")
         val planSummary = root.getAsJsonObject("plan_summary")
+        val explainDebugObj = root.getAsJsonObject("explain_debug")
 
         val metadata = mutableMapOf<String, Any?>()
         if (contextBundle != null) {
@@ -287,6 +308,9 @@ class RuntimeBridge(
         }
         if (planSummary != null) {
             metadata["plan_summary"] = gson.fromJson(planSummary, Map::class.java)
+        }
+        if (explainDebugObj != null) {
+            metadata["explain_debug"] = gson.fromJson(explainDebugObj, Map::class.java)
         }
 
         return RuntimeResponse(
@@ -370,7 +394,7 @@ class RuntimeBridge(
         }
 
         if (status !in 200..299) {
-            throw RuntimeException("Runtime HTTP $status: $response")
+            throw RuntimeHttpException(status, response.toString())
         }
 
         return response.toString()

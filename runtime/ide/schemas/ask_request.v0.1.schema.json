@@ -41,7 +41,13 @@
     },
     "client_context": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "description": "Optional IDE context e.g. selection text when task_type is EXPLAIN_DEBUG."
+    },
+    "task_type": {
+      "type": "string",
+      "enum": ["EXPLAIN_DEBUG", "general"],
+      "description": "When EXPLAIN_DEBUG, backend may use real reasoning if selection and selected_file are present."
     }
   },
   "additionalProperties": false

@@ -1,8 +1,8 @@
 # JetBrains Plugin MVP — Demo Guide
 
-Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit interception (shadow mode)** and **Repo-Aware Ask (plan-only)**. Use this when testing or presenting the plugin.
+Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit interception (shadow mode)**, **Repo-Aware Ask (plan-only)**, and **Explain/Debug selected code**. Use this when testing or presenting the plugin.
 
-**Related:** [JETBRAINS_PLUGIN_MVP_SPIKE.md](JETBRAINS_PLUGIN_MVP_SPIKE.md) — architecture and contracts.
+**Related:** [JETBRAINS_PLUGIN_MVP_SPIKE.md](JETBRAINS_PLUGIN_MVP_SPIKE.md) — architecture and contracts. **Explain/Debug (Phase-2):** [PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md](../demo/PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md) — implementation and contracts.
 
 ---
 
@@ -135,7 +135,36 @@ Shows: question → `/v0/ask` → context bundle + plan summary; no execution, n
 
 ---
 
-## 7. Verification checklist
+## 7. Demo 3 — Explain/Debug selected code
+
+Shows: select code in editor → Ask Motadata AI with selection → optional real reasoning (vLLM) → structured explain/debug response (Summary, Logic flow, Likely bug/risk, Evidence, Confidence/limitations) or "Reasoning unavailable" when the service is down. No execution.
+
+**Prerequisite for real reasoning:** A vLLM-compatible HTTP completion service (e.g. vLLM on port 8000). Default URL: `http://127.0.0.1:8000`. Override with env `MOTADATA_EXPLAIN_VLLM_URL` if your service is elsewhere. If the service is not running, the plugin still shows a response with "Reasoning unavailable" and no template steps.
+
+1. **Ensure Plan-Gate is running** (Section 3) and the sandbox IDE has **m-coder** open. For structured reasoning, start your vLLM (or compatible) service on port 8000 if desired.
+
+2. **Select code** in the editor (e.g. a function or block in a source file).
+
+3. **Open the Ask action:**  
+   **Tools → Ask Motadata AI** (or **Help → Find Action** → "Ask Motadata AI").
+
+4. **Observe the dialog prompt:**  
+   It shows **"Explain/Debug selected code (PLAN ONLY). Optional: add a question or leave as-is."**  
+   Enter an optional question (e.g. "What does this do?" or "Where might this fail?") or leave as-is and confirm.
+
+5. **Observe the response dialog:**
+   - **Title:** "Ask Motadata AI — Explain/Debug".
+   - **When the reasoning service is available:** Structured sections — **Summary**, **Logic flow**, **Likely bug/risk**, **Evidence**, **Confidence / limitations** — from the model. No plan steps are substituted.
+   - **When the reasoning service is unavailable:** Message "Reasoning unavailable: ..." and a note that no template steps were substituted; ensure the reasoning service is running and `MOTADATA_EXPLAIN_VLLM_URL` is set if needed.
+
+6. **Verify guardrails:**  
+   No code edits, no execution. Only one runtime call: `POST /v0/ask` with `task_type=EXPLAIN_DEBUG`, `selected_file`, and `client_context.selection`.
+
+**Success criteria:** With code selected, the dialog shows "Explain/Debug — PLAN ONLY" and either structured explain_debug sections (when vLLM is running) or a clear "Reasoning unavailable" message (when it is not); nothing is executed.
+
+---
+
+## 8. Verification checklist
 
 Before considering the demo complete:
 
@@ -144,10 +173,11 @@ Before considering the demo complete:
 - [ ] m-coder is open in the sandbox with Git integration active.
 - [ ] **Commit demo:** Each commit produces a “Motadata AI” notification (REFUSAL / CONDITIONAL_BLOCK or BOUNDING / APPROVE) and the commit succeeds; `~/.motadata-ai/plugin-decisions.log` has a new entry.
 - [ ] **Ask demo:** “Ask Motadata AI” returns a dialog with PLAN ONLY, context bundle (files + reasons), selectors used, and 3–6 plan steps; no execution or edits.
+- [ ] **Explain/Debug demo:** With code selected, "Ask Motadata AI" shows "Explain/Debug — PLAN ONLY" and either structured sections (Summary, Logic flow, etc.) when the reasoning service is running, or "Reasoning unavailable" when it is not; no execution.
 
 ---
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 | Issue | What to check |
 |-------|----------------|
@@ -159,10 +189,11 @@ Before considering the demo complete:
 | **Log file missing** | Plugin creates `~/.motadata-ai/plugin-decisions.log` on first decision. Ensure you have write permission to `~/.motadata-ai` (plugin may create the directory). |
 | **runIde fails: GradleJvmSupportMatrix / IllegalArgumentException: 25** | IntelliJ 2023.3’s Gradle plugin cannot parse Java 25. **Workaround:** (1) Run with JDK 17: `export JAVA_HOME=/path/to/jdk17` then `./gradlew runIde`. (2) If the system has JDK 25, point `JAVA_HOME` to JDK 17 before running. (3) Clear the sandbox: `rm -rf jetbrains-plugin/build/idea-sandbox` then run `./gradlew runIde` again. |
 | **runIde fails: libsecret-1.so / PasswordSafeSettings** | On Linux (e.g. WSL, minimal containers) the credential store native library may be missing. The IDE often continues with a fallback; if it still exits, install `libsecret-1-dev` (e.g. `apt install libsecret-1-dev`) or ignore if you do not need stored passwords in the sandbox. |
+| **Explain/Debug shows "Reasoning unavailable" or error** | For structured Explain/Debug, a vLLM-compatible HTTP completion service must be running (default `http://127.0.0.1:8000`). Set `MOTADATA_EXPLAIN_VLLM_URL` if the service is on another URL. When the service is down, the plugin correctly shows the error and does not substitute template steps. |
 
 ---
 
-## 9. Log and artifact locations
+## 10. Log and artifact locations
 
 | Item | Location |
 |------|----------|
@@ -172,10 +203,11 @@ Before considering the demo complete:
 | Ask handler | `runtime/ask_service/handlers.py` |
 | Plugin source | `jetbrains-plugin/src/main/kotlin/` |
 | Plugin descriptor | `jetbrains-plugin/src/main/resources/META-INF/plugin.xml` |
+| Explain/Debug reasoner | `runtime/ask_service/reasoner.py` |
 
 ---
 
-## 10. Quick reference — commands
+## 11. Quick reference — commands
 
 ```bash
 # Terminal 1 — Plan-Gate (from repo root)
@@ -187,7 +219,9 @@ cd jetbrains-plugin
 ./gradlew runIde
 # Then in sandbox: File → Open → m-coder repo
 # Demo 1: make change → Git → Commit
-# Demo 2: Tools → Ask Motadata AI → enter question
+# Demo 2: Tools → Ask Motadata AI → enter question (no selection)
+# Demo 3: select code → Tools → Ask Motadata AI → (optional question) → Explain/Debug result
+# Optional for Demo 3: start vLLM on 8000 or set MOTADATA_EXPLAIN_VLLM_URL
 
 # Verify
 curl http://127.0.0.1:8089/healthz

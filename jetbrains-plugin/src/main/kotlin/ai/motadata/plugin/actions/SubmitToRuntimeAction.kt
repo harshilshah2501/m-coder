@@ -8,7 +8,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.util.GitInfoUtil
 
 /**
  * Submit to Runtime — Explicit code-intent action through governed runtime path.
@@ -84,10 +84,9 @@ class SubmitToRuntimeAction : AnAction() {
     }
 
     private fun executeGovernedRequest(project: Project, command: String) {
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
         val repoRoot = project.basePath ?: ""
 
         val request = RuntimeRequest(

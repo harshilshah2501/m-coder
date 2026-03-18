@@ -70,7 +70,16 @@ data class RuntimeRequest(
         .format(DateTimeFormatter.ISO_INSTANT),
 
     /** Plugin client policy. */
-    val clientPolicy: ClientPolicy = ClientPolicy()
+    val clientPolicy: ClientPolicy = ClientPolicy(),
+
+    /** Repo-relative path of the selected file (for Ask EXPLAIN_DEBUG). */
+    val selectedFile: String? = null,
+
+    /** Selected code text (for Ask EXPLAIN_DEBUG). */
+    val selection: String? = null,
+
+    /** Task mode for Ask: EXPLAIN_DEBUG or general. */
+    val taskType: String? = null
 ) {
     /**
      * Convert to JSON-compatible map for serialization.
@@ -87,7 +96,10 @@ data class RuntimeRequest(
             "plan_hash" to planHash,
             "ide_context" to ideContext.toMap(),
             "timestamp_utc" to timestampUtc,
-            "client_policy" to clientPolicy.toMap()
+            "client_policy" to clientPolicy.toMap(),
+            "selected_file" to selectedFile,
+            "selection" to selection,
+            "task_type" to taskType
         ).filterValues { it != null }
     }
 }

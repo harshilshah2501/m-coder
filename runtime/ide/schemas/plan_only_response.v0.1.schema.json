@@ -114,6 +114,22 @@
         }
       },
       "additionalProperties": false
+    },
+    "explain_debug": {
+      "type": "object",
+      "description": "Present when task_type was EXPLAIN_DEBUG; contains real reasoning or error.",
+      "properties": {
+        "summary": { "type": "string" },
+        "logic_flow": { "type": "string" },
+        "likely_bug_risk": { "type": "string" },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "confidence_limits": { "type": "string" },
+        "error": { "type": "string" }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

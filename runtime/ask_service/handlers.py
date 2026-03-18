@@ -23,6 +23,7 @@ from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
 
 from .planner import PlanOnlyPlanner
+from .reasoner import explain_debug, ExplainDebugResult
 
 
 REPO = Path(__file__).resolve().parents[1]  # runtime/
@@ -55,12 +56,19 @@ def handle_ask_request(ask_request: dict) -> dict:
     - governance_posture == PLAN_ONLY
     - execution == false
     - no execution, no sandbox, no tool calls
+
+    When task_type is EXPLAIN_DEBUG and selected_file + selection are present,
+    invokes real reasoning (ExplainDebugReasoner). If reasoning is unavailable,
+    returns explain_debug.error and does NOT use template planner steps.
     """
     request_id = str(ask_request.get("request_id", ""))
     repo_root = str(ask_request.get("repo_root", ""))
     revision = str(ask_request.get("revision", ""))
     query = str(ask_request.get("query", ""))
     selected_file = ask_request.get("selected_file")
+    task_type = ask_request.get("task_type") or "general"
+    client_context = ask_request.get("client_context") or {}
+    selection = (client_context.get("selection") or "").strip() if isinstance(client_context, dict) else ""
 
     symbol_hints = _extract_symbol_hints(query)
 
@@ -80,19 +88,36 @@ def handle_ask_request(ask_request: dict) -> dict:
     try:
         bundle = engine.build_context_bundle(ctx_request)
     except (ContextEngineError, MissingExplicitFilesError) as e:
-        # Fail-closed on context building; surface structured error but keep execution=false.
         return _build_error_plan_only_response(
             request_id=request_id,
             message=str(e),
         )
 
-    planner = PlanOnlyPlanner()
-    plan_summary = planner.plan(query=query, bundle=bundle)
+    explain_debug_result: ExplainDebugResult | None = None
+    plan_steps: List[str]
+
+    if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
+        result = explain_debug(
+            query=query,
+            selected_file=selected_file,
+            selection=selection or "",
+            bundle=bundle,
+        )
+        explain_debug_result = result
+        if result.error:
+            plan_steps = ["Reasoning service unavailable; no template steps substituted."]
+        else:
+            plan_steps = ["Explain/debug analysis completed; see structured output above."]
+    else:
+        planner = PlanOnlyPlanner()
+        plan_summary = planner.plan(query=query, bundle=bundle)
+        plan_steps = plan_summary.steps
 
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
-        plan_steps=plan_summary.steps,
+        plan_steps=plan_steps,
+        explain_debug=explain_debug_result,
     )
 
 
@@ -129,6 +154,7 @@ def _build_plan_only_response(
     request_id: str,
     bundle,
     plan_steps: List[str],
+    explain_debug: ExplainDebugResult | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -139,7 +165,7 @@ def _build_plan_only_response(
     ]
     selectors_used = list(bundle.provenance.selectors)
 
-    return {
+    payload: Dict[str, Any] = {
         "schema_version": "plan_only_response.v0.1",
         "request_id": request_id,
         "timestamp_utc": _now_utc(),
@@ -159,6 +185,9 @@ def _build_plan_only_response(
             "severity": "info",
         },
     }
+    if explain_debug is not None:
+        payload["explain_debug"] = explain_debug.to_dict()
+    return payload
 
 
 def _build_error_plan_only_response(

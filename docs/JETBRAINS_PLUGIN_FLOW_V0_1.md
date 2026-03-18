@@ -77,7 +77,7 @@ CLI client (`runtime/ci_gate/cli.py`) calls Plan-Gate Service and fails the buil
 HTTP endpoint for plugin clients:
 
 - **POST /v0/plan** — Request body: PlanRequest v0.1 JSON. Response: DecisionResponse v0.1 JSON.
-- **POST /v0/ask** — Repo-aware, plan-only queries (no execution). Request body: AskRequest v0.1 JSON. Response: PlanOnlyResponse v0.1 (context bundle, plan summary, `governance_posture=PLAN_ONLY`, `execution=false`). See [docs/runtime/JETBRAINS_PLUGIN_MVP_SPIKE.md](runtime/JETBRAINS_PLUGIN_MVP_SPIKE.md) and schemas `runtime/ide/schemas/ask_request.v0.1.schema.json`, `runtime/ide/schemas/plan_only_response.v0.1.schema.json`.
+- **POST /v0/ask** — Repo-aware, plan-only queries (no execution). Request body: AskRequest v0.1 JSON. Response: PlanOnlyResponse v0.1 (context bundle, plan summary, `governance_posture=PLAN_ONLY`, `execution=false`). When the request includes `task_type=EXPLAIN_DEBUG` and selected file/selection, the response may include an optional **explain_debug** object (summary, logic_flow, likely_bug_risk, evidence, confidence_limits) from the reasoning service (vLLM-compatible, default `http://127.0.0.1:8000`), or **explain_debug.error** when the service is unavailable (no template steps substituted). See [docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md](runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md) (§7 Demo 3) and [docs/demo/PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md](demo/PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md); schemas: `runtime/ide/schemas/ask_request.v0.1.schema.json`, `runtime/ide/schemas/plan_only_response.v0.1.schema.json`.
 - Default port: 8089 (env `PLAN_GATE_PORT`)
 - Run: `python -m runtime.plan_gate_service.app`
 - Health check: GET `/healthz` (returns `{"status":"ok"}`) — used by plugin for liveness
