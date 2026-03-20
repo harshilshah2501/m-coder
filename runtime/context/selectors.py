@@ -187,7 +187,7 @@ def select_symbol_hints(root_path: str, symbol_hints: Iterable[str]) -> List[Sel
                 text = f.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            if hint in text:
+            if hint in text.lower():
                 selected_path = _normalize_rel_path(root, f)
                 break
         if selected_path is not None:

@@ -14,10 +14,11 @@ Option A: sidecar plan-only path, no loop/state-machine integration yet.
 """
 
 import json
-from dataclasses import asdict
+import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
@@ -28,6 +29,7 @@ from .reasoner import explain_debug, ExplainDebugResult
 
 REPO = Path(__file__).resolve().parents[1]  # runtime/
 IDE_SCHEMAS = REPO / "ide" / "schemas"
+LOG = logging.getLogger(__name__)
 
 
 def _load_schema(name: str) -> dict:
@@ -48,6 +50,23 @@ def validate_ask_request(data: dict) -> List[str]:
     return errs
 
 
+def _resolve_ask_repo_root(repo_root: str) -> Tuple[str, bool]:
+    """
+    Resolve repo root for context building. If the requested path does not exist
+    on this server (e.g. client sent a Windows path, server is Linux), use
+    ASK_DEFAULT_REPO_ROOT when set. Returns (effective_root, fallback_used).
+    """
+    root = Path(repo_root).resolve() if repo_root.strip() else Path()
+    if root.exists() and root.is_dir():
+        return (str(root), False)
+    default = os.environ.get("ASK_DEFAULT_REPO_ROOT", "").strip()
+    if default:
+        default_path = Path(default).resolve()
+        if default_path.exists() and default_path.is_dir():
+            return (str(default_path), True)
+    return (repo_root or ".", False)
+
+
 def handle_ask_request(ask_request: dict) -> dict:
     """
     Process AskRequest and return PlanOnlyResponse v0.1.
@@ -62,13 +81,17 @@ def handle_ask_request(ask_request: dict) -> dict:
     returns explain_debug.error and does NOT use template planner steps.
     """
     request_id = str(ask_request.get("request_id", ""))
-    repo_root = str(ask_request.get("repo_root", ""))
+    repo_root = (ask_request.get("repo_root") or "").strip() or "."
     revision = str(ask_request.get("revision", ""))
     query = str(ask_request.get("query", ""))
     selected_file = ask_request.get("selected_file")
     task_type = ask_request.get("task_type") or "general"
     client_context = ask_request.get("client_context") or {}
     selection = (client_context.get("selection") or "").strip() if isinstance(client_context, dict) else ""
+
+    effective_root, fallback_used = _resolve_ask_repo_root(repo_root)
+    if fallback_used:
+        LOG.info("[ASK] repo_root invalid on server → using ASK_DEFAULT_REPO_ROOT")
 
     symbol_hints = _extract_symbol_hints(query)
 
@@ -79,9 +102,15 @@ def handle_ask_request(ask_request: dict) -> dict:
     ctx_request = ContextRequest(
         task_id=request_id or "ask-task",
         revision=revision or "unknown-revision",
-        root_path=repo_root,
+        root_path=effective_root,
         files=files,
         symbol_hints=symbol_hints,
+    )
+
+    context_resolution = (
+        {"requested_repo_root": repo_root, "effective_repo_root": effective_root, "fallback_used": True}
+        if fallback_used
+        else None
     )
 
     engine = ContextEngine()
@@ -91,6 +120,8 @@ def handle_ask_request(ask_request: dict) -> dict:
         return _build_error_plan_only_response(
             request_id=request_id,
             message=str(e),
+            revision=revision,
+            context_resolution=context_resolution,
         )
 
     explain_debug_result: ExplainDebugResult | None = None
@@ -118,6 +149,7 @@ def handle_ask_request(ask_request: dict) -> dict:
         bundle=bundle,
         plan_steps=plan_steps,
         explain_debug=explain_debug_result,
+        context_resolution=context_resolution,
     )
 
 
@@ -155,6 +187,7 @@ def _build_plan_only_response(
     bundle,
     plan_steps: List[str],
     explain_debug: ExplainDebugResult | None = None,
+    context_resolution: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -164,6 +197,13 @@ def _build_plan_only_response(
         for item in bundle.items
     ]
     selectors_used = list(bundle.provenance.selectors)
+    has_grounded_files = len(bundle.items) > 0
+
+    plan_summary: Dict[str, Any] = {"steps": plan_steps}
+    if not has_grounded_files:
+        plan_summary["notes"] = [
+            "No grounded context files were found; selectors produced no matching files. Plan steps are ungrounded."
+        ]
 
     payload: Dict[str, Any] = {
         "schema_version": "plan_only_response.v0.1",
@@ -174,35 +214,41 @@ def _build_plan_only_response(
             "files": files,
             "selectors_used": selectors_used,
         },
-        "plan_summary": {
-            "steps": plan_steps,
-        },
+        "plan_summary": plan_summary,
         "governance_posture": "PLAN_ONLY",
         "execution": False,
         "ui": {
             "title": "Repo-Aware Plan (PLAN ONLY)",
-            "message": "Deterministic context bundle and plan-only steps generated. No execution performed.",
-            "severity": "info",
+            "message": (
+                "Deterministic context bundle and plan-only steps generated. No execution performed."
+                if has_grounded_files
+                else "No context files matched; plan steps are ungrounded. No execution performed."
+            ),
+            "severity": "info" if has_grounded_files else "warning",
         },
     }
     if explain_debug is not None:
         payload["explain_debug"] = explain_debug.to_dict()
+    if context_resolution is not None:
+        payload["context_resolution"] = context_resolution
     return payload
 
 
 def _build_error_plan_only_response(
     request_id: str,
     message: str,
+    revision: str = "",
+    context_resolution: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """
     Build a PlanOnlyResponse that reports a context error but preserves execution=false invariants.
     """
-    return {
+    payload: Dict[str, Any] = {
         "schema_version": "plan_only_response.v0.1",
         "request_id": request_id,
         "timestamp_utc": _now_utc(),
         "context_bundle": {
-            "revision": "unknown-revision",
+            "revision": revision.strip() or "unknown-revision",
             "files": [],
             "selectors_used": [],
         },
@@ -218,4 +264,6 @@ def _build_error_plan_only_response(
             "severity": "warning",
         },
     }
-
+    if context_resolution is not None:
+        payload["context_resolution"] = context_resolution
+    return payload

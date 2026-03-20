@@ -130,6 +130,16 @@
         "error": { "type": "string" }
       },
       "additionalProperties": false
+    },
+    "context_resolution": {
+      "type": "object",
+      "description": "Present when server used ASK_DEFAULT_REPO_ROOT because requested repo_root was invalid on server.",
+      "properties": {
+        "requested_repo_root": { "type": "string" },
+        "effective_repo_root": { "type": "string" },
+        "fallback_used": { "type": "boolean" }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

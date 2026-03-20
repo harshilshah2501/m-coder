@@ -4,13 +4,36 @@ from __future__ import annotations
 
 import json
 import os
-import socketserver
-import threading
+import sys
+import urllib.error
+import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from . import config
 from . import handlers
+
+EXPLAIN_VLLM_URL_ENV = "MOTADATA_EXPLAIN_VLLM_URL"
+VLLM_HEALTH_TIMEOUT = 5
+
+
+def _vllm_healthcheck() -> None:
+    """If MOTADATA_EXPLAIN_VLLM_URL is set, verify vLLM is reachable; exit with clear error if not."""
+    url_env = os.environ.get(EXPLAIN_VLLM_URL_ENV, "").strip()
+    if not url_env:
+        return
+    base = url_env.rstrip("/")
+    health_url = f"{base}/v1/models"
+    try:
+        req = urllib.request.Request(health_url, method="GET")
+        with urllib.request.urlopen(req, timeout=VLLM_HEALTH_TIMEOUT) as resp:
+            if resp.status != 200:
+                print(f"vLLM healthcheck failed: {health_url} returned {resp.status}", file=sys.stderr)
+                sys.exit(1)
+    except (urllib.error.URLError, OSError) as e:
+        print(f"vLLM not reachable at {health_url}: {e}", file=sys.stderr)
+        print("Start vLLM first (e.g. runtime/scripts/start_governed_services.sh) or unset MOTADATA_EXPLAIN_VLLM_URL.", file=sys.stderr)
+        sys.exit(1)
 
 
 class PlanGateHandler(BaseHTTPRequestHandler):
@@ -119,6 +142,7 @@ def run_server(port: int | None = None, spool_dir: Path | None = None) -> HTTPSe
 
 
 def main() -> None:
+    _vllm_healthcheck()
     port = config.get_port()
     server = run_server()
     print(f"Plan-Gate Service on http://127.0.0.1:{port}/v0/plan")

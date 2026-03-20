@@ -123,6 +123,19 @@ class TestContextEngineSymbols:
         assert bundle2.items[0].path == "a.py"
         assert bundle1.items[0].selection_reason == bundle2.items[0].selection_reason
 
+    def test_symbol_hint_case_insensitive(self, tmp_path: Path) -> None:
+        root = tmp_path / "repo"
+        _write(root, "handler.py", "def processFiles():\n    pass\n")
+
+        engine = ContextEngine()
+        req = _make_request(root, symbol_hints=["processfiles"], selectors=["symbols"])
+
+        bundle = engine.build_context_bundle(req)
+
+        assert len(bundle.items) == 1
+        assert bundle.items[0].path == "handler.py"
+        assert "processfiles" in bundle.items[0].selection_reason.lower()
+
 
 class TestContextEngineProvenance:
     def test_provenance_fields_present(self, tmp_path: Path) -> None:
@@ -137,9 +150,34 @@ class TestContextEngineProvenance:
         assert bundle.provenance.root_path == str((root).resolve())
         assert bundle.provenance.requested_files == ["a.py"]
         assert bundle.provenance.symbol_hints == ["foo"]
-        # Selectors preserved from request.
-        assert bundle.provenance.selectors == req.selectors
+        # Selectors that actually contributed refs (direct added a.py; symbols find no "foo" in a.py).
+        assert bundle.provenance.selectors == ["direct"]
 
         # Do not assert on created_at_utc value; only check that it is non-empty.
         assert bundle.created_at_utc
+
+    def test_provenance_selectors_contributed_only(self, tmp_path: Path) -> None:
+        root = tmp_path / "repo"
+        _write(root, "a.py", "def foo():\n    pass\n")
+
+        engine = ContextEngine()
+        req = _make_request(root, symbol_hints=["foo"], selectors=["symbols"])
+
+        bundle = engine.build_context_bundle(req)
+
+        assert len(bundle.items) == 1
+        assert bundle.items[0].path == "a.py"
+        assert bundle.provenance.selectors == ["symbols"]
+
+    def test_provenance_empty_when_no_refs(self, tmp_path: Path) -> None:
+        root = tmp_path / "repo"
+        _write(root, "a.py", "x = 1\n")  # no "nonexistentsymbol" anywhere
+
+        engine = ContextEngine()
+        req = _make_request(root, symbol_hints=["nonexistentsymbol"], selectors=["symbols"])
+
+        bundle = engine.build_context_bundle(req)
+
+        assert len(bundle.items) == 0
+        assert bundle.provenance.selectors == []
 

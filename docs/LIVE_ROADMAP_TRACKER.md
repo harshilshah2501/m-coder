@@ -5,14 +5,15 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-17  
-- **Current active layer**: **Layer-3 — Runtime Enforcement / Execution**  
-- **Current active milestone focus**: **M4.x observation stack merged to main.** Next: M3.12 (narrow repo-aware slice).  
+- **Last updated**: 2026-03-20  
+- **Current active layer**: **Layer-5 — Workspace Intelligence / Evidence-Driven Ask**  
+- **Current active milestone focus**: **L5.1–L5.3 workspace-local retrieval foundation** (resolver, indexing, retrieval contract).  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** Follow-on M3.12–M3.18 NOT_STARTED.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
+  - **Layer-5 is now the active program focus** because grounded Ask is not yet production-real until workspace-local retrieval and evidence bundling are in place.
 
 ---
 
@@ -69,6 +70,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
 | **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
+| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**IN_PROGRESS**</span> | Active blocker-clearing layer: workspace-local retrieval and deterministic evidence bundle contract for grounded Ask. |
 
 
 ---
@@ -169,6 +171,8 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.18 | Task evaluation harness            | <span style="color:#757575">NOT_STARTED</span> | M3.17          | Harness to evaluate tasks against governance and runtime contracts.                                   |
 
 > Note: These Layer-3 milestones are **execution milestones** and do not redefine doctrine. They implement the runtime-governed agent architecture described in the Layer-3 specs.
+
+> Follow-on relationship note: M3.12–M3.16 remain valid downstream ingestion/enrichment milestones. They are not substitutes for workspace-local code grounding and are not the immediate blocker for grounded Ask validity.
 
 #### 4.3.2 Artifact-Driven Milestone Details
 
@@ -439,19 +443,74 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ---
 
+### 4.5 Layer-5 — Workspace Intelligence / Evidence-Driven Ask
+
+**Purpose**: Establish a workspace intelligence layer in WSL that performs workspace-local retrieval and deterministic evidence assembly before Plan-Gate evaluation. Layer-5 defines the structured evidence-bundle contract into Plan-Gate, reduces dependence on remote repo-path assumptions (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) to compatibility-only behavior, and does not redesign Layer-1 governance semantics or Layer-3 execution authority.
+
+**Current status**: <span style="color:#e65100">**IN_PROGRESS**</span>  
+**Priority**: **CRITICAL**
+
+| ID   | Milestone | Status | Dependencies | Deliverable / exit criteria summary |
+| ---- | --------- | ------ | ------------ | ----------------------------------- |
+| L5.1 | Workspace Resolver | <span style="color:#e65100">IN_PROGRESS</span> | M3.7 | Plugin/runtime request resolves to canonical workspace identity (Windows plugin ↔ WSL repo) with deterministic root + revision provenance in request metadata. |
+| L5.2 | Index Manager / File + Symbol Indexing | <span style="color:#757575">NOT_STARTED</span> | L5.1, M3.2 | Index scope decision locked (file-only vs symbol-aware/AST-assisted), plus deterministic lifecycle (build/update/invalidate) and incremental update/watch rules for workspace-local retrieval. |
+| L5.3 | Graph + Retrieval Foundation | <span style="color:#757575">NOT_STARTED</span> | L5.2 | Multi-lane retrieval contract defined (path/lexical, symbol, graph expansion, recency/open-file bias) with stable ranking and deterministic candidate set output. |
+| L5.4 | Snippet Extraction + Evidence Bundle Builder | <span style="color:#757575">NOT_STARTED</span> | L5.3 | Deterministic snippet selection and bundle assembly with schema versioning, bundle hash/provenance, file paths, selectors/spans, and explicit selection reasons. |
+| L5.5 | Plugin ↔ Context Layer Integration | <span style="color:#757575">NOT_STARTED</span> | L5.1–L5.4, M3.7 | Ask requests from plugin route through context layer and carry evidence bundle metadata into runtime surfaces. |
+| L5.6 | Ask Refactor (evidence-driven contract) | <span style="color:#757575">NOT_STARTED</span> | L5.4–L5.5, M3.5 | Ask/Explain path consumes evidence bundle as first-class contract at Plan-Gate boundaries; response grounding linked to supplied evidence. |
+| L5.7 | Dirty Buffer / Live File Overlay | <span style="color:#757575">NOT_STARTED</span> | L5.5 | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth. |
+| L5.8 | Grounded Ask Validation + Metrics | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.7, L4 | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking. |
+| L5.9 | Compatibility Path Deprecation / Hardening | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.8 | Compatibility transition with feature flags, controlled fallback path, and telemetry comparison between compatibility and workspace-local evidence paths before hardening default. |
+
+#### 4.5.1 Ask validity criteria (grounded Ask contract)
+
+- For repo-grounded Ask queries, at least one relevant file must be selected, **or** an explicit no-match outcome must be returned with deterministic justification.
+- Evidence bundle must include: file paths, snippet spans/selectors, and per-selection reason fields.
+- Empty `context_bundle.files` is invalid for grounded Ask unless accompanied by explicit no-match or scope-invalid justification.
+- Plan-Gate and downstream reasoning surfaces must consume the provided bundle as evidence input, not infer hidden repository state.
+
+#### 4.5.2 vLLM dependency boundary
+
+- Retrieval, indexing, workspace resolution, and evidence bundling are deterministic infrastructure concerns and do not require vLLM availability.
+- vLLM remains applicable for deeper reasoning/explanation synthesis over supplied evidence bundles.
+
+#### 4.5.3 Layer-5 MVP contract-tightening checklist
+
+- L5.2 must lock index granularity decisions explicitly (file-level baseline, symbol-level coverage, AST-assisted parsing scope, and incremental watcher/update behavior).
+- L5.3 must define retrieval lanes and ranking behavior explicitly (lexical/path lane, symbol lane, graph-expansion lane, recency/open-file bias, deterministic merge/rank output).
+- L5.8 must define baseline latency/SLA targets for retrieval and end-to-end Ask to prevent correctness-only but unusable behavior.
+- L5.4/L5.6 must lock evidence bundle contract versioning and determinism fields (schema version, bundle hash, revision/provenance linkage, replay/debug reproducibility).
+- L5.9 must operationalize migration from compatibility path via feature flags, fallback semantics, and telemetry-based comparison gates.
+
+**Dependencies**:  
+- Upstream: existing Layer-3 runtime and plugin bridge remain stable.  
+- New: Workspace Intelligence Layer contract and evidence bundle schema.
+- Compatibility note: GPU-side direct repo access behavior (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) is compatibility-only during migration, not the primary architecture.
+
+**Layer exit criteria**:  
+- Workspace-local retrieval produces deterministic grounded evidence bundles.  
+- Ask path consumes evidence bundles and returns internally consistent files/selectors/plan surfaces.
+
+---
+
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **M4.x observation stack on main.** Next: **M3.12** (narrow repo-aware slice only).
+- **Current objective**: **Establish Layer-5 Workspace Intelligence MVP for grounded Ask** (workspace-local retrieval + deterministic evidence bundle path).
 - **Active tasks**:
-  - M3.0–M3.11 and M4.1–M4.6 complete on main.
+  - L5.1 scope/contract finalization (workspace resolver boundaries, provenance fields, Windows plugin ↔ WSL workspace mapping).
+  - L5.2 indexing contract definition (index granularity, incremental update/watch strategy, determinism invariants, invalidation triggers).
+  - L5.3 retrieval foundation planning (multi-lane candidate generation and stable merge/ranking policy for grounded Ask inputs).
 - **Next 3 milestones** (actual upcoming work):
-  1. **M3.12** Documentation ingestion (narrow repo-aware slice) — NOT_STARTED
-  2. **M3.13** Jira ingestion — NOT_STARTED
-  3. **M3.14** PR ingestion — NOT_STARTED
+  1. **L5.1** Workspace Resolver — IN_PROGRESS
+  2. **L5.2** Index Manager / File + Symbol Indexing — NOT_STARTED
+  3. **L5.3** Graph + Retrieval Foundation — NOT_STARTED
 - **Current blockers**:
-  - None.
+  - Grounded Ask is not production-valid yet because workspace-local retrieval and deterministic evidence-bundle assembly are not fully implemented.
+  - Ask requests can currently produce empty/insufficient `context_bundle.files` without a strict no-match contract path.
 - **Immediate next action**:
-  - Cut a fresh branch for M3.12 narrow implementation only after main is updated (done). Begin M3.12 when ready.
+  - Finalize Layer-5 implementation contract for L5.1–L5.3, including index granularity and retrieval-lane/ranking decisions, then begin first narrow implementation slice (resolver + minimal deterministic retrieval path).
+  - Draft L5 evidence bundle version/hash contract and baseline retrieval + Ask latency targets before enabling broader plugin rollout.
+  - Keep M3.12–M3.16 as downstream enrichment milestones (documentation/Jira/PR ingestion) after grounded workspace-local Ask path is operational.
 
 ---
 
