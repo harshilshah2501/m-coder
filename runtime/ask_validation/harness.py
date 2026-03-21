@@ -34,7 +34,6 @@ class QueryResult:
     actual_outcome: str  # "grounded" | "no_match_valid" | "no_match_invalid" | "error"
     files_found: int
     selectors_used: list[str]
-    retrieval_latency_ms: float
     end_to_end_latency_ms: float
     violations: list[str] = field(default_factory=list)
     response: dict[str, Any] = field(default_factory=dict)
@@ -54,8 +53,10 @@ class ValidationMetrics:
     relevant_file_present_count: int = 0
     relevant_file_presence_rate: float = 0.0
     
-    avg_retrieval_latency_ms: float = 0.0
-    max_retrieval_latency_ms: float = 0.0
+    # Retrieval latency: NOT INSTRUMENTED
+    # ContextEngine does not expose timing; requires engine-level instrumentation.
+    # Until instrumented, this metric is unavailable.
+    retrieval_latency_instrumented: bool = False
     
     avg_e2e_latency_ms: float = 0.0
     max_e2e_latency_ms: float = 0.0
@@ -72,8 +73,7 @@ class ValidationMetrics:
             "no_match_expected": self.no_match_expected,
             "empty_bundle_rate": round(self.empty_bundle_rate, 4),
             "relevant_file_presence_rate": round(self.relevant_file_presence_rate, 4),
-            "avg_retrieval_latency_ms": round(self.avg_retrieval_latency_ms, 2),
-            "max_retrieval_latency_ms": round(self.max_retrieval_latency_ms, 2),
+            "retrieval_latency_instrumented": self.retrieval_latency_instrumented,
             "avg_e2e_latency_ms": round(self.avg_e2e_latency_ms, 2),
             "max_e2e_latency_ms": round(self.max_e2e_latency_ms, 2),
             "no_match_justification_rate": round(self.no_match_justification_rate, 4),
@@ -97,13 +97,14 @@ class HarnessResult:
             "",
             f"Overall: {'PASS' if self.passed else 'FAIL'}",
             "",
-            "REQUIRED METRICS:",
+            "MEASURED METRICS:",
             f"  Empty Bundle Rate:         {self.metrics.empty_bundle_rate:.2%}",
             f"  Relevant File Presence:    {self.metrics.relevant_file_presence_rate:.2%}",
-            f"  Avg Retrieval Latency:     {self.metrics.avg_retrieval_latency_ms:.1f} ms",
-            f"  Max Retrieval Latency:     {self.metrics.max_retrieval_latency_ms:.1f} ms",
             f"  Avg E2E Latency:           {self.metrics.avg_e2e_latency_ms:.1f} ms",
             f"  Max E2E Latency:           {self.metrics.max_e2e_latency_ms:.1f} ms",
+            "",
+            "NOT INSTRUMENTED:",
+            f"  Retrieval Latency:         (requires ContextEngine instrumentation)",
             "",
             "OPTIONAL METRICS:",
             f"  No-Match Justification:    {self.metrics.no_match_justification_rate:.2%}",
@@ -122,7 +123,7 @@ class HarnessResult:
         for r in self.results:
             status = "PASS" if r.passed else "FAIL"
             lines.append(f"  [{status}] {r.query_id}: {r.actual_outcome} "
-                        f"(files={r.files_found}, latency={r.end_to_end_latency_ms:.1f}ms)")
+                        f"(files={r.files_found}, e2e={r.end_to_end_latency_ms:.1f}ms)")
             for v in r.violations:
                 lines.append(f"         - {v}")
         
@@ -146,7 +147,6 @@ def _setup_test_repo(tmp_root: Path, files: dict[str, str]) -> Path:
 def _check_grounded_outcome(
     query: GoldenQuery,
     response: dict[str, Any],
-    retrieval_latency_ms: float,
 ) -> tuple[str, list[str]]:
     """
     Check if a grounded query has valid outcome.
@@ -265,15 +265,11 @@ class AskValidationHarness:
         
         results: list[QueryResult] = []
         all_violations: list[str] = []
-        
-        retrieval_latencies: list[float] = []
         e2e_latencies: list[float] = []
         
         for query in self.queries:
             result = self._run_query(query)
             results.append(result)
-            
-            retrieval_latencies.append(result.retrieval_latency_ms)
             e2e_latencies.append(result.end_to_end_latency_ms)
             
             if not result.passed:
@@ -282,7 +278,7 @@ class AskValidationHarness:
                 )
         
         # Calculate metrics
-        metrics = self._calculate_metrics(results, retrieval_latencies, e2e_latencies)
+        metrics = self._calculate_metrics(results, e2e_latencies)
         
         # Overall pass: all queries pass
         passed = all(r.passed for r in results)
@@ -313,9 +309,10 @@ class AskValidationHarness:
         if query.id == "grounded_explicit_file":
             ask_request["selected_file"] = "src/main.py"
         
-        # Measure latencies
+        # Measure end-to-end latency only
+        # NOTE: Retrieval latency is NOT instrumented. ContextEngine does not
+        # currently expose timing data. Do NOT estimate retrieval as % of E2E.
         start_time = time.perf_counter()
-        retrieval_start = start_time  # Context retrieval is part of handle_ask_request
         
         try:
             response = handle_ask_request(ask_request)
@@ -327,7 +324,6 @@ class AskValidationHarness:
                 actual_outcome="error",
                 files_found=0,
                 selectors_used=[],
-                retrieval_latency_ms=0,
                 end_to_end_latency_ms=0,
                 violations=[f"Exception during handle_ask_request: {e}"],
                 response={},
@@ -335,9 +331,6 @@ class AskValidationHarness:
         
         end_time = time.perf_counter()
         e2e_latency_ms = (end_time - start_time) * 1000
-        # Retrieval latency approximated as portion of e2e (context engine work)
-        # In a more sophisticated harness, we'd instrument the context engine
-        retrieval_latency_ms = e2e_latency_ms * 0.7  # Estimated proportion
         
         # Extract result data
         files = response.get("context_bundle", {}).get("files", [])
@@ -345,17 +338,13 @@ class AskValidationHarness:
         
         # Validate outcome based on expectation
         if query.expectation == QueryExpectation.GROUNDED:
-            outcome, violations = _check_grounded_outcome(
-                query, response, retrieval_latency_ms
-            )
+            outcome, violations = _check_grounded_outcome(query, response)
         elif query.expectation == QueryExpectation.NO_MATCH_VALID:
             outcome, violations = _check_no_match_outcome(query, response)
         else:
             # EITHER_WITH_JUSTIFICATION: accept grounded OR valid no-match
             if files:
-                outcome, violations = _check_grounded_outcome(
-                    query, response, retrieval_latency_ms
-                )
+                outcome, violations = _check_grounded_outcome(query, response)
             else:
                 outcome, violations = _check_no_match_outcome(query, response)
         
@@ -368,7 +357,6 @@ class AskValidationHarness:
             actual_outcome=outcome,
             files_found=len(files),
             selectors_used=selectors,
-            retrieval_latency_ms=retrieval_latency_ms,
             end_to_end_latency_ms=e2e_latency_ms,
             violations=violations,
             response=response,
@@ -377,7 +365,6 @@ class AskValidationHarness:
     def _calculate_metrics(
         self,
         results: list[QueryResult],
-        retrieval_latencies: list[float],
         e2e_latencies: list[float],
     ) -> ValidationMetrics:
         """Calculate aggregated metrics from results."""
@@ -411,11 +398,12 @@ class AskValidationHarness:
                 metrics.relevant_file_present_count / len(grounded_results)
             )
         
-        # Latency metrics
-        if retrieval_latencies:
-            metrics.avg_retrieval_latency_ms = sum(retrieval_latencies) / len(retrieval_latencies)
-            metrics.max_retrieval_latency_ms = max(retrieval_latencies)
+        # Retrieval latency: NOT INSTRUMENTED
+        # ContextEngine does not expose timing data. This requires engine-level
+        # instrumentation to measure accurately. Do NOT estimate as % of E2E.
+        metrics.retrieval_latency_instrumented = False
         
+        # E2E latency metrics (measured directly)
         if e2e_latencies:
             metrics.avg_e2e_latency_ms = sum(e2e_latencies) / len(e2e_latencies)
             metrics.max_e2e_latency_ms = max(e2e_latencies)

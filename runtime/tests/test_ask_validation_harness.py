@@ -10,12 +10,14 @@ Or for fast iteration:
 
     pytest runtime/tests/test_ask_validation_harness.py::test_harness_full_suite -v
 
-The harness validates:
+The harness validates (MEASURED DIRECTLY):
 1. Empty bundle rate (for grounded queries)
 2. Relevant file presence rate
-3. Retrieval latency
-4. End-to-end ask latency
-5. No-match justification validity
+3. End-to-end ask latency
+4. No-match justification validity
+
+NOT INSTRUMENTED (requires ContextEngine changes):
+- Retrieval latency (currently unavailable, not estimated)
 """
 
 from __future__ import annotations
@@ -62,16 +64,17 @@ class TestAskValidationHarness:
         metrics = result.metrics.to_dict()
         assert "empty_bundle_rate" in metrics
         assert "relevant_file_presence_rate" in metrics
-        assert "avg_retrieval_latency_ms" in metrics
-        assert "max_retrieval_latency_ms" in metrics
         assert "avg_e2e_latency_ms" in metrics
         assert "max_e2e_latency_ms" in metrics
         assert "no_match_justification_rate" in metrics
         
+        # Verify retrieval latency is explicitly marked as not instrumented
+        assert "retrieval_latency_instrumented" in metrics
+        assert metrics["retrieval_latency_instrumented"] is False
+        
         # Verify metrics are in valid ranges
         assert 0 <= metrics["empty_bundle_rate"] <= 1
         assert 0 <= metrics["relevant_file_presence_rate"] <= 1
-        assert metrics["avg_retrieval_latency_ms"] >= 0
         assert metrics["avg_e2e_latency_ms"] >= 0
         assert 0 <= metrics["no_match_justification_rate"] <= 1
         
@@ -110,20 +113,20 @@ class TestAskValidationHarness:
                 assert qr.actual_outcome == "no_match_valid"
     
     def test_harness_reports_latencies(self, tmp_path: Path) -> None:
-        """Verify latency metrics are captured and reasonable."""
+        """Verify E2E latency metrics are captured and reasonable."""
         result = run_validation_harness(tmp_path)
         
-        # Latencies should be positive
-        assert result.metrics.avg_retrieval_latency_ms > 0
+        # E2E latencies should be positive (measured directly)
         assert result.metrics.avg_e2e_latency_ms > 0
         
         # Max should be >= avg
-        assert result.metrics.max_retrieval_latency_ms >= result.metrics.avg_retrieval_latency_ms
         assert result.metrics.max_e2e_latency_ms >= result.metrics.avg_e2e_latency_ms
         
-        # Each result should have latency data
+        # Retrieval latency is NOT instrumented
+        assert result.metrics.retrieval_latency_instrumented is False
+        
+        # Each result should have E2E latency data
         for qr in result.results:
-            assert qr.retrieval_latency_ms >= 0
             assert qr.end_to_end_latency_ms >= 0
 
 
@@ -223,13 +226,16 @@ class TestHarnessOutput:
         # Should contain key sections
         assert "GROUNDED ASK VALIDATION HARNESS RESULTS" in summary
         assert "Overall:" in summary
-        assert "REQUIRED METRICS:" in summary
+        assert "MEASURED METRICS:" in summary
         assert "Empty Bundle Rate:" in summary
         assert "Relevant File Presence:" in summary
-        assert "Avg Retrieval Latency:" in summary
         assert "Avg E2E Latency:" in summary
         assert "QUERY SUMMARY:" in summary
         assert "QUERY DETAILS:" in summary
+        
+        # Should explicitly indicate retrieval latency is not instrumented
+        assert "NOT INSTRUMENTED:" in summary
+        assert "Retrieval Latency:" in summary
     
     def test_metrics_dict_format(self, tmp_path: Path) -> None:
         """Metrics dict should be JSON-serializable."""
