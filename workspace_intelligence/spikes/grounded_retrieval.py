@@ -15,6 +15,11 @@ APPROACH:
     - NO GPU dependency, NO embeddings, NO graph traversal
 
 This is intentionally ugly but working.
+
+LAYER-5 NOTE:
+    This is a provisional spike implementation. It will be superseded by
+    production L5.2/L5.3 implementations. Do not treat this as final
+    architecture.
 """
 
 from __future__ import annotations

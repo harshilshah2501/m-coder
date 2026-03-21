@@ -10,8 +10,12 @@ This harness demonstrates workspace-local retrieval with:
 - Timing readouts
 - No GPU filesystem dependency
 
+LAYER-5 NOTE:
+    This is a provisional spike harness. It will be superseded by
+    production L5.2/L5.3 implementations.
+
 Usage:
-    python -m runtime.context.spike_grounded_ask_harness [workspace_root]
+    python -m workspace_intelligence.spikes.grounded_retrieval_harness [workspace_root]
     
 If workspace_root is not provided, uses the repository root.
 """
@@ -23,7 +27,7 @@ import sys
 from pathlib import Path
 from typing import List
 
-from runtime.context.spike_workspace_local_retrieval import (
+from workspace_intelligence.spikes.grounded_retrieval import (
     WorkspaceLocalRetriever,
     RetrievalConfig,
     RetrievalResult,
@@ -76,7 +80,7 @@ def print_result_summary(result: RetrievalResult) -> None:
 def run_demo(workspace_root: str) -> List[RetrievalResult]:
     """Run demo queries and return results."""
     print_separator()
-    print("SPIKE: Workspace-Local Retrieval Demo")
+    print("LAYER-5 SPIKE: Workspace-Local Retrieval Demo")
     print(f"Workspace: {workspace_root}")
     print_separator()
     
@@ -205,7 +209,7 @@ def main() -> int:
     passed = run_validation_checks(results)
     
     print_separator()
-    print("SPIKE COMPLETE")
+    print("LAYER-5 SPIKE COMPLETE")
     print_separator()
     
     return 0 if passed else 1
