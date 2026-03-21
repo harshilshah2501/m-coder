@@ -18,26 +18,21 @@ pytest runtime/tests/test_ask_validation_harness.py::test_harness_full_suite -v 
 
 ## Metrics
 
-### Measured Directly
+### All Measured Directly
 
 | Metric | Description |
 |--------|-------------|
 | **Empty Bundle Rate** | % of grounded queries that returned no files |
 | **Relevant File Presence Rate** | % of grounded queries that found expected files |
+| **Avg Retrieval Latency** | Mean time for ContextEngine.build_context_bundle() (ms) |
+| **Max Retrieval Latency** | Maximum retrieval latency (ms) |
 | **Avg E2E Latency** | Mean end-to-end Ask latency (ms) |
 | **Max E2E Latency** | Maximum end-to-end latency (ms) |
 | **No-Match Justification Rate** | % of no-match queries with valid justification |
 
-### Not Instrumented
-
-| Metric | Status |
-|--------|--------|
-| **Retrieval Latency** | Requires ContextEngine instrumentation; currently unavailable |
-
-> **Note**: Retrieval latency is NOT estimated as a percentage of E2E latency.
-> The harness reports only what it can measure directly. To enable retrieval
-> latency measurement, instrument `ContextEngine.build_context_bundle()` with
-> timing data in the returned bundle or via a side-channel.
+> **Note**: Retrieval latency is measured by instrumenting the actual
+> `ContextEngine.build_context_bundle()` call with precise timing.
+> This is the real retrieval path used by the Ask service.
 
 ## Grounded Success Definition
 
@@ -62,15 +57,16 @@ An **invalid no-match** occurs when files are empty but no justification is prov
 
 ## Latency Reporting
 
+**Retrieval Latency** (measured directly):
+- Time for `ContextEngine.build_context_bundle()` to complete
+- Includes selector execution, deduplication, and file materialization
+- Measured with `time.perf_counter()` precision
+
 **End-to-End Latency** (measured directly):
 - Total time from `handle_ask_request()` call to response return
 - Includes context retrieval, planning, and response construction
 
-**Retrieval Latency** (NOT instrumented):
-- Would measure time for `ContextEngine.build_context_bundle()` specifically
-- Requires engine-level instrumentation to measure accurately
-- This harness does NOT estimate retrieval latency as a percentage of E2E
-- When retrieval timing is needed, instrument the ContextEngine directly
+Both latencies are measured independently - retrieval is NOT derived from E2E.
 
 ## Golden Query Suite
 
@@ -104,9 +100,10 @@ gate_checks = {
 
 These thresholds should be tuned based on baseline measurements during Wave 1.
 
-**Note on Retrieval Latency Gates**:
-Retrieval latency gates cannot be enforced until ContextEngine instrumentation
-is added. Until then, use E2E latency as the primary latency gate.
+Example retrieval latency gate:
+```python
+"retrieval_latency_under_500ms": metrics.max_retrieval_latency_ms < 500,
+```
 
 ## Extending the Suite
 
