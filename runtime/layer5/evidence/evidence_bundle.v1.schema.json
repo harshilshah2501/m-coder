@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:motadata:layer5:evidence_bundle:v1",
+  "title": "Layer-5 EvidenceBundle v1 (frozen contract surface)",
+  "description": "Strict schema for layer5.evidence_bundle.v1. Unknown properties are rejected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provisional",
+    "schema_hint",
+    "query_raw",
+    "query_tokens",
+    "top_k",
+    "index_schema_version",
+    "workspace_identity_hash",
+    "canonical_root",
+    "a5_authority_note",
+    "entries"
+  ],
+  "properties": {
+    "provisional": { "const": false },
+    "schema_hint": { "const": "layer5.evidence_bundle.v1" },
+    "query_raw": { "type": "string" },
+    "query_tokens": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "top_k": { "type": "integer", "minimum": 0 },
+    "index_schema_version": { "type": "string" },
+    "workspace_identity_hash": { "type": "string" },
+    "canonical_root": { "type": "string" },
+    "a5_authority_note": {
+      "const": "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets."
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/evidence_entry" }
+    }
+  },
+  "definitions": {
+    "evidence_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provisional",
+        "rank",
+        "relative_path",
+        "retrieval_score",
+        "retrieval_breakdown",
+        "snippet"
+      ],
+      "properties": {
+        "provisional": { "const": false },
+        "rank": { "type": "integer", "minimum": 0 },
+        "relative_path": { "type": "string" },
+        "retrieval_score": { "type": "integer" },
+        "retrieval_breakdown": { "$ref": "#/definitions/retrieval_breakdown" },
+        "snippet": { "$ref": "#/definitions/snippet" }
+      }
+    },
+    "retrieval_breakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path_substrings",
+        "basename_substrings",
+        "content_substrings"
+      ],
+      "properties": {
+        "path_substrings": { "type": "integer" },
+        "basename_substrings": { "type": "integer" },
+        "content_substrings": { "type": "integer" }
+      }
+    },
+    "snippet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "start_line",
+        "end_line",
+        "start_byte_utf8",
+        "end_byte_utf8",
+        "anchor_line",
+        "matched_tokens",
+        "selection_reason",
+        "truncated_by_max_bytes"
+      ],
+      "properties": {
+        "text": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 0 },
+        "end_line": { "type": "integer", "minimum": 0 },
+        "start_byte_utf8": { "type": "integer", "minimum": 0 },
+        "end_byte_utf8": { "type": "integer", "minimum": 0 },
+        "anchor_line": { "type": "integer", "minimum": 0 },
+        "matched_tokens": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "selection_reason": {
+          "type": "string",
+          "enum": [
+            "query_token_substring_anchor",
+            "no_query_token_in_body_file_start",
+            "no_query_tokens_file_start",
+            "file_missing",
+            "file_unreadable",
+            "empty_file"
+          ]
+        },
+        "truncated_by_max_bytes": { "type": "boolean" }
+      }
+    }
+  }
+}

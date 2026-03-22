@@ -1,0 +1,162 @@
+"""
+Ask v1 — evidence_bundle.v1 as primary context (Plan-Gate / A8).
+
+Validates the frozen ``layer5.evidence_bundle.v1`` payload and maps it to a
+``ContextBundle`` without ContextEngine or repository filesystem reads.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from pathlib import Path
+from typing import Any, Dict, List
+
+from runtime.layer5.evidence.schema_validate import (
+    EvidenceSchemaValidationError,
+    validate_evidence_bundle_dict,
+)
+
+from .evidence_bridge import context_bundle_from_evidence_dict
+from .handlers import _build_plan_only_response
+from .planner import PlanOnlyPlanner
+from .reasoner import explain_debug, ExplainDebugResult
+
+LOG = logging.getLogger(__name__)
+
+REPO = Path(__file__).resolve().parents[1]  # runtime/
+IDE_SCHEMAS = REPO / "ide" / "schemas"
+
+
+class AskV1ClientError(Exception):
+    """Client-visible v1 Ask errors (mapped to HTTP 400 by Plan-Gate)."""
+
+    def __init__(self, code: str, message: str, details: Any = None) -> None:
+        self.code = code
+        self.message = message
+        self.details = details
+        super().__init__(message)
+
+
+def _load_schema(name: str) -> dict:
+    with open(IDE_SCHEMAS / name, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def validate_ask_v1_request(data: dict) -> List[str]:
+    """Validate against ``ask_request.v1.0.schema.json``. Returns list of errors."""
+    try:
+        import jsonschema
+    except ImportError:
+        return ["jsonschema not installed"]
+    schema = _load_schema("ask_request.v1.0.schema.json")
+    errs: List[str] = []
+    for e in jsonschema.Draft7Validator(schema).iter_errors(data):
+        errs.append(e.message)
+    return errs
+
+
+def handle_ask_v1_request(ask_request: dict) -> dict:
+    """
+    Process AskRequest v1.0: strict evidence validation, bundle → ContextBundle, plan / explain_debug.
+
+    Preconditions: envelope already passed ``validate_ask_v1_request`` (or equivalent).
+    """
+    request_id = str(ask_request.get("request_id", ""))
+    query = str(ask_request.get("query", ""))
+    evidence_bundle = ask_request.get("evidence_bundle")
+    if not isinstance(evidence_bundle, dict):
+        raise AskV1ClientError(
+            "evidence_schema_invalid",
+            "evidence_bundle must be an object",
+            None,
+        )
+
+    try:
+        validate_evidence_bundle_dict(evidence_bundle)
+    except EvidenceSchemaValidationError as e:
+        raise AskV1ClientError(
+            "evidence_schema_invalid",
+            str(e),
+            {"path": getattr(e, "path", "$")},
+        ) from e
+
+    entries = evidence_bundle.get("entries") or []
+    if not isinstance(entries, list) or len(entries) == 0:
+        raise AskV1ClientError(
+            "empty_evidence_bundle",
+            "evidence_bundle.entries must contain at least one entry",
+            None,
+        )
+
+    expected_hash = (ask_request.get("expected_workspace_identity_hash") or "").strip()
+    if expected_hash:
+        actual = str(evidence_bundle.get("workspace_identity_hash") or "")
+        if actual != expected_hash:
+            raise AskV1ClientError(
+                "identity_mismatch",
+                "expected_workspace_identity_hash does not match evidence_bundle.workspace_identity_hash",
+                {
+                    "expected_workspace_identity_hash": expected_hash,
+                    "workspace_identity_hash": actual,
+                },
+            )
+
+    revision = str(ask_request.get("revision") or "").strip() or "evidence_bundle.v1"
+    task_id = request_id or "ask-v1-task"
+    bundle = context_bundle_from_evidence_dict(evidence_bundle, task_id=task_id, revision=revision)
+
+    selected_file = ask_request.get("selected_file")
+    task_type = ask_request.get("task_type") or "general"
+    client_context = ask_request.get("client_context") or {}
+    selection = (
+        (client_context.get("selection") or "").strip()
+        if isinstance(client_context, dict)
+        else ""
+    )
+
+    explain_debug_result: ExplainDebugResult | None = None
+    plan_steps: List[str]
+
+    if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
+        result = explain_debug(
+            query=query,
+            selected_file=str(selected_file),
+            selection=selection or "",
+            bundle=bundle,
+        )
+        explain_debug_result = result
+        if result.error:
+            plan_steps = ["Reasoning service unavailable; no template steps substituted."]
+        else:
+            plan_steps = ["Explain/debug analysis completed; see structured output above."]
+    else:
+        planner = PlanOnlyPlanner()
+        plan_summary = planner.plan(query=query, bundle=bundle)
+        plan_steps = plan_summary.steps
+
+    ingestion_meta = {
+        "ask_path": "v1_evidence",
+        "context_source": "layer5.evidence_bundle.v1",
+        "no_context_engine": True,
+    }
+    context_resolution = {
+        "context_source": "layer5.evidence_bundle.v1",
+        "no_repo_filesystem": True,
+    }
+
+    return _build_plan_only_response(
+        request_id=request_id,
+        bundle=bundle,
+        plan_steps=plan_steps,
+        explain_debug=explain_debug_result,
+        context_resolution=context_resolution,
+        evidence_bundle=evidence_bundle,
+        evidence_first_meta=ingestion_meta,
+        ui_title="Evidence-driven Plan (PLAN ONLY)",
+        ui_message=(
+            "Context was built only from evidence_bundle.v1 (no repository reads on this path). "
+            "Plan-only steps generated; no execution performed."
+        ),
+        ui_severity="info",
+    )

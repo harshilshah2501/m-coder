@@ -241,3 +241,32 @@ def test_ask_via_plan_gate_http_repo_root_fallback_and_revision(tmp_path):
     finally:
         proc.terminate()
         proc.wait(timeout=5)
+
+
+def test_handle_ask_request_evidence_first_returns_layer5_bundle(tmp_path):
+    repo_root = tmp_path / "ws"
+    repo_root.mkdir()
+    (repo_root / "pyproject.toml").write_text("[project]\nname=w\nversion='0'\n", encoding="utf-8")
+    (repo_root / "src").mkdir()
+    (repo_root / "src" / "app.py").write_text("def hello_unit():\n    return 1\n", encoding="utf-8")
+
+    ask_request = {
+        "schema_version": "ask_request.v0.1",
+        "request_id": "req-evidence-first-1",
+        "timestamp_utc": "2026-03-10T12:00:00Z",
+        "repo_root": str(repo_root),
+        "revision": "abc",
+        "query": "hello",
+        "evidence_first": True,
+    }
+    response = handle_ask_request(ask_request)
+
+    assert response["schema_version"] == "plan_only_response.v0.1"
+    eb = response.get("evidence_bundle")
+    assert eb is not None, "evidence_first path should attach layer5 bundle"
+    assert eb.get("schema_hint") == "layer5.evidence_bundle.v1"
+    assert eb.get("provisional") is False
+    meta = response.get("evidence_first_meta") or {}
+    assert meta.get("used_layer5") is True
+    entries = eb.get("entries") or []
+    assert len(entries) >= 1

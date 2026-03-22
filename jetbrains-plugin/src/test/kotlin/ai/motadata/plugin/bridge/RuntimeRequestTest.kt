@@ -84,6 +84,19 @@ class RuntimeRequestTest {
 
         assertFalse(map.containsKey("task_id"))
         assertFalse(map.containsKey("plan_hash"))
+        assertFalse(map.containsKey("evidence_first"))
+    }
+
+    @Test
+    fun `toMap includes evidence_first when enabled`() {
+        val request = RuntimeRequest(
+            actionType = RuntimeActionType.ASK_PLAN,
+            repoRoot = "/tmp/repo",
+            ideContext = IdeContext(projectName = "test"),
+            evidenceFirst = true
+        )
+        val map = request.toMap()
+        assertEquals(true, map["evidence_first"])
     }
 
     @Test

@@ -140,6 +140,16 @@
         "fallback_used": { "type": "boolean" }
       },
       "additionalProperties": false
+    },
+    "evidence_bundle": {
+      "type": "object",
+      "description": "layer5.evidence_bundle.v1 JSON when evidence_first path succeeded (opaque; validate with L5 schema).",
+      "additionalProperties": true
+    },
+    "evidence_first_meta": {
+      "type": "object",
+      "description": "Whether Layer-5 evidence path was used or legacy ContextEngine fallback.",
+      "additionalProperties": true
     }
   },
   "additionalProperties": false

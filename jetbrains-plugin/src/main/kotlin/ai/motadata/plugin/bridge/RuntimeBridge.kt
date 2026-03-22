@@ -2,6 +2,7 @@ package ai.motadata.plugin.bridge
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -15,8 +16,8 @@ import java.util.UUID
  * Service was reachable; the request or server state was invalid.
  * Must NOT be mapped to RUNTIME_UNAVAILABLE.
  */
-private class RuntimeHttpException(statusCode: Int, body: String) :
-    RuntimeException("Runtime HTTP $statusCode: $body")
+internal class RuntimeHttpException(val statusCode: Int, val responseBody: String) :
+    RuntimeException("Runtime HTTP $statusCode: $responseBody")
 
 /**
  * RuntimeBridge — The single integration point between IDE plugin and runtime.
@@ -143,14 +144,78 @@ class RuntimeBridge(
     }
 
     private fun callAskEndpoint(request: RuntimeRequest): RuntimeResponse {
-        val askRequest = buildAskRequest(request)
+        if (!request.evidenceFirst) {
+            return postV0Ask(request.requestId, buildAskRequestV0(request, includeEvidenceFirstFlag = false))
+        }
+
+        val exportOutcome = Layer5EvidenceExporter.tryExportEvidenceBundle(
+            request.repoRoot,
+            request.payload ?: "",
+        )
+        val localEvidenceJson = when (exportOutcome) {
+            is EvidenceExportOutcome.ServiceFailure ->
+                return RuntimeResponse.unknown(
+                    request.requestId,
+                    formatContextLayerServiceFailure(exportOutcome),
+                )
+            is EvidenceExportOutcome.Unreachable ->
+                return postV0Ask(
+                    request.requestId,
+                    buildAskRequestV0(request, includeEvidenceFirstFlag = true),
+                )
+            is EvidenceExportOutcome.Success -> exportOutcome.bundleJson
+        }
+
+        val evidenceObj = try {
+            JsonParser.parseString(localEvidenceJson).asJsonObject
+        } catch (_: Exception) {
+            return RuntimeResponse.unknown(
+                request.requestId,
+                "Context Layer returned evidence that is not valid JSON; evidence-first path aborted (no silent /v0/ask fallback).",
+            )
+        }
+
+        val v1Body = AskV1Contract.buildAskRequestV1Json(gson, request, evidenceObj)
         return try {
-            val responseJson = postJson("$baseUrl/v0/ask", askRequest)
+            val responseJson = postJson("$baseUrl/v1/ask", v1Body)
             parseAskResponse(request.requestId, responseJson)
         } catch (e: RuntimeHttpException) {
-            RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
+            when {
+                AskV1Contract.isContractClientFailure(e.statusCode, e.responseBody) ->
+                    RuntimeResponse.unknown(
+                        request.requestId,
+                        AskV1Contract.formatV1FailureMessage(e.statusCode, e.responseBody),
+                    )
+                AskV1Contract.shouldFallbackV1ToV0(e.statusCode) ->
+                    postV0Ask(
+                        request.requestId,
+                        buildAskRequestV0(request, includeEvidenceFirstFlag = true),
+                    )
+                else ->
+                    RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
+            }
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
+        }
+    }
+
+    private fun formatContextLayerServiceFailure(out: EvidenceExportOutcome.ServiceFailure): String {
+        val preview = out.responseBody.take(1200)
+        return if (out.httpStatus > 0) {
+            "Context Layer HTTP ${out.httpStatus}: $preview"
+        } else {
+            "Context Layer provider failure: $preview"
+        }
+    }
+
+    private fun postV0Ask(requestId: String, body: String): RuntimeResponse {
+        return try {
+            val responseJson = postJson("$baseUrl/v0/ask", body)
+            parseAskResponse(requestId, responseJson)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(requestId, e.message ?: "Bad request")
+        } catch (e: Exception) {
+            RuntimeResponse.runtimeUnavailable(requestId, e.message ?: "Unknown error")
         }
     }
 
@@ -204,7 +269,8 @@ class RuntimeBridge(
         return gson.toJson(planRequest)
     }
 
-    private fun buildAskRequest(request: RuntimeRequest): String {
+    /** Legacy AskRequest v0.1 for [POST /v0/ask] only. */
+    private fun buildAskRequestV0(request: RuntimeRequest, includeEvidenceFirstFlag: Boolean): String {
         val clientContext = mutableMapOf<String, Any?>()
         request.selection?.let { clientContext["selection"] = it }
 
@@ -219,6 +285,7 @@ class RuntimeBridge(
         )
         if (request.selectedFile != null) askRequest["selected_file"] = request.selectedFile
         if (request.taskType != null) askRequest["task_type"] = request.taskType
+        if (includeEvidenceFirstFlag) askRequest["evidence_first"] = true
         if (clientContext.isNotEmpty()) askRequest["client_context"] = clientContext
 
         return gson.toJson(askRequest.filterValues { it != null })
@@ -292,11 +359,20 @@ class RuntimeBridge(
             else -> RuntimeOutcome.UNKNOWN
         }
 
-        val ui = RuntimeUi(
-            title = "Repo-Aware Plan (PLAN ONLY)",
-            message = "Planning complete. No execution performed.",
-            severity = "info"
-        )
+        val uiObj = root.getAsJsonObject("ui")
+        val ui = if (uiObj != null) {
+            RuntimeUi(
+                title = uiObj.getAsJsonPrimitive("title")?.asString,
+                message = uiObj.getAsJsonPrimitive("message")?.asString,
+                severity = uiObj.getAsJsonPrimitive("severity")?.asString,
+            )
+        } else {
+            RuntimeUi(
+                title = "Repo-Aware Plan (PLAN ONLY)",
+                message = "Planning complete. No execution performed.",
+                severity = "info",
+            )
+        }
 
         val contextBundle = root.getAsJsonObject("context_bundle")
         val planSummary = root.getAsJsonObject("plan_summary")
@@ -311,6 +387,17 @@ class RuntimeBridge(
         }
         if (explainDebugObj != null) {
             metadata["explain_debug"] = gson.fromJson(explainDebugObj, Map::class.java)
+        }
+
+        val evidenceBundleObj = root.getAsJsonObject("evidence_bundle")
+        if (evidenceBundleObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["evidence_bundle"] = gson.fromJson(evidenceBundleObj, Map::class.java) as Map<String, Any?>
+        }
+        val evidenceMetaObj = root.getAsJsonObject("evidence_first_meta")
+        if (evidenceMetaObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["evidence_first_meta"] = gson.fromJson(evidenceMetaObj, Map::class.java) as Map<String, Any?>
         }
 
         return RuntimeResponse(

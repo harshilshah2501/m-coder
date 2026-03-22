@@ -5,15 +5,15 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-20  
-- **Current active layer**: **Layer-5 — Workspace Intelligence / Evidence-Driven Ask**  
-- **Current active milestone focus**: **L5.1–L5.3 workspace-local retrieval foundation** (resolver, indexing, retrieval contract).  
+- **Last updated**: 2026-03-21  
+- **Current active layer**: **Layer-5 — Workspace Intelligence**  
+- **Current active milestone focus**: **End-to-end validation / objective-path verification** — first full run: plugin (or exporter) → local L5 evidence → `POST /v1/ask` → Plan-Gate → grounded plan-only response.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** Follow-on M3.12–M3.18 NOT_STARTED.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 is now the active program focus** because grounded Ask is not yet production-real until workspace-local retrieval and evidence bundling are in place.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 integration slice (A7/A8) COMPLETE** — JetBrains evidence-first path uses real `ask_request.v1.0` + `POST /v1/ask`; Plan-Gate ingests frozen evidence without silent contract downgrade. **Next:** operational e2e (Windows IDE + WSL/Python + Plan-Gate) and L5.7+ backlog.
 
 ---
 
@@ -70,7 +70,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
 | **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
-| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**IN_PROGRESS**</span> | Active blocker-clearing layer: workspace-local retrieval and deterministic evidence bundle contract for grounded Ask. |
+| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | Wave-1–2 done; **L5.5 (A7) + L5.6 (A8) COMPLETE** — contract-aligned plugin ↔ `/v1/ask`. **Current focus:** end-to-end objective-path verification. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk (infra debt). |
 
 
 ---
@@ -447,20 +447,30 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Establish a workspace intelligence layer in WSL that performs workspace-local retrieval and deterministic evidence assembly before Plan-Gate evaluation. Layer-5 defines the structured evidence-bundle contract into Plan-Gate, reduces dependence on remote repo-path assumptions (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) to compatibility-only behavior, and does not redesign Layer-1 governance semantics or Layer-3 execution authority.
 
-**Current status**: <span style="color:#e65100">**IN_PROGRESS**</span>  
+**Current status**: <span style="color:#e65100">**VALIDATING**</span> (integration A7/A8 complete; e2e verification in flight)  
 **Priority**: **CRITICAL**
 
 | ID   | Milestone | Status | Dependencies | Deliverable / exit criteria summary |
 | ---- | --------- | ------ | ------------ | ----------------------------------- |
-| L5.1 | Workspace Resolver | <span style="color:#e65100">IN_PROGRESS</span> | M3.7 | Plugin/runtime request resolves to canonical workspace identity (Windows plugin ↔ WSL repo) with deterministic root + revision provenance in request metadata. |
-| L5.2 | Index Manager / File + Symbol Indexing | <span style="color:#757575">NOT_STARTED</span> | L5.1, M3.2 | Index scope decision locked (file-only vs symbol-aware/AST-assisted), plus deterministic lifecycle (build/update/invalidate) and incremental update/watch rules for workspace-local retrieval. |
-| L5.3 | Graph + Retrieval Foundation | <span style="color:#757575">NOT_STARTED</span> | L5.2 | Multi-lane retrieval contract defined (path/lexical, symbol, graph expansion, recency/open-file bias) with stable ranking and deterministic candidate set output. |
-| L5.4 | Snippet Extraction + Evidence Bundle Builder | <span style="color:#757575">NOT_STARTED</span> | L5.3 | Deterministic snippet selection and bundle assembly with schema versioning, bundle hash/provenance, file paths, selectors/spans, and explicit selection reasons. |
-| L5.5 | Plugin ↔ Context Layer Integration | <span style="color:#757575">NOT_STARTED</span> | L5.1–L5.4, M3.7 | Ask requests from plugin route through context layer and carry evidence bundle metadata into runtime surfaces. |
-| L5.6 | Ask Refactor (evidence-driven contract) | <span style="color:#757575">NOT_STARTED</span> | L5.4–L5.5, M3.5 | Ask/Explain path consumes evidence bundle as first-class contract at Plan-Gate boundaries; response grounding linked to supplied evidence. |
+| L5.0 | Grounded Ask Spike (Wave-1 / A1) | <span style="color:#2e7d32">COMPLETE</span> | — | Provisional workspace-local retrieval spike; grounded evidence output proven (`workspace_intelligence/spikes/`). Not final L5.2/L5.3 architecture. |
+| L5.1 | Workspace Resolver baseline (Wave-1 / A2) | <span style="color:#2e7d32">COMPLETE</span> | M3.7 | Resolver + local API skeleton (`runtime/layer5/`). Canonical workspace identity + path normalization contract. |
+| L5.2 | Deterministic Index MVP (Wave-2 / A4) | <span style="color:#2e7d32">COMPLETE</span> | L5.1, M3.2 | **A4:** deterministic file-level index (`runtime/layer5/index/`), `canonical_json` lifecycle, full rebuild; excludes graph/symbol/AST. |
+| L5.3 | Retrieval Foundation (Wave-2 / A5) | <span style="color:#2e7d32">COMPLETE</span> | L5.2 | **A5:** lexical deterministic retrieval (`runtime/layer5/retrieval/`), `(-score, relative_path)` ranking, breakdown; not graph/symbol lanes. |
+| L5.4 | Snippet + Evidence Builder (Wave-2 / A6) | <span style="color:#2e7d32">COMPLETE</span> | L5.3 | **A6:** bounded snippets + bundle assembly (`runtime/layer5/evidence/`). Evidence contract freeze — see **§4.5.1a** below. |
+| L5.5 | Plugin Evidence Bridge (A7) | <span style="color:#2e7d32">COMPLETE</span> | L5.1–L5.4, M3.7 | Evidence-first: local `layer5_export_evidence.py` → real `ask_request.v1.0` → `POST /v1/ask`; narrow v0 fallback; UI treats `evidence_bundle` as primary grounding. See **§6.15**. |
+| L5.6 | Plan-Gate Evidence Ingestion (A8) | <span style="color:#2e7d32">COMPLETE</span> | L5.4–L5.5, M3.5 | Plan-Gate `POST /v1/ask` validates/consumes `layer5.evidence_bundle.v1`; reasoning from bundle only (no repo ContextEngine on v1 path). See **§6.15**. |
 | L5.7 | Dirty Buffer / Live File Overlay | <span style="color:#757575">NOT_STARTED</span> | L5.5 | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth. |
 | L5.8 | Grounded Ask Validation + Metrics | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.7, L4 | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking. |
 | L5.9 | Compatibility Path Deprecation / Hardening | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.8 | Compatibility transition with feature flags, controlled fallback path, and telemetry comparison between compatibility and workspace-local evidence paths before hardening default. |
+
+#### 4.5.1a L5.4 — Evidence contract (freeze)
+
+- **Schema:** `layer5.evidence_bundle.v1` (`runtime/layer5/evidence/evidence_bundle.v1.schema.json`, `evidence_bundle.v1.md`).
+- **Status:** **FROZEN** (Wave-2.5 freeze-fix).
+- **Golden fixture + hash:** `runtime/layer5/evidence/golden/` (`evidence_bundle.v1.masked.json`, `evidence_bundle.v1.fingerprint.sha256`); CI tests assert fingerprint stability.
+- **Enforcement:** strict JSON Schema (`additionalProperties: false`), frozen `selection_reason` enum, normative byte-offset semantics, `IdentityMismatchError` policy + `require_identity_match` flag (`runtime/layer5/evidence/identity_policy.py`).
+
+**Wave-1 closure (A1/A2/A3):** Grounded Ask proven via L5.0 spike; resolver/API skeleton established (L5.1; test env follow-up **Caveat-F1**); baseline Ask validation harness in `runtime/ask_validation/` (Wave-1 gate; latency path vs spine **Caveat-F2**). Milestone **L5.8** row below remains NOT_STARTED until full metrics/SLO and downstream scope are met.
 
 #### 4.5.1 Ask validity criteria (grounded Ask contract)
 
@@ -476,6 +486,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 #### 4.5.3 Layer-5 MVP contract-tightening checklist
 
+- **Wave-2 shipped (A4–A6):** file-level index + lexical retrieval + evidence v1 frozen; items below that assumed broader scope (symbol/graph/watchers) remain **forward** tightening for later waves unless rescoped.
 - L5.2 must lock index granularity decisions explicitly (file-level baseline, symbol-level coverage, AST-assisted parsing scope, and incremental watcher/update behavior).
 - L5.3 must define retrieval lanes and ranking behavior explicitly (lexical/path lane, symbol lane, graph-expansion lane, recency/open-file bias, deterministic merge/rank output).
 - L5.8 must define baseline latency/SLA targets for retrieval and end-to-end Ask to prevent correctness-only but unusable behavior.
@@ -493,24 +504,32 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ---
 
+## Backlog / Deferred (Layer-5)
+
+**Caveat-F1 — Resolver test environment robustness**  
+Problem: resolver tests assume `/workspace/...` in places; fails on typical local roots. Timing: late Wave-2 or early Wave-3 unless A4/A5 blocked sooner. Goal: pass on Cursor/CI `/workspace/...` and normal local checkouts. Trigger: `/workspace` assumptions block Wave-2. Success: stable green resolver tests in both layouts.
+
+**Caveat-F2 — A3 latency path upgrade**  
+Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/retrieval/evidence spine. Timing: after A4/A5/A6 deliver enough of that spine. Goal: re-instrument A3 on real index + retrieval + snippet/evidence paths. Trigger: harness latency misleading vs production path. Success: A3 reflects actual Layer-5 execution path latency.
+
+---
+
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Establish Layer-5 Workspace Intelligence MVP for grounded Ask** (workspace-local retrieval + deterministic evidence bundle path).
+- **Current objective**: **End-to-end validation / first objective-path verification** — prove the full chain: **IDE (or exporter) → local L5 evidence → `POST /v1/ask` → Plan-Gate validation + plan/reasoning → grounded response back to client.**
 - **Active tasks**:
-  - L5.1 scope/contract finalization (workspace resolver boundaries, provenance fields, Windows plugin ↔ WSL workspace mapping).
-  - L5.2 indexing contract definition (index granularity, incremental update/watch strategy, determinism invariants, invalidation triggers).
-  - L5.3 retrieval foundation planning (multi-lane candidate generation and stable merge/ranking policy for grounded Ask inputs).
+  - Run **first real e2e** on target setup (e.g. JetBrains on Windows + WSL/Python + Plan-Gate on 8089): evidence-first flag, export script path, `/v1/ask` round-trip, UI shows `evidence_bundle` as primary.
+  - Capture any environment-specific notes (Python path, `MOTADATA_LAYER5_EVIDENCE_SCRIPT`, Plan-Gate version `/version` shows `ask_request_v1`).
 - **Next 3 milestones** (actual upcoming work):
-  1. **L5.1** Workspace Resolver — IN_PROGRESS
-  2. **L5.2** Index Manager / File + Symbol Indexing — NOT_STARTED
-  3. **L5.3** Graph + Retrieval Foundation — NOT_STARTED
+  1. **E2E validation gate** — <span style="color:#e65100">IN_PROGRESS</span> (objective-path proof, not new architecture)
+  2. **L5.7** Dirty Buffer / Live File Overlay — <span style="color:#757575">NOT_STARTED</span>
+  3. **L5.8** Grounded Ask Validation + Metrics — <span style="color:#757575">NOT_STARTED</span>
 - **Current blockers**:
-  - Grounded Ask is not production-valid yet because workspace-local retrieval and deterministic evidence-bundle assembly are not fully implemented.
-  - Ask requests can currently produce empty/insufficient `context_bundle.files` without a strict no-match contract path.
+  - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
+  - Resolver test env fragility (**Caveat-F1**); harness latency vs spine (**Caveat-F2**).
 - **Immediate next action**:
-  - Finalize Layer-5 implementation contract for L5.1–L5.3, including index granularity and retrieval-lane/ranking decisions, then begin first narrow implementation slice (resolver + minimal deterministic retrieval path).
-  - Draft L5 evidence bundle version/hash contract and baseline retrieval + Ask latency targets before enabling broader plugin rollout.
-  - Keep M3.12–M3.16 as downstream enrichment milestones (documentation/Jira/PR ingestion) after grounded workspace-local Ask path is operational.
+  - Execute documented e2e path; file any breakage as environment or follow-up tickets (not contract redesign).
+  - Keep M3.12–M3.16 as downstream enrichment after e2e hardens.
 
 ---
 
@@ -726,6 +745,26 @@ This section records **evidence of completed milestones**. Entries should be **a
   - **Merge commit SHA**: 302fae2681fbfd07c732445674c988b957f170c6 (short: 302fae2)
   - **Tests run**: 105 passed, 1 skipped (test_container_sandbox_driver live test when no podman/docker).
   - **Demo result**: 7 ledger rows; refused / blocked / executed semantics preserved.
+
+### 6.15 L5.5 / L5.6 — Wave-3 integration (A7 Plugin + A8 Plan-Gate `/v1/ask`)
+
+- **Milestones**: **L5.5 (A7)** Plugin Evidence Bridge — <span style="color:#2e7d32">COMPLETE</span> (2026-03-21); **L5.6 (A8)** Plan-Gate Evidence Ingestion — <span style="color:#2e7d32">COMPLETE</span> (2026-03-21).
+- **Artifacts (summary)**:
+  - **Runtime / Plan-Gate:** `runtime/plan_gate_service/app.py` — `POST /v1/ask`; `runtime/ask_service/v1_ingest.py`; `runtime/ide/schemas/ask_request.v1.0.schema.json`; `runtime/ask_service/evidence_bridge.py` — `context_bundle_from_evidence_dict`; `runtime/tests/test_ask_v1_ingest.py`.
+  - **Local export (plugin prerequisite):** `runtime/scripts/layer5_export_evidence.py` — stdin query + workspace arg → stdout `layer5.evidence_bundle.v1` JSON.
+  - **Plugin:** `jetbrains-plugin/.../bridge/RuntimeBridge.kt` — evidence-first → v1 ask when export succeeds; `AskV1Contract.kt`, `Layer5EvidenceExporter.kt`; `AskMotadataAiAction.kt` — evidence-primary UI; `AskV1ContractTest.kt` (Kotlin compile; full `:test` may hit IDE sandbox **Index** issue).
+- **Contract outcomes**:
+  - Evidence-first uses real **`ask_request.v1.0`** and **`POST /v1/ask`** (not v0 `evidence_first` bolt-on for the primary path).
+  - Listed v1 contract failures (`evidence_schema_invalid`, `identity_mismatch`, `empty_evidence_bundle`, `ask_envelope_invalid`) **do not** silently fall back to legacy.
+  - Controlled fallback only: export/script failure, v1 **404/405**, or legacy mode (flag off).
+- **Evidence (automated)**:
+  - `python3 -m pytest runtime/tests/test_ask_v1_ingest.py` — PASS (v1 ingest + HTTP Plan-Gate slice).
+- **Evidence (automated e2e smoke — Linux host, 2026-03-21)**:
+  - Start Plan-Gate (`python3 -m runtime.plan_gate_service.app`, unset `MOTADATA_EXPLAIN_VLLM_URL`); `GET /healthz` OK.
+  - `printf '<query>' | python3 runtime/scripts/layer5_export_evidence.py <repo_root>` → JSON evidence bundle.
+  - `POST /v1/ask` with `ask_request.v1.0` + bundle (+ `expected_workspace_identity_hash` when hash non-empty) → `plan_only_response.v0.1`, `governance_posture=PLAN_ONLY`, `execution=false`, `evidence_first_meta.ask_path=v1_evidence`, non-empty `plan_summary.steps` (sample: 4 steps, 8 evidence entries).
+- **Evidence (pending — operational e2e)**:
+  - First full **Windows IDE + WSL/Python + Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID.
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 

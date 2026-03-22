@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Tuple
 from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
 
+from .evidence_bridge import resolve_workspace_input_path, try_build_layer5_evidence
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 
@@ -89,6 +90,8 @@ def handle_ask_request(ask_request: dict) -> dict:
     client_context = ask_request.get("client_context") or {}
     selection = (client_context.get("selection") or "").strip() if isinstance(client_context, dict) else ""
 
+    evidence_first = bool(ask_request.get("evidence_first"))
+
     effective_root, fallback_used = _resolve_ask_repo_root(repo_root)
     if fallback_used:
         LOG.info("[ASK] repo_root invalid on server → using ASK_DEFAULT_REPO_ROOT")
@@ -99,30 +102,58 @@ def handle_ask_request(ask_request: dict) -> dict:
     if selected_file:
         files = [str(selected_file)]
 
-    ctx_request = ContextRequest(
-        task_id=request_id or "ask-task",
-        revision=revision or "unknown-revision",
-        root_path=effective_root,
-        files=files,
-        symbol_hints=symbol_hints,
-    )
-
     context_resolution = (
         {"requested_repo_root": repo_root, "effective_repo_root": effective_root, "fallback_used": True}
         if fallback_used
         else None
     )
 
-    engine = ContextEngine()
-    try:
-        bundle = engine.build_context_bundle(ctx_request)
-    except (ContextEngineError, MissingExplicitFilesError) as e:
-        return _build_error_plan_only_response(
-            request_id=request_id,
-            message=str(e),
-            revision=revision,
-            context_resolution=context_resolution,
+    bundle = None
+    evidence_bundle_dict: Dict[str, Any] | None = None
+    evidence_first_meta: Dict[str, Any] | None = None
+
+    if evidence_first:
+        ws_path = resolve_workspace_input_path(repo_root)
+        if ws_path:
+            pair = try_build_layer5_evidence(
+                ws_path,
+                query,
+                request_id or "ask-task",
+                revision or "unknown-revision",
+            )
+            if pair:
+                evidence_bundle_dict, bundle = pair
+                evidence_first_meta = {"used_layer5": True, "workspace_input_path": ws_path}
+            else:
+                evidence_first_meta = {
+                    "used_layer5": False,
+                    "fallback_reason": "layer5_resolve_index_or_evidence_failed",
+                }
+        else:
+            evidence_first_meta = {
+                "used_layer5": False,
+                "fallback_reason": "no_workspace_path_on_server",
+            }
+
+    if bundle is None:
+        ctx_request = ContextRequest(
+            task_id=request_id or "ask-task",
+            revision=revision or "unknown-revision",
+            root_path=effective_root,
+            files=files,
+            symbol_hints=symbol_hints,
         )
+
+        engine = ContextEngine()
+        try:
+            bundle = engine.build_context_bundle(ctx_request)
+        except (ContextEngineError, MissingExplicitFilesError) as e:
+            return _build_error_plan_only_response(
+                request_id=request_id,
+                message=str(e),
+                revision=revision,
+                context_resolution=context_resolution,
+            )
 
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
@@ -150,6 +181,8 @@ def handle_ask_request(ask_request: dict) -> dict:
         plan_steps=plan_steps,
         explain_debug=explain_debug_result,
         context_resolution=context_resolution,
+        evidence_bundle=evidence_bundle_dict,
+        evidence_first_meta=evidence_first_meta,
     )
 
 
@@ -188,6 +221,11 @@ def _build_plan_only_response(
     plan_steps: List[str],
     explain_debug: ExplainDebugResult | None = None,
     context_resolution: Dict[str, Any] | None = None,
+    evidence_bundle: Dict[str, Any] | None = None,
+    evidence_first_meta: Dict[str, Any] | None = None,
+    ui_title: str | None = None,
+    ui_message: str | None = None,
+    ui_severity: str | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -205,6 +243,17 @@ def _build_plan_only_response(
             "No grounded context files were found; selectors produced no matching files. Plan steps are ungrounded."
         ]
 
+    default_title = "Repo-Aware Plan (PLAN ONLY)"
+    if has_grounded_files:
+        default_message = (
+            "Deterministic context bundle and plan-only steps generated. No execution performed."
+        )
+    else:
+        default_message = (
+            "No context files matched; plan steps are ungrounded. No execution performed."
+        )
+    default_severity = "info" if has_grounded_files else "warning"
+
     payload: Dict[str, Any] = {
         "schema_version": "plan_only_response.v0.1",
         "request_id": request_id,
@@ -218,19 +267,19 @@ def _build_plan_only_response(
         "governance_posture": "PLAN_ONLY",
         "execution": False,
         "ui": {
-            "title": "Repo-Aware Plan (PLAN ONLY)",
-            "message": (
-                "Deterministic context bundle and plan-only steps generated. No execution performed."
-                if has_grounded_files
-                else "No context files matched; plan steps are ungrounded. No execution performed."
-            ),
-            "severity": "info" if has_grounded_files else "warning",
+            "title": ui_title if ui_title is not None else default_title,
+            "message": ui_message if ui_message is not None else default_message,
+            "severity": ui_severity if ui_severity is not None else default_severity,
         },
     }
     if explain_debug is not None:
         payload["explain_debug"] = explain_debug.to_dict()
     if context_resolution is not None:
         payload["context_resolution"] = context_resolution
+    if evidence_bundle is not None:
+        payload["evidence_bundle"] = evidence_bundle
+    if evidence_first_meta is not None:
+        payload["evidence_first_meta"] = evidence_first_meta
     return payload
 
 

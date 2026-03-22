@@ -79,7 +79,16 @@ data class RuntimeRequest(
     val selection: String? = null,
 
     /** Task mode for Ask: EXPLAIN_DEBUG or general. */
-    val taskType: String? = null
+    val taskType: String? = null,
+
+    /**
+     * When true, the plugin prefers [POST /v1/ask] with [ask_request.v1.0] after obtaining
+     * `layer5.evidence_bundle.v1` from the **WSL Context Layer** (HTTP service or installed CLI;
+     * see [Layer5EvidenceExporter]). Repo-relative scripts are dev-only (opt-in). If export or v1
+     * is unavailable, falls back to [POST /v0/ask] with `evidence_first`. Contract failures from v1
+     * are never silently downgraded.
+     */
+    val evidenceFirst: Boolean = false
 ) {
     /**
      * Convert to JSON-compatible map for serialization.
@@ -100,7 +109,11 @@ data class RuntimeRequest(
             "selected_file" to selectedFile,
             "selection" to selection,
             "task_type" to taskType
-        ).filterValues { it != null }
+        ).filterValues { it != null }.toMutableMap().apply {
+            if (evidenceFirst) {
+                this["evidence_first"] = true
+            }
+        }
     }
 }
 

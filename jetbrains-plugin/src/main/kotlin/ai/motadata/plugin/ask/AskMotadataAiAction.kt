@@ -74,7 +74,8 @@ class AskMotadataAiAction : AnAction() {
             ),
             selectedFile = selectedFileRepoRelative,
             selection = selectionText,
-            taskType = if (useExplainDebug) "EXPLAIN_DEBUG" else null
+            taskType = if (useExplainDebug) "EXPLAIN_DEBUG" else null,
+            evidenceFirst = MotadataAskFlags.isEvidenceFirstAskEnabled()
         )
 
         val response = bridge.askPlan(request)
@@ -165,8 +166,48 @@ class AskMotadataAiAction : AnAction() {
             sb.appendLine("Governance Outcome: ${response.outcome.toHumanReadable()}")
             sb.appendLine()
 
+            response.ui?.title?.takeIf { it.isNotBlank() }?.let { sb.appendLine(it) }
+            response.ui?.message?.takeIf { it.isNotBlank() }?.let { sb.appendLine(it); sb.appendLine() }
+
+            val evidenceBundle = response.metadata["evidence_bundle"] as? Map<*, *>
+            val evidenceMeta = response.metadata["evidence_first_meta"] as? Map<*, *>
+            val v1EvidenceAsk = (evidenceMeta?.get("ask_path") as? String) == "v1_evidence"
+
+            if (evidenceBundle != null) {
+                sb.appendLine("Grounding — layer5.evidence_bundle.v1 (primary)")
+                sb.appendLine("────────────────────────────────────────")
+                val hint = evidenceBundle["schema_hint"] ?: evidenceBundle["schema_version"]
+                sb.appendLine("schema_hint: $hint")
+                if (v1EvidenceAsk) {
+                    sb.appendLine("ask_path: v1_evidence (POST /v1/ask)")
+                }
+                sb.appendLine()
+                @Suppress("UNCHECKED_CAST")
+                val entries = evidenceBundle["entries"] as? List<*>
+                if (entries.isNullOrEmpty()) {
+                    sb.appendLine("(no entries)")
+                } else {
+                    entries.forEachIndexed { i, raw ->
+                        val ent = raw as? Map<*, *> ?: return@forEachIndexed
+                        val path = ent["relative_path"] ?: ent["path"]
+                        sb.appendLine("${i + 1}. $path  (retrieval_score=${ent["retrieval_score"]})")
+                        @Suppress("UNCHECKED_CAST")
+                        val sn = ent["snippet"] as? Map<*, *>
+                        if (sn != null) {
+                            val text = (sn["text"] as? String) ?: ""
+                            val lines = text.replace("\r\n", "\n").trim().lines().take(5)
+                            if (lines.isNotEmpty()) {
+                                sb.appendLine("   preview:")
+                                lines.forEach { line -> sb.appendLine("   | $line") }
+                            }
+                        }
+                    }
+                }
+                sb.appendLine()
+            }
+
             val contextBundle = response.metadata["context_bundle"] as? Map<*, *>
-            if (contextBundle != null) {
+            if (contextBundle != null && !v1EvidenceAsk) {
                 val revision = contextBundle["revision"]
                 sb.appendLine("Context bundle @ ${revision ?: "unknown-revision"}")
                 val files = contextBundle["files"] as? List<*>
@@ -187,6 +228,9 @@ class AskMotadataAiAction : AnAction() {
                     sb.appendLine("Selectors used: ${selectors.joinToString(", ")}")
                     sb.appendLine()
                 }
+            } else if (contextBundle != null && v1EvidenceAsk) {
+                sb.appendLine("(Planner context is derived from evidence_bundle above; duplicate file list omitted.)")
+                sb.appendLine()
             }
 
             val planSummary = response.metadata["plan_summary"] as? Map<*, *>

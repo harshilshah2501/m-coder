@@ -52,6 +52,7 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     "shadow_run_record": "v0.1",
                     "ingestion_batch": "v0.1",
                     "ask_request": "v0.1",
+                    "ask_request_v1": "v1.0",
                     "plan_only_response": "v0.1",
                     "execute_request": "v0.1",
                     "execute_response": "v0.1"
@@ -103,6 +104,33 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                 self._send_json(200, response)
             except Exception as e:
                 # Even on handler failure, preserve execution=false semantics inside handler.
+                self._send_json(500, {"error": str(e)})
+            return
+
+        if self.path == "/v1/ask":
+            from runtime.ask_service.v1_ingest import (
+                AskV1ClientError,
+                handle_ask_v1_request,
+                validate_ask_v1_request,
+            )
+
+            errs = validate_ask_v1_request(data)
+            if errs:
+                self._send_json(
+                    400,
+                    {"error": "ask_envelope_invalid", "message": "Schema validation failed", "details": errs},
+                )
+                return
+
+            try:
+                response = handle_ask_v1_request(data)
+                self._send_json(200, response)
+            except AskV1ClientError as e:
+                self._send_json(
+                    400,
+                    {"error": e.code, "message": e.message, "details": e.details},
+                )
+            except Exception as e:
                 self._send_json(500, {"error": str(e)})
             return
 
