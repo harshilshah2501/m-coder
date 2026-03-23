@@ -7,13 +7,14 @@
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
 - **Last updated**: 2026-03-21  
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
-- **Current active milestone focus**: **End-to-end validation / objective-path verification** — first full run: plugin (or exporter) → local L5 evidence → `POST /v1/ask` → Plan-Gate → grounded plan-only response.  
+- **Current integration branch (local consolidated line)**: **`feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), **`integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
+- **Current active milestone focus**: **End-to-end validation / objective-path verification** — Windows JetBrains + **WSL Context Layer wheel** (`motadata-context-layer`) indexing **Motadata AIOps workspace repo** + GPU **m-coder** Plan-Gate → `POST /v1/ask`. Operator runbook: **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`**.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
-  - **Layer-3 M3.0–M3.11 are COMPLETE on main.** Follow-on M3.12–M3.18 NOT_STARTED.  
+  - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 integration slice (A7/A8) COMPLETE** — JetBrains evidence-first path uses real `ask_request.v1.0` + `POST /v1/ask`; Plan-Gate ingests frozen evidence without silent contract downgrade. **Next:** operational e2e (Windows IDE + WSL/Python + Plan-Gate) and L5.7+ backlog.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate **`POST /v1/ask`**. **Packaging slice COMPLETE** — installable **`packaging/motadata-context-layer`** wheel + **`runtime/context_layer_service`** HTTP API (**no m-coder checkout required on WSL**). **Next:** recorded **e2e deployment success criteria** (runbook §10); **L5.7+** backlog.
 
 ---
 
@@ -70,7 +71,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
 | **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
-| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | Wave-1–2 done; **L5.5 (A7) + L5.6 (A8) COMPLETE** — contract-aligned plugin ↔ `/v1/ask`. **Current focus:** end-to-end objective-path verification. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk (infra debt). |
+| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | **L5.5/L5.6 + Context Layer wheel** on branch; **M3.12** handler manifest path merged on same branch. **Focus:** e2e per **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`** (Windows / WSL AIOps / GPU m-coder). Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
 
 
 ---
@@ -457,7 +458,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | L5.2 | Deterministic Index MVP (Wave-2 / A4) | <span style="color:#2e7d32">COMPLETE</span> | L5.1, M3.2 | **A4:** deterministic file-level index (`runtime/layer5/index/`), `canonical_json` lifecycle, full rebuild; excludes graph/symbol/AST. |
 | L5.3 | Retrieval Foundation (Wave-2 / A5) | <span style="color:#2e7d32">COMPLETE</span> | L5.2 | **A5:** lexical deterministic retrieval (`runtime/layer5/retrieval/`), `(-score, relative_path)` ranking, breakdown; not graph/symbol lanes. |
 | L5.4 | Snippet + Evidence Builder (Wave-2 / A6) | <span style="color:#2e7d32">COMPLETE</span> | L5.3 | **A6:** bounded snippets + bundle assembly (`runtime/layer5/evidence/`). Evidence contract freeze — see **§4.5.1a** below. |
-| L5.5 | Plugin Evidence Bridge (A7) | <span style="color:#2e7d32">COMPLETE</span> | L5.1–L5.4, M3.7 | Evidence-first: local `layer5_export_evidence.py` → real `ask_request.v1.0` → `POST /v1/ask`; narrow v0 fallback; UI treats `evidence_bundle` as primary grounding. See **§6.15**. |
+| L5.5 | Plugin Evidence Bridge (A7) | <span style="color:#2e7d32">COMPLETE</span> | L5.1–L5.4, M3.7 | Evidence-first: **WSL HTTP** `POST /v1/export_evidence` (wheel) or CLI / dev script → `ask_request.v1.0` → `POST /v1/ask`; controlled v0 fallback only when Context Layer **unreachable**; UI treats `evidence_bundle` as primary. See **§6.15**. |
 | L5.6 | Plan-Gate Evidence Ingestion (A8) | <span style="color:#2e7d32">COMPLETE</span> | L5.4–L5.5, M3.5 | Plan-Gate `POST /v1/ask` validates/consumes `layer5.evidence_bundle.v1`; reasoning from bundle only (no repo ContextEngine on v1 path). See **§6.15**. |
 | L5.7 | Dirty Buffer / Live File Overlay | <span style="color:#757575">NOT_STARTED</span> | L5.5 | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth. |
 | L5.8 | Grounded Ask Validation + Metrics | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.7, L4 | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking. |
@@ -518,8 +519,9 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 - **Current objective**: **End-to-end validation / first objective-path verification** — prove the full chain: **IDE (or exporter) → local L5 evidence → `POST /v1/ask` → Plan-Gate validation + plan/reasoning → grounded response back to client.**
 - **Active tasks**:
-  - Run **first real e2e** on target setup (e.g. JetBrains on Windows + WSL/Python + Plan-Gate on 8089): evidence-first flag, export script path, `/v1/ask` round-trip, UI shows `evidence_bundle` as primary.
-  - Capture any environment-specific notes (Python path, `MOTADATA_LAYER5_EVIDENCE_SCRIPT`, Plan-Gate version `/version` shows `ask_request_v1`).
+  - Run e2e using **runbook** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`: **GPU** = m-coder + Plan-Gate; **WSL** = wheel + **Motadata AIOps** repo path; **Windows** = plugin + tunnels as documented.
+  - Verify **Deployment Success Criteria** (runbook §10): Windows→WSL `/healthz`, Windows→GPU `/version`, WSL `POST /v1/export_evidence`, plugin `ask_path=v1_evidence`, golden + no-match queries.
+  - Plan-Gate `/version` must show **`ask_request_v1`**; unset `MOTADATA_EXPLAIN_VLLM_URL` if no vLLM.
 - **Next 3 milestones** (actual upcoming work):
   1. **E2E validation gate** — <span style="color:#e65100">IN_PROGRESS</span> (objective-path proof, not new architecture)
   2. **L5.7** Dirty Buffer / Live File Overlay — <span style="color:#757575">NOT_STARTED</span>
@@ -529,8 +531,8 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
   - Resolver test env fragility (**Caveat-F1**); harness latency vs spine (**Caveat-F2**).
 - **Immediate next action**:
-  - Execute documented e2e path; file any breakage as environment or follow-up tickets (not contract redesign).
-  - Keep M3.12–M3.16 as downstream enrichment after e2e hardens.
+  - Push **`feature/l5-context-layer-v1-ask-packaging`** after review; delete **local** merged topic branches (`feature/m3.12-narrow-context-engine`, `cursor/m3.12-narrow-context-engine`, `integration/m3.12-context-demo`, `feature/m3.17-task-schema`, `feature/jetbrains-plugin-golden-demo-path`) to reduce clutter — **do not** delete `integration/l5-wave1-foundation` until integration owners confirm.
+  - Execute e2e path from runbook; file environment breakages as tickets (not contract redesign).
 
 ---
 
@@ -752,8 +754,8 @@ This section records **evidence of completed milestones**. Entries should be **a
 - **Milestones**: **L5.5 (A7)** Plugin Evidence Bridge — <span style="color:#2e7d32">COMPLETE</span> (2026-03-21); **L5.6 (A8)** Plan-Gate Evidence Ingestion — <span style="color:#2e7d32">COMPLETE</span> (2026-03-21).
 - **Artifacts (summary)**:
   - **Runtime / Plan-Gate:** `runtime/plan_gate_service/app.py` — `POST /v1/ask`; `runtime/ask_service/v1_ingest.py`; `runtime/ide/schemas/ask_request.v1.0.schema.json`; `runtime/ask_service/evidence_bridge.py` — `context_bundle_from_evidence_dict`; `runtime/tests/test_ask_v1_ingest.py`.
-  - **Local export (plugin prerequisite):** `runtime/scripts/layer5_export_evidence.py` — stdin query + workspace arg → stdout `layer5.evidence_bundle.v1` JSON.
-  - **Plugin:** `jetbrains-plugin/.../bridge/RuntimeBridge.kt` — evidence-first → v1 ask when export succeeds; `AskV1Contract.kt`, `Layer5EvidenceExporter.kt`; `AskMotadataAiAction.kt` — evidence-primary UI; `AskV1ContractTest.kt` (Kotlin compile; full `:test` may hit IDE sandbox **Index** issue).
+  - **WSL export (primary):** `packaging/motadata-context-layer/` wheel; `runtime/context_layer_service/` — `GET /healthz`, `POST /v1/export_evidence`; dev fallback `runtime/scripts/layer5_export_evidence.py`.
+  - **Plugin:** `jetbrains-plugin/.../bridge/RuntimeBridge.kt`, `Layer5EvidenceExporter.kt`, `EvidenceExportOutcome.kt`, `AskV1Contract.kt`; default Context Layer URL `http://127.0.0.1:8091`; Plan-Gate default `http://127.0.0.1:8089` (see runbook for remote GPU).
 - **Contract outcomes**:
   - Evidence-first uses real **`ask_request.v1.0`** and **`POST /v1/ask`** (not v0 `evidence_first` bolt-on for the primary path).
   - Listed v1 contract failures (`evidence_schema_invalid`, `identity_mismatch`, `empty_evidence_bundle`, `ask_envelope_invalid`) **do not** silently fall back to legacy.
@@ -765,7 +767,16 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `printf '<query>' | python3 runtime/scripts/layer5_export_evidence.py <repo_root>` → JSON evidence bundle.
   - `POST /v1/ask` with `ask_request.v1.0` + bundle (+ `expected_workspace_identity_hash` when hash non-empty) → `plan_only_response.v0.1`, `governance_posture=PLAN_ONLY`, `execution=false`, `evidence_first_meta.ask_path=v1_evidence`, non-empty `plan_summary.steps` (sample: 4 steps, 8 evidence entries).
 - **Evidence (pending — operational e2e)**:
-  - First full **Windows IDE + WSL/Python + Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID.
+  - First full **Windows IDE + WSL Context Layer wheel + GPU Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID (checklist: **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`** §10).
+
+### 6.16 Branch consolidation + M3.12 on L5 line (2026-03-21)
+
+- **Unified branch:** `feature/l5-context-layer-v1-ask-packaging` now **merge-parent** for:
+  - `feature/m3.12-narrow-context-engine` — `runtime/ask_service/handlers.py` gains **ManifestBuilder** + **`select_from_manifest`** (repo-aware file hints) while preserving **evidence_first**, **`ASK_DEFAULT_REPO_ROOT`**, **EXPLAIN_DEBUG**, and default **ContextEngine** selectors; `runtime/tests/test_ask_service.py` extended with M3.12 determinism tests.
+  - `integration/m3.12-context-demo` — demo runbook / verification artifacts as merged.
+  - `feature/m3.17-task-schema` — task-model slice + **`docs/runtime/C1_EXECUTION_TRACE_BUILDER_RESULT.md`** unified (M3.17 pre-merge sign-off appended).
+- **Operator doc (in-repo):** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md` — terminology (m-coder vs **Motadata AIOps** workspace), ports, fallback truth table, deployment success criteria.
+- **Local cleanup:** After push, safe to **`git branch -d`** the merged topic branches listed in **§5 Immediate next action** (local only unless coordinated for `origin`).
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
