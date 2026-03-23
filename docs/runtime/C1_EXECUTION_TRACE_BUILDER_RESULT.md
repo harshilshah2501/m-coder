@@ -62,6 +62,17 @@
 - **Ledger schema changed:** No. SandboxLedgerStore and sandbox_ledger table unchanged.
 - **Task contract changed:** No. Task/contracts and execute request/response schemas unchanged.
 
+### Pre-merge review (M3.17 sign-off)
+
+**1. `task_id=request_id`**
+
+- The production ledger row shape (SandboxLedgerStore / table `sandbox_ledger`) has **no** `task_id` column. Columns are: ledger_row_id, event_type, outcome_type, request_id, plan_hash, sandbox_id, timestamp_utc, payload, artifact_manifest_ref, canonical_hash.
+- There is no separate task identifier in the production ledger; `task_id` on TraceEvent is an **optional convenience alias** only. We set `task_id=request_id` so that trace events carry a single identifier when the downstream only has request_id. This is **not** claiming a real task identity—it is “best available id” for display/correlation.
+
+**2. Report output uses mapped vocabulary**
+
+- Report text/JSON show C1 vocabulary (e.g. `PLAN_APPROVED`, `EXECUTION_COMPLETED`) instead of raw ledger event names (`plangate_safe_execute`, `sandbox_executed`). Any downstream that parses or matches on the old raw strings must use `event.metadata["raw_event_type"]`.
+
 ### 8. Follow-up risks or notes
 
 - **build_by_canonical_hash semantics change:** Callers that previously expected all request_ids for a canonical_hash now receive only the latest request group. If any consumer relied on “all requests” for that hash, it will need to use list_all() or a new API and filter by canonical_hash in payload/column.
