@@ -6,6 +6,7 @@ Ask-service handlers — Repo-Aware Ask / Safe Planning sidecar path.
 Implements:
 - validation for AskRequest v0.1
 - mapping to ContextRequest
+- M3.12: optional manifest + doc_selector for repo-aware file hints
 - ContextEngine call
 - PlanOnlyPlanner invocation
 - PlanOnlyResponse v0.1 construction
@@ -21,7 +22,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from runtime.context.contracts import ContextRequest
+from runtime.context.doc_selector import select_from_manifest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
+from runtime.context.manifest_builder import ManifestBuilder
+from runtime.context.manifest_models import IngestionConfig
 
 from .evidence_bridge import resolve_workspace_input_path, try_build_layer5_evidence
 from .planner import PlanOnlyPlanner
@@ -99,7 +103,36 @@ def handle_ask_request(ask_request: dict) -> dict:
     symbol_hints = _extract_symbol_hints(query)
 
     files: List[str] = []
-    if selected_file:
+    repo_aware_notes: List[str] = []
+
+    manifest_root = repo_root
+    root_path = Path(manifest_root) if manifest_root else None
+    if (not root_path or not root_path.exists() or not root_path.is_dir()) and effective_root:
+        root_path = Path(effective_root)
+        manifest_root = effective_root
+
+    if root_path is not None and root_path.exists() and root_path.is_dir():
+        try:
+            config = IngestionConfig.default_docs_and_runtime()
+            manifest = ManifestBuilder().build(manifest_root, revision or "HEAD", config)
+            req_for_select = ContextRequest(
+                task_id=request_id or "ask-task",
+                revision=revision or "unknown-revision",
+                root_path=manifest_root,
+                files=[str(selected_file)] if selected_file else [],
+                symbol_hints=symbol_hints,
+            )
+            refs = select_from_manifest(manifest, query, req_for_select)
+            if refs:
+                files = [r.path for r in refs]
+                reasons = {r.selection_reason for r in refs}
+                repo_aware_notes.append(
+                    f"Repo-aware selection: {len(files)} file(s) by " + ", ".join(sorted(reasons)) + "."
+                )
+        except Exception:
+            pass
+
+    if not files and selected_file:
         files = [str(selected_file)]
 
     context_resolution = (
@@ -183,6 +216,7 @@ def handle_ask_request(ask_request: dict) -> dict:
         context_resolution=context_resolution,
         evidence_bundle=evidence_bundle_dict,
         evidence_first_meta=evidence_first_meta,
+        repo_aware_notes=repo_aware_notes or None,
     )
 
 
@@ -226,6 +260,7 @@ def _build_plan_only_response(
     ui_title: str | None = None,
     ui_message: str | None = None,
     ui_severity: str | None = None,
+    repo_aware_notes: List[str] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -237,11 +272,14 @@ def _build_plan_only_response(
     selectors_used = list(bundle.provenance.selectors)
     has_grounded_files = len(bundle.items) > 0
 
+    extra = list(repo_aware_notes or [])
     plan_summary: Dict[str, Any] = {"steps": plan_steps}
     if not has_grounded_files:
-        plan_summary["notes"] = [
+        plan_summary["notes"] = extra + [
             "No grounded context files were found; selectors produced no matching files. Plan steps are ungrounded."
         ]
+    elif extra:
+        plan_summary["notes"] = extra
 
     default_title = "Repo-Aware Plan (PLAN ONLY)"
     if has_grounded_files:

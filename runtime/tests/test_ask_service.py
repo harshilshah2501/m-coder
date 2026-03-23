@@ -270,3 +270,47 @@ def test_handle_ask_request_evidence_first_returns_layer5_bundle(tmp_path):
     assert meta.get("used_layer5") is True
     entries = eb.get("entries") or []
     assert len(entries) >= 1
+
+
+def test_ask_same_repo_same_query_same_bundle(tmp_path):
+    """M3.12: same repo + same ask -> same selected bundle (determinism)."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "docs").mkdir()
+    (repo_root / "docs" / "context.md").write_text("# Context Engine\n\nHow selection works.", encoding="utf-8")
+    (repo_root / "README.md").write_text("Root", encoding="utf-8")
+
+    ask_request = {
+        "schema_version": "ask_request.v0.1",
+        "request_id": "req-1",
+        "timestamp_utc": "2026-03-15T12:00:00Z",
+        "repo_root": str(repo_root),
+        "revision": "rev1",
+        "query": "How does context selection work?",
+    }
+    r1 = handle_ask_request(ask_request)
+    r2 = handle_ask_request(ask_request)
+    assert r1["governance_posture"] == "PLAN_ONLY"
+    assert r2["execution"] is False
+    files1 = [f["path"] for f in r1["context_bundle"]["files"]]
+    files2 = [f["path"] for f in r2["context_bundle"]["files"]]
+    assert files1 == files2
+
+
+def test_ask_plan_only_no_execution_coupling(tmp_path):
+    """Ask path must not trigger execution; response is always plan_only."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "docs").mkdir()
+    (repo_root / "docs" / "x.md").write_text("# X", encoding="utf-8")
+
+    response = handle_ask_request({
+        "schema_version": "ask_request.v0.1",
+        "request_id": "r",
+        "timestamp_utc": "2026-03-15T12:00:00Z",
+        "repo_root": str(repo_root),
+        "revision": "r",
+        "query": "documentation",
+    })
+    assert response["governance_posture"] == "PLAN_ONLY"
+    assert response["execution"] is False
