@@ -9,7 +9,7 @@
 | Component | Status | Details |
 |-----------|--------|---------|
 | **vLLM Server** | ✅ Running | PID 2643, Port 8000 OPEN |
-| **Model Path** | ✅ Correct | `/home/harshil/Harshil-PoCs/models/v16_2/motadata-coder-v16_2-merged` |
+| **Model Path** | ✅ Correct | Set per host in `runtime/config/demo_stack.env` as `VLLM_BASE_MODEL` (see `runtime/scripts/governed_services.sh start`) |
 | **Model Files** | ✅ Exist | 28GB total (6 safetensors files) |
 | **Model Config** | ✅ Valid | Qwen2ForCausalLM, 48 layers, 5120 hidden_size |
 | **RAG API** | ✅ Running | Port 8081, calling vLLM correctly |

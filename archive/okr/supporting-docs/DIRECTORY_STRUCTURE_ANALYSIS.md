@@ -232,9 +232,11 @@
 │   │   └── generate_reports.py
 │   └── README.md                     [Scripts documentation]
 │
-├── 📁 systemd/                       [Systemd Services]
-│   ├── motadata-orchestrator.service [Main orchestrator]
-│   └── README.md                     [Systemd documentation]
+├── 📁 runtime/                       [m-coder assistant runtime]
+│   ├── scripts/
+│   │   └── governed_services.sh      [vLLM + Plan-Gate launcher]
+│   └── config/
+│       └── demo_stack.env.example    [Copy to demo_stack.env on GPU]
 │
 ├── 📁 .config/                       [Configuration]
 │   ├── .env.example                  [Environment variables template]

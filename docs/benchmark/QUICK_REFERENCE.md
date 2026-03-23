@@ -5,10 +5,10 @@
 ### Service Management
 ```bash
 # Start/Stop/Restart all services using orchestrator (repo layout)
-bash runtime/rag/scripts/orchestrator_unified.sh start
-bash runtime/rag/scripts/orchestrator_unified.sh stop
-bash runtime/rag/scripts/orchestrator_unified.sh restart
-bash runtime/rag/scripts/orchestrator_unified.sh status
+bash runtime/scripts/governed_services.sh start
+bash runtime/scripts/governed_services.sh stop
+bash runtime/scripts/governed_services.sh restart
+bash runtime/scripts/governed_services.sh status
 
 # View logs (repo layout)
 tail -f runtime/rag/logs/vllm.log
@@ -207,7 +207,7 @@ ls -t debug_sessions/*.json | head -1 | xargs cat | python3 -m json.tool
 
 ### Restart Everything
 ```bash
-bash rag/scripts/orchestrator_unified.sh restart
+bash runtime/scripts/governed_services.sh restart
 ```
 
 ### Kill Stuck Processes
@@ -220,13 +220,13 @@ pkill -f "api_server.py"
 ### Free GPU Memory
 ```bash
 # Stop all services
-bash rag/scripts/orchestrator_unified.sh stop
+bash runtime/scripts/governed_services.sh stop
 
 # Check GPU
 nvidia-smi
 
 # Restart all services
-bash rag/scripts/orchestrator_unified.sh start
+bash runtime/scripts/governed_services.sh start
 ```
 
 ### Reset Qdrant

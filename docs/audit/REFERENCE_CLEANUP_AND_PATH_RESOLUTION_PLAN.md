@@ -35,8 +35,10 @@ Scope: (1) inventory and classify references to data paths that may leave active
 
 | Reference location | Target data area | Reference style | Portability | Notes |
 |--------------------|------------------|-----------------|-------------|-------|
-| ml/training/src/finetuning/train_v16_1_surgical.py, train_v16_2.py, validate_v16_1_fixed.py, test_v16_1_merged.py | ml/datasets (v16_1_fixed, v16_2) | Absolute path | Poor | DATASET_DIR = "/home/.../datasets/v16_*"; OUTPUT_DIR/CHECKPOINT_DIR also absolute |
-| ml/training/src/finetuning/merge_v16_1.py, merge_v16_2.py | models, checkpoints | Absolute path | Poor | ADAPTER_PATH, OUTPUT_PATH, LORA_MODEL_PATH = "/home/.../models/...", "/home/.../training/checkpoints/..." |
+| ml/training/src/finetuning/train_v16_1_surgical.py, validate_v16_1_fixed.py, test_v16_1_merged.py | ml/datasets (v16_1_fixed, v16_2) | Absolute path | Poor | DATASET_DIR = "/home/.../datasets/v16_*"; OUTPUT_DIR/CHECKPOINT_DIR also absolute |
+| train_v16_2.py | *(removed from repo)* | — | — | — |
+| ml/training/src/finetuning/merge_v16_1.py | models, checkpoints | Absolute path | Poor | ADAPTER_PATH, OUTPUT_PATH = "/home/.../models/..." |
+| merge_v16_2.py | *(removed from repo)* | — | — | Use `VLLM_BASE_MODEL` + `runtime/scripts/governed_services.sh start` for serving |
 | ml/training/src/finetuning/train_v17_dpo.py | ml/datasets (v17 DPO), models | BASE_DIR + relative | Poor | BASE_DIR = Path("/home/harshil/Harshil-PoCs"); then datasets/, models/ |
 | ml/training/src/validation/validate_dpo_dataset.py | ml/datasets (v17) | BASE_DIR + relative | Poor | BASE_DIR = Path("/home/..."); TRAIN_FILE = BASE_DIR / "datasets/v17_dpo_pairs_train.jsonl" |
 | ml/training/src/config/v17_training_config.py | ml/datasets, training artifacts | Absolute path | Poor | train_data_path, output_dir = "/home/.../datasets/...", "/home/.../training/artifacts/..." |
@@ -160,7 +162,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
 
 - **Name:** Reference Cleanup Batch 1 — Absolute path inventory and conversion  
 - **Purpose:** Introduce the data root contract (env + default) and convert the highest-impact absolute paths so that dataset and evaluation paths are resolved from one root.  
-- **Scope:** (1) Add a small shared helper or config module that resolves MOTADATA_DATA_ROOT (env or repo-root default). (2) Convert finetuning scripts (train_v16_1_surgical, train_v16_2, validate_v16_1_fixed, test_v16_1_merged, merge_v16_1, merge_v16_2, train_v17_dpo) to use data root + relative keys for DATASET_DIR, OUTPUT_DIR, CHECKPOINT_DIR, MODEL paths. (3) Convert ml/training/src/data/* and dataset_creation/v16_2/* to use data root for all dataset paths. Do not change behavior of scripts beyond path resolution.  
+- **Scope:** (1) Add a small shared helper or config module that resolves MOTADATA_DATA_ROOT (env or repo-root default). (2) Convert finetuning scripts (train_v16_1_surgical, validate_v16_1_fixed, test_v16_1_merged, merge_v16_1, train_v17_dpo) to use data root + relative keys for DATASET_DIR, OUTPUT_DIR, CHECKPOINT_DIR, MODEL paths. *(train_v16_2.py, merge_v16_2.py removed from repo.)* (3) Convert ml/training/src/data/* and dataset_creation/v16_2/* to use data root for all dataset paths. Do not change behavior of scripts beyond path resolution.  
 - **Exclusions:** No export, no deletion, no change to processed-data path shape in this batch; no docs/runbook edits in Batch 1 if scope is large.  
 - **Preconditions:** This plan approved; env name (e.g. MOTADATA_DATA_ROOT) and default (repo root) agreed; list of files to touch from this plan.  
 - **Success criteria:** All touched scripts resolve dataset and model paths via data root; no remaining `/home/harshil/Harshil-PoCs/` literals in those files; existing tests or a smoke run (e.g. one training/eval step) still succeed with data root unset (repo default) or set to current layout.

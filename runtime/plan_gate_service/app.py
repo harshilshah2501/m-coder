@@ -32,7 +32,7 @@ def _vllm_healthcheck() -> None:
                 sys.exit(1)
     except (urllib.error.URLError, OSError) as e:
         print(f"vLLM not reachable at {health_url}: {e}", file=sys.stderr)
-        print("Start vLLM first (e.g. runtime/scripts/start_governed_services.sh) or unset MOTADATA_EXPLAIN_VLLM_URL.", file=sys.stderr)
+        print("Start vLLM first (e.g. runtime/scripts/governed_services.sh start) or unset MOTADATA_EXPLAIN_VLLM_URL.", file=sys.stderr)
         sys.exit(1)
 
 

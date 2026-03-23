@@ -6,13 +6,13 @@
 ## What Was Done
 
 ### Phase 1: Remove API Wrapper from Orchestrator ✅
-- Removed `start_wrapper()` function from `orchestrator_unified.sh`
+- Legacy RAG `orchestrator_unified.sh` removed; use `runtime/scripts/governed_services.sh`
 - Removed wrapper timeout configuration (WRAPPER_TIMEOUT)
 - Removed wrapper from startup sequence in `start_all()`
 - Removed wrapper from status check function
 - Removed TRAINING_DIR path variable (no longer needed)
 
-**Files Modified**: `rag/scripts/orchestrator_unified.sh`
+**Files Modified**: `runtime/scripts/governed_services.sh` (governed stack)
 
 ### Phase 2: Move Anti-Repetition Settings to RAG API ✅
 - Added `GENERATION_DEFAULTS` config to RAG API (repetition_penalty, frequency_penalty, presence_penalty, top_p, top_k)

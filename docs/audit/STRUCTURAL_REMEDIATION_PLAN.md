@@ -6,6 +6,8 @@
 **Date:** 2026-03-15  
 **Scope:** Convert Phases 0–6 audit findings into a precise, dependency-safe, justified remediation plan. No remediation is applied. No files moved, renamed, edited, or deleted.
 
+**Update (2026-03):** `docs/status_reports/` was **removed** from the repository. Mentions of that path below reflect the layout when this plan was written.
+
 ---
 
 ## 1. Purpose and scope

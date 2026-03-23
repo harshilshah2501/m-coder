@@ -5,6 +5,8 @@
 **Date:** 2026-03-15  
 **Scope:** Documentation and spec placement across root, docs/, and layer boundaries. No moves, renames, link fixes, or remediation performed.
 
+**Update (2026-03):** `docs/status_reports/` was **removed** from the repository. Mentions of that path in this report describe layout at audit time.
+
 ---
 
 ## 1. Purpose and scope

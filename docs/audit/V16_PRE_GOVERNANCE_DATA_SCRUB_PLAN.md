@@ -5,6 +5,8 @@
 **Date:** 2026-03-16  
 **Governing principle:** Classify first; no execution in this phase.
 
+**Update (2026-03):** `docs/status_reports/` was **removed** from the repository as obsolete. Inventory rows and “do not scrub” notes below that mention that path are **historical**; they do not imply the folder should return.
+
 ---
 
 ## 1. Purpose and scope
@@ -29,7 +31,7 @@ No files were deleted, moved, or edited in this phase.
 
 - **Biggest active-footprint problems:** (1) **Large tracked datasets under `ml/datasets`** — v16_1_fixed, v16_2, v16_2_before_clean, cpt, and v17_* JSONL files total ~247 MB on disk and are tracked; they are referenced by training/eval scripts (often via hardcoded `/home/.../datasets/...` paths) and have reproducibility value. (2) **Large tracked processed data under `ml/training/data/processed`** — v15_search_replace_20251231.jsonl (~62 MB) and v14_multifile_final.jsonl (~2.7 MB) are tracked and contribute to clone size. (3) **Archive large debug JSON** — `archive/docs/debug/` contains multi-MB JSON files (RAG summaries) that are tracked and add to repo size.
 
-- **Biggest risks in scrubbing incorrectly:** (1) Deleting or moving datasets that training/evaluation scripts still assume in-repo (breaking reproducibility and CI). (2) Treating "V16" or "pre-governance" as a reason to remove docs that are part of the report convention (docs/status_reports, docs/evaluation, docs/training, docs/datasets) or that have audit value. (3) Assuming working-tree deletion of large tracked files fixes repo size — it does not; history would still contain the blobs, so history-rewrite planning is needed if the goal is smaller clones.
+- **Biggest risks in scrubbing incorrectly:** (1) Deleting or moving datasets that training/evaluation scripts still assume in-repo (breaking reproducibility and CI). (2) Treating "V16" or "pre-governance" as a reason to remove docs that are part of the report convention (docs/evaluation, docs/training, docs/datasets) or that have audit value. *(Former `docs/status_reports/` area was removed separately as obsolete.)* (3) Assuming working-tree deletion of large tracked files fixes repo size — it does not; history would still contain the blobs, so history-rewrite planning is needed if the goal is smaller clones.
 
 ---
 
@@ -46,7 +48,7 @@ No files were deleted, moved, or edited in this phase.
 | ML training artifacts (summaries) | ml/training/artifacts/ | JSON summaries | ~2.4 MB | Tracked | vLLM/RAG export | vLLM_Proxy_Server_Project_Summary__*.json |
 | Evaluation results | ml/evaluation/results/ | JSON/HTML reports | ~6.3 MB (dir) | Tracked | V16.1/V16.2 comprehensive eval | comprehensive_evaluation_*.json, v16_1, phase_c |
 | Evaluation reports | ml/evaluation/reports/ | HTML/JSON | Part of 6.3 MB | Tracked | Iteration/benchmark | test_task1_*.json, benchmark_results |
-| Docs: status reports | docs/status_reports/ | Markdown | ~60 KB | Tracked | V16 deployment, planning | JANUARY_*_PROGRESS, V16_*, findings |
+| ~~Docs: status reports~~ | ~~docs/status_reports/~~ | — | — | **Removed** | *(obsolete)* | Directory deleted 2026-03; see banner above. |
 | Docs: evaluation/training/datasets | docs/evaluation/, docs/training/, docs/datasets/ | Markdown + JSON | ~316 KB total | Tracked | V16/V15 eval and dataset docs | V16_*.md, v16_inference_results.json |
 | Archive (docs, okr, reorg) | archive/ | Mixed (md, json, txt, code) | ~14 MB | Tracked | Pre-governance, reorg, OKR | docs/debug (large JSON), okr, reorg, planning |
 | Archive debug JSON | archive/docs/debug/ | RAG/summary JSON | ~9 MB (2 files ~9 MB + ~2.3 MB) | Tracked | Dec 2025 RAG exports | RAG-Datastore_*_, RAG_System_*_.json |
@@ -64,7 +66,7 @@ No files were deleted, moved, or edited in this phase.
 | ml/training/sft/stage7/*.jsonl | Medium (conf-drift methodology) | conf_drift_pipeline, Stage-7 code | **KEEP_ACTIVE** | Medium if deleted | Leave in place; part of active Stage-7 flow | |
 | ml/training/artifacts (summary JSON) | Low (debug export) | Possibly referenced in docs | **ARCHIVE_OUTSIDE_ACTIVE_FLOW** or **DELETE_WORKING_TREE_CANDIDATE** | Low | Move to archive or remove from tracking in a small batch | |
 | ml/evaluation/results and reports | Medium (comparison, audit) | Evaluation scripts and docs | **ARCHIVE_OUTSIDE_ACTIVE_FLOW** or **KEEP_ACTIVE** | Medium (lose comparison baseline) | Prefer archive outside active flow; keep pointers in docs | |
-| docs/status_reports | High (convention, audit) | Batch D report convention; README | **KEEP_ACTIVE** | High if deleted (convention) | Do not scrub; part of canonical report placement | |
+| ~~docs/status_reports~~ | — | — | **REMOVED** (supersedes prior KEEP_ACTIVE) | — | *(Directory deleted as obsolete — see banner.)* | |
 | docs/evaluation, docs/training, docs/datasets | High (audit, methodology) | Spine and cross-links | **KEEP_ACTIVE** | High | Do not scrub; V16/V15 docs have historical and audit value | |
 | archive/ (whole) | Historical (audit, reorg) | Some cross-refs from docs | **LEAVE_UNTOUCHED** or **ARCHIVE_OUTSIDE_ACTIVE_FLOW** | Medium if physically removed | Prefer leave untouched; if repo size critical, move archive to external store in a dedicated batch | |
 | archive/docs/debug (large JSON) | Low (one-off exports) | Unlikely active refs | **ARCHIVE_OUTSIDE_ACTIVE_FLOW** or **HISTORY_REWRITE_CANDIDATE** | Low | Strong candidate for moving out of repo or history rewrite if shrinking clone | |
@@ -105,7 +107,7 @@ Items that should be **preserved but removed from the normal repo surface** (e.g
 
 ## 8. Leave-untouched / preserve candidates
 
-- **docs/status_reports/** — Part of Batch D report convention; V16 deployment and planning history; do not scrub.
+- ~~**docs/status_reports/**~~ — **Removed** from repo (obsolete; see banner).
 - **docs/evaluation/, docs/training/, docs/datasets/** — V16/V15 evaluation and dataset documentation; audit and methodology value; do not scrub.
 - **ml/training/sft/stage7/** — Active conf-drift and Stage-7 artifacts; referenced by pipeline; leave in place.
 - **Canonical docs and governance** — README, MASTER_SYSTEM_SPEC, governance/, docs/LAYER*; not in scope for data scrub.
@@ -127,7 +129,7 @@ Items that should be **preserved but removed from the normal repo surface** (e.g
 
 - **What should be scrubbed first, if anything:** (1) **Optional working-tree cleanup** of already-ignored `ml/training/generated/stage6c_runs` (prune old runs) and, if refs allow, low-value `ml/training/artifacts` summary JSON or `archive/docs/debug` after copying externally. (2) **No** casual deletion of ml/datasets or ml/training/data/processed — they must be exported first and then removed in a controlled batch with path/ref updates.
 
-- **What must not be scrubbed casually:** (1) **ml/datasets** and **ml/training/data/processed** — high reproducibility and reference value; do not delete without export and migration plan. (2) **docs/status_reports**, **docs/evaluation**, **docs/training**, **docs/datasets** — part of report convention and audit; do not remove. (3) **Governance and canonical docs** — out of scope.
+- **What must not be scrubbed casually:** (1) **ml/datasets** and **ml/training/data/processed** — high reproducibility and reference value; do not delete without export and migration plan. (2) **docs/evaluation**, **docs/training**, **docs/datasets** — part of report convention and audit; do not remove. *(Former `docs/status_reports/` was removed separately as obsolete.)* (3) **Governance and canonical docs** — out of scope.
 
 - **Whether history-rewrite planning is needed:** Yes, **only if** the goal is to reduce Git repository size (e.g. clone time). Then a **separate migration-grade history-rewrite plan** is needed; do not mix it with normal working-tree scrub or archive batches.
 

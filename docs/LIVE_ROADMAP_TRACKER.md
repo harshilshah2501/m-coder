@@ -8,13 +8,13 @@
 - **Last updated**: 2026-03-21  
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: **`feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), **`integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **End-to-end validation / objective-path verification** — Windows JetBrains + **WSL Context Layer wheel** (`motadata-context-layer`) indexing **Motadata AIOps workspace repo** + GPU **m-coder** Plan-Gate → `POST /v1/ask`. Operator runbook: **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`**.  
+- **Current active milestone focus**: **End-to-end validation / objective-path verification** — Windows JetBrains + **WSL Context Layer wheel** (`motadata-context-layer`) indexing **Motadata AIOps workspace repo** + GPU **m-coder** Plan-Gate → `POST /v1/ask`. Operator docs: **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (GPU → WSL → Windows) + **`docs/MOTADATA_DEMO_SCENARIOS.md`** + **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md`**.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate **`POST /v1/ask`**. **Packaging slice COMPLETE** — installable **`packaging/motadata-context-layer`** wheel + **`runtime/context_layer_service`** HTTP API (**no m-coder checkout required on WSL**). **Next:** recorded **e2e deployment success criteria** (runbook §10); **L5.7+** backlog.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate **`POST /v1/ask`**. **Packaging slice COMPLETE** — installable **`packaging/motadata-context-layer`** wheel + **`runtime/context_layer_service`** HTTP API (**no m-coder checkout required on WSL**). **Next:** recorded **e2e deployment success criteria** ([`MOTADATA_DEMO_SCENARIOS.md`](MOTADATA_DEMO_SCENARIOS.md) §4); **L5.7+** backlog.
 
 ---
 
@@ -71,7 +71,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
 | **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
-| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | **L5.5/L5.6 + Context Layer wheel** on branch; **M3.12** handler manifest path merged on same branch. **Focus:** e2e per **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`** (Windows / WSL AIOps / GPU m-coder). Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
+| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | **L5.5/L5.6 + Context Layer wheel** on branch; **M3.12** handler manifest path merged on same branch. **Focus:** e2e per **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** / **`docs/MOTADATA_DEMO_SCENARIOS.md`** (Windows / WSL AIOps / GPU m-coder). Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
 
 
 ---
@@ -163,12 +163,12 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.9  | Shadow Mode Validation              | <span style="color:#2e7d32">COMPLETE</span>    | M3.0–M3.8      | Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.                                |
 | M3.10 | Sandbox driver abstraction         | <span style="color:#2e7d32">COMPLETE</span>    | M3.4           | Abstraction layer for sandbox execution drivers. see §6.13.                                          |
 | M3.11 | Container sandbox runtime           | <span style="color:#2e7d32">COMPLETE</span>    | M3.10          | Container-based sandbox implementing driver abstraction. see §6.14.                                  |
-| M3.12 | Documentation ingestion            | <span style="color:#e65100">**VALIDATING**</span> (integration) | M3.0–M3.9      | Narrow repo-aware context engine on `integration/m3.12-context-demo`; see docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md. |
+| M3.12 | Documentation ingestion            | <span style="color:#e65100">**VALIDATING**</span> (integration) | M3.0–M3.9      | Narrow repo-aware manifest / **`doc_selector`** path merged on **`feature/l5-context-layer-v1-ask-packaging`** (see **§6.16**); prior report: `docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md`. **Merge to `main`** still pending when integration owners promote. |
 | M3.13 | Jira ingestion                     | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest Jira data.                                                                         |
 | M3.14 | PR ingestion                       | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest PR data.                                                                           |
 | M3.15 | Jira cleaning pipeline             | <span style="color:#757575">NOT_STARTED</span> | M3.13          | Clean and normalize Jira data.                                                                        |
 | M3.16 | PR signal extraction               | <span style="color:#757575">NOT_STARTED</span> | M3.14          | Extract signals from PR data.                                                                         |
-| M3.17 | Task schema                        | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Schema and contract for task representation.                                                         |
+| M3.17 | Task schema                        | <span style="color:#2e7d32">**COMPLETE**</span> (L5 branch) | M3.0–M3.9      | Initial task-model slice + C1 trace alignment merged on **`feature/l5-context-layer-v1-ask-packaging`** (see **§6.16**). **M3.18** harness / broader evaluation scope still open. |
 | M3.18 | Task evaluation harness            | <span style="color:#757575">NOT_STARTED</span> | M3.17          | Harness to evaluate tasks against governance and runtime contracts.                                   |
 
 > Note: These Layer-3 milestones are **execution milestones** and do not redefine doctrine. They implement the runtime-governed agent architecture described in the Layer-3 specs.
@@ -416,7 +416,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 **Purpose**: Observe and validate that runtime behavior continues to match doctrine. Layer-4 detects drift, boundary relocation, and collapse vectors in production, providing structured evidence to governance (GREG). It does not author doctrine or enforce directly.
 
 **Current status**: **M4.1–M4.6 COMPLETE on main** (merged 2026-03-15). **Track-C (C1–C3) COMPLETE** (2026-03-17): runtime observation query layer validated and demo-ready.  
-**Priority**: **HIGH** once Layer-3 MVP is stable.
+**Priority note:** Layer-3 runtime MVP is **complete on main**; Track-C closure is **done** — ongoing work is maintenance and Layer-5 integration touchpoints, not “unblocking L4.”
 
 **Track-C (Runtime Observation Query Layer)**  
 - **C1** Execution Trace Builder: deterministic trace reconstruction by request_id / canonical_hash (latest request group).  
@@ -519,9 +519,9 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 - **Current objective**: **End-to-end validation / first objective-path verification** — prove the full chain: **IDE (or exporter) → local L5 evidence → `POST /v1/ask` → Plan-Gate validation + plan/reasoning → grounded response back to client.**
 - **Active tasks**:
-  - Run e2e using **runbook** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`: **GPU** = m-coder + Plan-Gate; **WSL** = wheel + **Motadata AIOps** repo path; **Windows** = plugin + tunnels as documented.
-  - Verify **Deployment Success Criteria** (runbook §10): Windows→WSL `/healthz`, Windows→GPU `/version`, WSL `POST /v1/export_evidence`, plugin `ask_path=v1_evidence`, golden + no-match queries.
-  - Plan-Gate `/version` must show **`ask_request_v1`**; unset `MOTADATA_EXPLAIN_VLLM_URL` if no vLLM.
+  - Run e2e using **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + **Motadata AIOps** repo path; **Windows** = plugin + SSH tunnels as documented.
+  - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4): Windows→WSL `/healthz`, Windows→GPU `/version`, WSL `POST /v1/export_evidence`, plugin `ask_path=v1_evidence`, golden + no-match queries.
+  - Plan-Gate `/version` must show **`ask_request_v1`**. **Full demo stack** requires vLLM + **`MOTADATA_EXPLAIN_VLLM_URL`** (see **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`**). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production / demo path.
 - **Next 3 milestones** (actual upcoming work):
   1. **E2E validation gate** — <span style="color:#e65100">IN_PROGRESS</span> (objective-path proof, not new architecture)
   2. **L5.7** Dirty Buffer / Live File Overlay — <span style="color:#757575">NOT_STARTED</span>
@@ -767,7 +767,7 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `printf '<query>' | python3 runtime/scripts/layer5_export_evidence.py <repo_root>` → JSON evidence bundle.
   - `POST /v1/ask` with `ask_request.v1.0` + bundle (+ `expected_workspace_identity_hash` when hash non-empty) → `plan_only_response.v0.1`, `governance_posture=PLAN_ONLY`, `execution=false`, `evidence_first_meta.ask_path=v1_evidence`, non-empty `plan_summary.steps` (sample: 4 steps, 8 evidence entries).
 - **Evidence (pending — operational e2e)**:
-  - First full **Windows IDE + WSL Context Layer wheel + GPU Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID (checklist: **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md`** §10).
+  - First full **Windows IDE + WSL Context Layer wheel + GPU Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID (checklist: **`docs/MOTADATA_DEMO_SCENARIOS.md`** §4).
 
 ### 6.16 Branch consolidation + M3.12 on L5 line (2026-03-21)
 
@@ -775,7 +775,7 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `feature/m3.12-narrow-context-engine` — `runtime/ask_service/handlers.py` gains **ManifestBuilder** + **`select_from_manifest`** (repo-aware file hints) while preserving **evidence_first**, **`ASK_DEFAULT_REPO_ROOT`**, **EXPLAIN_DEBUG**, and default **ContextEngine** selectors; `runtime/tests/test_ask_service.py` extended with M3.12 determinism tests.
   - `integration/m3.12-context-demo` — demo runbook / verification artifacts as merged.
   - `feature/m3.17-task-schema` — task-model slice + **`docs/runtime/C1_EXECUTION_TRACE_BUILDER_RESULT.md`** unified (M3.17 pre-merge sign-off appended).
-- **Operator doc (in-repo):** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE_AND_DEMO.md` — terminology (m-coder vs **Motadata AIOps** workspace), ports, fallback truth table, deployment success criteria.
+- **Operator docs (in-repo):** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md` (architecture); `docs/MOTADATA_DEMO_SETUP_RUNBOOK.md` (setup); `docs/MOTADATA_DEMO_SCENARIOS.md` (demo + success criteria).
 - **Local cleanup:** After push, safe to **`git branch -d`** the merged topic branches listed in **§5 Immediate next action** (local only unless coordinated for `origin`).
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.

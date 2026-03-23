@@ -158,9 +158,7 @@ If issues occur:
 ## Related Documentation
 
 - [V16_2_DATASET_SUMMARY.md](../datasets/V16_2_DATASET_SUMMARY.md) - Dataset details
-- [v16_2/CURATION_REPORT.md](../iterations/v16_2/CURATION_REPORT.md) - Curation process
 - [V16_TRAINING_SUMMARY.md](V16_TRAINING_SUMMARY.md) - V16 baseline
-- [ITERATION_9_JOURNAL.md](../iterations/ITERATION_9_JOURNAL.md) - Training lessons
 
 ---
 

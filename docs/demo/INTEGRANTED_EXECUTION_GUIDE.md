@@ -87,7 +87,7 @@ Rules:
 
 ### Step 2 — Start full stack
 
-    bash runtime/scripts/start_governed_services.sh
+    bash runtime/scripts/governed_services.sh start
 
 What happens:
 

@@ -63,7 +63,7 @@ Scope: identify candidates, destinations, reference-impact, validation gates, ro
 
 The following must **remain active** in the repo and must **not** be included in archive/export execution:
 
-- **docs/status_reports/** — Batch D report convention; V16 deployment and planning history.  
+- ~~**docs/status_reports/**~~ — **Removed** from the repo (obsolete; was Batch D progress/planning area).  
 - **docs/evaluation/, docs/training/, docs/datasets/** — V16/V15 methodology and audit; cross-links from spine.  
 - **ml/training/sft/stage7/** — Active conf-drift and Stage-7 artifacts; referenced by conf_drift_pipeline and Stage-7 code.  
 - **Canonical docs and governance** — README, MASTER_SYSTEM_SPEC, governance/, docs/LAYER*, PATH_SAFE and remediation plans.  
@@ -79,7 +79,7 @@ The following must **remain active** in the repo and must **not** be included in
 
 1. **Hardcoded absolute dataset paths**  
    - Examples: `DATASET_DIR = "/home/harshil/Harshil-PoCs/datasets/v16_1_fixed"`, `BASE_DIR / "datasets/v17_dpo_pairs_train.jsonl"`, `INPUT_DIR = Path("/home/harshil/Harshil-PoCs/datasets/v16_2")`.  
-   - Used in: train_v16_1_surgical.py, train_v16_2.py, validate_v16_1_fixed.py, train_v17_dpo.py, data_curation.py, surgical_fixer.py, final_polish.py, fix_dataset_v16_1.py, chunk_cpt_dataset.py, cpt_audit.py, remove_secrets.py, filter_dataset_by_judge.py, generate_dpo_pairs*.py, create_splits.py, validate_dpo_dataset.py, validate_v17_dataset.py, balance_v17_dataset.py, kpi2_truncation_test.py, kpi3_coverage_test.py, comprehensive_model_evaluation.py.  
+   - Used in: train_v16_1_surgical.py, validate_v16_1_fixed.py, train_v17_dpo.py, data_curation.py, surgical_fixer.py, final_polish.py, fix_dataset_v16_1.py, chunk_cpt_dataset.py, cpt_audit.py, remove_secrets.py, filter_dataset_by_judge.py, generate_dpo_pairs*.py, create_splits.py, validate_dpo_dataset.py, validate_v17_dataset.py, balance_v17_dataset.py, kpi2_truncation_test.py, kpi3_coverage_test.py, comprehensive_model_evaluation.py. *(train_v16_2.py removed from repo.)*  
    - **Risk:** If repo is the source of truth for these paths (e.g. ml/datasets is symlinked or used via env), removing data from repo breaks all of these. If only parent /home/.../datasets is used, repo export is safer but must be explicit.
 
 2. **Evaluation results paths**  
