@@ -162,7 +162,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | M3.9  | Shadow Mode Validation              | <span style="color:#2e7d32">COMPLETE</span>    | M3.0–M3.8      | Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.                                |
 | M3.10 | Sandbox driver abstraction         | <span style="color:#2e7d32">COMPLETE</span>    | M3.4           | Abstraction layer for sandbox execution drivers. see §6.13.                                          |
 | M3.11 | Container sandbox runtime           | <span style="color:#2e7d32">COMPLETE</span>    | M3.10          | Container-based sandbox implementing driver abstraction. see §6.14.                                  |
-| M3.12 | Documentation ingestion            | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest documentation into observation/context.                                           |
+| M3.12 | Documentation ingestion            | <span style="color:#e65100">**VALIDATING**</span> (integration) | M3.0–M3.9      | Narrow repo-aware context engine on `integration/m3.12-context-demo`; see docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md. |
 | M3.13 | Jira ingestion                     | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest Jira data.                                                                         |
 | M3.14 | PR ingestion                       | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest PR data.                                                                           |
 | M3.15 | Jira cleaning pipeline             | <span style="color:#757575">NOT_STARTED</span> | M3.13          | Clean and normalize Jira data.                                                                        |
@@ -524,6 +524,7 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   1. **E2E validation gate** — <span style="color:#e65100">IN_PROGRESS</span> (objective-path proof, not new architecture)
   2. **L5.7** Dirty Buffer / Live File Overlay — <span style="color:#757575">NOT_STARTED</span>
   3. **L5.8** Grounded Ask Validation + Metrics — <span style="color:#757575">NOT_STARTED</span>
+- **Related (M3.12):** Manifest + `doc_selector` repo-aware slice **merged** into `feature/l5-context-layer-v1-ask-packaging`. **M3.13** (Jira) / **M3.14** (PR) ingestion — NOT_STARTED.
 - **Current blockers**:
   - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
   - Resolver test env fragility (**Caveat-F1**); harness latency vs spine (**Caveat-F2**).
