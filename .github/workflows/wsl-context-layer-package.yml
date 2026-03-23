@@ -1,0 +1,60 @@
+name: wsl-context-layer-package
+
+on:
+  workflow_dispatch:
+    inputs:
+      sanity_query:
+        description: "Sanity query for /v1/export_evidence"
+        required: false
+        default: "How does alert correlation work in this repo?"
+      top_k:
+        description: "top_k for evidence export sanity check"
+        required: false
+        default: "8"
+  push:
+    branches:
+      - main
+      - integration/**
+      - feature/**
+    paths:
+      - "packaging/motadata-context-layer/**"
+      - "runtime/context_layer_service/**"
+      - "runtime/layer5/**"
+      - ".github/workflows/wsl-context-layer-package.yml"
+  pull_request:
+    paths:
+      - "packaging/motadata-context-layer/**"
+      - "runtime/context_layer_service/**"
+      - "runtime/layer5/**"
+      - ".github/workflows/wsl-context-layer-package.yml"
+
+jobs:
+  build-verify-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Make pipeline executable
+        run: chmod +x packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
+
+      - name: Build and verify WSL Context Layer package
+        env:
+          WORKSPACE_ROOT: ${{ github.workspace }}
+          SANITY_QUERY: ${{ github.event.inputs.sanity_query || 'How does alert correlation work in this repo?' }}
+          TOP_K: ${{ github.event.inputs.top_k || '8' }}
+        run: |
+          bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: motadata-context-layer-wheel
+          path: packaging/motadata-context-layer/dist/*.whl
+          if-no-files-found: error

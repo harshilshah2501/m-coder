@@ -19,6 +19,53 @@ cd packaging/motadata-context-layer
 python3 -m build --wheel -o dist
 ```
 
+## Deterministic package pipeline (build + health + sanity)
+
+Use the integrated pipeline script to ensure each update is packageable and runtime-compatible on WSL:
+
+```bash
+bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
+```
+
+What it validates:
+
+1. Wheel build in isolated build venv
+2. Wheel install in isolated smoke venv
+3. `GET /healthz` + `GET /version` contract checks
+4. `POST /v1/export_evidence` sanity check on your `WORKSPACE_ROOT`
+5. Optional Plan-Gate compatibility (`/version` includes `ask_request_v1=v1.0`)
+6. Optional wheel copy to deployment target via `scp` or `rsync`
+
+Optional variables:
+
+```bash
+WORKSPACE_ROOT=/root/Harshil-PoCs/Motadata \
+SANITY_QUERY='How does alert correlation work in this repo?' \
+TOP_K=8 \
+PLAN_GATE_URL=http://127.0.0.1:8089 \
+bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
+```
+
+WSL deployment copy (your target):
+
+```bash
+WORKSPACE_ROOT=/root/Harshil-PoCs/Motadata \
+DEPLOY_TARGET=root@172.30.127.150 \
+DEPLOY_PATH=/root/Harshil-PoCs/Motadata \
+DEPLOY_METHOD=scp \
+bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
+```
+
+Using `rsync` instead:
+
+```bash
+WORKSPACE_ROOT=/root/Harshil-PoCs/Motadata \
+DEPLOY_TARGET=root@172.30.127.150 \
+DEPLOY_PATH=/root/Harshil-PoCs/Motadata \
+DEPLOY_METHOD=rsync \
+bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
+```
+
 Install:
 
 ```bash
