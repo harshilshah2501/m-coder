@@ -5,16 +5,52 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-21  
+- **Last updated**: 2026-03-23  
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: **`feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), **`integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **End-to-end validation / objective-path verification** — Windows JetBrains + **WSL Context Layer wheel** (`motadata-context-layer`) indexing **Motadata AIOps workspace repo** + GPU **m-coder** Plan-Gate → `POST /v1/ask`. Operator docs: **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (GPU → WSL → Windows) + **`docs/MOTADATA_DEMO_SCENARIOS.md`** + **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md`**.  
+- **Current active milestone focus**: **Backend path validation + JetBrains plugin alignment** (not “full e2e” until IDE + observability gates pass). **Backend HTTP** chain: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` is provable with **`docs/Backend Production Validation Sheet.md`**. **Plugin** path defaults to **`POST /v0/ask`** unless evidence-first is enabled — see **Known system realities** below. North star: **`docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (deployment/validation; rename mentally to deployment runbook) + acceptance-style **`docs/MOTADATA_DEMO_SCENARIOS.md`** + **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md`**.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
-  - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on.  
+  - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) exists on Plan-Gate; **Ask → Plan → Execute** continuum is not fully reflected in L5 tracker rows until plugin + execute UX are explicitly gated together.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate **`POST /v1/ask`**. **Packaging slice COMPLETE** — installable **`packaging/motadata-context-layer`** wheel + **`runtime/context_layer_service`** HTTP API (**no m-coder checkout required on WSL**). **Next:** recorded **e2e deployment success criteria** ([`MOTADATA_DEMO_SCENARIOS.md`](MOTADATA_DEMO_SCENARIOS.md) §4); **L5.7+** backlog.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate **`POST /v1/ask`**. **Packaging slice COMPLETE** — installable **`packaging/motadata-context-layer`** wheel + **`runtime/context_layer_service`** HTTP API (**no m-coder checkout required on WSL**). **Next:** **production slice readiness** — plugin truthfulness, observability, retrieval quality gates (**L5.8** / **§1.4** tracks); not only deployment smoke.
+
+### 1.1 Known system realities (do not skip)
+
+- **Dual Ask path:** JetBrains may call **`POST /v0/ask`** unless **evidence-first** is ON (`motadata.ask.evidence_first` / `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST`). Backend validation scripts for **`POST /v1/ask`** are **not** the same default path as the IDE — this is a **known system condition**, not operator error.
+- **Evidence-first default:** **OFF** in plugin — alignment with **`layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
+- **Observability gap:** Plan-Gate HTTP does **not** log each request by default; **no unified trace** (Context Layer ↔ Plan-Gate ↔ vLLM) without further work — see **§1.4 Track OBS**.
+- **Retrieval:** Lexical/deterministic **≠** relevance-validated — **L5.8** and **§1.4 Track RET** cover quality gates.
+- **Host profiles:** **Windows+WSL+GPU** and **native Linux** are charter targets; plugin **Plan-Gate URL is hardcoded** `127.0.0.1:8089` today — config externalization is backlog, not done.
+
+### 1.2 Current truth state (honest)
+
+| Surface | State |
+| ------- | ----- |
+| **Backend** (Context Layer + Plan-Gate + vLLM stack when started) | **Functional** for HTTP contracts per validation sheet |
+| **JetBrains plugin** | **Primary user surface** — path/rendering/metadata alignment **in progress**; treat as **critical component**, not a Wave-3 afterthought |
+| **True end-to-end** (IDE → evidence → `/v1/ask` → honest UI + traceability) | **Not** production-complete until **§1.3** gates and **Track OBS** are satisfied |
+
+### 1.3 Hard production gates (updated checklist)
+
+Treat as **release blockers** for claiming production-grade slice (iterate in charter + validation sheets):
+
+- [ ] **Plugin** can reach **`POST /v1/ask`** **deterministically** when product intent is evidence-first (or product explicitly documents v0-only mode).
+- [ ] **Evidence bundle** visible in UI when backend returned it; **insufficiency** visible when weak — no “silent theater.”
+- [ ] **`ask_path` / path class** surfaced to operator (UI or logs).
+- [ ] **`plan_summary.notes`** shown when backend sends them (known gap: UI may omit).
+- [ ] **`POST /v0/execute`** outcomes **truthful** (executed vs blocked vs refused) — no fake success.
+- [ ] **Request tracing**: `request_id` (or equivalent) **correlatable** across Context Layer, Plan-Gate, and (for Explain) vLLM — **Track OBS**.
+
+### 1.4 Explicit follow-on tracks (named in tracker)
+
+| Track | ID | Scope |
+| ----- | -- | ----- |
+| **Observability** | **L5-OBS-1** | `request_id` propagation; Plan-Gate access/structured logging; path visibility in UI; automation friendly with **`docs/Backend Production Validation Sheet.md`** / **`docs/JetBrains Plugin Defect Isolation Sheet.md`**. |
+| **Retrieval validation** | **L5-RET-VALIDATION** (feeds **L5.8**) | Query → expected file mapping; `top_k` correctness; false positive/negative classification; lexical limits explicit. |
+
+**Related audit artifacts:** `docs/audit/END_TO_END_SYSTEM_AUDIT_REPORT.md`, `docs/audit/SURGICAL_NEXT_STEPS_PLAN.md`.
 
 ---
 
@@ -71,7 +107,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
 | **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
 | **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
-| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | **L5.5/L5.6 + Context Layer wheel** on branch; **M3.12** handler manifest path merged on same branch. **Focus:** e2e per **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** / **`docs/MOTADATA_DEMO_SCENARIOS.md`** (Windows / WSL AIOps / GPU m-coder). Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
+| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **Active work:** backend HTTP validation ✅ operator path; **plugin alignment + observability + retrieval quality** (§1.3–§1.4) — **not** “full e2e” until those gates pass. **Deployment/validation:** runbook + **`docs/Backend Production Validation Sheet.md`** / **`docs/JetBrains Plugin Defect Isolation Sheet.md`**. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
 
 
 ---
@@ -448,7 +484,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Establish a workspace intelligence layer in WSL that performs workspace-local retrieval and deterministic evidence assembly before Plan-Gate evaluation. Layer-5 defines the structured evidence-bundle contract into Plan-Gate, reduces dependence on remote repo-path assumptions (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) to compatibility-only behavior, and does not redesign Layer-1 governance semantics or Layer-3 execution authority.
 
-**Current status**: <span style="color:#e65100">**VALIDATING**</span> (integration A7/A8 complete; e2e verification in flight)  
+**Current status**: <span style="color:#e65100">**VALIDATING**</span> (integration A7/A8 complete; **backend** HTTP validation provable; **plugin alignment + observability** per **§1** — not full production e2e until gates pass)  
 **Priority**: **CRITICAL**
 
 | ID   | Milestone | Status | Dependencies | Deliverable / exit criteria summary |
@@ -517,22 +553,22 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **End-to-end validation / first objective-path verification** — prove the full chain: **IDE (or exporter) → local L5 evidence → `POST /v1/ask` → Plan-Gate validation + plan/reasoning → grounded response back to client.**
+- **Current objective**: **Backend path validation + plugin alignment + production gates** — **not** claiming “full e2e production-ready” until **§1.3** + **Track OBS** are satisfied. Sequentially: (1) **`docs/Backend Production Validation Sheet.md`** proves **Context Layer → `/v1/ask`** (and related scenarios) without IDE; (2) **`docs/JetBrains Plugin Defect Isolation Sheet.md`** compares IDE to known-good backend; (3) close **§1.3** checklist items (path visibility, notes, execute honesty, tracing).
 - **Active tasks**:
-  - Run e2e using **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + **Motadata AIOps** repo path; **Windows** = plugin + SSH tunnels as documented.
-  - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4): Windows→WSL `/healthz`, Windows→GPU `/version`, WSL `POST /v1/export_evidence`, plugin `ask_path=v1_evidence`, golden + no-match queries.
-  - Plan-Gate `/version` must show **`ask_request_v1`**. **Full demo stack** requires vLLM + **`MOTADATA_EXPLAIN_VLLM_URL`** (see **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`**). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production / demo path.
+  - Run deployment/validation flow using **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + indexed repo path; **Windows** = plugin + tunnels as documented. Treat **`docs/MOTADATA_DEMO_SCENARIOS.md`** as **acceptance scenarios**, not “demo-only.”
+  - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4) where applicable; **plugin** must have **evidence-first ON** for apples-to-apples comparison with backend `/v1/ask` scripts.
+  - Plan-Gate `/version` must show **`ask_request_v1`**. **Full Explain/Debug stack** requires vLLM + **`MOTADATA_EXPLAIN_VLLM_URL`** (see runbook). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production validation path.
 - **Next 3 milestones** (actual upcoming work):
-  1. **E2E validation gate** — <span style="color:#e65100">IN_PROGRESS</span> (objective-path proof, not new architecture)
+  1. **Production slice gate** — <span style="color:#e65100">IN_PROGRESS</span> (backend ✅ scriptable; **plugin + observability** per **§1** — rename mentally: not “E2E theater”)
   2. **L5.7** Dirty Buffer / Live File Overlay — <span style="color:#757575">NOT_STARTED</span>
-  3. **L5.8** Grounded Ask Validation + Metrics — <span style="color:#757575">NOT_STARTED</span>
+  3. **L5.8** Grounded Ask Validation + Metrics — <span style="color:#757575">NOT_STARTED</span> (overlaps **§1.4 L5-RET-VALIDATION**; **L5-OBS-1** tracked separately in **§1.4**)
 - **Related (M3.12):** Manifest + `doc_selector` repo-aware slice **merged** into `feature/l5-context-layer-v1-ask-packaging`. **M3.13** (Jira) / **M3.14** (PR) ingestion — NOT_STARTED.
 - **Current blockers**:
   - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
   - Resolver test env fragility (**Caveat-F1**); harness latency vs spine (**Caveat-F2**).
 - **Immediate next action**:
   - Push **`feature/l5-context-layer-v1-ask-packaging`** after review; delete **local** merged topic branches (`feature/m3.12-narrow-context-engine`, `cursor/m3.12-narrow-context-engine`, `integration/m3.12-context-demo`, `feature/m3.17-task-schema`, `feature/jetbrains-plugin-golden-demo-path`) to reduce clutter — **do not** delete `integration/l5-wave1-foundation` until integration owners confirm.
-  - Execute e2e path from runbook; file environment breakages as tickets (not contract redesign).
+  - Execute validation path from runbook + validation sheets; file environment breakages as tickets (not contract redesign).
 
 ---
 
