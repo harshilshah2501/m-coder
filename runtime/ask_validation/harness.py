@@ -20,12 +20,31 @@ from typing import Any
 from runtime.ask_service.handlers import handle_ask_request, _extract_symbol_hints
 from runtime.context.contracts import ContextRequest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
+from runtime.layer5.index import build_file_index
+from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
+from runtime.layer5.retrieval.quality_gate import assess_evidence_quality
+from runtime.layer5.workspace.identity import WorkspaceIdentity
 from runtime.ask_validation.golden_queries import (
     GoldenQuery,
-    QueryExpectation,
     GOLDEN_QUERY_SUITE,
+    QueryExpectation,
 )
 
+MIN_CORE_CODE_PCT_FOR_CODE_INTENT = 0.60
+MAX_FALSE_STRONG_RATE = 0.0
+MIN_WEAK_CORRECTNESS_RATE = 0.80
+MIN_NO_MATCH_CORRECTNESS_RATE = 0.95
+
+# Layer-5 lexical top-k used for dominance metrics (PR-4: measured retrieval, not ContextEngine bundle).
+HARNESS_LEXICAL_TOP_K = 8
+
+
+@dataclass(frozen=True)
+class ClosureThresholds:
+    min_core_code_pct_for_code_intent: float = MIN_CORE_CODE_PCT_FOR_CODE_INTENT
+    max_false_strong_rate: float = MAX_FALSE_STRONG_RATE
+    min_weak_correctness_rate: float = MIN_WEAK_CORRECTNESS_RATE
+    min_no_match_correctness_rate: float = MIN_NO_MATCH_CORRECTNESS_RATE
 
 @dataclass
 class QueryResult:
@@ -38,6 +57,21 @@ class QueryResult:
     selectors_used: list[str]
     retrieval_latency_ms: float  # Real, measured retrieval latency (ContextEngine)
     end_to_end_latency_ms: float  # Full ask handler latency
+    suite: str
+    expected_intent_type: str
+    expected_quality_set: list[str]
+    expected_core_presence: bool
+    expected_subsystem: str | None
+    query_text: str
+    intent_type: str = ""
+    evidence_quality: str = ""
+    quality_reasons: list[str] = field(default_factory=list)
+    dominance_metrics: dict[str, float] = field(default_factory=dict)
+    expected_behavior_pass: bool = False
+    false_strong: bool = False
+    weak_correct: bool = False
+    no_match_correct: bool = False
+    ambiguity_false_confidence: bool = False
     violations: list[str] = field(default_factory=list)
     response: dict[str, Any] = field(default_factory=dict)
 
@@ -67,6 +101,27 @@ class ValidationMetrics:
     # Optional useful metrics
     no_match_justified_count: int = 0
     no_match_justification_rate: float = 0.0
+
+    # Dominance metrics
+    core_code_pct_top_k: float = 0.0
+    code_pct_top_k: float = 0.0
+    noise_pct_top_k: float = 0.0
+
+    # Outcome distribution
+    strong_rate: float = 0.0
+    weak_rate: float = 0.0
+    insufficient_rate: float = 0.0
+    no_match_rate: float = 0.0
+
+    # Truthfulness metrics
+    false_strong_rate: float = 0.0
+    weak_correctness_rate: float = 0.0
+    no_match_correctness_rate: float = 0.0
+    ambiguity_false_confidence_rate: float = 0.0
+
+    # Grouped and threshold summary
+    grouped_summary: dict[str, dict[str, Any]] = field(default_factory=dict)
+    threshold_results: dict[str, bool] = field(default_factory=dict)
     
     def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary for reporting."""
@@ -81,6 +136,19 @@ class ValidationMetrics:
             "avg_e2e_latency_ms": round(self.avg_e2e_latency_ms, 2),
             "max_e2e_latency_ms": round(self.max_e2e_latency_ms, 2),
             "no_match_justification_rate": round(self.no_match_justification_rate, 4),
+            "core_code_pct_top_k": round(self.core_code_pct_top_k, 4),
+            "code_pct_top_k": round(self.code_pct_top_k, 4),
+            "noise_pct_top_k": round(self.noise_pct_top_k, 4),
+            "strong_rate": round(self.strong_rate, 4),
+            "weak_rate": round(self.weak_rate, 4),
+            "insufficient_rate": round(self.insufficient_rate, 4),
+            "no_match_rate": round(self.no_match_rate, 4),
+            "false_strong_rate": round(self.false_strong_rate, 4),
+            "weak_correctness_rate": round(self.weak_correctness_rate, 4),
+            "no_match_correctness_rate": round(self.no_match_correctness_rate, 4),
+            "ambiguity_false_confidence_rate": round(self.ambiguity_false_confidence_rate, 4),
+            "grouped_summary": self.grouped_summary,
+            "threshold_results": self.threshold_results,
         }
 
 
@@ -91,6 +159,7 @@ class HarnessResult:
     metrics: ValidationMetrics
     results: list[QueryResult] = field(default_factory=list)
     violations: list[str] = field(default_factory=list)
+    closure_thresholds: ClosureThresholds = field(default_factory=ClosureThresholds)
     
     def summary(self) -> str:
         """Generate human-readable summary."""
@@ -111,6 +180,17 @@ class HarnessResult:
             "",
             "OPTIONAL METRICS:",
             f"  No-Match Justification:    {self.metrics.no_match_justification_rate:.2%}",
+            f"  Core Code % (top-k):       {self.metrics.core_code_pct_top_k:.2%}",
+            f"  Code % (top-k):            {self.metrics.code_pct_top_k:.2%}",
+            f"  Noise % (top-k):           {self.metrics.noise_pct_top_k:.2%}",
+            f"  STRONG rate:               {self.metrics.strong_rate:.2%}",
+            f"  WEAK rate:                 {self.metrics.weak_rate:.2%}",
+            f"  INSUFFICIENT rate:         {self.metrics.insufficient_rate:.2%}",
+            f"  NO_MATCH rate:             {self.metrics.no_match_rate:.2%}",
+            f"  False STRONG rate:         {self.metrics.false_strong_rate:.2%}",
+            f"  WEAK correctness rate:     {self.metrics.weak_correctness_rate:.2%}",
+            f"  NO_MATCH correctness rate: {self.metrics.no_match_correctness_rate:.2%}",
+            f"  Ambiguity false-confidence:{self.metrics.ambiguity_false_confidence_rate:.2%}",
             "",
             f"QUERY SUMMARY: {sum(1 for r in self.results if r.passed)}/{len(self.results)} passed",
         ]
@@ -246,6 +326,7 @@ class AskValidationHarness:
         self,
         queries: list[GoldenQuery] | None = None,
         tmp_root: Path | None = None,
+        thresholds: ClosureThresholds | None = None,
     ):
         """
         Initialize harness.
@@ -256,6 +337,7 @@ class AskValidationHarness:
         """
         self.queries = queries or GOLDEN_QUERY_SUITE
         self.tmp_root = tmp_root
+        self.thresholds = thresholds or ClosureThresholds()
     
     def run(self) -> HarnessResult:
         """
@@ -288,11 +370,15 @@ class AskValidationHarness:
         # Overall pass: all queries pass
         passed = all(r.passed for r in results)
         
+        threshold_results = self._evaluate_thresholds(metrics)
+        metrics.threshold_results = threshold_results
+
         return HarnessResult(
             passed=passed,
             metrics=metrics,
             results=results,
             violations=all_violations,
+            closure_thresholds=self.thresholds,
         )
     
     def _run_query(self, query: GoldenQuery) -> QueryResult:
@@ -378,6 +464,25 @@ class AskValidationHarness:
         # Extract result data
         files = response.get("context_bundle", {}).get("files", [])
         selectors = response.get("context_bundle", {}).get("selectors_used", [])
+        metadata = response.get("metadata") or {}
+        intent_type = str(metadata.get("intent_type") or "")
+        evidence_quality = str(metadata.get("evidence_quality") or "")
+        quality_reasons = [str(x) for x in (metadata.get("quality_reasons") or [])]
+        # Dominance metrics from Layer-5 lexical retrieval (same paths quality_gate uses downstream).
+        root_s = str(repo_root.resolve())
+        identity = WorkspaceIdentity(
+            canonical_root=root_s,
+            identity_hash=WorkspaceIdentity.compute_identity_hash(root_s),
+            original_input=root_s,
+            path_type="posix",
+            is_git_repo=False,
+        )
+        idx = build_file_index(identity)
+        lex_cfg = LexicalRetrievalConfig()
+        lex_ret = retrieve_lexical(idx, query.query, top_k=HARNESS_LEXICAL_TOP_K, config=lex_cfg)
+        lexical_paths = [h.relative_path for h in lex_ret.hits]
+        layer5_assess = assess_evidence_quality(query.query, lexical_paths)
+        dominance_metrics = {k: float(v) for k, v in layer5_assess.dominance_metrics.items()}
         
         # Validate outcome based on expectation
         if query.expectation == QueryExpectation.GROUNDED:
@@ -392,6 +497,28 @@ class AskValidationHarness:
                 outcome, violations = _check_no_match_outcome(query, response)
         
         passed = len(violations) == 0
+        expected_behavior_pass = (
+            intent_type == query.expected_intent_type and evidence_quality in set(query.expected_quality_set)
+        )
+        if query.expected_core_presence and dominance_metrics.get("core_code_in_top_k_pct", 0.0) <= 0:
+            expected_behavior_pass = False
+            violations.append("Expected core code presence in top-k but got none")
+
+        false_strong = (
+            evidence_quality == "STRONG"
+            and (
+                dominance_metrics.get("noise_in_top_k_pct", 0.0) > 0.5
+                or (query.expected_core_presence and dominance_metrics.get("core_code_in_top_k_pct", 0.0) == 0.0)
+            )
+        )
+        weak_correct = evidence_quality == "WEAK" and "STRONG" not in set(query.expected_quality_set)
+        # Semantics: NO_MATCH_VALID fixtures list allowed evidence_quality values (e.g. strict NO_MATCH-only
+        # vs WEAK/INSUFFICIENT when generic empty/no-grounding is acceptable).
+        no_match_correct = (
+            query.expectation == QueryExpectation.NO_MATCH_VALID
+            and evidence_quality in set(query.expected_quality_set)
+        )
+        ambiguity_false_confidence = query.suite == "adversarial" and evidence_quality == "STRONG"
         
         return QueryResult(
             query_id=query.id,
@@ -402,6 +529,21 @@ class AskValidationHarness:
             selectors_used=selectors,
             retrieval_latency_ms=retrieval_latency_ms,
             end_to_end_latency_ms=e2e_latency_ms,
+            suite=query.suite,
+            expected_intent_type=query.expected_intent_type,
+            expected_quality_set=list(query.expected_quality_set),
+            expected_core_presence=query.expected_core_presence,
+            expected_subsystem=query.expected_subsystem,
+            query_text=query.query,
+            intent_type=intent_type,
+            evidence_quality=evidence_quality,
+            quality_reasons=quality_reasons,
+            dominance_metrics=dominance_metrics,
+            expected_behavior_pass=expected_behavior_pass,
+            false_strong=false_strong,
+            weak_correct=weak_correct,
+            no_match_correct=no_match_correct,
+            ambiguity_false_confidence=ambiguity_false_confidence,
             violations=violations,
             response=response,
         )
@@ -464,8 +606,91 @@ class AskValidationHarness:
             metrics.no_match_justification_rate = (
                 metrics.no_match_justified_count / len(no_match_results)
             )
+
+        # Dominance averages over all results with metadata.
+        dom_rows = [r.dominance_metrics for r in results if r.dominance_metrics]
+        if dom_rows:
+            metrics.core_code_pct_top_k = sum(d.get("core_code_in_top_k_pct", 0.0) for d in dom_rows) / len(dom_rows)
+            metrics.code_pct_top_k = sum(d.get("code_in_top_k_pct", 0.0) for d in dom_rows) / len(dom_rows)
+            metrics.noise_pct_top_k = sum(d.get("noise_in_top_k_pct", 0.0) for d in dom_rows) / len(dom_rows)
+
+        # Outcome distribution.
+        if results:
+            metrics.strong_rate = sum(1 for r in results if r.evidence_quality == "STRONG") / len(results)
+            metrics.weak_rate = sum(1 for r in results if r.evidence_quality == "WEAK") / len(results)
+            metrics.insufficient_rate = sum(1 for r in results if r.evidence_quality == "INSUFFICIENT") / len(results)
+            metrics.no_match_rate = sum(1 for r in results if r.evidence_quality == "NO_MATCH") / len(results)
+
+        # Truthfulness metrics.
+        if results:
+            metrics.false_strong_rate = sum(1 for r in results if r.false_strong) / len(results)
+            weak_rows = [r for r in results if r.evidence_quality == "WEAK"]
+            metrics.weak_correctness_rate = (
+                sum(1 for r in weak_rows if r.expected_behavior_pass) / len(weak_rows)
+                if weak_rows
+                else 1.0
+            )
+            no_match_rows = [r for r in results if r.expectation == QueryExpectation.NO_MATCH_VALID]
+            metrics.no_match_correctness_rate = (
+                sum(1 for r in no_match_rows if r.no_match_correct) / len(no_match_rows)
+                if no_match_rows
+                else 1.0
+            )
+            adversarial_rows = [r for r in results if r.suite == "adversarial"]
+            metrics.ambiguity_false_confidence_rate = (
+                sum(1 for r in adversarial_rows if r.ambiguity_false_confidence) / len(adversarial_rows)
+                if adversarial_rows
+                else 0.0
+            )
+
+        # Grouped summary.
+        grouped: dict[str, dict[str, Any]] = {}
+        suites = sorted({r.suite for r in results})
+        for suite in suites:
+            rows = [r for r in results if r.suite == suite]
+            grouped[suite] = {
+                "count": len(rows),
+                "pass_rate": (sum(1 for r in rows if r.passed) / len(rows)) if rows else 0.0,
+                "strong_rate": (sum(1 for r in rows if r.evidence_quality == "STRONG") / len(rows)) if rows else 0.0,
+                "weak_rate": (sum(1 for r in rows if r.evidence_quality == "WEAK") / len(rows)) if rows else 0.0,
+                "insufficient_rate": (sum(1 for r in rows if r.evidence_quality == "INSUFFICIENT") / len(rows)) if rows else 0.0,
+                "no_match_rate": (sum(1 for r in rows if r.evidence_quality == "NO_MATCH") / len(rows)) if rows else 0.0,
+                "core_code_pct_top_k": (
+                    sum(r.dominance_metrics.get("core_code_in_top_k_pct", 0.0) for r in rows) / len(rows)
+                )
+                if rows
+                else 0.0,
+            }
+        metrics.grouped_summary = grouped
         
         return metrics
+
+    def _evaluate_thresholds(self, metrics: ValidationMetrics) -> dict[str, bool]:
+        code_intent_group = {
+            "aiops_grounding",
+            "debug",
+            "plan_change",
+        }
+        core_vals = [
+            g.get("core_code_pct_top_k", 0.0)
+            for k, g in metrics.grouped_summary.items()
+            if k in code_intent_group
+        ]
+        avg_core_code_pct = sum(core_vals) / len(core_vals) if core_vals else 0.0
+        return {
+            "min_core_code_pct_for_code_intent": (
+                avg_core_code_pct >= self.thresholds.min_core_code_pct_for_code_intent
+            ),
+            "max_false_strong_rate": (
+                metrics.false_strong_rate <= self.thresholds.max_false_strong_rate
+            ),
+            "min_weak_correctness_rate": (
+                metrics.weak_correctness_rate >= self.thresholds.min_weak_correctness_rate
+            ),
+            "min_no_match_correctness_rate": (
+                metrics.no_match_correctness_rate >= self.thresholds.min_no_match_correctness_rate
+            ),
+        }
 
 
 def run_validation_harness(tmp_root: Path) -> HarnessResult:

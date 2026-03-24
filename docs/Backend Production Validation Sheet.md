@@ -69,14 +69,14 @@ jq '.plan_summary.steps, .plan_summary.notes' /tmp/ask_nomatch_v1_response.json
 
 ---
 
-**Environment profile:** __________________________  
-**Date:** __________________________  
+**Environment profile:** WSL (`root@DESKTOP-MBPAQK1`)  
+**Date:** Tuesday Mar 24, 2026  
 **Tester:** __________________________  
 **Branch / commit:** __________________________  
-**Workspace root:** __________________________  
-**Context Layer URL:** __________________________  
-**Plan-Gate URL:** __________________________  
-**vLLM URL:** __________________________
+**Workspace root:** `/root/Harshil-PoCs/Motadata`  
+**Context Layer URL:** `http://127.0.0.1:8091`  
+**Plan-Gate URL:** `http://127.0.0.1:8089`  
+**vLLM URL:** `http://127.0.0.1:8000`
 
 > Suggested defaults for this slice:
 > - Context Layer: `http://127.0.0.1:8091`
@@ -101,11 +101,11 @@ export QUERY="${QUERY:-How does alert correlation work in this repo?}"
 
 | Component | Command | Expected | Actual | Pass/Fail |
 | --- | --- | --- | --- | --- |
-| Context Layer | `curl -sS "$CONTEXT_URL/healthz"` | JSON includes `"status":"ok"` and `"service":"motadata_context_layer"` | __________________ | ______ |
-| Context Layer | `curl -sS "$CONTEXT_URL/version"` | JSON includes `"evidence_schema_hint":"layer5.evidence_bundle.v1"` and `POST /v1/export_evidence` | __________________ | ______ |
-| Plan-Gate | `curl -sS "$PLAN_GATE_URL/healthz"` | JSON includes `"status":"ok"` | __________________ | ______ |
-| Plan-Gate | `curl -sS "$PLAN_GATE_URL/version"` | JSON includes `ask_request_v1` in `supported_schemas` | __________________ | ______ |
-| vLLM | `curl -sS "$VLLM_URL/v1/models"` | JSON includes served model in `data[].id` | __________________ | ______ |
+| Context Layer | `curl -sS "$CONTEXT_URL/healthz"` | JSON includes `"status":"ok"` and `"service":"motadata_context_layer"` | `{"status":"ok","service":"motadata_context_layer","package_version":"0.1.0"}` | Pass |
+| Context Layer | `curl -sS "$CONTEXT_URL/version"` | JSON includes `"evidence_schema_hint":"layer5.evidence_bundle.v1"` and `POST /v1/export_evidence` | `{"service_version":"v0.1","evidence_schema_hint":"layer5.evidence_bundle.v1","endpoints":["GET /healthz","GET /version","POST /v1/export_evidence"]}` | Pass |
+| Plan-Gate | `curl -sS "$PLAN_GATE_URL/healthz"` | JSON includes `"status":"ok"` | `{"status":"ok"}` | Pass |
+| Plan-Gate | `curl -sS "$PLAN_GATE_URL/version"` | JSON includes `ask_request_v1` in `supported_schemas` | `supported_schemas.ask_request_v1 = "v1.0"` | Pass |
+| vLLM | `curl -sS "$VLLM_URL/v1/models"` | JSON includes served model in `data[].id` | `data[].id` includes `motadata-coder` | Pass |
 
 **If a check fails:** Connection refused → service not running or wrong port. Wrong JSON shape → wrong service or old binary. For Plan-Gate `/version`, confirm `supported_schemas` includes `ask_request_v1` (see `runtime/plan_gate_service/app.py`).
 
@@ -113,10 +113,10 @@ export QUERY="${QUERY:-How does alert correlation work in this repo?}"
 
 | Component | Log file / source | Attached? |
 | --- | --- | --- |
-| Context Layer | `stderr` or `$MOTADATA_CONTEXT_LAYER_LOG_PATH` | Yes / No |
-| Plan-Gate | `runtime/.run/plan_gate.log` | Yes / No |
-| vLLM | `runtime/.run/vllm.log` | Yes / No |
-| Execute/runtime | __________________________ | Yes / No |
+| Context Layer | `stderr` (health/version terminal excerpts) | Yes |
+| Plan-Gate | terminal excerpt (`/healthz`, `/version`) | Yes |
+| vLLM | terminal excerpt (`/v1/models`) | Yes |
+| Execute/runtime | pending during Section E run | No |
 
 ### A3. Path proof expectations
 
@@ -134,8 +134,8 @@ export QUERY="${QUERY:-How does alert correlation work in this repo?}"
 Use these exact queries first before custom ones:
 
 - **Ask (evidence-first):** `How does alert correlation work in this repo?`
-- **Debug/Explain:** `Explain this function and likely bug risk.`
-- **Plan:** `Plan how to add structured request logging in Plan-Gate without changing behavior.`
+- **Debug/Explain (Motadata AIOps):** `Explain how availability correlation works in this engine and likely bug risks.` — file `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java`, selection around `start(Promise<Void> ...)`.
+- **Plan (Motadata AIOps):** `Plan how to improve alert-correlation evidence retrieval quality for AvailabilityCorrelationEngine flows without changing runtime behavior.`
 - **No-match honesty:** `Where is the quantum flux capacitor serializer pipeline?` (intentionally out-of-domain)
 - **Code/Execute command:** `echo "production-slice-exec-check"`
 
@@ -196,36 +196,70 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 | Check                                 | Expected | Actual             | Pass/Fail |
 | ------------------------------------- | -------- | ------------------ | --------- |
-| `/v1/export_evidence` hit             | Yes      | __________________ | ______    |
-| `/v1/ask` hit                         | Yes      | __________________ | ______    |
-| `ask_path = v1_evidence`              | Yes      | __________________ | ______    |
-| evidence entries count > 0            | Yes      | __________________ | ______    |
-| evidence paths relevant               | Yes      | __________________ | ______    |
-| steps present or honest insufficiency | Yes      | __________________ | ______    |
-| execution false                       | Yes      | __________________ | ______    |
-| vLLM hit                              | No       | __________________ | ______    |
+| `/v1/export_evidence` hit             | Yes      | Yes                | Pass      |
+| `/v1/ask` hit                         | Yes      | Yes                | Pass      |
+| `ask_path = v1_evidence`              | Yes      | Yes                | Pass      |
+| evidence entries count > 0            | Yes      | 8                  | Pass      |
+| evidence paths relevant               | Yes      | Weak (fixtures / `correlation.metrics`; not alert-correlation implementation) | Fail      |
+| steps present or honest insufficiency | Yes      | Yes (4 steps in `plan_summary.steps`) | Pass      |
+| execution false                       | Yes      | Yes                | Pass      |
+| vLLM hit                              | No       | No                 | Pass      |
 
 ### Evidence summary
 
 * Top 5 paths:
   
-  1. ---
-  2. ---
-  3. ---
-  4. ---
-  5. ---
+  1. `motadata/test-plugin-metrics/sharepoint_online_poll.json`
+  2. `motadata/test-plugin-metrics/oracle_index_poll.json`
+  3. `motadata/test-plugin-metrics/snmp_interface_poll.json`
+  4. `motadata/test-plugin-metrics/mysql_index_poll.json`
+  5. `motadata/db-files/report-templates/js/highcharts.js`
 
-* Relevance verdict: `good / mixed / weak`
+* Relevance verdict: `weak`
 
 ### Logs
 
-* Context Layer excerpt: ______________________________________
-* Plan-Gate excerpt: _________________________________________
-* vLLM excerpt: ______________________________________________
+* Context Layer excerpt: Not captured with this artifact export; attach stderr / `$MOTADATA_CONTEXT_LAYER_LOG_PATH` when re-running the B commands on the target host.
+* Plan-Gate excerpt: Not captured with this artifact export; attach `runtime/.run/plan_gate.log` (or equivalent) when re-running.
+* vLLM excerpt: N/A (no vLLM call for this Ask path).
 
 ### Verdict
 
----
+**Contract / path:** Pass — `layer5.evidence_bundle.v1` export, `POST /v1/ask` returned `PLAN_ONLY`, `execution=false`, `evidence_first_meta.ask_path=v1_evidence`, `request_id` aligned with request, embedded `evidence_bundle` matches export.
+
+**Retrieval / answer quality:** Weak for the canonical query — A5 lexical retrieval surfaced high-frequency substring matches (e.g. `in`, `repo`, `correlation.metrics` in plugin JSON) rather than implementation areas for **alert correlation** (e.g. policy / AI ops Java modules). Treat as a successful **HTTP + governance** slice; improve indexing or ranking for product relevance separately.
+
+### B1. Re-test Addendum — PR-2.1 intent-rule fix (new entry, no overwrite)
+
+**Goal:** Validate that code-intent phrasing is classified correctly and weak grounding is surfaced honestly (without false strong claims).
+
+**Input query:** `Which files implement topology anomaly scoring pipeline?`  
+**Artifacts used:** `/tmp/evidence.json`, `/tmp/ask_v1.json`, `/tmp/ask_v1_response.json`
+
+**Observed (from jq):**
+
+- `metadata.intent_type = CODE_INTENT`
+- `metadata.evidence_quality = WEAK`
+- `metadata.quality_reasons = ["DIVERSITY_VIOLATION","LOW_CODE_RATIO","LOW_CORE_RATIO","NOISE_DOMINATED","NO_CORE_IN_TOP3"]`
+- `plan_summary.steps` present (4)
+- `plan_summary.notes` includes caveat: `Evidence quality is WEAK; plan/explanation may be incomplete.`
+- `execution = false`
+
+### B1 Actual
+
+| Check | Expected | Actual | Pass/Fail |
+| ----- | -------- | ------ | --------- |
+| Intent classification for code-intent query | `CODE_INTENT` | `CODE_INTENT` | Pass |
+| Weak evidence should not be labeled strong | `WEAK` or refusal when noisy | `WEAK` | Pass |
+| Weak evidence caveat present | Yes | Yes (`plan_summary.notes`) | Pass |
+| Safety posture preserved | `execution=false` | `false` | Pass |
+| AIOps implementation dominance in top-k | Preferably high | Low (noise-dominated reasons present) | Fail |
+
+### B1 Verdict
+
+**Control-layer behavior:** Pass. The fix correctly reclassified this query from `GENERIC_INTENT` to `CODE_INTENT`, and the system surfaced weak-grounding caveats rather than overconfident output.
+
+**Retrieval relevance:** Still weak. Evidence remained noise-dominated (`LOW_CORE_RATIO`, `LOW_CODE_RATIO`, `NO_CORE_IN_TOP3`), so this entry validates **truthful weak-mode behavior**, not strong grounding quality.
 
 ---
 
@@ -233,18 +267,20 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 **Goal:** Validate that Explain/Debug uses evidence plus LLM path when expected.
 
-**Input query:** `Explain this function and likely bug risk.`  
+Use a **Motadata AIOps** symbol so `WORKSPACE_ROOT` indexes the product repo (same tree as scenarios B/D), not the m-coder tooling.
+
+**Input query:** `Explain how availability correlation works in this engine and likely bug risks.`  
 **top_k:** `8`  
-**Selected file:** `runtime/ask_service/handlers.py`  
-**Selection / method:** `def handle_ask_request(ask_request: dict) -> dict:`
+**Selected file:** `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java`  
+**Selection / method:** `public void start(Promise<Void> startPromise) throws Exception` (Verticle entry; availability correlation engine)
 
 ### Command sequence
 
 ```bash
-# Reuse /tmp/evidence.json or regenerate with a debug-oriented query
+# Reuse /tmp/evidence.json or regenerate with a debug-oriented query (Motadata AIOps)
 curl -sS -X POST "$CONTEXT_URL/v1/export_evidence" \
   -H "Content-Type: application/json" \
-  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"Explain this function and likely bug risk.\",\"top_k\":$TOP_K}" \
+  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"Explain how availability correlation works in this engine and likely bug risks.\",\"top_k\":$TOP_K}" \
   > /tmp/evidence_debug.json
 
 python3 - <<'PY'
@@ -254,10 +290,10 @@ req = {
   "schema_version": "ask_request.v1.0",
   "request_id": str(uuid.uuid4()),
   "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
-  "query": "Explain this function and likely bug risk.",
+  "query": "Explain how availability correlation works in this engine and likely bug risks.",
   "task_type": "EXPLAIN_DEBUG",
-  "selected_file": "runtime/ask_service/handlers.py",
-  "client_context": {"selection": "def handle_ask_request(ask_request: dict) -> dict:"},
+  "selected_file": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+  "client_context": {"selection": "public void start(Promise<Void> startPromise) throws Exception"},
   "evidence_bundle": ev,
 }
 if ev.get("workspace_identity_hash"):
@@ -284,23 +320,61 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 | Check                                  | Expected | Actual             | Pass/Fail |
 | -------------------------------------- | -------- | ------------------ | --------- |
-| `/v1/export_evidence` hit              | Yes      | __________________ | ______    |
-| `/v1/ask` hit                          | Yes      | __________________ | ______    |
-| `ask_path = v1_evidence`               | Yes      | __________________ | ______    |
-| `explain_debug` present                | Yes      | __________________ | ______    |
-| vLLM hit                               | Yes      | __________________ | ______    |
-| output tied to selected file/selection | Yes      | __________________ | ______    |
-| execution false                        | Yes      | __________________ | ______    |
+| `/v1/export_evidence` hit              | Yes      | Yes                | Pass      |
+| `/v1/ask` hit                          | Yes      | Yes                | Pass      |
+| `ask_path = v1_evidence`               | Yes      | Yes                | Pass      |
+| `explain_debug` present                | Yes      | Yes (summary/logic_flow/likely_bug_risk/evidence/confidence_limits) | Pass      |
+| vLLM hit                               | Yes      | Yes (inferred: `explain_debug` generated without error) | Pass      |
+| output tied to selected file/selection | Yes      | Partially (references `AvailabilityCorrelationEngine.java#start(Promise<Void>)`, but analysis is generic) | Pass      |
+| execution false                        | Yes      | Yes                | Pass      |
 
 ### Logs
 
-* Context Layer excerpt: ______________________________________
-* Plan-Gate excerpt: _________________________________________
-* vLLM excerpt: ______________________________________________
+* Context Layer excerpt: `POST /v1/export_evidence` succeeded; produced `layer5.evidence_bundle.v1` with `top_k=8`.
+* Plan-Gate excerpt: `POST /v1/ask` returned `plan_only_response.v0.1`, `request_id=deb8381f-8fb5-40dd-bcde-f181b11a57f6`, `governance_posture=PLAN_ONLY`, `execution=false`, `evidence_first_meta.ask_path=v1_evidence`.
+* vLLM excerpt: Not attached in this artifact pack; infer LLM leg ran because `explain_debug` is populated (not `error`).
 
 ### Verdict
 
----
+**Contract / path:** Pass. The debug chain is consistent end-to-end (`evidence_debug.json` -> `ask_debug_v1.json` -> `ask_debug_v1_response.json`) with matching `request_id` and identity hash checks.
+
+**Explain output quality:** Partial/weak grounding. Structured explain output is present and references the selected method, but retrieval evidence is still mostly lexical/noisy (`log_reduce.log`, test-plugin metrics), so domain depth is limited.
+
+**Section-C result:** Pass for protocol + observability checks; mark quality as **mixed** for relevance.
+
+### C1. Re-test Addendum — PR-2.1 intent-rule fix (new entry, no overwrite)
+
+**Goal:** Validate Debug/Explain path after intent-rule fix, ensuring truthful weak-grounding behavior without false confidence.
+
+**Input query:** `Explain how availability correlation works in this engine and likely bug risks.`  
+**Artifacts used:** `/tmp/evidence_debug.json`, `/tmp/ask_debug_v1.json`, `/tmp/ask_debug_v1_response.json`
+
+### C1 Actual
+
+| Check | Expected | Actual | Pass/Fail |
+| ----- | -------- | ------ | --------- |
+| `/v1/export_evidence` -> `/v1/ask` path | Yes | Yes | Pass |
+| Ask contract posture | `PLAN_ONLY`, `execution=false` | `PLAN_ONLY`, `false` | Pass |
+| Debug payload presence | `explain_debug` present | Present (`has("explain_debug") = true`, no error) | Pass |
+| Intent classification | `CODE_INTENT` for debug/code query | `CODE_INTENT` | Pass |
+| Quality honesty | `WEAK` or refusal when noisy | `WEAK` with reasons (`LOW_CORE_RATIO`, `LOW_CODE_RATIO`, `NO_CORE_IN_TOP3`, `NOISE_DOMINATED`, `DIVERSITY_VIOLATION`, `NO_SYMBOL_MATCH`) | Pass |
+| Weak-mode caveat note | Yes | Yes (`Evidence quality is WEAK; plan/explanation may be incomplete.`) | Pass |
+| AIOps core dominance in top-k | Preferably high | Low (`core_code_in_top_k_pct=0.0`, `noise_in_top_k_pct=0.875`) | Fail |
+
+### C1 Evidence summary
+
+- `metadata.intent_type = CODE_INTENT`
+- `metadata.evidence_quality = WEAK`
+- `dominance_metrics`: `core_code_in_top_k_pct=0.0`, `code_in_top_k_pct=0.125`, `noise_in_top_k_pct=0.875`, `core_in_top_3_count=0.0`, `max_consecutive_noise=4.0`
+- `plan_summary.steps` length = `1`
+- `plan_summary.notes` includes explicit weak-grounding caveat
+- `execution = false`
+
+### C1 Verdict
+
+**Control-layer behavior:** Pass. Debug path correctly classifies intent as `CODE_INTENT`, preserves PLAN_ONLY safety, and surfaces weak-grounding caveats explicitly.
+
+**Retrieval grounding quality:** Still weak/noise-dominated. This validates truthful weak-mode behavior rather than strong domain grounding.
 
 ---
 
@@ -308,7 +382,7 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 **Goal:** Validate governed planning without execution.
 
-**Input query:** `Plan how to add structured request logging in Plan-Gate without changing behavior.`  
+**Input query:** `Plan how to improve alert-correlation evidence retrieval quality for AvailabilityCorrelationEngine flows without changing runtime behavior.`  
 **top_k:** `8`
 
 ### Command sequence (plan-only Ask contract)
@@ -316,7 +390,7 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 ```bash
 curl -sS -X POST "$CONTEXT_URL/v1/export_evidence" \
   -H "Content-Type: application/json" \
-  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"Plan how to add structured request logging in Plan-Gate without changing behavior.\",\"top_k\":$TOP_K}" \
+  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"Plan how to improve alert-correlation evidence retrieval quality for AvailabilityCorrelationEngine flows without changing runtime behavior.\",\"top_k\":$TOP_K}" \
   > /tmp/evidence_plan.json
 
 python3 - <<'PY'
@@ -326,7 +400,7 @@ req = {
   "schema_version": "ask_request.v1.0",
   "request_id": str(uuid.uuid4()),
   "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
-  "query": "Plan how to add structured request logging in Plan-Gate without changing behavior.",
+  "query": "Plan how to improve alert-correlation evidence retrieval quality for AvailabilityCorrelationEngine flows without changing runtime behavior.",
   "evidence_bundle": ev,
 }
 if ev.get("workspace_identity_hash"):
@@ -352,15 +426,53 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 | Check                    | Expected                | Actual             | Pass/Fail |
 | ------------------------ | ----------------------- | ------------------ | --------- |
-| evidence export hit      | Yes / preferred         | __________________ | ______    |
-| Plan-Gate endpoint used  | `/v1/ask` or `/v0/plan` | __________________ | ______    |
-| `PLAN_ONLY`              | Yes                     | __________________ | ______    |
-| steps present            | Yes                     | __________________ | ______    |
-| notes present in backend | Yes / optional          | __________________ | ______    |
-| execution false          | Yes                     | __________________ | ______    |
-| vLLM hit                 | No / not required       | __________________ | ______    |
+| evidence export hit      | Yes / preferred         | Yes (`evidence_plan.json`, `layer5.evidence_bundle.v1`) | Pass      |
+| Plan-Gate endpoint used  | `/v1/ask` or `/v0/plan` | `/v1/ask` (`ask_plan_v1_response.json`) | Pass      |
+| `PLAN_ONLY`              | Yes                     | Yes                | Pass      |
+| steps present            | Yes                     | Yes (4 steps in `plan_summary.steps`) | Pass      |
+| notes present in backend | Yes / optional          | Not present (optional) | Pass      |
+| execution false          | Yes                     | Yes                | Pass      |
+| vLLM hit                 | No / not required       | No (not required)  | Pass      |
 
 ### Verdict
+
+**Contract / path:** Pass. Evidence-first planning chain succeeded (`/v1/export_evidence` -> `/v1/ask`) with `request_id` match (`00f3824c-beda-48f5-9543-fa627e0e3dbc`), `governance_posture=PLAN_ONLY`, `execution=false`, and `evidence_first_meta.ask_path=v1_evidence`.
+
+**Plan quality:** Mixed relevance. Steps are present and actionable, but retrieval remained lexical/noisy (top paths still skew toward test-plugin metrics rather than core AIOps engine flow), so semantic quality is weaker than contract quality.
+
+---
+
+### D1. Re-test Addendum — PR-2.1 intent-rule fix (new entry, no overwrite)
+
+**Goal:** Validate Plan path after intent-rule fix, ensuring truthful weak-grounding behavior for code-intent planning queries.
+
+**Input query:** `Plan how to improve alert-correlation evidence retrieval quality for AvailabilityCorrelationEngine flows without changing runtime behavior.`  
+**Artifacts used:** `/tmp/evidence_plan.json`, `/tmp/ask_plan_v1.json`, `/tmp/ask_plan_v1_response.json`
+
+### D1 Actual
+
+| Check | Expected | Actual | Pass/Fail |
+| ----- | -------- | ------ | --------- |
+| `/v1/export_evidence` -> `/v1/ask` path | Yes | Yes | Pass |
+| Ask contract posture | `PLAN_ONLY`, `execution=false` | `PLAN_ONLY`, `false` | Pass |
+| Intent classification for planning/code query | `CODE_INTENT` or `PLAN_INTENT` | `CODE_INTENT` | Pass |
+| Quality honesty | `WEAK` or refusal when noisy | `WEAK` with reasons (`LOW_CORE_RATIO`, `LOW_CODE_RATIO`, `NO_CORE_IN_TOP3`, `NOISE_DOMINATED`, `DIVERSITY_VIOLATION`, `NO_SYMBOL_MATCH`) | Pass |
+| Weak-mode caveat note | Yes | Yes (`Evidence quality is WEAK; plan/explanation may be incomplete.`) | Pass |
+| Plan output allowed for WEAK | Yes | Yes (`plan_summary.steps` length = `4`) | Pass |
+| AIOps core dominance in top-k | Preferably high | Low (`core_code_in_top_k_pct=0.0`, `noise_in_top_k_pct=0.625`) | Fail |
+
+### D1 Evidence summary
+
+- `metadata.evidence_quality = WEAK`
+- `dominance_metrics`: `top_k_size=8.0`, `core_code_in_top_k_pct=0.0`, `code_in_top_k_pct=0.25`, `noise_in_top_k_pct=0.625`, `core_in_top_3_count=0.0`, `max_consecutive_noise=3.0`
+- `plan_summary.steps` present with weak-quality caveat in notes
+- `execution = false`, `ask_path = v1_evidence`, `context_source = layer5.evidence_bundle.v1`
+
+### D1 Verdict
+
+**Control-layer behavior:** Pass. Plan path remains truthful under weak evidence, preserving PLAN_ONLY guarantees and explicit weak-quality caveats.
+
+**Retrieval grounding quality:** Still weak/noise-dominated. This re-test confirms policy honesty, not retrieval dominance closure.
 
 ---
 
@@ -370,22 +482,24 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 **Goal:** Validate governed code execution or refusal honestly.
 
-**Command / action:** `echo production-slice-exec-check`  
-**repo_root (in payload):** `/tmp` (adjust if your execute path requires a real repo)
+Use an AIOps-context probe command so this scenario stays aligned with Motadata validation while remaining side-effect free.
+
+**Command / action:** `python3 -c "print('aiops-exec-probe: AvailabilityCorrelationEngine')"`  
+**repo_root (in payload):** `$WORKSPACE_ROOT` (Motadata checkout root used in B/C/D)
 
 ### Command sequence
 
 ```bash
 python3 - <<'PY'
-import datetime, json, uuid
+import datetime, json, os, uuid
 req = {
   "schema_version": "execute_request.v0.1",
   "request_id": str(uuid.uuid4()),
   "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
-  "repo_root": "/tmp",
+  "repo_root": os.environ.get("WORKSPACE_ROOT", "/tmp"),
   "revision": "manual-validation",
   "branch": "manual-validation",
-  "command": "echo production-slice-exec-check",
+  "command": "python3 -c \"print('aiops-exec-probe: AvailabilityCorrelationEngine')\"",
 }
 json.dump(req, open('/tmp/execute_v0.json', 'w', encoding='utf-8'))
 PY
@@ -405,21 +519,31 @@ curl -sS -X POST "$PLAN_GATE_URL/v0/execute" \
 
 ### Actual
 
+Case split for this scenario:
+- **Case-A (allowed/executed on Motadata AIOps):** completed (`repo_root=/home/harshil/Projects/Motadata`, `outcome=EXECUTED`, `executed=true`, `exit_code=0`)
+- **Case-B (blocked/refusal on inaccessible `/root` Motadata path):** completed (`repo_root=/root/Harshil-PoCs/Motadata`, `outcome=BLOCKED`, `executed=false`)
+
 | Check                                        | Expected         | Actual             | Pass/Fail |
 | -------------------------------------------- | ---------------- | ------------------ | --------- |
-| `/v0/execute` hit                            | Yes              | __________________ | ______    |
-| outcome clear                                | Yes              | __________________ | ______    |
-| exit code visible if executed                | Yes              | __________________ | ______    |
-| refusal/block reason visible if not executed | Yes              | __________________ | ______    |
-| execution truly happened                     | Yes / if allowed | __________________ | ______    |
-| misleading success                           | No               | __________________ | ______    |
+| `/v0/execute` hit                            | Yes              | Yes (`execute_v0_response.json` returned) | Pass      |
+| outcome clear                                | Yes              | Yes (`outcome=BLOCKED`, `executed=false`, `schema_version=execute_response.v0.1`) | Pass      |
+| exit code visible if executed                | Yes              | Yes in Case-A (`exit_code=0`, `stdout_summary` includes `aiops-exec-probe: AvailabilityCorrelationEngine`) | Pass      |
+| refusal/block reason visible if not executed | Yes              | Yes (`Working directory is not accessible: /root/Harshil-PoCs/Motadata ...`) | Pass      |
+| execution truly happened                     | Yes / if allowed | Yes (Case-A executed successfully on accessible Motadata path) | Pass      |
+| misleading success                           | No               | No fake success returned | Pass      |
 
 ### Logs
 
-* Plan-Gate excerpt: _________________________________________
-* Runtime/sandbox excerpt: ___________________________________
+* Plan-Gate excerpt: both paths confirmed — Case-A returned `outcome=EXECUTED`, `executed=true`; Case-B returned `outcome=BLOCKED`, `executed=false` with inaccessible working-dir reason.
+* Runtime/sandbox excerpt: Case-A produced `exit_code=0` and `stdout_summary=aiops-exec-probe: AvailabilityCorrelationEngine`; Case-B failed pre-sandbox due to inaccessible `/root` path.
 
 ### Verdict
+
+**Contract / honesty:** Pass. Endpoint now shows truthful governed behavior for both allow and block branches using `execute_response.v0.1`.
+
+**Execution readiness:** Pass. Case-A executed successfully on accessible Motadata path; Case-B remained correctly blocked on inaccessible `/root` path.
+
+**Action before re-test:** None for Section E. Keep both artifacts as evidence of dual-path governance behavior.
 
 ---
 
@@ -429,7 +553,9 @@ curl -sS -X POST "$PLAN_GATE_URL/v0/execute" \
 
 **Goal:** Validate honest insufficiency under weak evidence.
 
-**Input query:** `Where is the quantum flux capacitor serializer pipeline?`  
+Use an out-of-domain query that still sounds code-like, but is intentionally absent from Motadata/AIOps.
+
+**Input query:** `Where is the AvailabilityCorrelationEngine quantum-fusion serializer pipeline and rollback DAG builder?`  
 **top_k:** `8`
 
 ### Command sequence
@@ -437,7 +563,7 @@ curl -sS -X POST "$PLAN_GATE_URL/v0/execute" \
 ```bash
 curl -sS -X POST "$CONTEXT_URL/v1/export_evidence" \
   -H "Content-Type: application/json" \
-  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"Where is the quantum flux capacitor serializer pipeline?\",\"top_k\":$TOP_K}" \
+  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"Where is the AvailabilityCorrelationEngine quantum-fusion serializer pipeline and rollback DAG builder?\",\"top_k\":$TOP_K}" \
   > /tmp/evidence_nomatch.json
 
 python3 - <<'PY'
@@ -447,7 +573,7 @@ req = {
   "schema_version": "ask_request.v1.0",
   "request_id": str(uuid.uuid4()),
   "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
-  "query": "Where is the quantum flux capacitor serializer pipeline?",
+  "query": "Where is the AvailabilityCorrelationEngine quantum-fusion serializer pipeline and rollback DAG builder?",
   "evidence_bundle": ev,
 }
 if ev.get("workspace_identity_hash"):
@@ -488,7 +614,7 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 **Goal:** Validate fail-closed behavior.
 
 **Injected condition (example A):** Invalid `ask_request.v1.0` envelope — POST body missing required `evidence_bundle` (expect HTTP 400, error code `ask_envelope_invalid`).  
-**Injected condition (example B):** Workspace identity mismatch — `expected_workspace_identity_hash` does not match `evidence_bundle.workspace_identity_hash` (expect HTTP 400, error code `identity_mismatch`).
+**Injected condition (example B):** Workspace identity mismatch using your real plan/debug evidence bundle — set `expected_workspace_identity_hash` to a wrong value (expect HTTP 400, error code `identity_mismatch`).
 
 Examples (also valid):
 
@@ -512,16 +638,15 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
   -H "Content-Type: application/json" \
   -d '{"schema_version":"ask_request.v1.0","request_id":"bad","query":"x"}'
 
-# 2) Identity mismatch (expect HTTP 400 identity_mismatch) — illustrative minimal bundle;
-#    if schema validation rejects, use a real /tmp/evidence.json from scenario B and only change expected_workspace_identity_hash.
+# 2) Identity mismatch (expect HTTP 400 identity_mismatch) using real evidence from this run
 python3 - <<'PY'
 import datetime, json, uuid
-ev = {"schema_hint":"layer5.evidence_bundle.v1","workspace_identity_hash":"abc","entries":[{"relative_path":"x.py","retrieval_score":1,"snippet":{"text":"x"}}]}
+ev = json.load(open("/tmp/evidence_plan.json", "r", encoding="utf-8"))
 req = {
   "schema_version":"ask_request.v1.0",
   "request_id":str(uuid.uuid4()),
   "timestamp_utc":datetime.datetime.utcnow().isoformat()+"Z",
-  "query":"test",
+  "query":"identity mismatch test for ask_request.v1.0",
   "expected_workspace_identity_hash":"WRONG",
   "evidence_bundle":ev
 }
@@ -550,27 +675,76 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 | Scenario     | Endpoint path proven? | Output truthful?   | Observability sufficient? | Pass/Fail |
 | ------------ | --------------------- | ------------------ | ------------------------- | --------- |
-| Ask v1       | __________________    | __________________ | __________________        | ______    |
-| Debug        | __________________    | __________________ | __________________        | ______    |
-| Plan         | __________________    | __________________ | __________________        | ______    |
-| Code         | __________________    | __________________ | __________________        | ______    |
+| Ask v1       | Yes (`/v1/export_evidence` -> `/v1/ask`) | Mixed (contract pass, relevance weak) | Partial (artifact-rich; service logs not attached) | Pass |
+| Ask v1 (B1 re-test, PR-2.1) | Yes (`/v1/export_evidence` -> `/v1/ask`) | Yes (code-intent detected; weak evidence explicitly caveated) | Good (jq metadata + notes + execution state captured) | Pass |
+| Debug        | Yes (`/v1/export_evidence` -> `/v1/ask` -> explain path) | Mixed (structured output; grounding weak) | Partial (response proves explain path; vLLM log excerpt pending) | Pass |
+| Debug (C1 re-test, PR-2.1) | Yes (`/v1/export_evidence` -> `/v1/ask` -> explain path) | Yes (CODE_INTENT + WEAK caveat; no false confidence) | Good (metadata + dominance metrics + explain presence captured) | Pass |
+| Plan         | Yes (`/v1/export_evidence` -> `/v1/ask`) | Mixed (truthful plan, noisy retrieval context) | Partial (artifacts present; logs optional) | Pass |
+| Plan (D1 re-test, PR-2.1) | Yes (`/v1/export_evidence` -> `/v1/ask`) | Yes (WEAK quality surfaced with caveat; no false strong grounding) | Good (metadata + dominance metrics + plan steps captured) | Pass |
+| Code         | Yes (`/v0/execute`)  | Yes (both `EXECUTED` and `BLOCKED` paths truthful) | Partial (response artifacts strong; deeper sandbox logs optional) | Pass |
 | No-match     | __________________    | __________________ | __________________        | ______    |
 | Failure mode | __________________    | __________________ | __________________        | ______    |
 
 ### Overall backend status
 
-* Contract integrity: `good / partial / poor`
-* Observability: `good / partial / poor`
-* Retrieval quality: `good / mixed / weak`
-* Execution honesty: `good / partial / poor`
+* Contract integrity: `good` (B/C/D proven)
+* Observability: `partial` (JSON artifacts strong; runtime logs still sparse)
+* Retrieval quality: `mixed` (often lexical/noisy for AIOps intent)
+* Execution honesty: `good` (Section E covers both allow + block truthfully; F/G pending separately)
 
 ### Biggest blocker
 
----
+Retrieval quality for AIOps intent remains weak in multiple scenarios (candidate files skew to test-plugin metrics and generic token matches), reducing semantic usefulness despite correct contracts.
 
 ### Next required backend fix
 
----
+Improve evidence retrieval/ranking for AIOps-domain queries (e.g., prioritize `motadata/src/main/java/com/mindarray/aiops/*` and demote noisy fixture-heavy matches) while preserving current v1 contract behavior.
+
+## Grounding quality summary (current run)
+
+This validation shows a split result:
+
+- **Contract/governance quality is strong**: endpoint paths, schema contracts, identity checks, and honest execution/block behavior are working.
+- **Grounding quality is weak-to-mixed**: responses are frequently based on lexical/noisy evidence rather than core AIOps implementation context.
+
+### Why context-backing is weak
+
+1. **Lexical overmatching dominates retrieval**
+   - Common tokens (e.g., `in`, `this`, `work`, `engine`) pull in unrelated files.
+   - Top-k candidates often include fixtures/logs/vendor assets instead of target subsystem logic.
+
+2. **Evidence-first ask path trusts provided bundle**
+   - `POST /v1/ask` with `evidence_bundle.v1` is intentionally evidence-driven (`no_repo_filesystem=true` on this path).
+   - If the bundle is noisy, the answer remains noisy; Plan-Gate does not repair retrieval quality at this stage.
+
+3. **Domain priors are too weak**
+   - AIOps queries are not sufficiently biased toward `motadata/src/main/java/com/mindarray/aiops/*`.
+   - Test-plugin metrics and generic files can outrank core engine files.
+
+4. **Explain output quality is bounded by retrieved context**
+   - Structured `explain_debug` responses may still be generic when evidence does not include true implementation hotspots.
+
+### Retrieval quality remediation checklist
+
+- [ ] Add **path-prior boosting** for AIOps domains (`motadata/src/main/java/com/mindarray/aiops/*`) on AIOps intent queries.
+- [ ] Add **fixture/log demotion** (e.g., `test-plugin-metrics`, `src/test/resources`, vendor bundles) unless query explicitly targets tests/fixtures.
+- [ ] Apply **query normalization**:
+  - split merged identifiers (e.g., `AvailabilityCorrelationEngine` -> `availability correlation engine`)
+  - keep exact-symbol variants for camel case and dotted metrics keys.
+- [ ] Add **stopword/low-signal token dampening** in scoring to reduce accidental matches.
+- [ ] Add **post-retrieval sanity checks**:
+  - minimum ratio of top-k files from expected subsystem paths
+  - fail-soft note in response when relevance threshold is low.
+- [ ] Introduce a lightweight **reranker** (BM25 + path priors + optional semantic rerank) before final top-k selection.
+- [ ] Expand observability:
+  - record retrieval feature contributions per candidate (already partial)
+  - emit a relevance confidence score in Ask response metadata.
+
+### Acceptance criteria for grounding improvements
+
+- For AIOps-correlation queries, at least **3/5 top files** should come from `motadata/src/main/java/com/mindarray/aiops/*` or directly related policy/engine modules.
+- `plan_summary.steps` and `explain_debug.evidence` should cite concrete subsystem files/methods, not generic fixtures/logs.
+- No high-confidence answer when top-k relevance is below threshold; response should state explicit insufficiency.
 
 ## Troubleshooting (common issues)
 

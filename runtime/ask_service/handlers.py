@@ -26,6 +26,7 @@ from runtime.context.doc_selector import select_from_manifest
 from runtime.context.engine import ContextEngine, ContextEngineError, MissingExplicitFilesError
 from runtime.context.manifest_builder import ManifestBuilder
 from runtime.context.manifest_models import IngestionConfig
+from runtime.layer5.retrieval.quality_gate import NO_MATCH, WEAK, assess_evidence_quality
 
 from .evidence_bridge import resolve_workspace_input_path, try_build_layer5_evidence
 from .planner import PlanOnlyPlanner
@@ -188,8 +189,38 @@ def handle_ask_request(ask_request: dict) -> dict:
                 context_resolution=context_resolution,
             )
 
+    quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+    metadata = {
+        "intent_type": quality.intent_type,
+        "evidence_quality": quality.evidence_quality,
+        "quality_reasons": list(quality.quality_reasons),
+        "dominance_metrics": quality.dominance_metrics,
+        "policy_version": quality.policy_version,
+    }
+    if quality.blocked:
+        block_message = (
+            "No context files matched relevant code evidence for this ask."
+            if quality.evidence_quality == NO_MATCH
+            else "No context files matched enough grounded evidence; plan steps are ungrounded."
+        )
+        return _build_plan_only_response(
+            request_id=request_id,
+            bundle=bundle,
+            plan_steps=[],
+            explain_debug=None,
+            context_resolution=context_resolution,
+            evidence_bundle=evidence_bundle_dict,
+            evidence_first_meta=evidence_first_meta,
+            repo_aware_notes=[block_message],
+            ui_title="Grounding blocked (PLAN ONLY)",
+            ui_message=block_message,
+            ui_severity="warning",
+            metadata=metadata,
+        )
+
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
+    weak_note: List[str] = []
 
     if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
         result = explain_debug(
@@ -207,6 +238,8 @@ def handle_ask_request(ask_request: dict) -> dict:
         planner = PlanOnlyPlanner()
         plan_summary = planner.plan(query=query, bundle=bundle)
         plan_steps = plan_summary.steps
+    if quality.evidence_quality == WEAK:
+        weak_note.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
 
     return _build_plan_only_response(
         request_id=request_id,
@@ -216,7 +249,8 @@ def handle_ask_request(ask_request: dict) -> dict:
         context_resolution=context_resolution,
         evidence_bundle=evidence_bundle_dict,
         evidence_first_meta=evidence_first_meta,
-        repo_aware_notes=repo_aware_notes or None,
+        repo_aware_notes=(repo_aware_notes + weak_note) or None,
+        metadata=metadata,
     )
 
 
@@ -261,6 +295,7 @@ def _build_plan_only_response(
     ui_message: str | None = None,
     ui_severity: str | None = None,
     repo_aware_notes: List[str] | None = None,
+    metadata: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -318,6 +353,8 @@ def _build_plan_only_response(
         payload["evidence_bundle"] = evidence_bundle
     if evidence_first_meta is not None:
         payload["evidence_first_meta"] = evidence_first_meta
+    if metadata is not None:
+        payload["metadata"] = metadata
     return payload
 
 
@@ -353,4 +390,18 @@ def _build_error_plan_only_response(
     }
     if context_resolution is not None:
         payload["context_resolution"] = context_resolution
+    payload["metadata"] = {
+        "intent_type": "GENERIC_INTENT",
+        "evidence_quality": "INSUFFICIENT",
+        "quality_reasons": ["NO_RELEVANT_HITS"],
+        "dominance_metrics": {
+            "top_k_size": 0.0,
+            "core_code_in_top_k_pct": 0.0,
+            "code_in_top_k_pct": 0.0,
+            "noise_in_top_k_pct": 0.0,
+            "core_in_top_3_count": 0.0,
+            "max_consecutive_noise": 0.0,
+        },
+        "policy_version": "quality_gate.v1",
+    }
     return payload

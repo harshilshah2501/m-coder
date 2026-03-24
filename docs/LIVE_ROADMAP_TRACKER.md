@@ -7,50 +7,205 @@
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
 - **Last updated**: 2026-03-23  
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
-- **Current integration branch (local consolidated line)**: **`feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), **`integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **Backend path validation + JetBrains plugin alignment** (not “full e2e” until IDE + observability gates pass). **Backend HTTP** chain: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` is provable with **`docs/Backend Production Validation Sheet.md`**. **Plugin** path defaults to **`POST /v0/ask`** unless evidence-first is enabled — see **Known system realities** below. North star: **`docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (deployment/validation; rename mentally to deployment runbook) + acceptance-style **`docs/MOTADATA_DEMO_SCENARIOS.md`** + **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md`**.  
+- **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
+- **Current active milestone focus**: **Backend path validation + JetBrains plugin alignment** (not “full e2e” until IDE + observability gates pass). **Backend HTTP** chain: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` is provable with `**docs/Backend Production Validation Sheet.md`**. **Plugin** path defaults to `**POST /v0/ask`** unless evidence-first is enabled — see **Known system realities** below. North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` (deployment/validation; rename mentally to deployment runbook) + acceptance-style `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) exists on Plan-Gate; **Ask → Plan → Execute** continuum is not fully reflected in L5 tracker rows until plugin + execute UX are explicitly gated together.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate **`POST /v1/ask`**. **Packaging slice COMPLETE** — installable **`packaging/motadata-context-layer`** wheel + **`runtime/context_layer_service`** HTTP API (**no m-coder checkout required on WSL**). **Next:** **production slice readiness** — plugin truthfulness, observability, retrieval quality gates (**L5.8** / **§1.4** tracks); not only deployment smoke.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Next:** **production slice readiness** — plugin truthfulness, observability, retrieval quality gates (**L5.8** / **§1.4** tracks); not only deployment smoke.
 
 ### 1.1 Known system realities (do not skip)
 
-- **Dual Ask path:** JetBrains may call **`POST /v0/ask`** unless **evidence-first** is ON (`motadata.ask.evidence_first` / `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST`). Backend validation scripts for **`POST /v1/ask`** are **not** the same default path as the IDE — this is a **known system condition**, not operator error.
-- **Evidence-first default:** **OFF** in plugin — alignment with **`layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
+- **Dual Ask path:** JetBrains may call `**POST /v0/ask`** unless **evidence-first** is ON (`motadata.ask.evidence_first` / `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST`). Backend validation scripts for `**POST /v1/ask`** are **not** the same default path as the IDE — this is a **known system condition**, not operator error.
+- **Evidence-first default:** **OFF** in plugin — alignment with `**layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
 - **Observability gap:** Plan-Gate HTTP does **not** log each request by default; **no unified trace** (Context Layer ↔ Plan-Gate ↔ vLLM) without further work — see **§1.4 Track OBS**.
 - **Retrieval:** Lexical/deterministic **≠** relevance-validated — **L5.8** and **§1.4 Track RET** cover quality gates.
 - **Host profiles:** **Windows+WSL+GPU** and **native Linux** are charter targets; plugin **Plan-Gate URL is hardcoded** `127.0.0.1:8089` today — config externalization is backlog, not done.
 
 ### 1.2 Current truth state (honest)
 
-| Surface | State |
-| ------- | ----- |
-| **Backend** (Context Layer + Plan-Gate + vLLM stack when started) | **Functional** for HTTP contracts per validation sheet |
-| **JetBrains plugin** | **Primary user surface** — path/rendering/metadata alignment **in progress**; treat as **critical component**, not a Wave-3 afterthought |
-| **True end-to-end** (IDE → evidence → `/v1/ask` → honest UI + traceability) | **Not** production-complete until **§1.3** gates and **Track OBS** are satisfied |
+
+| Surface                                                                     | State                                                                                                                                    |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend** (Context Layer + Plan-Gate + vLLM stack when started)           | **Functional** for HTTP contracts per validation sheet                                                                                   |
+| **JetBrains plugin**                                                        | **Primary user surface** — path/rendering/metadata alignment **in progress**; treat as **critical component**, not a Wave-3 afterthought |
+| **True end-to-end** (IDE → evidence → `/v1/ask` → honest UI + traceability) | **Not** production-complete until **§1.3** gates and **Track OBS** are satisfied                                                         |
+
 
 ### 1.3 Hard production gates (updated checklist)
 
 Treat as **release blockers** for claiming production-grade slice (iterate in charter + validation sheets):
 
-- [ ] **Plugin** can reach **`POST /v1/ask`** **deterministically** when product intent is evidence-first (or product explicitly documents v0-only mode).
-- [ ] **Evidence bundle** visible in UI when backend returned it; **insufficiency** visible when weak — no “silent theater.”
-- [ ] **`ask_path` / path class** surfaced to operator (UI or logs).
-- [ ] **`plan_summary.notes`** shown when backend sends them (known gap: UI may omit).
-- [ ] **`POST /v0/execute`** outcomes **truthful** (executed vs blocked vs refused) — no fake success.
-- [ ] **Request tracing**: `request_id` (or equivalent) **correlatable** across Context Layer, Plan-Gate, and (for Explain) vLLM — **Track OBS**.
+- **Plugin** can reach `**POST /v1/ask`** **deterministically** when product intent is evidence-first (or product explicitly documents v0-only mode).
+- **Evidence bundle** visible in UI when backend returned it; **insufficiency** visible when weak — no “silent theater.”
+- `**ask_path` / path class** surfaced to operator (UI or logs).
+- `**plan_summary.notes`** shown when backend sends them (known gap: UI may omit).
+- `**POST /v0/execute**` outcomes **truthful** (executed vs blocked vs refused) — no fake success.
+- **Request tracing**: `request_id` (or equivalent) **correlatable** across Context Layer, Plan-Gate, and (for Explain) vLLM — **Track OBS**.
 
 ### 1.4 Explicit follow-on tracks (named in tracker)
 
-| Track | ID | Scope |
-| ----- | -- | ----- |
-| **Observability** | **L5-OBS-1** | `request_id` propagation; Plan-Gate access/structured logging; path visibility in UI; automation friendly with **`docs/Backend Production Validation Sheet.md`** / **`docs/JetBrains Plugin Defect Isolation Sheet.md`**. |
-| **Retrieval validation** | **L5-RET-VALIDATION** (feeds **L5.8**) | Query → expected file mapping; `top_k` correctness; false positive/negative classification; lexical limits explicit. |
+
+| Track                    | ID                                     | Scope                                                                                                                                                                                                                     |
+| ------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observability**        | **L5-OBS-1**                           | `request_id` propagation; Plan-Gate access/structured logging; path visibility in UI; automation friendly with `**docs/Backend Production Validation Sheet.md`** / `**docs/JetBrains Plugin Defect Isolation Sheet.md**`. |
+| **Retrieval validation** | **L5-RET-VALIDATION** (feeds **L5.8**) | Query → expected file mapping; `top_k` correctness; false positive/negative classification; lexical limits explicit.                                                                                                      |
+
 
 **Related audit artifacts:** `docs/audit/END_TO_END_SYSTEM_AUDIT_REPORT.md`, `docs/audit/SURGICAL_NEXT_STEPS_PLAN.md`.
+
+## CURRENT SYSTEM REALITY (POST VALIDATION)
+
+### Backend
+- Context Layer + Plan-Gate + vLLM path is **contract-correct and governed**
+- `/v1/ask` evidence-first path validated
+- execution path (`/v0/execute`) is honest and deterministic
+
+### Retrieval
+- Current retrieval is **lexical-first (A5)** and produces **noisy top-k**
+- Evidence bundles frequently dominated by:
+  - test-plugin-metrics JSON
+  - logs
+  - vendor assets
+- Core AIOps code (`src/main/java/com/mindarray/aiops/*`) is underrepresented
+
+### Plugin
+- Plugin path may diverge (`/v0/ask` vs `/v1/ask`)
+- Evidence rendering incomplete
+- plan_summary.notes not shown
+- UI can misrepresent grounded context
+
+### System Status
+- Backend: FUNCTIONAL
+- Retrieval: WEAK / NOISY
+- Plugin: PARTIALLY MISALIGNED
+- End-to-end: NOT YET PRODUCTION-GRADE
+
+## CRITICAL BLOCKERS FOR PRODUCTION CLOSURE
+
+### B1 — Retrieval Quality (NON-NEGOTIABLE)
+- Top-k must be dominated by AIOps implementation files
+- Remove dominance of:
+  - test/*
+  - logs
+  - vendor assets
+- Add path priors for:
+  - src/main/java/com/mindarray/aiops/*
+- Add identifier normalization (CamelCase, symbol-aware)
+- Add weak-evidence detection
+
+### B2 — Grounded Ask Validation (L5.8)
+- Query → expected files mapping
+- top-k correctness validation
+- false positive / false negative tracking
+- no-match honesty enforcement
+
+### B3 — Plugin Truthfulness
+- Show evidence_bundle entries
+- Show ask_path
+- Show plan_summary.notes
+- Fix "(no files selected)" misleading cases
+- Correct execute outcome UX
+
+### B4 — Observability (L5-OBS-1)
+- request_id propagation across:
+  - Context Layer
+  - Plan-Gate
+  - vLLM
+- Plan-Gate request logging
+- endpoint path visibility
+- traceability for Ask / Debug / Execute
+
+### B5 — Host Profile Readiness
+- Windows + WSL + GPU validated
+- Native Linux + JetBrains validated
+- Config externalization (no hardcoded localhost assumptions)
+
+### B6 — Compatibility Path Hardening (L5.9)
+- Define canonical repo_root behavior
+- Control fallback paths explicitly
+- Remove ambiguity between old/new paths
+
+## L5-RET — RETRIEVAL QUALITY TRACK
+
+Objective:
+Make evidence bundles **AIOps-aware and code-dominant**
+
+### R1 — Hard Filtering
+- Exclude:
+  - test/*
+  - *.log
+  - vendor/js/*
+  - test-plugin-metrics/*
+- Prefer:
+  - src/main/*
+  - code-bearing files
+
+### R2 — Path-Based Scoring
+- Boost:
+  +100 → src/main/java/com/mindarray/aiops/*
+  +70 → src/main/java/*
+  +50 → same package
+- Penalize:
+  -100 → test/*
+  -80 → logs/json metrics
+  -60 → vendor assets
+
+### R3 — Query Normalization
+- CamelCase splitting
+- symbol-aware tokenization
+- case-insensitive matching
+
+### R4 — Evidence Guardrail
+- If <30% code files in top-k:
+  → mark evidence as WEAK
+
+### R5 — No-Match Honesty
+- If no relevant code evidence:
+  → explicit "insufficient grounded evidence"
+
+### Done Criteria
+- ≥70% top-k from core AIOps code for code-intent queries
+- No test/vendor/log dominance
+
+## L5-OBS — OBSERVABILITY TRACK
+
+Objective:
+Make system fully traceable and debuggable
+
+### O1 — Request Propagation
+- request_id across all services
+
+### O2 — Endpoint Logging
+- log:
+  - /v1/export_evidence
+  - /v1/ask
+  - /v0/execute
+  - vLLM calls
+
+### O3 — Path Visibility
+- surface ask_path in logs/UI
+
+### O4 — Trace Reconstruction
+- map request → evidence → plan → execution
+
+### Done Criteria
+- full trace available for any request
+- no blind debugging required
+
+## PRODUCTION CLOSURE GATES
+
+System is considered production-grade only if:
+
+[ ] Retrieval produces AIOps-dominant evidence
+[ ] Ask/Debug/Plan/Code scenarios pass
+[ ] Plugin reflects backend truth
+[ ] Observability fully implemented
+[ ] Host profiles validated
+[ ] Compatibility path resolved
+[ ] Documentation aligned and canonical
 
 ---
 
@@ -71,16 +226,17 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 
 ### 2.1 Status markers
 
-**Color coding** (in tables below): <span style="color:#2e7d32">**green** = done</span> (COMPLETE / LOCKED) · <span style="color:#e65100">**orange** = active</span> (IN_PROGRESS / VALIDATING) · <span style="color:#757575">**gray** = not started</span> (NOT_STARTED) · <span style="color:#c62828">**red** = blocked</span> (BLOCKED). Renders in GitHub and most Markdown viewers.
+**Color coding** (in tables below): **green** = done (COMPLETE / LOCKED) · **orange** = active (IN_PROGRESS / VALIDATING) · **gray** = not started (NOT_STARTED) · **red** = blocked (BLOCKED). Renders in GitHub and most Markdown viewers.
+
 
 | Status          | Meaning                                                              |
 | --------------- | -------------------------------------------------------------------- |
-| <span style="color:#757575">**NOT_STARTED**</span> | Milestone defined, no substantive work begun                         |
-| <span style="color:#e65100">**IN_PROGRESS**</span> | Active engineering work underway                                     |
-| <span style="color:#c62828">**BLOCKED**</span>     | Work paused due to dependency or risk                                |
-| <span style="color:#e65100">**VALIDATING**</span>  | Implementation complete; in testing / verification / hardening phase |
-| <span style="color:#2e7d32">**COMPLETE**</span>    | Implementation done; exit criteria met, but not doctrinally locked   |
-| <span style="color:#2e7d32">**LOCKED**</span>      | Completed and ratified; further changes require explicit governance  |
+| **NOT_STARTED** | Milestone defined, no substantive work begun                         |
+| **IN_PROGRESS** | Active engineering work underway                                     |
+| **BLOCKED**     | Work paused due to dependency or risk                                |
+| **VALIDATING**  | Implementation complete; in testing / verification / hardening phase |
+| **COMPLETE**    | Implementation done; exit criteria met, but not doctrinally locked   |
+| **LOCKED**      | Completed and ratified; further changes require explicit governance  |
 
 
 ### 2.2 Priority markers
@@ -101,13 +257,13 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 ## 3. Executive Progress Snapshot
 
 
-| Layer  | Scope                           | Status                | Notes                                                                                     |
-| ------ | ------------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
-| **L1** | Governance (Constitution)       | <span style="color:#2e7d32">**LOCKED**</span>            | Constitutional manifest, phase doctrine, dominance rules locked.                          |
-| **L2** | ML Compilation (Stages 1–8)     | <span style="color:#2e7d32">**COMPLETE / LOCKED**</span> | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS. |
-| **L3** | Runtime Enforcement / Execution | <span style="color:#2e7d32">**COMPLETE**</span> (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. |
-| **L4** | Observation / Drift Detection   | <span style="color:#2e7d32">**COMPLETE**</span> (Track-C) | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17). |
-| **L5** | Workspace Intelligence / Ask Grounding | <span style="color:#e65100">**VALIDATING**</span> | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **Active work:** backend HTTP validation ✅ operator path; **plugin alignment + observability + retrieval quality** (§1.3–§1.4) — **not** “full e2e” until those gates pass. **Deployment/validation:** runbook + **`docs/Backend Production Validation Sheet.md`** / **`docs/JetBrains Plugin Defect Isolation Sheet.md`**. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
+| Layer  | Scope                                  | Status                    | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------ | -------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L1** | Governance (Constitution)              | **LOCKED**                | Constitutional manifest, phase doctrine, dominance rules locked.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **L2** | ML Compilation (Stages 1–8)            | **COMPLETE / LOCKED**     | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.                                                                                                                                                                                                                                                                                                                                                                             |
+| **L3** | Runtime Enforcement / Execution        | **COMPLETE** (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **L4** | Observation / Drift Detection          | **COMPLETE** (Track-C)    | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).                                                                                                                                                                                                                                                                                                                                        |
+| **L5** | Workspace Intelligence / Ask Grounding | **VALIDATING**            | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **Active work:** backend HTTP validation ✅ operator path; **plugin alignment + observability + retrieval quality** (§1.3–§1.4) — **not** “full e2e” until those gates pass. **Deployment/validation:** runbook + `**docs/Backend Production Validation Sheet.md`** / `**docs/JetBrains Plugin Defect Isolation Sheet.md**`. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
 
 
 ---
@@ -118,16 +274,16 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Define constitutional judgment semantics (REF, CONF, DES, MIX, CODE, REACH), dominance hierarchy, irreversible boundary doctrine, collapse taxonomy, and governance protocols. Layer-1 defines *what* judgment means; lower layers implement without reinterpretation.
 
-**Current status**: <span style="color:#2e7d32">**LOCKED**</span>
+**Current status**: **LOCKED**
 
 
 | ID   | Milestone                                    | Status | Dependencies | Exit criteria                                                                |
 | ---- | -------------------------------------------- | ------ | ------------ | ---------------------------------------------------------------------------- |
-| L1.1 | Constitutional Manifest v1.0 locked          | <span style="color:#2e7d32">LOCKED</span> | —            | Manifest ratified by GREG; phase semantics and dominance hierarchy explicit. |
-| L1.2 | Boundary Doctrine locked                     | <span style="color:#2e7d32">LOCKED</span> | L1.1         | Irreversible boundary definitions and phrase equality rules finalized.       |
-| L1.3 | Collapse Taxonomy locked                     | <span style="color:#2e7d32">LOCKED</span> | L1.1         | Collapse types (REF_SOFTENING, CONF_TO_DES, etc.) defined and immutable.     |
-| L1.4 | Golden Exemplars corpus locked               | <span style="color:#2e7d32">LOCKED</span> | L1.1–L1.3    | Governance exemplars set finalized; D.N.A validation protocol enforced.      |
-| L1.5 | Governance escalation (GREG) protocol locked | <span style="color:#2e7d32">LOCKED</span> | L1.1–L1.4    | Process for constitutional change defined; versioning rules in force.        |
+| L1.1 | Constitutional Manifest v1.0 locked          | LOCKED | —            | Manifest ratified by GREG; phase semantics and dominance hierarchy explicit. |
+| L1.2 | Boundary Doctrine locked                     | LOCKED | L1.1         | Irreversible boundary definitions and phrase equality rules finalized.       |
+| L1.3 | Collapse Taxonomy locked                     | LOCKED | L1.1         | Collapse types (REF_SOFTENING, CONF_TO_DES, etc.) defined and immutable.     |
+| L1.4 | Golden Exemplars corpus locked               | LOCKED | L1.1–L1.3    | Governance exemplars set finalized; D.N.A validation protocol enforced.      |
+| L1.5 | Governance escalation (GREG) protocol locked | LOCKED | L1.1–L1.4    | Process for constitutional change defined; versioning rules in force.        |
 
 
 **Dependencies**: None for new runtime work (Layer-1 is already locked).  
@@ -139,21 +295,21 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Compile constitutional judgment into a mutation-stable, deterministic, training-grade dataset and SFT model **without altering semantics**. Covers Stage-1–Stage-8: base mapping → variants → mutation harness → freeze → SFT.
 
-**Current status**: <span style="color:#2e7d32">**COMPLETE / LOCKED**</span>
+**Current status**: **COMPLETE / LOCKED**
 
 #### 4.2.1 Stages and Status
 
 
 | Stage | Name                        | Status | Dependencies | Exit criteria                                                                 |
 | ----- | --------------------------- | ------ | ------------ | ----------------------------------------------------------------------------- |
-| S1    | Structural mapping          | <span style="color:#2e7d32">LOCKED</span> | L1.*         | Governance exemplars mapped to product surfaces; no new semantics introduced. |
-| S2    | Artifact extraction         | <span style="color:#2e7d32">LOCKED</span> | S1           | Instructions, context, reasoning, boundaries, postures extracted losslessly.  |
-| S3    | Base stabilization          | <span style="color:#2e7d32">LOCKED</span> | S2           | Bases pass D.N.A; boundaries and phases stable; REF dominance preserved.      |
-| S4    | Variant generation          | <span style="color:#2e7d32">LOCKED</span> | S3           | 4 variants per base; same boundary, phase, posture; single mutation axis.     |
-| S5    | Variant stability gate      | <span style="color:#2e7d32">LOCKED</span> | S4           | All variants pass POST-DRAFT D.N.A; no optimism drift or boundary aliasing.   |
-| S6    | Mutation harness (6A/6B/6C) | <span style="color:#2e7d32">LOCKED</span> | S5           | Stage-6C PASS; collapse vectors fully classified; freeze unblocked.           |
-| S7    | Dataset freeze              | <span style="color:#2e7d32">LOCKED</span> | S6           | Freeze manifest locked; corpus hash, variant counts, phase distribution set.  |
-| S8    | SFT training                | <span style="color:#2e7d32">LOCKED</span> | S7           | SFT / adapter training complete; invariance audit PASS; release approved.     |
+| S1    | Structural mapping          | LOCKED | L1.*         | Governance exemplars mapped to product surfaces; no new semantics introduced. |
+| S2    | Artifact extraction         | LOCKED | S1           | Instructions, context, reasoning, boundaries, postures extracted losslessly.  |
+| S3    | Base stabilization          | LOCKED | S2           | Bases pass D.N.A; boundaries and phases stable; REF dominance preserved.      |
+| S4    | Variant generation          | LOCKED | S3           | 4 variants per base; same boundary, phase, posture; single mutation axis.     |
+| S5    | Variant stability gate      | LOCKED | S4           | All variants pass POST-DRAFT D.N.A; no optimism drift or boundary aliasing.   |
+| S6    | Mutation harness (6A/6B/6C) | LOCKED | S5           | Stage-6C PASS; collapse vectors fully classified; freeze unblocked.           |
+| S7    | Dataset freeze              | LOCKED | S6           | Freeze manifest locked; corpus hash, variant counts, phase distribution set.  |
+| S8    | SFT training                | LOCKED | S7           | SFT / adapter training complete; invariance audit PASS; release approved.     |
 
 
 #### 4.2.2 Layer-2 Closure Evidence (Summary)
@@ -185,27 +341,29 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 #### 4.3.1 Layer-3 Milestones (canonical M3.0–M3.18)
 
-| ID    | Milestone                          | Status      | Dependencies   | Deliverable / exit criteria summary                                                                 |
-| ----- | ---------------------------------- | ----------- | -------------- | ---------------------------------------------------------------------------------------------------- |
-| M3.0  | Deterministic Runtime Emulator     | <span style="color:#2e7d32">COMPLETE</span>    | L2.*           | Plan-gate emulator + shadow runner + invariant tests. see §6.2.                                       |
-| M3.1  | Deterministic Agent State Transition Table | <span style="color:#2e7d32">COMPLETE</span>    | Plan-Gate contract | State enum, terminal states, stop reasons, transition matrix. see §6.3.                               |
-| M3.2  | Repository Context Engine          | <span style="color:#2e7d32">COMPLETE</span>    | L2.*           | Context bundles, versioned and reproducible. see §4.3.2 (M3.2).                                       |
-| M3.3  | Agent Loop Orchestrator            | <span style="color:#2e7d32">COMPLETE</span>    | M3.2, M3.1     | Loop controller, transition executor, no model-controlled recursion. see §6.4, §6.12.                 |
-| M3.4  | Execution Sandbox                  | <span style="color:#2e7d32">COMPLETE</span>    | M3.2–M3.3      | Isolated executor, REFUSED/BLOCKED/EXECUTED, ledger. see §6.8.                                         |
-| M3.5  | Plan-Gate Integration              | <span style="color:#2e7d32">COMPLETE</span>    | M3.2–M3.4      | All paths through Plan-Gate; four postures; decisions ledgered. see §6.9.                            |
-| M3.6  | Internal Plan-Gate Decomposition   | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | AuthorityValidator, IrreversibilityDetector, JudgeGate. see §6.10.                                    |
-| M3.7  | IDE Plugin Integration             | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | Plugin → Plan-Gate → ledger; /v0/execute; 30 tests. see §6.7.                                          |
-| M3.8  | Ledger Emission / Replay            | <span style="color:#2e7d32">COMPLETE</span>    | M3.5           | Ledger completeness, replay, join contract. see §6.12.                                                |
-| M3.9  | Shadow Mode Validation              | <span style="color:#2e7d32">COMPLETE</span>    | M3.0–M3.8      | Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.                                |
-| M3.10 | Sandbox driver abstraction         | <span style="color:#2e7d32">COMPLETE</span>    | M3.4           | Abstraction layer for sandbox execution drivers. see §6.13.                                          |
-| M3.11 | Container sandbox runtime           | <span style="color:#2e7d32">COMPLETE</span>    | M3.10          | Container-based sandbox implementing driver abstraction. see §6.14.                                  |
-| M3.12 | Documentation ingestion            | <span style="color:#e65100">**VALIDATING**</span> (integration) | M3.0–M3.9      | Narrow repo-aware manifest / **`doc_selector`** path merged on **`feature/l5-context-layer-v1-ask-packaging`** (see **§6.16**); prior report: `docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md`. **Merge to `main`** still pending when integration owners promote. |
-| M3.13 | Jira ingestion                     | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest Jira data.                                                                         |
-| M3.14 | PR ingestion                       | <span style="color:#757575">NOT_STARTED</span> | M3.0–M3.9      | Pipeline to ingest PR data.                                                                           |
-| M3.15 | Jira cleaning pipeline             | <span style="color:#757575">NOT_STARTED</span> | M3.13          | Clean and normalize Jira data.                                                                        |
-| M3.16 | PR signal extraction               | <span style="color:#757575">NOT_STARTED</span> | M3.14          | Extract signals from PR data.                                                                         |
-| M3.17 | Task schema                        | <span style="color:#2e7d32">**COMPLETE**</span> (L5 branch) | M3.0–M3.9      | Initial task-model slice + C1 trace alignment merged on **`feature/l5-context-layer-v1-ask-packaging`** (see **§6.16**). **M3.18** harness / broader evaluation scope still open. |
-| M3.18 | Task evaluation harness            | <span style="color:#757575">NOT_STARTED</span> | M3.17          | Harness to evaluate tasks against governance and runtime contracts.                                   |
+
+| ID    | Milestone                                  | Status                       | Dependencies       | Deliverable / exit criteria summary                                                                                                                                                                                                                                       |
+| ----- | ------------------------------------------ | ---------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M3.0  | Deterministic Runtime Emulator             | COMPLETE                     | L2.*               | Plan-gate emulator + shadow runner + invariant tests. see §6.2.                                                                                                                                                                                                           |
+| M3.1  | Deterministic Agent State Transition Table | COMPLETE                     | Plan-Gate contract | State enum, terminal states, stop reasons, transition matrix. see §6.3.                                                                                                                                                                                                   |
+| M3.2  | Repository Context Engine                  | COMPLETE                     | L2.*               | Context bundles, versioned and reproducible. see §4.3.2 (M3.2).                                                                                                                                                                                                           |
+| M3.3  | Agent Loop Orchestrator                    | COMPLETE                     | M3.2, M3.1         | Loop controller, transition executor, no model-controlled recursion. see §6.4, §6.12.                                                                                                                                                                                     |
+| M3.4  | Execution Sandbox                          | COMPLETE                     | M3.2–M3.3          | Isolated executor, REFUSED/BLOCKED/EXECUTED, ledger. see §6.8.                                                                                                                                                                                                            |
+| M3.5  | Plan-Gate Integration                      | COMPLETE                     | M3.2–M3.4          | All paths through Plan-Gate; four postures; decisions ledgered. see §6.9.                                                                                                                                                                                                 |
+| M3.6  | Internal Plan-Gate Decomposition           | COMPLETE                     | M3.5               | AuthorityValidator, IrreversibilityDetector, JudgeGate. see §6.10.                                                                                                                                                                                                        |
+| M3.7  | IDE Plugin Integration                     | COMPLETE                     | M3.5               | Plugin → Plan-Gate → ledger; /v0/execute; 30 tests. see §6.7.                                                                                                                                                                                                             |
+| M3.8  | Ledger Emission / Replay                   | COMPLETE                     | M3.5               | Ledger completeness, replay, join contract. see §6.12.                                                                                                                                                                                                                    |
+| M3.9  | Shadow Mode Validation                     | COMPLETE                     | M3.0–M3.8          | Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.                                                                                                                                                                                                   |
+| M3.10 | Sandbox driver abstraction                 | COMPLETE                     | M3.4               | Abstraction layer for sandbox execution drivers. see §6.13.                                                                                                                                                                                                               |
+| M3.11 | Container sandbox runtime                  | COMPLETE                     | M3.10              | Container-based sandbox implementing driver abstraction. see §6.14.                                                                                                                                                                                                       |
+| M3.12 | Documentation ingestion                    | **VALIDATING** (integration) | M3.0–M3.9          | Narrow repo-aware manifest / `**doc_selector`** path merged on `**feature/l5-context-layer-v1-ask-packaging**` (see **§6.16**); prior report: `docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md`. **Merge to `main`** still pending when integration owners promote. |
+| M3.13 | Jira ingestion                             | NOT_STARTED                  | M3.0–M3.9          | Pipeline to ingest Jira data.                                                                                                                                                                                                                                             |
+| M3.14 | PR ingestion                               | NOT_STARTED                  | M3.0–M3.9          | Pipeline to ingest PR data.                                                                                                                                                                                                                                               |
+| M3.15 | Jira cleaning pipeline                     | NOT_STARTED                  | M3.13              | Clean and normalize Jira data.                                                                                                                                                                                                                                            |
+| M3.16 | PR signal extraction                       | NOT_STARTED                  | M3.14              | Extract signals from PR data.                                                                                                                                                                                                                                             |
+| M3.17 | Task schema                                | **COMPLETE** (L5 branch)     | M3.0–M3.9          | Initial task-model slice + C1 trace alignment merged on `**feature/l5-context-layer-v1-ask-packaging`** (see **§6.16**). **M3.18** harness / broader evaluation scope still open.                                                                                         |
+| M3.18 | Task evaluation harness                    | NOT_STARTED                  | M3.17              | Harness to evaluate tasks against governance and runtime contracts.                                                                                                                                                                                                       |
+
 
 > Note: These Layer-3 milestones are **execution milestones** and do not redefine doctrine. They implement the runtime-governed agent architecture described in the Layer-3 specs.
 
@@ -455,6 +613,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 **Priority note:** Layer-3 runtime MVP is **complete on main**; Track-C closure is **done** — ongoing work is maintenance and Layer-5 integration touchpoints, not “unblocking L4.”
 
 **Track-C (Runtime Observation Query Layer)**  
+
 - **C1** Execution Trace Builder: deterministic trace reconstruction by request_id / canonical_hash (latest request group).  
 - **C2** Execution Explanation Builder: deterministic explanation from trace.  
 - **C3** Runtime Query Surface: CLI for summary, request trace/explanation, canonical_hash trace/explanation.  
@@ -465,14 +624,15 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 *M4.1–M4.6 merged to main 2026-03-15. See `docs/reports/M4X_MAIN_MERGE_COMPLETION.md`. Track-C final closure 2026-03-17.*
 
-| ID   | Milestone                   | Status      | Dependencies | Deliverable                                                              | Exit criteria                                                                               |
-| ---- | --------------------------- | ----------- | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| M4.1 | Ledger Ingestion            | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M3.8         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
-| M4.2 | Drift Baseline              | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors.      | Baselines established for key metrics; thresholds approved by governance stakeholders.      |
-| M4.3 | Collapse Vector Tracking    | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior.           | All detected collapses are classified; unclassified collapses trigger alerts.               |
-| M4.4 | Ledger Reconciliation       | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.               | Ability to trace changes in behavior across releases and runtime environments.              |
-| M4.5 | GREG Governance Escalation  | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1–M4.4    | Automated pathways for generating evidence packages and triggering GREG. | Drift above threshold results in deterministic escalation with complete evidence bundles.   |
-| M4.6 | Runtime Performance Metrics | <span style="color:#2e7d32">**COMPLETE**</span> (main) | M4.1–M4.4    | Metrics and dashboards for runtime performance and invariance.           | Key runtime and invariance metrics available to stakeholders; alerts wired into operations. |
+
+| ID   | Milestone                   | Status              | Dependencies | Deliverable                                                              | Exit criteria                                                                               |
+| ---- | --------------------------- | ------------------- | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| M4.1 | Ledger Ingestion            | **COMPLETE** (main) | M3.8         | Service/pipeline ingesting runtime ledger rows into observation storage. | All ledger_row.v0.1 events of interest are reliably ingested and queryable.                 |
+| M4.2 | Drift Baseline              | **COMPLETE** (main) | M4.1         | Baseline distributions of phases, boundaries, and collapse vectors.      | Baselines established for key metrics; thresholds approved by governance stakeholders.      |
+| M4.3 | Collapse Vector Tracking    | **COMPLETE** (main) | M4.1–M4.2    | Online classification of collapse vectors in runtime behavior.           | All detected collapses are classified; unclassified collapses trigger alerts.               |
+| M4.4 | Ledger Reconciliation       | **COMPLETE** (main) | M4.1         | Tools to reconcile pre-SFT, post-SFT, and runtime ledgers.               | Ability to trace changes in behavior across releases and runtime environments.              |
+| M4.5 | GREG Governance Escalation  | **COMPLETE** (main) | M4.1–M4.4    | Automated pathways for generating evidence packages and triggering GREG. | Drift above threshold results in deterministic escalation with complete evidence bundles.   |
+| M4.6 | Runtime Performance Metrics | **COMPLETE** (main) | M4.1–M4.4    | Metrics and dashboards for runtime performance and invariance.           | Key runtime and invariance metrics available to stakeholders; alerts wired into operations. |
 
 
 **Dependencies**: Layer-3 ledger emission and runtime invariants; Layer-1 doctrine for drift definitions; Layer-2 for pre-SFT invariance baselines.  
@@ -480,25 +640,41 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ---
 
-### 4.5 Layer-5 — Workspace Intelligence / Evidence-Driven Ask
+### LAYER 5 — CONTEXT LAYER & ASK SYSTEM
+
+Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
+
+#### Completed
+- L5.1 → L5.6: Indexing, retrieval, evidence schema, Ask path integration
+
+#### In Progress / Not Started
+- L5.7: Dirty buffer overlay
+- L5.8: Grounded Ask validation
+- L5.9: Compatibility path hardening
+
+#### New Required Tracks
+- L5-RET: Retrieval Quality Remediation
+- L5-OBS: Observability & Tracing
+- L5-UX: Plugin Truthfulness Alignment
 
 **Purpose**: Establish a workspace intelligence layer in WSL that performs workspace-local retrieval and deterministic evidence assembly before Plan-Gate evaluation. Layer-5 defines the structured evidence-bundle contract into Plan-Gate, reduces dependence on remote repo-path assumptions (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) to compatibility-only behavior, and does not redesign Layer-1 governance semantics or Layer-3 execution authority.
 
-**Current status**: <span style="color:#e65100">**VALIDATING**</span> (integration A7/A8 complete; **backend** HTTP validation provable; **plugin alignment + observability** per **§1** — not full production e2e until gates pass)  
 **Priority**: **CRITICAL**
 
-| ID   | Milestone | Status | Dependencies | Deliverable / exit criteria summary |
-| ---- | --------- | ------ | ------------ | ----------------------------------- |
-| L5.0 | Grounded Ask Spike (Wave-1 / A1) | <span style="color:#2e7d32">COMPLETE</span> | — | Provisional workspace-local retrieval spike; grounded evidence output proven (`workspace_intelligence/spikes/`). Not final L5.2/L5.3 architecture. |
-| L5.1 | Workspace Resolver baseline (Wave-1 / A2) | <span style="color:#2e7d32">COMPLETE</span> | M3.7 | Resolver + local API skeleton (`runtime/layer5/`). Canonical workspace identity + path normalization contract. |
-| L5.2 | Deterministic Index MVP (Wave-2 / A4) | <span style="color:#2e7d32">COMPLETE</span> | L5.1, M3.2 | **A4:** deterministic file-level index (`runtime/layer5/index/`), `canonical_json` lifecycle, full rebuild; excludes graph/symbol/AST. |
-| L5.3 | Retrieval Foundation (Wave-2 / A5) | <span style="color:#2e7d32">COMPLETE</span> | L5.2 | **A5:** lexical deterministic retrieval (`runtime/layer5/retrieval/`), `(-score, relative_path)` ranking, breakdown; not graph/symbol lanes. |
-| L5.4 | Snippet + Evidence Builder (Wave-2 / A6) | <span style="color:#2e7d32">COMPLETE</span> | L5.3 | **A6:** bounded snippets + bundle assembly (`runtime/layer5/evidence/`). Evidence contract freeze — see **§4.5.1a** below. |
-| L5.5 | Plugin Evidence Bridge (A7) | <span style="color:#2e7d32">COMPLETE</span> | L5.1–L5.4, M3.7 | Evidence-first: **WSL HTTP** `POST /v1/export_evidence` (wheel) or CLI / dev script → `ask_request.v1.0` → `POST /v1/ask`; controlled v0 fallback only when Context Layer **unreachable**; UI treats `evidence_bundle` as primary. See **§6.15**. |
-| L5.6 | Plan-Gate Evidence Ingestion (A8) | <span style="color:#2e7d32">COMPLETE</span> | L5.4–L5.5, M3.5 | Plan-Gate `POST /v1/ask` validates/consumes `layer5.evidence_bundle.v1`; reasoning from bundle only (no repo ContextEngine on v1 path). See **§6.15**. |
-| L5.7 | Dirty Buffer / Live File Overlay | <span style="color:#757575">NOT_STARTED</span> | L5.5 | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth. |
-| L5.8 | Grounded Ask Validation + Metrics | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.7, L4 | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking. |
-| L5.9 | Compatibility Path Deprecation / Hardening | <span style="color:#757575">NOT_STARTED</span> | L5.6–L5.8 | Compatibility transition with feature flags, controlled fallback path, and telemetry comparison between compatibility and workspace-local evidence paths before hardening default. |
+
+| ID   | Milestone                                  | Status      | Dependencies    | Deliverable / exit criteria summary                                                                                                                                                                                                               |
+| ---- | ------------------------------------------ | ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L5.0 | Grounded Ask Spike (Wave-1 / A1)           | COMPLETE    | —               | Provisional workspace-local retrieval spike; grounded evidence output proven (`workspace_intelligence/spikes/`). Not final L5.2/L5.3 architecture.                                                                                                |
+| L5.1 | Workspace Resolver baseline (Wave-1 / A2)  | COMPLETE    | M3.7            | Resolver + local API skeleton (`runtime/layer5/`). Canonical workspace identity + path normalization contract.                                                                                                                                    |
+| L5.2 | Deterministic Index MVP (Wave-2 / A4)      | COMPLETE    | L5.1, M3.2      | **A4:** deterministic file-level index (`runtime/layer5/index/`), `canonical_json` lifecycle, full rebuild; excludes graph/symbol/AST.                                                                                                            |
+| L5.3 | Retrieval Foundation (Wave-2 / A5)         | COMPLETE    | L5.2            | **A5:** lexical deterministic retrieval (`runtime/layer5/retrieval/`), `(-score, relative_path)` ranking, breakdown; not graph/symbol lanes.                                                                                                      |
+| L5.4 | Snippet + Evidence Builder (Wave-2 / A6)   | COMPLETE    | L5.3            | **A6:** bounded snippets + bundle assembly (`runtime/layer5/evidence/`). Evidence contract freeze — see **§4.5.1a** below.                                                                                                                        |
+| L5.5 | Plugin Evidence Bridge (A7)                | COMPLETE    | L5.1–L5.4, M3.7 | Evidence-first: **WSL HTTP** `POST /v1/export_evidence` (wheel) or CLI / dev script → `ask_request.v1.0` → `POST /v1/ask`; controlled v0 fallback only when Context Layer **unreachable**; UI treats `evidence_bundle` as primary. See **§6.15**. |
+| L5.6 | Plan-Gate Evidence Ingestion (A8)          | COMPLETE    | L5.4–L5.5, M3.5 | Plan-Gate `POST /v1/ask` validates/consumes `layer5.evidence_bundle.v1`; reasoning from bundle only (no repo ContextEngine on v1 path). See **§6.15**.                                                                                            |
+| L5.7 | Dirty Buffer / Live File Overlay           | NOT_STARTED | L5.5            | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth.                                                                                                         |
+| L5.8 | Grounded Ask Validation + Metrics          | NOT_STARTED | L5.6–L5.7, L4   | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking.                                                                                        |
+| L5.9 | Compatibility Path Deprecation / Hardening | NOT_STARTED | L5.6–L5.8       | Compatibility transition with feature flags, controlled fallback path, and telemetry comparison between compatibility and workspace-local evidence paths before hardening default.                                                                |
+
 
 #### 4.5.1a L5.4 — Evidence contract (freeze)
 
@@ -531,11 +707,13 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 - L5.9 must operationalize migration from compatibility path via feature flags, fallback semantics, and telemetry-based comparison gates.
 
 **Dependencies**:  
+
 - Upstream: existing Layer-3 runtime and plugin bridge remain stable.  
 - New: Workspace Intelligence Layer contract and evidence bundle schema.
 - Compatibility note: GPU-side direct repo access behavior (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) is compatibility-only during migration, not the primary architecture.
 
 **Layer exit criteria**:  
+
 - Workspace-local retrieval produces deterministic grounded evidence bundles.  
 - Ask path consumes evidence bundles and returns internally consistent files/selectors/plan surfaces.
 
@@ -553,21 +731,22 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Backend path validation + plugin alignment + production gates** — **not** claiming “full e2e production-ready” until **§1.3** + **Track OBS** are satisfied. Sequentially: (1) **`docs/Backend Production Validation Sheet.md`** proves **Context Layer → `/v1/ask`** (and related scenarios) without IDE; (2) **`docs/JetBrains Plugin Defect Isolation Sheet.md`** compares IDE to known-good backend; (3) close **§1.3** checklist items (path visibility, notes, execute honesty, tracing).
+- **Current objective**: **Backend path validation + plugin alignment + production gates** — **not** claiming “full e2e production-ready” until **§1.3** + **Track OBS** are satisfied. Sequentially: (1) `**docs/Backend Production Validation Sheet.md`** proves **Context Layer → `/v1/ask`** (and related scenarios) without IDE; (2) `**docs/JetBrains Plugin Defect Isolation Sheet.md**` compares IDE to known-good backend; (3) close **§1.3** checklist items (path visibility, notes, execute honesty, tracing).
 - **Active tasks**:
-  - Run deployment/validation flow using **`docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + indexed repo path; **Windows** = plugin + tunnels as documented. Treat **`docs/MOTADATA_DEMO_SCENARIOS.md`** as **acceptance scenarios**, not “demo-only.”
+  - Run deployment/validation flow using `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + indexed repo path; **Windows** = plugin + tunnels as documented. Treat `**docs/MOTADATA_DEMO_SCENARIOS.md`** as **acceptance scenarios**, not “demo-only.”
   - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4) where applicable; **plugin** must have **evidence-first ON** for apples-to-apples comparison with backend `/v1/ask` scripts.
-  - Plan-Gate `/version` must show **`ask_request_v1`**. **Full Explain/Debug stack** requires vLLM + **`MOTADATA_EXPLAIN_VLLM_URL`** (see runbook). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production validation path.
+  - Plan-Gate `/version` must show `**ask_request_v1`**. **Full Explain/Debug stack** requires vLLM + `**MOTADATA_EXPLAIN_VLLM_URL`** (see runbook). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production validation path.
+  - **B1 re-test (PR-2.1 intent-rule fix) recorded:** query `Which files implement topology anomaly scoring pipeline?` now classifies as `CODE_INTENT` (previously `GENERIC_INTENT`), with truthful `WEAK` quality and caveat note when evidence remains noise-dominated. This is a **control-layer correctness pass**, not yet a retrieval-dominance pass (see `docs/Backend Production Validation Sheet.md` B1 addendum).
 - **Next 3 milestones** (actual upcoming work):
-  1. **Production slice gate** — <span style="color:#e65100">IN_PROGRESS</span> (backend ✅ scriptable; **plugin + observability** per **§1** — rename mentally: not “E2E theater”)
-  2. **L5.7** Dirty Buffer / Live File Overlay — <span style="color:#757575">NOT_STARTED</span>
-  3. **L5.8** Grounded Ask Validation + Metrics — <span style="color:#757575">NOT_STARTED</span> (overlaps **§1.4 L5-RET-VALIDATION**; **L5-OBS-1** tracked separately in **§1.4**)
+  1. **Production slice gate** — IN_PROGRESS (backend ✅ scriptable; **plugin + observability** per **§1** — rename mentally: not “E2E theater”)
+  2. **L5.7** Dirty Buffer / Live File Overlay — NOT_STARTED
+  3. **L5.8** Grounded Ask Validation + Metrics — NOT_STARTED (overlaps **§1.4 L5-RET-VALIDATION**; **L5-OBS-1** tracked separately in **§1.4**)
 - **Related (M3.12):** Manifest + `doc_selector` repo-aware slice **merged** into `feature/l5-context-layer-v1-ask-packaging`. **M3.13** (Jira) / **M3.14** (PR) ingestion — NOT_STARTED.
 - **Current blockers**:
   - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
   - Resolver test env fragility (**Caveat-F1**); harness latency vs spine (**Caveat-F2**).
 - **Immediate next action**:
-  - Push **`feature/l5-context-layer-v1-ask-packaging`** after review; delete **local** merged topic branches (`feature/m3.12-narrow-context-engine`, `cursor/m3.12-narrow-context-engine`, `integration/m3.12-context-demo`, `feature/m3.17-task-schema`, `feature/jetbrains-plugin-golden-demo-path`) to reduce clutter — **do not** delete `integration/l5-wave1-foundation` until integration owners confirm.
+  - Push `**feature/l5-context-layer-v1-ask-packaging*`* after review; delete **local** merged topic branches (`feature/m3.12-narrow-context-engine`, `cursor/m3.12-narrow-context-engine`, `integration/m3.12-context-demo`, `feature/m3.17-task-schema`, `feature/jetbrains-plugin-golden-demo-path`) to reduce clutter — **do not** delete `integration/l5-wave1-foundation` until integration owners confirm.
   - Execute validation path from runbook + validation sheets; file environment breakages as tickets (not contract redesign).
 
 ---
@@ -590,7 +769,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.2 M3.0 — Deterministic Runtime Emulator
 
-- **Milestone**: M3.0 Deterministic Runtime Emulator — <span style="color:#2e7d32">COMPLETE</span> (2026-03-09)
+- **Milestone**: M3.0 Deterministic Runtime Emulator — COMPLETE (2026-03-09)
 - **Artifacts** (6/6):
   - `runtime/plan_gate_stub/plan_gate.py` — PlanGate class with `evaluate_plan()` method
   - `runtime/emulator/authority.py` — AuthorityChecker with deterministic rule-based validation
@@ -613,7 +792,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.3 M3.1 — Deterministic Agent State Transition Table
 
-- **Milestone**: M3.1 Deterministic Agent State Transition Table — <span style="color:#2e7d32">COMPLETE</span> (2026-03-10)
+- **Milestone**: M3.1 Deterministic Agent State Transition Table — COMPLETE (2026-03-10)
 - **Artifacts** (3/3):
   - `docs/runtime/RUNTIME_STATE_TRANSITIONS.md` — deterministic runtime state transition contract (runtime-owned control, terminal states, stop reasons, plan-gate checkpoints, decision-boundary ledger semantics)
   - `runtime/state/schemas/state_enums.v0.1.json` — state + stop_reason enums (13 states including `PLAN_EVALUATED`)
@@ -625,7 +804,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.4 M3.3 — Agent Loop Orchestrator (Scaffold)
 
-- **Milestone**: M3.3 Agent Loop Orchestrator — <span style="color:#2e7d32">COMPLETE</span> (2026-03-13); **final integration via §6.12.**
+- **Milestone**: M3.3 Agent Loop Orchestrator — COMPLETE (2026-03-13); **final integration via §6.12.**
 - **Artifacts (scaffold)**:
   - `runtime/state/store.py` — Task state store (in-memory + optional JSON persistence)
   - `runtime/state/transitions.py` — transition validator enforcing `transition_matrix.v0.1.json`
@@ -647,7 +826,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.7 M3.7 — IDE Plugin Integration (RuntimeBridge + Governed Actions)
 
-- **Milestone**: M3.7 IDE Plugin Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **MVP scope: commit interception, ask flow, /v0/execute with decision ledgering and production governance.**
+- **Milestone**: M3.7 IDE Plugin Integration — COMPLETE (2026-03-12); **MVP scope: commit interception, ask flow, /v0/execute with decision ledgering and production governance.**
 - **Artifacts** (11+):
   - **Plugin RuntimeBridge abstraction**:
     - `jetbrains-plugin/.../bridge/RuntimeBridge.kt` — Single integration point for all runtime calls.
@@ -672,10 +851,9 @@ This section records **evidence of completed milestones**. Entries should be **a
   - **Tests:** pytest `runtime/tests/test_execute_service.py` — 30 passed (decision ledgering, explicit flags, shlex, no keyword path).
 - **Scope (MVP):** Commit interception, ask flow, explicit runtime execution, fail-closed bridge. Not in MVP: push interception, full IDE coverage, plugin E2E in running IDE.
 
-
 ### 6.8 M3.4 — Execution Sandbox (CODE Phase)
 
-- **Milestone**: M3.4 Execution Sandbox — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **closed for MVP; demo closure and local evidence complete.**
+- **Milestone**: M3.4 Execution Sandbox — COMPLETE (2026-03-12); **closed for MVP; demo closure and local evidence complete.**
 - **Artifacts** (6/6):
   - `runtime/sandbox/sandbox_runner.py` — SandboxRunner with subprocess execution, timeout enforcement, artifact capture
   - `runtime/sandbox/sandbox_policy.py` — SandboxPolicy with command allowlist, time limits, env filtering
@@ -702,7 +880,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.9 M3.5 — Plan-Gate Integration
 
-- **Milestone**: M3.5 Plan-Gate Integration — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
+- **Milestone**: M3.5 Plan-Gate Integration — COMPLETE (2026-03-12); **all execution paths flow through Plan-Gate before sandbox; posture-complete (refuse, defer, bounded_allow, safe_execute).**
 - **Artifacts** (6/6):
   - `runtime/plangate/plangate_decision.py` — PlanGateDecision (posture: refuse | defer | bounded_allow | safe_execute; authority_ok, boundary_detected, irreversible, reason); to_dict/from_dict.
   - `runtime/plangate/plangate_service.py` — PlanGateService.evaluate(request) → PlanGateDecision; deterministic rule-based (REFUSED_COMMANDS, plan_gate_defer, plan_gate_refuse, plan_gate_bounded_allow); no LLM.
@@ -720,7 +898,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.10 M3.6 — Internal Plan-Gate Decomposition
 
-- **Milestone**: M3.6 Internal Plan-Gate Decomposition — <span style="color:#2e7d32">COMPLETE</span> (2026-03-12); **Plan-Gate internally decomposed into explicit first-class subcomponents; external contract unchanged.**
+- **Milestone**: M3.6 Internal Plan-Gate Decomposition — COMPLETE (2026-03-12); **Plan-Gate internally decomposed into explicit first-class subcomponents; external contract unchanged.**
 - **Artifacts** (7/7):
   - `runtime/plangate/contracts.py` — AuthorityResult, IrreversibilityResult, JudgeInput dataclasses.
   - `runtime/plangate/authority_validator.py` — AuthorityValidator component; validates requester authority.
@@ -747,7 +925,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.12 Layer-3 Integration (M3.3, M3.8, M3.9)
 
-- **Milestone**: M3.3 Agent Loop Orchestrator, M3.8 Ledger Emission/Replay, M3.9 Shadow Mode Validation — <span style="color:#2e7d32">COMPLETE</span> (2026-03-13). This section documents the final integration of these milestones on main (tag `layer3-runtime-governed-v1`).
+- **Milestone**: M3.3 Agent Loop Orchestrator, M3.8 Ledger Emission/Replay, M3.9 Shadow Mode Validation — COMPLETE (2026-03-13). This section documents the final integration of these milestones on main (tag `layer3-runtime-governed-v1`).
 - **Merge**:
   - Branch merged: `integration/layer3-next-verification` (merged into `main` with `--no-ff`)
   - Merge commit: `23395b60bb72d70d01fbb6750c1ffb70760c3dcd`
@@ -760,7 +938,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.13 M3.10 — Sandbox Driver Abstraction
 
-- **Milestone**: M3.10 Sandbox Driver Abstraction — <span style="color:#2e7d32">COMPLETE</span> (merged to main).
+- **Milestone**: M3.10 Sandbox Driver Abstraction — COMPLETE (merged to main).
 - **Artifacts**:
   - `runtime/sandbox/sandbox_driver.py` — SandboxDriver protocol, BaseSandboxDriver(ABC), LocalProcessSandboxDriver; driver_name for observability.
   - `runtime/sandbox/sandbox_executor.py` — Optional `driver` parameter; delegates to `_driver.run` / `_driver.validate_only`; default LocalProcessSandboxDriver.
@@ -773,7 +951,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.14 M3.11 — Container Sandbox Runtime
 
-- **Milestone**: M3.11 Container Sandbox Runtime — <span style="color:#2e7d32">COMPLETE</span> (merged to main).
+- **Milestone**: M3.11 Container Sandbox Runtime — COMPLETE (merged to main).
 - **Container driver file**: `runtime/sandbox/container_sandbox_driver.py` — ContainerSandboxDriver(BaseSandboxDriver), driver_name = "container"; run/validate_only via podman/docker; workspace mount, exec form, timeout, --rm.
 - **Tests passed**: pytest `runtime/tests/test_sandbox_runner.py` (37), `runtime/tests/test_sandbox_driver.py` (12), `runtime/tests/test_transition_executor.py` (26), `runtime/tests/test_sandbox_demo_e2e.py` (12), `runtime/tests/test_container_sandbox_driver.py` (17 passed, 1 skipped when no runtime). **Total: 105 passed, 1 skipped.**
 - **Demo result**: `python3 -m runtime.sandbox.demo_governed_execution` — 7 ledger rows; refused / blocked / executed semantics preserved; DES → CODE execution and governance unchanged.
@@ -787,13 +965,13 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.15 L5.5 / L5.6 — Wave-3 integration (A7 Plugin + A8 Plan-Gate `/v1/ask`)
 
-- **Milestones**: **L5.5 (A7)** Plugin Evidence Bridge — <span style="color:#2e7d32">COMPLETE</span> (2026-03-21); **L5.6 (A8)** Plan-Gate Evidence Ingestion — <span style="color:#2e7d32">COMPLETE</span> (2026-03-21).
+- **Milestones**: **L5.5 (A7)** Plugin Evidence Bridge — COMPLETE (2026-03-21); **L5.6 (A8)** Plan-Gate Evidence Ingestion — COMPLETE (2026-03-21).
 - **Artifacts (summary)**:
   - **Runtime / Plan-Gate:** `runtime/plan_gate_service/app.py` — `POST /v1/ask`; `runtime/ask_service/v1_ingest.py`; `runtime/ide/schemas/ask_request.v1.0.schema.json`; `runtime/ask_service/evidence_bridge.py` — `context_bundle_from_evidence_dict`; `runtime/tests/test_ask_v1_ingest.py`.
   - **WSL export (primary):** `packaging/motadata-context-layer/` wheel; `runtime/context_layer_service/` — `GET /healthz`, `POST /v1/export_evidence`; dev fallback `runtime/scripts/layer5_export_evidence.py`.
   - **Plugin:** `jetbrains-plugin/.../bridge/RuntimeBridge.kt`, `Layer5EvidenceExporter.kt`, `EvidenceExportOutcome.kt`, `AskV1Contract.kt`; default Context Layer URL `http://127.0.0.1:8091`; Plan-Gate default `http://127.0.0.1:8089` (see runbook for remote GPU).
 - **Contract outcomes**:
-  - Evidence-first uses real **`ask_request.v1.0`** and **`POST /v1/ask`** (not v0 `evidence_first` bolt-on for the primary path).
+  - Evidence-first uses real `**ask_request.v1.0`** and `**POST /v1/ask**` (not v0 `evidence_first` bolt-on for the primary path).
   - Listed v1 contract failures (`evidence_schema_invalid`, `identity_mismatch`, `empty_evidence_bundle`, `ask_envelope_invalid`) **do not** silently fall back to legacy.
   - Controlled fallback only: export/script failure, v1 **404/405**, or legacy mode (flag off).
 - **Evidence (automated)**:
@@ -803,16 +981,16 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `printf '<query>' | python3 runtime/scripts/layer5_export_evidence.py <repo_root>` → JSON evidence bundle.
   - `POST /v1/ask` with `ask_request.v1.0` + bundle (+ `expected_workspace_identity_hash` when hash non-empty) → `plan_only_response.v0.1`, `governance_posture=PLAN_ONLY`, `execution=false`, `evidence_first_meta.ask_path=v1_evidence`, non-empty `plan_summary.steps` (sample: 4 steps, 8 evidence entries).
 - **Evidence (pending — operational e2e)**:
-  - First full **Windows IDE + WSL Context Layer wheel + GPU Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID (checklist: **`docs/MOTADATA_DEMO_SCENARIOS.md`** §4).
+  - First full **Windows IDE + WSL Context Layer wheel + GPU Plan-Gate** run recorded by humans/CI when available; amend this subsection with transcript or run ID (checklist: `**docs/MOTADATA_DEMO_SCENARIOS.md`** §4).
 
 ### 6.16 Branch consolidation + M3.12 on L5 line (2026-03-21)
 
 - **Unified branch:** `feature/l5-context-layer-v1-ask-packaging` now **merge-parent** for:
-  - `feature/m3.12-narrow-context-engine` — `runtime/ask_service/handlers.py` gains **ManifestBuilder** + **`select_from_manifest`** (repo-aware file hints) while preserving **evidence_first**, **`ASK_DEFAULT_REPO_ROOT`**, **EXPLAIN_DEBUG**, and default **ContextEngine** selectors; `runtime/tests/test_ask_service.py` extended with M3.12 determinism tests.
+  - `feature/m3.12-narrow-context-engine` — `runtime/ask_service/handlers.py` gains **ManifestBuilder** + `**select_from_manifest`** (repo-aware file hints) while preserving **evidence_first**, `**ASK_DEFAULT_REPO_ROOT`**, **EXPLAIN_DEBUG**, and default **ContextEngine** selectors; `runtime/tests/test_ask_service.py` extended with M3.12 determinism tests.
   - `integration/m3.12-context-demo` — demo runbook / verification artifacts as merged.
-  - `feature/m3.17-task-schema` — task-model slice + **`docs/runtime/C1_EXECUTION_TRACE_BUILDER_RESULT.md`** unified (M3.17 pre-merge sign-off appended).
+  - `feature/m3.17-task-schema` — task-model slice + `**docs/runtime/C1_EXECUTION_TRACE_BUILDER_RESULT.md`** unified (M3.17 pre-merge sign-off appended).
 - **Operator docs (in-repo):** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md` (architecture); `docs/MOTADATA_DEMO_SETUP_RUNBOOK.md` (setup); `docs/MOTADATA_DEMO_SCENARIOS.md` (demo + success criteria).
-- **Local cleanup:** After push, safe to **`git branch -d`** the merged topic branches listed in **§5 Immediate next action** (local only unless coordinated for `origin`).
+- **Local cleanup:** After push, safe to `**git branch -d`** the merged topic branches listed in **§5 Immediate next action** (local only unless coordinated for `origin`).
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
@@ -859,3 +1037,6 @@ This file is the **single live progress dashboard** for the Motadata AI Coding A
   - Focus on concrete status, dependencies, exit criteria, and evidence.
 
 Following this protocol ensures that this tracker remains a durable, engineering-grade artifact that Cursor and humans can rely on for roadmap execution reviews.
+
+---
+

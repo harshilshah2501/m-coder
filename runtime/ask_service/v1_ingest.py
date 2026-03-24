@@ -16,6 +16,7 @@ from runtime.layer5.evidence.schema_validate import (
     EvidenceSchemaValidationError,
     validate_evidence_bundle_dict,
 )
+from runtime.layer5.retrieval.quality_gate import NO_MATCH, WEAK, assess_evidence_quality
 
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
@@ -105,6 +106,14 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     revision = str(ask_request.get("revision") or "").strip() or "evidence_bundle.v1"
     task_id = request_id or "ask-v1-task"
     bundle = context_bundle_from_evidence_dict(evidence_bundle, task_id=task_id, revision=revision)
+    quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+    metadata = {
+        "intent_type": quality.intent_type,
+        "evidence_quality": quality.evidence_quality,
+        "quality_reasons": list(quality.quality_reasons),
+        "dominance_metrics": quality.dominance_metrics,
+        "policy_version": quality.policy_version,
+    }
 
     selected_file = ask_request.get("selected_file")
     task_type = ask_request.get("task_type") or "general"
@@ -115,8 +124,39 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         else ""
     )
 
+    ingestion_meta = {
+        "ask_path": "v1_evidence",
+        "context_source": "layer5.evidence_bundle.v1",
+        "no_context_engine": True,
+    }
+    context_resolution = {
+        "context_source": "layer5.evidence_bundle.v1",
+        "no_repo_filesystem": True,
+    }
+    if quality.blocked:
+        block_message = (
+            "No context files matched relevant code evidence for this ask."
+            if quality.evidence_quality == NO_MATCH
+            else "No context files matched enough grounded evidence; plan steps are ungrounded."
+        )
+        return _build_plan_only_response(
+            request_id=request_id,
+            bundle=bundle,
+            plan_steps=[],
+            explain_debug=None,
+            context_resolution=context_resolution,
+            evidence_bundle=evidence_bundle,
+            evidence_first_meta=ingestion_meta,
+            ui_title="Grounding blocked (PLAN ONLY)",
+            ui_message=block_message,
+            ui_severity="warning",
+            repo_aware_notes=[block_message],
+            metadata=metadata,
+        )
+
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
+    weak_notes: List[str] = []
 
     if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
         result = explain_debug(
@@ -134,16 +174,8 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         planner = PlanOnlyPlanner()
         plan_summary = planner.plan(query=query, bundle=bundle)
         plan_steps = plan_summary.steps
-
-    ingestion_meta = {
-        "ask_path": "v1_evidence",
-        "context_source": "layer5.evidence_bundle.v1",
-        "no_context_engine": True,
-    }
-    context_resolution = {
-        "context_source": "layer5.evidence_bundle.v1",
-        "no_repo_filesystem": True,
-    }
+    if quality.evidence_quality == WEAK:
+        weak_notes.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
 
     return _build_plan_only_response(
         request_id=request_id,
@@ -159,4 +191,6 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             "Plan-only steps generated; no execution performed."
         ),
         ui_severity="info",
+        repo_aware_notes=weak_notes or None,
+        metadata=metadata,
     )

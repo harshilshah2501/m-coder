@@ -161,3 +161,67 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
     finally:
         proc.terminate()
         proc.wait(timeout=5)
+
+
+def test_v1_blocked_has_refusal_shape_and_metadata():
+    ev = _load_golden_evidence()
+    ev["entries"] = [
+        {
+            "provisional": False,
+            "rank": 0,
+            "relative_path": "logs/app.log",
+            "retrieval_score": 1,
+            "retrieval_breakdown": {
+                "path_substrings": 1,
+                "basename_substrings": 0,
+                "content_substrings": 0,
+            },
+            "snippet": {
+                "text": "error happened",
+                "start_line": 1,
+                "end_line": 1,
+                "start_byte_utf8": 0,
+                "end_byte_utf8": 14,
+                "anchor_line": 1,
+                "matched_tokens": ["error"],
+                "selection_reason": "query_token_substring_anchor",
+                "truncated_by_max_bytes": False,
+            },
+        }
+    ]
+    req = _minimal_v1_ask(ev, query="in this system")
+    resp = handle_ask_v1_request(req)
+    assert resp["execution"] is False
+    assert resp["plan_summary"]["steps"] == []
+    assert "explain_debug" not in resp
+    md = resp.get("metadata") or {}
+    assert md.get("evidence_quality") in {"INSUFFICIENT", "NO_MATCH"}
+    assert isinstance(md.get("quality_reasons"), list) and len(md["quality_reasons"]) >= 1
+
+
+def test_v0_v1_metadata_semantics_match_on_quality_keys(tmp_path):
+    from runtime.ask_service.handlers import handle_ask_request
+
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "src").mkdir()
+    (repo_root / "src" / "app.py").write_text("def run():\n    return 1\n", encoding="utf-8")
+
+    v0 = handle_ask_request(
+        {
+            "schema_version": "ask_request.v0.1",
+            "request_id": "v0-md",
+            "timestamp_utc": "2026-03-21T12:00:00Z",
+            "repo_root": str(repo_root),
+            "revision": "rev0",
+            "query": "where implemented run",
+        }
+    )
+    v1_req = _minimal_v1_ask(_load_golden_evidence(), request_id="v1-md", query="where implemented retry")
+    v1 = handle_ask_v1_request(v1_req)
+    for resp in (v0, v1):
+        md = resp.get("metadata") or {}
+        assert "intent_type" in md
+        assert "evidence_quality" in md
+        assert "quality_reasons" in md
+        assert "dominance_metrics" in md

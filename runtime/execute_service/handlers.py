@@ -262,7 +262,22 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
         )
 
     working_dir = Path(intent.working_dir)
-    if not working_dir.exists():
+    try:
+        working_dir_exists = working_dir.exists()
+    except (OSError, PermissionError) as e:
+        return _build_response(
+            request_id=request_id,
+            outcome="BLOCKED",
+            posture=posture,
+            executed=False,
+            reason=f"Working directory is not accessible: {working_dir} ({e})",
+            ui_title="Execution Blocked",
+            ui_message=f"Repository root is not accessible: {working_dir}",
+            ui_severity="error",
+            plan_hash=plan_hash_final,
+            decision_ledger_row_id=decision_ledger_row_id,
+        )
+    if not working_dir_exists:
         return _build_response(
             request_id=request_id,
             outcome="BLOCKED",

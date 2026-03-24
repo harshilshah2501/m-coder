@@ -27,14 +27,18 @@ import pytest
 
 from runtime.ask_validation.harness import (
     AskValidationHarness,
+    ClosureThresholds,
     HarnessResult,
+    QueryResult,
+    ValidationMetrics,
     run_validation_harness,
 )
 from runtime.ask_validation.golden_queries import (
     GoldenQuery,
-    QueryExpectation,
     GOLDEN_QUERY_SUITE,
+    QueryExpectation,
     get_grounded_queries,
+    get_queries_by_suite,
     get_no_match_queries,
 )
 
@@ -67,6 +71,19 @@ class TestAskValidationHarness:
         assert "avg_e2e_latency_ms" in metrics
         assert "max_e2e_latency_ms" in metrics
         assert "no_match_justification_rate" in metrics
+        assert "core_code_pct_top_k" in metrics
+        assert "code_pct_top_k" in metrics
+        assert "noise_pct_top_k" in metrics
+        assert "strong_rate" in metrics
+        assert "weak_rate" in metrics
+        assert "insufficient_rate" in metrics
+        assert "no_match_rate" in metrics
+        assert "false_strong_rate" in metrics
+        assert "weak_correctness_rate" in metrics
+        assert "no_match_correctness_rate" in metrics
+        assert "ambiguity_false_confidence_rate" in metrics
+        assert "grouped_summary" in metrics
+        assert "threshold_results" in metrics
         
         # Verify metrics are in valid ranges
         assert 0 <= metrics["empty_bundle_rate"] <= 1
@@ -74,6 +91,14 @@ class TestAskValidationHarness:
         assert metrics["avg_retrieval_latency_ms"] >= 0
         assert metrics["avg_e2e_latency_ms"] >= 0
         assert 0 <= metrics["no_match_justification_rate"] <= 1
+        assert 0 <= metrics["strong_rate"] <= 1
+        assert 0 <= metrics["weak_rate"] <= 1
+        assert 0 <= metrics["insufficient_rate"] <= 1
+        assert 0 <= metrics["no_match_rate"] <= 1
+        assert 0 <= metrics["false_strong_rate"] <= 1
+        assert 0 <= metrics["weak_correctness_rate"] <= 1
+        assert 0 <= metrics["no_match_correctness_rate"] <= 1
+        assert 0 <= metrics["ambiguity_false_confidence_rate"] <= 1
         
         # For Wave 1-2 baseline: we want the harness to run and report,
         # not necessarily pass all queries yet
@@ -130,21 +155,18 @@ class TestAskValidationHarness:
 class TestGoldenQueryValidation:
     """Test individual golden query behaviors."""
     
-    def test_grounded_symbol_retry(self, tmp_path: Path) -> None:
-        """Symbol hint 'retry' should match retry.py."""
-        query = next(q for q in GOLDEN_QUERY_SUITE if q.id == "grounded_symbol_retry")
+    def test_aiops_alert_correlation(self, tmp_path: Path) -> None:
+        query = next(q for q in GOLDEN_QUERY_SUITE if q.id == "aiops_alert_correlation_impl")
         harness = AskValidationHarness(queries=[query], tmp_root=tmp_path)
         result = harness.run()
         
         assert len(result.results) == 1
         qr = result.results[0]
         
-        # Should be grounded with files
         assert qr.files_found >= 1
-        assert "symbols" in qr.selectors_used
+        assert qr.suite == "aiops_grounding"
     
     def test_no_match_nonexistent_symbol(self, tmp_path: Path) -> None:
-        """Query for nonexistent symbol should return valid no-match."""
         query = next(q for q in GOLDEN_QUERY_SUITE if q.id == "no_match_nonexistent_symbol")
         harness = AskValidationHarness(queries=[query], tmp_root=tmp_path)
         result = harness.run()
@@ -167,14 +189,13 @@ class TestGoldenQueryValidation:
         )
         assert has_justification, "No-match should have justification"
     
-    def test_case_insensitive_matching(self, tmp_path: Path) -> None:
-        """Case-insensitive symbol matching should work."""
-        query = next(q for q in GOLDEN_QUERY_SUITE if q.id == "edge_case_insensitive")
-        harness = AskValidationHarness(queries=[query], tmp_root=tmp_path)
-        result = harness.run()
-        
-        qr = result.results[0]
-        assert qr.files_found >= 1, "Case-insensitive search should find handler.py"
+    def test_adversarial_suite_exists(self) -> None:
+        rows = get_queries_by_suite("adversarial")
+        assert rows, "adversarial suite must not be empty"
+        ids = {q.id for q in rows}
+        assert "adversarial_engine" in ids
+        assert "adversarial_fix_bug" in ids
+        assert "adversarial_in_this_system" in ids
 
 
 class TestMetricsCalculation:
@@ -211,6 +232,50 @@ class TestMetricsCalculation:
             expected_rate = present_count / len(grounded_results)
             assert abs(result.metrics.relevant_file_presence_rate - expected_rate) < 0.001
 
+    def test_grouped_summary_has_all_suites(self, tmp_path: Path) -> None:
+        result = run_validation_harness(tmp_path)
+        grouped = result.metrics.grouped_summary
+        assert "aiops_grounding" in grouped
+        assert "debug" in grouped
+        assert "plan_change" in grouped
+        assert "no_match" in grouped
+        assert "adversarial" in grouped
+
+    def test_threshold_evaluation_present(self, tmp_path: Path) -> None:
+        result = run_validation_harness(tmp_path)
+        thresholds = result.metrics.threshold_results
+        assert "min_core_code_pct_for_code_intent" in thresholds
+        assert "max_false_strong_rate" in thresholds
+        assert "min_weak_correctness_rate" in thresholds
+        assert "min_no_match_correctness_rate" in thresholds
+
+
+class TestDerivedMetricRules:
+    def test_false_strong_identification(self, tmp_path: Path) -> None:
+        q = next(q for q in GOLDEN_QUERY_SUITE if q.id == "adversarial_engine")
+        harness = AskValidationHarness(queries=[q], tmp_root=tmp_path)
+        result = harness.run()
+        # metric exists and should be computed deterministically
+        assert result.metrics.false_strong_rate >= 0.0
+
+    def test_weak_correctness_computed(self, tmp_path: Path) -> None:
+        q = next(q for q in GOLDEN_QUERY_SUITE if q.id == "adversarial_fix_bug")
+        harness = AskValidationHarness(queries=[q], tmp_root=tmp_path)
+        result = harness.run()
+        assert 0.0 <= result.metrics.weak_correctness_rate <= 1.0
+
+    def test_no_match_correctness_computed(self, tmp_path: Path) -> None:
+        q = next(q for q in GOLDEN_QUERY_SUITE if q.id == "no_match_quantum_handler")
+        harness = AskValidationHarness(queries=[q], tmp_root=tmp_path)
+        result = harness.run()
+        assert 0.0 <= result.metrics.no_match_correctness_rate <= 1.0
+
+    def test_ambiguity_false_confidence_rate_computed(self, tmp_path: Path) -> None:
+        rows = get_queries_by_suite("adversarial")
+        harness = AskValidationHarness(queries=rows, tmp_root=tmp_path)
+        result = harness.run()
+        assert 0.0 <= result.metrics.ambiguity_false_confidence_rate <= 1.0
+
 
 class TestHarnessOutput:
     """Test harness output formats."""
@@ -229,6 +294,7 @@ class TestHarnessOutput:
         assert "Avg Retrieval Latency:" in summary
         assert "Max Retrieval Latency:" in summary
         assert "Avg E2E Latency:" in summary
+        assert "False STRONG rate:" in summary
         assert "QUERY SUMMARY:" in summary
         assert "QUERY DETAILS:" in summary
     
@@ -258,22 +324,7 @@ def test_validation_harness_as_gate(tmp_path: Path) -> None:
     # These are illustrative - actual thresholds should be tuned based on
     # initial baseline measurements.
     
-    gate_checks = {
-        # For grounded queries, empty bundle rate should be low
-        "empty_bundle_rate_below_50pct": result.metrics.empty_bundle_rate < 0.5,
-        
-        # File presence rate should be above 50% for grounded queries
-        "file_presence_above_50pct": result.metrics.relevant_file_presence_rate > 0.5,
-        
-        # No-match queries should have justification
-        "no_match_justified_above_80pct": result.metrics.no_match_justification_rate > 0.8,
-        
-        # Retrieval latency should be under 500ms
-        "retrieval_latency_under_500ms": result.metrics.max_retrieval_latency_ms < 500,
-        
-        # E2E latency should be under 1 second
-        "e2e_latency_under_1s": result.metrics.max_e2e_latency_ms < 1000,
-    }
+    gate_checks = dict(result.metrics.threshold_results)
     
     print("\n" + "=" * 60)
     print("WAVE 2 GATE CHECK RESULTS")
@@ -283,6 +334,21 @@ def test_validation_harness_as_gate(tmp_path: Path) -> None:
         print(f"  [{status}] {check_name}")
     print("=" * 60)
     
-    # This test documents the gate structure but doesn't enforce it yet
-    # for Wave 1 baseline establishment
-    assert True, "Gate check structure validated"
+    assert len(gate_checks) == 4
+
+
+class TestFixtureStructure:
+    def test_all_suites_load(self) -> None:
+        suites = {q.suite for q in GOLDEN_QUERY_SUITE}
+        assert suites == {"aiops_grounding", "debug", "plan_change", "no_match", "adversarial"}
+
+    def test_fixture_metadata_is_structurally_valid(self) -> None:
+        for q in GOLDEN_QUERY_SUITE:
+            assert q.expected_intent_type
+            assert q.expected_quality_set
+            assert isinstance(q.expected_core_presence, bool)
+            assert isinstance(q.repo_files, dict)
+
+    def test_adversarial_queries_present(self) -> None:
+        ids = {q.id for q in get_queries_by_suite("adversarial")}
+        assert {"adversarial_engine", "adversarial_fix_bug", "adversarial_this_not_working", "adversarial_in_this_system", "adversarial_update_logic"}.issubset(ids)

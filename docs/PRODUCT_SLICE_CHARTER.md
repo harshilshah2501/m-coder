@@ -19,6 +19,15 @@ Deliver the **smallest production-grade vertical slice** that is:
 
 **Non-goal for this charter:** Define internet-scale multi-tenant SaaS, full enterprise RBAC, or unrelated ML/RAG product lines inside this slice.
 
+### Retrieval Non-Negotiable
+
+The system must ensure that:
+- evidence bundles are dominated by AIOps implementation code
+- non-code artifacts (tests, logs, vendor) do not dominate retrieval
+- weak evidence triggers explicit insufficiency
+
+Without this, the system is not considered context-aware.
+
 ---
 
 ## Canonical active slice

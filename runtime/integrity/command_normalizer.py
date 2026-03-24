@@ -55,7 +55,10 @@ def _normalize_working_dir(repo_root: str | None, default_cwd: str = "") -> str:
     base = (repo_root or default_cwd or ".").strip()
     if not base:
         base = "."
-    path = Path(base).resolve()
+    try:
+        path = Path(base).resolve()
+    except (OSError, PermissionError) as e:
+        raise NormalizationError(f"Working directory is not accessible: {base} ({e})") from e
     return str(path)
 
 

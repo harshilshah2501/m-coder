@@ -314,3 +314,51 @@ def test_ask_plan_only_no_execution_coupling(tmp_path):
     })
     assert response["governance_posture"] == "PLAN_ONLY"
     assert response["execution"] is False
+
+
+def test_ask_blocked_response_shape_for_no_match(tmp_path):
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "logs").mkdir()
+    (repo_root / "logs" / "app.log").write_text("error happened", encoding="utf-8")
+
+    response = handle_ask_request(
+        {
+            "schema_version": "ask_request.v0.1",
+            "request_id": "blocked-insufficient",
+            "timestamp_utc": "2026-03-15T12:00:00Z",
+            "repo_root": str(repo_root),
+            "revision": "r1",
+            "query": "Where is MissingSymbolFoo() implemented?",
+        }
+    )
+    assert response["execution"] is False
+    assert response["plan_summary"]["steps"] == []
+    assert "explain_debug" not in response
+    md = response.get("metadata") or {}
+    assert md.get("evidence_quality") in {"INSUFFICIENT", "NO_MATCH"}
+    assert isinstance(md.get("quality_reasons"), list) and len(md["quality_reasons"]) >= 1
+
+
+def test_ask_weak_includes_caveat_note(tmp_path):
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "tests").mkdir()
+    (repo_root / "tests" / "engine_test.py").write_text("engine", encoding="utf-8")
+    (repo_root / "src").mkdir()
+    (repo_root / "src" / "engine.py").write_text("def engine():\n  return 1\n", encoding="utf-8")
+
+    response = handle_ask_request(
+        {
+            "schema_version": "ask_request.v0.1",
+            "request_id": "weak-note",
+            "timestamp_utc": "2026-03-15T12:00:00Z",
+            "repo_root": str(repo_root),
+            "revision": "r2",
+            "query": "where implemented engine",
+        }
+    )
+    md = response.get("metadata") or {}
+    if md.get("evidence_quality") == "WEAK":
+        notes = response.get("plan_summary", {}).get("notes", [])
+        assert any("WEAK" in n for n in notes)

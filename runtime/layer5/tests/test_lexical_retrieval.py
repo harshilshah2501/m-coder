@@ -13,6 +13,8 @@ import pytest
 
 from runtime.layer5.index import WorkspaceFileIndex, build_file_index
 from runtime.layer5.retrieval import LexicalRetrievalConfig, normalize_query, retrieve_lexical
+from runtime.layer5.retrieval.lexical import _apply_top_k_core_correction
+from runtime.layer5.retrieval.models import RetrievalHit
 from runtime.layer5.workspace.identity import WorkspaceIdentity
 
 
@@ -147,3 +149,147 @@ class TestLexicalRetrievalLatencySmoke:
             assert elapsed < 2.0, f"40 retrievals took {elapsed:.3f}s (~{per_ms:.2f}ms each)"
         finally:
             tmp.cleanup()
+
+
+class TestPolicyRanking:
+    def test_noise_suppression_engine_query(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(root / "tests" / "engine_test.py", "engine engine")
+            _touch(root / "logs" / "engine.log", "engine failure")
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "ingestion" / "EngineProcessor.java",
+                "class EngineProcessor { void processEngine() {} }",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(idx, "engine", top_k=3, config=LexicalRetrievalConfig())
+            top = [h.relative_path for h in r.hits]
+            assert top[0].endswith("EngineProcessor.java")
+
+    def test_core_dominance_for_alert_correlation_engine(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(root / "tests" / "alert_correlation_test.py", "alert correlation engine")
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "alerting" / "AlertProcessor.java",
+                "class AlertProcessor { void runCorrelationEngine() {} }",
+            )
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "correlation" / "AlertCorrelationEngine.java",
+                "class AlertCorrelationEngine { void correlateAlerts() {} }",
+            )
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "correlation" / "CorrelationService.java",
+                "class CorrelationService { void correlate() {} }",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(idx, "alert correlation engine", top_k=3, config=LexicalRetrievalConfig())
+            top3 = [h.relative_path.lower() for h in r.hits[:3]]
+            assert any("src/main/java/com/mindarray/aiops/" in p for p in top3)
+
+    def test_subsystem_boost_topology_anomaly(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "topology" / "TopologyAnomalyDetector.java",
+                "class TopologyAnomalyDetector { void detectAnomaly() {} }",
+            )
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "metrics" / "MetricWriter.java",
+                "class MetricWriter { void anomalyMetric() {} }",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(idx, "topology anomaly", top_k=2, config=LexicalRetrievalConfig())
+            assert r.hits[0].relative_path.endswith("TopologyAnomalyDetector.java")
+
+    def test_policy_determinism_same_query_same_order(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(
+                root / "src" / "main" / "java" / "com" / "mindarray" / "aiops" / "correlation" / "CorrelationService.java",
+                "class CorrelationService { void correlate() {} }",
+            )
+            _touch(root / "tests" / "correlation_test.py", "correlation service")
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            cfg = LexicalRetrievalConfig()
+            a = retrieve_lexical(idx, "correlation service", top_k=2, config=cfg)
+            b = retrieve_lexical(idx, "correlation service", top_k=2, config=cfg)
+            assert [h.relative_path for h in a.hits] == [h.relative_path for h in b.hits]
+
+    def test_topology_anomaly_detection_phrase_prefers_core(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            core_path = (
+                "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java"
+            )
+            _touch(
+                root / core_path,
+                "class TopologyAnomalyDetector { void detectAnomaly() {} }",
+            )
+            _touch(
+                root / "src/main/java/com/mindarray/aiops/metrics/MetricWriter.java",
+                "class MetricWriter { void anomalyMetric() {} }",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "How does topology anomaly detection work?",
+                top_k=2,
+                config=LexicalRetrievalConfig(),
+            )
+            assert r.hits[0].relative_path.endswith("TopologyAnomalyDetector.java")
+
+    def test_top_k_core_correction_unit_swap(self):
+        """Direct test: correction inserts a core hit into the top-3 window."""
+        hits = [
+            RetrievalHit("logs/a.log", 100, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}),
+            RetrievalHit("tests/b.py", 90, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}),
+            RetrievalHit("vendor/c.js", 80, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}),
+            RetrievalHit(
+                "src/main/java/com/mindarray/aiops/topology/Core.java",
+                10,
+                {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0},
+            ),
+        ]
+        out = _apply_top_k_core_correction(hits, top_k=4)
+        top3 = [h.relative_path for h in out[:3]]
+        assert "src/main/java/com/mindarray/aiops/topology/Core.java" in top3
+
+    def test_top_k_core_correction_noise_dominated_query(self):
+        """Heavy noise token overlap cannot keep core out of the top-3 window when correction is on."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "topology anomaly detection " * 80
+            _touch(root / "logs" / "noise.log", blob)
+            _touch(root / "tests" / "t.py", blob)
+            _touch(root / "vendor" / "v.js", blob)
+            core_rel = (
+                "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java"
+            )
+            _touch(root / core_rel, "class TopologyAnomalyDetector {}\n")
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            q = "topology anomaly detection"
+            without = retrieve_lexical(
+                idx,
+                q,
+                top_k=4,
+                config=LexicalRetrievalConfig(enable_top_k_core_correction=False),
+            )
+            with_corr = retrieve_lexical(
+                idx,
+                q,
+                top_k=4,
+                config=LexicalRetrievalConfig(enable_top_k_core_correction=True),
+            )
+            assert not any(
+                h.relative_path.endswith("TopologyAnomalyDetector.java") for h in without.hits[:3]
+            )
+            assert any(
+                h.relative_path.endswith("TopologyAnomalyDetector.java") for h in with_corr.hits[:3]
+            )
