@@ -247,13 +247,14 @@ class TestPolicyRanking:
     def test_top_k_core_correction_unit_swap(self):
         """Direct test: correction inserts a core hit into the top-3 window."""
         hits = [
-            RetrievalHit("logs/a.log", 100, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}),
-            RetrievalHit("tests/b.py", 90, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}),
-            RetrievalHit("vendor/c.js", 80, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}),
+            RetrievalHit("logs/a.log", 100, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}, None),
+            RetrievalHit("tests/b.py", 90, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}, None),
+            RetrievalHit("vendor/c.js", 80, {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0}, None),
             RetrievalHit(
                 "src/main/java/com/mindarray/aiops/topology/Core.java",
                 10,
                 {"path_substrings": 0, "basename_substrings": 0, "content_substrings": 0},
+                None,
             ),
         ]
         out = _apply_top_k_core_correction(hits, top_k=4)

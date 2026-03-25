@@ -1,0 +1,39 @@
+{
+  "schema_version": "pr6.mandatory_anchor_fixtures.v1",
+  "description": "PR-6 Slice 1 deterministic debug fixtures for AIOps Java anchors.",
+  "fixtures": [
+    {
+      "id": "alert_correlation_engine_debug",
+      "query": "Debug alert correlation engine failing to correlate duplicate incidents",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+        "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+      ],
+      "required_top_k": 5,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.4
+    },
+    {
+      "id": "topology_anomaly_detector_debug",
+      "query": "Trace topology anomaly detector false positives in node graph",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java",
+        "src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java"
+      ],
+      "required_top_k": 5,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.4
+    },
+    {
+      "id": "ingestion_pipeline_parser_debug",
+      "query": "Investigate ingestion pipeline parser timeout for metrics collector",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java"
+      ],
+      "required_top_k": 5,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.4
+    }
+  ]
+}

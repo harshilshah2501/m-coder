@@ -6,9 +6,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from runtime.layer5.index.models import FileIndexEntry, WorkspaceFileIndex
+from runtime.layer5.index.symbol_inventory import resolve_symbol_lookup_for_index
 
 from runtime.layer5.retrieval.config import LexicalRetrievalConfig, get_retrieval_policy
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
@@ -82,6 +83,30 @@ def _module_bias(
     return 0
 
 
+def _symbol_inventory_boost(
+    entry: FileIndexEntry,
+    tokens: Tuple[str, ...],
+    cfg: LexicalRetrievalConfig,
+    policy: Mapping,
+    symbol_lookup: Mapping[str, Tuple[str, ...]],
+) -> int:
+    if not tokens:
+        return 0
+    inv_tokens = symbol_lookup.get(entry.relative_path, ())
+    if not inv_tokens:
+        return 0
+    inv_set = set(inv_tokens)
+    token_set = set(tokens)
+    if token_set.intersection(inv_set):
+        exact = _scaled(float(policy.get("symbol_inventory_exact_boost", 0.0)), cfg)
+        overlap = len(token_set.intersection(inv_set))
+        cap = int(policy.get("symbol_inventory_overlap_cap", 3))
+        overlap = min(overlap, max(cap, 0))
+        token_part = _scaled(float(policy.get("symbol_inventory_token_boost", 0.0)), cfg) * overlap
+        return exact + token_part
+    return 0
+
+
 def _is_core_aiops_hit(hit: RetrievalHit) -> bool:
     return classify_file(hit.relative_path).file_class == "core_aiops_code"
 
@@ -136,6 +161,7 @@ def _score_entry(
     root: Path,
     cfg: LexicalRetrievalConfig,
     policy: Mapping,
+    symbol_lookup: Mapping[str, Tuple[str, ...]],
 ) -> RetrievalHit:
     if not tokens:
         return RetrievalHit(
@@ -146,6 +172,7 @@ def _score_entry(
                 "basename_substrings": 0,
                 "content_substrings": 0,
             },
+            diagnostics=None,
         )
 
     rel_l = entry.relative_path.lower()
@@ -169,13 +196,40 @@ def _score_entry(
         else 0
     )
     symbol_boost = _symbol_boost(entry, tokens, cfg, policy) if cfg.enable_policy_bias else 0
+    symbol_inventory_boost = (
+        _symbol_inventory_boost(entry, tokens, cfg, policy, symbol_lookup) if cfg.enable_policy_bias else 0
+    )
     module_bias = _module_bias(entry, tokens, cfg, policy) if cfg.enable_policy_bias else 0
     noise_penalty = 0
     if cfg.enable_policy_bias and is_noise_class(fpolicy.file_class):
         mult = float(policy["noise_penalty_multiplier"])
         noise_penalty = _scaled(abs(class_prior) * mult, cfg)
-    total = path_part + base_part + content_part + path_prior + subsystem_boost + symbol_boost + module_bias - noise_penalty
-    policy_part = path_prior + subsystem_boost + symbol_boost + module_bias - noise_penalty
+    total = (
+        path_part
+        + base_part
+        + content_part
+        + path_prior
+        + subsystem_boost
+        + symbol_boost
+        + symbol_inventory_boost
+        + module_bias
+        - noise_penalty
+    )
+    policy_part = path_prior + subsystem_boost + symbol_boost + symbol_inventory_boost + module_bias - noise_penalty
+    diagnostics: Optional[Dict[str, int]] = None
+    if cfg.include_score_diagnostics:
+        diagnostics = {
+            "path_lexical": path_part,
+            "basename_lexical": base_part,
+            "content": content_part,
+            "path_prior": path_prior,
+            "subsystem_boost": subsystem_boost,
+            "symbol_boost": symbol_boost,
+            "symbol_inventory_boost": symbol_inventory_boost,
+            "module_bias": module_bias,
+            "noise_penalty": noise_penalty,
+            "total": total,
+        }
     return RetrievalHit(
         relative_path=entry.relative_path,
         score=total,
@@ -184,6 +238,7 @@ def _score_entry(
             "basename_substrings": base_part,
             "content_substrings": content_part,
         },
+        diagnostics=diagnostics,
     )
 
 
@@ -209,6 +264,7 @@ def retrieve_lexical(
     policy = get_retrieval_policy(cfg.policy_version)
     tokens = normalize_query(query, min_token_len=cfg.min_token_len)
     root = Path(index.canonical_root)
+    symbol_lookup = resolve_symbol_lookup_for_index(index)
 
     if top_k <= 0:
         return RetrievalResult(
@@ -220,7 +276,7 @@ def retrieve_lexical(
             workspace_identity_hash=index.workspace_identity_hash,
         )
 
-    scored: List[RetrievalHit] = [_score_entry(e, tokens, root, cfg, policy) for e in index.files]
+    scored: List[RetrievalHit] = [_score_entry(e, tokens, root, cfg, policy, symbol_lookup) for e in index.files]
 
     if not tokens:
         # Deterministic fallback: index.files is already sorted by relative_path
@@ -233,6 +289,7 @@ def retrieve_lexical(
                     "basename_substrings": 0,
                     "content_substrings": 0,
                 },
+                diagnostics=None,
             )
             for e in index.files[:top_k]
         )

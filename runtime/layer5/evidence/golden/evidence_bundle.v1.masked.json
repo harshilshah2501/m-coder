@@ -9,9 +9,9 @@
       "retrieval_breakdown": {
         "basename_substrings": 0,
         "content_substrings": 2,
-        "path_substrings": 0
+        "path_substrings": 5
       },
-      "retrieval_score": 2,
+      "retrieval_score": 7,
       "snippet": {
         "anchor_line": 2,
         "end_byte_utf8": 110,

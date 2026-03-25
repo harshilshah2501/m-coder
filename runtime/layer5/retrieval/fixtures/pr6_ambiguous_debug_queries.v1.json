@@ -1,0 +1,88 @@
+{
+  "schema_version": "pr6.ambiguous_debug_fixtures.v1",
+  "description": "Ambiguous / indirect / soft-noise PR-6 queries (multi-anchor).",
+  "fixtures": [
+    {
+      "id": "ambiguous_correlation_alerts",
+      "query": "Correlation issue in alerts",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+        "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java",
+        "src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "ambiguous_topology_graph",
+      "query": "Topology graph inconsistency",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java",
+        "src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java",
+        "src/main/java/com/mindarray/aiops/topology/GraphConsistencyChecker.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "ambiguous_metrics_ingestion_intermittent",
+      "query": "Metrics ingestion failing intermittently",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+        "src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "indirect_duplicate_incidents",
+      "query": "duplicate incident handling",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+        "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.55
+    },
+    {
+      "id": "soft_noise_helper_utils",
+      "query": "correlation helper utilities",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java",
+        "src/main/java/com/mindarray/aiops/shared/ServiceFacade.java",
+        "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.55
+    },
+    {
+      "id": "multi_file_pipeline_orchestration",
+      "query": "orchestrate collector pipeline end to end",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java",
+        "src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "soft_collision_shared_facade",
+      "query": "service facade delegation correlation",
+      "expected_anchor_paths": [
+        "src/main/java/com/mindarray/aiops/shared/ServiceFacade.java",
+        "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.55
+    }
+  ]
+}

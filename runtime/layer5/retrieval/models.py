@@ -5,7 +5,7 @@ Retrieval result shapes for A6 (no snippets — file-level hits only).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -18,6 +18,11 @@ class RetrievalHit:
     """
     Integer components, e.g. ``path_substrings``, ``basename_substrings``, ``content_substrings``.
     Sum equals ``score`` (see ranking rules in ``lexical`` module).
+    """
+    diagnostics: Optional[Dict[str, int]] = None
+    """
+    Optional per-component scores when ``LexicalRetrievalConfig.include_score_diagnostics`` is True.
+    Not part of evidence_bundle schema; for audits and PR-6 analysis only.
     """
 
 

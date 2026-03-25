@@ -55,6 +55,9 @@ RETRIEVAL_POLICY_V2: Final[Mapping[str, object]] = MappingProxyType(
         ),
         "subsystem_boost": 3.25,
         "symbol_boost": 3.6,
+        "symbol_inventory_exact_boost": 2.8,
+        "symbol_inventory_token_boost": 1.4,
+        "symbol_inventory_overlap_cap": 3,
         "module_bias": 1.85,
         "noise_penalty_multiplier": 1.15,
     }
@@ -121,4 +124,9 @@ class LexicalRetrievalConfig:
     When True, apply a minimal deterministic post-rank step so at least one
     ``core_aiops_code`` hit appears in positions 0–2 when such a candidate exists
     in the full ranked list (see ``lexical.py``).
+    """
+    include_score_diagnostics: bool = False
+    """
+    When True, each ``RetrievalHit`` includes ``diagnostics`` with integer contributions
+    (path/basename/content, path_prior, subsystem, symbol boosts, module_bias, noise).
     """
