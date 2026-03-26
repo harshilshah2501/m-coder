@@ -9,6 +9,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import FrozenSet, Iterable, Tuple
 
+# PR-6 Slice 4: broad support / constants-style Java basenames (case-insensitive suffix).
+_SUPPORT_STYLE_JAVA_SUFFIXES: Tuple[str, ...] = (
+    "constants.java",
+    "utils.java",
+    "helpers.java",
+    "helper.java",
+    "common.java",
+    "config.java",
+    "facade.java",
+)
+
 
 _NOISE_DIR_TOKENS: FrozenSet[str] = frozenset(
     {
@@ -157,6 +168,19 @@ def infer_query_subsystems(tokens: Iterable[str]) -> FrozenSet[str]:
         if token_set.intersection(keywords)
     }
     return frozenset(matched)
+
+
+def is_support_style_java_basename(basename: str) -> bool:
+    """
+    Deterministic support / constants / helper-style Java file names.
+
+    Used under code/debug intent to demote broad owners that often win on raw
+    content repetition (e.g. ``*Constants.java``) vs behavioral classes.
+    """
+    b = basename.lower().strip()
+    if not b.endswith(".java"):
+        return False
+    return any(b.endswith(s) for s in _SUPPORT_STYLE_JAVA_SUFFIXES)
 
 
 def looks_like_symbol_token(token: str) -> bool:

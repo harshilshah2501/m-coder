@@ -10,6 +10,7 @@ from runtime.layer5.retrieval.config import (
     RETRIEVAL_POLICY_V1,
     RETRIEVAL_POLICY_V2,
     RETRIEVAL_POLICY_V3,
+    RETRIEVAL_POLICY_V4,
     RETRIEVAL_POLICY_VERSION,
     get_retrieval_policy,
 )
@@ -21,6 +22,7 @@ from runtime.layer5.retrieval.policy import (
     infer_code_debug_intent,
     infer_file_subsystem,
     infer_query_subsystems,
+    is_support_style_java_basename,
 )
 from runtime.layer5.retrieval.query import normalize_query
 
@@ -29,6 +31,7 @@ __all__ = [
     "RETRIEVAL_POLICY_V1",
     "RETRIEVAL_POLICY_V2",
     "RETRIEVAL_POLICY_V3",
+    "RETRIEVAL_POLICY_V4",
     "RETRIEVAL_POLICY_VERSION",
     "get_retrieval_policy",
     "RetrievalHit",
@@ -38,6 +41,7 @@ __all__ = [
     "infer_code_debug_intent",
     "infer_file_subsystem",
     "infer_query_subsystems",
+    "is_support_style_java_basename",
     "normalize_query",
     "retrieve_lexical",
 ]

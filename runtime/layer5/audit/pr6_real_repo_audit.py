@@ -208,6 +208,11 @@ def main() -> None:
         "content cap, ``retrieval_policy.v3`` main-Java lane bonus, ``db-files`` → "
         "``generated_metrics_data`` classification, expanded diagnostics.\n"
     )
+    lines.append(
+        "- **Slice 4:** ``retrieval_policy.v4`` — support-style Java basename content cap + demotion, "
+        "basename/query CamelCase token overlap (specificity), diagnostics "
+        "(``basename_specificity``, ``support_file_demotion``, ``support_style_content_trimmed``).\n"
+    )
 
     lines.append("\n## Verdict\n")
     top1_r = top1_hits / max(1, nq)

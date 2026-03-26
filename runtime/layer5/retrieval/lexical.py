@@ -6,10 +6,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from runtime.layer5.index.models import FileIndexEntry, WorkspaceFileIndex
-from runtime.layer5.index.symbol_inventory import resolve_symbol_lookup_for_index
+from runtime.layer5.index.symbol_inventory import (
+    normalize_identifier_tokens,
+    resolve_symbol_lookup_for_index,
+)
 
 from runtime.layer5.retrieval.config import LexicalRetrievalConfig, get_retrieval_policy
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
@@ -19,6 +22,7 @@ from runtime.layer5.retrieval.policy import (
     infer_code_debug_intent,
     infer_query_subsystems,
     is_noise_class,
+    is_support_style_java_basename,
     looks_like_symbol_token,
 )
 from runtime.layer5.retrieval.query import normalize_query
@@ -52,29 +56,86 @@ def _apply_code_intent_content(
     fpolicy: FilePolicy,
     code_intent_active: bool,
     cfg: LexicalRetrievalConfig,
-) -> Tuple[int, int, int]:
+    basename: str,
+) -> Tuple[int, int, int, int]:
     """
-    Returns ``(effective_content, noise_content_suppressed, config_content_trimmed)``.
-
-    ``noise_content_suppressed`` is 1 when a noise class would have contributed raw mass.
-    ``config_content_trimmed`` is the number of content points dropped from cap.
+    Returns ``(effective_content, noise_content_suppressed, config_content_trimmed,
+    support_style_content_trimmed)``.
     """
     if not code_intent_active or not cfg.enable_code_debug_content_gating:
-        return raw_content, 0, 0
+        return raw_content, 0, 0, 0
     fc = fpolicy.file_class
     if fc in cfg.code_intent_zero_content_classes:
         suppressed = 1 if raw_content > 0 else 0
-        return 0, suppressed, 0
+        return 0, suppressed, 0, 0
     if fc == "config" and cfg.code_intent_config_content_cap is not None:
         cap = max(0, int(cfg.code_intent_config_content_cap))
         if raw_content > cap:
-            return cap, 0, raw_content - cap
-        return raw_content, 0, 0
-    return raw_content, 0, 0
+            return cap, 0, raw_content - cap, 0
+        return raw_content, 0, 0, 0
+    if (
+        is_support_style_java_basename(basename)
+        and fc in ("core_aiops_code", "supporting_prod_code")
+        and cfg.code_intent_support_style_content_cap is not None
+    ):
+        cap = max(0, int(cfg.code_intent_support_style_content_cap))
+        if raw_content > cap:
+            return cap, 0, 0, raw_content - cap
+    return raw_content, 0, 0, 0
 
 
 def _scaled(score: float, cfg: LexicalRetrievalConfig) -> int:
     return int(round(score * cfg.policy_score_scale))
+
+
+def _basename_query_specificity(
+    basename: str,
+    query_tokens: Tuple[str, ...],
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+) -> int:
+    """
+    PR-6 Slice 4: reward basenames whose CamelCase stem tokens overlap query tokens.
+
+    Helps ``AlertCorrelationEngine`` beat ``AvailabilityCorrelationEngine`` when the query
+    contains ``alert`` but not ``availability``.
+    """
+    per = float(policy.get("basename_query_specificity_per_token", 0.0))
+    if per <= 0 or not query_tokens:
+        return 0
+    stem = Path(basename).stem
+    if not stem:
+        return 0
+    stem_toks: Set[str] = set(normalize_identifier_tokens(stem))
+    if not stem_toks:
+        return 0
+    inter = stem_toks.intersection(set(query_tokens))
+    if not inter:
+        return 0
+    cap = int(policy.get("basename_query_specificity_token_cap", 8))
+    n = min(len(inter), max(cap, 0))
+    return _scaled(per * n, cfg)
+
+
+def _support_file_demotion(
+    basename: str,
+    rel_l: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+) -> int:
+    """PR-6 Slice 4: demote broad *Constants / *Utils / … Java owners under code intent."""
+    dem = float(policy.get("code_intent_support_file_demotion", 0.0))
+    if dem <= 0 or not code_intent_active or not cfg.enable_policy_bias:
+        return 0
+    if fpolicy.file_class not in ("core_aiops_code", "supporting_prod_code"):
+        return 0
+    if "/src/main/java/" not in rel_l:
+        return 0
+    if not is_support_style_java_basename(basename):
+        return 0
+    return _scaled(dem, cfg)
 
 
 def _symbol_boost(
@@ -205,15 +266,16 @@ def _score_entry(
         )
 
     rel_l = entry.relative_path.lower()
-    base_l = _basename(entry.relative_path).lower()
+    base_name = _basename(entry.relative_path)
+    base_l = base_name.lower()
     fpolicy = classify_file(entry.relative_path)
     query_subsystems = infer_query_subsystems(tokens)
 
     path_part = sum(rel_l.count(t) * cfg.weight_path for t in tokens)
     base_part = sum(base_l.count(t) * cfg.weight_basename for t in tokens)
     raw_content = _raw_content_score(root, entry, tokens, cfg)
-    content_part, noise_content_suppressed, config_content_trimmed = _apply_code_intent_content(
-        raw_content, fpolicy, code_intent_active, cfg
+    content_part, noise_content_suppressed, config_content_trimmed, support_style_content_trimmed = (
+        _apply_code_intent_content(raw_content, fpolicy, code_intent_active, cfg, base_name)
     )
     prior_map = policy["path_prior"]
     class_prior = 0.0
@@ -244,6 +306,13 @@ def _score_entry(
         and fpolicy.file_class in ("core_aiops_code", "supporting_prod_code")
     ):
         main_java_bonus = _scaled(float(policy.get("code_intent_main_java_bonus", 0.0)), cfg)
+    basename_specificity = 0
+    support_file_demotion = 0
+    if code_intent_active and cfg.enable_policy_bias:
+        basename_specificity = _basename_query_specificity(base_name, tokens, policy, cfg)
+        support_file_demotion = _support_file_demotion(
+            base_name, rel_l, fpolicy, code_intent_active, policy, cfg
+        )
     total = (
         path_part
         + base_part
@@ -255,6 +324,8 @@ def _score_entry(
         + module_bias
         - noise_penalty
         + main_java_bonus
+        + basename_specificity
+        - support_file_demotion
     )
     policy_part = (
         path_prior
@@ -264,6 +335,8 @@ def _score_entry(
         + module_bias
         - noise_penalty
         + main_java_bonus
+        + basename_specificity
+        - support_file_demotion
     )
     diagnostics: Optional[Dict[str, int]] = None
     if cfg.include_score_diagnostics:
@@ -280,7 +353,10 @@ def _score_entry(
             "main_java_bonus": main_java_bonus,
             "noise_content_suppressed": noise_content_suppressed,
             "config_content_trimmed": config_content_trimmed,
+            "support_style_content_trimmed": support_style_content_trimmed,
             "code_intent": 1 if code_intent_active else 0,
+            "basename_specificity": basename_specificity,
+            "support_file_demotion": support_file_demotion,
             "total": total,
         }
     return RetrievalHit(

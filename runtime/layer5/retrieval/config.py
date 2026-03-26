@@ -9,7 +9,7 @@ from types import MappingProxyType
 from typing import Final, FrozenSet, Mapping, Optional, Tuple
 
 
-RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v3"
+RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v4"
 """
 Versioned deterministic policy identifier.
 Any change to policy weights/thresholds requires a new version and re-validation.
@@ -95,6 +95,38 @@ RETRIEVAL_POLICY_V3: Final[Mapping[str, object]] = MappingProxyType(
 PR-6 Slice 3: same priors as v2 plus ``code_intent_main_java_bonus`` for ``src/main/java`` code paths.
 """
 
+RETRIEVAL_POLICY_V4: Final[Mapping[str, object]] = MappingProxyType(
+    {
+        "path_prior": MappingProxyType(
+            {
+                "core_aiops_code": 6.5,
+                "supporting_prod_code": 2.3,
+                "config": -1.2,
+                "tests": -4.6,
+                "logs": -5.6,
+                "vendor_static": -6.8,
+                "generated_metrics_data": -5.6,
+            }
+        ),
+        "subsystem_boost": 3.25,
+        "symbol_boost": 3.6,
+        "symbol_inventory_exact_boost": 2.8,
+        "symbol_inventory_token_boost": 1.4,
+        "symbol_inventory_overlap_cap": 3,
+        "module_bias": 1.85,
+        "noise_penalty_multiplier": 1.15,
+        "code_intent_main_java_bonus": 3.5,
+        # Slice 4: demote *Constants.java / *Utils.java / … under code/debug intent (scaled).
+        "code_intent_support_file_demotion": 5.0,
+        # Extra boost per query token that matches a CamelCase stem token in the basename.
+        "basename_query_specificity_per_token": 2.0,
+        "basename_query_specificity_token_cap": 8,
+    }
+)
+"""
+PR-6 Slice 4: owner disambiguation — support-basename demotion + basename/query token overlap.
+"""
+
 CODE_INTENT_ZERO_CONTENT_CLASSES_DEFAULT: Final[FrozenSet[str]] = frozenset(
     {"logs", "vendor_static", "generated_metrics_data", "tests"}
 )
@@ -106,7 +138,9 @@ def get_retrieval_policy(version: str) -> Mapping[str, object]:
         return RETRIEVAL_POLICY_V1
     if version == "retrieval_policy.v2":
         return RETRIEVAL_POLICY_V2
-    return RETRIEVAL_POLICY_V3
+    if version == "retrieval_policy.v3":
+        return RETRIEVAL_POLICY_V3
+    return RETRIEVAL_POLICY_V4
 
 QUALITY_GATE_VERSION: Final[str] = "quality_gate.v1"
 QUALITY_REASON_CODES: Final[Tuple[str, ...]] = (
@@ -180,4 +214,11 @@ class LexicalRetrievalConfig:
     """
     When set and intent is active, ``config`` class files contribute at most this many
     raw content points (after ``weight_content``), before other scoring.
+    """
+    code_intent_support_style_content_cap: Optional[int] = 24
+    """
+    PR-6 Slice 4: when set and intent is active, ``*Constants.java`` / ``*Utils.java`` / …
+    (see ``is_support_style_java_basename``) cap raw content contribution so behavioral
+    owners can outrank broad support files. Kept low so keyword-heavy constant pools
+    cannot dominate.
     """

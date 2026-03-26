@@ -379,3 +379,75 @@ class TestSlice3CodeIntentContentGating:
             log_hit = next(h for h in r.hits if h.relative_path.endswith(".log"))
             assert (log_hit.diagnostics or {}).get("noise_content_suppressed") == 1
             assert (log_hit.diagnostics or {}).get("content") == 0
+
+
+class TestSlice4OwnerDisambiguation:
+    """PR-6 Slice 4: support-style basenames + basename/query specificity."""
+
+    def test_constants_java_does_not_outrank_behavioral_owner(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "topology anomaly graph node edge metric trace detector false positive " * 80
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/viz/VisualizationConstants.java",
+                "package com.mindarray.viz;\npublic class VisualizationConstants {\n" + blob + "\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+                "package com.mindarray.nms;\n"
+                "public class TopologyEngine {\n"
+                "  void refreshTopologyGraph() { /* topology anomaly */ }\n"
+                "}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Trace topology anomaly detector false positives in node graph",
+                top_k=2,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("TopologyEngine.java")
+            d0 = r.hits[0].diagnostics or {}
+            assert d0.get("basename_specificity", 0) >= 0
+            const_hit = next(
+                h for h in r.hits if "VisualizationConstants" in h.relative_path
+            )
+            assert (const_hit.diagnostics or {}).get("support_file_demotion", 0) > 0
+
+    def test_alert_correlation_beats_availability_when_query_emphasizes_alert(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(
+                root
+                / "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+                "package com.mindarray.aiops.correlation;\n"
+                "public class AlertCorrelationEngine {\n"
+                "  public void correlateDuplicateIncidents() {}\n"
+                "}\n",
+            )
+            _touch(
+                root
+                / "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+                "package com.mindarray.aiops;\n"
+                "public class AvailabilityCorrelationEngine {\n"
+                "  public void correlateDuplicateIncidents() {}\n"
+                "}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Debug alert correlation engine failing to correlate duplicate incidents",
+                top_k=2,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("AlertCorrelationEngine.java")
+            d0 = r.hits[0].diagnostics or {}
+            assert d0.get("basename_specificity", 0) > 0
+
+    def test_support_style_basename_is_detected(self):
+        from runtime.layer5.retrieval import is_support_style_java_basename
+
+        assert is_support_style_java_basename("NMSConstants.java") is True
+        assert is_support_style_java_basename("TopologyEngine.java") is False
