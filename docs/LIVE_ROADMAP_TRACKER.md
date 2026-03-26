@@ -5,23 +5,24 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-23  
+- **Last updated**: 2026-03-26  
+- **Program state**: **Retrieval baseline locked → validation and system hardening phase**
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **Backend path validation + JetBrains plugin alignment** (not “full e2e” until IDE + observability gates pass). **Backend HTTP** chain: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` is provable with `**docs/Backend Production Validation Sheet.md`**. **Plugin** path defaults to `**POST /v0/ask`** unless evidence-first is enabled — see **Known system realities** below. North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` (deployment/validation; rename mentally to deployment runbook) + acceptance-style `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
+- **Current active milestone focus**: **L5.8 — Grounded Ask Validation + Metrics**. Parallel hard gates: **L5-OBS-1 — Observability & Tracing** and **Plugin Truthfulness Alignment**. **L5.9** is explicitly downstream after grounded-input validation stability; **M3.18** remains downstream task-level evaluation after L5.8. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) exists on Plan-Gate; **Ask → Plan → Execute** continuum is not fully reflected in L5 tracker rows until plugin + execute UX are explicitly gated together.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Next:** **production slice readiness** — plugin truthfulness, observability, retrieval quality gates (**L5.8** / **§1.4** tracks); not only deployment smoke.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Next:** **production slice readiness** — plugin truthfulness, observability, retrieval generalization/validation gates (**L5.8** / **§1.4** tracks); not only deployment smoke.
 
 ### 1.1 Known system realities (do not skip)
 
 - **Dual Ask path:** JetBrains may call `**POST /v0/ask`** unless **evidence-first** is ON (`motadata.ask.evidence_first` / `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST`). Backend validation scripts for `**POST /v1/ask`** are **not** the same default path as the IDE — this is a **known system condition**, not operator error.
 - **Evidence-first default:** **OFF** in plugin — alignment with `**layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
 - **Observability gap:** Plan-Gate HTTP does **not** log each request by default; **no unified trace** (Context Layer ↔ Plan-Gate ↔ vLLM) without further work — see **§1.4 Track OBS**.
-- **Retrieval:** Lexical/deterministic **≠** relevance-validated — **L5.8** and **§1.4 Track RET** cover quality gates.
+- **Retrieval:** PR-6 true-positive debug retrieval baseline is **COMPLETE / LOCKED** (deterministic, workspace-local). Active risk is **generalization + validation thresholds** under **L5.8** and **§1.4 Track RET**.
 - **Host profiles:** **Windows+WSL+GPU** and **native Linux** are charter targets; plugin **Plan-Gate URL is hardcoded** `127.0.0.1:8089` today — config externalization is backlog, not done.
 
 ### 1.2 Current truth state (honest)
@@ -64,12 +65,13 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - execution path (`/v0/execute`) is honest and deterministic
 
 ### Retrieval
-- Current retrieval is **lexical-first (A5)** and produces **noisy top-k**
-- Evidence bundles frequently dominated by:
-  - test-plugin-metrics JSON
-  - logs
-  - vendor assets
-- Core AIOps code (`src/main/java/com/mindarray/aiops/*`) is underrepresented
+- Deterministic lexical + symbol retrieval foundation is materially strengthened
+- **PR-6 true-positive debug retrieval baseline is COMPLETE / LOCKED** on real Motadata repo:
+  - Top-1 accuracy: **10/10**
+  - Top-3 anchor hit: **10/10**
+  - Mean first relevant rank: **1.00**
+  - Mean top-5 noise dominance: **0.00**
+- Remaining retrieval risk is **generalization beyond the locked debug fixture set**, not raw noise-dominance rescue
 
 ### Plugin
 - Plugin path may diverge (`/v0/ask` vs `/v1/ask`)
@@ -79,22 +81,19 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 
 ### System Status
 - Backend: FUNCTIONAL
-- Retrieval: WEAK / NOISY
+- Retrieval: BASELINE LOCKED (PR-6), GENERALIZATION PENDING (L5.8)
 - Plugin: PARTIALLY MISALIGNED
-- End-to-end: NOT YET PRODUCTION-GRADE
+- End-to-end: NOT YET PRODUCTION-GRADE (plugin truthfulness + observability + validation gates pending)
 
 ## CRITICAL BLOCKERS FOR PRODUCTION CLOSURE
 
-### B1 — Retrieval Quality (NON-NEGOTIABLE)
-- Top-k must be dominated by AIOps implementation files
-- Remove dominance of:
-  - test/*
-  - logs
-  - vendor assets
-- Add path priors for:
-  - src/main/java/com/mindarray/aiops/*
-- Add identifier normalization (CamelCase, symbol-aware)
-- Add weak-evidence detection
+### B1 — Retrieval Generalization & Validation (NON-NEGOTIABLE)
+- Preserve PR-6 locked baseline policy and deterministic behavior
+- Expand beyond fixed debug closure set with controlled golden suites
+- Build query → expected owner/anchor mappings across Ask / Debug / Plan / Code
+- Add perturbation variants and adversarial packs
+- Track false positives / false negatives / no-match honesty precision
+- Detect owner drift / anchor drift / noise regression with deterministic thresholds
 
 ### B2 — Grounded Ask Validation (L5.8)
 - Query → expected files mapping
@@ -128,47 +127,59 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Control fallback paths explicitly
 - Remove ambiguity between old/new paths
 
-## L5-RET — RETRIEVAL QUALITY TRACK
+## L5-RET — RETRIEVAL POLICY BASELINE + VALIDATION TRACK
 
 Objective:
-Make evidence bundles **AIOps-aware and code-dominant**
+Keep retrieval deterministic and baseline-protected while validating generalization.
 
-### R1 — Hard Filtering
-- Exclude:
-  - test/*
-  - *.log
-  - vendor/js/*
-  - test-plugin-metrics/*
-- Prefer:
-  - src/main/*
-  - code-bearing files
+L5-RET is now a **baseline preservation and regression-protection layer**, not an active improvement track.
 
-### R2 — Path-Based Scoring
-- Boost:
-  +100 → src/main/java/com/mindarray/aiops/*
-  +70 → src/main/java/*
-  +50 → same package
-- Penalize:
-  -100 → test/*
-  -80 → logs/json metrics
-  -60 → vendor assets
+### R1 — Baseline Policy Maintenance (LOCKED)
+- PR-6 established deterministic owner-first retrieval baseline (`retrieval_policy.v5`)
+- Baseline is frozen as canonical for true-positive debug grounding
+- Any ranking logic change requires PR-6 audit re-validation on real repo before merge
 
-### R3 — Query Normalization
-- CamelCase splitting
-- symbol-aware tokenization
-- case-insensitive matching
+### R2 — L5-RET-VALIDATION (feeds L5.8)
+- Query → expected owner / anchor mapping
+- Golden suites:
+  - Ask-understanding
+  - Debug-root-cause
+  - Plan/change-impact
+  - Code-targeting
+  - No-match / ambiguity
+  - Adversarial noise
+- Perturbation suite:
+  - abbreviated symbol
+  - package omitted
+  - CamelCase split
+  - error text only
+  - active-file bias
+  - typo-light wording
+  - subsystem alias wording
+  - why/where/fix phrasing shifts
 
-### R4 — Evidence Guardrail
-- If <30% code files in top-k:
-  → mark evidence as WEAK
-
-### R5 — No-Match Honesty
-- If no relevant code evidence:
-  → explicit "insufficient grounded evidence"
+### R3 — Metrics Gates
+- top-1 owner accuracy
+- top-3 anchor hit
+- mean first relevant rank
+- noise dominance
+- code ratio
+- weak-evidence precision
+- no-match honesty precision
+- drift detection
 
 ### Done Criteria
-- ≥70% top-k from core AIOps code for code-intent queries
-- No test/vendor/log dominance
+- PR-6 baseline preserved
+- L5.8 validation thresholds published and passing for expanded suites
+- Regression detection active for owner/noise drift
+
+## PR-6 Baseline Invariants (NON-NEGOTIABLE)
+- Deterministic retrieval only (no embeddings, no semantic ranking)
+- Workspace-local retrieval (WSL), not GPU
+- Production code dominance over logs/tests/vendor
+- Noise dominance must remain ~0.00
+- Owner-file accuracy must not regress
+- Any retrieval change must pass regression suite before merge
 
 ## L5-OBS — OBSERVABILITY TRACK
 
@@ -263,7 +274,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)            | **COMPLETE / LOCKED**     | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.                                                                                                                                                                                                                                                                                                                                                                             |
 | **L3** | Runtime Enforcement / Execution        | **COMPLETE** (M3.0–M3.11) | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **L4** | Observation / Drift Detection          | **COMPLETE** (Track-C)    | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).                                                                                                                                                                                                                                                                                                                                        |
-| **L5** | Workspace Intelligence / Ask Grounding | **VALIDATING**            | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **Active work:** backend HTTP validation ✅ operator path; **plugin alignment + observability + retrieval quality** (§1.3–§1.4) — **not** “full e2e” until those gates pass. **Deployment/validation:** runbook + `**docs/Backend Production Validation Sheet.md`** / `**docs/JetBrains Plugin Defect Isolation Sheet.md**`. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
+| **L5** | Workspace Intelligence / Ask Grounding | **VALIDATING**            | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **Active work:** backend HTTP validation ✅ operator path; **plugin alignment + observability + retrieval generalization/validation** (§1.3–§1.4) — **not** “full e2e” until those gates pass. **Deployment/validation:** runbook + `**docs/Backend Production Validation Sheet.md`** / `**docs/JetBrains Plugin Defect Isolation Sheet.md**`. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
 
 
 ---
@@ -653,7 +664,7 @@ Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
 - L5.9: Compatibility path hardening
 
 #### New Required Tracks
-- L5-RET: Retrieval Quality Remediation
+- L5-RET: Retrieval Baseline Preservation + Validation Generalization
 - L5-OBS: Observability & Tracing
 - L5-UX: Plugin Truthfulness Alignment
 
@@ -672,7 +683,7 @@ Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
 | L5.5 | Plugin Evidence Bridge (A7)                | COMPLETE    | L5.1–L5.4, M3.7 | Evidence-first: **WSL HTTP** `POST /v1/export_evidence` (wheel) or CLI / dev script → `ask_request.v1.0` → `POST /v1/ask`; controlled v0 fallback only when Context Layer **unreachable**; UI treats `evidence_bundle` as primary. See **§6.15**. |
 | L5.6 | Plan-Gate Evidence Ingestion (A8)          | COMPLETE    | L5.4–L5.5, M3.5 | Plan-Gate `POST /v1/ask` validates/consumes `layer5.evidence_bundle.v1`; reasoning from bundle only (no repo ContextEngine on v1 path). See **§6.15**.                                                                                            |
 | L5.7 | Dirty Buffer / Live File Overlay           | NOT_STARTED | L5.5            | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth.                                                                                                         |
-| L5.8 | Grounded Ask Validation + Metrics          | NOT_STARTED | L5.6–L5.7, L4   | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking.                                                                                        |
+| L5.8 | Grounded Ask Validation + Metrics          | NOT_STARTED | L5.6, L4        | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking. **Note:** L5.7 (Dirty Buffer) is not a blocking dependency for L5.8; L5.8 validation runs on on-disk repository state, while dirty-buffer support is a correctness extension. |
 | L5.9 | Compatibility Path Deprecation / Hardening | NOT_STARTED | L5.6–L5.8       | Compatibility transition with feature flags, controlled fallback path, and telemetry comparison between compatibility and workspace-local evidence paths before hardening default.                                                                |
 
 
@@ -731,16 +742,19 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Backend path validation + plugin alignment + production gates** — **not** claiming “full e2e production-ready” until **§1.3** + **Track OBS** are satisfied. Sequentially: (1) `**docs/Backend Production Validation Sheet.md`** proves **Context Layer → `/v1/ask`** (and related scenarios) without IDE; (2) `**docs/JetBrains Plugin Defect Isolation Sheet.md**` compares IDE to known-good backend; (3) close **§1.3** checklist items (path visibility, notes, execute honesty, tracing).
+- **Current objective**: **L5.8 grounded validation execution** while preserving the locked PR-6 retrieval baseline; close **L5-OBS-1** and **plugin truthfulness** in parallel as hard production gates.
 - **Active tasks**:
   - Run deployment/validation flow using `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + indexed repo path; **Windows** = plugin + tunnels as documented. Treat `**docs/MOTADATA_DEMO_SCENARIOS.md`** as **acceptance scenarios**, not “demo-only.”
   - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4) where applicable; **plugin** must have **evidence-first ON** for apples-to-apples comparison with backend `/v1/ask` scripts.
   - Plan-Gate `/version` must show `**ask_request_v1`**. **Full Explain/Debug stack** requires vLLM + `**MOTADATA_EXPLAIN_VLLM_URL`** (see runbook). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production validation path.
-  - **B1 re-test (PR-2.1 intent-rule fix) recorded:** query `Which files implement topology anomaly scoring pipeline?` now classifies as `CODE_INTENT` (previously `GENERIC_INTENT`), with truthful `WEAK` quality and caveat note when evidence remains noise-dominated. This is a **control-layer correctness pass**, not yet a retrieval-dominance pass (see `docs/Backend Production Validation Sheet.md` B1 addendum).
-- **Next 3 milestones** (actual upcoming work):
-  1. **Production slice gate** — IN_PROGRESS (backend ✅ scriptable; **plugin + observability** per **§1** — rename mentally: not “E2E theater”)
-  2. **L5.7** Dirty Buffer / Live File Overlay — NOT_STARTED
-  3. **L5.8** Grounded Ask Validation + Metrics — NOT_STARTED (overlaps **§1.4 L5-RET-VALIDATION**; **L5-OBS-1** tracked separately in **§1.4**)
+  - **B1 control-layer note (historical):** query `Which files implement topology anomaly scoring pipeline?` classification correction remains valid (`CODE_INTENT` vs prior `GENERIC_INTENT`). PR-6 now closes baseline retrieval dominance for the locked debug set; active work is generalized validation in L5.8.
+- **Next execution order**:
+  1. **L5.8** Grounded Ask Validation + Metrics (active)
+  2. **L5-OBS-1** Observability & Tracing (parallel hard gate)
+  3. **Plugin Truthfulness Alignment** (parallel hard gate)
+  4. **M3.18** task-level Ask/Debug/Plan/Code evaluation (downstream)
+  5. **L5.9** compatibility path hardening (downstream after grounded-input stability)
+  6. Host readiness / acceptance / release sign-off
 - **Related (M3.12):** Manifest + `doc_selector` repo-aware slice **merged** into `feature/l5-context-layer-v1-ask-packaging`. **M3.13** (Jira) / **M3.14** (PR) ingestion — NOT_STARTED.
 - **Current blockers**:
   - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
@@ -1018,7 +1032,7 @@ This file is the **single live progress dashboard** for the Motadata AI Coding A
   - Update:
     - `Current objective`
     - `Active tasks`
-    - `Next 3 milestones`
+    - `Next execution order`
     - `Current blockers`
     - `Immediate next action`
 5. **Do not alter constitutional doctrine**
