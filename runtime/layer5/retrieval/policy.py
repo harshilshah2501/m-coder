@@ -37,6 +37,50 @@ _SUBSYSTEM_KEYWORDS = {
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
+# Query tokens that imply code / debug / engineering investigation (PR-6 Slice 3).
+# Intersection with normalized query tokens enables content gating without ML.
+_CODE_DEBUG_INTENT_TOKENS: FrozenSet[str] = frozenset(
+    {
+        "alert",
+        "alerts",
+        "anomaly",
+        "collector",
+        "correlation",
+        "debug",
+        "delegation",
+        "detector",
+        "duplicate",
+        "engine",
+        "facade",
+        "fail",
+        "failing",
+        "false",
+        "graph",
+        "helper",
+        "incident",
+        "incidents",
+        "ingest",
+        "ingestion",
+        "inconsistency",
+        "intermittently",
+        "investigate",
+        "issue",
+        "metric",
+        "metrics",
+        "orchestrate",
+        "parser",
+        "pipeline",
+        "positive",
+        "positives",
+        "service",
+        "timeout",
+        "topology",
+        "trace",
+        "utilities",
+        "utility",
+    }
+)
+
 
 @dataclass(frozen=True)
 class FilePolicy:
@@ -62,6 +106,8 @@ def classify_file(relative_path: str) -> FilePolicy:
     if any(part in {"vendor", "node_modules"} for part in parts):
         return FilePolicy(file_class="vendor_static", subsystem="unknown")
     if any(part in {"test-plugin-metrics", "metrics_dump"} for part in parts):
+        return FilePolicy(file_class="generated_metrics_data", subsystem="unknown")
+    if "db-files" in parts:
         return FilePolicy(file_class="generated_metrics_data", subsystem="unknown")
     if ext == ".json" and any(tok in rel for tok in ("metrics", "snapshot", "report")):
         return FilePolicy(file_class="generated_metrics_data", subsystem="unknown")
@@ -89,6 +135,18 @@ def infer_file_subsystem(relative_path: str) -> str:
         if any(t in keywords for t in toks):
             return subsystem
     return "unknown"
+
+
+def infer_code_debug_intent(tokens: Tuple[str, ...]) -> bool:
+    """
+    Deterministic code/debug/engineering intent for lexical retrieval.
+
+    When True, Slice-3 content gating may zero content scores on noise file classes
+    so log/JSON dumps cannot outrank ``src/main/java`` implementation files.
+    """
+    if not tokens:
+        return False
+    return bool(set(tokens) & _CODE_DEBUG_INTENT_TOKENS)
 
 
 def infer_query_subsystems(tokens: Iterable[str]) -> FrozenSet[str]:

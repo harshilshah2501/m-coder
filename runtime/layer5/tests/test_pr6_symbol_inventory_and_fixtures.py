@@ -68,66 +68,8 @@ def _load_pr6_symbol_fixture() -> List[Dict[str, object]]:
 
 
 def _setup_pr6_tree(root: Path) -> None:
-    _touch(
-        root / "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
-        (
-            "package com.mindarray.aiops.correlation;\n"
-            "public class AlertCorrelationEngine {\n"
-            "  public void correlateDuplicateIncidents() {}\n"
-            "}\n"
-        ),
-    )
-    _touch(
-        root / "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java",
-        (
-            "package com.mindarray.aiops.correlation;\n"
-            "public class CorrelationService {\n"
-            "  public void correlateAlerts() {}\n"
-            "}\n"
-        ),
-    )
-    _touch(
-        root / "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java",
-        (
-            "package com.mindarray.aiops.topology;\n"
-            "public class TopologyAnomalyDetector {\n"
-            "  public void detectNodeGraphAnomaly() {}\n"
-            "}\n"
-        ),
-    )
-    _touch(
-        root / "src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java",
-        (
-            "package com.mindarray.aiops.topology;\n"
-            "public class NodeGraphAnalyzer {\n"
-            "  public void analyzeGraphNodes() {}\n"
-            "}\n"
-        ),
-    )
-    _touch(
-        root / "src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
-        (
-            "package com.mindarray.aiops.ingestion;\n"
-            "public class IngestionPipeline {\n"
-            "  public void runCollectorPipeline() {}\n"
-            "}\n"
-        ),
-    )
-    _touch(
-        root / "src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
-        (
-            "package com.mindarray.aiops.ingestion;\n"
-            "public class MetricsParser {\n"
-            "  public void parseCollectorMetrics() {}\n"
-            "}\n"
-        ),
-    )
-
-    # Intentional noise files.
-    _touch(root / "tests/correlation/alert_correlation_test.py", "alert correlation engine duplicate incidents")
-    _touch(root / "logs/correlation.log", "correlate duplicate incidents engine failed")
-    _touch(root / "vendor/topology.js", "topology anomaly detector graph node")
-    _touch(root / "test-plugin-metrics/collector_snapshot.json", "{\"collector\":\"timeout\"}")
+    """Same layout as ``write_noisy_aiops_workspace`` (motadata-prefixed PR-6 tree)."""
+    write_noisy_aiops_workspace(root)
 
 
 def _first_relevant_rank(hits: List[str], anchors: List[str]) -> int | None:
@@ -148,11 +90,11 @@ def test_pr6_symbol_inventory_is_deterministic_and_contains_expected_fields():
         inv_b = build_symbol_inventory(idx)
         assert inv_a.canonical_json() == inv_b.canonical_json()
         assert inv_a.schema_version == "layer5.symbol_inventory.v1"
-        assert len(inv_a.entries) >= 12
+        assert len(inv_a.entries) >= 8
 
         sample = inv_a.entries[0]
         assert sample.symbol_name
-        assert sample.relative_path.startswith("src/main/java/com/mindarray/aiops/")
+        assert sample.relative_path.startswith("motadata/src/main/java/com/mindarray/aiops/")
         assert isinstance(sample.package, str)
         assert isinstance(sample.module, str)
         assert isinstance(sample.normalized_tokens, tuple)
@@ -204,7 +146,7 @@ def test_pr6_fixtures_meet_anchor_and_dominance_requirements():
 def test_package_private_methods_in_symbol_inventory():
     with tempfile.TemporaryDirectory() as raw:
         root = Path(raw)
-        rel = "src/main/java/com/mindarray/aiops/testpkg/PkgOnly.java"
+        rel = "motadata/src/main/java/com/mindarray/aiops/testpkg/PkgOnly.java"
         _touch(
             root / rel,
             "package com.mindarray.aiops.testpkg;\n"
@@ -283,7 +225,7 @@ def test_query_prefers_class_specific_file_over_same_package_sibling():
     with tempfile.TemporaryDirectory() as raw:
         root = Path(raw)
         _touch(
-            root / "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+            root / "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
             (
                 "package com.mindarray.aiops.correlation;\n"
                 "public class AlertCorrelationEngine {\n"
@@ -292,7 +234,7 @@ def test_query_prefers_class_specific_file_over_same_package_sibling():
             ),
         )
         _touch(
-            root / "src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java",
+            root / "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java",
             (
                 "package com.mindarray.aiops.correlation;\n"
                 "public class CorrelationUtils {\n"

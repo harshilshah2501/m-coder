@@ -10,6 +10,11 @@ import pytest
 from pathlib import Path
 
 from runtime.layer5.workspace.resolver import WorkspaceResolver, ResolverConfig, resolve_workspace
+
+# Repo root: runtime/layer5/tests/ -> parents[3] == m-coder
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_RUNTIME_LAYER5 = _REPO_ROOT / "runtime" / "layer5"
+_RUNTIME_CONTEXT = _REPO_ROOT / "runtime" / "context"
 from runtime.layer5.workspace.identity import (
     WorkspaceIdentity,
     WorkspaceRevision,
@@ -124,18 +129,18 @@ class TestResolverWithRealFilesystem:
     def test_resolve_current_workspace(self):
         """Resolve the actual workspace we're in (has .git)."""
         resolver = WorkspaceResolver()
-        # Use a known path in the workspace
-        identity, error = resolver.resolve("/workspace/runtime/layer5")
+        identity, error = resolver.resolve(str(_RUNTIME_LAYER5))
 
         assert error is None
         assert identity is not None
         assert identity.is_git_repo is True
-        assert identity.canonical_root.endswith("workspace") or "/workspace" in identity.canonical_root
+        assert _REPO_ROOT.name in identity.canonical_root or str(_REPO_ROOT) in identity.canonical_root
 
     def test_resolve_with_file_path(self):
         """Resolution should work with file paths too."""
         resolver = WorkspaceResolver()
-        identity, error = resolver.resolve("/workspace/runtime/layer5/__init__.py")
+        marker = _RUNTIME_LAYER5 / "__init__.py"
+        identity, error = resolver.resolve(str(marker))
 
         assert error is None
         assert identity is not None
@@ -144,7 +149,7 @@ class TestResolverWithRealFilesystem:
     def test_revision_metadata_captured(self):
         """Test that git revision metadata is captured."""
         resolver = WorkspaceResolver()
-        identity, error = resolver.resolve("/workspace")
+        identity, error = resolver.resolve(str(_REPO_ROOT))
 
         assert error is None
         assert identity is not None
@@ -221,9 +226,10 @@ class TestResolverDeterminism:
     def test_same_input_same_output(self):
         """Same input always produces same canonical root and hash."""
         resolver = WorkspaceResolver()
+        rt = str(_REPO_ROOT / "runtime")
 
-        identity1, _ = resolver.resolve("/workspace/runtime")
-        identity2, _ = resolver.resolve("/workspace/runtime")
+        identity1, _ = resolver.resolve(rt)
+        identity2, _ = resolver.resolve(rt)
 
         assert identity1.canonical_root == identity2.canonical_root
         assert identity1.identity_hash == identity2.identity_hash
@@ -232,8 +238,8 @@ class TestResolverDeterminism:
         """Different paths in same workspace produce same identity hash."""
         resolver = WorkspaceResolver()
 
-        identity1, _ = resolver.resolve("/workspace/runtime/layer5")
-        identity2, _ = resolver.resolve("/workspace/runtime/context")
+        identity1, _ = resolver.resolve(str(_RUNTIME_LAYER5))
+        identity2, _ = resolver.resolve(str(_RUNTIME_CONTEXT))
 
         assert identity1.identity_hash == identity2.identity_hash
         assert identity1.canonical_root == identity2.canonical_root
@@ -243,7 +249,7 @@ class TestConvenienceFunction:
     """Test resolve_workspace convenience function."""
 
     def test_resolve_workspace_success(self):
-        identity, error = resolve_workspace("/workspace")
+        identity, error = resolve_workspace(str(_REPO_ROOT))
         assert error is None
         assert identity is not None
 
@@ -258,7 +264,7 @@ class TestResolveOrRaise:
 
     def test_resolve_or_raise_success(self):
         resolver = WorkspaceResolver()
-        identity = resolver.resolve_or_raise("/workspace")
+        identity = resolver.resolve_or_raise(str(_REPO_ROOT))
         assert identity is not None
         assert identity.canonical_root
 

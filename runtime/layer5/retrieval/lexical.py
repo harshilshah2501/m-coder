@@ -14,7 +14,9 @@ from runtime.layer5.index.symbol_inventory import resolve_symbol_lookup_for_inde
 from runtime.layer5.retrieval.config import LexicalRetrievalConfig, get_retrieval_policy
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
 from runtime.layer5.retrieval.policy import (
+    FilePolicy,
     classify_file,
+    infer_code_debug_intent,
     infer_query_subsystems,
     is_noise_class,
     looks_like_symbol_token,
@@ -28,7 +30,7 @@ def _basename(rel: str) -> str:
     return rel.rsplit("/", 1)[-1]
 
 
-def _content_score(
+def _raw_content_score(
     root: Path,
     entry: FileIndexEntry,
     tokens: Tuple[str, ...],
@@ -43,6 +45,32 @@ def _content_score(
         return 0
     text = data.decode("utf-8", errors="replace").lower()
     return sum(text.count(t) * cfg.weight_content for t in tokens)
+
+
+def _apply_code_intent_content(
+    raw_content: int,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    cfg: LexicalRetrievalConfig,
+) -> Tuple[int, int, int]:
+    """
+    Returns ``(effective_content, noise_content_suppressed, config_content_trimmed)``.
+
+    ``noise_content_suppressed`` is 1 when a noise class would have contributed raw mass.
+    ``config_content_trimmed`` is the number of content points dropped from cap.
+    """
+    if not code_intent_active or not cfg.enable_code_debug_content_gating:
+        return raw_content, 0, 0
+    fc = fpolicy.file_class
+    if fc in cfg.code_intent_zero_content_classes:
+        suppressed = 1 if raw_content > 0 else 0
+        return 0, suppressed, 0
+    if fc == "config" and cfg.code_intent_config_content_cap is not None:
+        cap = max(0, int(cfg.code_intent_config_content_cap))
+        if raw_content > cap:
+            return cap, 0, raw_content - cap
+        return raw_content, 0, 0
+    return raw_content, 0, 0
 
 
 def _scaled(score: float, cfg: LexicalRetrievalConfig) -> int:
@@ -162,6 +190,7 @@ def _score_entry(
     cfg: LexicalRetrievalConfig,
     policy: Mapping,
     symbol_lookup: Mapping[str, Tuple[str, ...]],
+    code_intent_active: bool,
 ) -> RetrievalHit:
     if not tokens:
         return RetrievalHit(
@@ -182,7 +211,10 @@ def _score_entry(
 
     path_part = sum(rel_l.count(t) * cfg.weight_path for t in tokens)
     base_part = sum(base_l.count(t) * cfg.weight_basename for t in tokens)
-    content_part = _content_score(root, entry, tokens, cfg)
+    raw_content = _raw_content_score(root, entry, tokens, cfg)
+    content_part, noise_content_suppressed, config_content_trimmed = _apply_code_intent_content(
+        raw_content, fpolicy, code_intent_active, cfg
+    )
     prior_map = policy["path_prior"]
     class_prior = 0.0
     if isinstance(prior_map, Mapping):
@@ -204,6 +236,14 @@ def _score_entry(
     if cfg.enable_policy_bias and is_noise_class(fpolicy.file_class):
         mult = float(policy["noise_penalty_multiplier"])
         noise_penalty = _scaled(abs(class_prior) * mult, cfg)
+    main_java_bonus = 0
+    if (
+        code_intent_active
+        and cfg.enable_policy_bias
+        and "/src/main/java/" in rel_l
+        and fpolicy.file_class in ("core_aiops_code", "supporting_prod_code")
+    ):
+        main_java_bonus = _scaled(float(policy.get("code_intent_main_java_bonus", 0.0)), cfg)
     total = (
         path_part
         + base_part
@@ -214,8 +254,17 @@ def _score_entry(
         + symbol_inventory_boost
         + module_bias
         - noise_penalty
+        + main_java_bonus
     )
-    policy_part = path_prior + subsystem_boost + symbol_boost + symbol_inventory_boost + module_bias - noise_penalty
+    policy_part = (
+        path_prior
+        + subsystem_boost
+        + symbol_boost
+        + symbol_inventory_boost
+        + module_bias
+        - noise_penalty
+        + main_java_bonus
+    )
     diagnostics: Optional[Dict[str, int]] = None
     if cfg.include_score_diagnostics:
         diagnostics = {
@@ -228,6 +277,10 @@ def _score_entry(
             "symbol_inventory_boost": symbol_inventory_boost,
             "module_bias": module_bias,
             "noise_penalty": noise_penalty,
+            "main_java_bonus": main_java_bonus,
+            "noise_content_suppressed": noise_content_suppressed,
+            "config_content_trimmed": config_content_trimmed,
+            "code_intent": 1 if code_intent_active else 0,
             "total": total,
         }
     return RetrievalHit(
@@ -263,6 +316,9 @@ def retrieve_lexical(
     cfg = config or LexicalRetrievalConfig()
     policy = get_retrieval_policy(cfg.policy_version)
     tokens = normalize_query(query, min_token_len=cfg.min_token_len)
+    code_intent_active = (
+        bool(cfg.code_debug_intent) if cfg.code_debug_intent is not None else infer_code_debug_intent(tokens)
+    )
     root = Path(index.canonical_root)
     symbol_lookup = resolve_symbol_lookup_for_index(index)
 
@@ -276,7 +332,9 @@ def retrieve_lexical(
             workspace_identity_hash=index.workspace_identity_hash,
         )
 
-    scored: List[RetrievalHit] = [_score_entry(e, tokens, root, cfg, policy, symbol_lookup) for e in index.files]
+    scored: List[RetrievalHit] = [
+        _score_entry(e, tokens, root, cfg, policy, symbol_lookup, code_intent_active) for e in index.files
+    ]
 
     if not tokens:
         # Deterministic fallback: index.files is already sorted by relative_path

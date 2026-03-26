@@ -6,10 +6,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Mapping, Tuple
+from typing import Final, FrozenSet, Mapping, Optional, Tuple
 
 
-RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v2"
+RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v3"
 """
 Versioned deterministic policy identifier.
 Any change to policy weights/thresholds requires a new version and re-validation.
@@ -67,12 +67,46 @@ PR-4 targeted tuning: stronger core path prior and subsystem/symbol boosts,
 slightly stronger noise penalties — deterministic, config-driven.
 """
 
+RETRIEVAL_POLICY_V3: Final[Mapping[str, object]] = MappingProxyType(
+    {
+        "path_prior": MappingProxyType(
+            {
+                "core_aiops_code": 6.5,
+                "supporting_prod_code": 2.3,
+                "config": -1.2,
+                "tests": -4.6,
+                "logs": -5.6,
+                "vendor_static": -6.8,
+                "generated_metrics_data": -5.6,
+            }
+        ),
+        "subsystem_boost": 3.25,
+        "symbol_boost": 3.6,
+        "symbol_inventory_exact_boost": 2.8,
+        "symbol_inventory_token_boost": 1.4,
+        "symbol_inventory_overlap_cap": 3,
+        "module_bias": 1.85,
+        "noise_penalty_multiplier": 1.15,
+        # Extra deterministic bias for production Java under code/debug intent (scaled).
+        "code_intent_main_java_bonus": 3.5,
+    }
+)
+"""
+PR-6 Slice 3: same priors as v2 plus ``code_intent_main_java_bonus`` for ``src/main/java`` code paths.
+"""
+
+CODE_INTENT_ZERO_CONTENT_CLASSES_DEFAULT: Final[FrozenSet[str]] = frozenset(
+    {"logs", "vendor_static", "generated_metrics_data", "tests"}
+)
+
 
 def get_retrieval_policy(version: str) -> Mapping[str, object]:
     """Resolve immutable policy mapping by version string (audit-friendly)."""
     if version == "retrieval_policy.v1":
         return RETRIEVAL_POLICY_V1
-    return RETRIEVAL_POLICY_V2
+    if version == "retrieval_policy.v2":
+        return RETRIEVAL_POLICY_V2
+    return RETRIEVAL_POLICY_V3
 
 QUALITY_GATE_VERSION: Final[str] = "quality_gate.v1"
 QUALITY_REASON_CODES: Final[Tuple[str, ...]] = (
@@ -129,4 +163,21 @@ class LexicalRetrievalConfig:
     """
     When True, each ``RetrievalHit`` includes ``diagnostics`` with integer contributions
     (path/basename/content, path_prior, subsystem, symbol boosts, module_bias, noise).
+    """
+    code_debug_intent: Optional[bool] = None
+    """
+    When True/False, force code/debug intent on or off for content gating and main-Java bonus.
+    When None (default), intent is inferred from query tokens (see ``infer_code_debug_intent``).
+    """
+    enable_code_debug_content_gating: bool = True
+    """
+    When True and code/debug intent is active, content scores from noise file classes are zeroed
+    and ``config`` class content may be capped (see ``code_intent_config_content_cap``).
+    """
+    code_intent_zero_content_classes: FrozenSet[str] = CODE_INTENT_ZERO_CONTENT_CLASSES_DEFAULT
+    """File classes whose raw content keyword mass is ignored under code/debug intent."""
+    code_intent_config_content_cap: Optional[int] = 80
+    """
+    When set and intent is active, ``config`` class files contribute at most this many
+    raw content points (after ``weight_content``), before other scoring.
     """

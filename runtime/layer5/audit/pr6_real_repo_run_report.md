@@ -1,23 +1,23 @@
 # PR-6 real-repo (or bundled) retrieval audit
 ## Workspace source
 - bundled noisy fixture (no real AIOps checkout found): `/home/harshil/Harshil-PoCs/m-coder/runtime/layer5/audit/fixture_noisy_aiops_workspace` (set `PR6_AIOPS_ROOT` to evaluate a real tree)
-- **Indexed files:** 16
+- **Indexed files:** 27
 - **Queries run:** 10
 
 ## Per-query results
 ### `alert_correlation_engine_debug` (mandatory)
 - **query:** Debug alert correlation engine failing to correlate duplicate incidents
-- **first relevant rank:** 1
+- **first relevant rank:** 2
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 57 ✓
-  - **diagnostics (top-1):** {'path_lexical': 4, 'basename_lexical': 6, 'content': 9, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 4, 'noise_penalty': 0, 'total': 57}
-  - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 43 ✓
-  3. `src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 39
-  4. `src/main/java/com/mindarray/aiops/shared/ServiceFacade.java` — 27
-  5. `src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 25
+  1. `motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 62
+  - **diagnostics (top-1):** {'path_lexical': 4, 'basename_lexical': 6, 'content': 7, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 4, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 62}
+  - **note:** inspect content vs symbol_inventory vs lexical path overlap
+  2. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 53 ✓
+  3. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 50
+  4. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 45
+  5. `motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java` — 37
 
 ### `topology_anomaly_detector_debug` (mandatory)
 - **query:** Trace topology anomaly detector false positives in node graph
@@ -25,13 +25,13 @@
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java` — 58 ✓
-  - **diagnostics (top-1):** {'path_lexical': 6, 'basename_lexical': 6, 'content': 8, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 4, 'noise_penalty': 0, 'total': 58}
+  1. `motadata/src/main/java/com/mindarray/aiops/DependencyManager.java` — 54 ✓
+  - **diagnostics (top-1):** {'path_lexical': 2, 'basename_lexical': 0, 'content': 20, 'path_prior': 13, 'subsystem_boost': 0, 'symbol_boost': 0, 'symbol_inventory_boost': 12, 'module_bias': 0, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 54}
   - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java` — 50 ✓
-  3. `src/main/java/com/mindarray/aiops/topology/GraphConsistencyChecker.java` — 47
-  4. `src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 27
-  5. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 23
+  2. `motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 34
+  3. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 32
+  4. `motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java` — 31
+  5. `motadata/src/main/java/com/mindarray/nms/TopologyEngine.java` — 30 ✓
 
 ### `ingestion_pipeline_parser_debug` (mandatory)
 - **query:** Investigate ingestion pipeline parser timeout for metrics collector
@@ -39,13 +39,13 @@
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 50 ✓
-  - **diagnostics (top-1):** {'path_lexical': 3, 'basename_lexical': 4, 'content': 5, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 4, 'noise_penalty': 0, 'total': 50}
+  1. `motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 57 ✓
+  - **diagnostics (top-1):** {'path_lexical': 3, 'basename_lexical': 4, 'content': 5, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 4, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 57}
   - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java` — 50 ✓
-  3. `src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 39
-  4. `src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java` — 38
-  5. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 13
+  2. `motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java` — 57 ✓
+  3. `motadata/src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 46
+  4. `motadata/src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java` — 45
+  5. `motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java` — 41 ✓
 
 ### `ambiguous_correlation_alerts` (ambiguous)
 - **query:** Correlation issue in alerts
@@ -53,27 +53,27 @@
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 49 ✓
-  - **diagnostics (top-1):** {'path_lexical': 5, 'basename_lexical': 4, 'content': 8, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 9, 'module_bias': 4, 'noise_penalty': 0, 'total': 49}
+  1. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 53 ✓
+  - **diagnostics (top-1):** {'path_lexical': 4, 'basename_lexical': 4, 'content': 13, 'path_prior': 13, 'subsystem_boost': 0, 'symbol_boost': 0, 'symbol_inventory_boost': 12, 'module_bias': 0, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 53}
   - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 46 ✓
-  3. `src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 42
-  4. `src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 30 ✓
-  5. `src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 27
+  2. `motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 53
+  3. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 52
+  4. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 48
+  5. `motadata/src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 37
 
 ### `ambiguous_topology_graph` (ambiguous)
 - **query:** Topology graph inconsistency
-- **first relevant rank:** 1
+- **first relevant rank:** 2
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/topology/GraphConsistencyChecker.java` — 47 ✓
-  - **diagnostics (top-1):** {'path_lexical': 2, 'basename_lexical': 2, 'content': 5, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 4, 'noise_penalty': 0, 'total': 47}
-  - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java` — 42 ✓
-  3. `src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java` — 39 ✓
-  4. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 13
-  5. `src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 13
+  1. `motadata/src/main/java/com/mindarray/aiops/DependencyManager.java` — 34
+  - **diagnostics (top-1):** {'path_lexical': 0, 'basename_lexical': 0, 'content': 5, 'path_prior': 13, 'subsystem_boost': 0, 'symbol_boost': 0, 'symbol_inventory_boost': 9, 'module_bias': 0, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 34}
+  - **note:** path_prior exceeds symbol_inventory on this file — class policy prior strong
+  2. `motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java` — 23 ✓
+  3. `motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java` — 22 ✓
+  4. `motadata/src/main/java/com/mindarray/nms/TopologyEngine.java` — 21 ✓
+  5. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 20
 
 ### `ambiguous_metrics_ingestion_intermittent` (ambiguous)
 - **query:** Metrics ingestion failing intermittently
@@ -81,27 +81,27 @@
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java` — 39 ✓
-  - **diagnostics (top-1):** {'path_lexical': 2, 'basename_lexical': 2, 'content': 3, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 9, 'module_bias': 4, 'noise_penalty': 0, 'total': 39}
+  1. `motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java` — 46 ✓
+  - **diagnostics (top-1):** {'path_lexical': 2, 'basename_lexical': 2, 'content': 3, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 9, 'module_bias': 4, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 46}
   - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 38 ✓
-  3. `src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java` — 38 ✓
-  4. `src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 25
-  5. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 13
+  2. `motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 45 ✓
+  3. `motadata/src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java` — 45 ✓
+  4. `motadata/src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 32
+  5. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 22
 
 ### `indirect_duplicate_incidents` (ambiguous)
 - **query:** duplicate incident handling
-- **first relevant rank:** 1
+- **first relevant rank:** 2
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 33 ✓
-  - **diagnostics (top-1):** {'path_lexical': 0, 'basename_lexical': 0, 'content': 5, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 9, 'module_bias': 0, 'noise_penalty': 0, 'total': 33}
-  - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 29 ✓
-  3. `src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 19
-  4. `src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 19
-  5. `src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 13
+  1. `motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 37
+  - **diagnostics (top-1):** {'path_lexical': 0, 'basename_lexical': 0, 'content': 2, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 9, 'module_bias': 0, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 37}
+  - **note:** path_prior exceeds symbol_inventory on this file — class policy prior strong
+  2. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 34 ✓
+  3. `motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java` — 31 ✓
+  4. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 26
+  5. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 26
 
 ### `soft_noise_helper_utils` (ambiguous)
 - **query:** correlation helper utilities
@@ -109,27 +109,27 @@
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 45 ✓
-  - **diagnostics (top-1):** {'path_lexical': 2, 'basename_lexical': 2, 'content': 6, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 12, 'module_bias': 4, 'noise_penalty': 0, 'total': 45}
+  1. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 49 ✓
+  - **diagnostics (top-1):** {'path_lexical': 2, 'basename_lexical': 2, 'content': 3, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 12, 'module_bias': 4, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 49}
   - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 38
-  3. `src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 38 ✓
-  4. `src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 25
-  5. `src/main/java/com/mindarray/aiops/shared/ServiceFacade.java` — 23 ✓
+  2. `motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 45 ✓
+  3. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 45
+  4. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 35 ✓
+  5. `motadata/src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 32
 
 ### `multi_file_pipeline_orchestration` (ambiguous)
 - **query:** orchestrate collector pipeline end to end
-- **first relevant rank:** 1
+- **first relevant rank:** 2
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 47 ✓
-  - **diagnostics (top-1):** {'path_lexical': 1, 'basename_lexical': 2, 'content': 10, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 0, 'noise_penalty': 0, 'total': 47}
-  - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 38 ✓
-  3. `src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java` — 30 ✓
-  4. `src/main/java/com/mindarray/aiops/shared/ServiceFacade.java` — 23
-  5. `src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java` — 23
+  1. `motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java` — 54
+  - **diagnostics (top-1):** {'path_lexical': 1, 'basename_lexical': 2, 'content': 10, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 15, 'module_bias': 0, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 54}
+  - **note:** inspect content vs symbol_inventory vs lexical path overlap
+  2. `motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java` — 53 ✓
+  3. `motadata/src/main/java/com/mindarray/aiops/ingestion/CollectorRegistry.java` — 45
+  4. `motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java` — 37
+  5. `motadata/src/main/java/com/mindarray/aiops/DependencyManager.java` — 35 ✓
 
 ### `soft_collision_shared_facade` (ambiguous)
 - **query:** service facade delegation correlation
@@ -137,18 +137,18 @@
 - **top-3 anchor hit:** yes
 - **noise dominance ratio (top-5):** 0.00
 - **top-5 (path | score):**
-  1. `src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 45 ✓
-  - **diagnostics (top-1):** {'path_lexical': 3, 'basename_lexical': 4, 'content': 3, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 12, 'module_bias': 4, 'noise_penalty': 0, 'total': 45}
+  1. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java` — 52 ✓
+  - **diagnostics (top-1):** {'path_lexical': 3, 'basename_lexical': 4, 'content': 3, 'path_prior': 13, 'subsystem_boost': 6, 'symbol_boost': 0, 'symbol_inventory_boost': 12, 'module_bias': 4, 'noise_penalty': 0, 'main_java_bonus': 7, 'noise_content_suppressed': 0, 'config_content_trimmed': 0, 'code_intent': 1, 'total': 52}
   - **note:** top-1 is an expected anchor.
-  2. `src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 39
-  3. `src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 38
-  4. `src/main/java/com/mindarray/aiops/shared/ServiceFacade.java` — 37 ✓
-  5. `src/main/java/com/mindarray/aiops/correlation/internal/EventDeduper.java` — 25
+  2. `motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java` — 45
+  3. `motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java` — 45
+  4. `motadata/src/main/java/com/mindarray/aiops/shared/ServiceFacade.java` — 44 ✓
+  5. `motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java` — 35 ✓
 
 ## Aggregate metrics
-- **top-1 accuracy:** 10/10 = 1.00
+- **top-1 accuracy:** 6/10 = 0.60
 - **top-3 anchor hit rate:** 10/10 = 1.00
-- **mean first relevant rank:** 1.00
+- **mean first relevant rank:** 1.40
 - **mean noise dominance ratio (top-5):** 0.00
 
 ## Failure analysis
@@ -159,7 +159,7 @@
 - **Module/path bias:** `RetrievalHit.diagnostics` exposes `module_bias` vs `symbol_inventory_boost` vs `content` for top-1 rows above.
 
 ## Adjustments made in this slice
-- Diagnostics-only (`include_score_diagnostics`) + package-private regex extension; **no retrieval weight tuning** in this pass (failures classified first).
+- **Slice 3:** code/debug intent content gating on noise file classes, optional ``config`` content cap, ``retrieval_policy.v3`` main-Java lane bonus, ``db-files`` → ``generated_metrics_data`` classification, expanded diagnostics.
 
 ## Verdict
 **READY** for next slice (subject to real-checkout confirmation).

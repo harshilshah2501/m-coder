@@ -280,13 +280,19 @@ class TestPolicyRanking:
                 idx,
                 q,
                 top_k=4,
-                config=LexicalRetrievalConfig(enable_top_k_core_correction=False),
+                config=LexicalRetrievalConfig(
+                    enable_top_k_core_correction=False,
+                    code_debug_intent=False,
+                ),
             )
             with_corr = retrieve_lexical(
                 idx,
                 q,
                 top_k=4,
-                config=LexicalRetrievalConfig(enable_top_k_core_correction=True),
+                config=LexicalRetrievalConfig(
+                    enable_top_k_core_correction=True,
+                    code_debug_intent=False,
+                ),
             )
             assert not any(
                 h.relative_path.endswith("TopologyAnomalyDetector.java") for h in without.hits[:3]
@@ -294,3 +300,82 @@ class TestPolicyRanking:
             assert any(
                 h.relative_path.endswith("TopologyAnomalyDetector.java") for h in with_corr.hits[:3]
             )
+
+
+class TestSlice3CodeIntentContentGating:
+    def test_repeated_tokens_in_log_do_not_outrank_main_java_under_code_intent(self):
+        """Noise-class files must not win top-1 on raw content repetition (PR-6 Slice 3)."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "topology anomaly graph node edge metric collector pipeline " * 120
+            _touch(root / "motadata" / "logs" / "noise.log", blob)
+            _touch(
+                root
+                / "motadata"
+                / "test-plugin-metrics"
+                / "oracle_index_poll.json",
+                '{"topology": "' + ("anomaly " * 200) + '"}',
+            )
+            java_rel = (
+                "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java"
+            )
+            _touch(
+                root / java_rel,
+                "package com.mindarray.nms;\n"
+                "public class TopologyEngine { void refreshTopologyGraph() {} }\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Trace topology anomaly false positives in node graph",
+                top_k=3,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("TopologyEngine.java")
+            d0 = r.hits[0].diagnostics or {}
+            assert d0.get("code_intent") == 1
+            assert d0.get("main_java_bonus", 0) > 0
+
+    def test_code_intent_gating_off_preserves_content_rich_noise_leading(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "foobarxy " * 200
+            _touch(root / "motadata" / "logs" / "huge.log", blob)
+            java_rel = "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java"
+            _touch(root / java_rel, "package com.mindarray.nms;\npublic class TopologyEngine {}\n")
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "foobarxy",
+                top_k=2,
+                config=LexicalRetrievalConfig(code_debug_intent=False),
+            )
+            assert r.hits[0].relative_path.endswith(".log")
+
+    def test_classify_db_files_as_generated_metrics_data(self):
+        from runtime.layer5.retrieval import classify_file
+
+        p = classify_file("motadata/db-files/template-widgets/oceanstor.json")
+        assert p.file_class == "generated_metrics_data"
+
+    def test_diagnostics_include_gating_fields_when_enabled(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(root / "motadata" / "logs" / "x.log", "debug engine failure " * 50)
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/aiops/EngineX.java",
+                "package com.mindarray.aiops;\npublic class EngineX { void debugEngine() {} }\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "debug engine failure",
+                top_k=8,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            log_hit = next(h for h in r.hits if h.relative_path.endswith(".log"))
+            assert (log_hit.diagnostics or {}).get("noise_content_suppressed") == 1
+            assert (log_hit.diagnostics or {}).get("content") == 0

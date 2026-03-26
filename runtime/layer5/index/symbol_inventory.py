@@ -19,7 +19,12 @@ from typing import Dict, List, Mapping, Tuple
 
 from runtime.layer5.index.models import WorkspaceFileIndex
 
-_JAVA_ROOT_PREFIX = "src/main/java/com/mindarray/aiops/"
+def _is_aiops_java_source_path(relative_path: str) -> bool:
+    """True for Java files under Mindarray AIOps sources (optional ``motadata/`` module prefix)."""
+    r = relative_path.replace("\\", "/")
+    if not r.lower().endswith(".java"):
+        return False
+    return "/src/main/java/com/mindarray/aiops/" in r
 _PACKAGE_RE = re.compile(r"^\s*package\s+([a-zA-Z0-9_.]+)\s*;", re.MULTILINE)
 _TYPE_RE = re.compile(r"\b(class|interface|enum|record)\s+([A-Za-z_][A-Za-z0-9_]*)\b")
 # Line-scoped method-like pattern (reduces cross-line / chained-call false positives vs whole-file scan).
@@ -215,7 +220,7 @@ def build_symbol_inventory(index: WorkspaceFileIndex) -> SymbolInventory:
         rel = f.relative_path
         if not rel.lower().endswith(".java"):
             continue
-        if not rel.startswith(_JAVA_ROOT_PREFIX):
+        if not _is_aiops_java_source_path(rel):
             continue
         p = root / rel
         try:

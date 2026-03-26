@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-PR-6 Slice 2: run retrieval against a real AIOps root (env) or bundled noisy fixture.
+PR-6 audit: run retrieval against a real AIOps root (env) or bundled noisy fixture.
 
 Usage (from repo root):
   PR6_AIOPS_ROOT=/path/to/Motadata python3 runtime/layer5/audit/pr6_real_repo_audit.py
 
 If PR6_AIOPS_ROOT is unset or invalid, uses runtime/layer5/audit/fixture_noisy_aiops_workspace/
-(after running noisy_workspace_fixture.write_noisy_aiops_workspace on that path once).
+(the directory is replaced on each bundled run so stale paths cannot accumulate).
 """
 
 from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -83,6 +84,8 @@ def _resolve_workspace_root() -> Tuple[Path, str]:
         if p.is_dir():
             return p, f"environment `PR6_AIOPS_ROOT` / `MOTADATA_AIOPS_REPO_ROOT` → `{p}`"
     _BUNDLED_ROOT.parent.mkdir(parents=True, exist_ok=True)
+    if _BUNDLED_ROOT.exists():
+        shutil.rmtree(_BUNDLED_ROOT)
     write_noisy_aiops_workspace(_BUNDLED_ROOT)
     return _BUNDLED_ROOT.resolve(), (
         f"bundled noisy fixture (no real AIOps checkout found): `{_BUNDLED_ROOT}` "
@@ -201,15 +204,23 @@ def main() -> None:
 
     lines.append("\n## Adjustments made in this slice\n")
     lines.append(
-        "- Diagnostics-only (`include_score_diagnostics`) + package-private regex extension; "
-        "**no retrieval weight tuning** in this pass (failures classified first).\n"
+        "- **Slice 3:** code/debug intent content gating on noise file classes, optional ``config`` "
+        "content cap, ``retrieval_policy.v3`` main-Java lane bonus, ``db-files`` → "
+        "``generated_metrics_data`` classification, expanded diagnostics.\n"
     )
 
     lines.append("\n## Verdict\n")
-    if top1_hits / max(1, nq) >= 0.55 and top3_hits / max(1, nq) >= 0.85 and mean_noise <= 0.45:
+    top1_r = top1_hits / max(1, nq)
+    top3_r = top3_hits / max(1, nq)
+    if top1_r >= 0.55 and top3_r >= 0.85 and mean_noise <= 0.45:
         lines.append("**READY** for next slice (subject to real-checkout confirmation).\n")
     else:
         lines.append("**NOT READY** — review failure analysis and real `PR6_AIOPS_ROOT` run.\n")
+    if top3_r < 1.0:
+        lines.append(
+            f"- **Caveat:** top-3 anchor hit rate is {top3_r:.2f}; treat as **NOT READY** for "
+            "closure until all fixtures recover anchors in top-3 on the target checkout.\n"
+        )
 
     _REPORT.write_text("".join(lines), encoding="utf-8")
     print(f"Wrote {_REPORT}")

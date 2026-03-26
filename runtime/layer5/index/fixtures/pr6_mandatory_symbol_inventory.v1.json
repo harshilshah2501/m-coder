@@ -1,40 +1,28 @@
 {
   "schema_version": "layer5.symbol_inventory.v1.fixture",
-  "description": "Frozen mandatory symbols for PR-6 Slice 1 validation.",
+  "description": "Frozen mandatory symbols for PR-6 validation (motadata-prefixed paths).",
   "entries": [
     {
-      "symbol_name": "AlertCorrelationEngine",
-      "relative_path": "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
-      "module": "correlation",
-      "normalized_tokens": ["alert", "correlation", "engine"]
+      "symbol_name": "AvailabilityCorrelationEngine",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "module": "unknown",
+      "normalized_tokens": ["availability", "correlation", "engine"]
     },
     {
       "symbol_name": "correlateDuplicateIncidents",
-      "relative_path": "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
-      "module": "correlation",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "module": "unknown",
       "normalized_tokens": ["correlate", "duplicate", "incidents"]
     },
     {
-      "symbol_name": "TopologyAnomalyDetector",
-      "relative_path": "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java",
-      "module": "topology",
-      "normalized_tokens": ["anomaly", "detector", "topology"]
-    },
-    {
-      "symbol_name": "NodeGraphAnalyzer",
-      "relative_path": "src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java",
-      "module": "topology",
-      "normalized_tokens": ["analyzer", "graph", "node"]
-    },
-    {
       "symbol_name": "IngestionPipeline",
-      "relative_path": "src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
       "module": "ingestion",
       "normalized_tokens": ["ingestion", "pipeline"]
     },
     {
       "symbol_name": "MetricsParser",
-      "relative_path": "src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
       "module": "ingestion",
       "normalized_tokens": ["metrics", "parser"]
     }

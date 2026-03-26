@@ -6,8 +6,9 @@
       "id": "alert_correlation_engine_debug",
       "query": "Debug alert correlation engine failing to correlate duplicate incidents",
       "expected_anchor_paths": [
-        "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
-        "src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java"
       ],
       "required_top_k": 5,
       "min_anchor_hits_top_3": 1,
@@ -17,8 +18,9 @@
       "id": "topology_anomaly_detector_debug",
       "query": "Trace topology anomaly detector false positives in node graph",
       "expected_anchor_paths": [
-        "src/main/java/com/mindarray/aiops/topology/TopologyAnomalyDetector.java",
-        "src/main/java/com/mindarray/aiops/topology/NodeGraphAnalyzer.java"
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+        "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java"
       ],
       "required_top_k": 5,
       "min_anchor_hits_top_3": 1,
@@ -28,8 +30,9 @@
       "id": "ingestion_pipeline_parser_debug",
       "query": "Investigate ingestion pipeline parser timeout for metrics collector",
       "expected_anchor_paths": [
-        "src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
-        "src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java"
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
       ],
       "required_top_k": 5,
       "min_anchor_hits_top_3": 1,
