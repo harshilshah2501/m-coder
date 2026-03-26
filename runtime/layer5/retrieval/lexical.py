@@ -21,9 +21,13 @@ from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_code_debug_intent,
     infer_query_subsystems,
+    is_generic_eventbus_java_handler,
     is_noise_class,
     is_support_style_java_basename,
     looks_like_symbol_token,
+    query_duplicate_incident_focus,
+    query_ingestion_focus,
+    query_topology_focus,
 )
 from runtime.layer5.retrieval.query import normalize_query
 
@@ -84,6 +88,127 @@ def _apply_code_intent_content(
     return raw_content, 0, 0, 0
 
 
+def _path_hints_exempt_topic_supporting_cap(
+    rel_l: str,
+    *,
+    topology_focus: bool,
+    ingestion_focus: bool,
+) -> bool:
+    """
+    If the path already encodes topic-relevant structure, do not apply the broad
+    supporting-class content cap (PR-6 Slice 5).
+    """
+    if topology_focus:
+        topo_hints = (
+            "topology",
+            "topo",
+            "graph",
+            "node",
+            "edge",
+            "anomaly",
+            "cache",
+            "store",
+            "metric",
+            "aiops",
+            "ingestion",
+            "dependency",
+        )
+        if any(h in rel_l for h in topo_hints):
+            return True
+    if ingestion_focus:
+        ing_hints = (
+            "ingestion",
+            "ingest",
+            "pipeline",
+            "parser",
+            "collector",
+            "aiops",
+            "dependency",
+        )
+        if any(h in rel_l for h in ing_hints):
+            return True
+    return False
+
+
+def _apply_topic_focus_supporting_content_cap(
+    effective_content: int,
+    *,
+    rel_l: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    cfg: LexicalRetrievalConfig,
+    narrow_owner_signal: bool,
+    query_tokens: Tuple[str, ...],
+) -> Tuple[int, int]:
+    """
+    Cap keyword mass for *supporting* production Java that lacks basename/symbol owner
+    signals when the query is topology- or ingestion-focused, unless the path already
+    encodes topic hints (see ``_path_hints_exempt_topic_supporting_cap``).
+    Returns ``(content, topic_focus_supporting_content_trimmed)``.
+    """
+    if not code_intent_active or not cfg.enable_code_debug_content_gating:
+        return effective_content, 0
+    cap = cfg.code_intent_generic_facade_content_cap
+    if cap is None:
+        return effective_content, 0
+    cap = max(0, int(cap))
+    if fpolicy.file_class != "supporting_prod_code":
+        return effective_content, 0
+    if "/src/main/java/" not in rel_l:
+        return effective_content, 0
+    if narrow_owner_signal:
+        return effective_content, 0
+    tf = query_topology_focus(query_tokens)
+    inf = query_ingestion_focus(query_tokens)
+    if not (tf or inf):
+        return effective_content, 0
+    if _path_hints_exempt_topic_supporting_cap(rel_l, topology_focus=tf, ingestion_focus=inf):
+        return effective_content, 0
+    if effective_content > cap:
+        return cap, effective_content - cap
+    return effective_content, 0
+
+
+def _apply_generic_facade_content_cap(
+    effective_content: int,
+    *,
+    relative_path: str,
+    base_name: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    cfg: LexicalRetrievalConfig,
+    narrow_owner_signal: bool,
+    query_tokens: Tuple[str, ...],
+) -> Tuple[int, int]:
+    """
+    PR-6 Slice 5: cap keyword mass for generic ``eventbus`` handlers when the query is
+    topology- or ingestion-focused and the file lacks direct owner evidence.
+    ``narrow_owner_signal`` is true when basename/query specificity or basename symbol
+    match fires — not symbol-inventory body overlap alone.
+    Returns ``(content, generic_facade_content_trimmed)``.
+    """
+    if not code_intent_active or not cfg.enable_code_debug_content_gating:
+        return effective_content, 0
+    cap = cfg.code_intent_generic_facade_content_cap
+    if cap is None:
+        return effective_content, 0
+    cap = max(0, int(cap))
+    if narrow_owner_signal:
+        return effective_content, 0
+    if fpolicy.file_class not in ("core_aiops_code", "supporting_prod_code"):
+        return effective_content, 0
+    rel_l = relative_path.lower()
+    if "/src/main/java/" not in rel_l:
+        return effective_content, 0
+    if not is_generic_eventbus_java_handler(relative_path, base_name):
+        return effective_content, 0
+    if not (query_topology_focus(query_tokens) or query_ingestion_focus(query_tokens)):
+        return effective_content, 0
+    if effective_content > cap:
+        return cap, effective_content - cap
+    return effective_content, 0
+
+
 def _scaled(score: float, cfg: LexicalRetrievalConfig) -> int:
     return int(round(score * cfg.policy_score_scale))
 
@@ -115,6 +240,96 @@ def _basename_query_specificity(
     cap = int(policy.get("basename_query_specificity_token_cap", 8))
     n = min(len(inter), max(cap, 0))
     return _scaled(per * n, cfg)
+
+
+def _ingestion_log_parser_demotion(
+    basename: str,
+    rel_l: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+    tokens: Tuple[str, ...],
+) -> int:
+    """Demote ``log/.../*Parser.java`` when the query is ingestion/pipeline/collector focused."""
+    dem = float(policy.get("code_intent_ingestion_log_parser_demotion", 0.0))
+    if dem <= 0 or not code_intent_active or not cfg.enable_policy_bias:
+        return 0
+    if not query_ingestion_focus(tokens):
+        return 0
+    if "/log/" not in rel_l:
+        return 0
+    if not basename.lower().endswith("parser.java"):
+        return 0
+    if fpolicy.file_class not in ("core_aiops_code", "supporting_prod_code"):
+        return 0
+    return _scaled(dem, cfg)
+
+
+def _generic_integration_demotion(
+    basename: str,
+    rel_l: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+    tokens: Tuple[str, ...],
+) -> int:
+    """PR-6 Slice 5: demote generic ``*Integration.java`` in ``integration/`` on duplicate-incident queries."""
+    dem = float(policy.get("code_intent_generic_integration_demotion", 0.0))
+    if dem <= 0 or not code_intent_active or not cfg.enable_policy_bias:
+        return 0
+    if not query_duplicate_incident_focus(tokens):
+        return 0
+    ts = set(tokens)
+    if ts.intersection({"integration", "servicenow", "bidirectional"}):
+        return 0
+    if fpolicy.file_class != "supporting_prod_code":
+        return 0
+    if "/integration/" not in rel_l:
+        return 0
+    if not basename.lower().endswith("integration.java"):
+        return 0
+    return _scaled(dem, cfg)
+
+
+def _duplicate_incident_core_boost(
+    base_name: str,
+    rel_l: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+    tokens: Tuple[str, ...],
+) -> int:
+    """PR-6 Slice 5: boost core AIOps behavioral classes on duplicate+incident queries."""
+    boost = float(policy.get("code_intent_duplicate_incident_core_boost", 0.0))
+    if boost <= 0 or not code_intent_active or not cfg.enable_policy_bias:
+        return 0
+    if not query_duplicate_incident_focus(tokens):
+        return 0
+    if fpolicy.file_class != "core_aiops_code":
+        return 0
+    if "/src/main/java/" not in rel_l:
+        return 0
+    stem = Path(base_name).stem
+    stem_toks = set(normalize_identifier_tokens(stem))
+    behavior = frozenset(
+        {
+            "processor",
+            "query",
+            "correlation",
+            "manager",
+            "dependency",
+            "parser",
+            "pipeline",
+            "engine",
+            "availability",
+        }
+    )
+    if not stem_toks.intersection(behavior):
+        return 0
+    return _scaled(boost, cfg)
 
 
 def _support_file_demotion(
@@ -274,8 +489,44 @@ def _score_entry(
     path_part = sum(rel_l.count(t) * cfg.weight_path for t in tokens)
     base_part = sum(base_l.count(t) * cfg.weight_basename for t in tokens)
     raw_content = _raw_content_score(root, entry, tokens, cfg)
+
+    symbol_boost = _symbol_boost(entry, tokens, cfg, policy) if cfg.enable_policy_bias else 0
+    symbol_inventory_boost = (
+        _symbol_inventory_boost(entry, tokens, cfg, policy, symbol_lookup) if cfg.enable_policy_bias else 0
+    )
+    basename_specificity = 0
+    if code_intent_active and cfg.enable_policy_bias:
+        basename_specificity = _basename_query_specificity(base_name, tokens, policy, cfg)
+    owner_evidence = (
+        (basename_specificity > 0) or (symbol_inventory_boost > 0) or (symbol_boost > 0)
+    )
+    direct_owner_alignment = 1 if owner_evidence else 0
+    owner_evidence_score = basename_specificity + symbol_inventory_boost + symbol_boost
+    # Facade cap: exclude symbol_inventory alone — repeated body text can match query tokens
+    # without naming/structural owner alignment (real PR-6 misses had symbol_inventory_boost 0).
+    narrow_owner_signal_for_facade = (basename_specificity > 0) or (symbol_boost > 0)
+
     content_part, noise_content_suppressed, config_content_trimmed, support_style_content_trimmed = (
         _apply_code_intent_content(raw_content, fpolicy, code_intent_active, cfg, base_name)
+    )
+    content_part, generic_facade_content_trimmed = _apply_generic_facade_content_cap(
+        content_part,
+        relative_path=entry.relative_path,
+        base_name=base_name,
+        fpolicy=fpolicy,
+        code_intent_active=code_intent_active,
+        cfg=cfg,
+        narrow_owner_signal=narrow_owner_signal_for_facade,
+        query_tokens=tokens,
+    )
+    content_part, topic_focus_supporting_content_trimmed = _apply_topic_focus_supporting_content_cap(
+        content_part,
+        rel_l=rel_l,
+        fpolicy=fpolicy,
+        code_intent_active=code_intent_active,
+        cfg=cfg,
+        narrow_owner_signal=narrow_owner_signal_for_facade,
+        query_tokens=tokens,
     )
     prior_map = policy["path_prior"]
     class_prior = 0.0
@@ -288,10 +539,6 @@ def _score_entry(
         and fpolicy.subsystem in query_subsystems
         and fpolicy.subsystem != "unknown"
         else 0
-    )
-    symbol_boost = _symbol_boost(entry, tokens, cfg, policy) if cfg.enable_policy_bias else 0
-    symbol_inventory_boost = (
-        _symbol_inventory_boost(entry, tokens, cfg, policy, symbol_lookup) if cfg.enable_policy_bias else 0
     )
     module_bias = _module_bias(entry, tokens, cfg, policy) if cfg.enable_policy_bias else 0
     noise_penalty = 0
@@ -306,13 +553,20 @@ def _score_entry(
         and fpolicy.file_class in ("core_aiops_code", "supporting_prod_code")
     ):
         main_java_bonus = _scaled(float(policy.get("code_intent_main_java_bonus", 0.0)), cfg)
-    basename_specificity = 0
     support_file_demotion = 0
     if code_intent_active and cfg.enable_policy_bias:
-        basename_specificity = _basename_query_specificity(base_name, tokens, policy, cfg)
         support_file_demotion = _support_file_demotion(
             base_name, rel_l, fpolicy, code_intent_active, policy, cfg
         )
+    generic_integration_demotion = _generic_integration_demotion(
+        base_name, rel_l, fpolicy, code_intent_active, policy, cfg, tokens
+    )
+    ingestion_log_parser_demotion = _ingestion_log_parser_demotion(
+        base_name, rel_l, fpolicy, code_intent_active, policy, cfg, tokens
+    )
+    duplicate_incident_core_boost = _duplicate_incident_core_boost(
+        base_name, rel_l, fpolicy, code_intent_active, policy, cfg, tokens
+    )
     total = (
         path_part
         + base_part
@@ -326,6 +580,9 @@ def _score_entry(
         + main_java_bonus
         + basename_specificity
         - support_file_demotion
+        - generic_integration_demotion
+        - ingestion_log_parser_demotion
+        + duplicate_incident_core_boost
     )
     policy_part = (
         path_prior
@@ -337,6 +594,9 @@ def _score_entry(
         + main_java_bonus
         + basename_specificity
         - support_file_demotion
+        - generic_integration_demotion
+        - ingestion_log_parser_demotion
+        + duplicate_incident_core_boost
     )
     diagnostics: Optional[Dict[str, int]] = None
     if cfg.include_score_diagnostics:
@@ -354,9 +614,17 @@ def _score_entry(
             "noise_content_suppressed": noise_content_suppressed,
             "config_content_trimmed": config_content_trimmed,
             "support_style_content_trimmed": support_style_content_trimmed,
+            "generic_facade_content_trimmed": generic_facade_content_trimmed,
+            "topic_focus_supporting_content_trimmed": topic_focus_supporting_content_trimmed,
             "code_intent": 1 if code_intent_active else 0,
             "basename_specificity": basename_specificity,
             "support_file_demotion": support_file_demotion,
+            "owner_evidence_score": owner_evidence_score,
+            "direct_owner_alignment": direct_owner_alignment,
+            "generic_integration_demotion": generic_integration_demotion,
+            "ingestion_log_parser_demotion": ingestion_log_parser_demotion,
+            "duplicate_incident_core_boost": duplicate_incident_core_boost,
+            "facade_cap_basename_or_symbol_owner_signal": 1 if narrow_owner_signal_for_facade else 0,
             "total": total,
         }
     return RetrievalHit(

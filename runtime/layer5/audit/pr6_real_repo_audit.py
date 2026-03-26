@@ -213,11 +213,22 @@ def main() -> None:
         "basename/query CamelCase token overlap (specificity), diagnostics "
         "(``basename_specificity``, ``support_file_demotion``, ``support_style_content_trimmed``).\n"
     )
+    lines.append(
+        "- **Slice 5:** ``retrieval_policy.v5`` — topic-gated generic eventbus handler content cap, "
+        "supporting-class content cap when path lacks topic hints, ``*Util.java`` support suffix, "
+        "duplicate-incident integration demotion + core AIOps boost, ingestion ``log/*Parser`` demotion; "
+        "diagnostics (``owner_evidence_score``, ``facade_cap_basename_or_symbol_owner_signal``, "
+        "``topic_focus_supporting_content_trimmed``, ``ingestion_log_parser_demotion``, …).\n"
+    )
 
     lines.append("\n## Verdict\n")
     top1_r = top1_hits / max(1, nq)
     top3_r = top3_hits / max(1, nq)
-    if top1_r >= 0.55 and top3_r >= 0.85 and mean_noise <= 0.45:
+    if top1_r >= 1.0 and top3_r >= 1.0 and mean_noise <= 0.0:
+        lines.append(
+            "**READY** for PR-6 closure on this fixture set (subject to real-checkout confirmation).\n"
+        )
+    elif top1_r >= 0.55 and top3_r >= 0.85 and mean_noise <= 0.45:
         lines.append("**READY** for next slice (subject to real-checkout confirmation).\n")
     else:
         lines.append("**NOT READY** — review failure analysis and real `PR6_AIOPS_ROOT` run.\n")

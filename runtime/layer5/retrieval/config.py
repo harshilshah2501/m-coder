@@ -9,7 +9,7 @@ from types import MappingProxyType
 from typing import Final, FrozenSet, Mapping, Optional, Tuple
 
 
-RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v4"
+RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v5"
 """
 Versioned deterministic policy identifier.
 Any change to policy weights/thresholds requires a new version and re-validation.
@@ -127,6 +127,44 @@ RETRIEVAL_POLICY_V4: Final[Mapping[str, object]] = MappingProxyType(
 PR-6 Slice 4: owner disambiguation — support-basename demotion + basename/query token overlap.
 """
 
+RETRIEVAL_POLICY_V5: Final[Mapping[str, object]] = MappingProxyType(
+    {
+        "path_prior": MappingProxyType(
+            {
+                "core_aiops_code": 6.5,
+                "supporting_prod_code": 2.3,
+                "config": -1.2,
+                "tests": -4.6,
+                "logs": -5.6,
+                "vendor_static": -6.8,
+                "generated_metrics_data": -5.6,
+            }
+        ),
+        "subsystem_boost": 3.25,
+        "symbol_boost": 3.6,
+        "symbol_inventory_exact_boost": 2.8,
+        "symbol_inventory_token_boost": 1.4,
+        "symbol_inventory_overlap_cap": 3,
+        "module_bias": 1.85,
+        "noise_penalty_multiplier": 1.15,
+        "code_intent_main_java_bonus": 3.5,
+        "code_intent_support_file_demotion": 5.0,
+        "basename_query_specificity_per_token": 2.0,
+        "basename_query_specificity_token_cap": 8,
+        # Slice 5: demote generic *Integration.java under duplicate-incident queries without integration intent.
+        "code_intent_generic_integration_demotion": 8.0,
+        # Slice 5: boost core AIOps behavioral names on duplicate+incident queries.
+        "code_intent_duplicate_incident_core_boost": 18.0,
+        # Slice 5: demote log/*Parser.java when query is ingestion/pipeline-focused (pipeline owner vs log parse).
+        "code_intent_ingestion_log_parser_demotion": 30.0,
+    }
+)
+"""
+PR-6 Slice 5: mandatory top-1 closure — generic eventbus content cap (topic-gated), util.java support cap,
+integration demotion + duplicate-incident core boost.
+"""
+
+
 CODE_INTENT_ZERO_CONTENT_CLASSES_DEFAULT: Final[FrozenSet[str]] = frozenset(
     {"logs", "vendor_static", "generated_metrics_data", "tests"}
 )
@@ -140,7 +178,9 @@ def get_retrieval_policy(version: str) -> Mapping[str, object]:
         return RETRIEVAL_POLICY_V2
     if version == "retrieval_policy.v3":
         return RETRIEVAL_POLICY_V3
-    return RETRIEVAL_POLICY_V4
+    if version == "retrieval_policy.v4":
+        return RETRIEVAL_POLICY_V4
+    return RETRIEVAL_POLICY_V5
 
 QUALITY_GATE_VERSION: Final[str] = "quality_gate.v1"
 QUALITY_REASON_CODES: Final[Tuple[str, ...]] = (
@@ -221,4 +261,11 @@ class LexicalRetrievalConfig:
     (see ``is_support_style_java_basename``) cap raw content contribution so behavioral
     owners can outrank broad support files. Kept low so keyword-heavy constant pools
     cannot dominate.
+    """
+    code_intent_generic_facade_content_cap: Optional[int] = 220
+    """
+    PR-6 Slice 5: when set and code/debug intent is active, cap effective content for
+    generic ``eventbus`` handler slots that lack direct owner evidence, only when the
+    query is topology- or ingestion-focused (see ``query_topology_focus`` /
+    ``query_ingestion_focus``). Prevents broad handlers from winning top-1 on raw mass alone.
     """

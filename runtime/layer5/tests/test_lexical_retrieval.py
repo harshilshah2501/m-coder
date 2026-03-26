@@ -450,4 +450,152 @@ class TestSlice4OwnerDisambiguation:
         from runtime.layer5.retrieval import is_support_style_java_basename
 
         assert is_support_style_java_basename("NMSConstants.java") is True
+        assert is_support_style_java_basename("MotadataConfigUtil.java") is True
         assert is_support_style_java_basename("TopologyEngine.java") is False
+
+
+class TestSlice5MandatoryTop1Closure:
+    """PR-6 Slice 5: topic-gated generic facade content cap + duplicate-incident owner signals."""
+
+    def test_topology_focus_caps_generic_eventbus_handler_content(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "topology anomaly graph node edge detector false positive trace metric " * 120
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+                "package com.mindarray.eventbus;\npublic class UIActionEventHandler {\n" + blob + "\n}\n",
+            )
+            te_body = "topology anomaly graph node detector false positive trace metric edge " * 25
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+                "package com.mindarray.nms;\n"
+                "public class TopologyEngine {\n"
+                f"  void refreshTopologyGraph() {{ {te_body} }}\n"
+                "}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Trace topology anomaly detector false positives in node graph",
+                top_k=2,
+                config=LexicalRetrievalConfig(
+                    include_score_diagnostics=True,
+                    code_intent_generic_facade_content_cap=100,
+                ),
+            )
+            assert r.hits[0].relative_path.endswith("TopologyEngine.java")
+            uia = next(h for h in r.hits if "UIActionEventHandler" in h.relative_path)
+            assert (uia.diagnostics or {}).get("generic_facade_content_trimmed", 0) > 0
+            assert (uia.diagnostics or {}).get("facade_cap_basename_or_symbol_owner_signal", 0) == 0
+
+    def test_ingestion_focus_caps_generic_eventbus_handler_content(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "ingestion pipeline parser metrics collector timeout poll ingest " * 80
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+                "package com.mindarray.eventbus;\npublic class UIActionEventHandler {\n" + blob + "\n}\n",
+            )
+            mp_body = "ingestion pipeline parser metrics collector timeout poll ingest " * 25
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+                "package com.mindarray.aiops.ingestion;\n"
+                "public class MetricsParser {\n"
+                f"  void parseMetricsPipeline() {{ {mp_body} }}\n"
+                "}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Investigate ingestion pipeline parser timeout for metrics collector",
+                top_k=2,
+                config=LexicalRetrievalConfig(
+                    include_score_diagnostics=True,
+                    code_intent_generic_facade_content_cap=100,
+                ),
+            )
+            assert r.hits[0].relative_path.endswith("MetricsParser.java")
+            uia = next(h for h in r.hits if "UIActionEventHandler" in h.relative_path)
+            assert (uia.diagnostics or {}).get("generic_facade_content_trimmed", 0) > 0
+
+    def test_duplicate_incident_query_prefers_core_aiops_over_integration(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+                "package com.mindarray.integration;\n"
+                "public class ServiceNowIntegration {\n"
+                "  void duplicate() { incident incident incident handling handling handling }\n"
+                "}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+                "package com.mindarray.aiops;\n"
+                "public class DependencyQueryProcessor {\n"
+                "  void onIncident() {}\n"
+                "}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "duplicate incident handling",
+                top_k=2,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("DependencyQueryProcessor.java")
+            d0 = r.hits[0].diagnostics or {}
+            assert d0.get("duplicate_incident_core_boost", 0) > 0
+            sni = next(h for h in r.hits if "ServiceNowIntegration" in h.relative_path)
+            assert (sni.diagnostics or {}).get("generic_integration_demotion", 0) > 0
+
+    def test_ingestion_focus_applies_log_parser_demotion_diagnostic(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            lp_blob = "parser metrics collector pipeline ingestion timeout ingest " * 40
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/log/LogParser.java",
+                "package com.mindarray.log;\npublic class LogParser {\n" + lp_blob + "\n}\n",
+            )
+            dqp_body = "ingestion pipeline parser metrics collector timeout " * 15
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+                "package com.mindarray.aiops;\npublic class DependencyQueryProcessor {\n"
+                + dqp_body
+                + "\n}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Investigate ingestion pipeline parser timeout for metrics collector",
+                top_k=5,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            lp_hit = next(h for h in r.hits if "LogParser" in h.relative_path)
+            assert (lp_hit.diagnostics or {}).get("ingestion_log_parser_demotion", 0) > 0
+
+    def test_correlation_only_query_does_not_apply_facade_cap_to_event_handler(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            blob = "topology graph anomaly correlation alert " * 40
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+                "package com.mindarray.eventbus;\npublic class UIActionEventHandler {\n" + blob + "\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+                "package com.mindarray.aiops;\npublic class AvailabilityCorrelationEngine {}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Correlation issue in alerts",
+                top_k=2,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("UIActionEventHandler.java")
+            assert (r.hits[0].diagnostics or {}).get("generic_facade_content_trimmed", 0) == 0

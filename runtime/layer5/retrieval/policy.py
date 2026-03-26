@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import FrozenSet, Iterable, Tuple
 
 # PR-6 Slice 4: broad support / constants-style Java basenames (case-insensitive suffix).
+# Slice 5: single *Util.java (distinct from *Utils.java) — config/helper pools.
 _SUPPORT_STYLE_JAVA_SUFFIXES: Tuple[str, ...] = (
     "constants.java",
     "utils.java",
+    "util.java",
     "helpers.java",
     "helper.java",
     "common.java",
@@ -168,6 +170,55 @@ def infer_query_subsystems(tokens: Iterable[str]) -> FrozenSet[str]:
         if token_set.intersection(keywords)
     }
     return frozenset(matched)
+
+
+def query_topology_focus(tokens: Tuple[str, ...]) -> bool:
+    """
+    PR-6 Slice 5: query is strongly topology/anomaly/graph oriented (not merely ``correlation``).
+    Used to gate generic eventbus-handler content caps without hurting correlation-only queries.
+    """
+    ts = set(tokens)
+    if "topology" in ts or "topo" in ts:
+        return True
+    if "anomaly" in ts and ("graph" in ts or "node" in ts or "detector" in ts):
+        return True
+    return False
+
+
+def query_ingestion_focus(tokens: Tuple[str, ...]) -> bool:
+    """
+    PR-6 Slice 5: query is strongly ingestion/pipeline/parser/collector oriented.
+    """
+    ts = set(tokens)
+    if "ingestion" in ts or "ingest" in ts:
+        return True
+    if "pipeline" in ts and ("parser" in ts or "metric" in ts or "metrics" in ts or "collector" in ts):
+        return True
+    if "parser" in ts and ("timeout" in ts or "metric" in ts or "metrics" in ts or "collector" in ts):
+        return True
+    if "collector" in ts and ("metric" in ts or "metrics" in ts):
+        return True
+    return False
+
+
+def query_duplicate_incident_focus(tokens: Tuple[str, ...]) -> bool:
+    """True when the query is about duplicate incidents (incident or incidents token)."""
+    ts = set(tokens)
+    if "duplicate" not in ts:
+        return False
+    return "incident" in ts or "incidents" in ts
+
+
+def is_generic_eventbus_java_handler(relative_path: str, basename: str) -> bool:
+    """
+    Deterministic structural slot: ``.../eventbus/...`` + ``*Handler.java`` with ``handler`` in name.
+    Not a filename blacklist — path role + naming pattern.
+    """
+    rel = relative_path.lower()
+    b = basename.lower()
+    if "/eventbus/" not in rel or not b.endswith(".java"):
+        return False
+    return "handler" in b
 
 
 def is_support_style_java_basename(basename: str) -> bool:
