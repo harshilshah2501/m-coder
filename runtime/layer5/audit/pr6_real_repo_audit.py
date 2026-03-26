@@ -32,6 +32,8 @@ _FIX_MANDATORY = _LAYER5 / "retrieval" / "fixtures" / "pr6_mandatory_anchor_debu
 _FIX_AMBIG = _LAYER5 / "retrieval" / "fixtures" / "pr6_ambiguous_debug_queries.v1.json"
 _REPORT = Path(__file__).resolve().parent / "pr6_real_repo_run_report.md"
 _BUNDLED_ROOT = Path(__file__).resolve().parent / "fixture_noisy_aiops_workspace"
+PR6_AUDIT_MODE = "PR6_CLOSURE_AUDIT"
+PR6_REPORT_BANNER = "PR-6 Closure Validation Report — Canonical"
 
 
 def _identity(root: Path) -> WorkspaceIdentity:
@@ -126,8 +128,10 @@ def main() -> None:
     failures: List[str] = []
 
     lines: List[str] = []
-    lines.append("# PR-6 real-repo (or bundled) retrieval audit\n")
+    lines.append(f"# {PR6_REPORT_BANNER}\n")
+    lines.append("## PR-6 real-repo (or bundled) retrieval audit\n")
     lines.append("## Workspace source\n")
+    lines.append(f"- **audit mode:** `{PR6_AUDIT_MODE}`\n")
     lines.append(f"- {repo_note}\n")
     lines.append(f"- **Indexed files:** {len(idx.files)}\n")
     lines.append(f"- **Queries run:** {len(queries)}\n")

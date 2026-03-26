@@ -1,4 +1,5 @@
 {
+  "lock_notice": "PR-6 closure fixture — DO NOT MODIFY without version bump",
   "schema_version": "layer5.symbol_inventory.v1.fixture",
   "description": "Frozen mandatory symbols for PR-6 validation (motadata-prefixed paths).",
   "entries": [

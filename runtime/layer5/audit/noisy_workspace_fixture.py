@@ -2,6 +2,9 @@
 Deterministic noisy AIOps-style workspace for PR-6 evaluation.
 
 Uses a ``motadata/`` module prefix so relative paths match real-checkout layouts.
+
+PR-6 closure fixture generator — DO NOT MODIFY without version bump and
+PR-6 audit re-validation.
 """
 
 from __future__ import annotations

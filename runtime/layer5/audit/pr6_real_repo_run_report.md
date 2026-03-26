@@ -1,5 +1,7 @@
-# PR-6 real-repo (or bundled) retrieval audit
+# PR-6 Closure Validation Report — Canonical
+## PR-6 real-repo (or bundled) retrieval audit
 ## Workspace source
+- **audit mode:** `PR6_CLOSURE_AUDIT`
 - environment `PR6_AIOPS_ROOT` / `MOTADATA_AIOPS_REPO_ROOT` → `/home/harshil/Projects/Motadata`
 - **Indexed files:** 2432
 - **Queries run:** 10

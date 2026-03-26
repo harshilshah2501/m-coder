@@ -9,6 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import FrozenSet, Iterable, Tuple
 
+# PR-6 closure lock (canonical baseline)
+# Date: 2026-03-26
+# Validation repo: /home/harshil/Projects/Motadata (WSL)
+# Closure metrics: top-1=10/10, top-3=10/10, mean_rank=1.00, mean_noise=0.00
+# Any modification requires PR-6 audit re-validation.
+
 # PR-6 Slice 4: broad support / constants-style Java basenames (case-insensitive suffix).
 # Slice 5: single *Util.java (distinct from *Utils.java) — config/helper pools.
 _SUPPORT_STYLE_JAVA_SUFFIXES: Tuple[str, ...] = (

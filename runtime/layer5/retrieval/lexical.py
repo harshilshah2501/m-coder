@@ -1,5 +1,8 @@
 """
 Lexical-first retrieval over A4 ``WorkspaceFileIndex`` with deterministic policy bias.
+
+Any change to ranking logic must be validated via PR-6 audit suite on real repo
+before merge.
 """
 
 from __future__ import annotations

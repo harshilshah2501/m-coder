@@ -8,8 +8,14 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, FrozenSet, Mapping, Optional, Tuple
 
+# PR-6 closure lock (canonical baseline)
+# Date: 2026-03-26
+# Validation repo: /home/harshil/Projects/Motadata (WSL)
+# Closure metrics: top-1=10/10, top-3=10/10, mean_rank=1.00, mean_noise=0.00
+# Any modification requires PR-6 audit re-validation.
+PR6_CLOSED_BASELINE: Final[str] = "retrieval_policy.v5"
 
-RETRIEVAL_POLICY_VERSION: Final[str] = "retrieval_policy.v5"
+RETRIEVAL_POLICY_VERSION: Final[str] = PR6_CLOSED_BASELINE
 """
 Versioned deterministic policy identifier.
 Any change to policy weights/thresholds requires a new version and re-validation.

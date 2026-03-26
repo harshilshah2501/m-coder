@@ -3,6 +3,9 @@ A5 — Lexical retrieval over A4 file index (MVP).
 
 Consumes ``WorkspaceFileIndex`` only; no symbol field, no graph, no embeddings.
 See ``A6_HANDOFF.md`` for output contract and guarantees.
+
+Any change to ranking logic must be validated via PR-6 audit suite on real repo
+before merge.
 """
 
 from runtime.layer5.retrieval.config import (

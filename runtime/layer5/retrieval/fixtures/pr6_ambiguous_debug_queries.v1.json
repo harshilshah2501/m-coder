@@ -1,4 +1,5 @@
 {
+  "lock_notice": "PR-6 closure fixture — DO NOT MODIFY without version bump",
   "schema_version": "pr6.ambiguous_debug_fixtures.v1",
   "description": "Ambiguous / indirect / soft-noise PR-6 queries (multi-anchor).",
   "fixtures": [
