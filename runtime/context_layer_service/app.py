@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from . import config
@@ -11,6 +12,47 @@ from .evidence_api import export_evidence_bundle_dict
 from .logging_setup import get_logger, setup_logging_from_env
 
 LOG = get_logger(__name__)
+
+_EXPORT_PATH = "/v1/export_evidence"
+
+
+def _request_id_from_body(data: object) -> str:
+    if not isinstance(data, dict):
+        return "unknown"
+    for key in ("request_id", "correlation_id"):
+        raw = data.get(key)
+        if raw is None:
+            continue
+        s = str(raw).strip()
+        if s:
+            return s
+    return "unknown"
+
+
+def _workspace_marker(workspace: str) -> str:
+    w = workspace.strip().replace("\\", "/")
+    if not w:
+        return "empty"
+    seg = w.rstrip("/").split("/")[-1]
+    return seg if len(seg) <= 64 else seg[:61] + "..."
+
+
+def _context_layer_request_log(
+    path: str,
+    request_id: str,
+    status: str,
+    t0: float,
+    workspace_marker: str,
+) -> None:
+    elapsed_ms = (time.perf_counter() - t0) * 1000.0
+    LOG.info(
+        "CONTEXT_LAYER request path=%s request_id=%s status=%s workspace=%s duration_ms=%.2f",
+        path,
+        request_id,
+        status,
+        workspace_marker,
+        elapsed_ms,
+    )
 
 
 def _error_payload(
@@ -61,8 +103,11 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
         self._send_json(404, _error_payload("not_found", "Not found", failure_class="route_not_found"))
 
     def do_POST(self) -> None:
-        if self.path != "/v1/export_evidence":
+        t0 = time.perf_counter()
+        path = self.path
+        if path != _EXPORT_PATH:
             self._send_json(404, _error_payload("not_found", "Not found", failure_class="route_not_found"))
+            _context_layer_request_log(path, "unknown", "error", t0, "n/a")
             return
         try:
             content_length = int(self.headers.get("Content-Length", 0))
@@ -73,9 +118,12 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 400,
                 _error_payload("invalid_json", str(e), failure_class="invalid_json"),
             )
+            _context_layer_request_log(_EXPORT_PATH, "unknown", "error", t0, "n/a")
             return
 
+        rid = _request_id_from_body(data)
         workspace = (data.get("workspace_root") or data.get("workspace") or "").strip()
+        wmark = _workspace_marker(workspace)
         query = (data.get("query") or "").strip()
         top_k = data.get("top_k", 8)
         if not isinstance(top_k, int):
@@ -87,6 +135,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                     failure_class="invalid_request",
                 ),
             )
+            _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
 
         try:
@@ -96,6 +145,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 400,
                 _error_payload("invalid_request", str(e), failure_class="invalid_request"),
             )
+            _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
         except RuntimeError as e:
             # Service is healthy; workspace/index/export could not complete — not "service absent"
@@ -103,6 +153,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 422,
                 _error_payload("export_failed", str(e), failure_class="workspace_export_failed"),
             )
+            _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
         except Exception as e:
             LOG.exception("Unexpected export error")
@@ -110,6 +161,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 500,
                 _error_payload("internal_error", str(e), failure_class="internal_error"),
             )
+            _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
 
         try:
@@ -129,6 +181,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                     failure_class="evidence_contract_violation",
                 ),
             )
+            _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
         except Exception as e:
             LOG.exception("Schema validation unexpected error")
@@ -136,9 +189,11 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 500,
                 _error_payload("internal_error", str(e), failure_class="internal_error"),
             )
+            _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
 
         self._send_json(200, bundle)
+        _context_layer_request_log(_EXPORT_PATH, rid, "success", t0, wmark)
 
     def _send_json(self, status: int, obj: object) -> None:
         self.send_response(status)

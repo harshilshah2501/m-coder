@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -13,8 +15,45 @@ from pathlib import Path
 from . import config
 from . import handlers
 
+LOG = logging.getLogger(__name__)
+
 EXPLAIN_VLLM_URL_ENV = "MOTADATA_EXPLAIN_VLLM_URL"
 VLLM_HEALTH_TIMEOUT = 5
+
+_PATH_TO_REQUEST_TYPE = {
+    "/v0/plan": "plan",
+    "/v0/ask": "ask_v0",
+    "/v1/ask": "ask_v1",
+    "/v0/execute": "execute",
+}
+
+
+def _request_id_from_body(data: object) -> str:
+    if not isinstance(data, dict):
+        return "unknown"
+    rid = data.get("request_id")
+    if rid is None:
+        return "unknown"
+    s = str(rid).strip()
+    return s if s else "unknown"
+
+
+def _plan_gate_request_log(
+    path: str,
+    request_type: str,
+    request_id: str,
+    status: str,
+    t0: float,
+) -> None:
+    elapsed_ms = (time.perf_counter() - t0) * 1000.0
+    LOG.info(
+        "PLAN_GATE request path=%s request_type=%s request_id=%s status=%s duration_ms=%.2f",
+        path,
+        request_type,
+        request_id,
+        status,
+        elapsed_ms,
+    )
 
 
 def _vllm_healthcheck() -> None:
@@ -62,18 +101,26 @@ class PlanGateHandler(BaseHTTPRequestHandler):
         self._send_json(404, {"error": "Not found"})
 
     def do_POST(self) -> None:
+        t0 = time.perf_counter()
+        path = self.path
+        req_type = _PATH_TO_REQUEST_TYPE.get(path, "unknown")
+
         try:
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body)
         except (json.JSONDecodeError, ValueError) as e:
             self._send_json(400, {"error": f"Invalid JSON: {e}"})
+            _plan_gate_request_log(path, req_type, "unknown", "error", t0)
             return
 
-        if self.path == "/v0/plan":
+        rid = _request_id_from_body(data)
+
+        if path == "/v0/plan":
             errs = handlers.validate_plan_request(data)
             if errs:
                 self._send_json(400, {"error": "Schema validation failed", "details": errs})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
                 return
 
             mode = config.get_mode()
@@ -87,27 +134,32 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     data, mode, fixed_time, spool_root, date_or_id
                 )
                 self._send_json(200, decision)
+                _plan_gate_request_log(path, req_type, rid, "success", t0)
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
             return
 
-        if self.path == "/v0/ask":
+        if path == "/v0/ask":
             from runtime.ask_service.handlers import validate_ask_request, handle_ask_request
 
             errs = validate_ask_request(data)
             if errs:
                 self._send_json(400, {"error": "Schema validation failed", "details": errs})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
                 return
 
             try:
                 response = handle_ask_request(data)
                 self._send_json(200, response)
+                _plan_gate_request_log(path, req_type, rid, "success", t0)
             except Exception as e:
                 # Even on handler failure, preserve execution=false semantics inside handler.
                 self._send_json(500, {"error": str(e)})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
             return
 
-        if self.path == "/v1/ask":
+        if path == "/v1/ask":
             from runtime.ask_service.v1_ingest import (
                 AskV1ClientError,
                 handle_ask_v1_request,
@@ -120,36 +172,44 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     400,
                     {"error": "ask_envelope_invalid", "message": "Schema validation failed", "details": errs},
                 )
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
                 return
 
             try:
                 response = handle_ask_v1_request(data)
                 self._send_json(200, response)
+                _plan_gate_request_log(path, req_type, rid, "success", t0)
             except AskV1ClientError as e:
                 self._send_json(
                     400,
                     {"error": e.code, "message": e.message, "details": e.details},
                 )
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
             return
 
-        if self.path == "/v0/execute":
+        if path == "/v0/execute":
             from runtime.execute_service.handlers import validate_execute_request, handle_execute_request
 
             errs = validate_execute_request(data)
             if errs:
                 self._send_json(400, {"error": "Schema validation failed", "details": errs})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
                 return
 
             try:
                 response = handle_execute_request(data)
                 self._send_json(200, response)
+                _plan_gate_request_log(path, req_type, rid, "success", t0)
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
+                _plan_gate_request_log(path, req_type, rid, "error", t0)
             return
 
         self._send_json(404, {"error": "Not found"})
+        _plan_gate_request_log(path, req_type, rid, "error", t0)
 
     def _send_json(self, status: int, obj: object) -> None:
         self.send_response(status)
@@ -170,6 +230,11 @@ def run_server(port: int | None = None, spool_dir: Path | None = None) -> HTTPSe
 
 
 def main() -> None:
+    if not logging.root.handlers:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(levelname)s %(name)s %(message)s",
+        )
     _vllm_healthcheck()
     port = config.get_port()
     server = run_server()

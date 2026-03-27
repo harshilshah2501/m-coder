@@ -23,7 +23,7 @@ class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
  * M3.4 Architecture:
  * - Uses RuntimeBridge as the single integration point
  * - Routes ALL commits through runtime governance
- * - Surfaces distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED)
+ * - Surfaces distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED, EXECUTED_FAILED)
  * - Fails closed if runtime unavailable in enforcing mode
  * - Shadow mode: logs decisions but allows commits to proceed
  * - Enforcing mode: blocks commits based on runtime decision
@@ -157,6 +157,15 @@ class MotadataCheckinHandler(
                 )
             }
 
+            RuntimeOutcome.EXECUTED_FAILED -> {
+                Triple(
+                    response.ui?.title ?: "Commit decision — executed but failed",
+                    response.ui?.message
+                        ?: "Unexpected outcome for commit path (execute-failed).",
+                    NotificationType.WARNING
+                )
+            }
+
             RuntimeOutcome.UNKNOWN -> {
                 Triple(
                     "Runtime returned unknown decision (shadow mode)",
@@ -181,6 +190,7 @@ class MotadataCheckinHandler(
             RuntimeOutcome.REFUSED -> ReturnResult.CANCEL
             RuntimeOutcome.DEFERRED -> ReturnResult.CANCEL
             RuntimeOutcome.BLOCKED -> ReturnResult.CANCEL
+            RuntimeOutcome.EXECUTED_FAILED -> ReturnResult.CANCEL
             RuntimeOutcome.UNKNOWN -> ReturnResult.CANCEL
         }
     }

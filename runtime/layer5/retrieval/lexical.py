@@ -8,6 +8,7 @@ before merge.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -18,6 +19,7 @@ from runtime.layer5.index.symbol_inventory import (
 )
 
 from runtime.layer5.retrieval.config import LexicalRetrievalConfig, get_retrieval_policy
+from runtime.layer5.retrieval.intent import classify_intent
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
 from runtime.layer5.retrieval.policy import (
     FilePolicy,
@@ -50,12 +52,35 @@ def _raw_content_score(
     if not tokens or not cfg.read_file_contents:
         return 0
     path = root / entry.relative_path
-    try:
-        data = path.read_bytes()[: cfg.max_content_bytes]
-    except (OSError, PermissionError):
+    text = _read_content_lower_cached(
+        str(path),
+        int(entry.mtime_ns),
+        int(entry.size_bytes),
+        int(cfg.max_content_bytes),
+    )
+    if not text:
         return 0
-    text = data.decode("utf-8", errors="replace").lower()
     return sum(text.count(t) * cfg.weight_content for t in tokens)
+
+
+@lru_cache(maxsize=16_384)
+def _read_content_lower_cached(
+    abs_path: str,
+    mtime_ns: int,
+    size_bytes: int,
+    max_content_bytes: int,
+) -> str:
+    """
+    Cache lowercased file content slices across retrieval calls.
+    Key includes file fingerprint fields from index entries (mtime/size) plus read cap,
+    so cache remains deterministic and safe when files change.
+    """
+    _ = mtime_ns, size_bytes
+    try:
+        data = Path(abs_path).read_bytes()[:max_content_bytes]
+    except (OSError, PermissionError):
+        return ""
+    return data.decode("utf-8", errors="replace").lower()
 
 
 def _apply_code_intent_content(
@@ -462,6 +487,57 @@ def _apply_top_k_core_correction(sorted_hits: List[RetrievalHit], top_k: int) ->
     return tops
 
 
+def _symbol_aligned_basename(hit: RetrievalHit, symbol_tokens: Tuple[str, ...]) -> bool:
+    if not symbol_tokens:
+        return False
+    stem = Path(_basename(hit.relative_path)).stem
+    if not stem:
+        return False
+    stem_tokens = set(normalize_identifier_tokens(stem))
+    if not stem_tokens:
+        return False
+    symbol_set = {t.lower() for t in symbol_tokens}
+    stem_l = stem.lower()
+    if stem_l in symbol_set:
+        return True
+    overlap = stem_tokens.intersection(symbol_set)
+    return len(overlap) >= 2
+
+
+def _apply_top_k_symbol_owner_correction(
+    sorted_hits: List[RetrievalHit],
+    top_k: int,
+    symbol_tokens: Tuple[str, ...],
+) -> List[RetrievalHit]:
+    """
+    L5.8 narrow hardening: for symbol-targeting queries, ensure at least one symbol-aligned
+    basename candidate appears in top-3 when such a candidate exists in the ranked list.
+    Deterministic swap-only correction; no broad recall expansion.
+    """
+    if top_k <= 0 or not sorted_hits or not symbol_tokens:
+        return list(sorted_hits[:top_k])
+    tops = list(sorted_hits[:top_k])
+    if len(tops) < 3:
+        return tops
+    if any(_symbol_aligned_basename(h, symbol_tokens) for h in tops[:3]):
+        return tops
+    symbol_hit: RetrievalHit | None = None
+    for h in sorted_hits:
+        if _symbol_aligned_basename(h, symbol_tokens):
+            symbol_hit = h
+            break
+    if symbol_hit is None:
+        return tops
+
+    in_tops_idx = next((i for i, h in enumerate(tops) if h.relative_path == symbol_hit.relative_path), None)
+    replace_i = min(range(3), key=lambda i: (tops[i].score, tops[i].relative_path))
+    if in_tops_idx is not None:
+        tops[replace_i], tops[in_tops_idx] = tops[in_tops_idx], tops[replace_i]
+    else:
+        tops[replace_i] = symbol_hit
+    return tops
+
+
 def _score_entry(
     entry: FileIndexEntry,
     tokens: Tuple[str, ...],
@@ -505,9 +581,13 @@ def _score_entry(
     )
     direct_owner_alignment = 1 if owner_evidence else 0
     owner_evidence_score = basename_specificity + symbol_inventory_boost + symbol_boost
-    # Facade cap: exclude symbol_inventory alone — repeated body text can match query tokens
-    # without naming/structural owner alignment (real PR-6 misses had symbol_inventory_boost 0).
-    narrow_owner_signal_for_facade = (basename_specificity > 0) or (symbol_boost > 0)
+    # Facade/supporting caps: exclude symbol_inventory alone (can overmatch body text).
+    # Treat owner signal as strong only with symbol match OR sufficiently specific basename overlap.
+    # This keeps generic one-token overlaps from bypassing deterministic content caps.
+    narrow_owner_signal_for_facade = (
+        (symbol_boost > 0)
+        or (basename_specificity >= int(cfg.weak_owner_signal_min_specificity))
+    )
 
     content_part, noise_content_suppressed, config_content_trimmed, support_style_content_trimmed = (
         _apply_code_intent_content(raw_content, fpolicy, code_intent_active, cfg, base_name)
@@ -663,6 +743,7 @@ def retrieve_lexical(
     cfg = config or LexicalRetrievalConfig()
     policy = get_retrieval_policy(cfg.policy_version)
     tokens = normalize_query(query, min_token_len=cfg.min_token_len)
+    intent = classify_intent(query)
     code_intent_active = (
         bool(cfg.code_debug_intent) if cfg.code_debug_intent is not None else infer_code_debug_intent(tokens)
     )
@@ -701,9 +782,12 @@ def retrieve_lexical(
     else:
         scored.sort(key=lambda h: (-h.score, h.relative_path))
         if cfg.enable_top_k_core_correction:
-            chosen = tuple(_apply_top_k_core_correction(scored, top_k))
+            corrected = _apply_top_k_core_correction(scored, top_k)
+            corrected = _apply_top_k_symbol_owner_correction(corrected, top_k, intent.symbol_tokens)
+            chosen = tuple(corrected)
         else:
-            chosen = tuple(scored[:top_k])
+            corrected = _apply_top_k_symbol_owner_correction(scored, top_k, intent.symbol_tokens)
+            chosen = tuple(corrected)
 
     return RetrievalResult(
         query_raw=query,

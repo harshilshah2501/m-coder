@@ -49,6 +49,28 @@ def _max_consecutive_noise(paths: Iterable[str]) -> int:
     return max_run
 
 
+def _has_strong_symbol_match(path: str, symbol_tokens: Tuple[str, ...]) -> bool:
+    """
+    Strict no-match guard: avoid treating a single broad fragment as sufficient symbol evidence.
+    Strong match is:
+    - at least one structured token hit (contains dot/underscore/digit), OR
+    - at least two distinct symbol-token overlaps in the same path.
+    """
+    pl = path.lower()
+    matched: List[str] = []
+    structured_hit = False
+    for tok in symbol_tokens:
+        tl = tok.lower().strip()
+        if not tl or tl not in pl:
+            continue
+        matched.append(tl)
+        if "." in tl or "_" in tl or any(ch.isdigit() for ch in tl):
+            structured_hit = True
+    if structured_hit:
+        return True
+    return len(set(matched)) >= 2
+
+
 def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessment:
     intent = classify_intent(query)
     paths = list(file_paths)
@@ -109,7 +131,7 @@ def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessm
     if max_noise_run > int(QUALITY_GATE_THRESHOLDS_V1["max_consecutive_noise"]):
         reasons.append("DIVERSITY_VIOLATION")
     if intent.has_symbol_signal:
-        if not any(any(tok in p.lower() for tok in intent.symbol_tokens) for p in paths):
+        if not any(_has_strong_symbol_match(p, intent.symbol_tokens) for p in paths):
             reasons.append("NO_SYMBOL_MATCH")
 
     if intent_gated:

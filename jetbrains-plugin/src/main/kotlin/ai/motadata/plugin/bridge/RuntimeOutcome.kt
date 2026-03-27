@@ -10,8 +10,9 @@ package ai.motadata.plugin.bridge
  * - REFUSED: Runtime governance denied the action (governance/authority failure)
  * - DEFERRED: Action deferred, not executed (pending approval or escalation)
  * - BOUNDED_ALLOW: Bounded-safe allowance (no sandbox execution in MVP)
- * - BLOCKED: Execution path reached but blocked by runtime/sandbox policy
- * - EXECUTED: Execution completed through governed runtime path
+ * - BLOCKED: Execution path reached but blocked by runtime/sandbox policy (before run or policy deny)
+ * - EXECUTED: Execution completed successfully through governed runtime path
+ * - EXECUTED_FAILED: Sandbox ran the command but it did not succeed (e.g. non-zero exit); not a policy block
  *
  * The plugin MUST NOT collapse these into generic SUCCESS/FAILURE.
  */
@@ -30,6 +31,12 @@ enum class RuntimeOutcome {
 
     /** Action executed successfully through governed runtime path. */
     EXECUTED,
+
+    /**
+     * Sandbox invoked the command but it did not succeed (e.g. non-zero exit).
+     * Distinct from [BLOCKED], which is refusal/block before or without a completed run.
+     */
+    EXECUTED_FAILED,
 
     /** Runtime was unavailable; action NOT executed (fail-closed). */
     RUNTIME_UNAVAILABLE,
@@ -77,13 +84,13 @@ enum class RuntimeOutcome {
      * Whether this outcome represents an error condition requiring attention.
      */
     val isError: Boolean
-        get() = this in listOf(REFUSED, BLOCKED, RUNTIME_UNAVAILABLE)
+        get() = this in listOf(REFUSED, BLOCKED, RUNTIME_UNAVAILABLE, EXECUTED_FAILED)
 
     /**
-     * Whether the action was actually executed through the sandbox.
+     * Whether the action was actually executed through the sandbox (including failed runs).
      */
     val wasExecuted: Boolean
-        get() = this == EXECUTED
+        get() = this == EXECUTED || this == EXECUTED_FAILED
 
     /**
      * Human-readable description for UI.
@@ -95,6 +102,7 @@ enum class RuntimeOutcome {
             BOUNDED_ALLOW -> "Bounded Allowance (No Execution)"
             BLOCKED -> "Blocked by Policy"
             EXECUTED -> "Executed Successfully"
+            EXECUTED_FAILED -> "Executed but Failed"
             RUNTIME_UNAVAILABLE -> "Runtime Unavailable"
             UNKNOWN -> "Unknown Outcome"
         }

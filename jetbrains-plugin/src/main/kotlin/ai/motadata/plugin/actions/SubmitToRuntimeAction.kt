@@ -16,7 +16,7 @@ import ai.motadata.plugin.util.GitInfoUtil
  * M3.4 Architecture:
  * - Demonstrates plugin → runtime → Plan-Gate → sandbox (if allowed) path
  * - Routes through RuntimeBridge exclusively
- * - Surfaces all distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED)
+ * - Surfaces all distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED, EXECUTED_FAILED)
  * - Does NOT execute locally
  * - Does NOT fallback if runtime unavailable
  *
@@ -136,6 +136,12 @@ class SubmitToRuntimeAction : AnAction() {
                 Messages.getInformationIcon()
             )
 
+            RuntimeOutcome.EXECUTED_FAILED -> Triple(
+                "Execution Failed",
+                buildExecutedFailedMessage(command, response),
+                Messages.getWarningIcon()
+            )
+
             RuntimeOutcome.REFUSED -> Triple(
                 "Execution Refused",
                 buildRefusedMessage(command, response),
@@ -191,6 +197,28 @@ class SubmitToRuntimeAction : AnAction() {
             response.planHash?.let { appendLine("Plan Hash: ${it.take(16)}...") }
             appendLine()
             appendLine("The action was executed through the governed sandbox.")
+        }
+    }
+
+    private fun buildExecutedFailedMessage(command: String, response: RuntimeResponse): String {
+        return buildString {
+            appendLine("═══════════════════════════════════════════")
+            appendLine("  EXECUTED — Run failed (not a policy block)")
+            appendLine("═══════════════════════════════════════════")
+            appendLine()
+            appendLine("Command: $command")
+            appendLine()
+            appendLine("Outcome: ${response.outcome.toHumanReadable()}")
+            appendLine()
+            appendLine(
+                "The sandbox ran this command; it did not succeed (e.g. non-zero exit). " +
+                    "This is distinct from execution blocked before run."
+            )
+            appendLine()
+            response.reason?.let { appendLine("Reason: $it") }
+            response.ui?.message?.let { appendLine("Details: $it") }
+            response.ledgerRowId?.let { appendLine("Ledger Row: $it") }
+            response.planHash?.let { appendLine("Plan Hash: ${it.take(16)}...") }
         }
     }
 

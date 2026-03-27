@@ -21,6 +21,8 @@
 5. Work through **B → F** in order for a first pass; each record compares **backend truth** (commands given) vs **plugin UI**.
 6. **File defects** with a one-line statement per record; use **G** for overall severity.
 
+**Status discipline:** For every record row, use **PASS**, **FAIL**, or **NOT_PROVEN** (no blanks). If backend truth exists but plugin/log correlation is missing, use **NOT_PROVEN**.
+
 ### Canonical test inputs (same as backend sheet)
 
 Use these **exact** strings so results are comparable:
@@ -88,6 +90,18 @@ curl -sS "$PLAN_GATE_URL/healthz"
 | Debug direct API pass | You ran Backend sheet **C** (or equivalent) with vLLM up | Yes / No |
 | Plan direct API pass | You ran Backend sheet **D** (plan-only `/v1/ask`) | Yes / No |
 | Code direct API pass | You ran Backend sheet **E** (`/v0/execute`) and recorded outcome | Yes / No |
+
+### A2.1 Request-id correlation checklist (required for Host-A closure pass)
+
+| Scenario | request_id captured from backend JSON | Plugin-visible artifact linked to same scenario | Context Layer trace | Plan-Gate trace | vLLM trace |
+| --- | --- | --- | --- | --- | --- |
+| Ask v1 evidence-first | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | N/A |
+| Explain/Debug | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN |
+| Execute | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | N/A | PASS / FAIL / NOT_PROVEN | N/A |
+| No-match | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | N/A |
+| Failure-mode | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | optional | PASS / FAIL / NOT_PROVEN | N/A |
+
+If request-id trace cannot be shown for a service, mark **NOT_PROVEN** and note the reason.
 
 ### A3. Purpose of this sheet
 

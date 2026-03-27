@@ -45,6 +45,7 @@ class RuntimeResponseTest {
         val boundedResponse = RuntimeResponse(RuntimeOutcome.BOUNDED_ALLOW, "req-4")
         val blockedResponse = RuntimeResponse(RuntimeOutcome.BLOCKED, "req-5")
         val unavailableResponse = RuntimeResponse(RuntimeOutcome.RUNTIME_UNAVAILABLE, "req-6")
+        val executedFailedResponse = RuntimeResponse(RuntimeOutcome.EXECUTED_FAILED, "req-7")
 
         assertTrue(executedResponse.shouldProceed(shadowMode = false))
         assertFalse(refusedResponse.shouldProceed(shadowMode = false))
@@ -52,6 +53,7 @@ class RuntimeResponseTest {
         assertFalse(boundedResponse.shouldProceed(shadowMode = false))
         assertFalse(blockedResponse.shouldProceed(shadowMode = false))
         assertFalse(unavailableResponse.shouldProceed(shadowMode = false))
+        assertFalse(executedFailedResponse.shouldProceed(shadowMode = false))
     }
 
     @Test
@@ -63,6 +65,7 @@ class RuntimeResponseTest {
         assertEquals(RuntimeSeverity.ERROR, RuntimeResponse(RuntimeOutcome.BLOCKED, "").getSeverity())
         assertEquals(RuntimeSeverity.ERROR, RuntimeResponse(RuntimeOutcome.RUNTIME_UNAVAILABLE, "").getSeverity())
         assertEquals(RuntimeSeverity.WARNING, RuntimeResponse(RuntimeOutcome.UNKNOWN, "").getSeverity())
+        assertEquals(RuntimeSeverity.WARNING, RuntimeResponse(RuntimeOutcome.EXECUTED_FAILED, "").getSeverity())
     }
 
     @Test

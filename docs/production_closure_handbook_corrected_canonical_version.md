@@ -53,7 +53,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 - Execute path → Honest under backend invocation
 
 - Architecture is correct and MUST NOT be altered:
-
+  
   - Retrieval → Workspace (WSL)
   - Reasoning + Governance → GPU (Plan-Gate + vLLM)
   - Plugin → Thin UI client only
@@ -106,13 +106,13 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 ## Closure Gates (Canonical)
 
-| Gate           | Meaning                                                             | Status | Closure Condition                                         |   |
-| -------------- | ------------------------------------------------------------------- | ------ | --------------------------------------------------------- | - |
-| Grounding      | PR-6 baseline achieved; generalization remains mandatory            | OPEN   | L5.8 validation thresholds + drift/no-match gates          |   |
-| Truthfulness   | Weak or insufficient evidence must not produce confident reasoning  | OPEN   | Hard guard + reason codes enforced                        |   |
-| Plugin Honesty | UI must reflect backend truth and path class                        | OPEN   | Evidence, ask\_path, notes, execute outcome visible       |   |
-| Observability  | Request must be traceable across Context Layer, Plan-Gate, vLLM     | OPEN   | Request ID + endpoint logging                             |   |
-| Host Readiness | Windows + WSL + GPU and native Linux profiles validated             | OPEN   | Deployment/validation runbook passes both                 |   |
+| Gate           | Meaning                                                            | Status | Closure Condition                                   |     |
+| -------------- | ------------------------------------------------------------------ | ------ | --------------------------------------------------- | --- |
+| Grounding      | PR-6 baseline achieved; generalization remains mandatory           | OPEN   | L5.8 validation thresholds + drift/no-match gates   |     |
+| Truthfulness   | Weak or insufficient evidence must not produce confident reasoning | OPEN   | Hard guard + reason codes enforced                  |     |
+| Plugin Honesty | UI must reflect backend truth and path class                       | OPEN   | Evidence, ask\_path, notes, execute outcome visible |     |
+| Observability  | Request must be traceable across Context Layer, Plan-Gate, vLLM    | OPEN   | Request ID + endpoint logging                       |     |
+| Host Readiness | Windows + WSL + GPU and native Linux profiles validated            | OPEN   | Deployment/validation runbook passes both           |     |
 
 ---
 
@@ -323,29 +323,45 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 ---
 
-## 3. Numbered Action Items to Final Closure 
+##  3. Numbered Action Items to Final Closure
 
 These action items are executed strictly in alignment with the Phase sequence defined in Section 6. No item should be progressed out of phase.
 
-Actions **1–2** are materially satisfied by the locked PR-6 retrieval baseline; the current active action is **3 (L5.8 validation harness)**.
+Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline, L5.8 closure validation, completed plugin product-truthfulness logic, completed main HTTP-path observability (Context Layer, Plan-Gate, explain/debug logging), completed Explain/Debug trust validation (server and plugin contract), and completed Execute-path trust validation on the **live HTTP product path** (`POST /v0/execute`). **Action 8 (Validate no-match honesty)** remains **satisfied** under the **L5.8 / Action 3** closure already recorded below (strict no-match honesty); it is **not** reactivated as unfinished work. The current active action is **9 (Close host profile A)**.
 
-| **#**   | **Action item**                         | **What it includes**                                                               | **Done means done**                            |
-| ------- | --------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------- |
-| **1**   | Land retrieval policy PR-1              | File/subsystem classifier, scoring priors, deterministic tests                     | PR merged; tests green; top-k visibly cleaner  |
-| **2**   | Land retrieval policy PR-2              | Intent classifier, weak-evidence quality gate, hard reasoning guard                | Weak/insufficient/no-match behavior enforced   |
-| **3**   | Complete L5.8 validation harness        | Golden + adversarial query packs, before/after metrics                             | Quality metrics reproducible and published     |
-| **4**   | Close plugin truthfulness gaps          | Evidence rendering, ask\_path, notes, execute honesty                              | Plugin no longer contradicts backend truth     |
-| **5**   | Close Plan-Gate observability gap       | Request logging, correlation IDs, trace reconstruction                             | Any request traceable end to end               |
-| **6**   | Validate Explain/Debug path rigorously  | Prove vLLM use when required; prove no hidden repo access                          | Debug path contract and logs are trustworthy   |
-| **7**   | Validate Execute path rigorously        | Refused/blocked/executed always distinct and truthful                              | No fake success; no ambiguity                  |
-| **8**   | Validate no-match honesty               | Out-of-scope and absent-symbol queries return explicit insufficiency               | No hallucinated implementation claims          |
-| **9**   | Close host profile A                    | Windows + WSL + GPU full release validation pass                                   | Checklist passes; runbook correct              |
-| **10**  | Close host profile B                    | Native Linux full release validation pass                                          | Checklist passes; config documented            |
-| **11**  | Close compatibility path hardening      | Fallback rules documented and controlled                                           | No silent path ambiguity remains               |
-| **12**  | Mainline convergence                    | Feature branch/integration line/main are operationally unambiguous                 | Release branch truth is clear                  |
-| **13**  | Canonical doc finalization              | Roadmap, charter, runbook, validation sheets, retrieval policy linked and current  | No active contradiction across docs            |
-| **14**  | Final acceptance run                    | Ask, Debug, Plan, Code, No-match, Failure-mode suite                               | All pass on reference environment              |
-| **15**  | Production-slice release sign-off       | Hard gates reviewed against evidence                                               | Ready to claim first production-grade slice    |
+| **#**     | **Action item**                        | **What it includes**                                                              | **Done means done**                               |
+| --------- | -------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **~~1~~** | ~~Land retrieval policy PR-1~~         | ~~File/subsystem classifier, scoring priors, deterministic tests~~                | ~~PR merged; tests green; top-k visibly cleaner~~ |
+| **~~2~~** | ~~Land retrieval policy PR-2~~         | ~~Intent classifier, weak-evidence quality gate, hard reasoning guard~~           | ~~Weak/insufficient/no-match behavior enforced~~  |
+| **~~3~~** | ~~Complete L5.8 validation harness~~   | ~~Golden + adversarial query packs, before/after metrics~~                        | ~~Quality metrics reproducible and published~~    |
+| **~~4~~** | ~~Close plugin truthfulness gaps~~       | ~~Evidence rendering, ask\_path, notes, execute honesty~~                           | ~~Plugin no longer contradicts backend truth~~      |
+| **~~5~~** | ~~Close Plan-Gate observability gap~~  | ~~Request logging, correlation IDs, trace reconstruction~~                      | ~~Any request traceable end to end~~              |
+| **~~6~~** | ~~Validate Explain/Debug path rigorously~~ | ~~Prove vLLM use when required; prove no hidden repo access~~                         | ~~Debug path contract and logs are trustworthy~~      |
+| **~~7~~** | ~~Validate Execute path rigorously~~       | ~~Refused/blocked/executed (incl. executed-failed vs blocked) always distinct and truthful; `plan_gate_*` server-rejected by default on live HTTP~~ | ~~No fake success; no ambiguity; trust boundary enforced~~ |
+| **~~8~~** | ~~Validate no-match honesty~~              | ~~Out-of-scope and absent-symbol queries return explicit insufficiency~~              | ~~Satisfied under L5.8 / Action 3 closure; see note below~~ |
+| **9**     | Close host profile A                   | Windows + WSL + GPU full release validation pass                                  | Checklist passes; runbook correct                 |
+| **10**    | Close host profile B                   | Native Linux full release validation pass                                         | Checklist passes; config documented               |
+| **11**    | Close compatibility path hardening     | Fallback rules documented and controlled                                          | No silent path ambiguity remains                  |
+| **12**    | Mainline convergence                   | Feature branch/integration line/main are operationally unambiguous                | Release branch truth is clear                     |
+| **13**    | Canonical doc finalization             | Roadmap, charter, runbook, validation sheets, retrieval policy linked and current | No active contradiction across docs               |
+| **14**    | Final acceptance run                   | Ask, Debug, Plan, Code, No-match, Failure-mode suite                              | All pass on reference environment                 |
+| **15**    | Production-slice release sign-off      | Hard gates reviewed against evidence                                              | Ready to claim first production-grade slice       |
+
+**Note:** PR-6 baseline remains locked on canonical real-repo context. L5.8 includes guard-context hardening so synthetic or shifted-root corpora cannot produce false baseline regression signals during baseline comparison.
+
+L5.8 Action 3 closure: PR-6 baseline preserved; guard-context hardening completed; retrieval generalization materially recovered; code-targeting rank-depth resolved; strict no-match honesty fixed; latency p95 reduced below hard gate (<= 400 ms); no remaining hard drift failures. Warning-level latency monitoring remains non-blocking CI observation.
+
+**Action 4:** Action 4 product-truthfulness logic is complete. Remaining JetBrains plugin `:test` reliability is environment/tooling debt and does not reopen the truthfulness feature closure itself.
+
+**Action 5:** Action 5 product-observability logic is complete for the main HTTP product path. Remaining runbook/CI/non-HTTP parity work is operational follow-through and does not reopen the observability closure itself.
+
+**Action 6:** Action 6 Explain/Debug trust validation is complete for product logic (server and plugin contract). Remaining IntelliJ plugin test-runtime execution is environment/tooling debt and does not reopen the Explain/Debug trust closure.
+
+**Action 7:** Action 7 execute trust validation is complete for the live HTTP product path (including executed-failed vs blocked honesty and server-enforced rejection of `plan_gate_*` client hints by default). Remaining direct-handler validation discipline and broader auth/binding concerns are out-of-scope follow-through and do not reopen the execute trust closure.
+
+**Action 8:** Action 8 (no-match honesty) remains satisfied under the L5.8 / Action 3 closure already recorded above; it is not reactivated as the current frontier.
+
+**Action 9 (current):** Action 9 remains **IN_PROGRESS**. Current evidence indicates no new product blocker has been proven in this slice; the remaining gap is completion of the Windows+JetBrains Host-A proof-pack (plugin-visible artifacts plus request-id correlation across Context Layer / Plan-Gate / vLLM where applicable). This is operational validation follow-through, not a product-contract redesign signal by itself.
 
 # 4. Critical Correction (NEW — Architecture Reality)
 
@@ -540,4 +556,3 @@ A system that retrieves the wrong file perfectly is still broken.
 ---
 
 This version reflects actual system behavior and enforces true production closure discipline.
-

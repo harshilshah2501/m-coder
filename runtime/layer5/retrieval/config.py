@@ -275,3 +275,9 @@ class LexicalRetrievalConfig:
     query is topology- or ingestion-focused (see ``query_topology_focus`` /
     ``query_ingestion_focus``). Prevents broad handlers from winning top-1 on raw mass alone.
     """
+    weak_owner_signal_min_specificity: int = 8
+    """
+    L5.8 narrow hardening: minimum basename-specificity needed to treat a candidate as
+    owner-signal-strong for generic-content cap exemptions. Keeps one-token overlaps
+    (e.g. generic *Engine.java) from escaping deterministic caps.
+    """

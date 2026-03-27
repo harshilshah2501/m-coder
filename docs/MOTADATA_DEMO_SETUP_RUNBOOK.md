@@ -164,6 +164,8 @@ echo
 
 **Prerequisite:** Phase **1.6** complete.
 
+**Related:** For **Ask debug-path validation** (record `metadata`, `evidence_quality`, plan responses from **WSL** against Plan-Gate on the GPU), use [DEBUG_PATH_VALIDATION_RUNBOOK.md](DEBUG_PATH_VALIDATION_RUNBOOK.md) after this phase passes.
+
 ## 2.1 Motadata workspace
 
 Clone or ensure the **Motadata AIOps** repo exists on **WSL** at the path you will use as **`workspace_root`** (example: **`/root/Harshil-PoCs/Motadata`**).
@@ -370,6 +372,22 @@ Do **not** set Plan-Gate URL — it is hardcoded to **`http://127.0.0.1:8089`**;
 | 2 | WSL | **§2.3–2.7** — Context Layer + POST smoke OK |
 | 3 | Windows | **§3.2–3.3** — SSH tunnel + curls OK |
 | 4 | Windows | **§3.4** — plugin + evidence-first |
+
+---
+
+## Action 9 final proof-pack capture (Windows Host-A)
+
+Use this once after phases 1–3 are green.
+
+| Scenario | Required capture (all) |
+|---|---|
+| Ask v1 evidence-first | `request_id`, backend response JSON, plugin-visible output (dialog text or screenshot), Context Layer trace, Plan-Gate trace |
+| Explain/Debug | `request_id`, backend response JSON, plugin-visible output, Context Layer trace, Plan-Gate trace, vLLM trace |
+| Execute | `request_id`, backend response JSON, plugin-visible output, Plan-Gate trace (include one `EXECUTED` and one `BLOCKED/REFUSED`; `EXECUTED_FAILED` optional) |
+| No-match honesty | `request_id`, backend response JSON, plugin-visible output, Context Layer trace, Plan-Gate trace |
+| Failure-mode | `request_id`, backend response JSON, plugin-visible output, Plan-Gate trace |
+
+Proof-pack rule: if any service trace cannot be correlated by `request_id`, mark it **NOT_PROVEN** (do not leave blank).
 
 ---
 

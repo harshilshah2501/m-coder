@@ -23,6 +23,13 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from runtime.layer5.audit.noisy_workspace_fixture import write_noisy_aiops_workspace
+from runtime.layer5.audit.pr6_context import (
+    DEFAULT_CANONICAL_ROOT,
+    PR6_MODE_BASELINE,
+    PR6_MODE_FIXTURE,
+    classify_pr6_context,
+    pr6_fixture_root,
+)
 from runtime.layer5.index import build_file_index
 from runtime.layer5.retrieval import LexicalRetrievalConfig, classify_file, retrieve_lexical
 from runtime.layer5.workspace.identity import WorkspaceIdentity
@@ -31,7 +38,7 @@ _LAYER5 = Path(__file__).resolve().parents[1]
 _FIX_MANDATORY = _LAYER5 / "retrieval" / "fixtures" / "pr6_mandatory_anchor_debug_queries.v1.json"
 _FIX_AMBIG = _LAYER5 / "retrieval" / "fixtures" / "pr6_ambiguous_debug_queries.v1.json"
 _REPORT = Path(__file__).resolve().parent / "pr6_real_repo_run_report.md"
-_BUNDLED_ROOT = Path(__file__).resolve().parent / "fixture_noisy_aiops_workspace"
+_BUNDLED_ROOT = pr6_fixture_root()
 PR6_AUDIT_MODE = "PR6_CLOSURE_AUDIT"
 PR6_REPORT_BANNER = "PR-6 Closure Validation Report — Canonical"
 
@@ -79,12 +86,36 @@ def _load_queries() -> List[Dict[str, Any]]:
     return out
 
 
-def _resolve_workspace_root() -> Tuple[Path, str]:
+def _resolve_workspace_root() -> Tuple[Path, str, str]:
+    anchor_union: List[str] = []
+    for path in (_FIX_MANDATORY, _FIX_AMBIG):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for row in data["fixtures"]:
+            anchor_union.extend(str(x) for x in row["expected_anchor_paths"])
     env = (os.environ.get("PR6_AIOPS_ROOT") or os.environ.get("MOTADATA_AIOPS_REPO_ROOT") or "").strip()
+    canonical_env = (os.environ.get("PR6_CANONICAL_ROOT") or "").strip()
+    canonical_root = Path(canonical_env).resolve() if canonical_env else DEFAULT_CANONICAL_ROOT
     if env:
         p = Path(env).resolve()
         if p.is_dir():
-            return p, f"environment `PR6_AIOPS_ROOT` / `MOTADATA_AIOPS_REPO_ROOT` → `{p}`"
+            ctx = classify_pr6_context(p, tuple(anchor_union), canonical_root=canonical_root)
+            if ctx.mode == PR6_MODE_BASELINE:
+                return (
+                    ctx.root,
+                    f"environment `PR6_AIOPS_ROOT` / `MOTADATA_AIOPS_REPO_ROOT` → `{ctx.root}`",
+                    PR6_MODE_BASELINE,
+                )
+            if ctx.mode == PR6_MODE_FIXTURE:
+                return (
+                    ctx.root,
+                    f"environment root classified as fixture_diagnostic: `{ctx.root}` ({ctx.reason})",
+                    PR6_MODE_FIXTURE,
+                )
+            raise SystemExit(
+                "Invalid PR-6 root context for audit: "
+                f"root=`{ctx.root}` reason=`{ctx.reason}`. "
+                "Use canonical real repo root for baseline or bundled fixture root for diagnostics."
+            )
     _BUNDLED_ROOT.parent.mkdir(parents=True, exist_ok=True)
     if _BUNDLED_ROOT.exists():
         shutil.rmtree(_BUNDLED_ROOT)
@@ -92,7 +123,7 @@ def _resolve_workspace_root() -> Tuple[Path, str]:
     return _BUNDLED_ROOT.resolve(), (
         f"bundled noisy fixture (no real AIOps checkout found): `{_BUNDLED_ROOT}` "
         "(set `PR6_AIOPS_ROOT` to evaluate a real tree)"
-    )
+    ), PR6_MODE_FIXTURE
 
 
 def _diagnostic_note(top_hit_path: str, anchors: List[str], diag: Optional[Dict[str, int]]) -> str:
@@ -115,7 +146,7 @@ def _diagnostic_note(top_hit_path: str, anchors: List[str], diag: Optional[Dict[
 
 
 def main() -> None:
-    root, repo_note = _resolve_workspace_root()
+    root, repo_note, context_mode = _resolve_workspace_root()
     ident = _identity(root)
     idx = build_file_index(ident)
     cfg = LexicalRetrievalConfig(include_score_diagnostics=True)
@@ -132,6 +163,7 @@ def main() -> None:
     lines.append("## PR-6 real-repo (or bundled) retrieval audit\n")
     lines.append("## Workspace source\n")
     lines.append(f"- **audit mode:** `{PR6_AUDIT_MODE}`\n")
+    lines.append(f"- **context mode:** `{context_mode}`\n")
     lines.append(f"- {repo_note}\n")
     lines.append(f"- **Indexed files:** {len(idx.files)}\n")
     lines.append(f"- **Queries run:** {len(queries)}\n")

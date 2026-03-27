@@ -89,6 +89,20 @@ The deployment is **valid for demo / sign-off** only if **all** of the following
 
 ---
 
+## 4.1 Action 9 closure capture rule (Windows Host-A)
+
+For the final Host-A pass, each scenario must be recorded with:
+
+- `request_id`
+- backend JSON artifact
+- plugin-visible output artifact (dialog text or screenshot)
+- trace references: Context Layer, Plan-Gate, and vLLM for Explain/Debug
+
+Allowed status per scenario row: **PASS / FAIL / NOT_PROVEN**.  
+Do not leave blanks; if trace correlation is missing, mark **NOT_PROVEN**.
+
+---
+
 ## 5. Demo limitations (operator awareness)
 
 - **Gradle `:test`** for the plugin may hit an IntelliJ sandbox **Index** error in some environments; **`compileKotlin`** / **`compileTestKotlin`** remain useful.

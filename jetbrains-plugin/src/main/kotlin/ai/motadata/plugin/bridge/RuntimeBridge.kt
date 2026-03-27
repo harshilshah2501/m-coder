@@ -151,6 +151,7 @@ class RuntimeBridge(
         val exportOutcome = Layer5EvidenceExporter.tryExportEvidenceBundle(
             request.repoRoot,
             request.payload ?: "",
+            request.requestId,
         )
         val localEvidenceJson = when (exportOutcome) {
             is EvidenceExportOutcome.ServiceFailure ->
@@ -347,7 +348,7 @@ class RuntimeBridge(
         )
     }
 
-    private fun parseAskResponse(requestId: String, json: String): RuntimeResponse {
+    internal fun parseAskResponse(requestId: String, json: String): RuntimeResponse {
         val root = gson.fromJson(json, JsonObject::class.java)
 
         val posture = root.getAsJsonPrimitive("governance_posture")?.asString
@@ -400,6 +401,18 @@ class RuntimeBridge(
             metadata["evidence_first_meta"] = gson.fromJson(evidenceMetaObj, Map::class.java) as Map<String, Any?>
         }
 
+        val backendMetadataObj = root.getAsJsonObject("metadata")
+        if (backendMetadataObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["backend_metadata"] = gson.fromJson(backendMetadataObj, Map::class.java) as Map<String, Any?>
+        }
+
+        val contextResolutionObj = root.getAsJsonObject("context_resolution")
+        if (contextResolutionObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["context_resolution"] = gson.fromJson(contextResolutionObj, Map::class.java) as Map<String, Any?>
+        }
+
         return RuntimeResponse(
             outcome = outcome,
             requestId = requestId,
@@ -410,7 +423,7 @@ class RuntimeBridge(
         )
     }
 
-    private fun parseExecuteResponse(requestId: String, json: String): RuntimeResponse {
+    internal fun parseExecuteResponse(requestId: String, json: String): RuntimeResponse {
         val root = gson.fromJson(json, JsonObject::class.java)
 
         val outcomeStr = root.getAsJsonPrimitive("outcome")?.asString
@@ -418,6 +431,7 @@ class RuntimeBridge(
 
         val outcome = when (outcomeStr?.uppercase()) {
             "EXECUTED" -> RuntimeOutcome.EXECUTED
+            "EXECUTED_FAILED" -> RuntimeOutcome.EXECUTED_FAILED
             "REFUSED" -> RuntimeOutcome.REFUSED
             "BLOCKED" -> RuntimeOutcome.BLOCKED
             "DEFERRED" -> RuntimeOutcome.DEFERRED
@@ -439,7 +453,8 @@ class RuntimeBridge(
         val reason = root.getAsJsonPrimitive("reason")?.asString
         val ledgerRowId = root.getAsJsonPrimitive("ledger_row_id")?.asString
         val planHash = root.getAsJsonPrimitive("plan_hash")?.asString
-        val wasExecuted = root.getAsJsonPrimitive("executed")?.asBoolean ?: (outcome == RuntimeOutcome.EXECUTED)
+        val wasExecuted = root.getAsJsonPrimitive("executed")?.asBoolean
+            ?: (outcome == RuntimeOutcome.EXECUTED || outcome == RuntimeOutcome.EXECUTED_FAILED)
 
         return RuntimeResponse(
             outcome = outcome,

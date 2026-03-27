@@ -5,11 +5,11 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-26  
+- **Last updated**: 2026-03-27  
 - **Program state**: **Retrieval baseline locked → validation and system hardening phase**
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **L5.8 — Grounded Ask Validation + Metrics**. Parallel hard gates: **L5-OBS-1 — Observability & Tracing** and **Plugin Truthfulness Alignment**. **L5.9** is explicitly downstream after grounded-input validation stability; **M3.18** remains downstream task-level evaluation after L5.8. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
+- **Current active milestone focus**: **Action #9 — Close host profile A (IN_PROGRESS)** (next numbered closure step per `docs/production_closure_handbook_corrected_canonical_version.md`). Current truth: backend-side proof artifacts exist, **no new TRUE_PRODUCT_BLOCKER has been proven**, and remaining closure gap is **Windows+JetBrains Host-A proof-pack completion** (plugin-visible artifacts + request-id trace correlation). This next move is operational proof completion, not product code change. **Action #7 — Validate Execute path rigorously** is **COMPLETE** (live HTTP `POST /v0/execute` product path: **`EXECUTED_FAILED` vs `BLOCKED`** honesty; **`plan_gate_*` client hints rejected by default** unless explicit test-only env). **Action #8 — Validate no-match honesty** remains **SATISFIED** under **L5.8 / Action 3** closure (not reactivated). **Action #6 — Validate Explain/Debug path rigorously** is **COMPLETE** (server-side Explain/Debug trust proof; plugin truth-surface preservation and rendering proof). **Caveat:** Explain/Debug trust proof is complete across server and plugin contract surfaces. Remaining IntelliJ plugin `:test` runtime execution is environment/tooling debt, not unfinished Action 6 product logic. **Action #5 — Plan-Gate observability / L5-OBS-1 (main HTTP path)** is **COMPLETE** (structured logging and `request_id` correlation across Context Layer, Plan-Gate, and explain/debug). **Action #4 — Plugin Truthfulness Alignment** is **COMPLETE** for product-truthfulness logic (metadata, provenance, calibration surfaced in Ask UI). **L5.8 — Grounded Ask Validation + Metrics** is **COMPLETE** (hard gates satisfied). **L5.9** and **M3.18** remain downstream. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -96,12 +96,26 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Detect owner drift / anchor drift / noise regression with deterministic thresholds
 
 ### B2 — Grounded Ask Validation (L5.8)
+**Status:** **COMPLETE**  
+**Linked Closure Action:** **Action #3 (closed)**  
+**PR-6 baseline remains locked on canonical real-repo context. Current L5.8 hardening includes guard-context enforcement so synthetic or shifted-root corpora cannot produce false baseline regression signals.**  
+**Progress checklist:**  
+- [x] Deterministic L5.8 harness scaffolding landed in `runtime/layer5/audit` (`l58_dataset`, `l58_evaluator`, `l58_perturbations`, `l58_drift`, `l58_report`, `l58_grounded_harness`)  
+- [x] Golden dataset + thresholds fixtures added (`l58_golden_queries.v1.json`, `l58_thresholds.v1.json`)  
+- [x] Perturbation determinism snapshot test added (`test_l58_perturbation_snapshot.py`)  
+- [x] PR-6 protected subset enforcement wired into harness evaluation path  
+- [x] JSON + Markdown harness report outputs added  
+- [x] CI smoke/full harness invocation wired in workflow  
+- [x] Validate L5.8 harness against canonical PR-6 reference environment with zero protected-subset regressions  
+- [x] Promote L5.8 to **COMPLETE** after closure-gate validation and PR-6 preservation checks  
+**Final state note:** canonical full-run latency p95 is ~339 ms, no remaining hard failures, and residual latency warning threshold is non-blocking.
 - Query → expected files mapping
 - top-k correctness validation
 - false positive / false negative tracking
 - no-match honesty enforcement
 
 ### B3 — Plugin Truthfulness
+- **Caveat:** JetBrains plugin full `:test` reliability remains open due to environment/IDE-layout limitations. This is tracked as tooling debt, not as unfinished Action 4 product-truthfulness logic.
 - Show evidence_bundle entries
 - Show ask_path
 - Show plan_summary.notes
@@ -109,6 +123,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Correct execute outcome UX
 
 ### B4 — Observability (L5-OBS-1)
+- **Caveat:** Main HTTP request traceability is complete across Context Layer, Plan-Gate, and explain/debug model calls. Remaining runbook/CI log collection and non-HTTP parity are operational follow-through, not unfinished Action 5 product logic.
 - request_id propagation across:
   - Context Layer
   - Plan-Gate
@@ -840,6 +855,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.7 M3.7 — IDE Plugin Integration (RuntimeBridge + Governed Actions)
 
+- **Action 7 (Execute trust) — COMPLETE (live HTTP product path):** Execute trust validation is complete for **`POST /v0/execute`** via Plan-Gate (including **`EXECUTED_FAILED` vs `BLOCKED`** and **`plan_gate_*` server-rejected by default** on live HTTP). **Caveat:** Execute trust is complete on the live HTTP product path. Remaining direct-handler behavior and broader auth/binding topics are follow-through items, not unfinished Action 7 product logic.
 - **Milestone**: M3.7 IDE Plugin Integration — COMPLETE (2026-03-12); **MVP scope: commit interception, ask flow, /v0/execute with decision ledgering and production governance.**
 - **Artifacts** (11+):
   - **Plugin RuntimeBridge abstraction**:
@@ -852,14 +868,14 @@ This section records **evidence of completed milestones**. Entries should be **a
     - `jetbrains-plugin/.../ask/AskMotadataAiAction.kt` — PLAN ONLY semantics.
     - `jetbrains-plugin/.../actions/SubmitToRuntimeAction.kt` — Explicit execution action.
   - **Runtime execute endpoint**:
-    - `runtime/execute_service/handlers.py` — `/v0/execute`: Plan-Gate → ledger decision → sandbox (if safe_execute) → ledger outcome. Governance from PlanGateService only; explicit request fields (plan_gate_refuse, plan_gate_defer, plan_gate_bounded_allow) for test/demo; command parsed with shlex.split(); decision_ledger_row_id and ledger_row_id in response.
+    - `runtime/execute_service/handlers.py` — `/v0/execute`: Plan-Gate → ledger decision → sandbox (if safe_execute) → ledger outcome. Governance from PlanGateService only; `plan_gate_*` fields only when `MOTADATA_EXECUTE_ALLOW_PLAN_GATE_OVERRIDES` test mode is set (live HTTP rejects them by default); command parsed with shlex.split(); decision_ledger_row_id and ledger_row_id in response.
     - `runtime/ide/schemas/execute_request.v0.1.schema.json` — Optional ledger_path, plan_gate_* (test/demo).
     - `runtime/ide/schemas/execute_response.v0.1.schema.json` — decision_ledger_row_id, ledger_row_id.
   - **Tests**: `runtime/tests/test_execute_service.py` — 30 tests (validation, explicit flags, decision ledgering, shlex parsing).
   - **Documentation**: `docs/runtime/milestones/M3.4_IDE_PLUGIN_INTEGRATION.md`, `docs/runtime/JETBRAINS_PLUGIN_RUNTIME_BRIDGE.md`.
 - **Evidence**:
   - **Plan-Gate decision ledgering in /v0/execute:** When ledger_path (request or MOTADATA_EXECUTE_LEDGER_PATH) is set, Plan-Gate decision is persisted (plangate_refused, plangate_deferred, plangate_bounded_allow, plangate_safe_execute) before sandbox or return. Response includes decision_ledger_row_id; ledger_row_id when executed. Decision and execution evidence are separate.
-  - **Production governance:** No command-string keyword heuristics. Posture from PlanGateService.evaluate(request) only; test/demo control via explicit plan_gate_refuse, plan_gate_defer, plan_gate_bounded_allow.
+  - **Production governance:** No command-string keyword heuristics. Posture from PlanGateService.evaluate(request) only; `plan_gate_*` overrides only when explicit test env is enabled (rejected by default on live HTTP).
   - **Command parsing:** shlex.split() for quoted args; invalid/empty command rejected; shell=False downstream.
   - **RuntimeBridge:** Single integration point; 7 distinct outcomes; fail-closed; 3 governed actions (commit, ask, submit to runtime).
   - **Tests:** pytest `runtime/tests/test_execute_service.py` — 30 passed (decision ledgering, explicit flags, shlex, no keyword path).

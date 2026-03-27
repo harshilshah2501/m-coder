@@ -51,6 +51,32 @@ except ImportError:
 EXECUTE_REQUEST_SCHEMA = "execute_request.v0.1"
 EXECUTE_RESPONSE_SCHEMA = "execute_response.v0.1"
 
+# Client-supplied Plan-Gate posture hints (test/demo only). Rejected unless env allows.
+_PLAN_GATE_OVERRIDE_KEYS = frozenset({"plan_gate_refuse", "plan_gate_defer", "plan_gate_bounded_allow"})
+_PLAN_GATE_OVERRIDES_ENV = "MOTADATA_EXECUTE_ALLOW_PLAN_GATE_OVERRIDES"
+
+
+def _plan_gate_overrides_allowed() -> bool:
+    v = os.environ.get(_PLAN_GATE_OVERRIDES_ENV, "").strip().lower()
+    return v in ("1", "true", "yes")
+
+
+def _present_plan_gate_override_keys(data: dict[str, Any]) -> list[str]:
+    return sorted(k for k in _PLAN_GATE_OVERRIDE_KEYS if k in data)
+
+
+def _plan_gate_override_errors_if_forbidden(data: dict[str, Any]) -> list[str]:
+    if _plan_gate_overrides_allowed():
+        return []
+    bad = _present_plan_gate_override_keys(data)
+    if not bad:
+        return []
+    return [
+        "Forbidden client hints in production runtime: "
+        + ", ".join(bad)
+        + f". Set {_PLAN_GATE_OVERRIDES_ENV}=1 for tests only."
+    ]
+
 
 def validate_execute_request(data: dict[str, Any]) -> list[str]:
     """Validate ExecuteRequest schema. Returns list of error messages (empty if valid)."""
@@ -68,6 +94,8 @@ def validate_execute_request(data: dict[str, Any]) -> list[str]:
 
     if not data.get("command"):
         errors.append("Missing required field: command")
+
+    errors.extend(_plan_gate_override_errors_if_forbidden(data))
 
     return errors
 
@@ -91,6 +119,20 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
         revision,
     )
     task_id = data.get("task_id")
+
+    pg_errs = _plan_gate_override_errors_if_forbidden(data)
+    if pg_errs:
+        return _build_response(
+            request_id=request_id,
+            outcome="BLOCKED",
+            posture="refuse",
+            executed=False,
+            reason=pg_errs[0],
+            ui_title="Request rejected",
+            ui_message="plan_gate_* hints are not accepted in production runtime mode.",
+            ui_severity="error",
+            plan_hash=plan_hash_final,
+        )
 
     if CommandNormalizer is None or intent_to_plangate_request is None or DeterministicGuard is None:
         return _build_response(
@@ -342,20 +384,55 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
             stdout_summary=result.stdout_summary,
             stderr_summary=result.stderr_summary,
         )
-    else:
+
+    # Distinguish: sandbox ran the process but it failed (non-zero exit, timeout, etc.)
+    # vs policy / identity block before or without a successful run contract.
+    if getattr(result, "outcome_type", "") == "executed":
+        failed_reason, failed_ui = _executed_failed_copy(result)
         return _build_response(
             request_id=request_id,
-            outcome="BLOCKED",
+            outcome="EXECUTED_FAILED",
             posture=posture,
-            executed=False,
-            reason=result.blocked_reason or "Execution blocked by sandbox policy.",
-            ui_title="Execution Blocked",
-            ui_message=result.blocked_reason or "Sandbox policy blocked this execution.",
-            ui_severity="error",
+            executed=True,
+            reason=failed_reason,
+            ui_title="Execution Failed",
+            ui_message=failed_ui,
+            ui_severity="warning",
             plan_hash=plan_hash_final,
             decision_ledger_row_id=decision_ledger_row_id,
             ledger_row_id=result.ledger_row_id,
+            exit_code=result.exit_code,
+            stdout_summary=result.stdout_summary,
+            stderr_summary=result.stderr_summary,
         )
+
+    return _build_response(
+        request_id=request_id,
+        outcome="BLOCKED",
+        posture=posture,
+        executed=False,
+        reason=result.blocked_reason or "Execution blocked by sandbox policy.",
+        ui_title="Execution Blocked",
+        ui_message=result.blocked_reason or "Sandbox policy blocked this execution.",
+        ui_severity="error",
+        plan_hash=plan_hash_final,
+        decision_ledger_row_id=decision_ledger_row_id,
+        ledger_row_id=result.ledger_row_id,
+    )
+
+
+def _executed_failed_copy(result: Any) -> tuple[str, str]:
+    """Human-readable reason/UI for runs that reached the sandbox but did not succeed."""
+    exit_code = getattr(result, "exit_code", -1)
+    final_status = getattr(result, "final_status", "") or ""
+    base_reason = f"Command ran in the governed sandbox but did not succeed (exit_code={exit_code})."
+    if final_status:
+        base_reason = f"{base_reason} ({final_status})"
+    ui = (
+        "The command was executed in the sandbox but exited unsuccessfully or failed. "
+        "This is not a pre-execution policy block."
+    )
+    return base_reason, ui
 
 
 def _build_response(

@@ -73,6 +73,11 @@ def _contains_symbol_signal(query: str) -> Tuple[bool, Tuple[str, ...]]:
             or raw.endswith("()")
         ):
             symbols.append(base.lower())
+            # Deterministic split for CamelCase symbol robustness: allow partial symbol-path linkage
+            # in quality checks without semantic expansion.
+            for part in re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)|[0-9]+", base):
+                if part:
+                    symbols.append(part.lower())
     dedup = []
     seen = set()
     for s in symbols:

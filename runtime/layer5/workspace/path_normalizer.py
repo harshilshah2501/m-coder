@@ -145,6 +145,10 @@ class PathNormalizer:
         else:
             canonical = cls._normalize_posix_path(path)
 
+        # JetBrains / IDE may send WSL "bridge" paths that do not resolve reliably in every
+        # process (e.g. /mnt/wsl.localhost/<distro>/home/...). Map to real Linux /home/... on POSIX.
+        canonical = cls._map_wsl_localhost_bridge_to_linux_home(canonical)
+
         # Resolve symlinks if requested and on compatible platform
         if resolve_symlinks:
             try:
@@ -215,6 +219,24 @@ class PathNormalizer:
         # Collapse multiple slashes
         while "//" in path:
             path = path.replace("//", "/")
+        return path
+
+    # JetBrains remote / WSL integration often surfaces paths like:
+    #   /mnt/wsl.localhost/Ubuntu-24.04/home/user/project
+    # or (after slash collapse) /wsl.localhost/... which is not always stat()-able from every
+    # Python process even when the same tree exists at /home/user/project.
+    _WSL_LOCALHOST_MNT_HOME = re.compile(r"^/mnt/wsl\.localhost/[^/]+(/home/.+)$")
+    _WSL_LOCALHOST_HOME = re.compile(r"^/wsl\.localhost/[^/]+(/home/.+)$")
+
+    @classmethod
+    def _map_wsl_localhost_bridge_to_linux_home(cls, path: str) -> str:
+        """Map IDE WSL bridge paths to native /home/... when running on POSIX."""
+        if os.name != "posix":
+            return path
+        for pat in (cls._WSL_LOCALHOST_MNT_HOME, cls._WSL_LOCALHOST_HOME):
+            m = pat.match(path)
+            if m:
+                return m.group(1)
         return path
 
     @classmethod

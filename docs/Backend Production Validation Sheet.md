@@ -20,6 +20,8 @@
 6. **Record** Actual / Pass-Fail in the tables; paste short **log excerpts** where indicated.
 7. Complete **H. Final Backend Summary**.
 
+**Status discipline:** Every scenario row must be marked as exactly one of **PASS**, **FAIL**, or **NOT_PROVEN**. Do not leave blanks.
+
 ### What this proves vs what it does not
 
 | Proves | Does not prove |
@@ -128,6 +130,19 @@ export QUERY="${QUERY:-How does alert correlation work in this repo?}"
 | Code | `/v0/execute` |
 | No-match | `/v1/export_evidence` -> `/v1/ask` |
 | Failure mode | explicit failure surfaced, no fake success |
+
+### A3.1 Request-id correlation checklist (required per scenario B–G)
+
+| Scenario | request_id recorded | Context Layer trace | Plan-Gate trace | vLLM trace (Explain/Debug) |
+| --- | --- | --- | --- | --- |
+| B Ask v1 | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | N/A |
+| C Debug | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN |
+| D Plan | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | N/A |
+| E Code/Execute | PASS / FAIL / NOT_PROVEN | N/A | PASS / FAIL / NOT_PROVEN | N/A |
+| F No-match | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | PASS / FAIL / NOT_PROVEN | N/A |
+| G Failure-mode | PASS / FAIL / NOT_PROVEN | optional | PASS / FAIL / NOT_PROVEN | N/A |
+
+If a trace cannot be correlated to `request_id`, mark **NOT_PROVEN** and write why.
 
 ### A4. Canonical test payloads
 
@@ -596,7 +611,7 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 ### Actual
 
-| Check                     | Expected | Actual             | Pass/Fail |
+| Check                     | Expected | Actual             | Status (PASS/FAIL/NOT_PROVEN) |
 | ------------------------- | -------- | ------------------ | --------- |
 | evidence weak/empty       | Yes      | __________________ | ______    |
 | explicit insufficiency    | Yes      | __________________ | ______    |
@@ -661,7 +676,7 @@ curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
 
 ### Actual
 
-| Check                                  | Expected | Actual             | Pass/Fail |
+| Check                                  | Expected | Actual             | Status (PASS/FAIL/NOT_PROVEN) |
 | -------------------------------------- | -------- | ------------------ | --------- |
 | failure surfaced                       | Yes      | __________________ | ______    |
 | silent fallback avoided where required | Yes      | __________________ | ______    |

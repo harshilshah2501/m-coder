@@ -7,6 +7,11 @@ from typing import Dict, List, Optional
 
 import pytest
 
+from runtime.layer5.audit.pr6_context import (
+    DEFAULT_CANONICAL_ROOT,
+    PR6_MODE_BASELINE,
+    classify_pr6_context,
+)
 from runtime.layer5.index import build_file_index
 from runtime.layer5.retrieval import LexicalRetrievalConfig, classify_file, retrieve_lexical
 from runtime.layer5.workspace.identity import WorkspaceIdentity
@@ -38,7 +43,20 @@ def _resolve_real_repo_root() -> Path:
     p = Path(env).resolve()
     if not p.is_dir():
         pytest.skip(f"PR6 closure guard root missing: {p}")
-    return p
+    anchor_union: List[str] = []
+    for fixture_path in (_FIX_MANDATORY, _FIX_AMBIG):
+        data = json.loads(fixture_path.read_text(encoding="utf-8"))
+        for row in data["fixtures"]:
+            anchor_union.extend(str(x) for x in row["expected_anchor_paths"])
+    canonical_env = (os.environ.get("PR6_CANONICAL_ROOT") or "").strip()
+    canonical_root = Path(canonical_env).resolve() if canonical_env else DEFAULT_CANONICAL_ROOT
+    context = classify_pr6_context(p, tuple(anchor_union), canonical_root=canonical_root)
+    if context.mode != PR6_MODE_BASELINE:
+        pytest.fail(
+            "PR-6 baseline guard refused non-baseline context: "
+            f"mode={context.mode}, root={context.root}, reason={context.reason}"
+        )
+    return context.root
 
 
 def _identity(root: Path) -> WorkspaceIdentity:

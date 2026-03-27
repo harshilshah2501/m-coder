@@ -65,7 +65,14 @@ object Layer5EvidenceExporter {
         return DEFAULT_SERVICE_URL
     }
 
-    fun tryExportEvidenceBundle(workspaceRoot: String, query: String): EvidenceExportOutcome {
+    /**
+     * @param requestId optional; forwarded as `request_id` on HTTP POST `/v1/export_evidence` for log correlation with Plan-Gate.
+     */
+    fun tryExportEvidenceBundle(
+        workspaceRoot: String,
+        query: String,
+        requestId: String? = null,
+    ): EvidenceExportOutcome {
         val root = workspaceRoot.trim()
         val q = query.trim()
         if (root.isEmpty() || q.isEmpty()) {
@@ -73,7 +80,7 @@ object Layer5EvidenceExporter {
         }
 
         if (!isHttpDisabled()) {
-            when (val http = tryHttpExport(resolveContextLayerBaseUrl(), root, q)) {
+            when (val http = tryHttpExport(resolveContextLayerBaseUrl(), root, q, requestId)) {
                 is EvidenceExportOutcome.ServiceFailure -> return http
                 is EvidenceExportOutcome.Success -> return http
                 is EvidenceExportOutcome.Unreachable -> { /* try CLI / dev */ }
@@ -88,7 +95,12 @@ object Layer5EvidenceExporter {
         return EvidenceExportOutcome.Unreachable("context_layer_unreachable_no_provider")
     }
 
-    private fun tryHttpExport(baseUrl: String, workspaceRoot: String, query: String): EvidenceExportOutcome {
+    private fun tryHttpExport(
+        baseUrl: String,
+        workspaceRoot: String,
+        query: String,
+        requestId: String?,
+    ): EvidenceExportOutcome {
         val base = baseUrl.trimEnd('/')
         if (base.isEmpty()) return EvidenceExportOutcome.Unreachable("empty_context_layer_url")
         val url = "$base/v1/export_evidence"
@@ -99,11 +111,15 @@ object Layer5EvidenceExporter {
             conn.requestMethod = "POST"
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            val payload = mapOf(
-                "workspace_root" to workspaceRoot,
-                "query" to query,
-                "top_k" to 8,
-            )
+            val payload = buildMap {
+                put("workspace_root", workspaceRoot)
+                put("query", query)
+                put("top_k", 8)
+                val rid = requestId?.trim()
+                if (!rid.isNullOrEmpty()) {
+                    put("request_id", rid)
+                }
+            }
             OutputStreamWriter(conn.outputStream, StandardCharsets.UTF_8).use { it.write(gson.toJson(payload)) }
             val code = conn.responseCode
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream ?: conn.inputStream

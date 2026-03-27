@@ -5,6 +5,8 @@ Validates deterministic path conversion between Windows, WSL, and POSIX formats.
 These tests run on any platform (not just WSL).
 """
 
+import os
+
 import pytest
 from runtime.layer5.workspace.path_normalizer import PathNormalizer, PathNormalizationResult
 
@@ -215,6 +217,28 @@ class TestDeterminism:
         # All variants should produce same canonical path
         assert len(canonical_paths) == 1
         assert canonical_paths.pop() == "/mnt/c/Users/dev/project"
+
+
+class TestJetBrainsWslLocalhostBridge:
+    """JetBrains WSL bridge paths map to native /home/... on Linux."""
+
+    def test_mnt_wsl_localhost_distro_home(self):
+        if os.name != "posix":
+            pytest.skip("bridge mapping applies on POSIX only")
+        r = PathNormalizer.normalize(
+            "/mnt/wsl.localhost/Ubuntu-24.04/home/harshil/Projects/Motadata",
+            resolve_symlinks=False,
+        )
+        assert r.canonical_path == "/home/harshil/Projects/Motadata"
+
+    def test_wsl_localhost_without_mnt_prefix(self):
+        if os.name != "posix":
+            pytest.skip("bridge mapping applies on POSIX only")
+        r = PathNormalizer.normalize(
+            "/wsl.localhost/Ubuntu-24.04/home/harshil/Projects/Motadata",
+            resolve_symlinks=False,
+        )
+        assert r.canonical_path == "/home/harshil/Projects/Motadata"
 
 
 if __name__ == "__main__":

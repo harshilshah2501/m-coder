@@ -10,7 +10,9 @@ template steps (return explain_debug.error instead).
 from __future__ import annotations
 
 import json
+import logging
 import os
+import time
 import urllib.request
 import urllib.error
 from dataclasses import dataclass, field
@@ -19,9 +21,29 @@ from typing import Any, Dict, List
 from runtime.context.contracts import ContextBundle
 
 
+LOG = logging.getLogger(__name__)
+
 EXPLAIN_VLLM_URL_ENV = "MOTADATA_EXPLAIN_VLLM_URL"
 DEFAULT_VLLM_URL = "http://127.0.0.1:8000"
 TIMEOUT_SECONDS = 60
+
+
+def _explain_debug_request_log(
+    request_id: str,
+    base_url: str,
+    model: str,
+    status: str,
+    t0: float,
+) -> None:
+    elapsed_ms = (time.perf_counter() - t0) * 1000.0
+    LOG.info(
+        "EXPLAIN_DEBUG request_id=%s base_url=%s model=%s status=%s duration_ms=%.2f",
+        request_id,
+        base_url,
+        model,
+        status,
+        elapsed_ms,
+    )
 
 
 @dataclass
@@ -118,6 +140,7 @@ def explain_debug(
     selected_file: str,
     selection: str,
     bundle: ContextBundle,
+    request_id: str = "",
 ) -> ExplainDebugResult:
     """
     Perform real explain/debug reasoning using a vLLM-compatible endpoint.
@@ -126,16 +149,22 @@ def explain_debug(
     when the service is unavailable or response is invalid. Caller must NOT
     use PlanOnlyPlanner when error is set.
     """
+    t0 = time.perf_counter()
+    rid = (request_id or "").strip() or "unknown"
     base_url = os.environ.get(EXPLAIN_VLLM_URL_ENV, DEFAULT_VLLM_URL).rstrip("/")
     url = f"{base_url}/v1/chat/completions"
+    model_name = os.environ.get("MOTADATA_EXPLAIN_MODEL", "motadata-coder")
 
     prompt = _build_prompt(query, selected_file, selection, bundle)
-    payload = {
-        "model": os.environ.get("MOTADATA_EXPLAIN_MODEL", "motadata-coder"),
+    payload: Dict[str, Any] = {
+        "model": model_name,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2,
         "max_tokens": 1500,
     }
+    # OpenAI-compatible optional correlation (vLLM often forwards; ignored safely if not).
+    if rid != "unknown":
+        payload["user"] = rid
 
     try:
         req = urllib.request.Request(
@@ -146,21 +175,31 @@ def explain_debug(
         )
         with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
             if resp.status != 200:
+                _explain_debug_request_log(rid, base_url, model_name, "error", t0)
                 return ExplainDebugResult(
                     error=f"Reasoning service returned HTTP {resp.status}"
                 )
             body = json.loads(resp.read().decode("utf-8"))
     except urllib.error.URLError as e:
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
         return ExplainDebugResult(
             error=f"Reasoning service unavailable: {e.reason or type(e).__name__}"
         )
     except TimeoutError:
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
         return ExplainDebugResult(error="Reasoning service timeout")
     except Exception as e:
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
         return ExplainDebugResult(error=f"Reasoning request failed: {e}")
 
     choices = body.get("choices") or []
     if not choices:
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
         return ExplainDebugResult(error="Reasoning service returned no choices")
     content = choices[0].get("message", {}).get("content") or ""
-    return _parse_structured_response(content)
+    parsed = _parse_structured_response(content)
+    if parsed.error:
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+    else:
+        _explain_debug_request_log(rid, base_url, model_name, "success", t0)
+    return parsed

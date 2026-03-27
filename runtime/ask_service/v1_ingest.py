@@ -164,6 +164,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             selected_file=str(selected_file),
             selection=selection or "",
             bundle=bundle,
+            request_id=request_id,
         )
         explain_debug_result = result
         if result.error:
