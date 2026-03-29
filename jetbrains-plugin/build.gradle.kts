@@ -16,6 +16,13 @@ intellij {
     // Git4Idea not on compile classpath to avoid dvcs module; plugin.xml still <depends>Git4Idea</depends> for runtime
 }
 
+// Default patched range was capped at 253.*; JetBrains Client / newer IDs need a higher until-build (e.g. JBC-261).
+tasks.patchPluginXml {
+    // Align floor with compile SDK (2025.3 → base build 253); raise ceiling for JetBrains Client 261+.
+    sinceBuild.set("253")
+    untilBuild.set("999.*")
+}
+
 dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     testImplementation(kotlin("test"))
