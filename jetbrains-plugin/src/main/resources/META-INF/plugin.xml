@@ -17,10 +17,14 @@
 
         No IDE action of interest bypasses runtime governance.
         Fails closed when runtime unavailable in enforcing mode.
+
+        Git Integration (Git4Idea) is optional: install JetBrains &quot;Git&quot; if you want the
+        standard Git commit UI to register the check-in handler; Ask / Submit to Runtime work without it.
     </description>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>Git4Idea</depends>
+    <!-- Hard dependency breaks JBC/minimal IDEs; we do not call git4idea APIs (GitInfoUtil uses git CLI). -->
+    <depends optional="true">Git4Idea</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <checkinHandlerFactory implementation="ai.motadata.plugin.vcs.MotadataCheckinHandlerFactory"/>
