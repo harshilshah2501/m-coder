@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -24,6 +25,13 @@ def _normalize_workspace_root(raw: str) -> str:
     return PathNormalizer.normalize(w, resolve_symlinks=True).canonical_path
 
 _EXPORT_PATH = "/v1/export_evidence"
+
+_DEBUG_EXPORT_ENV = "MOTADATA_CONTEXT_LAYER_DEBUG_EXPORT"
+
+
+def _debug_export_requests() -> bool:
+    v = (os.environ.get(_DEBUG_EXPORT_ENV) or "").strip().lower()
+    return v in ("1", "true", "yes")
 
 
 def _request_id_from_body(data: object) -> str:
@@ -132,8 +140,17 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
             return
 
         rid = _request_id_from_body(data)
-        workspace = (data.get("workspace_root") or data.get("workspace") or "").strip()
-        workspace = _normalize_workspace_root(workspace)
+        raw_workspace = (data.get("workspace_root") or data.get("workspace") or "").strip()
+        workspace = _normalize_workspace_root(raw_workspace)
+        if _debug_export_requests():
+            LOG.info(
+                "DEBUG export_evidence peer=%s rid=%s raw_workspace_root=%r normalized_workspace_root=%r query_len=%s",
+                self.client_address,
+                rid,
+                raw_workspace,
+                workspace,
+                len((data.get("query") or "").strip()),
+            )
         wmark = _workspace_marker(workspace)
         query = (data.get("query") or "").strip()
         top_k = data.get("top_k", 8)
