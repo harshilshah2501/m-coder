@@ -7,11 +7,21 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+from runtime.layer5.workspace.path_normalizer import PathNormalizer
+
 from . import config
 from .evidence_api import export_evidence_bundle_dict
 from .logging_setup import get_logger, setup_logging_from_env
 
 LOG = get_logger(__name__)
+
+
+def _normalize_workspace_root(raw: str) -> str:
+    """Canonicalize workspace_root at HTTP boundary (JetBrains WSL bridge paths, symlinks)."""
+    w = raw.strip()
+    if not w:
+        return w
+    return PathNormalizer.normalize(w, resolve_symlinks=True).canonical_path
 
 _EXPORT_PATH = "/v1/export_evidence"
 
@@ -123,6 +133,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
 
         rid = _request_id_from_body(data)
         workspace = (data.get("workspace_root") or data.get("workspace") or "").strip()
+        workspace = _normalize_workspace_root(workspace)
         wmark = _workspace_marker(workspace)
         query = (data.get("query") or "").strip()
         top_k = data.get("top_k", 8)

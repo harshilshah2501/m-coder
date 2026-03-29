@@ -3,28 +3,28 @@
 **Scope:** This is the **operational runbook** for a single disciplined **Windows JetBrains + WSL Context Layer + GPU Plan-Gate/vLLM** validation pass.  
 **Action 7** (execute trust on the live HTTP product path) is documented as complete elsewhere; this runbook is for **Action 9 Host-A proof**, not a repeat Action 7 code audit.
 
-**Fixed layout (customize only the table below if your machine differs):**
+**Two paths, one audited workspace:**
 
 
-| Role                                                               | Path / host                                                                                                                                 |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **m-coder** (GPU scripts, Context Layer source, Plan-Gate in repo) | `/home/harshil/Harshil-PoCs/m-coder` **or** `/root/Harshil-PoCs/m-coder` — pick **one** and use it everywhere in this doc as `MCODER_ROOT`. |
-| **Motadata** (product repo for grounded Ask)                       | `/home/harshil/Projects/Motadata`                                                                                                           |
-| **Context Layer bind**                                             | `0.0.0.0:8091` (so Windows `curl` / IDE can reach WSL without guessing)                                                                     |
-| **Plan-Gate / Execute / Ask** (plugin default)                     | `http://127.0.0.1:8089` — plugin **hardcodes** this; tunnel must present Plan-Gate on **Windows localhost 8089**.                           |
+| Role                                           | Path / host                                                                                                                                                                                           |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `**MCODER_ROOT`** (tooling only)               | Checkout used to **start** GPU governed services and **run** Context Layer from this repo, e.g. `/home/harshil/Harshil-PoCs/m-coder` or `/root/Harshil-PoCs/m-coder`. **Not** the product under test. |
+| `**MOTADATA_ROOT`** (only workspace audited)   | Motadata AIOps repo root, e.g. `/home/harshil/Projects/Motadata`. **All** Ask / Explain / Execute / no-match scenarios use this project open in the IDE.                                              |
+| **Context Layer bind**                         | `0.0.0.0:8091` (so Windows `curl` / IDE can reach WSL without guessing).                                                                                                                              |
+| **Plan-Gate / Ask / Execute** (plugin default) | `http://127.0.0.1:8089` — plugin **hardcodes** this; tunnel must present Plan-Gate on **Windows localhost 8089**.                                                                                     |
 
 
-**Non-negotiable:** For Motadata Ask, `workspace_root` sent to Context Layer must be a **Linux path that exists where Context Layer runs**. If the IDE plugin runs on **Windows** only, `project.basePath` may be `//wsl.localhost/...` and export will fail — use **JetBrains remote/WSL backend** for the Motadata project, or accept **NOT_PROVEN** for Ask until paths are Linux. Opening **m-coder** on the WSL backend is fine for the **PlanGateService** smoke query.
+**Non-negotiable:** `workspace_root` / `repo_root` for the plugin must resolve to a **real Linux directory** where Context Layer runs. If the IDE sends `/mnt/wsl.localhost/...`, use a **current Context Layer wheel** that maps that bridge path to `/home/...`, or open the project via a **Linux** path in the WSL backend. If correlation is missing, mark **NOT_PROVEN**.
 
 ---
 
 ## Overview (what you are doing)
 
-1. Start **GPU services** (Plan-Gate + vLLM + deps as per `governed_services.sh`).
-2. Start **Context Layer** in **WSL** on `**0.0.0.0:8091`**.
-3. Create **Windows → GPU** SSH tunnel for **8000** and **8089**.
+1. Start **GPU services** from `MCODER_ROOT` (`governed_services.sh`).
+2. Start **Context Layer** in **WSL** on `0.0.0.0:8091` (from `MCODER_ROOT`).
+3. Create **Windows → GPU** SSH tunnel for **vLLM** and **Plan-Gate** ports.
 4. Configure **JetBrains** VM options (evidence-first + Context Layer URL).
-5. Run **five scenarios** (Ask ×2 repos, Explain/Debug, Execute ×3, No-match, Failure).
+5. Open **only** `MOTADATA_ROOT` in the IDE and run **five scenarios**: Ask v1, Explain/Debug, Execute (×3), No-match, Failure.
 6. Capture **request_id**, logs, and screenshots under a dated folder.
 
 ---
@@ -37,16 +37,16 @@
 $ts = Get-Date -Format "yyyyMMdd_HHmmss"
 mkdir C:\action9_hostA_$ts
 cd C:\action9_hostA_$ts
-mkdir health, ask_mcoder, ask_motadata, debug, execute_ok, execute_blocked, execute_failed, nomatch, failure, logs
+mkdir health, ask, debug, execute_ok, execute_blocked, execute_failed, nomatch, failure, logs
 ```
 
 ---
 
 ## STEP 1 — GPU services
 
-**SSH or WSL shell on the GPU host** (same machine where vLLM/Plan-Gate listen on **127.0.0.1** inside that OS).
+**SSH or WSL shell on the GPU host** (where vLLM and Plan-Gate listen on `127.0.0.1`).
 
-### 1.1 Repo
+### 1.1 Repo (tooling checkout)
 
 ```bash
 export MCODER_ROOT=/home/harshil/Harshil-PoCs/m-coder
@@ -62,7 +62,7 @@ Wait **15–30 s** for listeners.
 curl -sS http://127.0.0.1:8000/v1/models
 ```
 
-Expect JSON including a `data` array of models.
+Expect JSON including a `data` array of models. (If vLLM uses another port locally, substitute it here and in your tunnel.)
 
 ### 1.3 Verify Plan-Gate
 
@@ -97,7 +97,7 @@ tail -f .run/vllm.log
 
 ## STEP 2 — Context Layer (WSL)
 
-**New WSL terminal** (same distro where Motadata and m-coder paths live).
+**WSL terminal** on the same distro where `MOTADATA_ROOT` exists.
 
 ### 2.1 Start (bind all interfaces — required for Windows → WSL)
 
@@ -110,7 +110,9 @@ export MOTADATA_CONTEXT_LAYER_PORT=8091
 python3 -m runtime.context_layer_service.app
 ```
 
-Expect stderr: `Context Layer listening on http://0.0.0.0:8091/healthz`.
+Or, after installing the wheel: `motadata-context-layer` with the same env vars.
+
+Expect: `Context Layer listening on http://0.0.0.0:8091/healthz`.
 
 ### 2.2 Verify inside WSL
 
@@ -119,36 +121,36 @@ curl -sS http://127.0.0.1:8091/healthz
 curl -sS http://127.0.0.1:8091/version
 ```
 
-### 2.3 Evidence export smoke (two workspaces)
+### 2.3 Evidence export smoke (Motadata only)
 
-**m-coder (PlanGateService exists here):**
-
-```bash
-curl -sS -X POST http://127.0.0.1:8091/v1/export_evidence \
-  -H "Content-Type: application/json" \
-  -d "{\"query\":\"PlanGateService\",\"workspace_root\":\"$MCODER_ROOT\",\"top_k\":8}" \
-  | tee ~/sample_evidence_mcoder.json | head -c 2000
-```
-
-**Motadata (product repo):**
+Set `MOTADATA_ROOT` to your real path, then:
 
 ```bash
+export MOTADATA_ROOT=/home/harshil/Projects/Motadata
 curl -sS -X POST http://127.0.0.1:8091/v1/export_evidence \
   -H "Content-Type: application/json" \
-  -d '{"query":"Vert.x bootstrap","workspace_root":"/home/harshil/Projects/Motadata","top_k":8}' \
+  -d "{\"query\":\"Vert.x HTTP router or bootstrap\",\"workspace_root\":\"$MOTADATA_ROOT\",\"top_k\":8}" \
   | tee ~/sample_evidence_motadata.json | head -c 2000
 ```
 
-Each response should be JSON with `schema_hint` / bundle fields per service contract; if you get `export_failed` / wrong `workspace_root`, fix paths before using the plugin.
+Expect JSON with `schema_hint` consistent with `layer5.evidence_bundle.v1`. If you get `export_failed`, fix `workspace_root` or upgrade Context Layer (bridge-path normalization) before using the plugin.
 
 ---
 
 ## STEP 3 — Windows → GPU tunnel
 
-**PowerShell on Windows** (replace user/host):
+**PowerShell on Windows** (replace user/host and local ports as needed).
+
+**Typical** (vLLM on remote `8000`, Plan-Gate on `8089`):
 
 ```powershell
-ssh -N -L 8000:127.0.0.1:18000 -L 8089:127.0.0.1:8089 harshil@45.195.82.10
+ssh -N -L 8000:127.0.0.1:8000 -L 8089:127.0.0.1:8089 <user>@<gpu-host>
+```
+
+If **Windows port 8000** is busy, forward vLLM to another local port (example **18000**):
+
+```powershell
+ssh -N -L 18000:127.0.0.1:8000 -L 8089:127.0.0.1:8089 <user>@<gpu-host>
 ```
 
 Keep this window open.
@@ -157,6 +159,12 @@ Keep this window open.
 
 ```powershell
 curl.exe -sS http://127.0.0.1:8089/healthz
+curl.exe -sS http://127.0.0.1:8000/v1/models
+```
+
+If you used local **18000** for vLLM:
+
+```powershell
 curl.exe -sS http://127.0.0.1:18000/v1/models
 ```
 
@@ -164,14 +172,16 @@ Save:
 
 ```powershell
 curl.exe -sS http://127.0.0.1:8089/healthz > health\windows_pg.txt
-curl.exe -sS http://127.0.0.1:18000/v1/models > health\windows_models.json
+curl.exe -sS http://127.0.0.1:8000/v1/models > health\windows_models.json
 ```
 
-**Context Layer is not tunneled here** — it runs in **local WSL**; Windows reaches it at `**http://127.0.0.1:8091`** if WSL port forwarding is active (or use WSL IP from `hostname -I` in VM options — same as your four-step procedure).
+(Adjust the models URL if you used `18000`.)
+
+**Context Layer is not tunneled here** — it runs in **local WSL**; Windows reaches it at `http://127.0.0.1:8091` (or the WSL IP in VM options).
 
 ---
 
-## STEP 4 — JetBrains (Windows client + WSL repos)
+## STEP 4 — JetBrains (Motadata project only)
 
 ### 4.1 VM options
 
@@ -193,56 +203,58 @@ Restart the IDE.
 | Context Layer             | `http://127.0.0.1:8091` (or WSL IP) | `-Dmotadata.context_layer.url=...` or `MOTADATA_CONTEXT_LAYER_URL`. |
 
 
-### 4.3 Open projects
+### 4.3 Open project
 
-- **Smoke (m-coder):** open `MCODER_ROOT` on **WSL backend** so Ask uses Linux `repo_root` (e.g. `/home/harshil/Harshil-PoCs/m-coder`).
-- **Product (Motadata):** open `/home/harshil/Projects/Motadata` on **WSL backend** so `repo_root` / `workspace_root` are Linux.
+- Open `**MOTADATA_ROOT`** only (e.g. `/home/harshil/Projects/Motadata`) on the **WSL backend** when possible so `repo_root` is a Linux path.
+- Do **not** rely on a second **m-coder** IDE window for this proof-pack; tooling runs from `MCODER_ROOT` in terminals only.
 
 ---
 
-## STEP 5 — Scenarios
+## STEP 5 — Scenarios (Motadata workspace)
 
-Use `**PASS` / `FAIL` / `NOT_PROVEN`** per row. If **request_id** or any log link is missing, mark **NOT_PROVEN** (do not leave blank).
+Use **PASS** / **FAIL** / **NOT_PROVEN** per row. If **request_id** or any log link is missing, mark **NOT_PROVEN** (do not leave blank).
 
-### 5.1 Ask v1 — m-coder
+### 5.1 Ask v1 (evidence-first)
 
-**Query:** `Where is PlanGateService defined?`
+**Example queries (pick one that should hit real code):**
 
-Capture under `ask_mcoder\`: `request_id.txt`, `plugin.png`, `pg_log_snippet.txt`, `context_log_snippet.txt`.
+- `Where is the main Vert.x bootstrap or HTTP router setup for this platform?`
+- `Where is alert ingestion or normalization implemented?`
+- `Where is incident deduplication or correlation logic defined?`
 
-### 5.2 Ask v1 — Motadata
+Capture under `ask\`: `request_id.txt`, `plugin.png`, `pg_log_snippet.txt`, `context_log_snippet.txt`.
 
-**Query:** e.g. `Where is the main Vert.x bootstrap or HTTP router setup for this platform?`
+Confirm in Plan-Gate logs you see the **v1** evidence path when evidence-first succeeds (not only legacy `/v0/ask` if that is your pass criterion — align with your tracker).
 
-Same captures under `ask_motadata\`.
+### 5.2 Explain / Debug
 
-### 5.3 Explain / Debug
+Select real Motadata code → run Explain/Debug from the plugin.
 
-Select real code → run Explain/Debug from the plugin.
+Capture under `debug\`: `request_id.txt`, `plugin.png`, Plan-Gate line, Context Layer line, **vLLM** line showing `/chat/completions` when Explain uses vLLM.
 
-Capture under `debug\`: `request_id.txt`, `plugin.png`, Plan-Gate line, Context Layer line, **vLLM** line showing chat/completions if Explain uses vLLM.
+### 5.3 Execute (three outcomes)
 
-### 5.4 Execute (three outcomes)
-
-Run **Submit to Runtime** from m-coder project (or same repo your sandbox uses):
+With **Motadata** project open, use **Submit to Runtime**:
 
 
-| Case           | Command                                | Expected outcome class |
-| -------------- | -------------------------------------- | ---------------------- |
-| OK             | `echo hello`                           | `EXECUTED`             |
-| Blocked        | `rm -rf /` (or other policy-blocked)   | `BLOCKED`              |
-| Ran but failed | `python3 -c "import sys; sys.exit(1)"` | `EXECUTED_FAILED`      |
+| Case           | Command                                      | Expected outcome class |
+| -------------- | -------------------------------------------- | ---------------------- |
+| OK             | `echo hello`                                 | `EXECUTED`             |
+| Blocked        | `rm -rf /` (or other policy-blocked command) | `BLOCKED`              |
+| Ran but failed | `python3 -c "import sys; sys.exit(1)"`       | `EXECUTED_FAILED`      |
 
+
+Sandbox policy must allow the “failed” command; adjust if your policy blocks `python3`.
 
 Capture per folder `execute_ok`, `execute_blocked`, `execute_failed`: `request_id.txt`, `plugin.png`, `pg_log_snippet.txt`.
 
-### 5.5 No-match
+### 5.4 No-match
 
 **Query:** `Where is nonexistent_xyz_function_12345 defined?`
 
-Capture under `nomatch\` (same pattern as Ask).
+Expect honest insufficiency / plan-only / no fake grounding. Capture under `nomatch\` (same pattern as Ask).
 
-### 5.6 Failure mode
+### 5.5 Failure mode
 
 Provoke a clear failure (e.g. stop Plan-Gate temporarily and retry Ask — expect unavailable / honest error). Capture under `failure\`.
 
@@ -265,14 +277,13 @@ Any missing correlation → **NOT_PROVEN** for that scenario.
 ## STEP 7 — Decision
 
 
-| Scenario      | Status                   |
-| ------------- | ------------------------ |
-| Ask m-coder   | PASS / FAIL / NOT_PROVEN |
-| Ask Motadata  | PASS / FAIL / NOT_PROVEN |
-| Explain/Debug | PASS / FAIL / NOT_PROVEN |
-| Execute (3)   | PASS / FAIL / NOT_PROVEN |
-| No-match      | PASS / FAIL / NOT_PROVEN |
-| Failure       | PASS / FAIL / NOT_PROVEN |
+| Scenario       | Status                   |
+| -------------- | ------------------------ |
+| Ask (Motadata) | PASS / FAIL / NOT_PROVEN |
+| Explain/Debug  | PASS / FAIL / NOT_PROVEN |
+| Execute (3)    | PASS / FAIL / NOT_PROVEN |
+| No-match       | PASS / FAIL / NOT_PROVEN |
+| Failure        | PASS / FAIL / NOT_PROVEN |
 
 
 **Branch:** all required rows **PASS** → close Action 9 Host-A; any single **TRUE_PRODUCT_BLOCKER** → one surgical fix; else **docs/env** follow-up.
@@ -282,13 +293,14 @@ Any missing correlation → **NOT_PROVEN** for that scenario.
 ## Common failure points (this layout)
 
 
-| Symptom                                   | Cause                                                                                    |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Tunnel dies                               | SSH session closed — Plan-Gate/vLLM unreachable from Windows.                            |
-| `evidence_first` off                      | Ask may skip v1 evidence path — VM option missing.                                       |
-| `root_path does not exist` / UNC in error | Plugin on Windows sending `//wsl.localhost/...` — use WSL backend project or NOT_PROVEN. |
-| `127.0.0.1:8091` refused on Windows       | Context Layer not bound to `0.0.0.0` or WSL forwarding / wrong IP in VM options.         |
-| Execute always `RUNTIME_UNAVAILABLE`      | Tunnel or Plan-Gate down; or wrong port.                                                 |
+| Symptom                                          | Cause                                                                                                                |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Tunnel dies                                      | SSH session closed — Plan-Gate/vLLM unreachable from Windows.                                                        |
+| `evidence_first` off                             | Ask may skip v1 evidence path — VM option missing.                                                                   |
+| `workspace_export_failed` / bad `workspace_root` | Wrong path, or bridge path — upgrade Context Layer or open project via Linux `MOTADATA_ROOT`.                        |
+| `127.0.0.1:8091` refused on Windows              | Context Layer not bound to `0.0.0.0` or WSL forwarding / wrong IP in VM options.                                     |
+| Execute `RUNTIME_UNAVAILABLE`                    | Tunnel or Plan-Gate down; wrong port.                                                                                |
+| vLLM `connection refused` on Windows `8000`      | Use alternate local forward (e.g. `18000` → remote `8000`); Plan-Gate on GPU still uses **its** configured vLLM URL. |
 
 
 ---

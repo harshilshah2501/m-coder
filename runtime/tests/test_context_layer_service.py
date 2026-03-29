@@ -12,9 +12,19 @@ from pathlib import Path
 
 import pytest
 
+from runtime.context_layer_service.app import _normalize_workspace_root
 from runtime.context_layer_service.evidence_api import export_evidence_bundle_dict
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_normalize_workspace_root_wsl_bridge():
+    if os.name != "posix":
+        pytest.skip("WSL bridge mapping applies on POSIX only")
+    assert (
+        _normalize_workspace_root("/mnt/wsl.localhost/Ubuntu-24.04/home/harshil/Projects/Motadata")
+        == "/home/harshil/Projects/Motadata"
+    )
 
 
 def test_export_evidence_bundle_dict_minimal_workspace(tmp_path):
