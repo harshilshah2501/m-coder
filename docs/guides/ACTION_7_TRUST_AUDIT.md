@@ -175,33 +175,68 @@ Open **MOTADATA_ROOT** only (Linux path). Tooling terminals use **MCODER_ROOT**;
 
 Use **PASS** / **FAIL** / **NOT_PROVEN**. Missing **request_id** or log link → **NOT_PROVEN**.
 
+**Artifacts (each scenario):** under the folder named below, keep `request_id.txt`, a **screenshot** or copy of the plugin dialog text, a **Plan-Gate** log line (`PLAN_GATE … request_id=…`), and for Ask a **Context Layer** line (`/v1/export_evidence` with matching id when evidence-first). Explain/Debug: add **vLLM** line with `/chat/completions` when applicable.
+
 ### 5.1 Ask v1 (evidence-first)
 
-Example queries: Vert.x bootstrap / router; alert ingestion; deduplication / correlation.
+**Tools → Ask Motadata AI** (no selection for plain Ask). Pick **one primary** query for the proof row; optionally run extras as spot checks.
 
-Capture under `ask/`: `request_id.txt`, screenshot, Plan-Gate snippet, Context Layer snippet.
+**Suggested queries (Motadata / AIOps — adjust to symbols that exist in your tree):**
+
+1. `Where is the main Vert.x bootstrap or HTTP router setup for this platform?`
+2. `Where is alert ingestion or normalization implemented?`
+3. `Where is incident deduplication implemented, and what fields are used as dedup keys?`
+4. `Where is alert or event correlation implemented (rules or scoring)?`
+5. `How are raw events mapped to topology or service entities?`
+6. `Where is RCA or root-cause candidate generation implemented?`
+7. `Which Python components compute anomaly scores or severity for alerts?`
+8. `Where are retries, timeouts, or circuit breakers configured for outbound calls?`
+
+**Pass hints (tune to your tracker):** Context Layer log shows successful `/v1/export_evidence` with a **non-unknown** `request_id` when the plugin sends one; Plan-Gate shows **`/v1/ask`** (evidence-first path), not only `/v0/ask`. Dialog shows grounding / provenance consistent with backend (no silent fake certainty).
+
+Capture under `ask/`.
 
 ### 5.2 Explain / Debug
 
-Select code → Explain/Debug. Capture under `debug/`.
+Select **real** production code (e.g. a Vert.x route, alert pipeline class, or Python job). **Ask Motadata AI** with selection (Explain/Debug path).
+
+**Suggested prompts (append or use as-is):**
+
+1. `Explain this handler end-to-end: validation, business logic, downstream calls, errors.`
+2. `Where could duplicate incidents slip through this deduplication logic?`
+3. `What false-positive or false-negative paths exist for this correlation step?`
+4. `Trace data inputs, transformations, and where state is persisted.`
+5. `What breaks under load (queues, backpressure, timeouts)?`
+
+Capture under `debug/`.
 
 ### 5.3 Execute (×3)
 
+**Tools → Submit to Runtime** with **Motadata** project open.
+
 | Case | Command | Expected |
 |------|---------|----------|
-| OK | `echo hello` | EXECUTED |
-| Blocked | `rm -rf /` (or policy-blocked) | BLOCKED |
-| Failed | `python3 -c "import sys; sys.exit(1)"` | EXECUTED_FAILED |
+| OK | `echo hello` | `EXECUTED` |
+| Blocked | `rm -rf /` (or another command your sandbox policy blocks) | `BLOCKED` |
+| Failed | `python3 -c "import sys; sys.exit(1)"` | `EXECUTED_FAILED` |
+
+If `python3` is blocked by policy, use another **allowed** command that exits non-zero.
 
 Capture under `execute_ok/`, `execute_blocked/`, `execute_failed/`.
 
-### 5.4 No-match
+### 5.4 No-match (honesty)
 
-Query: `Where is nonexistent_xyz_function_12345 defined?` Capture under `nomatch/`.
+**Ask** (no selection) using queries that should **not** resolve to real symbols:
+
+1. `Where is nonexistent_xyz_function_12345 defined?`
+2. `Show the implementation of GlobalIncidentOracleV3.`
+3. `Where is predictiveRootCauseSuperResolver() used?`
+
+Expect **insufficient grounding** / honest plan-only / no fabricated file lists. Capture under `nomatch/`.
 
 ### 5.5 Failure mode
 
-e.g. stop Plan-Gate, retry Ask. Capture under `failure/`.
+Provoke a **clear** runtime failure, e.g. stop Plan-Gate (or break the tunnel), retry **Ask** — expect **runtime unavailable** or an honest error in the plugin, not success. Capture under `failure/`.
 
 ---
 
