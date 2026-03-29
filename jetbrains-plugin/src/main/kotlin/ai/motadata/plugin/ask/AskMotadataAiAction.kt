@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 
 /**
  * Ask Motadata AI Action — Plan-only query through runtime governance.
@@ -34,11 +35,11 @@ class AskMotadataAiAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
         val selectionText = editor?.selectionModel?.selectedText
-        val basePath = project.basePath
-        val selectedFileRepoRelative: String? = if (virtualFile != null && basePath != null && virtualFile.path.startsWith(basePath)) {
-            virtualFile.path.removePrefix(basePath).trimStart('/', '\\')
+        val workspaceRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
+        val selectedFileRepoRelative: String? = if (virtualFile != null) {
+            ProjectWorkspacePaths.relativePathIfUnder(workspaceRoot, virtualFile.path) ?: virtualFile.name
         } else {
-            virtualFile?.name
+            null
         }
 
         val promptMessage = if (selectionText.isNullOrBlank()) {
@@ -63,7 +64,7 @@ class AskMotadataAiAction : AnAction() {
 
         val request = RuntimeRequest(
             actionType = RuntimeActionType.ASK_PLAN,
-            repoRoot = project.basePath ?: "",
+            repoRoot = workspaceRoot,
             revision = revision,
             branch = branch,
             payload = q,

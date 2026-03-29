@@ -17,7 +17,8 @@ object GitInfoUtil {
     data class GitInfo(val branch: String, val revision: String)
 
     fun getGitInfo(project: Project): GitInfo {
-        val workDir = project.basePath ?: return GitInfo("unknown", "unknown-revision")
+        val workDir = ProjectWorkspacePaths.layer5WorkspaceRoot(project).ifBlank { null }
+            ?: return GitInfo("unknown", "unknown-revision")
         val branch = runCommand(workDir, "git", "branch", "--show-current")?.trim().orEmpty()
         val revision = runCommand(workDir, "git", "rev-parse", "HEAD")?.trim().orEmpty()
         return GitInfo(

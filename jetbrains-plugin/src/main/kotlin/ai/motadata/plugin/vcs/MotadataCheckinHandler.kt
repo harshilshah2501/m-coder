@@ -10,6 +10,7 @@ import com.intellij.openapi.vcs.changes.CommitContext
 import com.intellij.openapi.vcs.checkin.CheckinHandler
 import com.intellij.openapi.vcs.checkin.CheckinHandlerFactory
 import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 
 class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
     override fun createHandler(panel: CheckinProjectPanel, commitContext: CommitContext): CheckinHandler {
@@ -43,7 +44,7 @@ class MotadataCheckinHandler(
         val gitInfo = GitInfoUtil.getGitInfo(project)
         val branch = gitInfo.branch
         val revision = gitInfo.revision
-        val repoRoot = project.basePath ?: ""
+        val repoRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
 
         val request = RuntimeRequest(
             actionType = RuntimeActionType.VCS_COMMIT,

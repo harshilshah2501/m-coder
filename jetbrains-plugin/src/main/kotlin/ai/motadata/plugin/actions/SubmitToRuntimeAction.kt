@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 
 /**
  * Submit to Runtime — Explicit code-intent action through governed runtime path.
@@ -73,7 +74,7 @@ class SubmitToRuntimeAction : AnAction() {
             "Runtime Unavailable — Action Not Executed"
         )
 
-        val repoRoot = project.basePath ?: ""
+        val repoRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
         DecisionLogger.log(
             action = "execute",
             decision = "RUNTIME_UNAVAILABLE [NO_FALLBACK]",
@@ -87,7 +88,7 @@ class SubmitToRuntimeAction : AnAction() {
         val gitInfo = GitInfoUtil.getGitInfo(project)
         val branch = gitInfo.branch
         val revision = gitInfo.revision
-        val repoRoot = project.basePath ?: ""
+        val repoRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
 
         val request = RuntimeRequest(
             actionType = RuntimeActionType.EXECUTE,

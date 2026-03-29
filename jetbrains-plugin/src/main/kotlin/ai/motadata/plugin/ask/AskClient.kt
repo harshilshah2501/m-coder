@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
 import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -67,7 +68,7 @@ class AskClient(
             "schema_version" to "ask_request.v0.1",
             "request_id" to requestId,
             "timestamp_utc" to timestamp,
-            "repo_root" to (project.basePath ?: ""),
+            "repo_root" to ProjectWorkspacePaths.layer5WorkspaceRoot(project),
             "revision" to revision,
             "query" to question,
             "branch" to branch

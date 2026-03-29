@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
 import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -83,7 +84,7 @@ class PlanGateClient(
                 "product" to "jetbrains",
                 "ide" to "intellij",
                 "project" to project.name,
-                "repo_root" to (project.basePath ?: ""),
+                "repo_root" to ProjectWorkspacePaths.layer5WorkspaceRoot(project),
                 "branch" to branch,
                 "revision" to revision,
                 "user" to (System.getProperty("user.name") ?: "unknown-user")
