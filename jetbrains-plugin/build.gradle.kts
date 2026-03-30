@@ -4,7 +4,8 @@ plugins {
 }
 
 group = "ai.motadata"
-version = "0.1.0"
+// Semver 0.MINOR.PATCH — bump MINOR (or PATCH) on each fix/rebuild you ship so the IDE shows a distinct version.
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -18,6 +19,8 @@ intellij {
 
 // Default patched range was capped at 253.*; JetBrains Client / newer IDs need a higher until-build (e.g. JBC-261).
 tasks.patchPluginXml {
+    // Single source of truth: packaged plugin.xml gets this version (must match IDE “Plugins” list).
+    version.set(project.version.toString())
     // Align floor with compile SDK (2025.3 → base build 253); raise ceiling for JetBrains Client 261+.
     sinceBuild.set("253")
     untilBuild.set("999.*")
@@ -51,5 +54,13 @@ tasks.withType<JavaCompile> {
 // Avoid buildSearchableOptions failure (Index: 1, Size: 1) with 2025.3; plugin has no searchable options
 tasks.named("buildSearchableOptions") {
     enabled = false
+}
+
+// IntelliJ Platform Gradle Plugin names the packaged artifact task `buildPlugin`, not `buildInstall`.
+tasks.register("buildInstall") {
+    group = "intellij plugin"
+    description =
+        "Alias for buildPlugin. Produces build/distributions/*.zip — use Settings → Plugins → Install from Disk."
+    dependsOn("buildPlugin")
 }
 
