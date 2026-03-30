@@ -24,6 +24,13 @@ def _normalize_workspace_root(raw: str) -> str:
         return w
     return PathNormalizer.normalize(w, resolve_symlinks=True).canonical_path
 
+
+def _looks_like_jetbrains_roaming_project_path(path: str) -> bool:
+    """True when path looks like JetBrains Roaming .../JetBrains/.../projects/... (not a repo root)."""
+    p = path.replace("\\", "/").lower()
+    return "/jetbrains/" in p and "/projects/" in p
+
+
 _EXPORT_PATH = "/v1/export_evidence"
 
 _DEBUG_EXPORT_ENV = "MOTADATA_CONTEXT_LAYER_DEBUG_EXPORT"
@@ -177,9 +184,20 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
             return
         except RuntimeError as e:
             # Service is healthy; workspace/index/export could not complete — not "service absent"
+            msg = str(e)
+            if (
+                "Workspace root does not exist" in msg
+                and workspace
+                and _looks_like_jetbrains_roaming_project_path(workspace)
+            ):
+                msg += (
+                    " JetBrains/Gateway: the IDE sent a Roaming project metadata path, not the checkout. "
+                    "Install Motadata plugin 0.2.1+, open a source file from the repo before Ask, or set "
+                    "IDE VM option -Dmotadata.layer5.workspace_root=/abs/path/to/repo."
+                )
             self._send_json(
                 422,
-                _error_payload("export_failed", str(e), failure_class="workspace_export_failed"),
+                _error_payload("export_failed", msg, failure_class="workspace_export_failed"),
             )
             _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return

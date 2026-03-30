@@ -35,7 +35,8 @@ class AskMotadataAiAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
         val selectionText = editor?.selectionModel?.selectedText
-        val workspaceRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
+        val anchorForWorkspace = virtualFile ?: editor?.virtualFile
+        val workspaceRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project, anchorForWorkspace)
         val selectedFileRepoRelative: String? = if (virtualFile != null) {
             ProjectWorkspacePaths.relativePathIfUnder(workspaceRoot, virtualFile.path) ?: virtualFile.name
         } else {
