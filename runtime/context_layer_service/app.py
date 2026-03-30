@@ -31,6 +31,38 @@ def _looks_like_jetbrains_roaming_project_path(path: str) -> bool:
     return "/jetbrains/" in p and "/projects/" in p
 
 
+def _default_workspace_from_env() -> str:
+    """Linux checkout used when the IDE sends Roaming metadata paths (same as smoke tests)."""
+    for key in ("MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE", "MOTADATA_ROOT"):
+        raw = (os.environ.get(key) or "").strip()
+        if not raw:
+            continue
+        w = PathNormalizer.normalize(raw, resolve_symlinks=True).canonical_path
+        if os.path.isdir(w):
+            return w
+    return ""
+
+
+def _effective_export_workspace(normalized: str) -> tuple[str, bool]:
+    """
+    If the client sends a JetBrains Roaming .../projects/<hash> path, replace with env default
+    when set so export works without relying on the IDE plugin alone.
+    Returns (workspace, substituted).
+    """
+    if not normalized:
+        return normalized, False
+    fallback = _default_workspace_from_env()
+    if not fallback:
+        return normalized, False
+    if not _looks_like_jetbrains_roaming_project_path(normalized):
+        return normalized, False
+    a = normalized.rstrip("/")
+    b = fallback.rstrip("/")
+    if a == b:
+        return normalized, False
+    return fallback, True
+
+
 _EXPORT_PATH = "/v1/export_evidence"
 
 _DEBUG_EXPORT_ENV = "MOTADATA_CONTEXT_LAYER_DEBUG_EXPORT"
@@ -148,13 +180,22 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
 
         rid = _request_id_from_body(data)
         raw_workspace = (data.get("workspace_root") or data.get("workspace") or "").strip()
-        workspace = _normalize_workspace_root(raw_workspace)
+        normalized = _normalize_workspace_root(raw_workspace)
+        workspace, ws_substituted = _effective_export_workspace(normalized)
+        if ws_substituted:
+            LOG.info(
+                "CONTEXT_LAYER export_evidence workspace substituted request_id=%s "
+                "(IDE sent JetBrains Roaming path; using MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE or MOTADATA_ROOT)",
+                rid,
+            )
         if _debug_export_requests():
             LOG.info(
-                "DEBUG export_evidence peer=%s rid=%s raw_workspace_root=%r normalized_workspace_root=%r query_len=%s",
+                "DEBUG export_evidence peer=%s rid=%s raw_workspace_root=%r normalized=%r "
+                "effective_workspace_root=%r query_len=%s",
                 self.client_address,
                 rid,
                 raw_workspace,
+                normalized,
                 workspace,
                 len((data.get("query") or "").strip()),
             )

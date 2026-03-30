@@ -12,10 +12,27 @@ from pathlib import Path
 
 import pytest
 
-from runtime.context_layer_service.app import _normalize_workspace_root
+from runtime.context_layer_service.app import (
+    _effective_export_workspace,
+    _normalize_workspace_root,
+)
 from runtime.context_layer_service.evidence_api import export_evidence_bundle_dict
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_effective_export_workspace_substitutes_roaming_when_env_set(tmp_path, monkeypatch):
+    monkeypatch.setenv("MOTADATA_ROOT", str(tmp_path))
+    roaming = "/mnt/c/Users/X/AppData/Roaming/JetBrains/IntelliJIdea2026.1/projects/ac852201fe776dbecf4a042e9084f9c8f10c20de"
+    w, sub = _effective_export_workspace(roaming)
+    assert sub is True
+    assert Path(w).resolve() == Path(tmp_path).resolve()
+
+
+def test_effective_export_workspace_noop_for_real_path(tmp_path):
+    w, sub = _effective_export_workspace(str(tmp_path))
+    assert sub is False
+    assert w == str(tmp_path)
 
 
 def test_normalize_workspace_root_wsl_bridge():
