@@ -35,7 +35,14 @@ class AskResultDialogMessageTest {
                 ),
             ),
         )
-        val msg = buildAskResultDialogMessage("q?", response)
+        val full = buildAskResultDialogMessage("q?", response)
+        val summary = buildAskResultSummaryMessage("q?", response)
+        assertTrue(!summary.contains("Response provenance (backend)"), summary)
+        assertTrue(!summary.contains("Dominance metrics (backend):"), summary)
+        assertTrue(summary.contains("Query: q?"), summary)
+        assertTrue(summary.contains("quality=WEAK"), summary)
+
+        val msg = full
         assertTrue(msg.contains("Evidence quality: WEAK"), msg)
         assertTrue(msg.contains("intent_type: CODE_INTENT"), msg)
         assertTrue(msg.indexOf("intent_type: CODE_INTENT") < msg.indexOf("Quality reasons"), msg)

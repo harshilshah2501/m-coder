@@ -1,13 +1,16 @@
 package ai.motadata.plugin.ask
 
 import ai.motadata.plugin.bridge.*
+import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import java.awt.datatransfer.StringSelection
 import ai.motadata.plugin.util.GitInfoUtil
 import ai.motadata.plugin.util.ProjectWorkspacePaths
 
@@ -113,12 +116,29 @@ class AskMotadataAiAction : AnAction() {
 
     private fun showPlanOnlyResult(project: Project, question: String, response: RuntimeResponse) {
         val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
-        val body = buildAskResultDialogMessage(question, response)
-        Messages.showInfoMessage(
-            project,
-            body,
+        val fullBody = buildAskResultDialogMessage(question, response)
+        val summary = buildAskResultSummaryMessage(question, response)
+        val title =
             if (explainDebug != null) "Ask Motadata AI — Explain/Debug" else "Ask Motadata AI — PLAN ONLY"
+
+        val group = NotificationGroupManager.getInstance().getNotificationGroup("Motadata AI")
+        if (group == null) {
+            Messages.showInfoMessage(project, fullBody, title)
+            return
+        }
+
+        val notification = group.createNotification(title, summary, NotificationType.INFORMATION)
+        notification.addAction(
+            NotificationAction.createSimple("View full response") {
+                Messages.showInfoMessage(project, fullBody, title)
+            }
         )
+        notification.addAction(
+            NotificationAction.createSimple("Copy full response") {
+                CopyPasteManager.getInstance().setContents(StringSelection(fullBody))
+            }
+        )
+        notification.notify(project)
     }
 
     private fun notify(project: Project, title: String, content: String, type: NotificationType) {

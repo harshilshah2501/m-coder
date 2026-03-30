@@ -2,6 +2,88 @@ package ai.motadata.plugin.ask
 
 import ai.motadata.plugin.bridge.RuntimeResponse
 
+private const val ASK_SUMMARY_SNIPPET_MAX = 360
+
+/**
+ * Short notification-friendly summary (outcome, key calibration, main answer preview).
+ * Full diagnostics remain in [buildAskResultDialogMessage].
+ */
+internal fun buildAskResultSummaryMessage(question: String, response: RuntimeResponse): String {
+    val sb = StringBuilder()
+    sb.appendLine("Outcome: ${response.outcome.toHumanReadable()}")
+    val qShort = question.trim().let { if (it.length > 100) it.take(100) + "…" else it }
+    if (qShort.isNotEmpty()) {
+        sb.appendLine("Query: $qShort")
+    }
+    val bm = response.metadata["backend_metadata"] as? Map<*, *>
+    if (bm != null) {
+        val eq = (bm["evidence_quality"] as? String)?.trim()
+        val intent = (bm["intent_type"] as? String)?.trim()
+        val parts = mutableListOf<String>()
+        if (!eq.isNullOrEmpty()) parts.add("quality=$eq")
+        if (!intent.isNullOrEmpty()) parts.add("intent=$intent")
+        if (parts.isNotEmpty()) {
+            sb.appendLine(parts.joinToString(" · "))
+        }
+    }
+
+    val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
+    if (explainDebug != null) {
+        val err = explainDebug["error"] as? String
+        if (err != null) {
+            val short = err.trim().let { if (it.length > 140) it.take(140) + "…" else it }
+            sb.appendLine("Reasoning unavailable: $short")
+        } else {
+            val sum = (explainDebug["summary"] as? String)?.trim()
+            if (!sum.isNullOrEmpty()) {
+                sb.appendLine()
+                sb.appendLine("Summary")
+                val body = if (sum.length > ASK_SUMMARY_SNIPPET_MAX) {
+                    sum.take(ASK_SUMMARY_SNIPPET_MAX).trimEnd() + "…"
+                } else {
+                    sum
+                }
+                sb.appendLine(body)
+            }
+        }
+    } else {
+        response.ui?.title?.takeIf { it.isNotBlank() }?.let { sb.appendLine(it) }
+        response.ui?.message?.takeIf { it.isNotBlank() }?.let { m ->
+            val t = if (m.length > 220) m.take(220).trimEnd() + "…" else m
+            sb.appendLine(t)
+        }
+
+        val planSummary = response.metadata["plan_summary"] as? Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        val steps = planSummary?.get("steps") as? List<*>
+        if (!steps.isNullOrEmpty()) {
+            sb.appendLine()
+            sb.appendLine("Plan (${steps.size} steps): ${steps.first()}")
+            if (steps.size > 1) {
+                sb.appendLine("(+${steps.size - 1} more in full response)")
+            }
+        }
+
+        val eb = response.metadata["evidence_bundle"] as? Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        val entries = eb?.get("entries") as? List<*>
+        if (!entries.isNullOrEmpty()) {
+            sb.appendLine("Grounding: ${entries.size} evidence entr${if (entries.size == 1) "y" else "ies"}")
+        } else {
+            val contextBundle = response.metadata["context_bundle"] as? Map<*, *>
+            @Suppress("UNCHECKED_CAST")
+            val files = contextBundle?.get("files") as? List<*>
+            if (!files.isNullOrEmpty()) {
+                sb.appendLine("Context: ${files.size} file${if (files.size == 1) "" else "s"}")
+            }
+        }
+    }
+
+    sb.appendLine()
+    sb.appendLine("— PLAN ONLY — Use View full response or Copy full response for complete diagnostics.")
+    return sb.toString()
+}
+
 /**
  * Builds the Ask result dialog text. Separated for tests and to keep backend calibration visible
  * without duplication between plan-only and explain/debug paths.

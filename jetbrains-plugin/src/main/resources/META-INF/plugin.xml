@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>ai.motadata.runtime-plugin</id>
     <name>Motadata Runtime Governance (MVP)</name>
-    <version>0.2.3</version>
+    <version>0.2.5</version>
     <vendor email="dev@motadata.ai">Motadata</vendor>
 
     <description>
@@ -35,14 +35,16 @@
         <action id="ai.motadata.plugin.actions.AskMotadataAiAction"
                 class="ai.motadata.plugin.ask.AskMotadataAiAction"
                 text="Ask Motadata AI"
-                description="Repo-aware Ask / Safe Planning (PLAN ONLY)">
+                description="Repo-aware Ask / Explain selection (PLAN ONLY). Hover this menu entry for details.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         <action id="ai.motadata.plugin.actions.SubmitToRuntimeAction"
                 class="ai.motadata.plugin.actions.SubmitToRuntimeAction"
                 text="Submit to Runtime"
-                description="Submit action for governed execution through runtime Plan-Gate">
+                description="Send a governed execution request through Plan-Gate (not plan-only). Hover for details.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>
