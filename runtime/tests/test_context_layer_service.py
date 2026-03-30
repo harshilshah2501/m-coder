@@ -14,6 +14,7 @@ import pytest
 
 from runtime.context_layer_service.app import (
     _effective_export_workspace,
+    _heuristic_unique_motadata_under_home,
     _normalize_workspace_root,
 )
 from runtime.context_layer_service.evidence_api import export_evidence_bundle_dict
@@ -33,6 +34,18 @@ def test_effective_export_workspace_noop_for_real_path(tmp_path):
     w, sub = _effective_export_workspace(str(tmp_path))
     assert sub is False
     assert w == str(tmp_path)
+
+
+def test_heuristic_unique_motadata_under_home_single(tmp_path):
+    (tmp_path / "someuser" / "Projects" / "Motadata").mkdir(parents=True)
+    w = _heuristic_unique_motadata_under_home(tmp_path)
+    assert w == str((tmp_path / "someuser" / "Projects" / "Motadata").resolve())
+
+
+def test_heuristic_unique_motadata_under_home_ambiguous(tmp_path):
+    for u in ("a", "b"):
+        (tmp_path / u / "Projects" / "Motadata").mkdir(parents=True)
+    assert _heuristic_unique_motadata_under_home(tmp_path) == ""
 
 
 def test_effective_export_workspace_heuristic_projects_motadata(tmp_path, monkeypatch):

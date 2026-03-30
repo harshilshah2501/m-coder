@@ -64,7 +64,7 @@ def _workspace_from_optional_file() -> str:
 
 
 def _heuristic_home_motadata() -> str:
-    """Last resort: common clone locations (explicit env / file wins)."""
+    """Common clone locations under $HOME (explicit env / file wins)."""
     home = Path.home()
     for parts in (("Projects", "Motadata"), ("Motadata",)):
         p = home.joinpath(*parts)
@@ -76,8 +76,36 @@ def _heuristic_home_motadata() -> str:
     return ""
 
 
+def _heuristic_unique_motadata_under_home(home_root: str | Path | None = None) -> str:
+    """
+    When the Context Layer runs as root, Path.home() is /root and ~/Projects/Motadata misses
+    /home/<user>/Projects/Motadata. If exactly one such directory exists under /home, use it.
+    """
+    hr = Path(home_root if home_root is not None else "/home")
+    if not hr.is_dir():
+        return ""
+    found: list[str] = []
+    try:
+        for user_dir in sorted(hr.iterdir()):
+            if not user_dir.is_dir():
+                continue
+            for parts in (("Projects", "Motadata"), ("Motadata",)):
+                p = user_dir.joinpath(*parts)
+                try:
+                    if p.is_dir():
+                        found.append(str(p.resolve()))
+                except OSError:
+                    continue
+    except OSError:
+        return ""
+    uniq = sorted(set(found))
+    if len(uniq) == 1:
+        return uniq[0]
+    return ""
+
+
 def _resolve_fallback_workspace() -> str:
-    """Linux checkout when the IDE sends Roaming .../projects/<hash>: env → file → ~/Projects/Motadata → ~/Motadata."""
+    """Linux checkout when the IDE sends Roaming .../projects/<hash>: env → file → $HOME heuristics → /home scan."""
     for key in ("MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE", "MOTADATA_ROOT"):
         raw = (os.environ.get(key) or "").strip()
         if not raw:
@@ -88,7 +116,10 @@ def _resolve_fallback_workspace() -> str:
     w = _workspace_from_optional_file()
     if w:
         return w
-    return _heuristic_home_motadata()
+    w = _heuristic_home_motadata()
+    if w:
+        return w
+    return _heuristic_unique_motadata_under_home()
 
 
 def _effective_export_workspace(normalized: str) -> tuple[str, bool]:
