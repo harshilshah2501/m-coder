@@ -3,6 +3,7 @@ package ai.motadata.plugin.gate
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
+import ai.motadata.plugin.bridge.MotadataRuntimeConfig
 import ai.motadata.plugin.util.GitInfoUtil
 import ai.motadata.plugin.util.ProjectWorkspacePaths
 import java.io.BufferedReader
@@ -24,7 +25,7 @@ import java.util.UUID
  */
 class PlanGateClient(
     private val gson: Gson = Gson(),
-    private val baseUrl: String = "http://127.0.0.1:8089"
+    private val baseUrl: String = MotadataRuntimeConfig.planGateBaseUrl(),
 ) {
 
     data class DecisionUi(

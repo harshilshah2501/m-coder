@@ -1,5 +1,6 @@
 package ai.motadata.plugin.actions
 
+import ai.motadata.plugin.bridge.MotadataRuntimeConfig
 import ai.motadata.plugin.bridge.*
 import ai.motadata.plugin.logging.DecisionLogger
 import com.intellij.notification.NotificationGroupManager
@@ -65,7 +66,7 @@ class SubmitToRuntimeAction : AnAction() {
                 appendLine("Runtime service is not available.")
                 appendLine()
                 appendLine("Cannot submit action for governed execution:")
-                appendLine("  - Runtime must be running at http://127.0.0.1:8089")
+                appendLine("  - Runtime must be running at ${MotadataRuntimeConfig.planGateBaseUrl()}")
                 appendLine("  - No local fallback is permitted")
                 appendLine("  - Action was NOT executed")
                 appendLine()

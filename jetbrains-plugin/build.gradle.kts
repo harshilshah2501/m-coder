@@ -5,7 +5,7 @@ plugins {
 
 group = "ai.motadata"
 // Semver 0.MINOR.PATCH — bump MINOR (or PATCH) on each fix/rebuild you ship so the IDE shows a distinct version.
-version = "0.2.2"
+version = "0.2.3"
 
 repositories {
     mavenCentral()

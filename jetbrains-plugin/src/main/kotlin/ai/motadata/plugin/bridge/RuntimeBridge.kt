@@ -35,7 +35,7 @@ internal class RuntimeHttpException(val statusCode: Int, val responseBody: Strin
  */
 class RuntimeBridge(
     private val gson: Gson = Gson(),
-    private val baseUrl: String = "http://127.0.0.1:8089",
+    private val baseUrl: String = MotadataRuntimeConfig.planGateBaseUrl(),
     private val timeoutMs: Int = 5000
 ) {
 
