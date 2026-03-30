@@ -191,9 +191,9 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 and _looks_like_jetbrains_roaming_project_path(workspace)
             ):
                 msg += (
-                    " JetBrains/Gateway: the IDE sent a Roaming project metadata path, not the checkout. "
-                    "Install Motadata plugin 0.2.1+, open a source file from the repo before Ask, or set "
-                    "IDE VM option -Dmotadata.layer5.workspace_root=/abs/path/to/repo."
+                    " Hint: path looks like JetBrains Roaming .../projects/<hash>, not the repo checkout. "
+                    "Use a current Motadata IDE plugin (resolves module/content roots), open a project file, "
+                    "or IDE VM option -Dmotadata.layer5.workspace_root=/abs/path/to/repo."
                 )
             self._send_json(
                 422,

@@ -7,26 +7,11 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 
-/**
- * Resolves a filesystem directory for repo-relative paths, git, and Context Layer indexing.
- *
- * [Project.getBasePath] often points at the `.idea` parent, but under **Remote Development /
- * JetBrains Gateway** it can be JetBrains Roaming metadata, e.g.
- * `.../JetBrains/IntelliJIdea2026.1/projects/<hash>`, which is not the checkout and breaks
- * `workspace_root` for `/v1/export_evidence`. Content roots from the project model point at
- * real sources.
- *
- * **Important:** [ProjectRootManager.getInstance(project).contentRoots] is often **empty** in
- * Gateway/remote flows even when modules have roots; we also scan [ModuleRootManager]. When an
- * anchor file is provided (e.g. open editor), [ProjectFileIndex.getContentRootForFile] is used first.
- */
+/** Repo / Layer5 index root. Gateway may set [Project.getBasePath] to Roaming `.../JetBrains/.../projects/<hash>`; we use anchor file content root, module roots, then project roots. */
 object ProjectWorkspacePaths {
 
     private const val WORKSPACE_OVERRIDE_PROP = "motadata.layer5.workspace_root"
 
-    /**
-     * True when [path] looks like JetBrains config `.../JetBrains/.../projects/...` (not the repo).
-     */
     fun looksLikeJetBrainsProjectMetadataDir(path: String): Boolean {
         if (path.isBlank()) return false
         val p = path.replace('\\', '/')
@@ -34,15 +19,7 @@ object ProjectWorkspacePaths {
         return p.contains("/projects/", ignoreCase = true)
     }
 
-    /**
-     * Prefer [Project.getBasePath] when it is not a JetBrains metadata dir; otherwise first
-     * usable root (shortest path first so a monorepo outer root wins over nested modules).
-     *
-     * Override (escape hatch): JVM property `-Dmotadata.layer5.workspace_root=/abs/path` (e.g. VM options).
-     *
-     * @param anchorFile Optional focused file (e.g. from the action event). Its content root is the
-     *   most reliable signal when [Project.getBasePath] is Gateway metadata.
-     */
+    /** `-Dmotadata.layer5.workspace_root` overrides. [anchorFile] wins when Gateway metadata basePath. */
     fun layer5WorkspaceRoot(project: Project, anchorFile: VirtualFile? = null): String {
         System.getProperty(WORKSPACE_OVERRIDE_PROP)?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
 
@@ -94,9 +71,6 @@ object ProjectWorkspacePaths {
             child.startsWith("$root/", ignoreCase = true)
     }
 
-    /**
-     * Repo-relative path of [filePath] under [rootPath], or null if not under root.
-     */
     fun relativePathIfUnder(rootPath: String, filePath: String): String? {
         if (!isDescendantPath(rootPath, filePath)) return null
         val root = rootPath.trimEnd('/', '\\').replace('\\', '/')
