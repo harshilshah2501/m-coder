@@ -41,8 +41,10 @@ class AskResultDialogMessageTest {
         assertTrue(!summary.contains("Dominance metrics (backend):"), summary)
         assertTrue(summary.contains("Query: q?"), summary)
         assertTrue(summary.contains("quality=WEAK"), summary)
+        assertTrue(summary.contains("request_id: r1"), summary)
 
         val msg = full
+        assertTrue(msg.startsWith("request_id: r1"), msg)
         assertTrue(msg.contains("Evidence quality: WEAK"), msg)
         assertTrue(msg.contains("intent_type: CODE_INTENT"), msg)
         assertTrue(msg.indexOf("intent_type: CODE_INTENT") < msg.indexOf("Quality reasons"), msg)
@@ -76,6 +78,7 @@ class AskResultDialogMessageTest {
             ),
         )
         val msg = buildAskResultDialogMessage("q?", response)
+        assertTrue(msg.startsWith("request_id: r2"), msg)
         assertTrue(msg.contains("Evidence quality: STRONG"), msg)
         assertTrue(msg.contains("intent_type: EXPLAIN_DEBUG"), msg)
         assertTrue(msg.contains("Model says things."), msg)

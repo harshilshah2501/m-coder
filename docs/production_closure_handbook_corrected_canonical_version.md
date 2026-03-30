@@ -339,7 +339,7 @@ Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline
 | **~~6~~** | ~~Validate Explain/Debug path rigorously~~ | ~~Prove vLLM use when required; prove no hidden repo access~~                         | ~~Debug path contract and logs are trustworthy~~      |
 | **~~7~~** | ~~Validate Execute path rigorously~~       | ~~Refused/blocked/executed (incl. executed-failed vs blocked) always distinct and truthful; `plan_gate_*` server-rejected by default on live HTTP~~ | ~~No fake success; no ambiguity; trust boundary enforced~~ |
 | **~~8~~** | ~~Validate no-match honesty~~              | ~~Out-of-scope and absent-symbol queries return explicit insufficiency~~              | ~~Satisfied under L5.8 / Action 3 closure; see note below~~ |
-| **9**     | Close host profile A                   | Windows + WSL + GPU full release validation pass                                  | Checklist passes; runbook correct                 |
+| **9**     | Close host profile A                   | Windows + WSL + GPU full release validation pass                                  | **Functional closure:** checklist + runbook (**FUNCTIONALLY CLOSED**); **audit pack** (trace file + packaging + validation sheets) pending, non-blocking |
 | **10**    | Close host profile B                   | Native Linux full release validation pass                                         | Checklist passes; config documented               |
 | **11**    | Close compatibility path hardening     | Fallback rules documented and controlled                                          | No silent path ambiguity remains                  |
 | **12**    | Mainline convergence                   | Feature branch/integration line/main are operationally unambiguous                | Release branch truth is clear                     |
@@ -361,7 +361,7 @@ L5.8 Action 3 closure: PR-6 baseline preserved; guard-context hardening complete
 
 **Action 8:** Action 8 (no-match honesty) remains satisfied under the L5.8 / Action 3 closure already recorded above; it is not reactivated as the current frontier.
 
-**Action 9 (current):** Action 9 remains **IN_PROGRESS**. Current evidence indicates no new product blocker has been proven in this slice; the remaining gap is completion of the Windows+JetBrains Host-A proof-pack (plugin-visible artifacts plus request-id correlation across Context Layer / Plan-Gate / vLLM where applicable). This is operational validation follow-through, not a product-contract redesign signal by itself.
+**Action 9:** **FUNCTIONALLY CLOSED (Audit pack pending).** Host Profile A has passed the **functional** bar (Ask, Explain/Debug, Execute boundary, No-match, Failure) per `docs/guides/ACTION_7_TRUST_AUDIT.md`; no new product blocker has been proven in this slice. **Remaining** work is **audit discipline** only: formal `mapping_request_ids.md`, per-scenario `hostA_proof_pack/` packaging, and the two validation sheets — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md`. This follow-through is **non-blocking** for product iteration; it is **required** for enterprise audit-grade submission.
 
 # 4. Critical Correction (NEW — Architecture Reality)
 

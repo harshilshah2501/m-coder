@@ -1,5 +1,16 @@
 # Host Profile A — closure proof-pack (Action 9)
 
+**Action 9 status:** **FUNCTIONALLY CLOSED (Audit pack pending).**
+
+| Sub-track | Status |
+|-----------|--------|
+| 9 — Host Profile A | ✅ Functional pass |
+| 9 — Audit pack (trace + packaging) | ⚠️ Pending (non-blocking) |
+
+**What remains (tracked, not blocking — explicitly required for audit):** formal **`mapping_request_ids.md`** (trace spine) — template: [mapping_request_ids.md](./mapping_request_ids.md); per-scenario folder packaging under `hostA_proof_pack/`; backend + plugin **validation sheets** — see [HOST_A_PROOF_PACK_CLOSURE.md](./HOST_A_PROOF_PACK_CLOSURE.md). Worked example mapping: [HOST_A_PLAN_GATE_LOG_MAPPING.md](./HOST_A_PLAN_GATE_LOG_MAPPING.md).
+
+---
+
 **Scope:** Operational runbook for a disciplined **JetBrains IDE on WSL backend** + **Context Layer** + **Plan-Gate / vLLM** validation pass. No Windows-side tunnel or Windows `curl` steps — everything below assumes the **IDE backend JVM and your shells run in Linux (WSL)**.
 
 **Action 7** (execute trust) is documented complete elsewhere; this is **Action 9 Host-A proof**, not an Action 7 code audit.
@@ -14,6 +25,8 @@
 | **Plan-Gate / Ask / Execute** | Plugin default `http://127.0.0.1:8089` — hardcoded in `RuntimeBridge` / `AskClient`. That port must reach Plan-Gate **from the WSL backend** (local process or port-forward). |
 
 **Non-negotiable:** Use **JetBrains Remote Development with WSL backend** (or pure Linux IDE) so `repo_root` / `workspace_root` are Linux paths. Set **VM options on the backend IDE**, not only on a Windows thin client. If correlation is missing, mark **NOT_PROVEN**.
+
+**Audit closure (request_id spine, per-scenario packaging, validation sheets):** [HOST_A_PROOF_PACK_CLOSURE.md](./HOST_A_PROOF_PACK_CLOSURE.md).
 
 ---
 
@@ -301,6 +314,8 @@ Expect **insufficient grounding** / honest plan-only / no fabricated file lists.
 |------------|--------|---------------------|-----------|----------------|
 | … | Y/N | Y/N | Y/N | Y/N / n/a |
 
+Fill one row per scenario after grepping logs (see **HOST_A_PROOF_PACK_CLOSURE.md §3**). Copy the template from **`docs/guides/mapping_request_ids.md`** to **`hostA_proof_pack/mapping_request_ids.md`** when you assemble the submission pack.
+
 ---
 
 ## STEP 7 — Decision
@@ -396,6 +411,8 @@ This caveat does **not** reverse the **5.2 PASS** for the captured Explain/Debug
 ### Pack closure
 
 Host-A Action 9 **§5.1–§5.5** evidence paths are listed in **Executive summary** and **Current run snapshot** above. Add optional UI captures under `Action_7_Evidences/failure/` only if a reviewer asks for plugin-visible **`RUNTIME_UNAVAILABLE`** text.
+
+**Next audit tier:** To close **request_id correlation**, **per-scenario folders**, and **backend + plugin validation sheets**, follow [HOST_A_PROOF_PACK_CLOSURE.md](./HOST_A_PROOF_PACK_CLOSURE.md).
 
 ---
 

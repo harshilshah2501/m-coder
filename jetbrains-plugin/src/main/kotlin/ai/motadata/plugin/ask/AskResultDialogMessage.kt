@@ -11,6 +11,7 @@ private const val ASK_SUMMARY_SNIPPET_MAX = 360
 internal fun buildAskResultSummaryMessage(question: String, response: RuntimeResponse): String {
     val sb = StringBuilder()
     sb.appendLine("Outcome: ${response.outcome.toHumanReadable()}")
+    sb.appendLine("request_id: ${response.requestId ?: "(none)"}")
     val qShort = question.trim().let { if (it.length > 100) it.take(100) + "…" else it }
     if (qShort.isNotEmpty()) {
         sb.appendLine("Query: $qShort")
@@ -90,6 +91,8 @@ internal fun buildAskResultSummaryMessage(question: String, response: RuntimeRes
  */
 internal fun buildAskResultDialogMessage(question: String, response: RuntimeResponse): String {
     val sb = StringBuilder()
+    sb.appendLine("request_id: ${response.requestId ?: "(none)"}")
+    sb.appendLine()
     appendBackendTruthSection(sb, response)
     appendResponseProvenanceSection(sb, response)
 

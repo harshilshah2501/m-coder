@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>ai.motadata.runtime-plugin</id>
     <name>Motadata Runtime Governance (MVP)</name>
-    <version>0.2.5</version>
+    <version>0.2.6</version>
     <vendor email="dev@motadata.ai">Motadata</vendor>
 
     <description>
