@@ -261,6 +261,14 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
         raw_workspace = (data.get("workspace_root") or data.get("workspace") or "").strip()
         normalized = _normalize_workspace_root(raw_workspace)
         workspace, ws_substituted = _effective_export_workspace(normalized)
+        # One line per request so operators can confirm traffic hits this process (stderr or MOTADATA_CONTEXT_LAYER_LOG_PATH).
+        LOG.info(
+            "CONTEXT_LAYER export_evidence begin request_id=%s substituted=%s effective_workspace=%s peer=%s",
+            rid,
+            ws_substituted,
+            _workspace_marker(workspace),
+            self.client_address,
+        )
         if ws_substituted:
             LOG.info(
                 "CONTEXT_LAYER export_evidence workspace substituted request_id=%s "
@@ -305,6 +313,18 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
         except RuntimeError as e:
             # Service is healthy; workspace/index/export could not complete — not "service absent"
             msg = str(e)
+            if "Workspace root does not exist" in msg:
+                fb = _resolve_fallback_workspace()
+                LOG.warning(
+                    "CONTEXT_LAYER export_failed_workspace request_id=%s substituted=%s "
+                    "effective_marker=%s fallback_resolved_nonempty=%s peer=%s error=%s",
+                    rid,
+                    ws_substituted,
+                    _workspace_marker(workspace),
+                    bool(fb),
+                    self.client_address,
+                    msg[:800],
+                )
             if (
                 "Workspace root does not exist" in msg
                 and workspace

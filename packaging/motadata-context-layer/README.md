@@ -71,7 +71,7 @@ bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
 Install:
 
 ```bash
-pip install dist/motadata_context_layer-0.1.3-py3-none-any.whl
+pip install dist/motadata_context_layer-0.1.4-py3-none-any.whl
 ```
 
 ## Run
@@ -81,6 +81,8 @@ motadata-context-layer
 # or
 python -m runtime.context_layer_service
 ```
+
+Logs go to **stderr** of that process unless `MOTADATA_CONTEXT_LAYER_LOG_PATH` is set. Every `POST /v1/export_evidence` emits **`CONTEXT_LAYER export_evidence begin`** at INFO so you can confirm Ask traffic hits this instance (if you see no such line, another process owns port 8091 or the client is not reaching this server).
 
 ## Configuration (environment)
 
