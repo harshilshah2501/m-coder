@@ -12,12 +12,14 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install .
 ```
 
-Build wheel (from repo, requires `pip install build`):
+Build wheel (from repo, requires `pip install build` in a venv). Bump `version` in `pyproject.toml` first, then:
 
 ```bash
 cd packaging/motadata-context-layer
 python3 -m build --wheel -o dist
 ```
+
+Wheels land in `packaging/motadata-context-layer/dist/` (gitignored — not stored in the repo; install or copy the `.whl` to your WSL host).
 
 ## Deterministic package pipeline (build + health + sanity)
 
@@ -69,7 +71,7 @@ bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
 Install:
 
 ```bash
-pip install dist/motadata_context_layer-0.1.0-py3-none-any.whl
+pip install dist/motadata_context_layer-0.1.1-py3-none-any.whl
 ```
 
 ## Run
@@ -89,6 +91,8 @@ python -m runtime.context_layer_service
 | `MOTADATA_CONTEXT_LAYER_LOG_LEVEL` | `DEBUG`, `INFO`, `WARNING`, `ERROR` | `INFO` |
 | `MOTADATA_CONTEXT_LAYER_LOG_PATH` | If set, log file path (append) | stderr only |
 | `MOTADATA_CONTEXT_LAYER_DISABLE_HTTP` | Set to `1` to skip HTTP in **clients** (plugin); not used by server | — |
+| `MOTADATA_ROOT` | If the IDE sends a JetBrains Roaming `.../projects/<hash>` path, **substitute** this directory for indexing (same as smoke tests). | — |
+| `MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE` | Same as `MOTADATA_ROOT` if you prefer a dedicated name (checked first). | — |
 
 ## Endpoints
 
