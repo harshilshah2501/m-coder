@@ -7,6 +7,7 @@ import os
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 
 from runtime.layer5.workspace.path_normalizer import PathNormalizer
 
@@ -31,8 +32,52 @@ def _looks_like_jetbrains_roaming_project_path(path: str) -> bool:
     return "/jetbrains/" in p and "/projects/" in p
 
 
-def _default_workspace_from_env() -> str:
-    """Linux checkout used when the IDE sends Roaming metadata paths (same as smoke tests)."""
+def _workspace_from_optional_file() -> str:
+    """First line of a file = absolute repo path (set-and-forget; no env on each shell)."""
+    paths: list[str] = []
+    env = (os.environ.get("MOTADATA_CONTEXT_LAYER_WORKSPACE_FILE") or "").strip()
+    if env:
+        paths.append(env)
+    paths.append(str(Path.home() / ".motadata_context_layer_workspace"))
+    paths.append(str(Path.home() / ".config" / "motadata" / "context_layer_workspace"))
+    seen: set[str] = set()
+    for p in paths:
+        if not p or p in seen:
+            continue
+        seen.add(p)
+        try:
+            fp = Path(p)
+            if not fp.is_file():
+                continue
+            lines = fp.read_text(encoding="utf-8").strip().splitlines()
+            if not lines:
+                continue
+            root = lines[0].strip()
+            if not root:
+                continue
+            w = PathNormalizer.normalize(root, resolve_symlinks=True).canonical_path
+            if os.path.isdir(w):
+                return w
+        except OSError:
+            continue
+    return ""
+
+
+def _heuristic_home_motadata() -> str:
+    """Last resort: common clone locations (explicit env / file wins)."""
+    home = Path.home()
+    for parts in (("Projects", "Motadata"), ("Motadata",)):
+        p = home.joinpath(*parts)
+        try:
+            if p.is_dir():
+                return str(p.resolve())
+        except OSError:
+            continue
+    return ""
+
+
+def _resolve_fallback_workspace() -> str:
+    """Linux checkout when the IDE sends Roaming .../projects/<hash>: env → file → ~/Projects/Motadata → ~/Motadata."""
     for key in ("MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE", "MOTADATA_ROOT"):
         raw = (os.environ.get(key) or "").strip()
         if not raw:
@@ -40,18 +85,21 @@ def _default_workspace_from_env() -> str:
         w = PathNormalizer.normalize(raw, resolve_symlinks=True).canonical_path
         if os.path.isdir(w):
             return w
-    return ""
+    w = _workspace_from_optional_file()
+    if w:
+        return w
+    return _heuristic_home_motadata()
 
 
 def _effective_export_workspace(normalized: str) -> tuple[str, bool]:
     """
-    If the client sends a JetBrains Roaming .../projects/<hash> path, replace with env default
-    when set so export works without relying on the IDE plugin alone.
+    If the client sends a JetBrains Roaming .../projects/<hash> path, replace with a resolved
+    checkout (env, ~/.motadata_context_layer_workspace, or ~/Projects/Motadata / ~/Motadata).
     Returns (workspace, substituted).
     """
     if not normalized:
         return normalized, False
-    fallback = _default_workspace_from_env()
+    fallback = _resolve_fallback_workspace()
     if not fallback:
         return normalized, False
     if not _looks_like_jetbrains_roaming_project_path(normalized):
@@ -185,7 +233,7 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
         if ws_substituted:
             LOG.info(
                 "CONTEXT_LAYER export_evidence workspace substituted request_id=%s "
-                "(IDE sent JetBrains Roaming path; using MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE or MOTADATA_ROOT)",
+                "(JetBrains Roaming path → MOTADATA_ROOT / workspace file / ~/Projects/Motadata / ~/Motadata)",
                 rid,
             )
         if _debug_export_requests():

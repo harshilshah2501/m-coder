@@ -35,6 +35,17 @@ def test_effective_export_workspace_noop_for_real_path(tmp_path):
     assert w == str(tmp_path)
 
 
+def test_effective_export_workspace_heuristic_projects_motadata(tmp_path, monkeypatch):
+    monkeypatch.delenv("MOTADATA_ROOT", raising=False)
+    monkeypatch.delenv("MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    (tmp_path / "Projects" / "Motadata").mkdir(parents=True)
+    roaming = "/mnt/c/Users/X/AppData/Roaming/JetBrains/IntelliJIdea2026.1/projects/ac852201fe776dbecf4a042e9084f9c8f10c20de"
+    w, sub = _effective_export_workspace(roaming)
+    assert sub is True
+    assert Path(w).resolve() == (tmp_path / "Projects" / "Motadata").resolve()
+
+
 def test_normalize_workspace_root_wsl_bridge():
     if os.name != "posix":
         pytest.skip("WSL bridge mapping applies on POSIX only")

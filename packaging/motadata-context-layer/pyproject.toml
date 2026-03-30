@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "motadata-context-layer"
-version = "0.1.1"
+version = "0.1.2"
 description = "Motadata WSL Context Layer — Layer-5 evidence HTTP service (no full m-coder repo required on WSL)"
 readme = "README.md"
 requires-python = ">=3.10"
