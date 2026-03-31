@@ -1,0 +1,128 @@
+# Product Authority Registry v1.1
+# Phase 1 Foundation — Sample concepts for validation testing
+
+schema_version: "product_authority_registry.v1.1"
+last_updated: "2026-03-31"
+maintainer: "harshil@motadata.com"
+
+concepts:
+
+  incident_deduplication:
+    primary_owner:
+      file: "motadata/src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java"
+      class: "IncidentDeduplicationProcessor"
+      method: "processDeduplication"
+      confidence: "high"
+    
+    verification:
+      last_verified_at: "2026-03-31T10:00:00Z"
+      verification_source: "code_trace"
+      verification_notes: "Verified via call graph trace from IncidentEventHandler"
+      staleness_threshold_days: 90
+    
+    aliases:
+      - "duplicate incident"
+      - "incident dedup"
+      - "dedup"
+      - "duplicate detection"
+      - "incident matching"
+    
+    collaborators:
+      - file: "motadata/src/main/java/com/mindarray/aiops/correlation/IncidentCorrelationEngine.java"
+        role: "orchestrator"
+        relationship: "calls_primary"
+      - file: "motadata/src/main/java/com/mindarray/aiops/query/IncidentQueryProcessor.java"
+        role: "query_support"
+        relationship: "data_provider"
+    
+    forbidden_distractors:
+      - file: "motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java"
+        reason: "Uses incident term but handles external sync, not deduplication logic"
+      - file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java"
+        reason: "Generic event routing, not deduplication implementation"
+    
+    notes:
+      - "Deduplication uses similarity scoring with configurable thresholds"
+      - "Primary algorithm is in processDeduplication() method"
+      - "Uses DependencyManager for topology-aware grouping"
+    
+    entry_points:
+      - type: "eventbus_handler"
+        file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java"
+        method: "handle"
+        event_type: "INCIDENT_CREATED"
+    
+    control_flow:
+      entry: "REST API or EventBus"
+      path:
+        - "IncidentEventHandler.handle()"
+        - "IncidentCorrelationEngine.correlate()"
+        - "IncidentDeduplicationProcessor.processDeduplication()"
+      exit: "IncidentStore.persist()"
+
+  alert_correlation:
+    primary_owner:
+      file: "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+      class: "AlertCorrelationEngine"
+      confidence: "high"
+    
+    verification:
+      last_verified_at: "2026-03-31T10:00:00Z"
+      verification_source: "code_trace"
+      staleness_threshold_days: 90
+    
+    aliases:
+      - "alert grouping"
+      - "alert clustering"
+      - "related alerts"
+      - "correlation engine"
+    
+    collaborators:
+      - file: "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationManager.java"
+        role: "manager"
+        relationship: "lifecycle_management"
+      - file: "motadata/src/main/java/com/mindarray/aiops/topology/TopologyCache.java"
+        role: "topology_provider"
+        relationship: "context_enrichment"
+    
+    forbidden_distractors:
+      - file: "motadata/src/main/java/com/mindarray/aiops/correlation/AvailabilityCorrelationEngine.java"
+        reason: "Different correlation domain - availability, not alerts"
+    
+    notes:
+      - "Uses topology graph for dependency-aware correlation"
+      - "Supports both time-based and topology-based correlation"
+    
+    entry_points:
+      - type: "eventbus_handler"
+        file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/AlertEventHandler.java"
+        method: "handle"
+        event_type: "ALERT_CREATED"
+
+  alert_escalation:
+    primary_owner:
+      file: "motadata/src/main/java/com/mindarray/aiops/alerting/AlertEscalationHandler.java"
+      class: "AlertEscalationHandler"
+      confidence: "medium"
+    
+    verification:
+      last_verified_at: "2025-12-01T10:00:00Z"
+      verification_source: "human"
+      verification_notes: "Manually verified during code review"
+      staleness_threshold_days: 90
+    
+    aliases:
+      - "escalation"
+      - "alert escalation"
+      - "severity escalation"
+      - "escalate alert"
+    
+    collaborators:
+      - file: "motadata/src/main/java/com/mindarray/aiops/alerting/AlertNotificationService.java"
+        role: "notification"
+        relationship: "downstream_action"
+    
+    forbidden_distractors: []
+    
+    notes:
+      - "Escalation rules are policy-driven from AlertPolicyEngine"
