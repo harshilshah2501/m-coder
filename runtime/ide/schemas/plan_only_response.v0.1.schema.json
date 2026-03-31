@@ -150,6 +150,15 @@
       "type": "object",
       "description": "Whether Layer-5 evidence path was used or legacy ContextEngine fallback.",
       "additionalProperties": true
+    },
+    "routing_mode": {
+      "type": "string",
+      "enum": ["plan_only", "explain_debug"],
+      "description": "Which handler branch produced the plan: template planner vs explain_debug (vLLM)."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Echo of ask_request.trace_id when provided, for log/response correlation."
     }
   },
   "additionalProperties": false

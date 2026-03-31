@@ -87,6 +87,9 @@ def handle_ask_request(ask_request: dict) -> dict:
     returns explain_debug.error and does NOT use template planner steps.
     """
     request_id = str(ask_request.get("request_id", ""))
+    trace_id = str(ask_request.get("trace_id") or "").strip()
+    if trace_id:
+        LOG.info("[ASK] trace_id=%s request_id=%s", trace_id, request_id)
     repo_root = (ask_request.get("repo_root") or "").strip() or "."
     revision = str(ask_request.get("revision", ""))
     query = str(ask_request.get("query", ""))
@@ -187,6 +190,8 @@ def handle_ask_request(ask_request: dict) -> dict:
                 message=str(e),
                 revision=revision,
                 context_resolution=context_resolution,
+                trace_id=trace_id or None,
+                routing_mode="plan_only",
             )
 
     quality = assess_evidence_quality(query, [item.path for item in bundle.items])
@@ -216,6 +221,8 @@ def handle_ask_request(ask_request: dict) -> dict:
             ui_message=block_message,
             ui_severity="warning",
             metadata=metadata,
+            routing_mode="plan_only",
+            trace_id=trace_id or None,
         )
 
     explain_debug_result: ExplainDebugResult | None = None
@@ -229,6 +236,7 @@ def handle_ask_request(ask_request: dict) -> dict:
             selection=selection or "",
             bundle=bundle,
             request_id=request_id,
+            trace_id=trace_id,
         )
         explain_debug_result = result
         if result.error:
@@ -242,6 +250,12 @@ def handle_ask_request(ask_request: dict) -> dict:
     if quality.evidence_quality == WEAK:
         weak_note.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
 
+    routing_mode = (
+        "explain_debug"
+        if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items)
+        else "plan_only"
+    )
+
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
@@ -252,6 +266,8 @@ def handle_ask_request(ask_request: dict) -> dict:
         evidence_first_meta=evidence_first_meta,
         repo_aware_notes=(repo_aware_notes + weak_note) or None,
         metadata=metadata,
+        routing_mode=routing_mode,
+        trace_id=trace_id or None,
     )
 
 
@@ -297,6 +313,8 @@ def _build_plan_only_response(
     ui_severity: str | None = None,
     repo_aware_notes: List[str] | None = None,
     metadata: Dict[str, Any] | None = None,
+    routing_mode: str | None = None,
+    trace_id: str | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -356,6 +374,10 @@ def _build_plan_only_response(
         payload["evidence_first_meta"] = evidence_first_meta
     if metadata is not None:
         payload["metadata"] = metadata
+    if routing_mode is not None:
+        payload["routing_mode"] = routing_mode
+    if trace_id:
+        payload["trace_id"] = trace_id
     return payload
 
 
@@ -364,6 +386,8 @@ def _build_error_plan_only_response(
     message: str,
     revision: str = "",
     context_resolution: Dict[str, Any] | None = None,
+    trace_id: str | None = None,
+    routing_mode: str | None = "plan_only",
 ) -> Dict[str, Any]:
     """
     Build a PlanOnlyResponse that reports a context error but preserves execution=false invariants.
@@ -391,6 +415,10 @@ def _build_error_plan_only_response(
     }
     if context_resolution is not None:
         payload["context_resolution"] = context_resolution
+    if trace_id:
+        payload["trace_id"] = trace_id
+    if routing_mode is not None:
+        payload["routing_mode"] = routing_mode
     payload["metadata"] = {
         "intent_type": "GENERIC_INTENT",
         "evidence_quality": "INSUFFICIENT",

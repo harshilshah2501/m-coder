@@ -49,13 +49,21 @@ internal object AskV1Contract {
         }
     }
 
-    fun buildAskRequestV1Json(gson: Gson, request: RuntimeRequest, evidenceBundle: JsonObject): String {
+    fun buildAskRequestV1Json(
+        gson: Gson,
+        request: RuntimeRequest,
+        evidenceBundle: JsonObject,
+        traceId: String,
+    ): String {
         val root = JsonObject()
         root.addProperty("schema_version", "ask_request.v1.0")
         root.addProperty("request_id", request.requestId)
         root.addProperty("timestamp_utc", request.timestampUtc)
         root.addProperty("query", request.payload ?: "")
         root.add("evidence_bundle", evidenceBundle.deepCopy())
+        if (traceId.isNotBlank()) {
+            root.addProperty("trace_id", traceId)
+        }
 
         request.revision?.takeIf { it.isNotBlank() }?.let { root.addProperty("revision", it) }
         request.branch?.takeIf { it.isNotBlank() }?.let { root.addProperty("branch", it) }

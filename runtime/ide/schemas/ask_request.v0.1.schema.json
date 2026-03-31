@@ -52,6 +52,10 @@
     "evidence_first": {
       "type": "boolean",
       "description": "When true, WSL/runtime builds layer5.evidence_bundle.v1 from workspace-local index+retrieval; repo_root is workspace input path only. On failure, falls back to ContextEngine (see evidence_first_meta)."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "End-to-end correlation ID for Ask (plugin → Plan-Gate → handlers → downstream); same value across v1 attempt and v0 fallback."
     }
   },
   "additionalProperties": false

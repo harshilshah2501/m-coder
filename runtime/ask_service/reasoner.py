@@ -34,16 +34,29 @@ def _explain_debug_request_log(
     model: str,
     status: str,
     t0: float,
+    trace_id: str = "",
 ) -> None:
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
-    LOG.info(
-        "EXPLAIN_DEBUG request_id=%s base_url=%s model=%s status=%s duration_ms=%.2f",
-        request_id,
-        base_url,
-        model,
-        status,
-        elapsed_ms,
-    )
+    tid = (trace_id or "").strip()
+    if tid:
+        LOG.info(
+            "EXPLAIN_DEBUG trace_id=%s request_id=%s base_url=%s model=%s status=%s duration_ms=%.2f",
+            tid,
+            request_id,
+            base_url,
+            model,
+            status,
+            elapsed_ms,
+        )
+    else:
+        LOG.info(
+            "EXPLAIN_DEBUG request_id=%s base_url=%s model=%s status=%s duration_ms=%.2f",
+            request_id,
+            base_url,
+            model,
+            status,
+            elapsed_ms,
+        )
 
 
 @dataclass
@@ -141,6 +154,7 @@ def explain_debug(
     selection: str,
     bundle: ContextBundle,
     request_id: str = "",
+    trace_id: str = "",
 ) -> ExplainDebugResult:
     """
     Perform real explain/debug reasoning using a vLLM-compatible endpoint.
@@ -151,6 +165,7 @@ def explain_debug(
     """
     t0 = time.perf_counter()
     rid = (request_id or "").strip() or "unknown"
+    tid = (trace_id or "").strip()
     base_url = os.environ.get(EXPLAIN_VLLM_URL_ENV, DEFAULT_VLLM_URL).rstrip("/")
     url = f"{base_url}/v1/chat/completions"
     model_name = os.environ.get("MOTADATA_EXPLAIN_MODEL", "motadata-coder")
@@ -163,8 +178,10 @@ def explain_debug(
         "max_tokens": 1500,
     }
     # OpenAI-compatible optional correlation (vLLM often forwards; ignored safely if not).
-    if rid != "unknown":
-        payload["user"] = rid
+    # Prefer trace_id for end-to-end grep when present.
+    correlation = tid if tid else (rid if rid != "unknown" else "")
+    if correlation:
+        payload["user"] = correlation
 
     try:
         req = urllib.request.Request(
@@ -175,31 +192,31 @@ def explain_debug(
         )
         with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
             if resp.status != 200:
-                _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+                _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
                 return ExplainDebugResult(
                     error=f"Reasoning service returned HTTP {resp.status}"
                 )
             body = json.loads(resp.read().decode("utf-8"))
     except urllib.error.URLError as e:
-        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
         return ExplainDebugResult(
             error=f"Reasoning service unavailable: {e.reason or type(e).__name__}"
         )
     except TimeoutError:
-        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
         return ExplainDebugResult(error="Reasoning service timeout")
     except Exception as e:
-        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
         return ExplainDebugResult(error=f"Reasoning request failed: {e}")
 
     choices = body.get("choices") or []
     if not choices:
-        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
         return ExplainDebugResult(error="Reasoning service returned no choices")
     content = choices[0].get("message", {}).get("content") or ""
     parsed = _parse_structured_response(content)
     if parsed.error:
-        _explain_debug_request_log(rid, base_url, model_name, "error", t0)
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
     else:
-        _explain_debug_request_log(rid, base_url, model_name, "success", t0)
+        _explain_debug_request_log(rid, base_url, model_name, "success", t0, trace_id=tid)
     return parsed

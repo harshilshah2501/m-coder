@@ -38,22 +38,44 @@ def _request_id_from_body(data: object) -> str:
     return s if s else "unknown"
 
 
+def _trace_id_from_body(data: object) -> str:
+    if not isinstance(data, dict):
+        return ""
+    tid = data.get("trace_id")
+    if tid is None:
+        return ""
+    s = str(tid).strip()
+    return s
+
+
 def _plan_gate_request_log(
     path: str,
     request_type: str,
     request_id: str,
     status: str,
     t0: float,
+    trace_id: str = "",
 ) -> None:
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
-    LOG.info(
-        "PLAN_GATE request path=%s request_type=%s request_id=%s status=%s duration_ms=%.2f",
-        path,
-        request_type,
-        request_id,
-        status,
-        elapsed_ms,
-    )
+    if trace_id:
+        LOG.info(
+            "PLAN_GATE request path=%s request_type=%s request_id=%s trace_id=%s status=%s duration_ms=%.2f",
+            path,
+            request_type,
+            request_id,
+            trace_id,
+            status,
+            elapsed_ms,
+        )
+    else:
+        LOG.info(
+            "PLAN_GATE request path=%s request_type=%s request_id=%s status=%s duration_ms=%.2f",
+            path,
+            request_type,
+            request_id,
+            status,
+            elapsed_ms,
+        )
 
 
 def _vllm_healthcheck() -> None:
@@ -111,16 +133,17 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             data = json.loads(body)
         except (json.JSONDecodeError, ValueError) as e:
             self._send_json(400, {"error": f"Invalid JSON: {e}"})
-            _plan_gate_request_log(path, req_type, "unknown", "error", t0)
+            _plan_gate_request_log(path, req_type, "unknown", "error", t0, trace_id="")
             return
 
         rid = _request_id_from_body(data)
+        tid = _trace_id_from_body(data)
 
         if path == "/v0/plan":
             errs = handlers.validate_plan_request(data)
             if errs:
                 self._send_json(400, {"error": "Schema validation failed", "details": errs})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
                 return
 
             mode = config.get_mode()
@@ -134,10 +157,10 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     data, mode, fixed_time, spool_root, date_or_id
                 )
                 self._send_json(200, decision)
-                _plan_gate_request_log(path, req_type, rid, "success", t0)
+                _plan_gate_request_log(path, req_type, rid, "success", t0, trace_id=tid)
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
             return
 
         if path == "/v0/ask":
@@ -146,17 +169,17 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             errs = validate_ask_request(data)
             if errs:
                 self._send_json(400, {"error": "Schema validation failed", "details": errs})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
                 return
 
             try:
                 response = handle_ask_request(data)
                 self._send_json(200, response)
-                _plan_gate_request_log(path, req_type, rid, "success", t0)
+                _plan_gate_request_log(path, req_type, rid, "success", t0, trace_id=tid)
             except Exception as e:
                 # Even on handler failure, preserve execution=false semantics inside handler.
                 self._send_json(500, {"error": str(e)})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
             return
 
         if path == "/v1/ask":
@@ -172,22 +195,22 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     400,
                     {"error": "ask_envelope_invalid", "message": "Schema validation failed", "details": errs},
                 )
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
                 return
 
             try:
                 response = handle_ask_v1_request(data)
                 self._send_json(200, response)
-                _plan_gate_request_log(path, req_type, rid, "success", t0)
+                _plan_gate_request_log(path, req_type, rid, "success", t0, trace_id=tid)
             except AskV1ClientError as e:
                 self._send_json(
                     400,
                     {"error": e.code, "message": e.message, "details": e.details},
                 )
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
             return
 
         if path == "/v0/execute":
@@ -196,20 +219,20 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             errs = validate_execute_request(data)
             if errs:
                 self._send_json(400, {"error": "Schema validation failed", "details": errs})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
                 return
 
             try:
                 response = handle_execute_request(data)
                 self._send_json(200, response)
-                _plan_gate_request_log(path, req_type, rid, "success", t0)
+                _plan_gate_request_log(path, req_type, rid, "success", t0, trace_id=tid)
             except Exception as e:
                 self._send_json(500, {"error": str(e)})
-                _plan_gate_request_log(path, req_type, rid, "error", t0)
+                _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
             return
 
         self._send_json(404, {"error": "Not found"})
-        _plan_gate_request_log(path, req_type, rid, "error", t0)
+        _plan_gate_request_log(path, req_type, rid, "error", t0, trace_id=tid)
 
     def _send_json(self, status: int, obj: object) -> None:
         self.send_response(status)

@@ -64,6 +64,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     Preconditions: envelope already passed ``validate_ask_v1_request`` (or equivalent).
     """
     request_id = str(ask_request.get("request_id", ""))
+    trace_id = str(ask_request.get("trace_id") or "").strip()
+    if trace_id:
+        LOG.info("[ASK_V1] trace_id=%s request_id=%s", trace_id, request_id)
     query = str(ask_request.get("query", ""))
     evidence_bundle = ask_request.get("evidence_bundle")
     if not isinstance(evidence_bundle, dict):
@@ -152,6 +155,8 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             ui_severity="warning",
             repo_aware_notes=[block_message],
             metadata=metadata,
+            routing_mode="plan_only",
+            trace_id=trace_id or None,
         )
 
     explain_debug_result: ExplainDebugResult | None = None
@@ -165,6 +170,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             selection=selection or "",
             bundle=bundle,
             request_id=request_id,
+            trace_id=trace_id,
         )
         explain_debug_result = result
         if result.error:
@@ -177,6 +183,12 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         plan_steps = plan_summary.steps
     if quality.evidence_quality == WEAK:
         weak_notes.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
+
+    routing_mode = (
+        "explain_debug"
+        if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items)
+        else "plan_only"
+    )
 
     return _build_plan_only_response(
         request_id=request_id,
@@ -194,4 +206,6 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         ui_severity="info",
         repo_aware_notes=weak_notes or None,
         metadata=metadata,
+        routing_mode=routing_mode,
+        trace_id=trace_id or None,
     )

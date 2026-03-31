@@ -50,9 +50,10 @@ class AskV1ContractTest {
             taskType = "general",
         )
 
-        val json = AskV1Contract.buildAskRequestV1Json(gson, req, ev)
+        val json = AskV1Contract.buildAskRequestV1Json(gson, req, ev, "trace-test-1")
         val root = JsonParser.parseString(json).asJsonObject
         assertEquals("ask_request.v1.0", root.get("schema_version").asString)
+        assertEquals("trace-test-1", root.get("trace_id").asString)
         assertEquals("rid-1", root.get("request_id").asString)
         assertEquals("hello query", root.get("query").asString)
         assertEquals("rev1", root.get("revision").asString)

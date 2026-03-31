@@ -52,6 +52,7 @@ def test_handle_ask_request_execution_false_and_plan_only(tmp_path, monkeypatch)
     assert "symbols" in response["context_bundle"]["selectors_used"]
     assert response["ui"]["severity"] == "info"
     assert "ungrounded" not in response["ui"]["message"].lower()
+    assert response.get("routing_mode") == "plan_only"
 
 
 def test_handle_ask_request_explain_debug_uses_reasoner_and_returns_structured(tmp_path):
@@ -72,11 +73,14 @@ def test_handle_ask_request_explain_debug_uses_reasoner_and_returns_structured(t
         "task_type": "EXPLAIN_DEBUG",
         "selected_file": "src/main.py",
         "client_context": {"selection": "def main():\n    return 42"},
+        "trace_id": "trace-explain-test",
     }
 
     response = handle_ask_request(ask_request)
 
     assert response["schema_version"] == "plan_only_response.v0.1"
+    assert response.get("trace_id") == "trace-explain-test"
+    assert response.get("routing_mode") == "explain_debug"
     assert response["governance_posture"] == "PLAN_ONLY"
     assert response["execution"] is False
     assert "explain_debug" in response

@@ -50,6 +50,10 @@
     "client_context": {
       "type": "object",
       "additionalProperties": true
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "End-to-end correlation ID (same across v1 and fallback v0 for one logical Ask)."
     }
   },
   "additionalProperties": false
