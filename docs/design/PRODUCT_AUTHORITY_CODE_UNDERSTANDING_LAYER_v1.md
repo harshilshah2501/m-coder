@@ -2,8 +2,9 @@
 
 **Document Type:** Architecture Design Specification  
 **Status:** Planning Phase  
-**Version:** 1.0  
-**Date:** 2026-03-31
+**Version:** 1.1  
+**Date:** 2026-03-31  
+**Revision:** 2026-03-31 — Hardening pass (drift control, structural validation, multi-hop, entry points)
 
 ---
 
@@ -102,8 +103,8 @@ This design explicitly **avoids**:
 **File:** `product_authority_registry.yaml`
 
 ```yaml
-# Schema: product_authority_registry.v1
-schema_version: "product_authority_registry.v1"
+# Schema: product_authority_registry.v1.1
+schema_version: "product_authority_registry.v1.1"
 last_updated: "2026-03-31"
 maintainer: "harshil@motadata.com"
 
@@ -116,7 +117,14 @@ concepts:
       file: "motadata/src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java"
       class: "IncidentDeduplicationProcessor"
       method: "processDeduplication"  # Optional: entry point method
-      confidence: "high"  # high | medium | weak
+      confidence: "high"  # high | medium | low
+    
+    # DRIFT CONTROL (v1.1): Verification metadata to prevent stale authority
+    verification:
+      last_verified_at: "2026-03-31T10:00:00Z"
+      verification_source: "code_trace"  # code_trace | human | test
+      verification_notes: "Verified via call graph trace from IncidentEventHandler"
+      staleness_threshold_days: 90  # Authority requires re-verification after this
     
     # Alternative names users might use for this concept
     aliases:
@@ -156,12 +164,29 @@ concepts:
         - "IncidentCorrelationEngine.correlate()"
         - "IncidentDeduplicationProcessor.processDeduplication()"
       exit: "IncidentStore.persist()"
+    
+    # ENTRY POINTS (v1.1): Known system entry points that invoke this concept
+    entry_points:
+      - type: "eventbus_handler"
+        file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java"
+        method: "handle"
+        event_type: "INCIDENT_CREATED"
+      - type: "rest_api"
+        file: "motadata/src/main/java/com/mindarray/aiops/api/IncidentController.java"
+        method: "createIncident"
+        endpoint: "POST /api/v1/incidents"
 
   alert_correlation:
     primary_owner:
       file: "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
       class: "AlertCorrelationEngine"
       confidence: "high"
+    
+    # DRIFT CONTROL (v1.1)
+    verification:
+      last_verified_at: "2026-03-31T10:00:00Z"
+      verification_source: "code_trace"
+      staleness_threshold_days: 90
     
     aliases:
       - "alert grouping"
@@ -184,12 +209,25 @@ concepts:
     notes:
       - "Uses topology graph for dependency-aware correlation"
       - "Supports both time-based and topology-based correlation"
+    
+    # ENTRY POINTS (v1.1)
+    entry_points:
+      - type: "eventbus_handler"
+        file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/AlertEventHandler.java"
+        method: "handle"
+        event_type: "ALERT_CREATED"
 
   alert_escalation:
     primary_owner:
       file: "motadata/src/main/java/com/mindarray/aiops/alerting/AlertEscalationHandler.java"
       class: "AlertEscalationHandler"
       confidence: "high"
+    
+    # DRIFT CONTROL (v1.1)
+    verification:
+      last_verified_at: "2026-03-31T10:00:00Z"
+      verification_source: "human"
+      staleness_threshold_days: 90
     
     aliases:
       - "escalation"
@@ -224,6 +262,41 @@ subsystems:
   ingestion:
     root_package: "com.mindarray.aiops.ingestion"
     description: "Data ingestion pipelines, parsers, collectors"
+
+# ENTRY POINTS REGISTRY (v1.1): System-wide entry point catalog
+entry_points_catalog:
+  eventbus_handlers:
+    description: "EventBus message handlers - primary async entry points"
+    pattern: "**/eventbus/handlers/*Handler.java"
+    role: "entry"
+    examples:
+      - "IncidentEventHandler"
+      - "AlertEventHandler"
+      - "MetricEventHandler"
+  
+  rest_controllers:
+    description: "REST API controllers - HTTP entry points"
+    pattern: "**/api/*Controller.java"
+    role: "entry"
+    examples:
+      - "IncidentController"
+      - "AlertController"
+  
+  schedulers:
+    description: "Scheduled/cron jobs - time-triggered entry points"
+    pattern: "**/scheduler/*Scheduler.java"
+    role: "entry"
+    examples:
+      - "AlertCleanupScheduler"
+      - "MetricAggregationScheduler"
+  
+  message_consumers:
+    description: "Kafka/queue consumers - external message entry points"
+    pattern: "**/consumer/*Consumer.java"
+    role: "entry"
+    examples:
+      - "MetricConsumer"
+      - "EventConsumer"
 ```
 
 ### 2.2 Code Understanding Index Schema
@@ -231,8 +304,8 @@ subsystems:
 **File:** In-memory structure (extends existing `WorkspaceFileIndex`)
 
 ```yaml
-# Schema: code_understanding_index.v1
-schema_version: "code_understanding_index.v1"
+# Schema: code_understanding_index.v1.1 (upgraded for multi-hop and entry points)
+schema_version: "code_understanding_index.v1.1"
 workspace_identity_hash: "sha256:..."
 canonical_root: "/path/to/workspace"
 
@@ -266,20 +339,42 @@ files:
           line_start: 150
           line_end: 180
     
-    # Import relationships (lightweight, 1-hop)
+    # Import relationships (lightweight)
     imports:
       - "com.mindarray.aiops.model.Incident"
       - "com.mindarray.aiops.query.IncidentQueryProcessor"
       - "com.mindarray.aiops.topology.DependencyManager"
     
-    # Outbound method calls (1-hop, high-confidence only)
+    # MULTI-HOP CALL GRAPH (v1.1): Controlled 2-hop expansion with pruning
     calls:
-      - target_class: "IncidentQueryProcessor"
-        target_method: "findPotentialDuplicates"
-        call_site_line: 95
-      - target_class: "DependencyManager"
-        target_method: "getDependencies"
-        call_site_line: 102
+      # Hop 1: Direct calls from this file
+      hop_1:
+        - target_class: "IncidentQueryProcessor"
+          target_method: "findPotentialDuplicates"
+          call_site_line: 95
+          confidence: "high"
+        - target_class: "DependencyManager"
+          target_method: "getDependencies"
+          call_site_line: 102
+          confidence: "high"
+      
+      # Hop 2: Calls from hop_1 targets (pruned, same-package priority)
+      hop_2:
+        - source: "IncidentQueryProcessor.findPotentialDuplicates"
+          target_class: "IncidentStore"
+          target_method: "queryByTimeWindow"
+          pruning_reason: "same_subsystem"
+          included: true
+        - source: "DependencyManager.getDependencies"
+          target_class: "TopologyCache"
+          target_method: "getGraph"
+          pruning_reason: "authority_linked"
+          included: true
+        - source: "DependencyManager.getDependencies"
+          target_class: "MetricsCollector"
+          target_method: "recordLatency"
+          pruning_reason: "utility_fanout"
+          included: false  # Pruned: utility/observability, not domain logic
     
     # Package/module classification
     package: "com.mindarray.aiops.correlation"
@@ -297,18 +392,75 @@ symbol_index:
     parent_class: "IncidentDeduplicationProcessor"
 
 # Caller → Callee edges (bidirectional for navigation)
+# MULTI-HOP (v1.1): Now supports 2-hop with pruning rules
 call_graph:
-  # Forward edges: who does X call?
+  # Forward edges: who does X call? (2-hop with pruning)
   forward:
     "IncidentCorrelationEngine.correlate":
-      - "IncidentDeduplicationProcessor.processDeduplication"
-      - "IncidentStore.save"
+      hop_1:
+        - "IncidentDeduplicationProcessor.processDeduplication"
+        - "IncidentStore.save"
+      hop_2:
+        - source: "IncidentDeduplicationProcessor.processDeduplication"
+          targets:
+            - "IncidentQueryProcessor.findPotentialDuplicates"
+            - "DependencyManager.getDependencies"
   
-  # Reverse edges: who calls X?
+  # Reverse edges: who calls X? (2-hop with pruning)
   reverse:
     "IncidentDeduplicationProcessor.processDeduplication":
-      - "IncidentCorrelationEngine.correlate"
-      - "IncidentEventHandler.handle"
+      hop_1:
+        - "IncidentCorrelationEngine.correlate"
+      hop_2:
+        - source: "IncidentCorrelationEngine.correlate"
+          targets:
+            - "IncidentEventHandler.handle"  # Entry point!
+  
+  # PRUNING RULES (v1.1): Control fan-out explosion
+  pruning_rules:
+    max_hop_2_targets_per_source: 5
+    priority_order:
+      - "same_package"           # Highest: same package as primary owner
+      - "known_collaborator"     # High: listed in registry collaborators
+      - "authority_linked"       # High: linked to another authority concept
+      - "same_subsystem"         # Medium: same subsystem
+      - "entry_point"            # Medium: known entry point
+      - "different_subsystem"    # Low: cross-subsystem (often pruned)
+      - "utility_fanout"         # Lowest: utils, logging, metrics (excluded)
+    excluded_patterns:
+      - "*Logger*"
+      - "*Metrics*"
+      - "*Utils*"
+      - "*Constants*"
+
+# ENTRY POINTS INDEX (v1.1): Catalog of system entry points
+entry_points_index:
+  eventbus_handlers:
+    - file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java"
+      class: "IncidentEventHandler"
+      method: "handle"
+      event_types: ["INCIDENT_CREATED", "INCIDENT_UPDATED"]
+      invokes: ["IncidentCorrelationEngine.correlate"]
+    - file: "motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/AlertEventHandler.java"
+      class: "AlertEventHandler"
+      method: "handle"
+      event_types: ["ALERT_CREATED"]
+      invokes: ["AlertCorrelationEngine.correlate"]
+  
+  rest_controllers:
+    - file: "motadata/src/main/java/com/mindarray/aiops/api/IncidentController.java"
+      class: "IncidentController"
+      endpoints:
+        - method: "POST"
+          path: "/api/v1/incidents"
+          handler: "createIncident"
+          invokes: ["IncidentService.create"]
+  
+  schedulers:
+    - file: "motadata/src/main/java/com/mindarray/aiops/scheduler/AlertCleanupScheduler.java"
+      class: "AlertCleanupScheduler"
+      cron: "0 0 * * *"
+      invokes: ["AlertStore.deleteOld"]
 
 # Package grouping for structural expansion
 package_groups:
@@ -326,8 +478,8 @@ package_groups:
 **File:** `product_goldens.yaml`
 
 ```yaml
-# Schema: product_goldens.v1
-schema_version: "product_goldens.v1"
+# Schema: product_goldens.v1.1 (extended with structural and drift failure modes)
+schema_version: "product_goldens.v1.1"
 last_updated: "2026-03-31"
 policy_version: "retrieval_policy.v5"
 
@@ -424,6 +576,79 @@ goldens:
       - condition: "no_method_level_detail"
         severity: "warning"
         description: "Debug intent should include method-level resolution"
+    
+    # ENTRY POINT TRACING (v1.1): Debug queries should trace from entry
+    expected_evidence:
+      entry_point_traced: true
+      entry_to_owner_path_present: true
+
+  # GOLDEN-004 (v1.1): Stale authority detection test
+  - id: "GOLDEN-004"
+    query: "Where is metric aggregation implemented?"
+    intent: "code_location"
+    
+    # Intentionally stale authority for testing
+    expected_primary_owner:
+      file: "motadata/src/main/java/com/mindarray/aiops/metrics/MetricAggregator.java"
+      class: "MetricAggregator"
+      confidence_required: "high"
+    
+    # Test expects structural validation to catch staleness
+    expected_behavior:
+      authority_is_stale: true
+      structural_validation_should_fail: true
+      expected_fallback: "reduced_boost"
+    
+    failure_conditions:
+      - condition: "stale_authority_error"
+        severity: "critical"
+        description: "Authority file no longer exists or class renamed"
+      - condition: "full_boost_applied_to_stale"
+        severity: "critical"
+        description: "Full +100 boost applied without structural validation"
+
+  # GOLDEN-005 (v1.1): Entry point tracing test
+  - id: "GOLDEN-005"
+    query: "Trace: how does an incident get created?"
+    intent: "trace"
+    
+    expected_trace:
+      entry_point:
+        type: "rest_api"
+        file: "motadata/src/main/java/com/mindarray/aiops/api/IncidentController.java"
+      path:
+        - "IncidentController.createIncident()"
+        - "IncidentService.create()"
+        - "IncidentCorrelationEngine.correlate()"
+        - "IncidentDeduplicationProcessor.processDeduplication()"
+    
+    failure_conditions:
+      - condition: "missing_entry_point_trace"
+        severity: "critical"
+        description: "Trace query did not identify entry point"
+      - condition: "incomplete_path"
+        severity: "warning"
+        description: "Path from entry to owner is incomplete"
+
+  # GOLDEN-006 (v1.1): Shallow path error test
+  - id: "GOLDEN-006"
+    query: "How does topology affect correlation?"
+    intent: "code_understanding"
+    
+    expected_primary_owner:
+      file: "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+      class: "AlertCorrelationEngine"
+    
+    # Test expects structural context, not just lexical matches
+    expected_evidence:
+      structural_context_required: true
+      must_include_callee: "TopologyCache"
+      must_show_relationship: "AlertCorrelationEngine → TopologyCache.getGraph()"
+    
+    failure_conditions:
+      - condition: "shallow_path_error"
+        severity: "warning"
+        description: "Only lexical matches found, no structural relationships"
 
 # Aggregate metrics requirements
 metrics_requirements:
@@ -446,6 +671,27 @@ metrics_requirements:
     minimum: 0.80
     target: 0.90
     description: "Query resolved to authority concept"
+  
+  # NEW METRICS (v1.1): Structural and drift metrics
+  authority_freshness_score:
+    minimum: 0.85
+    target: 0.95
+    description: "Percentage of authority entries verified within staleness threshold"
+  
+  structural_validation_pass_rate:
+    minimum: 0.90
+    target: 0.98
+    description: "Percentage of authority lookups that pass pre-boost validation"
+  
+  multi_hop_trace_accuracy:
+    minimum: 0.80
+    target: 0.90
+    description: "Accuracy of 2-hop call graph traces (validated against known paths)"
+  
+  entry_point_identification_rate:
+    minimum: 0.75
+    target: 0.85
+    description: "Percentage of queries where entry point was correctly identified"
 ```
 
 ---
@@ -476,13 +722,72 @@ where:
     distractor_penalty   (if file is in forbidden_distractors list)
 ```
 
-### 3.2 Authority Boost Values
+### 3.2 Authority Sanity Check (Pre-Boost Validation) — v1.1
+
+**Critical Addition:** Before applying any authority boost, the system MUST validate that the authority is not stale.
+
+```yaml
+# AUTHORITY SANITY CHECK (v1.1)
+# Runs BEFORE authority_score is computed
+pre_boost_validation:
+  description: "Structural validation to prevent boosting stale/invalid authority"
+  
+  checks:
+    - id: "file_exists"
+      description: "Primary owner file must exist in workspace"
+      action: "Check index for primary_owner.file"
+      on_failure: "mark_stale"
+    
+    - id: "class_exists"
+      description: "Primary owner class must exist in file"
+      action: "Check symbol_index for primary_owner.class"
+      on_failure: "mark_stale"
+    
+    - id: "method_exists"
+      description: "Primary owner method must exist (if specified)"
+      action: "Check symbol_index for primary_owner.method"
+      on_failure: "downgrade_confidence"
+    
+    - id: "is_referenced"
+      description: "File must be imported or called by at least one other file"
+      action: "Check call_graph.reverse for any caller"
+      on_failure: "mark_stale_candidate"
+    
+    - id: "freshness_check"
+      description: "Authority verification must be within staleness threshold"
+      action: "Compare last_verified_at to current date"
+      on_failure: "require_structural_validation"
+  
+  outcomes:
+    all_pass:
+      authority_status: "validated"
+      boost_allowed: "full"  # +100
+    
+    file_or_class_missing:
+      authority_status: "stale"
+      boost_allowed: "none"  # 0
+      action: "Log stale_authority_error, fall back to lexical"
+    
+    method_missing_or_not_referenced:
+      authority_status: "stale_candidate"
+      boost_allowed: "partial"  # +40
+      action: "Proceed with reduced confidence"
+    
+    freshness_failed:
+      authority_status: "unverified"
+      boost_allowed: "conditional"  # +100 only if structural checks pass
+      action: "Require structural validation before full boost"
+```
+
+### 3.3 Authority Boost Values
 
 ```yaml
 # Authority scoring weights (scaled to existing policy_score_scale = 2)
 authority_weights:
-  # Primary owner boost - overwhelming to ensure rank #1
-  owner_boost: 100  # Must dominate all other signals
+  # Primary owner boost - CONDITIONAL on validation (v1.1)
+  owner_boost_full: 100      # Only when authority_status == "validated"
+  owner_boost_partial: 40    # When authority_status == "stale_candidate" or "unverified"
+  owner_boost_none: 0        # When authority_status == "stale"
   
   # Concept match boosters
   exact_concept_match: 40      # Query maps directly to concept
@@ -509,6 +814,28 @@ hard_rules:
   owner_must_in_top_3: true
   distractor_max_rank: 4  # Distractors cannot be higher than rank 4
   weak_authority_signal_threshold: 0.6  # Below this, add uncertainty flag
+
+# AUTHORITY OVERCONFIDENCE GUARD (v1.1)
+# Prevents full boost without structural backing
+overconfidence_guard:
+  description: "Safety mechanism to prevent blind authority trust"
+  
+  full_boost_requires:
+    - "authority.confidence == 'high'"
+    - "OR pre_boost_validation.all_checks_pass == true"
+  
+  when_not_met:
+    boost_applied: "partial"  # +40 instead of +100
+    ranking_behavior: "allow_lexical_competition"
+    explanation: "Authority exists but not structurally validated; lexical signals may compete"
+  
+  logging:
+    event: "authority_overconfidence_guard_triggered"
+    fields:
+      - "concept_id"
+      - "primary_owner.file"
+      - "failed_checks"
+      - "applied_boost"
 ```
 
 ### 3.3 Distractor Penalty Rules
@@ -541,16 +868,22 @@ distractor_rules:
 
 ```yaml
 structural_proximity:
-  # 1-hop caller/callee relationships
+  # MULTI-HOP RELATIONSHIPS (v1.1): Upgraded from 1-hop to controlled 2-hop
   caller_relationship:
     description: "File A calls methods in primary_owner"
-    boost: caller_of_owner
-    max_hops: 1
+    hop_1:
+      boost: 15  # Direct caller
+    hop_2:
+      boost: 8   # Caller of caller (reduced)
+      pruning: "apply_pruning_rules"
   
   callee_relationship:
     description: "Primary owner calls methods in file B"
-    boost: callee_of_owner
-    max_hops: 1
+    hop_1:
+      boost: 12  # Direct callee
+    hop_2:
+      boost: 6   # Callee of callee (reduced)
+      pruning: "apply_pruning_rules"
   
   # Package affinity
   package_affinity:
@@ -561,7 +894,43 @@ structural_proximity:
   # Import relationship
   import_relationship:
     direct_import: 5
-    transitive_import: 0  # Not tracked in v1
+    transitive_import: 3  # Now tracked in v1.1 (1-hop transitive)
+  
+  # ENTRY POINT PROXIMITY (v1.1)
+  entry_point_relationship:
+    description: "File is a known entry point that leads to primary_owner"
+    direct_entry: 20      # Entry point directly invokes owner
+    indirect_entry: 10    # Entry point → orchestrator → owner
+    max_hops_from_entry: 2
+
+# MULTI-HOP EXPANSION RULES (v1.1)
+multi_hop_expansion:
+  enabled: true
+  max_hops: 2
+  
+  pruning_rules:
+    # Avoid fan-out explosion
+    max_targets_per_hop: 5
+    
+    # Priority ordering for which hop-2 targets to include
+    include_priority:
+      - same_package_as_owner     # Highest priority
+      - known_collaborator        # Listed in registry
+      - authority_linked          # Linked to another concept
+      - entry_point              # Known system entry
+    
+    exclude_always:
+      - "*Logger*"
+      - "*Metrics*"
+      - "*Utils*"
+      - "*Constants*"
+      - "*Exception*"
+    
+    # Stop expansion if target is in different subsystem AND not authority-linked
+    cross_subsystem_policy: "exclude_unless_authority_linked"
+  
+  # Boost decay per hop
+  decay_factor: 0.5  # hop_2 boost = hop_1 boost * 0.5
 ```
 
 ---
@@ -656,6 +1025,41 @@ def retrieve_lexical(...) -> RetrievalResult:
         "authority_confidence": {
           "type": "string",
           "enum": ["high", "medium", "weak", "none"]
+        },
+        "authority_status": {
+          "type": "string",
+          "enum": ["validated", "stale", "stale_candidate", "unverified"],
+          "description": "v1.1: Result of pre-boost validation"
+        },
+        "validation_details": {
+          "type": "object",
+          "description": "v1.1: Details of pre-boost validation checks",
+          "properties": {
+            "file_exists": { "type": "boolean" },
+            "class_exists": { "type": "boolean" },
+            "method_exists": { "type": "boolean" },
+            "is_referenced": { "type": "boolean" },
+            "freshness_ok": { "type": "boolean" },
+            "days_since_verification": { "type": "integer" }
+          }
+        },
+        "entry_trace": {
+          "type": "object",
+          "description": "v1.1: Entry point to owner trace",
+          "properties": {
+            "entry_point": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "file": { "type": "string" },
+                "method": { "type": "string" }
+              }
+            },
+            "path": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
         }
       }
     },
@@ -664,6 +1068,18 @@ def retrieve_lexical(...) -> RetrievalResult:
       "description": "Evidence entries marked as owner candidates",
       "items": {
         "$ref": "#/definitions/evidence_entry"
+      }
+    },
+    "structural_context": {
+      "type": "object",
+      "description": "v1.1: Multi-hop structural context",
+      "properties": {
+        "callers_hop_1": { "type": "array", "items": { "type": "string" } },
+        "callers_hop_2": { "type": "array", "items": { "type": "string" } },
+        "callees_hop_1": { "type": "array", "items": { "type": "string" } },
+        "callees_hop_2": { "type": "array", "items": { "type": "string" } },
+        "entry_points": { "type": "array", "items": { "type": "string" } },
+        "hop_2_pruned_count": { "type": "integer" }
       }
     }
   }
@@ -687,6 +1103,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         control_flow = authority_resolution.get("control_flow", [])
         notes = authority_resolution.get("notes", [])
         authority_confidence = authority_resolution.get("authority_confidence", "none")
+        authority_status = authority_resolution.get("authority_status", "unknown")  # v1.1
         
         # Pass to planner for answer-first generation
         planner_context = {
@@ -694,6 +1111,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             "control_flow": control_flow,
             "notes": notes,
             "authority_confidence": authority_confidence,
+            "authority_status": authority_status,  # v1.1: validated/stale/stale_candidate
         }
     else:
         planner_context = {}
@@ -707,6 +1125,54 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     )
 ```
 
+### 4.2.1 Answer Synthesis Guardrail (v1.1)
+
+**Critical Rule:** When authority resolution provides a primary owner, the final answer MUST anchor to it.
+
+```yaml
+# ANSWER SYNTHESIS GUARDRAIL (v1.1)
+# Enforced in Plan-Gate response generation
+answer_guardrail:
+  description: "Ensures answer anchors to authority when available"
+  
+  when_primary_owner_exists:
+    required:
+      - "Answer MUST reference primary_owner.file"
+      - "Answer MUST reference primary_owner.class"
+      - "If method specified, answer SHOULD reference primary_owner.method"
+      - "Answer MUST explain role of primary owner in system"
+    
+    disallowed:
+      - "Generic exploration steps without anchoring to owner"
+      - "Alternative candidates presented as equal options"
+      - "Hedge language like 'might be in' when confidence is high"
+    
+    alternative_candidates:
+      allowed_when: "Explicitly marked as collaborators or secondary"
+      presentation: "After primary owner, clearly labeled as supporting"
+  
+  when_authority_status_is_stale:
+    required:
+      - "Explicitly state uncertainty: 'Authority may be outdated'"
+      - "Include structural evidence for why file was selected"
+      - "Recommend verification"
+    
+    example: |
+      "Based on registry, this was implemented in `{class}`, but the authority 
+      has not been recently verified. The file still exists and is referenced 
+      by `{caller}`. Recommend confirming this is still the current implementation."
+  
+  when_authority_confidence_is_weak:
+    required:
+      - "Use uncertainty language: 'Likely in' not 'Is in'"
+      - "Present lexical evidence alongside authority"
+      - "Do not suppress alternative candidates"
+  
+  validation:
+    check: "Response must contain primary_owner.class if authority_confidence >= medium"
+    on_violation: "Log answer_anchor_violation, escalate for review"
+```
+
 ### 4.3 New Fields Added to Evidence Bundle
 
 | Field | Type | Location | Description |
@@ -718,6 +1184,19 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
 | `authority_resolution.notes` | array | Inside authority_resolution | Domain knowledge notes |
 | `authority_resolution.authority_confidence` | string | Inside authority_resolution | high/medium/weak/none |
 | `owner_evidence` | array | Evidence bundle top-level | Subset of entries marked as owners |
+
+**New Fields (v1.1):**
+
+| Field | Type | Location | Description |
+|-------|------|----------|-------------|
+| `authority_resolution.authority_status` | string | Inside authority_resolution | validated/stale/stale_candidate/unverified |
+| `authority_resolution.validation_details` | object | Inside authority_resolution | Pre-boost validation check results |
+| `authority_resolution.entry_trace` | object | Inside authority_resolution | Entry point → owner trace path |
+| `structural_context` | object | Evidence bundle top-level | Multi-hop callers, callees, entry points |
+| `structural_context.callers_hop_1` | array | Inside structural_context | Direct callers of owner |
+| `structural_context.callers_hop_2` | array | Inside structural_context | Callers of callers (pruned) |
+| `structural_context.entry_points` | array | Inside structural_context | Known entry points leading to owner |
+| `structural_context.hop_2_pruned_count` | integer | Inside structural_context | Number of hop-2 targets pruned |
 
 ### 4.4 Ask / Debug / Plan Behavior Changes
 
@@ -774,21 +1253,63 @@ QUERY INPUT
     │
     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 3: STRUCTURAL EXPANSION                                                │
+│ STEP 2.5: AUTHORITY SANITY CHECK (v1.1 — Pre-Boost Validation)              │
 │                                                                             │
 │ Input:  AuthorityResolution, CodeUnderstandingIndex                         │
-│ Output: StructuralContext (callers, callees, package_peers)                 │
+│ Output: AuthorityResolution with authority_status field                     │
 │                                                                             │
-│ Actions (only if authority match found):                                    │
+│ Actions:                                                                    │
+│   1. Check file_exists: primary_owner.file in index?                        │
+│   2. Check class_exists: primary_owner.class in symbol_index?               │
+│   3. Check method_exists: primary_owner.method in symbol_index? (if set)    │
+│   4. Check is_referenced: file has callers in call_graph.reverse?           │
+│   5. Check freshness: last_verified_at within staleness_threshold?          │
+│                                                                             │
+│ Outcomes:                                                                   │
+│   - All pass → authority_status = "validated", boost = full (+100)          │
+│   - File/class missing → authority_status = "stale", boost = none (0)       │
+│   - Method missing or not ref'd → authority_status = "stale_candidate",     │
+│                                    boost = partial (+40)                    │
+│   - Freshness failed → require structural validation for full boost         │
+│                                                                             │
+│ On Stale:                                                                   │
+│   - Log stale_authority_error                                               │
+│   - Continue with lexical-only ranking                                      │
+│   - Mark authority_resolution.requires_verification = true                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STEP 3: STRUCTURAL EXPANSION (v1.1 — Multi-Hop with Entry Points)           │
+│                                                                             │
+│ Input:  AuthorityResolution (validated), CodeUnderstandingIndex             │
+│ Output: StructuralContext (callers, callees, package_peers, entry_points)   │
+│                                                                             │
+│ Actions (only if authority_status != "stale"):                              │
 │   1. Look up primary_owner file in code_understanding_index                 │
-│   2. Extract direct callers (1-hop reverse call graph)                      │
-│   3. Extract direct callees (1-hop forward call graph)                      │
-│   4. Identify package peers (same package, exclude noise)                   │
-│   5. Mark all as "structural context" with appropriate boosts               │
+│   2. Extract HOP 1 callers (direct callers from call_graph.reverse)         │
+│   3. Extract HOP 1 callees (direct callees from call_graph.forward)         │
+│   4. Apply pruning rules for HOP 2 expansion:                               │
+│      - Include: same_package, known_collaborator, authority_linked          │
+│      - Exclude: utility_fanout, different_subsystem (unless authority link) │
+│      - Max 5 targets per source                                             │
+│   5. Extract HOP 2 callers/callees with decay factor (0.5x boost)           │
+│   6. Identify entry points that lead to primary_owner:                      │
+│      - Check entry_points_index for paths to owner                          │
+│      - Include entry → orchestrator → owner traces                          │
+│   7. Identify package peers (same package, exclude noise)                   │
+│   8. Mark all with appropriate boosts and hop distance                      │
 │                                                                             │
 │ Skip conditions:                                                            │
+│   - authority_status == "stale" → skip structural expansion                 │
 │   - authority_confidence == "none" → skip structural expansion              │
-│   - primary_owner file not in index → skip                                  │
+│   - primary_owner file not in index → skip (already caught in Step 2.5)     │
+│                                                                             │
+│ Entry Point Tracing (v1.1):                                                 │
+│   - If query intent is "trace" or "debug":                                  │
+│     → Prioritize finding entry point that leads to owner                    │
+│     → Build entry → orchestrator → owner path                               │
+│     → Include in structural_context.entry_trace                             │
 └─────────────────────────────────────────────────────────────────────────────┘
     │
     ▼
@@ -812,21 +1333,30 @@ QUERY INPUT
 │ Output: Re-ranked List[RetrievalHit] with authority signals                 │
 │                                                                             │
 │ Actions:                                                                    │
-│   1. For each hit, compute authority_score:                                 │
-│      - If hit.file == primary_owner.file: +owner_boost (100)                │
+│   1. For each hit, compute authority_score (v1.1 — conditional boost):      │
+│      - If hit.file == primary_owner.file:                                   │
+│        → If authority_status == "validated": +owner_boost_full (100)        │
+│        → If authority_status == "stale_candidate": +owner_boost_partial (40)│
+│        → If authority_status == "stale": +0 (no boost)                      │
 │      - If hit.file in collaborators: +collaborator_boost (25)               │
-│      - If hit.file in callers: +caller_boost (15)                           │
-│      - If hit.file in callees: +callee_boost (12)                           │
+│      - If hit.file in callers (hop 1): +caller_boost (15)                   │
+│      - If hit.file in callers (hop 2): +caller_boost * 0.5 (8)              │
+│      - If hit.file in callees (hop 1): +callee_boost (12)                   │
+│      - If hit.file in callees (hop 2): +callee_boost * 0.5 (6)              │
+│      - If hit.file is entry_point leading to owner: +entry_point_boost (20) │
 │      - If hit.file in forbidden_distractors: +distractor_penalty (-80)      │
 │   2. Update hit.score = lexical_score + authority_score                     │
 │   3. Re-sort by new score (descending)                                      │
-│   4. Apply hard rules:                                                      │
-│      - If primary_owner exists and not rank 1 → swap to rank 1              │
+│   4. Apply hard rules (with overconfidence guard):                          │
+│      - If authority_status == "validated" AND not rank 1 → swap to rank 1   │
+│      - If authority_status != "validated" → allow lexical competition       │
 │      - If distractor in top 3 → demote below rank 3                         │
 │                                                                             │
-│ Hard Rule Enforcement:                                                      │
-│   - Primary owner MUST be rank 1 if authority_confidence >= medium          │
+│ Hard Rule Enforcement (v1.1):                                               │
+│   - Primary owner MUST be rank 1 ONLY if authority_status == "validated"    │
+│   - If authority_status == "stale_candidate": owner SHOULD be in top 3      │
 │   - Distractors MUST NOT be in top 3 regardless of score                    │
+│   - Overconfidence guard: no forced rank 1 without structural validation    │
 └─────────────────────────────────────────────────────────────────────────────┘
     │
     ▼
@@ -912,12 +1442,23 @@ Query received
 
 | Metric | Formula | Target | Minimum |
 |--------|---------|--------|---------|
-| **owner@1** | (# queries where primary owner is rank 1) / (total queries with known owner) | 0.95 | 0.90 |
+| **owner@1** | (# queries where primary owner is rank 1) / (total queries with validated authority) | 0.95 | 0.90 |
 | **owner@3** | (# queries where primary owner is in top 3) / (total queries with known owner) | 1.00 | 0.95 |
 | **distractor_error_rate** | (# queries where distractor in top 3) / (total queries with forbidden distractors) | 0.00 | 0.05 |
 | **authority_hit_rate** | (# queries resolved to authority concept) / (total queries) | 0.90 | 0.80 |
 | **mean_owner_rank** | average rank of primary owner across all queries | 1.05 | 1.50 |
 | **weak_authority_rate** | (# queries with weak/none confidence) / (total queries) | 0.10 | 0.20 |
+
+**New Metrics (v1.1):**
+
+| Metric | Formula | Target | Minimum |
+|--------|---------|--------|---------|
+| **authority_freshness_score** | (# concepts verified within staleness_threshold) / (total concepts) | 0.95 | 0.85 |
+| **structural_validation_pass_rate** | (# authority lookups passing pre-boost validation) / (total authority lookups) | 0.98 | 0.90 |
+| **multi_hop_trace_accuracy** | (# correct 2-hop paths) / (total 2-hop traces attempted) | 0.90 | 0.80 |
+| **entry_point_identification_rate** | (# queries where entry point correctly identified) / (total trace/debug queries) | 0.85 | 0.75 |
+| **stale_authority_detection_rate** | (# stale authorities correctly detected) / (total stale authorities in test set) | 0.95 | 0.90 |
+| **overconfidence_guard_trigger_rate** | (# times guard triggered) / (total high-confidence lookups) | < 0.10 | < 0.15 |
 
 ### 6.2 Failure Conditions
 
@@ -925,8 +1466,8 @@ Query received
 failure_conditions:
   critical:
     - id: "OWNER_NOT_RANK_1"
-      condition: "primary_owner exists AND primary_owner.rank > 1"
-      description: "Primary owner must be rank 1 when authority confidence >= medium"
+      condition: "primary_owner exists AND authority_status == 'validated' AND primary_owner.rank > 1"
+      description: "Primary owner must be rank 1 when authority is validated"
       action: "Test fails, requires investigation"
     
     - id: "DISTRACTOR_IN_TOP_3"
@@ -938,6 +1479,17 @@ failure_conditions:
       condition: "primary_owner not in top 10 AND authority_confidence >= medium"
       description: "Primary owner completely missing from results"
       action: "Test fails, requires registry or index fix"
+    
+    # NEW CRITICAL FAILURES (v1.1)
+    - id: "STALE_AUTHORITY_ERROR"
+      condition: "authority_status == 'stale' AND (file missing OR class missing)"
+      description: "Authority file or class no longer exists in codebase"
+      action: "Registry requires update; mark concept as stale"
+    
+    - id: "FULL_BOOST_WITHOUT_VALIDATION"
+      condition: "owner_boost == 100 AND authority_status != 'validated'"
+      description: "Full boost applied without passing structural validation"
+      action: "Overconfidence guard failure; review ranking logic"
 
   warning:
     - id: "NO_AUTHORITY_MATCH"
@@ -954,12 +1506,39 @@ failure_conditions:
       condition: "collaborator.rank < primary_owner.rank"
       description: "Collaborator ranked higher than owner"
       action: "Review scoring weights"
+    
+    # NEW WARNING FAILURES (v1.1)
+    - id: "MISSING_ENTRY_POINT_TRACE"
+      condition: "intent == 'trace' AND entry_trace not present"
+      description: "Trace query did not identify entry point leading to owner"
+      action: "Review entry_points_index coverage"
+    
+    - id: "SHALLOW_PATH_ERROR"
+      condition: "structural_context is empty AND authority_confidence >= medium"
+      description: "Only lexical matches found; no structural relationships identified"
+      action: "Code understanding index may be incomplete"
+    
+    - id: "AUTHORITY_FRESHNESS_WARNING"
+      condition: "days_since_verification > staleness_threshold"
+      description: "Authority has not been verified recently"
+      action: "Schedule re-verification via code_trace or human review"
 
   info:
     - id: "MULTIPLE_CONCEPTS_MATCHED"
       condition: "len(matched_concepts) > 1"
       description: "Multiple concepts matched - compound query"
       action: "Ensure all owners are in top results"
+    
+    # NEW INFO EVENTS (v1.1)
+    - id: "OVERCONFIDENCE_GUARD_TRIGGERED"
+      condition: "authority_confidence == high AND structural_validation failed"
+      description: "High-confidence authority did not pass structural validation"
+      action: "Partial boost applied; lexical signals may compete"
+    
+    - id: "HOP_2_PRUNING_APPLIED"
+      condition: "hop_2_targets_pruned > 0"
+      description: "Multi-hop expansion was pruned to avoid fan-out"
+      action: "Normal behavior; log for debugging"
 ```
 
 ### 6.3 L5.8 Validation Integration
@@ -996,10 +1575,47 @@ l5_8_validation:
       - name: "authority_hit_rate"
         check: "assert metrics.authority_hit_rate >= 0.80"
         severity: "warning"
+      
+      # NEW ASSERTIONS (v1.1)
+      - name: "authority_freshness_score"
+        check: "assert metrics.authority_freshness_score >= 0.85"
+        severity: "warning"
+      
+      - name: "structural_validation_pass_rate"
+        check: "assert metrics.structural_validation_pass_rate >= 0.90"
+        severity: "critical"
+      
+      - name: "multi_hop_trace_accuracy"
+        check: "assert metrics.multi_hop_trace_accuracy >= 0.80"
+        severity: "warning"
+      
+      - name: "stale_authority_detection"
+        check: "assert metrics.stale_authority_detection_rate >= 0.90"
+        severity: "critical"
+      
+      - name: "no_full_boost_without_validation"
+        check: "assert metrics.full_boost_without_validation_count == 0"
+        severity: "critical"
     
     output:
       report_file: "authority_validation_report.json"
       include_in_ci: true
+      
+    # NEW VALIDATION SUITES (v1.1)
+    structural_validation_suite:
+      description: "Tests for pre-boost validation and staleness detection"
+      tests:
+        - "test_stale_file_detection"
+        - "test_stale_class_detection"
+        - "test_freshness_threshold_enforcement"
+        - "test_overconfidence_guard"
+      
+    multi_hop_suite:
+      description: "Tests for 2-hop call graph accuracy"
+      tests:
+        - "test_hop_2_expansion"
+        - "test_pruning_rules"
+        - "test_entry_point_tracing"
 ```
 
 ---
@@ -1291,27 +1907,30 @@ Alerts are correlated and escalated through two main components:
 
 ```
 docs/design/
-└── PRODUCT_AUTHORITY_CODE_UNDERSTANDING_LAYER_v1.md  (this document)
+└── PRODUCT_AUTHORITY_CODE_UNDERSTANDING_LAYER_v1.md  (this document, v1.1)
 
 runtime/layer5/
 ├── authority/                          (NEW)
 │   ├── __init__.py
 │   ├── registry.py                     # Load product_authority_registry.yaml
 │   ├── resolver.py                     # Concept extraction and matching
-│   ├── code_index.py                   # Extended code understanding index
+│   ├── code_index.py                   # Extended code understanding index (multi-hop v1.1)
 │   ├── ranking.py                      # Authority-aware ranking fusion
 │   ├── config.py                       # Authority layer configuration
+│   ├── validation.py                   # (v1.1) Pre-boost sanity checks
+│   ├── entry_points.py                 # (v1.1) Entry point detection and tracing
 │   └── eval/
 │       ├── __init__.py
-│       └── golden_runner.py            # Golden test harness
+│       ├── golden_runner.py            # Golden test harness
+│       └── structural_validator.py     # (v1.1) Structural validation tests
 ├── retrieval/
 │   └── lexical.py                      # MODIFIED: authority integration point
 └── evidence/
-    └── evidence_bundle.v1.schema.json  # MODIFIED: authority_resolution field
+    └── evidence_bundle.v1.schema.json  # MODIFIED: authority_resolution + structural_context
 
 runtime/data/authority/                 (NEW)
-├── product_authority_registry.yaml     # Product concept registry
-└── product_goldens.yaml                # Golden test cases
+├── product_authority_registry.yaml     # Product concept registry (v1.1 schema)
+└── product_goldens.yaml                # Golden test cases (v1.1 schema)
 ```
 
 ---
@@ -1340,6 +1959,7 @@ This design maintains full backward compatibility with existing contracts:
 
 ```yaml
 # Authority layer configuration (runtime/layer5/authority/config.py)
+# Schema version: authority_config.v1.1
 
 authority_config:
   enabled: true
@@ -1361,14 +1981,27 @@ authority_config:
   
   # Scoring weights (scaled to policy_score_scale = 2)
   weights:
-    owner_boost: 100
+    # CONDITIONAL OWNER BOOST (v1.1)
+    owner_boost_full: 100       # Only when authority_status == "validated"
+    owner_boost_partial: 40     # When authority_status == "stale_candidate"
+    owner_boost_none: 0         # When authority_status == "stale"
+    
     exact_concept_match: 40
     alias_concept_match: 30
     partial_concept_match: 15
     collaborator_direct: 25
     collaborator_same_package: 10
-    caller_of_owner: 15
-    callee_of_owner: 12
+    
+    # MULTI-HOP CALLER/CALLEE (v1.1)
+    caller_of_owner_hop_1: 15
+    caller_of_owner_hop_2: 8    # hop_1 * decay_factor
+    callee_of_owner_hop_1: 12
+    callee_of_owner_hop_2: 6    # hop_1 * decay_factor
+    
+    # ENTRY POINT BOOST (v1.1)
+    entry_point_direct: 20      # Entry point directly invokes owner
+    entry_point_indirect: 10    # Entry → orchestrator → owner
+    
     same_module: 8
     distractor_explicit: -80
     distractor_eventbus_generic: -40
@@ -1379,12 +2012,60 @@ authority_config:
     enforce_owner_rank_1: true
     enforce_distractor_demotion: true
     weak_authority_uncertainty_flag: true
+    # OVERCONFIDENCE GUARD (v1.1)
+    require_validation_for_full_boost: true
   
-  # Code index configuration
+  # PRE-BOOST VALIDATION (v1.1)
+  pre_boost_validation:
+    enabled: true
+    checks:
+      - "file_exists"
+      - "class_exists"
+      - "method_exists"       # Optional, downgrades on failure
+      - "is_referenced"       # File has at least one caller
+      - "freshness_check"
+    on_stale:
+      log_event: true
+      fallback_to_lexical: true
+      mark_requires_verification: true
+  
+  # DRIFT CONTROL (v1.1)
+  drift_control:
+    default_staleness_threshold_days: 90
+    freshness_check_enabled: true
+    on_stale_authority:
+      boost_allowed: "partial"
+      log_stale_authority_error: true
+  
+  # Code index configuration (v1.1 — multi-hop)
   code_index:
     extract_methods: true
     extract_imports: true
     extract_calls: true
-    max_call_hops: 1
+    max_call_hops: 2           # Upgraded from 1 to 2
+    hop_decay_factor: 0.5      # hop_2 boost = hop_1 * 0.5
     cache_ttl_seconds: 300
+    
+    # MULTI-HOP PRUNING (v1.1)
+    pruning:
+      max_hop_2_targets_per_source: 5
+      priority_order:
+        - "same_package"
+        - "known_collaborator"
+        - "authority_linked"
+        - "entry_point"
+      exclude_patterns:
+        - "*Logger*"
+        - "*Metrics*"
+        - "*Utils*"
+        - "*Constants*"
+    
+    # ENTRY POINTS (v1.1)
+    entry_points:
+      enabled: true
+      patterns:
+        eventbus_handlers: "**/eventbus/handlers/*Handler.java"
+        rest_controllers: "**/api/*Controller.java"
+        schedulers: "**/scheduler/*Scheduler.java"
+        consumers: "**/consumer/*Consumer.java"
 ```
