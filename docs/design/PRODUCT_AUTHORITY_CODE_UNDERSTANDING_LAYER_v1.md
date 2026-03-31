@@ -1,10 +1,10 @@
 # Product Authority + Code Understanding Layer (v1)
 
 **Document Type:** Architecture Design Specification  
-**Status:** Planning Phase  
+**Status:** Planning Phase — READY FOR IMPLEMENTATION  
 **Version:** 1.1  
 **Date:** 2026-03-31  
-**Revision:** 2026-03-31 — Hardening pass (drift control, structural validation, multi-hop, entry points)
+**Revision:** 2026-03-31 — Hardening pass complete (drift control, structural validation, multi-hop, entry points, guarded ranking, answer anchoring)
 
 ---
 
@@ -838,7 +838,59 @@ overconfidence_guard:
       - "applied_boost"
 ```
 
-### 3.3 Distractor Penalty Rules
+### 3.3.1 Authority Trust Policy (v1.1)
+
+**Explicit Policy:** Full authority boost (+100) is ONLY allowed when ALL of the following conditions are met:
+
+```yaml
+# AUTHORITY TRUST POLICY (v1.1)
+# Defines when authority can be fully trusted
+authority_trust_policy:
+  full_boost_conditions:
+    all_required:
+      - "confidence == 'high'"
+      - "authority_status == 'validated'"
+      - "NOT stale (freshness check passed)"
+      - "structural_validation.all_critical_checks_pass == true"
+    
+    critical_checks:
+      - "file_exists"      # Primary owner file must exist
+      - "class_exists"     # Primary owner class must exist in file
+    
+    optional_checks:
+      - "method_exists"    # Downgrades to partial on failure
+      - "is_referenced"    # Downgrades to stale_candidate on failure
+  
+  partial_boost_conditions:
+    any_of:
+      - "confidence == 'medium'"
+      - "authority_status == 'stale_candidate'"
+      - "authority_status == 'unverified'"
+      - "freshness check failed but structural checks passed"
+    
+    boost_value: 40
+    ranking_behavior: "allow_lexical_competition"
+  
+  no_boost_conditions:
+    any_of:
+      - "confidence == 'low'"
+      - "authority_status == 'stale'"
+      - "file_exists check failed"
+      - "class_exists check failed"
+    
+    boost_value: 0
+    ranking_behavior: "lexical_only"
+    logging: "stale_authority_error"
+  
+  # Explicit prohibition
+  prohibited:
+    - "Full boost (+100) when authority_status != 'validated'"
+    - "Full boost (+100) when freshness check failed AND no structural validation"
+    - "Forced rank-1 when authority_status == 'stale_candidate'"
+    - "Suppressing lexical competition when confidence < 'high'"
+```
+
+### 3.5 Distractor Penalty Rules
 
 ```yaml
 distractor_rules:
@@ -864,7 +916,7 @@ distractor_rules:
     reason: "Support file, not behavioral owner"
 ```
 
-### 3.4 Structural Proximity Scoring
+### 3.6 Structural Proximity Scoring
 
 ```yaml
 structural_proximity:
@@ -1701,6 +1753,32 @@ l5_8_validation:
 - Mitigation: Iteratively expand goldens based on failures
 - Risk: Metrics may be gamed by overfitting
 - Mitigation: Separate validation vs test sets
+
+### Phase 5: Hardening (v1.1 Delta Tasks)
+
+**Deliverables:**
+- [ ] Registry freshness metadata: Add `verification` block to all concepts
+- [ ] `runtime/layer5/authority/validation.py` - Pre-boost structural validation
+- [ ] `runtime/layer5/authority/entry_points.py` - Entry point extraction/indexing
+- [ ] 2-hop trace logic in `code_index.py` with pruning rules
+- [ ] Stale authority evaluation tests in `eval/structural_validator.py`
+- [ ] Overconfidence guard implementation in `ranking.py`
+
+**Success Criteria:**
+- authority_freshness_score >= 0.85
+- structural_validation_pass_rate >= 0.90
+- multi_hop_trace_accuracy >= 0.80
+- entry_point_identification_rate >= 0.75
+- stale_authority_detection_rate >= 0.90
+- No full boost applied without validation (0 violations)
+
+**Risks:**
+- Risk: Freshness thresholds too strict, causing false staleness
+- Mitigation: Configurable thresholds per concept; start lenient (90 days)
+- Risk: 2-hop expansion creates noise
+- Mitigation: Strict pruning rules; cap at 5 targets per hop
+- Risk: Entry point detection misses custom patterns
+- Mitigation: Extensible pattern registry; manual overrides in concept definitions
 
 ---
 
