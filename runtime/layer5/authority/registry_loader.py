@@ -155,12 +155,24 @@ class AuthorityRegistry:
             return (concept, match_type, 1.0)
 
         for alias, concept_name in self._alias_index.items():
-            if alias in query_lower:
+            if len(alias) >= 4 and alias in query_lower:
                 concept = self.concepts[concept_name]
                 return (concept, "alias", 0.9)
 
         query_tokens = set(_tokenize(query_lower))
         if not query_tokens:
+            return None
+
+        # Filter out common generic tokens that cause over-matching
+        GENERIC_TOKENS = frozenset({
+            "alert", "incident", "correlation", "event", "handler",
+            "service", "manager", "processor", "engine", "controller",
+            "how", "where", "what", "does", "is", "the", "work",
+        })
+
+        meaningful_query_tokens = query_tokens - GENERIC_TOKENS
+        if len(meaningful_query_tokens) < 1 and len(query_tokens) < 2:
+            # Query too generic (single common token)
             return None
 
         best_match: Optional[Tuple[str, float]] = None
@@ -170,8 +182,19 @@ class AuthorityRegistry:
                 continue
             overlap = query_tokens.intersection(concept_tokens)
             if overlap:
+                # Require either:
+                # 1. Full match of concept tokens (score=1.0), OR
+                # 2. At least 2 overlapping tokens AND >50% coverage
                 score = len(overlap) / len(concept_tokens)
-                if score >= 0.5 and (best_match is None or score > best_match[1]):
+                meaningful_overlap = overlap - GENERIC_TOKENS
+                
+                is_valid_match = (
+                    score >= 1.0  # Full concept match
+                    or (len(overlap) >= 2 and score > 0.5)  # Multiple tokens
+                    or (len(meaningful_overlap) >= 1 and score >= 0.5)  # Meaningful token
+                )
+                
+                if is_valid_match and (best_match is None or score > best_match[1]):
                     best_match = (concept_name, score)
 
         if best_match:

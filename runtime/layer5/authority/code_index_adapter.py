@@ -1,19 +1,28 @@
 """
 Code Index Adapter for Authority Validation.
 
-Thin adapter to check file/class/method existence against L5 index.
-Falls back to filesystem checks if index is not available.
+Thin adapter to check file/class/method existence against code index.
+Supports multiple index backends:
+- Phase 2 CodeIndex (primary)
+- L5 WorkspaceFileIndex (legacy)
+- Filesystem fallback
 
-Phase 1: Minimal interface, no new indexing system.
+Phase 2: Extended with entry points, callers/callees.
 """
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Optional, Protocol, Set, Tuple
+from typing import TYPE_CHECKING, List, Optional, Protocol, Set, Tuple
 
-from runtime.layer5.index.models import WorkspaceFileIndex
+if TYPE_CHECKING:
+    from runtime.layer5.authority.code_index_models import (
+        CallEdge,
+        CodeIndex,
+        EntryPointRecord,
+    )
+    from runtime.layer5.index.models import WorkspaceFileIndex
 
 
 class CodeIndexProtocol(Protocol):
@@ -37,6 +46,64 @@ class CodeIndexProtocol(Protocol):
         """Check if file is referenced by other files. Returns None if unknown."""
         ...
 
+    def get_entry_points_for_file(self, relative_path: str) -> List:
+        """Get entry points in a file. Returns empty list if not available."""
+        ...
+
+    def get_direct_callers(self, class_name: str, method_name: str) -> List:
+        """Get direct callers of a method. Returns empty list if not available."""
+        ...
+
+    def get_direct_callees(self, class_name: str, method_name: str) -> List:
+        """Get methods called by a method. Returns empty list if not available."""
+        ...
+
+
+class StructuredIndexAdapter:
+    """
+    Adapter for Phase 2 CodeIndex.
+
+    Uses the structured index for all lookups including
+    entry points and call edges.
+    """
+
+    def __init__(self, index: "CodeIndex") -> None:
+        self._index = index
+
+    def file_exists(self, relative_path: str) -> bool:
+        """Check if file exists in index."""
+        return self._index.file_exists(relative_path)
+
+    def class_exists(self, relative_path: str, class_name: str) -> bool:
+        """Check if class exists in file."""
+        return self._index.class_exists(relative_path, class_name)
+
+    def method_exists(
+        self, relative_path: str, class_name: str, method_name: str
+    ) -> bool:
+        """Check if method exists in class."""
+        return self._index.method_exists(relative_path, class_name, method_name)
+
+    def is_referenced(self, relative_path: str) -> Optional[bool]:
+        """Check if file is referenced by other files."""
+        return self._index.is_referenced(relative_path)
+
+    def get_entry_points_for_file(self, relative_path: str) -> List["EntryPointRecord"]:
+        """Get entry points in a file."""
+        return self._index.get_entry_points_for_file(relative_path)
+
+    def get_direct_callers(
+        self, class_name: str, method_name: str
+    ) -> List["CallEdge"]:
+        """Get direct callers of a method (1-hop reverse)."""
+        return self._index.get_callers(class_name, method_name)
+
+    def get_direct_callees(
+        self, class_name: str, method_name: str
+    ) -> List["CallEdge"]:
+        """Get methods called by a method (1-hop forward)."""
+        return self._index.get_callees(class_name, method_name)
+
 
 class L5IndexAdapter:
     """
@@ -48,7 +115,7 @@ class L5IndexAdapter:
 
     def __init__(
         self,
-        index: WorkspaceFileIndex,
+        index: "WorkspaceFileIndex",
         canonical_root: Optional[Path] = None,
     ) -> None:
         self._index = index
@@ -111,16 +178,27 @@ class L5IndexAdapter:
         Check if file is referenced by other files.
 
         Returns None if reference tracking is not available.
-        Phase 1: Always returns None (not implemented).
         """
         return None
+
+    def get_entry_points_for_file(self, relative_path: str) -> List:
+        """Not available in L5 adapter."""
+        return []
+
+    def get_direct_callers(self, class_name: str, method_name: str) -> List:
+        """Not available in L5 adapter."""
+        return []
+
+    def get_direct_callees(self, class_name: str, method_name: str) -> List:
+        """Not available in L5 adapter."""
+        return []
 
 
 class FilesystemAdapter:
     """
     Fallback adapter using filesystem only.
 
-    Used when no L5 index is available.
+    Used when no index is available.
     """
 
     def __init__(self, workspace_root: Path) -> None:
@@ -165,28 +243,59 @@ class FilesystemAdapter:
         """Returns None (not implemented for filesystem adapter)."""
         return None
 
+    def get_entry_points_for_file(self, relative_path: str) -> List:
+        """Not available in filesystem adapter."""
+        return []
+
+    def get_direct_callers(self, class_name: str, method_name: str) -> List:
+        """Not available in filesystem adapter."""
+        return []
+
+    def get_direct_callees(self, class_name: str, method_name: str) -> List:
+        """Not available in filesystem adapter."""
+        return []
+
 
 def create_adapter(
-    index: Optional[WorkspaceFileIndex] = None,
+    code_index: Optional["CodeIndex"] = None,
+    l5_index: Optional["WorkspaceFileIndex"] = None,
     workspace_root: Optional[Path] = None,
 ) -> CodeIndexProtocol:
     """
     Create appropriate code index adapter.
 
+    Priority:
+    1. Phase 2 CodeIndex (if provided)
+    2. L5 WorkspaceFileIndex (if provided)
+    3. Filesystem fallback (if workspace_root provided)
+
     Args:
-        index: Optional L5 WorkspaceFileIndex.
-        workspace_root: Optional workspace root path (required if no index).
+        code_index: Optional Phase 2 CodeIndex.
+        l5_index: Optional L5 WorkspaceFileIndex.
+        workspace_root: Optional workspace root path.
 
     Returns:
         CodeIndexProtocol implementation.
 
     Raises:
-        ValueError: If neither index nor workspace_root provided.
+        ValueError: If no index or workspace_root provided.
     """
-    if index is not None:
-        return L5IndexAdapter(index)
+    if code_index is not None:
+        return StructuredIndexAdapter(code_index)
+
+    if l5_index is not None:
+        return L5IndexAdapter(l5_index)
 
     if workspace_root is not None:
         return FilesystemAdapter(workspace_root)
 
-    raise ValueError("Either index or workspace_root must be provided")
+    raise ValueError("Either code_index, l5_index, or workspace_root must be provided")
+
+
+# Legacy compatibility
+def create_adapter_legacy(
+    index: Optional["WorkspaceFileIndex"] = None,
+    workspace_root: Optional[Path] = None,
+) -> CodeIndexProtocol:
+    """Legacy create_adapter for Phase 1 compatibility."""
+    return create_adapter(l5_index=index, workspace_root=workspace_root)

@@ -1,12 +1,15 @@
 """
-Product Authority Layer — Foundation Module.
+Product Authority Layer — Foundation + Code Understanding Module.
 
 Provides:
-- Authority registry loading and validation
-- Drift/freshness classification
-- Pre-boost structural validation
+- Authority registry loading and validation (Phase 1)
+- Drift/freshness classification (Phase 1)
+- Pre-boost structural validation (Phase 1)
+- Code index building and extraction (Phase 2)
+- Entry point detection (Phase 2)
+- Call edge extraction (Phase 2)
 
-Phase 1: Data + validation only. No ranking integration.
+Phase 1+2: Data + validation + structure. No ranking integration yet.
 """
 
 from runtime.layer5.authority.registry_loader import (
@@ -23,8 +26,27 @@ from runtime.layer5.authority.validation import (
     validate_authority,
     ValidationResult,
 )
+from runtime.layer5.authority.code_index_models import (
+    CodeIndex,
+    FileRecord,
+    ClassRecord,
+    MethodRecord,
+    CallEdge,
+    EntryPointRecord,
+    EntryPointType,
+)
+from runtime.layer5.authority.code_index_builder import (
+    build_index,
+    CodeIndexBuilder,
+)
+from runtime.layer5.authority.code_index_adapter import (
+    create_adapter,
+    StructuredIndexAdapter,
+    CodeIndexProtocol,
+)
 
 __all__ = [
+    # Phase 1
     "AuthorityRegistry",
     "load_registry",
     "AuthorityRegistryError",
@@ -33,4 +55,17 @@ __all__ = [
     "AuthorityState",
     "validate_authority",
     "ValidationResult",
+    # Phase 2
+    "CodeIndex",
+    "FileRecord",
+    "ClassRecord",
+    "MethodRecord",
+    "CallEdge",
+    "EntryPointRecord",
+    "EntryPointType",
+    "build_index",
+    "CodeIndexBuilder",
+    "create_adapter",
+    "StructuredIndexAdapter",
+    "CodeIndexProtocol",
 ]
