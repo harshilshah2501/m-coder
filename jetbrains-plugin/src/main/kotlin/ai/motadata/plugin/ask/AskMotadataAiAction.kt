@@ -115,11 +115,10 @@ class AskMotadataAiAction : AnAction() {
     }
 
     private fun showPlanOnlyResult(project: Project, question: String, response: RuntimeResponse) {
-        val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
         val fullBody = buildAskResultDialogMessage(question, response)
         val summary = buildAskResultSummaryMessage(question, response)
         val title =
-            if (explainDebug != null) "Ask Motadata AI — Explain/Debug" else "Ask Motadata AI — PLAN ONLY"
+            if (isExplainDebugAskUi(response)) "Ask Motadata AI — Explain/Debug" else "Ask Motadata AI — PLAN ONLY"
 
         val group = NotificationGroupManager.getInstance().getNotificationGroup("Motadata AI")
         if (group == null) {
@@ -127,7 +126,14 @@ class AskMotadataAiAction : AnAction() {
             return
         }
 
-        val notification = group.createNotification(title, summary, NotificationType.INFORMATION)
+        val pluginRoute = response.metadata[AskPluginRouting.METADATA_KEY] as? String
+        val notifyType = when (pluginRoute) {
+            AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK,
+            AskPluginRouting.CONTEXT_EXPORT_THEN_V0,
+            -> NotificationType.WARNING
+            else -> NotificationType.INFORMATION
+        }
+        val notification = group.createNotification(title, summary, notifyType)
         notification.addAction(
             NotificationAction.createSimple("View full response") {
                 Messages.showInfoMessage(project, fullBody, title)

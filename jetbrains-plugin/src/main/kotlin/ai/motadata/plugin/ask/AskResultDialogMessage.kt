@@ -1,8 +1,13 @@
 package ai.motadata.plugin.ask
 
+import ai.motadata.plugin.bridge.AskPluginRouting
 import ai.motadata.plugin.bridge.RuntimeResponse
 
 private const val ASK_SUMMARY_SNIPPET_MAX = 360
+
+/** UI mode from backend [routing_mode] only — never from payload shape or [explain_debug] presence. */
+internal fun isExplainDebugAskUi(response: RuntimeResponse): Boolean =
+    response.metadata["routing_mode"] as? String == "explain_debug"
 
 /**
  * Short notification-friendly summary (outcome, key calibration, main answer preview).
@@ -16,6 +21,7 @@ internal fun buildAskResultSummaryMessage(question: String, response: RuntimeRes
     if (qShort.isNotEmpty()) {
         sb.appendLine("Query: $qShort")
     }
+    appendPluginAskTruthSummaryLines(sb, response)
     val bm = response.metadata["backend_metadata"] as? Map<*, *>
     if (bm != null) {
         val eq = (bm["evidence_quality"] as? String)?.trim()
@@ -28,14 +34,14 @@ internal fun buildAskResultSummaryMessage(question: String, response: RuntimeRes
         }
     }
 
-    val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
-    if (explainDebug != null) {
-        val err = explainDebug["error"] as? String
+    if (isExplainDebugAskUi(response)) {
+        val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
+        val err = explainDebug?.get("error") as? String
         if (err != null) {
             val short = err.trim().let { if (it.length > 140) it.take(140) + "…" else it }
             sb.appendLine("Reasoning unavailable: $short")
         } else {
-            val sum = (explainDebug["summary"] as? String)?.trim()
+            val sum = (explainDebug?.get("summary") as? String)?.trim()
             if (!sum.isNullOrEmpty()) {
                 sb.appendLine()
                 sb.appendLine("Summary")
@@ -93,21 +99,25 @@ internal fun buildAskResultDialogMessage(question: String, response: RuntimeResp
     val sb = StringBuilder()
     sb.appendLine("request_id: ${response.requestId ?: "(none)"}")
     sb.appendLine()
+    appendPluginAskTruthBlock(sb, response)
     appendBackendTruthSection(sb, response)
     appendResponseProvenanceSection(sb, response)
 
     val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
 
-    if (explainDebug != null) {
+    if (isExplainDebugAskUi(response)) {
         sb.appendLine("═══════════════════════════════════════════")
         sb.appendLine("  Explain/Debug — PLAN ONLY")
         sb.appendLine("═══════════════════════════════════════════")
         sb.appendLine()
-        val err = explainDebug["error"] as? String
+        val err = explainDebug?.get("error") as? String
         if (err != null) {
             sb.appendLine("Reasoning unavailable: $err")
             sb.appendLine()
             sb.appendLine("No template steps were substituted. Ensure the reasoning service is running (e.g. vLLM) and MOTADATA_EXPLAIN_VLLM_URL is set if needed.")
+        } else if (explainDebug == null) {
+            sb.appendLine("(routing_mode is explain_debug but explain_debug payload is absent — backend truth incomplete.)")
+            sb.appendLine()
         } else {
             (explainDebug["summary"] as? String)?.takeIf { it.isNotBlank() }?.let {
                 sb.appendLine("Summary")
@@ -239,6 +249,42 @@ internal fun buildAskResultDialogMessage(question: String, response: RuntimeResp
     sb.appendLine("───────────────────────────────────────────")
 
     return sb.toString()
+}
+
+private fun appendPluginAskTruthSummaryLines(sb: StringBuilder, response: RuntimeResponse) {
+    val tid = response.metadata["trace_id"] as? String
+    val rm = response.metadata["routing_mode"] as? String
+    val par = response.metadata[AskPluginRouting.METADATA_KEY] as? String
+    if (!tid.isNullOrBlank()) sb.appendLine("trace_id: $tid")
+    if (!rm.isNullOrBlank()) sb.appendLine("routing_mode: $rm")
+    if (!par.isNullOrBlank()) {
+        sb.appendLine("plugin_ask_routing: $par")
+        if (par == AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK ||
+            par == AskPluginRouting.CONTEXT_EXPORT_THEN_V0
+        ) {
+            sb.appendLine("Note: response used a plugin fallback path (see full response for details).")
+        }
+    }
+}
+
+private fun appendPluginAskTruthBlock(sb: StringBuilder, response: RuntimeResponse) {
+    sb.appendLine("Plugin routing (truth)")
+    sb.appendLine("────────────────────")
+    val tid = response.metadata["trace_id"] as? String
+    val rm = response.metadata["routing_mode"] as? String
+    val par = response.metadata[AskPluginRouting.METADATA_KEY] as? String
+    sb.appendLine("trace_id: ${tid ?: "(not set)"}")
+    sb.appendLine("routing_mode: ${rm ?: "(not set)"}")
+    sb.appendLine("plugin_ask_routing: ${par ?: "(not set)"}")
+    @Suppress("UNCHECKED_CAST")
+    val decision = response.metadata["plugin_ask_routing_decision"] as? Map<*, *>
+    if (decision != null && decision.isNotEmpty()) {
+        sb.appendLine("plugin_ask_routing_decision:")
+        decision.entries.sortedBy { it.key.toString() }.forEach { (k, v) ->
+            sb.appendLine("  $k: $v")
+        }
+    }
+    sb.appendLine()
 }
 
 /**

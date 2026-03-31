@@ -1,12 +1,38 @@
 package ai.motadata.plugin.ask
 
+import ai.motadata.plugin.bridge.AskPluginRouting
 import ai.motadata.plugin.bridge.RuntimeOutcome
 import ai.motadata.plugin.bridge.RuntimeResponse
 import ai.motadata.plugin.bridge.RuntimeUi
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AskResultDialogMessageTest {
+
+    private fun planTruthMeta(requestId: String = "r1", traceId: String = "trace-plan-1"): Map<String, Any?> = mapOf(
+        "trace_id" to traceId,
+        "routing_mode" to "plan_only",
+        "plugin_ask_routing" to AskPluginRouting.V1_SUCCESS,
+        "plugin_ask_routing_decision" to mapOf(
+            "attempt" to "v1",
+            "result" to "success",
+            "trace_id" to traceId,
+            "request_id" to requestId,
+        ),
+    )
+
+    private fun explainTruthMeta(): Map<String, Any?> = mapOf(
+        "trace_id" to "trace-explain-1",
+        "routing_mode" to "explain_debug",
+        "plugin_ask_routing" to AskPluginRouting.V1_SUCCESS,
+        "plugin_ask_routing_decision" to mapOf(
+            "attempt" to "v1",
+            "result" to "success",
+            "trace_id" to "trace-explain-1",
+            "request_id" to "r2",
+        ),
+    )
 
     @Test
     fun `plan only message includes evidence quality and reasons`() {
@@ -14,7 +40,7 @@ class AskResultDialogMessageTest {
             outcome = RuntimeOutcome.BOUNDED_ALLOW,
             requestId = "r1",
             ui = RuntimeUi(title = "T", message = "M", severity = "info"),
-            metadata = mapOf(
+            metadata = planTruthMeta() + mapOf(
                 "backend_metadata" to mapOf(
                     "evidence_quality" to "WEAK",
                     "intent_type" to "CODE_INTENT",
@@ -33,7 +59,7 @@ class AskResultDialogMessageTest {
                     "files" to emptyList<Any>(),
                     "selectors_used" to emptyList<Any>(),
                 ),
-            ),
+            )
         )
         val full = buildAskResultDialogMessage("q?", response)
         val summary = buildAskResultSummaryMessage("q?", response)
@@ -62,7 +88,7 @@ class AskResultDialogMessageTest {
             outcome = RuntimeOutcome.BOUNDED_ALLOW,
             requestId = "r2",
             ui = null,
-            metadata = mapOf(
+            metadata = explainTruthMeta() + mapOf(
                 "backend_metadata" to mapOf(
                     "evidence_quality" to "STRONG",
                     "intent_type" to "EXPLAIN_DEBUG",
@@ -75,7 +101,7 @@ class AskResultDialogMessageTest {
                     "ask_path" to "v1_evidence",
                     "context_source" to "layer5.evidence_bundle.v1",
                 ),
-            ),
+            )
         )
         val msg = buildAskResultDialogMessage("q?", response)
         assertTrue(msg.startsWith("request_id: r2"), msg)
@@ -95,7 +121,7 @@ class AskResultDialogMessageTest {
             outcome = RuntimeOutcome.BOUNDED_ALLOW,
             requestId = "r2b",
             ui = null,
-            metadata = mapOf(
+            metadata = explainTruthMeta() + mapOf(
                 "backend_metadata" to mapOf(
                     "evidence_quality" to "WEAK",
                     "intent_type" to "CODE_INTENT",
@@ -140,7 +166,7 @@ class AskResultDialogMessageTest {
             outcome = RuntimeOutcome.BOUNDED_ALLOW,
             requestId = "r3",
             ui = null,
-            metadata = mapOf(
+            metadata = planTruthMeta(requestId = "r3", traceId = "trace-r3") + mapOf(
                 "backend_metadata" to mapOf("evidence_quality" to "STRONG", "quality_reasons" to emptyList<String>()),
                 "evidence_bundle" to mapOf("schema_version" to "layer5.evidence_bundle.v1", "entries" to emptyList<Any>()),
                 "evidence_first_meta" to mapOf(
@@ -154,7 +180,7 @@ class AskResultDialogMessageTest {
                     "files" to emptyList<Any>(),
                     "selectors_used" to emptyList<Any>(),
                 ),
-            ),
+            )
         )
         val msg = buildAskResultDialogMessage("q", response)
         assertTrue(msg.contains("evidence_bundle: present in response"), msg)
@@ -169,14 +195,14 @@ class AskResultDialogMessageTest {
             outcome = RuntimeOutcome.BOUNDED_ALLOW,
             requestId = "r4",
             ui = null,
-            metadata = mapOf(
+            metadata = planTruthMeta(requestId = "r4", traceId = "trace-r4") + mapOf(
                 "evidence_first_meta" to mapOf(
                     "used_layer5" to true,
                     "workspace_input_path" to "/tmp/ws",
                 ),
                 "plan_summary" to mapOf("steps" to listOf("s")),
                 "context_bundle" to mapOf("revision" to "r", "files" to emptyList<Any>(), "selectors_used" to emptyList<Any>()),
-            ),
+            )
         )
         val msg = buildAskResultDialogMessage("q", response)
         assertTrue(msg.contains("used_layer5: true"), msg)

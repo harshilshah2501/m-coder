@@ -3,6 +3,7 @@ package ai.motadata.plugin.ask
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
+import ai.motadata.plugin.bridge.AskPluginRouting
 import ai.motadata.plugin.bridge.MotadataRuntimeConfig
 import ai.motadata.plugin.util.GitInfoUtil
 import ai.motadata.plugin.util.ProjectWorkspacePaths
@@ -30,7 +31,13 @@ data class AskResult(
     val planSteps: List<String>,
     val uiTitle: String?,
     val uiMessage: String?,
-    val error: String?
+    val error: String?,
+    /** Backend correlation; null if absent from JSON. */
+    val traceId: String? = null,
+    /** Backend [routing_mode]; null if absent. */
+    val routingMode: String? = null,
+    /** Always [AskPluginRouting.V0_DIRECT] for this client (POST /v0/ask only). */
+    val pluginAskRouting: String = AskPluginRouting.V0_DIRECT,
 )
 
 class AskClient(
@@ -52,7 +59,10 @@ class AskClient(
                 planSteps = emptyList(),
                 uiTitle = null,
                 uiMessage = null,
-                error = e.message ?: "Unknown error calling /v0/ask"
+                error = e.message ?: "Unknown error calling /v0/ask",
+                traceId = null,
+                routingMode = null,
+                pluginAskRouting = AskPluginRouting.V0_DIRECT,
             )
         }
     }
@@ -83,6 +93,8 @@ class AskClient(
 
         val posture = root.getAsJsonPrimitive("governance_posture")?.asString
         val execution = root.getAsJsonPrimitive("execution")?.asBoolean
+        val traceId = root.getAsJsonPrimitive("trace_id")?.asString
+        val routingMode = root.getAsJsonPrimitive("routing_mode")?.asString
 
         val contextBundle = root.getAsJsonObject("context_bundle")
         val revision = contextBundle?.getAsJsonPrimitive("revision")?.asString
@@ -117,7 +129,10 @@ class AskClient(
             planSteps = steps,
             uiTitle = uiTitle,
             uiMessage = uiMessage,
-            error = if (postureOk && executionOk) null else "Invalid posture/execution in response"
+            error = if (postureOk && executionOk) null else "Invalid posture/execution in response",
+            traceId = traceId,
+            routingMode = routingMode,
+            pluginAskRouting = AskPluginRouting.V0_DIRECT,
         )
     }
 

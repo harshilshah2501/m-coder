@@ -12,6 +12,26 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 /**
+ * Merges plugin-side Ask truth into [RuntimeResponse.metadata] for UI and tests.
+ * UI mode must use backend [routing_mode] only; this adds trace and routing labels.
+ */
+internal fun mergeAskPluginRoutingMetadata(
+    response: RuntimeResponse,
+    traceId: String,
+    pluginAskRouting: String,
+    decision: AskRoutingDecision,
+): RuntimeResponse {
+    val md = response.metadata.toMutableMap()
+    val existingTrace = md["trace_id"] as? String
+    if (existingTrace.isNullOrBlank()) {
+        md["trace_id"] = traceId
+    }
+    md[AskPluginRouting.METADATA_KEY] = pluginAskRouting
+    md["plugin_ask_routing_decision"] = decision.toMetadataMap()
+    return response.copy(metadata = md)
+}
+
+/**
  * Thrown when the runtime returns an HTTP error status (4xx/5xx).
  * Service was reachable; the request or server state was invalid.
  * Must NOT be mapped to RUNTIME_UNAVAILABLE.
@@ -146,15 +166,19 @@ class RuntimeBridge(
     private fun callAskEndpoint(request: RuntimeRequest): RuntimeResponse {
         val traceId = "trace-" + UUID.randomUUID().toString()
         if (!request.evidenceFirst) {
-            AskRoutingDecisionLog.log(
+            val decision = AskRoutingDecision(
                 requestId = request.requestId,
                 traceId = traceId,
                 attempt = "v0",
                 result = "direct",
             )
+            AskRoutingDecisionLog.log(decision)
             return postV0Ask(
                 request.requestId,
                 buildAskRequestV0(request, includeEvidenceFirstFlag = false, traceId = traceId),
+                traceId = traceId,
+                pluginAskRouting = AskPluginRouting.V0_DIRECT,
+                decision = decision,
             )
         }
 
@@ -170,17 +194,20 @@ class RuntimeBridge(
                     formatContextLayerServiceFailure(exportOutcome),
                 )
             is EvidenceExportOutcome.Unreachable -> {
-                AskRoutingDecisionLog.log(
+                val decision = AskRoutingDecision(
                     requestId = request.requestId,
                     traceId = traceId,
                     attempt = "context_export",
                     result = "unreachable",
                     fallbackTo = "v0",
                 )
+                AskRoutingDecisionLog.log(decision)
                 return postV0Ask(
                     request.requestId,
                     buildAskRequestV0(request, includeEvidenceFirstFlag = true, traceId = traceId),
-                    pluginAskRouting = AskPluginRouting.V0_AFTER_EVIDENCE_EXPORT_UNREACHABLE,
+                    traceId = traceId,
+                    pluginAskRouting = AskPluginRouting.CONTEXT_EXPORT_THEN_V0,
+                    decision = decision,
                 )
             }
             is EvidenceExportOutcome.Success -> exportOutcome.bundleJson
@@ -198,13 +225,20 @@ class RuntimeBridge(
         val v1Body = AskV1Contract.buildAskRequestV1Json(gson, request, evidenceObj, traceId)
         return try {
             val responseJson = postJson("$baseUrl/v1/ask", v1Body)
-            AskRoutingDecisionLog.log(
+            val v1Decision = AskRoutingDecision(
                 requestId = request.requestId,
                 traceId = traceId,
                 attempt = "v1",
                 result = "success",
             )
-            parseAskResponse(request.requestId, responseJson)
+            AskRoutingDecisionLog.log(v1Decision)
+            val parsed = parseAskResponse(request.requestId, responseJson)
+            mergeAskPluginRoutingMetadata(
+                parsed,
+                traceId,
+                AskPluginRouting.V1_SUCCESS,
+                v1Decision,
+            )
         } catch (e: RuntimeHttpException) {
             when {
                 AskV1Contract.isContractClientFailure(e.statusCode, e.responseBody) ->
@@ -213,7 +247,7 @@ class RuntimeBridge(
                         AskV1Contract.formatV1FailureMessage(e.statusCode, e.responseBody),
                     )
                 AskV1Contract.shouldFallbackV1ToV0(e.statusCode) -> {
-                    AskRoutingDecisionLog.log(
+                    val decision = AskRoutingDecision(
                         requestId = request.requestId,
                         traceId = traceId,
                         attempt = "v1",
@@ -221,10 +255,13 @@ class RuntimeBridge(
                         reason = e.statusCode.toString(),
                         fallbackTo = "v0",
                     )
+                    AskRoutingDecisionLog.log(decision)
                     postV0Ask(
                         request.requestId,
                         buildAskRequestV0(request, includeEvidenceFirstFlag = true, traceId = traceId),
+                        traceId = traceId,
                         pluginAskRouting = AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK,
+                        decision = decision,
                     )
                 }
                 else ->
@@ -247,18 +284,14 @@ class RuntimeBridge(
     private fun postV0Ask(
         requestId: String,
         body: String,
-        pluginAskRouting: String? = null,
+        traceId: String,
+        pluginAskRouting: String,
+        decision: AskRoutingDecision,
     ): RuntimeResponse {
         return try {
             val responseJson = postJson("$baseUrl/v0/ask", body)
             val parsed = parseAskResponse(requestId, responseJson)
-            if (pluginAskRouting.isNullOrBlank()) {
-                parsed
-            } else {
-                parsed.copy(
-                    metadata = parsed.metadata + mapOf(AskPluginRouting.METADATA_KEY to pluginAskRouting),
-                )
-            }
+            mergeAskPluginRoutingMetadata(parsed, traceId, pluginAskRouting, decision)
         } catch (e: RuntimeHttpException) {
             RuntimeResponse.unknown(requestId, e.message ?: "Bad request")
         } catch (e: Exception) {

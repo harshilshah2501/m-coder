@@ -5,11 +5,11 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-30  
+- **Last updated**: 2026-03-31  
 - **Program state**: **Retrieval baseline locked → validation and system hardening phase**
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **Action #9 — FUNCTIONALLY CLOSED (Audit pack pending)** — per `docs/production_closure_handbook_corrected_canonical_version.md`. Host-A **functional** validation (Ask, Explain/Debug, Execute boundary, No-match, Failure) is complete; **no new TRUE_PRODUCT_BLOCKER** proven in this slice. **Audit pack** work (formal `mapping_request_ids.md`, per-scenario folder packaging, validation sheets) is **tracked, non-blocking** — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md` and `docs/guides/HOST_A_PLAN_GATE_LOG_MAPPING.md`. **Action #7 — Validate Execute path rigorously** is **COMPLETE** (live HTTP `POST /v0/execute` product path: **`EXECUTED_FAILED` vs `BLOCKED`** honesty; **`plan_gate_*` client hints rejected by default** unless explicit test-only env). **Action #8 — Validate no-match honesty** remains **SATISFIED** under **L5.8 / Action 3** closure (not reactivated). **Action #6 — Validate Explain/Debug path rigorously** is **COMPLETE** (server-side Explain/Debug trust proof; plugin truth-surface preservation and rendering proof). **Caveat:** Explain/Debug trust proof is complete across server and plugin contract surfaces. Remaining IntelliJ plugin `:test` runtime execution is environment/tooling debt, not unfinished Action 6 product logic. **Action #5 — Plan-Gate observability / L5-OBS-1 (main HTTP path)** is **COMPLETE** (structured logging and `request_id` correlation across Context Layer, Plan-Gate, and explain/debug). **Action #4 — Plugin Truthfulness Alignment** is **COMPLETE** for product-truthfulness logic (metadata, provenance, calibration surfaced in Ask UI). **L5.8 — Grounded Ask Validation + Metrics** is **COMPLETE** (hard gates satisfied). **L5.9** and **M3.18** remain downstream. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
+- **Current active milestone focus**: **Action #9 — FUNCTIONALLY CLOSED (Audit pack pending)** — per `docs/production_closure_handbook_corrected_canonical_version.md`. Host-A **functional** validation (Ask, Explain/Debug, Execute boundary, No-match, Failure) is complete; **no new TRUE_PRODUCT_BLOCKER** proven in this slice. **Audit pack** work (formal `mapping_request_ids.md`, per-scenario folder packaging, validation sheets) is **tracked, non-blocking** — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md` and `docs/guides/HOST_A_PLAN_GATE_LOG_MAPPING.md`. **Action #7 — Validate Execute path rigorously** is **COMPLETE** (live HTTP `POST /v0/execute` product path: **`EXECUTED_FAILED` vs `BLOCKED`** honesty; **`plan_gate_*` client hints rejected by default** unless explicit test-only env). **Action #8 — Validate no-match honesty** remains **SATISFIED** under **L5.8 / Action 3** closure (not reactivated). **Action #6 — Validate Explain/Debug path rigorously** is **COMPLETE** (server-side Explain/Debug trust proof; plugin truth-surface preservation and rendering proof). **Caveat:** Explain/Debug trust proof is complete across server and plugin contract surfaces. Remaining IntelliJ plugin `:test` runtime execution is environment/tooling debt, not unfinished Action 6 product logic. **Action #5 — Plan-Gate observability / L5-OBS-1 (main HTTP path)** is **COMPLETE** (structured logging and `request_id` correlation across Context Layer, Plan-Gate, and explain/debug). **Action #4 — Plugin Truthfulness Alignment** is **COMPLETE** for product-truthfulness logic (metadata, provenance, calibration surfaced in Ask UI). **L5.8 — Grounded Ask Validation + Metrics** is **COMPLETE** (hard gates satisfied). **Action 11 / L5.9 — Compatibility Path Hardening** is **CLOSED** (2026-03-31; evidence **§6.17**). **M3.18** remains downstream. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -151,9 +151,14 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Config externalization (no hardcoded localhost assumptions)
 
 ### B6 — Compatibility Path Hardening (L5.9)
-- Define canonical repo_root behavior
-- Control fallback paths explicitly
-- Remove ambiguity between old/new paths
+**Status:** **CLOSED** (Action 11, 2026-03-31) — tracker row **L5.9**; evidence **§6.17**.
+
+- Path routing made explicit (`ask_path`, structured Plan-Gate / plugin logs).
+- Trace chain established (`trace_id` end-to-end; `PLAN_GATE request` + `ROUTING_DECISION` where applicable).
+- Fallback no longer silent (controlled v1→v0; contract failures do not silently fall back; plugin logs routing decisions).
+- Explain vs planner distinction observable (`routing_mode`, `EXPLAIN_DEBUG` vs plan-only).
+
+**Closure bar (numbered):** *Fallback rules documented and controlled; no silent path ambiguity remains.*
 
 ## L5-RET — RETRIEVAL POLICY BASELINE + VALIDATION TRACK
 
@@ -685,11 +690,11 @@ Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
 
 #### Completed
 - L5.1 → L5.6: Indexing, retrieval, evidence schema, Ask path integration
+- **L5.9:** Compatibility path hardening — **Action 11 CLOSED** (2026-03-31); see **§6.17** and runbook `docs/guides/ACTION_11_LINUX_TEST_RUNBOOK.md`.
 
 #### In Progress / Not Started
 - L5.7: Dirty buffer overlay
 - L5.8: Grounded Ask validation
-- L5.9: Compatibility path hardening
 
 #### New Required Tracks
 - L5-RET: Retrieval Baseline Preservation + Validation Generalization
@@ -712,7 +717,7 @@ Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
 | L5.6 | Plan-Gate Evidence Ingestion (A8)          | COMPLETE    | L5.4–L5.5, M3.5 | Plan-Gate `POST /v1/ask` validates/consumes `layer5.evidence_bundle.v1`; reasoning from bundle only (no repo ContextEngine on v1 path). See **§6.15**.                                                                                            |
 | L5.7 | Dirty Buffer / Live File Overlay           | NOT_STARTED | L5.5            | Retrieval and snippet extraction can include unsaved editor buffers via deterministic overlay rules without mutating on-disk index truth.                                                                                                         |
 | L5.8 | Grounded Ask Validation + Metrics          | NOT_STARTED | L5.6, L4        | Validation harness + metrics for grounded Ask validity, invalid-empty detection, no-match explainability coverage, and retrieval/Ask latency SLO tracking. **Note:** L5.7 (Dirty Buffer) is not a blocking dependency for L5.8; L5.8 validation runs on on-disk repository state, while dirty-buffer support is a correctness extension. |
-| L5.9 | Compatibility Path Deprecation / Hardening | NOT_STARTED | L5.6–L5.8       | Compatibility transition with feature flags, controlled fallback path, and telemetry comparison between compatibility and workspace-local evidence paths before hardening default.                                                                |
+| L5.9 | Compatibility Path Deprecation / Hardening | **COMPLETE** (Action 11, 2026-03-31) | L5.6–L5.8       | **Action 11 closure:** explicit path routing + `trace_id` / `routing_mode`; structured `ROUTING_DECISION` (plugin) + Plan-Gate request logging; controlled v1→v0 fallback (no silent ambiguity); explain vs planner observable. Runbook: `docs/guides/ACTION_11_LINUX_TEST_RUNBOOK.md`; capture script: `scripts/action11_one_shot_capture.sh`. Evidence folder (example): `Action-11-artifacts-20260331-103853`. Broader “deprecation program” / telemetry gates may continue as separate follow-ons.                                                                |
 
 
 #### 4.5.1a L5.4 — Evidence contract (freeze)
@@ -781,7 +786,7 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   2. **L5-OBS-1** Observability & Tracing (parallel hard gate)
   3. **Plugin Truthfulness Alignment** (parallel hard gate)
   4. **M3.18** task-level Ask/Debug/Plan/Code evaluation (downstream)
-  5. **L5.9** compatibility path hardening (downstream after grounded-input stability)
+  5. ~~**L5.9** compatibility path hardening~~ **DONE** (Action 11, §6.17)
   6. Host readiness / acceptance / release sign-off
 - **Related (M3.12):** Manifest + `doc_selector` repo-aware slice **merged** into `feature/l5-context-layer-v1-ask-packaging`. **M3.13** (Jira) / **M3.14** (PR) ingestion — NOT_STARTED.
 - **Current blockers**:
@@ -1034,6 +1039,14 @@ This section records **evidence of completed milestones**. Entries should be **a
   - `feature/m3.17-task-schema` — task-model slice + `**docs/runtime/C1_EXECUTION_TRACE_BUILDER_RESULT.md`** unified (M3.17 pre-merge sign-off appended).
 - **Operator docs (in-repo):** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md` (architecture); `docs/MOTADATA_DEMO_SETUP_RUNBOOK.md` (setup); `docs/MOTADATA_DEMO_SCENARIOS.md` (demo + success criteria).
 - **Local cleanup:** After push, safe to `**git branch -d`** the merged topic branches listed in **§5 Immediate next action** (local only unless coordinated for `origin`).
+
+### 6.17 Action 11 — Compatibility Path Hardening (L5.9) — CLOSED (2026-03-31)
+
+- **Milestone**: **L5.9** compatibility path hardening delivered as **Action 11** — explicit routing, trace chain, non-silent fallback, explain/planner observability.
+- **Closure bar:** *Fallback rules documented and controlled; no silent path ambiguity remains.*
+- **Evidence pack (operator-local, example run):** folder `Action-11-artifacts-20260331-103853` under the operator home (contains `pytest-action11.txt`, `plan-gate.stderr.log`, `context-layer.stderr.log`, `response_v1.json` / `response_v0_fb.json` / `response_explain.json`, `artifact4_metadata.txt`, `artifact4_plugin_ROUTING_DECISION.txt`, `RUN_SUMMARY.txt`).
+- **Regression / automation:** `python3 -m pytest` targets in `docs/guides/ACTION_11_LINUX_TEST_RUNBOOK.md` (Track A); one-shot capture: `scripts/action11_one_shot_capture.sh`.
+- **Branch (development line):** `feature/action-11-path-hardening-trace-routing` (schemas, Plan-Gate, plugin `AskRoutingDecisionLog`, tests).
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
