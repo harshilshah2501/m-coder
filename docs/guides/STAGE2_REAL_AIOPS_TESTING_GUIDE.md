@@ -20,6 +20,18 @@ This guide is for running the Stage 2 **retrieval + quality-gate** harness again
 
 You are **not** validating vLLM or Plan-Gate HTTP in this runner unless you add separate E2E steps; the Stage 2 runner is **retrieval-truth** first.
 
+### Context Layer, Plan-Gate, and GPU — not required for the runner
+
+`stage2_runner.py` does **not** start or call the Context Layer HTTP service. Indexing and retrieval run **in-process** in Python against `--workspace_root`. With `--write_traces`, evidence bundles are built via the same **`export_evidence_bundle_dict`** code path the service uses, but **without** binding a port or running a server.
+
+| Service | Needed for Stage 2 runner? |
+|---------|----------------------------|
+| **Context Layer** (`/v1/export_evidence`) | **No** (optional only for [§8](#8-optional-context-layer-parity-check) HTTP parity) |
+| **Plan-Gate** | **No** |
+| **vLLM / GPU** | **No** |
+
+So on WSL you only need: Python, m-coder checkout, Motadata path, `PYTHONPATH`. No `systemctl`, Docker, or governed-services stack for this harness.
+
 ---
 
 ## 2. Prerequisites
@@ -117,6 +129,8 @@ PYTHONPATH=. python3 validation/stage2_runner.py \
 ```
 
 That folder contains the standard set: `stage2_metrics_report.md`, `stage2_results_sheet.csv`, `stage2_runner_manifest.json`, `stage2_failure_log.md`, and `stage2_trace_samples/` (per-case `evidence_bundle.json` / `case_meta.json` when `--write_traces` was used).
+
+Any directory you pass to `--output_dir` is fine (e.g. `~/stage-2-artifacts/aiops_wsl_20260401_094003/` vs under `~/Harshil-PoCs/`); artifacts are always written to that path only.
 
 ---
 
