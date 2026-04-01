@@ -1,0 +1,26 @@
+Action 10 — Effective Linux IDE settings (inspected 2026-03-30)
+
+Source file read: /home/harshil/.config/JetBrains/IntelliJIdea2026.1/idea64.vmoptions
+
+Lines containing motadata.* in that file: none.
+
+Effective values (from plugin source when JVM properties are unset):
+- motadata.ask.evidence_first
+  - JVM property: not set in idea64.vmoptions
+  - Env MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST: not inspected (would require IDE launch environment)
+  - Effective default: false (see jetbrains-plugin/.../MotadataAskFlags.kt)
+
+- motadata.context_layer.url
+  - JVM property: not set in idea64.vmoptions
+  - Env MOTADATA_CONTEXT_LAYER_URL: not inspected
+  - Effective default: http://127.0.0.1:8091 (see Layer5EvidenceExporter.resolveContextLayerBaseUrl)
+
+- motadata.plan_gate.url
+  - JVM property: not set in idea64.vmoptions
+  - Env MOTADATA_PLAN_GATE_URL: not inspected
+  - Effective default: http://127.0.0.1:8089 (see MotadataRuntimeConfig.planGateBaseUrl)
+
+Closure note: For parity with Host Profile A evidence-first Ask, the runbook expects explicit:
+  -Dmotadata.ask.evidence_first=true
+  -Dmotadata.context_layer.url=http://127.0.0.1:8091
+in Help → Edit Custom VM Options, then IDE restart. Those lines were not present in the inspected vmoptions file at capture time.

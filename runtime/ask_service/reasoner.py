@@ -37,26 +37,16 @@ def _explain_debug_request_log(
     trace_id: str = "",
 ) -> None:
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
-    tid = (trace_id or "").strip()
-    if tid:
-        LOG.info(
-            "EXPLAIN_DEBUG trace_id=%s request_id=%s base_url=%s model=%s status=%s duration_ms=%.2f",
-            tid,
-            request_id,
-            base_url,
-            model,
-            status,
-            elapsed_ms,
-        )
-    else:
-        LOG.info(
-            "EXPLAIN_DEBUG request_id=%s base_url=%s model=%s status=%s duration_ms=%.2f",
-            request_id,
-            base_url,
-            model,
-            status,
-            elapsed_ms,
-        )
+    tid = (trace_id or "").strip() or "(none)"
+    LOG.info(
+        "EXPLAIN_DEBUG trace_id=%s request_id=%s routing_mode=explain_debug base_url=%s model=%s status=%s duration_ms=%.2f",
+        tid,
+        request_id,
+        base_url,
+        model,
+        status,
+        elapsed_ms,
+    )
 
 
 @dataclass

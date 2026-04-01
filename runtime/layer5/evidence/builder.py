@@ -14,7 +14,7 @@ deterministic span.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from runtime.layer5.index.models import WorkspaceFileIndex
 from runtime.layer5.retrieval.models import RetrievalResult
@@ -31,12 +31,19 @@ A5_AUTHORITY_NOTE = (
 )
 
 
+def _norm_rel(path: str) -> str:
+    return path.replace("\\", "/").strip().lower()
+
+
 def build_evidence_bundle(
     retrieval: RetrievalResult,
     index: WorkspaceFileIndex,
     *,
     snippet_config: Optional[SnippetConfig] = None,
     require_identity_match: bool = True,
+    authority_resolution: Optional[Dict[str, Any]] = None,
+    structural_context: Optional[Dict[str, Any]] = None,
+    owner_evidence: Optional[Tuple[Dict[str, Any], ...]] = None,
 ) -> EvidenceBundle:
     """
     Produce an ``EvidenceBundle`` (v1) for one A5 result and its source index.
@@ -73,6 +80,20 @@ def build_evidence_bundle(
         for rank, hit in enumerate(retrieval.hits)
     )
 
+    oe: Tuple[Dict[str, Any], ...]
+    if owner_evidence is not None:
+        oe = owner_evidence
+    elif authority_resolution:
+        po = authority_resolution.get("primary_owner") or {}
+        pf = str(po.get("file") or "").strip()
+        if pf:
+            target = _norm_rel(pf)
+            oe = tuple(e.to_dict() for e in entries if _norm_rel(e.relative_path) == target)
+        else:
+            oe = ()
+    else:
+        oe = ()
+
     return EvidenceBundle(
         provisional=False,
         schema_hint=SCHEMA_HINT,
@@ -84,4 +105,7 @@ def build_evidence_bundle(
         canonical_root=str(root),
         entries=entries,
         a5_authority_note=A5_AUTHORITY_NOTE,
+        authority_resolution=authority_resolution,
+        owner_evidence=oe,
+        structural_context=structural_context,
     )

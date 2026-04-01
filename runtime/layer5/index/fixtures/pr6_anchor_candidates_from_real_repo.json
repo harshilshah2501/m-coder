@@ -1,0 +1,4022 @@
+{
+  "alert_correlation_engine_debug": [
+    {
+      "path": "motadata/src/test/resources/log_reduce.log",
+      "score": 4641,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 4661,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 4641
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/azure_storage_poll.json",
+      "score": 4289,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 4310,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 4289
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 805,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 4,
+        "content": 786,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 805
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/config-init.json",
+      "score": 1933,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1953,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 1933
+      }
+    },
+    {
+      "path": "motadata/db-files/template-widgets/oceanstor.json",
+      "score": 1483,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 1482,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1483
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+      "score": 1463,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1458,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1463
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/application-mappers.json",
+      "score": 1257,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1259,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1257
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/config/TestConfiguration.java",
+      "score": 1006,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1026,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 1006
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/runbook-plugins.json",
+      "score": 973,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 975,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 973
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 929,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 924,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 929
+      }
+    },
+    {
+      "path": "motadata/db-files/dashboard-widgets/inventory summary.json",
+      "score": 887,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 886,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 887
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 886,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 881,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 886
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/sap_maxdb_command_monitor_poll.json",
+      "score": 3637,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 3658,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 3637
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/event-policies.json",
+      "score": 802,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 804,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 802
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+      "score": 795,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 790,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 795
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+      "score": 758,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 753,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 758
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/patch/TestPatch.java",
+      "score": 744,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 764,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 744
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/accessibility.js",
+      "score": 735,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 730,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 735
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "score": 726,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 4,
+        "content": 715,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 726
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/snmp_network_connection_poll.json",
+      "score": 713,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 737,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 713
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/compliance-rules.json",
+      "score": 703,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 705,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 703
+      }
+    },
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 680,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 682,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 680
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/test-parameters.json",
+      "score": 670,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 690,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 670
+      }
+    },
+    {
+      "path": "motadata/db-files/trap-types.json",
+      "score": 659,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 661,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 659
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/APIServer.java",
+      "score": 647,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 642,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 647
+      }
+    }
+  ],
+  "topology_anomaly_detector_debug": [
+    {
+      "path": "motadata/test-plugin-metrics/oracle_index_poll.json",
+      "score": 6215,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 6235,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 6215
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/snmp_interface_poll.json",
+      "score": 5910,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 5930,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 5910
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+      "score": 1147,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1132,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1147
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/log_reduce.log",
+      "score": 5478,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5498,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 5478
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/snmp_device_discovery.json",
+      "score": 5374,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 5397,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 5374
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/sharepoint_online_poll.json",
+      "score": 5228,
+      "diagnostics": {
+        "path_lexical": 3,
+        "basename_lexical": 4,
+        "content": 5245,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 5228
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/visualization/TestVisualizationManager.java",
+      "score": 4432,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 4451,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 4432
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/cisco_ucs_fabric_interconnect_poll.json",
+      "score": 3555,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 3575,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 3555
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/test-parameters.json",
+      "score": 3318,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 3338,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 3318
+      }
+    },
+    {
+      "path": "motadata/db-files/metrics.json",
+      "score": 3137,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 3161,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 3137
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+      "score": 2960,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 2953,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2960
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/runbook-plugins.json",
+      "score": 2957,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 2955,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2957
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/mssql_session_poll.json",
+      "score": 2685,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 2708,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 2685
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 2573,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 2568,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2573
+      }
+    },
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 2367,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 2369,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2367
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/flow-domain-mappers.json",
+      "score": 2320,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 2318,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2320
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 2246,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 2239,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2246
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+      "score": 2020,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 2013,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2020
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/azure_storage_poll.json",
+      "score": 1994,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 2017,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 1994
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java",
+      "score": 1954,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1947,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1954
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/compliance-rules.json",
+      "score": 1900,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 1901,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1900
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java",
+      "score": 1752,
+      "diagnostics": {
+        "path_lexical": 3,
+        "basename_lexical": 2,
+        "content": 1742,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1752
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/nsxt_process_poll.json",
+      "score": 1706,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 1729,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 1706
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java",
+      "score": 1576,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1569,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1576
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/APIServer.java",
+      "score": 1510,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1503,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1510
+      }
+    }
+  ],
+  "ingestion_pipeline_parser_debug": [
+    {
+      "path": "motadata/src/main/resources/entity-schemas/log-parsers.json",
+      "score": 3503,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 3502,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 3503
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "score": 279,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 266,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 279
+      }
+    },
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 969,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 971,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 969
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 616,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 611,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 616
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/compliance-rules.json",
+      "score": 519,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 521,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 519
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/config-templates.json",
+      "score": 519,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 521,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 519
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/report/TestReportManager.java",
+      "score": 507,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 527,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 507
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/log_reduce.log",
+      "score": 482,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 502,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 482
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+      "score": 415,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 410,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 415
+      }
+    },
+    {
+      "path": "motadata/db-files/metrics.json",
+      "score": 402,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 416,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 402
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/LAMAIntegration.java",
+      "score": 379,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 374,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 379
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java",
+      "score": 351,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 346,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 351
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricPoller.java",
+      "score": 342,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 337,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 342
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/log/LogParser.java",
+      "score": 331,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 323,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 331
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/mysql_index_poll.json",
+      "score": 320,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 343,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 320
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/patch/TestPatch.java",
+      "score": 318,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 338,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 318
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/processor/TestLogParser.java",
+      "score": 312,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 329,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 312
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/accessibility.js",
+      "score": 304,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 299,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 304
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 280,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 275,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 280
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/visualization/TestVisualizationManager.java",
+      "score": 1472,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1492,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 1472
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 276,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 263,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 276
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java",
+      "score": 271,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 266,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 271
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/log/LogForwarder.java",
+      "score": 269,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 261,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 269
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/api/TestLogParser.java",
+      "score": 266,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 283,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 266
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+      "score": 265,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 260,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 265
+      }
+    }
+  ],
+  "ambiguous_correlation_alerts": [
+    {
+      "path": "motadata/test-plugin-metrics/oracle_index_poll.json",
+      "score": 6213,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 6233,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 6213
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/snmp_interface_poll.json",
+      "score": 5910,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 5930,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 5910
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 1284,
+      "diagnostics": {
+        "path_lexical": 4,
+        "basename_lexical": 4,
+        "content": 1263,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1284
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/log_reduce.log",
+      "score": 5478,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5498,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 5478
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/snmp_device_discovery.json",
+      "score": 5374,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 5397,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 5374
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/sharepoint_online_poll.json",
+      "score": 5044,
+      "diagnostics": {
+        "path_lexical": 3,
+        "basename_lexical": 4,
+        "content": 5061,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 5044
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/visualization/TestVisualizationManager.java",
+      "score": 4020,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 4039,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 4020
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/cisco_ucs_fabric_interconnect_poll.json",
+      "score": 3555,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 3575,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 3555
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/test-parameters.json",
+      "score": 3170,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 3190,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 3170
+      }
+    },
+    {
+      "path": "motadata/db-files/metrics.json",
+      "score": 3119,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 3143,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 3119
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/runbook-plugins.json",
+      "score": 2924,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 2922,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2924
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+      "score": 2868,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 2861,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2868
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/mssql_session_poll.json",
+      "score": 2680,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 2703,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 2680
+      }
+    },
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 2656,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 2658,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2656
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 2426,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 2421,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2426
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/flow-domain-mappers.json",
+      "score": 2319,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 2317,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2319
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 2158,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 2151,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2158
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/azure_storage_poll.json",
+      "score": 1994,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 2017,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 1994
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/compliance-rules.json",
+      "score": 1909,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 1910,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1909
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+      "score": 1850,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1843,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1850
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java",
+      "score": 1823,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1816,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1823
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java",
+      "score": 1709,
+      "diagnostics": {
+        "path_lexical": 3,
+        "basename_lexical": 2,
+        "content": 1699,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1709
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java",
+      "score": 1521,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1514,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1521
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/APIServer.java",
+      "score": 1462,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 0,
+        "content": 1455,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1462
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/mssql_index_poll.json",
+      "score": 1412,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 1432,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 1412
+      }
+    }
+  ],
+  "ambiguous_topology_graph": [
+    {
+      "path": "motadata/src/test/java/com/mindarray/topology/TestTopology.java",
+      "score": 275,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 287,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 4,
+        "noise_penalty": 11,
+        "total": 275
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "score": 266,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 258,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 266
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "score": 37,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 24,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 37
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/topology-perameters.json",
+      "score": 140,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 150,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 140
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/test-parameters.json",
+      "score": 122,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 142,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 122
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 93,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 88,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 93
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/TopologyPlugin.java",
+      "score": 86,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 78,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 86
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/topology-plugins.json",
+      "score": 83,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 75,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 83
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 62,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 57,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 62
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/cisco_aci_poll.json",
+      "score": 50,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 74,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 50
+      }
+    },
+    {
+      "path": "motadata/db-files/topology-config.json",
+      "score": 47,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 39,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 47
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java",
+      "score": 40,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 32,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 40
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+      "score": 38,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 33,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 38
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/accessibility.js",
+      "score": 37,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 32,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 37
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/topology/TestTopologyPlugins.java",
+      "score": 249,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 2,
+        "content": 261,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 4,
+        "noise_penalty": 11,
+        "total": 249
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/discovery-parameters.json",
+      "score": 37,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 57,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 37
+      }
+    },
+    {
+      "path": "motadata/db-files/trap-types.json",
+      "score": 34,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 36,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 34
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java",
+      "score": 33,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 28,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 33
+      }
+    },
+    {
+      "path": "motadata/db-files/email-templates/topology-template.ftl",
+      "score": 28,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 7,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 28
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/AIOpsObject.java",
+      "score": 28,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 23,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 28
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/samples/sample-topology.py",
+      "score": 23,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 2,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 23
+      }
+    },
+    {
+      "path": "motadata/db-files/icons/cloud-topology.png",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 0,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    },
+    {
+      "path": "motadata/db-files/icons/link-topology.png",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 0,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    },
+    {
+      "path": "motadata/db-files/icons/network-topology.png",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 0,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    },
+    {
+      "path": "motadata/db-files/icons/other-topology.png",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 0,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    }
+  ],
+  "ambiguous_metrics_ingestion_intermittent": [
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 236,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 238,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 236
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java",
+      "score": 233,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 228,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 233
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 8,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricPoller.java",
+      "score": 169,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 164,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 169
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/netroute/NetRouteResponseProcessor.java",
+      "score": 58,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 53,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 58
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ResponseProcessor.java",
+      "score": 54,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 49,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 54
+      }
+    },
+    {
+      "path": "motadata/plugin-scripts/trace/TraceJVMParserPlugin.class",
+      "score": 49,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 44,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 49
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+      "score": 49,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 44,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 49
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/store/MetricConfigStore.java",
+      "score": 47,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 42,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 47
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/api/TestObjectSettings.java",
+      "score": 42,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 62,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 42
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 41,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 36,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 41
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/azure_application_gateway_poll.json",
+      "score": 41,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 0,
+        "content": 64,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 41
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/patch/Patch810.java",
+      "score": 35,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 30,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 35
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricScheduler.java",
+      "score": 32,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 24,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 32
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 31,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 26,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 31
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/util/TagUtil.java",
+      "score": 31,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 26,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 31
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/store/MetricCacheStore.java",
+      "score": 30,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 25,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 30
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/patch/TestPatch.java",
+      "score": 30,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 50,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 30
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/MetricPlugin.java",
+      "score": 27,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 22,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 27
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/AIOpsObject.java",
+      "score": 25,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 20,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 25
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java",
+      "score": 24,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 19,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 24
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/Metric.java",
+      "score": 23,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 12,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 23
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/trace/TraceMetricProcessor.java",
+      "score": 23,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 18,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 23
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/runbook-plugins.json",
+      "score": 22,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 24,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 22
+      }
+    },
+    {
+      "path": "GOLDEN_EXEMPLARS_REFERENCE_ARCHIVE.md",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 16,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    }
+  ],
+  "indirect_duplicate_incidents": [
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+      "score": 68,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 63,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 68
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "score": 25,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 12,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 25
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricPoller.java",
+      "score": 29,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 24,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 29
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/topology/TestTopologyPlugins.java",
+      "score": 31,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 51,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 31
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/manager/MotadataAppManager.java",
+      "score": 22,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 17,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 22
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/slo/SLOConstants.java",
+      "score": 22,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 17,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 22
+      }
+    },
+    {
+      "path": "motadata/db-files/icons/declare-incident.png",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 0,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 7,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/ServiceOpsIntegration.java",
+      "score": 19,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 14,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 19
+      }
+    },
+    {
+      "path": "GOLDEN_EXEMPLARS_REFERENCE_ARCHIVE.md",
+      "score": 18,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 13,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 18
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/AtlassianJiraIntegration.java",
+      "score": 18,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 13,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 18
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/patch/Patch810.java",
+      "score": 17,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 12,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 17
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 16,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 3,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 16
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/job/JobScheduler.java",
+      "score": 16,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 11,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 16
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+      "score": 15,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 2,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 15
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/IntegrationConstants.java",
+      "score": 15,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 10,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 15
+      }
+    },
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 16,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/agent/AgentEventProcessor.java",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 9,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AIOpsConstants.java",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/package-info.java",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 9,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/LAMAIntegration.java",
+      "score": 13,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 8,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 13
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java",
+      "score": 12,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 7,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 12
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ResponseProcessor.java",
+      "score": 12,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 7,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 12
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/policy/MetricPolicyInspector.java",
+      "score": 11,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 6,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 11
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/ErrorMessageConstants.java",
+      "score": 10,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 10
+      }
+    }
+  ],
+  "soft_noise_helper_utils": [
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 306,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 290,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 306
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/aiops/TestCorrelationEngine.java",
+      "score": 78,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 95,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 78
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AIOpsConstants.java",
+      "score": 71,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 58,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 71
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/policy/MetricPolicyInspector.java",
+      "score": 55,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 50,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 55
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/EventEngine.java",
+      "score": 48,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 43,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 48
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/datastore/DatastoreEngine.java",
+      "score": 23,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 18,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 23
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "score": 22,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 9,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 22
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java",
+      "score": 21,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 16,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 21
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java",
+      "score": 18,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 13,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 18
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/BootstrapPrimary.java",
+      "score": 16,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 11,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 16
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/BootstrapStandalone.java",
+      "score": 16,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 11,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 16
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/package-info.java",
+      "score": 16,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 3,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 16
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/cache/CacheServiceImpl.java",
+      "score": 14,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 9,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 14
+      }
+    },
+    {
+      "path": "GOLDEN_EXEMPLARS_REFERENCE_ARCHIVE.md",
+      "score": 12,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 7,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 12
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java",
+      "score": 12,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 7,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 12
+      }
+    },
+    {
+      "path": "motadata/db-files/icons/declare-incident.png",
+      "score": 11,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 0,
+        "path_prior": 5,
+        "subsystem_boost": 6,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 11
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/Bootstrap.java",
+      "score": 11,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 6,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 11
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/AutoScaler.java",
+      "score": 11,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 6,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 11
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationQueryHelper.java",
+      "score": 11,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 3,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 11
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/exporting.js",
+      "score": 10,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 10
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/EventBusConstants.java",
+      "score": 10,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 10
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java",
+      "score": 10,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 10
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/store/MetricPolicyCacheStore.java",
+      "score": 10,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 5,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 10
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/cache/CacheService.java",
+      "score": 9,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 4,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 9
+      }
+    }
+  ],
+  "multi_file_pipeline_orchestration": [
+    {
+      "path": "motadata/test-plugin-metrics/azure_storage_poll.json",
+      "score": 4290,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 4311,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 4290
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/sap_maxdb_command_monitor_poll.json",
+      "score": 4147,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 4168,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 4147
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "score": 2101,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 4,
+        "content": 2082,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2101
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+      "score": 2003,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 4,
+        "content": 1984,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 2003
+      }
+    },
+    {
+      "path": "motadata/db-files/snmp-devices.json",
+      "score": 1987,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1989,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1987
+      }
+    },
+    {
+      "path": "motadata/src/test/resources/config-init.json",
+      "score": 1934,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1954,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 1934
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/highcharts.js",
+      "score": 1746,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1741,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1746
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+      "score": 1541,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1536,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1541
+      }
+    },
+    {
+      "path": "motadata/db-files/template-widgets/oceanstor.json",
+      "score": 1497,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 1496,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1497
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "score": 1340,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 1332,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1340
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/application-mappers.json",
+      "score": 1264,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1266,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1264
+      }
+    },
+    {
+      "path": "motadata/db-files/report-templates/js/accessibility.js",
+      "score": 1239,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1234,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1239
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/config/TestConfiguration.java",
+      "score": 1231,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1251,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 1231
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/runbook-plugins.json",
+      "score": 1228,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1230,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1228
+      }
+    },
+    {
+      "path": "motadata/db-files/counters-description.json",
+      "score": 1216,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1218,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1216
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+      "score": 1134,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1129,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1134
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/aiops/TestDependency.java",
+      "score": 1089,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 4,
+        "content": 1103,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 1089
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java",
+      "score": 1084,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1079,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1084
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 1048,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1043,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1048
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/log-parsers.json",
+      "score": 1034,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 1036,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1034
+      }
+    },
+    {
+      "path": "motadata/db-files/dashboard-widgets/inventory summary.json",
+      "score": 1001,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 1000,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 1001
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+      "score": 954,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 949,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 954
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/APIServer.java",
+      "score": 938,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 933,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 938
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/patch/TestPatch.java",
+      "score": 883,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 903,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 883
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/api/DependencyMapper.java",
+      "score": 874,
+      "diagnostics": {
+        "path_lexical": 2,
+        "basename_lexical": 4,
+        "content": 863,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 874
+      }
+    }
+  ],
+  "soft_collision_shared_facade": [
+    {
+      "path": "motadata/src/test/java/com/mindarray/visualization/TestVisualizationManager.java",
+      "score": 451,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 471,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 451
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "score": 309,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 293,
+        "path_prior": 13,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 309
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/policy/TestRUMPolicy.java",
+      "score": 303,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 323,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 303
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/mssql_session_poll.json",
+      "score": 250,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 274,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 250
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/trace/TraceProcessor.java",
+      "score": 248,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 243,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 248
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/trace/TestTraceProcessor.java",
+      "score": 222,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 242,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 222
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/trace/TraceConstants.java",
+      "score": 184,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 179,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 184
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+      "score": 172,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 164,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 172
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/rum/TestRUMEventProcessor.java",
+      "score": 168,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 188,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 168
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/NMSConstants.java",
+      "score": 158,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 153,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 158
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/compliance-rules.json",
+      "score": 136,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 138,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 136
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/policy/TestTracePolicy.java",
+      "score": 126,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 146,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 126
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/rum/RUMEventProcessor.java",
+      "score": 118,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 113,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 118
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/trace/TraceStatCalculator.java",
+      "score": 117,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 112,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 117
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/aws_poll.json",
+      "score": 114,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 138,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 114
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/api/TestIntegration.java",
+      "score": 110,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 130,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 110
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/nms/ResponseProcessor.java",
+      "score": 101,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 96,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 101
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/integration/ServiceOpsIntegration.java",
+      "score": 98,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 90,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 98
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/cache/CacheServiceProvider.java",
+      "score": 97,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 89,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 97
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/rum/RUMStatCalculator.java",
+      "score": 95,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 90,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 95
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/store/TraceServiceConfigStore.java",
+      "score": 95,
+      "diagnostics": {
+        "path_lexical": 1,
+        "basename_lexical": 2,
+        "content": 87,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 95
+      }
+    },
+    {
+      "path": "motadata/src/main/java/com/mindarray/visualization/VisualizationTraceHistoryResponseProcessor.java",
+      "score": 87,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 82,
+        "path_prior": 5,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 87
+      }
+    },
+    {
+      "path": "motadata/src/test/java/com/mindarray/policy/TestEventPolicy.java",
+      "score": 87,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 107,
+        "path_prior": -9,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 11,
+        "total": 87
+      }
+    },
+    {
+      "path": "motadata/test-plugin-metrics/aws_discovery.json",
+      "score": 87,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 111,
+        "path_prior": -11,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 13,
+        "total": 87
+      }
+    },
+    {
+      "path": "motadata/src/main/resources/entity-schemas/runbook-plugins.json",
+      "score": 85,
+      "diagnostics": {
+        "path_lexical": 0,
+        "basename_lexical": 0,
+        "content": 87,
+        "path_prior": -2,
+        "subsystem_boost": 0,
+        "symbol_boost": 0,
+        "symbol_inventory_boost": 0,
+        "module_bias": 0,
+        "noise_penalty": 0,
+        "total": 85
+      }
+    }
+  ]
+}

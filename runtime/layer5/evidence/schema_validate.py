@@ -2,9 +2,9 @@
 Strict validation of evidence bundle dicts against ``evidence_bundle.v1.schema.json``.
 
 Stdlib-only (no ``jsonschema`` dependency). Supports only the subset of JSON Schema
-draft-07 used by the v1 evidence schema: ``type``, ``required``, ``properties``,
-``additionalProperties``, ``items``, ``enum``, ``const``, ``definitions``, ``$ref``,
-``minimum`` for integers.
+draft-07 used by the v1 evidence schema: ``type`` (including union ``type`` arrays),
+``required``, ``properties``, ``additionalProperties``, ``items``, ``enum``, ``const``,
+``definitions``, ``$ref``, ``minimum`` for integers.
 """
 
 from __future__ import annotations
@@ -57,6 +57,30 @@ def _validate(
         return
 
     stype = schema.get("type")
+    if isinstance(stype, list):
+        last: Optional[EvidenceSchemaValidationError] = None
+        for opt in stype:
+            branch = {k: v for k, v in schema.items() if k != "type"}
+            branch["type"] = opt
+            try:
+                _validate(instance, branch, root, path)
+                return
+            except EvidenceSchemaValidationError as e:
+                last = e
+        raise EvidenceSchemaValidationError(
+            f"value {instance!r} did not match union {stype!r}", path
+        ) from last
+
+    if stype == "null":
+        if instance is not None:
+            raise EvidenceSchemaValidationError(f"expected null, got {instance!r}", path)
+        return
+
+    if stype == "number":
+        if isinstance(instance, bool) or not isinstance(instance, (int, float)):
+            raise EvidenceSchemaValidationError(f"expected number, got {instance!r}", path)
+        return
+
     if stype == "object":
         if not isinstance(instance, dict):
             raise EvidenceSchemaValidationError(f"expected object, got {type(instance).__name__}", path)

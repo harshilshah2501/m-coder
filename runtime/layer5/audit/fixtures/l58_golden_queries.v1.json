@@ -1,0 +1,246 @@
+{
+  "schema_version": "l58.grounded_queries.v1",
+  "description": "L5.8 deterministic grounded validation corpus.",
+  "cases": [
+    {
+      "id": "l58.ask.topology.where.base",
+      "flow_type": "ASK",
+      "intent": "CODE_INTENT",
+      "query": "Where is topology engine implemented?",
+      "expected_owner": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+        "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java"
+      ],
+      "unacceptable_noise": [
+        "logs",
+        "test",
+        "vendor",
+        "generated",
+        "metrics",
+        "docs_non_code"
+      ],
+      "expected_evidence_class": {
+        "primary": "STRONG",
+        "allow": [
+          "WEAK"
+        ]
+      },
+      "notes": "Ask-understanding topology owner mapping.",
+      "context": {},
+      "perturbation": {
+        "family_id": "l58.ask.topology.where",
+        "kind": "base",
+        "source_case_id": null
+      },
+      "expectations": {
+        "must_hit_top1_owner": false,
+        "must_hit_top3_anchor": true,
+        "max_first_relevant_rank": 3,
+        "max_noise_dominance_top5": 0.2,
+        "min_code_ratio_topk": 0.6,
+        "expect_no_match_honesty": false
+      }
+    },
+    {
+      "id": "l58.debug.correlation.duplicate.base",
+      "flow_type": "DEBUG",
+      "intent": "DEBUG_INTENT",
+      "query": "Debug alert correlation engine failing to correlate duplicate incidents",
+      "expected_owner": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java"
+      ],
+      "unacceptable_noise": [
+        "logs",
+        "test",
+        "vendor",
+        "generated",
+        "metrics",
+        "docs_non_code"
+      ],
+      "expected_evidence_class": {
+        "primary": "STRONG",
+        "allow": [
+          "WEAK"
+        ]
+      },
+      "notes": "PR-6 aligned debug owner and anchors.",
+      "context": {},
+      "perturbation": {
+        "family_id": "l58.debug.correlation.duplicate",
+        "kind": "base",
+        "source_case_id": null
+      },
+      "expectations": {
+        "must_hit_top1_owner": true,
+        "must_hit_top3_anchor": true,
+        "max_first_relevant_rank": 1,
+        "max_noise_dominance_top5": 0.0,
+        "min_code_ratio_topk": 0.8,
+        "expect_no_match_honesty": false
+      }
+    },
+    {
+      "id": "l58.plan.ingestion.impact.base",
+      "flow_type": "PLAN",
+      "intent": "PLAN_INTENT",
+      "query": "Plan change impact for ingestion pipeline parser timeout",
+      "expected_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
+      ],
+      "unacceptable_noise": [
+        "logs",
+        "test",
+        "vendor",
+        "generated",
+        "metrics",
+        "docs_non_code"
+      ],
+      "expected_evidence_class": {
+        "primary": "STRONG",
+        "allow": [
+          "WEAK"
+        ]
+      },
+      "notes": "Plan/change impact needs multi-anchor grounding.",
+      "context": {},
+      "perturbation": {
+        "family_id": "l58.plan.ingestion.impact",
+        "kind": "base",
+        "source_case_id": null
+      },
+      "expectations": {
+        "must_hit_top1_owner": false,
+        "must_hit_top3_anchor": true,
+        "max_first_relevant_rank": 3,
+        "max_noise_dominance_top5": 0.2,
+        "min_code_ratio_topk": 0.6,
+        "expect_no_match_honesty": false
+      }
+    },
+    {
+      "id": "l58.code.metrics.parser.target.base",
+      "flow_type": "CODE",
+      "intent": "CODE_INTENT",
+      "query": "Where is LogParser class used in metric processing pipeline?",
+      "expected_owner": "motadata/src/main/java/com/mindarray/log/LogParser.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/log/LogParser.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/nms/CollectorResponseProcessor.java"
+      ],
+      "unacceptable_noise": [
+        "logs",
+        "test",
+        "vendor",
+        "generated",
+        "metrics",
+        "docs_non_code"
+      ],
+      "expected_evidence_class": {
+        "primary": "STRONG",
+        "allow": [
+          "WEAK"
+        ]
+      },
+      "notes": "Code-targeting should prioritize parser owner in canonical corpus; previous ingestion anchors were invalid in canonical root.",
+      "context": {},
+      "perturbation": {
+        "family_id": "l58.code.metrics.parser.target",
+        "kind": "base",
+        "source_case_id": null
+      },
+      "expectations": {
+        "must_hit_top1_owner": false,
+        "must_hit_top3_anchor": true,
+        "max_first_relevant_rank": 3,
+        "max_noise_dominance_top5": 0.2,
+        "min_code_ratio_topk": 0.7,
+        "expect_no_match_honesty": false
+      }
+    },
+    {
+      "id": "l58.nomatch.nonexistent.symbol.static",
+      "flow_type": "CODE",
+      "intent": "CODE_INTENT",
+      "query": "Where is NonExistentCorrelationSymbol999 used?",
+      "expected_owner": "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+      ],
+      "unacceptable_noise": [
+        "logs",
+        "test",
+        "vendor",
+        "generated",
+        "metrics",
+        "docs_non_code"
+      ],
+      "expected_evidence_class": {
+        "primary": "NO_MATCH",
+        "allow": []
+      },
+      "notes": "No-match honesty strict case.",
+      "context": {},
+      "perturbation": {
+        "family_id": "l58.nomatch.nonexistent.symbol",
+        "kind": "error_text_only",
+        "source_case_id": null
+      },
+      "expectations": {
+        "must_hit_top1_owner": false,
+        "must_hit_top3_anchor": false,
+        "max_first_relevant_rank": 8,
+        "max_noise_dominance_top5": 0.8,
+        "min_code_ratio_topk": 0.0,
+        "expect_no_match_honesty": true
+      }
+    },
+    {
+      "id": "l58.adversarial.engine.noise.static",
+      "flow_type": "ASK",
+      "intent": "GENERIC_INTENT",
+      "query": "engine",
+      "expected_owner": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+      ],
+      "unacceptable_noise": [
+        "logs",
+        "test",
+        "vendor",
+        "generated",
+        "metrics",
+        "docs_non_code"
+      ],
+      "expected_evidence_class": {
+        "primary": "WEAK",
+        "allow": [
+          "INSUFFICIENT",
+          "NO_MATCH"
+        ]
+      },
+      "notes": "Adversarial ambiguity should avoid false strong.",
+      "context": {},
+      "perturbation": {
+        "family_id": "l58.adversarial.engine.noise",
+        "kind": "subsystem_alias_wording",
+        "source_case_id": null
+      },
+      "expectations": {
+        "must_hit_top1_owner": false,
+        "must_hit_top3_anchor": false,
+        "max_first_relevant_rank": 8,
+        "max_noise_dominance_top5": 0.7,
+        "min_code_ratio_topk": 0.0,
+        "expect_no_match_honesty": false
+      }
+    }
+  ]
+}

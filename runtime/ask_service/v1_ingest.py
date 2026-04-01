@@ -65,8 +65,13 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     """
     request_id = str(ask_request.get("request_id", ""))
     trace_id = str(ask_request.get("trace_id") or "").strip()
-    if trace_id:
-        LOG.info("[ASK_V1] trace_id=%s request_id=%s", trace_id, request_id)
+    task_type = ask_request.get("task_type") or "general"
+    LOG.info(
+        "[ASK_V1] trace_id=%s request_id=%s task_type=%s",
+        trace_id or "(none)",
+        request_id,
+        task_type,
+    )
     query = str(ask_request.get("query", ""))
     evidence_bundle = ask_request.get("evidence_bundle")
     if not isinstance(evidence_bundle, dict):
@@ -110,6 +115,8 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     task_id = request_id or "ask-v1-task"
     bundle = context_bundle_from_evidence_dict(evidence_bundle, task_id=task_id, revision=revision)
     quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+    ar_dict = evidence_bundle.get("authority_resolution")
+    authority_resolution = ar_dict if isinstance(ar_dict, dict) else None
     metadata = {
         "intent_type": quality.intent_type,
         "evidence_quality": quality.evidence_quality,
@@ -117,9 +124,12 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         "dominance_metrics": quality.dominance_metrics,
         "policy_version": quality.policy_version,
     }
+    if authority_resolution:
+        metadata["authority_resolution_present"] = True
+        metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
+        metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
 
     selected_file = ask_request.get("selected_file")
-    task_type = ask_request.get("task_type") or "general"
     client_context = ask_request.get("client_context") or {}
     selection = (
         (client_context.get("selection") or "").strip()
@@ -179,7 +189,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             plan_steps = ["Explain/debug analysis completed; see structured output above."]
     else:
         planner = PlanOnlyPlanner()
-        plan_summary = planner.plan(query=query, bundle=bundle)
+        plan_summary = planner.plan(
+            query=query, bundle=bundle, authority_resolution=authority_resolution
+        )
         plan_steps = plan_summary.steps
     if quality.evidence_quality == WEAK:
         weak_notes.append("Evidence quality is WEAK; plan/explanation may be incomplete.")

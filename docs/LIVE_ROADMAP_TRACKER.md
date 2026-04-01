@@ -5,17 +5,18 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-03-31  
-- **Program state**: **Retrieval baseline locked → validation and system hardening phase**
+- **Last updated**: 2026-04-01  
+- **Program state**: **Architecture + PR-6 locked; Actions 4 / 5 / 11 closed; Product Authority + Code Understanding v1 (Phases 1–5) complete — program emphasis on Stage 2 (validation depth, deployment trust, Action 14)**
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Current active milestone focus**: **Action #9 — FUNCTIONALLY CLOSED (Audit pack pending)** — per `docs/production_closure_handbook_corrected_canonical_version.md`. Host-A **functional** validation (Ask, Explain/Debug, Execute boundary, No-match, Failure) is complete; **no new TRUE_PRODUCT_BLOCKER** proven in this slice. **Audit pack** work (formal `mapping_request_ids.md`, per-scenario folder packaging, validation sheets) is **tracked, non-blocking** — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md` and `docs/guides/HOST_A_PLAN_GATE_LOG_MAPPING.md`. **Action #7 — Validate Execute path rigorously** is **COMPLETE** (live HTTP `POST /v0/execute` product path: **`EXECUTED_FAILED` vs `BLOCKED`** honesty; **`plan_gate_*` client hints rejected by default** unless explicit test-only env). **Action #8 — Validate no-match honesty** remains **SATISFIED** under **L5.8 / Action 3** closure (not reactivated). **Action #6 — Validate Explain/Debug path rigorously** is **COMPLETE** (server-side Explain/Debug trust proof; plugin truth-surface preservation and rendering proof). **Caveat:** Explain/Debug trust proof is complete across server and plugin contract surfaces. Remaining IntelliJ plugin `:test` runtime execution is environment/tooling debt, not unfinished Action 6 product logic. **Action #5 — Plan-Gate observability / L5-OBS-1 (main HTTP path)** is **COMPLETE** (structured logging and `request_id` correlation across Context Layer, Plan-Gate, and explain/debug). **Action #4 — Plugin Truthfulness Alignment** is **COMPLETE** for product-truthfulness logic (metadata, provenance, calibration surfaced in Ask UI). **L5.8 — Grounded Ask Validation + Metrics** is **COMPLETE** (hard gates satisfied). **Action 11 / L5.9 — Compatibility Path Hardening** is **CLOSED** (2026-03-31; evidence **§6.17**). **M3.18** remains downstream. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
+- **Program objective (next):** **Action #9** audit-pack closure and host-profile validation evidence; **Action 4** (plugin truth) and **Action 5** (HTTP observability) are **CLOSED** (**§6.18**, **§6.19**).  
+- **Current active milestone focus**: **Action #9 — FUNCTIONALLY CLOSED (Audit pack pending)** — per `docs/production_closure_handbook_corrected_canonical_version.md`. Host-A **functional** validation (Ask, Explain/Debug, Execute boundary, No-match, Failure) is complete; **no new TRUE_PRODUCT_BLOCKER** proven in this slice. **Audit pack** work (formal `mapping_request_ids.md`, per-scenario folder packaging, validation sheets) is **tracked, non-blocking** — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md` and `docs/guides/HOST_A_PLAN_GATE_LOG_MAPPING.md`. **Action #7 — Validate Execute path rigorously** is **COMPLETE** (live HTTP `POST /v0/execute` product path: **`EXECUTED_FAILED` vs `BLOCKED`** honesty; **`plan_gate_*` client hints rejected by default** unless explicit test-only env). **Action #8 — Validate no-match honesty** remains **SATISFIED** under **L5.8 / Action 3** closure (not reactivated). **Action #6 — Validate Explain/Debug path rigorously** is **COMPLETE** (server-side Explain/Debug trust proof; plugin truth-surface preservation and rendering proof). **Caveat:** Explain/Debug trust proof is complete across server and plugin contract surfaces. Remaining IntelliJ plugin `:test` runtime execution is environment/tooling debt, not unfinished Action 6 product logic. **Action #5 — Plan-Gate observability (L5-OBS-1 HTTP surface)** is **✅ CLOSED** (**§6.19**; guide `docs/guides/ACTION_5_OBSERVABILITY_CORRELATION.md`): unified `PLAN_GATE request` lines (`trace_id`, `routing_mode`, `outcome`, `duration_ms`); `[ASK]` / `[ASK_V1]` / `EXPLAIN_DEBUG` / `[EXECUTE]` grep anchors; failure paths keep correlation. **Action 4 — Close plugin truthfulness gaps** — **Status: ✅ CLOSED** (**§6.18**). UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id`, `plugin_ask_routing`, and structured routing decisions. Fallback paths are explicitly visible (summary + WARNING notification) and no longer presented as normal success. Full-dialog routing is auditable and compact; notification summary is concise on success and explicit on fallback. Legacy AskClient is isolated and documented. Compilation and targeted tests pass; Gradle test failure is environment-related (IntelliJ plugin setup), not implementation-related. **L5.8 — Grounded Ask Validation + Metrics** is **COMPLETE** (hard gates satisfied). **Action 11 / L5.9 — Compatibility Path Hardening** is **CLOSED** (2026-03-31; evidence **§6.17**). **M3.18** remains downstream. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) exists on Plan-Gate; **Ask → Plan → Execute** continuum is not fully reflected in L5 tracker rows until plugin + execute UX are explicitly gated together.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Next:** **production slice readiness** — plugin truthfulness, observability, retrieval generalization/validation gates (**L5.8** / **§1.4** tracks); not only deployment smoke.
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Product Authority + Code Understanding v1 — Phases 1–5 COMPLETE** (registry → index → ranking → Plan-Gate anchoring + eval → authority → action reasoning bridge). **Next (Stage 2):** **L5.8 validation generalization**, authority robustness / drift, multi-file coding validation, host-profile readiness, **Action 14** final acceptance — **reliability, repeatability, deployment trust** (not re-opening closed plugin / observability / compatibility work — **§6.17–§6.19**).
 
 ### Action 9 — sub-status (surgical)
 
@@ -44,7 +45,7 @@
 | Surface                                                                     | State                                                                                                                                    |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **Backend** (Context Layer + Plan-Gate + vLLM stack when started)           | **Functional** for HTTP contracts per validation sheet                                                                                   |
-| **JetBrains plugin**                                                        | **Primary user surface** — path/rendering/metadata alignment **in progress**; treat as **critical component**, not a Wave-3 afterthought |
+| **JetBrains plugin**                                                        | **Primary user surface** — **Action 4 CLOSED** (**§6.18**): `routing_mode`-driven UI, routing metadata, visible fallback; Gradle `:test` may still fail in some environments (tooling). Remaining **§B3** items. Treat as **critical component**. |
 | **True end-to-end** (IDE → evidence → `/v1/ask` → honest UI + traceability) | **Not** production-complete until **§1.3** gates and **Track OBS** are satisfied                                                         |
 
 
@@ -90,13 +91,14 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Plugin path may diverge (`/v0/ask` vs `/v1/ask`)
 - Evidence rendering incomplete
 - plan_summary.notes not shown
-- UI can misrepresent grounded context
+- UI can still misrepresent grounded context in areas outside Action 4 scope
+- **Action 4:** **CLOSED** (**§6.18**); other plugin gaps remain (**§B3**)
 
 ### System Status
 - Backend: FUNCTIONAL
 - Retrieval: BASELINE LOCKED (PR-6), GENERALIZATION PENDING (L5.8)
-- Plugin: PARTIALLY MISALIGNED
-- End-to-end: NOT YET PRODUCTION-GRADE (plugin truthfulness + observability + validation gates pending)
+- Plugin: **IMPROVING** — Action **4** **CLOSED** per **§6.18**; not full production-grade until **§B3** + **§1.3** gates
+- End-to-end: NOT YET PRODUCTION-GRADE (observability + validation gates + residual plugin UX pending)
 
 ## CRITICAL BLOCKERS FOR PRODUCTION CLOSURE
 
@@ -128,7 +130,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - no-match honesty enforcement
 
 ### B3 — Plugin Truthfulness
-- **Caveat:** JetBrains plugin full `:test` reliability remains open due to environment/IDE-layout limitations. This is tracked as tooling debt, not as unfinished Action 4 product-truthfulness logic.
+- **Action 4 — Close plugin truthfulness gaps** — **Status: ✅ CLOSED** — canonical paragraph **§6.18** (tracker-ready wording).
 - Show evidence_bundle entries
 - Show ask_path
 - Show plan_summary.notes
@@ -136,7 +138,8 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Correct execute outcome UX
 
 ### B4 — Observability (L5-OBS-1)
-- **Caveat:** Main HTTP request traceability is complete across Context Layer, Plan-Gate, and explain/debug model calls. Remaining runbook/CI log collection and non-HTTP parity are operational follow-through, not unfinished Action 5 product logic.
+- **Action #5 (2026-03-31):** **CLOSED** — **§6.19**, `docs/guides/ACTION_5_OBSERVABILITY_CORRELATION.md`. Plan-Gate and Ask/Execute services emit grep-stable correlation; proof-pack reconstruction without inference for the HTTP path.
+- **Caveat:** Context Layer wheel / vLLM process logs and CI runbook collection remain **operational** follow-through (not Action 5 HTTP closure scope).
 - request_id propagation across:
   - Context Layer
   - Plan-Gate
@@ -698,8 +701,8 @@ Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
 
 #### New Required Tracks
 - L5-RET: Retrieval Baseline Preservation + Validation Generalization
-- L5-OBS: Observability & Tracing
-- L5-UX: Plugin Truthfulness Alignment
+- L5-OBS: Observability & Tracing — **Action #5 CLOSED** (**§6.19**); non-HTTP ops follow-through
+- L5-UX: Plugin Truthfulness Alignment — **Action 4 CLOSED** (**§6.18**); residual checklist items remain in **§B3**
 
 **Purpose**: Establish a workspace intelligence layer in WSL that performs workspace-local retrieval and deterministic evidence assembly before Plan-Gate evaluation. Layer-5 defines the structured evidence-bundle contract into Plan-Gate, reduces dependence on remote repo-path assumptions (`repo_root`, `ASK_DEFAULT_REPO_ROOT`) to compatibility-only behavior, and does not redesign Layer-1 governance semantics or Layer-3 execution authority.
 
@@ -775,7 +778,7 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **L5.8 grounded validation execution** while preserving the locked PR-6 retrieval baseline; close **L5-OBS-1** and **plugin truthfulness** in parallel as hard production gates.
+- **Current objective**: **Stage 2 — Fully Functional & Ready System** (**§7.4**): deepen **L5.8** validation beyond the locked PR-6 slice, strengthen **authority robustness** and **host-profile** evidence, and drive toward **Action 14** acceptance — while preserving the locked PR-6 baseline. **Actions 4 / 5 / 11** and **Product Authority Phases 1–5** are **closed / complete**; remaining **§B3** plugin polish and optional **`./gradlew :test`** are follow-through, not Stage 2 “truth” rework.
 - **Active tasks**:
   - Run deployment/validation flow using `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + indexed repo path; **Windows** = plugin + tunnels as documented. Treat `**docs/MOTADATA_DEMO_SCENARIOS.md`** as **acceptance scenarios**, not “demo-only.”
   - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4) where applicable; **plugin** must have **evidence-first ON** for apples-to-apples comparison with backend `/v1/ask` scripts.
@@ -783,8 +786,8 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   - **B1 control-layer note (historical):** query `Which files implement topology anomaly scoring pipeline?` classification correction remains valid (`CODE_INTENT` vs prior `GENERIC_INTENT`). PR-6 now closes baseline retrieval dominance for the locked debug set; active work is generalized validation in L5.8.
 - **Next execution order**:
   1. **L5.8** Grounded Ask Validation + Metrics (active)
-  2. **L5-OBS-1** Observability & Tracing (parallel hard gate)
-  3. **Plugin Truthfulness Alignment** (parallel hard gate)
+  2. ~~**L5-OBS-1 (Action #5)**~~ **CLOSED** (**§6.19**); Context Layer / CI log parity = ops follow-through
+  3. ~~**Action 4 — Close plugin truthfulness gaps**~~ **✅ CLOSED** (**§6.18**); residual **§B3** checklist; **`./gradlew :test`** when IDE/Gradle plugin environment permits
   4. **M3.18** task-level Ask/Debug/Plan/Code evaluation (downstream)
   5. ~~**L5.9** compatibility path hardening~~ **DONE** (Action 11, §6.17)
   6. Host readiness / acceptance / release sign-off
@@ -1050,9 +1053,121 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 > Future entries should follow this style: **Milestone**, then bullet list of concrete evidence files / metrics / reports.
 
+### 6.18 Action 4 — Close plugin truthfulness gaps (2026-03-31)
+
+**Status: ✅ CLOSED**
+
+UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id`, `plugin_ask_routing`, and structured routing decisions. Fallback paths are explicitly visible (summary + WARNING notification) and no longer presented as normal success. Full-dialog routing is auditable and compact; notification summary is concise on success and explicit on fallback. Legacy AskClient is isolated and documented. Compilation and targeted tests pass; Gradle test failure is environment-related (IntelliJ plugin setup), not implementation-related.
+
+- **Implementation pointers (Kotlin, `jetbrains-plugin/`):** `bridge/RuntimeBridge.kt`, `bridge/AskRoutingDecision.kt`, `ask/AskResultDialogMessage.kt`, `ask/AskMotadataAiAction.kt`, `ask/AskClient.kt`; tests include `AskUiRoutingTruthTest`, `AskResultDialogMessageTest`.
+
+### 6.19 Action #5 — Plan-Gate observability (L5-OBS-1 HTTP) — CLOSED (2026-03-31)
+
+- **Status: ✅ CLOSED**
+- **Scope:** Observability and auditability only — no routing or execution semantics change.
+- **Deliverables:**
+  - **Plan-Gate** (`runtime/plan_gate_service/app.py`): every `POST` emits one `PLAN_GATE request` line with `path`, `request_type`, `request_id`, `trace_id` (literal `(none)` if absent), `routing_mode` (from ask responses when applicable, else `n/a`), `outcome` (layer + execute `outcome` when applicable), `status`, `duration_ms`.
+  - **Ask v0** (`runtime/ask_service/handlers.py`): `[ASK] trace_id=… request_id=… task_type=…` (always).
+  - **Ask v1** (`runtime/ask_service/v1_ingest.py`): `[ASK_V1] …` (always).
+  - **Explain** (`runtime/ask_service/reasoner.py`): `EXPLAIN_DEBUG … routing_mode=explain_debug …` (always includes `trace_id` slot).
+  - **Execute** (`runtime/execute_service/handlers.py`): `[EXECUTE] trace_id=… request_id=… phase=begin`; Plan-Gate line carries execute `outcome`.
+- **Evidence:** `runtime/plan_gate_service/tests/test_plan_gate_request_logging.py`, `runtime/tests/test_action5_observability.py`; guide `docs/guides/ACTION_5_OBSERVABILITY_CORRELATION.md`.
+- **Action #9** remains **FUNCTIONALLY CLOSED** with **audit pack pending** — observability supports reconstruction; the audit pack is separate work.
+
 ---
 
-## 7. How to Update This Tracker
+## 7. Stage-based execution model (recalibrated, 2026)
+
+> **Nomenclature:** **Stage 1–3** here are **program / product execution** milestones (MVP demo → production-ready → future expansion). They do **not** replace ML pipeline stage labels (Stage-1 … Stage-8), M3 milestone IDs, or layer numbers. Keep **§1 Header**, **§5**, and **§6** as the canonical status surfaces; use this section for phased outcomes and exit bars.
+
+### 7.1 Program state snapshot (aligned with §1)
+
+| Pillar | State |
+|--------|--------|
+| Architecture spine (4-layer governed) | Locked |
+| Retrieval baseline (PR-6) | Locked |
+| Action 11 — compatibility / path hardening (L5.9) | Closed — **§6.17** |
+| Action 4 — plugin truthfulness | Closed — **§6.18** |
+| Action 5 — observability closure (L5-OBS-1) | Closed — **§6.19** |
+
+### 7.2 Product Authority + Code Understanding Layer (v1) — status
+
+- **Design spec:** `docs/design/PRODUCT_AUTHORITY_CODE_UNDERSTANDING_LAYER_v1.md`
+- **Implementation line (example):** `feature/phase-4-product-authority` (authority stack + evidence + Plan-Gate + eval + reasoning bridge)
+
+| Phase | Focus | Status |
+|-------|--------|--------|
+| 1 | Authority foundation (registry, freshness, validation) | **COMPLETE** |
+| 2 | Code index + entry points + adapter | **COMPLETE** |
+| 3 | Authority-aware ranking | **COMPLETE** |
+| 4 | Plan-Gate integration + answer anchoring + eval wiring | **COMPLETE** |
+| 5 | Authority → action reasoning bridge (bounded fix/debug reasoning) | **COMPLETE** |
+
+### 7.3 Stage 1 — MVP Demo (Coding + Reasoning)
+
+**What this stage means now**
+
+- **Product ownership truth** — registry-backed owner identification, not generic file lists.
+- **Owner-first Ask / Debug / Plan** — grounded in evidence + authority where present.
+- **Authority-aware answer synthesis** — validated vs stale vs weak paths; distractors not promoted as peers.
+- **Bounded coding reasoning slice** — Ask → Plan → bounded reasoning (no full codegen; sandbox-compatible posture).
+- **One credible end-to-end product-aware coding/reasoning demo** — proves the slice, not full production scale.
+
+**Not part of Stage 1 scope (already closed — do not treat as open work)**
+
+- Plugin truthfulness (**Action 4**, **§6.18**)
+- Observability plumbing (**Action 5**, **§6.19**)
+- Compatibility / path hardening (**Action 11**, **§6.17**)
+
+**Exit criteria (Stage 1)**
+
+- System **consistently identifies true owners** where authority applies.
+- Answers are **owner-first** and **structurally grounded** (non-generic where authority exists).
+- **Distractors** are **not** presented as peer owners.
+- **Weak / stale authority** is handled **honestly** (hedge or no overclaim per policy).
+- **At least one real coding scenario** works end-to-end (bounded reasoning acceptable).
+
+### 7.4 Stage 2 — Fully Functional & Ready System
+
+**Framing:** **Reliability**, **repeatability**, and **deployment trust** — expanding validation depth, hardening behavior under drift and host profiles, and driving **final acceptance (Action 14)**. This stage does **not** re-do closed truthfulness, observability, or compatibility work (**§6.17–§6.19**); it builds on them.
+
+**Scope**
+
+- **S2.1 — L5.8 validation closure (primary gate):** expanded goldens, perturbations, ambiguity / adversarial phrasing; metrics: owner@1 / owner@3, distractor error rate, weak-evidence precision, no-match honesty, false-strong rate (**aligns with B1 / §1.4 Track RET**).
+- **S2.2 — Authority robustness:** drift handling, registry correctness, multi-owner / compound queries.
+- **S2.3 — Broader coding capability validation:** repeatable **multi-file** reasoning, change-impact understanding, safe proposals, grounded diffs, execution honesty.
+- **S2.4 — Observability at scale (post-closure):** trace reconstruction, production-grade logging reliability, artifact-based debugging — **extension** of closed L5-OBS-1 baselines, not reinvention.
+- **S2.5 — Host-profile readiness:** Windows + WSL + GPU, Linux native, consistent runtime behavior (**§B5**).
+- **S2.6 — Final acceptance (Action 14):** unified suite (Ask, Debug, Plan, Code, No-match), deterministic pass, production sign-off.
+
+**Exit criteria (Stage 2)**
+
+- Validation **deterministic** and **repeatable**; no hallucinated ownership; weak/no-match honest; coding behavior grounded and safe; **deployment-ready** bar satisfied.
+
+### 7.5 Stage 3 — Future Development
+
+**Goal:** Expand capability **without** compromising grounding and truthfulness.
+
+**Themes**
+
+- **Deeper context layer** — e.g. dirty-buffer overlay, richer symbol/call coverage.
+- **Broader authority coverage** — subsystem maps, versioned snapshots, more concepts.
+- **Jira / PR / doc ingestion expansion** — M3.12–M3.18 follow-ons, task evaluation harness.
+- **Stronger coding workflows** — multi-file patch flows, iterative fix-validation loops (still grounded).
+- **Model benchmarking** — e.g. Qwen3 / Qwen3-Coder vs grounded reasoning baselines.
+- **Enterprise / operator maturity** — packaging, audit/export, operator workflows.
+
+### 7.6 Priority order (program)
+
+1. Product ownership truth  
+2. Validation truth  
+3. Operational trust  
+4. Coding reliability  
+5. Expansion and scale  
+
+---
+
+## 8. How to Update This Tracker
 
 This file is the **single live progress dashboard** for the Motadata AI Coding Assistant roadmap. Future updates (including by automated tools such as Cursor) must follow these rules:
 
@@ -1086,7 +1201,8 @@ This file is the **single live progress dashboard** for the Motadata AI Coding A
   - Do not change milestone IDs (e.g., `M3.0`, `M4.1`) once created.
   - If a milestone is superseded, mark it as such in the **Notes** or **Exit criteria**, but keep the row for historical context.
 7. **Keep tables and structure intact**
-  - Maintain the section ordering and table structures defined in this file.
+  - Maintain the section ordering (**§1–§8**) and table structures defined in this file.
+  - When updating **§7 (stage-based execution)**, align Product Authority phase / stage wording with **§1 Header**, **§5**, and evidence in **§6**; do not conflate program Stages 1–3 with ML pipeline Stage-1…Stage-8 (see the nomenclature note at the start of **§7**).
   - When adding new milestones (if ever necessary), place them in the appropriate layer section with a clear ID and description.
 8. **Be concise but operational**
   - Avoid marketing language.

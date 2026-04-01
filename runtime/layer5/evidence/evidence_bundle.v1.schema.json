@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:motadata:layer5:evidence_bundle:v1",
   "title": "Layer-5 EvidenceBundle v1 (frozen contract surface)",
-  "description": "Strict schema for layer5.evidence_bundle.v1. Unknown properties are rejected.",
+  "description": "Strict schema for layer5.evidence_bundle.v1. Unknown properties are rejected. Phase 4: optional authority_resolution, owner_evidence, structural_context.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -35,9 +35,187 @@
     "entries": {
       "type": "array",
       "items": { "$ref": "#/definitions/evidence_entry" }
+    },
+    "authority_resolution": {
+      "$ref": "#/definitions/authority_resolution"
+    },
+    "owner_evidence": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/evidence_entry" }
+    },
+    "structural_context": {
+      "$ref": "#/definitions/structural_context"
     }
   },
   "definitions": {
+    "authority_primary_owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "class", "confidence"],
+      "properties": {
+        "file": { "type": "string" },
+        "class": { "type": "string" },
+        "method": { "type": "string" },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "weak"]
+        }
+      }
+    },
+    "authority_matched_concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["concept_id", "match_type", "confidence"],
+      "properties": {
+        "concept_id": { "type": "string" },
+        "match_type": { "type": "string", "enum": ["exact", "alias", "partial"] },
+        "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "primary_owner": { "$ref": "#/definitions/authority_primary_owner" }
+      }
+    },
+    "authority_forbidden_distractor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "reason"],
+      "properties": {
+        "file": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "authority_collaborator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "role", "relationship"],
+      "properties": {
+        "file": { "type": "string" },
+        "role": { "type": "string" },
+        "relationship": { "type": "string" }
+      }
+    },
+    "authority_validation_details": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file_exists",
+        "class_exists",
+        "method_exists",
+        "is_referenced",
+        "freshness_ok",
+        "days_since_verification"
+      ],
+      "properties": {
+        "file_exists": { "type": "boolean" },
+        "class_exists": { "type": "boolean" },
+        "method_exists": { "type": ["boolean", "null"] },
+        "is_referenced": { "type": ["boolean", "null"] },
+        "freshness_ok": { "type": "boolean" },
+        "days_since_verification": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "authority_entry_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "file", "method"],
+      "properties": {
+        "type": { "type": "string" },
+        "file": { "type": "string" },
+        "method": { "type": "string" }
+      }
+    },
+    "authority_entry_trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "entry_point": { "$ref": "#/definitions/authority_entry_point" },
+        "path": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "authority_resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matched_concepts",
+        "primary_owner",
+        "authority_confidence",
+        "authority_status",
+        "control_flow",
+        "notes",
+        "forbidden_distractors"
+      ],
+      "properties": {
+        "matched_concepts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/authority_matched_concept" }
+        },
+        "primary_owner": { "$ref": "#/definitions/authority_primary_owner" },
+        "authority_confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "weak", "none"]
+        },
+        "authority_status": {
+          "type": "string",
+          "enum": ["validated", "stale", "stale_candidate", "unverified"]
+        },
+        "control_flow": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_distractors": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/authority_forbidden_distractor" }
+        },
+        "collaborators": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/authority_collaborator" }
+        },
+        "validation_details": { "$ref": "#/definitions/authority_validation_details" },
+        "entry_trace": { "$ref": "#/definitions/authority_entry_trace" },
+        "compound": { "type": "boolean" }
+      }
+    },
+    "structural_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "callers_hop_1",
+        "callers_hop_2",
+        "callees_hop_1",
+        "callees_hop_2",
+        "entry_points",
+        "hop_2_pruned_count"
+      ],
+      "properties": {
+        "callers_hop_1": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "callers_hop_2": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "callees_hop_1": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "callees_hop_2": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hop_2_pruned_count": { "type": "integer", "minimum": 0 }
+      }
+    },
     "evidence_entry": {
       "type": "object",
       "additionalProperties": false,

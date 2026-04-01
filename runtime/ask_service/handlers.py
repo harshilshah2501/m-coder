@@ -88,13 +88,17 @@ def handle_ask_request(ask_request: dict) -> dict:
     """
     request_id = str(ask_request.get("request_id", ""))
     trace_id = str(ask_request.get("trace_id") or "").strip()
-    if trace_id:
-        LOG.info("[ASK] trace_id=%s request_id=%s", trace_id, request_id)
+    task_type = ask_request.get("task_type") or "general"
+    LOG.info(
+        "[ASK] trace_id=%s request_id=%s task_type=%s",
+        trace_id or "(none)",
+        request_id,
+        task_type,
+    )
     repo_root = (ask_request.get("repo_root") or "").strip() or "."
     revision = str(ask_request.get("revision", ""))
     query = str(ask_request.get("query", ""))
     selected_file = ask_request.get("selected_file")
-    task_type = ask_request.get("task_type") or "general"
     client_context = ask_request.get("client_context") or {}
     selection = (client_context.get("selection") or "").strip() if isinstance(client_context, dict) else ""
 
@@ -195,6 +199,8 @@ def handle_ask_request(ask_request: dict) -> dict:
             )
 
     quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+    ar_src = evidence_bundle_dict.get("authority_resolution") if evidence_bundle_dict else None
+    authority_resolution = ar_src if isinstance(ar_src, dict) else None
     metadata = {
         "intent_type": quality.intent_type,
         "evidence_quality": quality.evidence_quality,
@@ -202,6 +208,10 @@ def handle_ask_request(ask_request: dict) -> dict:
         "dominance_metrics": quality.dominance_metrics,
         "policy_version": quality.policy_version,
     }
+    if authority_resolution:
+        metadata["authority_resolution_present"] = True
+        metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
+        metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
     if quality.blocked:
         block_message = (
             "No context files matched relevant code evidence for this ask."
@@ -245,7 +255,9 @@ def handle_ask_request(ask_request: dict) -> dict:
             plan_steps = ["Explain/debug analysis completed; see structured output above."]
     else:
         planner = PlanOnlyPlanner()
-        plan_summary = planner.plan(query=query, bundle=bundle)
+        plan_summary = planner.plan(
+            query=query, bundle=bundle, authority_resolution=authority_resolution
+        )
         plan_steps = plan_summary.steps
     if quality.evidence_quality == WEAK:
         weak_note.append("Evidence quality is WEAK; plan/explanation may be incomplete.")

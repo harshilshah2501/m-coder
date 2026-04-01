@@ -1,0 +1,16 @@
+{
+  "service_version": "v0.1",
+  "supported_schemas": {
+    "plan_request": "v0.1",
+    "decision_response": "v0.1",
+    "plan": "v0.1",
+    "ledger": "v0.1",
+    "shadow_run_record": "v0.1",
+    "ingestion_batch": "v0.1",
+    "ask_request": "v0.1",
+    "ask_request_v1": "v1.0",
+    "plan_only_response": "v0.1",
+    "execute_request": "v0.1",
+    "execute_response": "v0.1"
+  }
+}

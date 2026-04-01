@@ -5,7 +5,7 @@ plugins {
 
 group = "ai.motadata"
 // Semver 0.MINOR.PATCH — bump MINOR (or PATCH) on each fix/rebuild you ship so the IDE shows a distinct version.
-version = "0.2.6"
+version = "0.2.7"
 
 repositories {
     mavenCentral()
@@ -36,9 +36,10 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    // Plain JUnit on the JVM: avoid IntelliJPlatformArgumentProvider → resolveIdeHomeVariable
-    // IOOBE ("Index: 1, Size: 1") when no local IDE layout matches the bundled platform (see plugin issue #1891).
-    jvmArgumentProviders.clear()
+    // Note: With IntelliJ 2025.3, the gradle-intellij-plugin can fail with "Index: 1, Size: 1"
+    // in resolveIdeHomeVariable when running :test. RuntimeBridgeTest verifies availability
+    // and error classification; validate manually on Windows or after upgrading to the
+    // intellij-platform-gradle-plugin 2.x if needed.
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

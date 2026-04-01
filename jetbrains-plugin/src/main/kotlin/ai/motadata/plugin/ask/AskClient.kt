@@ -23,6 +23,12 @@ data class AskContextFile(
     val selectionReason: String
 )
 
+/**
+ * Result of a **legacy** direct POST `/v0/ask` call.
+ * Does not participate in [ai.motadata.plugin.bridge.RuntimeBridge] v1/evidence/fallback flows;
+ * [pluginAskRouting] is always [AskPluginRouting.V0_DIRECT] by construction.
+ * Prefer [AskMotadataAiAction] / [RuntimeBridge.askPlan] for governed Ask UX.
+ */
 data class AskResult(
     val success: Boolean,
     val contextRevision: String?,
@@ -40,6 +46,10 @@ data class AskResult(
     val pluginAskRouting: String = AskPluginRouting.V0_DIRECT,
 )
 
+/**
+ * Standalone HTTP client for `/v0/ask` only. Not wired from plugin actions today; kept for tests/ad-hoc use.
+ * Truth semantics differ from [RuntimeBridge.askPlan] (no merged `plugin_ask_routing_decision`, no v1 path).
+ */
 class AskClient(
     private val gson: Gson = Gson(),
     private val baseUrl: String = MotadataRuntimeConfig.planGateBaseUrl(),

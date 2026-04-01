@@ -4,7 +4,6 @@ import ai.motadata.plugin.bridge.AskPluginRouting
 import ai.motadata.plugin.bridge.RuntimeOutcome
 import ai.motadata.plugin.bridge.RuntimeResponse
 import ai.motadata.plugin.bridge.RuntimeUi
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 

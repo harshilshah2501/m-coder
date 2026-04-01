@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+
 from typing import Any, Dict, List, Optional, Tuple
 
 from runtime.context.contracts import (
@@ -66,7 +67,41 @@ def try_build_layer5_evidence(
         LOG.info("[ASK evidence_first] index build failed: %s", e)
         return None
     r = retrieve_lexical(idx, query, top_k, LexicalRetrievalConfig())
-    evb = build_evidence_bundle(r, idx)
+
+    authority_resolution = None
+    structural_context = None
+    try:
+        from runtime.layer5.authority.authority_evidence import (
+            build_authority_resolution,
+            build_structural_context_stub,
+            match_concepts_for_query,
+        )
+        from runtime.layer5.authority.code_index_adapter import create_adapter
+        from runtime.layer5.authority.code_index_builder import build_index
+        from runtime.layer5.authority.registry_loader import load_registry
+
+        reg_path = Path(__file__).resolve().parents[1] / "layer5" / "authority" / "product_authority_registry.yaml"
+        registry = load_registry(reg_path)
+        adapter = None
+        try:
+            adapter = create_adapter(code_index=build_index(Path(workspace_input_path)))
+        except Exception:
+            adapter = None
+        authority_resolution = build_authority_resolution(query, registry, adapter)
+        if authority_resolution and adapter:
+            mm = match_concepts_for_query(query, registry)
+            if mm:
+                structural_context = build_structural_context_stub(mm[0][0], adapter)
+    except Exception:
+        authority_resolution = None
+        structural_context = None
+
+    evb = build_evidence_bundle(
+        r,
+        idx,
+        authority_resolution=authority_resolution,
+        structural_context=structural_context,
+    )
     rev = (revision_for_bundle or "").strip() or "unknown-revision"
     ctx = context_bundle_from_evidence(evb, task_id=request_id or "ask-task", revision=rev)
     return evb.to_dict(), ctx

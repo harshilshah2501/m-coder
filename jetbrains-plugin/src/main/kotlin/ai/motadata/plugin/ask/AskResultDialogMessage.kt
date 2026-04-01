@@ -255,20 +255,32 @@ private fun appendPluginAskTruthSummaryLines(sb: StringBuilder, response: Runtim
     val tid = response.metadata["trace_id"] as? String
     val rm = response.metadata["routing_mode"] as? String
     val par = response.metadata[AskPluginRouting.METADATA_KEY] as? String
-    if (!tid.isNullOrBlank()) sb.appendLine("trace_id: $tid")
-    if (!rm.isNullOrBlank()) sb.appendLine("routing_mode: $rm")
-    if (!par.isNullOrBlank()) {
-        sb.appendLine("plugin_ask_routing: $par")
-        if (par == AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK ||
-            par == AskPluginRouting.CONTEXT_EXPORT_THEN_V0
-        ) {
-            sb.appendLine("Note: response used a plugin fallback path (see full response for details).")
+    val isFallback = par == AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK ||
+        par == AskPluginRouting.CONTEXT_EXPORT_THEN_V0
+
+    if (tid.isNullOrBlank() && rm.isNullOrBlank() && par.isNullOrBlank()) return
+
+    if (isFallback) {
+        if (!tid.isNullOrBlank()) sb.appendLine("trace_id: $tid")
+        if (!rm.isNullOrBlank()) sb.appendLine("routing_mode: $rm")
+        if (!par.isNullOrBlank()) {
+            sb.appendLine("plugin_ask_routing: $par")
+            sb.appendLine("Note: plugin fallback path — open full response for details.")
         }
+        return
+    }
+
+    val parts = mutableListOf<String>()
+    if (!tid.isNullOrBlank()) parts.add("trace=$tid")
+    if (!rm.isNullOrBlank()) parts.add("mode=$rm")
+    if (!par.isNullOrBlank()) parts.add("plugin=$par")
+    if (parts.isNotEmpty()) {
+        sb.appendLine("Routing: ${parts.joinToString(" · ")}")
     }
 }
 
 private fun appendPluginAskTruthBlock(sb: StringBuilder, response: RuntimeResponse) {
-    sb.appendLine("Plugin routing (truth)")
+    sb.appendLine("Routing (correlation)")
     sb.appendLine("────────────────────")
     val tid = response.metadata["trace_id"] as? String
     val rm = response.metadata["routing_mode"] as? String
@@ -279,12 +291,22 @@ private fun appendPluginAskTruthBlock(sb: StringBuilder, response: RuntimeRespon
     @Suppress("UNCHECKED_CAST")
     val decision = response.metadata["plugin_ask_routing_decision"] as? Map<*, *>
     if (decision != null && decision.isNotEmpty()) {
-        sb.appendLine("plugin_ask_routing_decision:")
-        decision.entries.sortedBy { it.key.toString() }.forEach { (k, v) ->
-            sb.appendLine("  $k: $v")
-        }
+        sb.appendLine(formatPluginRoutingDecisionOneLine(decision))
     }
     sb.appendLine()
+}
+
+/** Single audit line for full dialog — avoids multi-line flight-recorder dump for normal paths. */
+private fun formatPluginRoutingDecisionOneLine(decision: Map<*, *>): String {
+    val attempt = decision["attempt"]?.toString() ?: "?"
+    val result = decision["result"]?.toString() ?: "?"
+    val fb = decision["fallback_to"]?.toString()
+    val reason = decision["reason"]?.toString()
+    val tail = buildString {
+        if (fb != null) append(", fallback_to=").append(fb)
+        if (!reason.isNullOrBlank()) append(", reason=").append(reason)
+    }
+    return "plugin_ask_routing_decision: attempt=$attempt, result=$result$tail"
 }
 
 /**

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from runtime.layer5.evidence.snippet import SnippetSpan
 
@@ -98,9 +98,12 @@ class EvidenceBundle:
     canonical_root: str
     entries: Tuple[EvidenceEntry, ...]
     a5_authority_note: str
+    authority_resolution: Optional[Dict[str, Any]] = None
+    owner_evidence: Tuple[Dict[str, Any], ...] = ()
+    structural_context: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d: Dict[str, Any] = {
             "provisional": self.provisional,
             "schema_hint": self.schema_hint,
             "query_raw": self.query_raw,
@@ -112,6 +115,13 @@ class EvidenceBundle:
             "a5_authority_note": self.a5_authority_note,
             "entries": [e.to_dict() for e in self.entries],
         }
+        if self.authority_resolution is not None:
+            d["authority_resolution"] = self.authority_resolution
+        if self.owner_evidence:
+            d["owner_evidence"] = list(self.owner_evidence)
+        if self.structural_context is not None:
+            d["structural_context"] = self.structural_context
+        return d
 
     def to_json(self, *, sort_keys: bool = True) -> str:
         return json.dumps(self.to_dict(), sort_keys=sort_keys, separators=(",", ":"))

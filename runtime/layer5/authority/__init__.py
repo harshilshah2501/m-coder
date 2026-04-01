@@ -11,7 +11,8 @@ Provides:
 - Authority-aware ranking fusion (Phase 3)
 - Retrieval integration with feature flag (Phase 3)
 
-Phase 1+2+3: Data + validation + structure + ranking. No Plan-Gate changes yet.
+Phase 1–3: Data + validation + structure + ranking. Phase 4: evidence bundle authority
+payloads + Plan-Gate synthesis (see ``authority_evidence``, ``ask_service.authority_synthesis``).
 """
 
 from runtime.layer5.authority.registry_loader import (

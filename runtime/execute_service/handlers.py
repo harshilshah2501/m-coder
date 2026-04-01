@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import uuid
 from datetime import datetime, timezone
@@ -50,6 +51,8 @@ except ImportError:
 
 EXECUTE_REQUEST_SCHEMA = "execute_request.v0.1"
 EXECUTE_RESPONSE_SCHEMA = "execute_response.v0.1"
+
+LOG = logging.getLogger(__name__)
 
 # Client-supplied Plan-Gate posture hints (test/demo only). Rejected unless env allows.
 _PLAN_GATE_OVERRIDE_KEYS = frozenset({"plan_gate_refuse", "plan_gate_defer", "plan_gate_bounded_allow"})
@@ -108,6 +111,8 @@ def handle_execute_request(data: dict[str, Any]) -> dict[str, Any]:
     No downstream re-parsing of raw command; SandboxAction built from CanonicalExecutionIntent only.
     """
     request_id = data.get("request_id", f"req-{uuid.uuid4()}")
+    trace_log = str(data.get("trace_id") or "").strip() or "(none)"
+    LOG.info("[EXECUTE] trace_id=%s request_id=%s phase=begin", trace_log, request_id)
     repo_root = data.get("repo_root", "") or str(Path.cwd())
     revision = data.get("revision", "unknown-revision")
     branch = data.get("branch", "unknown")
