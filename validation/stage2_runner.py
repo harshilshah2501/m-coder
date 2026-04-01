@@ -185,6 +185,38 @@ def _trace_case_ids(pack_cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]
     return ordered
 
 
+def _case_level_failure_reasons(case: Dict[str, Any], row: Dict[str, Any]) -> List[str]:
+    """Human-readable reasons a row failed overall_pass (for failure_log.md)."""
+    reasons: List[str] = []
+    if row.get("status") != "ok":
+        reasons.append(f"status={row.get('status')}")
+    if row.get("false_strong") == "true":
+        reasons.append("false_strong")
+    if row.get("distractor_fail") == "true":
+        reasons.append("distractor_top5")
+    ec = case.get("expected_evidence_class") or {}
+    primary = ec.get("primary") or "WEAK"
+    pred = row.get("predicted_evidence_class", "")
+    allow = list(ec.get("allow") or [])
+    if not _accepted_evidence(str(pred), str(primary), allow):
+        reasons.append(f"evidence_mismatch(pred={pred}, expected_primary={primary})")
+    owner = (case.get("expected_primary_owner") or "").strip()
+    anchors = list(case.get("acceptable_anchors") or [])
+    top1 = row.get("top_1_path", "") or ""
+    ranked = [p for p in (row.get("ranked_paths") or "").split("|") if p]
+    top3 = ranked[:3]
+    owner_ok = (bool(owner) and top1 == owner) or (not owner)
+    anchor_ok = (not anchors) or any(a in top3 for a in anchors)
+    if owner:
+        if not owner_ok and not anchor_ok:
+            reasons.append("owner@1_and_anchor_miss")
+        elif not owner_ok and anchor_ok:
+            reasons.append("owner@1_miss_only")
+    if (case.get("expected_action_output") or {}).get("surface", "none") != "none" and row.get("action_ok") == "false":
+        reasons.append("action_surface_mismatch")
+    return reasons
+
+
 def _compute_metrics(cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     by_id = {r["case_id"]: r for r in rows}
     with_owner = [c for c in cases if (c.get("expected_primary_owner") or "").strip()]
@@ -383,12 +415,23 @@ def main() -> int:
 
     metrics = _compute_metrics(cases, rows)
 
-    # Hard gates
+    # Hard gates (aligned with metrics table)
     gate_owner = metrics["owner_at_1"] >= 0.90
+    gate_o3 = metrics["owner_at_3"] >= 0.95
     gate_dist = metrics["distractor_error_rate"] <= 0.10
     gate_fs = metrics["false_strong_rate"] == 0.0
     gate_nm = metrics["no_match_precision"] >= 0.95
-    gates_ok = gate_owner and gate_dist and gate_fs and gate_nm and not timeout_storm
+    n_action = int(metrics["counts"].get("action_eval", 0))
+    gate_action = metrics["action_correctness"] >= 0.90 if n_action > 0 else True
+    gates_ok = (
+        gate_owner
+        and gate_o3
+        and gate_dist
+        and gate_fs
+        and gate_nm
+        and gate_action
+        and not timeout_storm
+    )
 
     # CSV
     csv_path = out_dir / "stage2_results_sheet.csv"
@@ -417,12 +460,12 @@ def main() -> int:
         f"| Metric | Value | Threshold | Pass |",
         f"|--------|-------|-----------|------|",
         f"| owner@1 | {metrics['owner_at_1']:.4f} | ≥ 0.90 | {'yes' if gate_owner else 'no'} |",
-        f"| owner@3 | {metrics['owner_at_3']:.4f} | ≥ 0.95 | {'yes' if metrics['owner_at_3'] >= 0.95 else 'no'} |",
+        f"| owner@3 | {metrics['owner_at_3']:.4f} | ≥ 0.95 | {'yes' if gate_o3 else 'no'} |",
         f"| distractor_error_rate | {metrics['distractor_error_rate']:.4f} | ≤ 0.10 | {'yes' if gate_dist else 'no'} |",
         f"| weak_evidence_honesty | {metrics['weak_evidence_honesty']:.4f} | ≥ 0.85 (warn < 0.85) | |",
         f"| no_match_precision | {metrics['no_match_precision']:.4f} | ≥ 0.95 | {'yes' if gate_nm else 'no'} |",
         f"| false_strong_rate | {metrics['false_strong_rate']:.4f} | = 0 | {'yes' if gate_fs else 'no'} |",
-        f"| action_correctness | {metrics['action_correctness']:.4f} | ≥ 0.90 | {'yes' if metrics['action_correctness'] >= 0.90 else 'no'} |",
+        f"| action_correctness | {metrics['action_correctness']:.4f} | ≥ 0.90 | {'yes' if gate_action else 'no'} |",
         "",
         f"- Timeouts: {metrics['counts']['timeouts']} / {len(cases)}",
         f"- Timeout storm abort (>20%): `{timeout_storm}`",
@@ -442,11 +485,50 @@ def main() -> int:
     fl = out_dir / "stage2_failure_log.md"
     fl_body = ["# Stage 2 failure log", ""]
     if failure_lines:
-        fl_body.extend(failure_lines)
-    else:
-        fl_body.append("(no failures recorded)")
-    if timeout_storm:
+        fl_body.append("## Retrieval / invariant events")
         fl_body.append("")
+        fl_body.extend(failure_lines)
+        fl_body.append("")
+    if not gates_ok:
+        fl_body.append("## Aggregate metric gates (failed thresholds)")
+        fl_body.append("")
+        agg = []
+        if not gate_owner:
+            agg.append("- **owner@1** — below 0.90")
+        if not gate_o3:
+            agg.append("- **owner@3** — below 0.95")
+        if not gate_dist:
+            agg.append("- **distractor_error_rate** — above 0.10")
+        if not gate_fs:
+            agg.append("- **false_strong_rate** — non-zero")
+        if not gate_nm:
+            agg.append("- **no_match_precision** — below 0.95")
+        if not gate_action:
+            agg.append("- **action_correctness** — below 0.90 (when action cases exist)")
+        if timeout_storm:
+            agg.append("- **timeouts** — more than 20% of cases")
+        fl_body.extend(agg if agg else ["- (no aggregate gate flags; check runner logic)"])
+        fl_body.append("")
+    by_id = {r["case_id"]: r for r in rows}
+    per_case_fails: List[str] = []
+    for c in cases:
+        cid = c["id"]
+        r = by_id[cid]
+        if r.get("overall_pass") != "false":
+            continue
+        rs = _case_level_failure_reasons(c, r)
+        per_case_fails.append(f"- **`{cid}`** — {', '.join(rs) if rs else 'overall_pass false (see CSV)'}")
+    if per_case_fails:
+        fl_body.append("## Per-case failures (`overall_pass` false)")
+        fl_body.append("")
+        fl_body.extend(per_case_fails)
+        fl_body.append("")
+    if not failure_lines and gates_ok and not per_case_fails:
+        fl_body.append("(no per-case or invariant failures; gates passed)")
+    elif failure_lines and gates_ok and not per_case_fails:
+        fl_body.append("*(Aggregate gates passed; see invariant events above.)*")
+    fl_body.append("")
+    if timeout_storm:
         fl_body.append("## Abort")
         fl_body.append("")
         fl_body.append("- `abort_reason=timeout_storm` — more than 20% of queries timed out.")

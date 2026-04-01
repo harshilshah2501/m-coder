@@ -29,6 +29,8 @@ You are **not** validating vLLM or Plan-Gate HTTP in this runner unless you add 
 3. **m-coder** clone with `validation/stage2_runner.py` and `validation/stage2_query_pack.json`.
 4. **Python 3** available as `python3` (the runner is not invoked by `python` on all distros).
 
+**JetBrains plugin:** Running `stage2_runner.py` is **Python-only** on WSL. You do **not** need to install or upgrade the IDE plugin to execute or evaluate this harness. The plugin (e.g. **0.2.7+** on branch `feature/phase-4-product-authority`) matters only for **Ask/Execute from the IDE** against Plan-Gate and services—not for Stage 2 CSV/metrics.
+
 Optional but useful:
 
 - `git` in PATH (runner records `git rev-parse HEAD` for the **m-coder** repo in the manifest).
@@ -90,6 +92,32 @@ PYTHONPATH=. python3 validation/stage2_runner.py \
 | `stage2_runner_manifest.json` | `query_pack_sha256`, **`workspace_identity_hash`**, git HEAD |
 | `stage2_trace_samples/trace_<case_id>/` | Optional: `evidence_bundle.json` + `case_meta.json` |
 
+**Git and generated files:** [`validation/.gitignore`](../../validation/.gitignore) ignores runner outputs (`stage2_*.csv`/`.md`, manifest, `stage2_trace_samples/`, and `validation/runs/`). Using `--output_dir validation/runs/...` (as below) keeps local runs out of `git status` once pulled. If you write directly under `validation/` without `runs/`, those root-level artifacts are also ignored.
+
+### 4.1 Archiving runs outside the repository (optional)
+
+To keep stable paths for sharing, reviews, or roadmap attachments, write outputs under a directory **outside** the m-coder clone (not covered by `validation/.gitignore`—that is fine for archival):
+
+```bash
+mkdir -p ~/Harshil-PoCs/stage-2-artifacts
+# ... cd to M_CODER_ROOT, then:
+PYTHONPATH=. python3 validation/stage2_runner.py \
+  --query_pack validation/stage2_query_pack.json \
+  --workspace_root "$MOTADATA_AIOPS_ROOT" \
+  --output_dir ~/Harshil-PoCs/stage-2-artifacts/aiops_wsl_$(date -u +%Y%m%d_%H%M%S) \
+  --top_k 8 \
+  --per_query_timeout_sec 120 \
+  --write_traces
+```
+
+**Recorded example (real Motadata AIOps run on WSL):**
+
+```text
+~/Harshil-PoCs/stage-2-artifacts/aiops_wsl_20260401_091512
+```
+
+That folder contains the standard set: `stage2_metrics_report.md`, `stage2_results_sheet.csv`, `stage2_runner_manifest.json`, `stage2_failure_log.md`, and `stage2_trace_samples/` (per-case `evidence_bundle.json` / `case_meta.json` when `--write_traces` was used).
+
 ---
 
 ## 5. Regression protocol (required before trusting a “green”)
@@ -123,6 +151,13 @@ jq -r '.workspace_identity_hash' "$OUT1/stage2_runner_manifest.json"
 jq -r '.workspace_identity_hash' "$OUT2/stage2_runner_manifest.json"
 ```
 
+If `jq` is not installed, use Python:
+
+```bash
+python3 -c "import json; print(json.load(open('$OUT1/stage2_runner_manifest.json'))['workspace_identity_hash'])"
+python3 -c "import json; print(json.load(open('$OUT2/stage2_runner_manifest.json'))['workspace_identity_hash'])"
+```
+
 ---
 
 ## 6. What to evaluate (and how)
@@ -137,6 +172,7 @@ Open `stage2_metrics_report.md` in the run directory and verify **Pass** column 
 - **no_match_precision** ≥ 0.95  
 - **false_strong_rate** = 0  
 - **action_correctness** ≥ 0.90 (when plan/action rows exist)
+- **weak_evidence_honesty** — warning-oriented in the report; the runner reports **1.0** when the pack has **no** cases whose expected primary is `WEAK` or `INSUFFICIENT` (vacuous pass). Treat dips below **0.85** as worth investigating when those cases exist.
 
 If **OVERALL: FAIL**, do not treat the run as Stage 2 complete.
 
@@ -219,11 +255,17 @@ For each case:
 | Field | When to change |
 |-------|----------------|
 | `query_text` | Steer lexical retrieval (add class names, file basename, subsystem words) so the **correct** file ranks higher. |
-| `expected_primary_owner` | Set to the **actual** primary file you accept as top-1 for this query on Motadata (POSIX path under repo root). |
-| `acceptable_anchors` | List alternative correct files for **owner@3** (top-3 hit). |
-| `expected_evidence_class` | Align `primary` / `allow` with `assess_evidence_quality` output for that query on this tree (use the probe script). |
+| `expected_primary_owner` | Set from **repo ground truth** — the real product owner file/module for that intent (code review, architecture, or blame), not “whatever ranked first.” |
+| `acceptable_anchors` | Real adjacent implementation files (callers, siblings, real alternates). |
+| `expected_evidence_class` | What a **correct system should assert** for evidence strength on that query and repo (STRONG / WEAK / NO_MATCH), then **compare** current retrieval + quality gate to that bar. |
 
-Re-run the runner until gates pass or you document a **product** gap (e.g. quality gate returns STRONG for a query that should be NO_MATCH).
+**Do not** derive the forked Motadata pack **only** from “whatever `assess_evidence_quality` returns today.” That is **circular**: weak retrieval → weak gate → pack rewritten to bless weak retrieval → tests go green by lowering reality. The probe script (§7.2) is for **diagnosis** of current behavior, not for **setting** expected labels by fiat.
+
+Re-run the runner until gates pass, retrieval/noise policy improves, or you document a **product** gap with evidence (e.g. quality gate is wrong relative to ground truth — then fix the gate, not the label, unless labels were wrong).
+
+### 7.3.1 Failure log vs metrics (runner)
+
+When **OVERALL** is FAIL, `stage2_failure_log.md` lists **aggregate gate misses** and **per-case** rows where `overall_pass` is false (with short reason codes). If the log still looks empty aside from aggregates, upgrade the runner — older builds only listed timeouts and false-STRONG lines.
 
 ### 7.4 Forking the pack for AIOps (recommended)
 
