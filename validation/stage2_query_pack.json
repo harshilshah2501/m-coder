@@ -1,0 +1,357 @@
+{
+  "schema_version": "stage2.query_pack.v1",
+  "description": "Stage 2 grounded validation — fixture_noisy_aiops_workspace paths (POSIX).",
+  "workspace_note": "Default runner uses runtime/layer5/audit/fixture_noisy_aiops_workspace or MOTADATA_AIOPS_REPO_ROOT / L58_AIOPS_ROOT.",
+  "cases": [
+    {
+      "id": "s2.q01",
+      "category": "ask",
+      "query_text": "Where is TopologyEngine.java implemented for topology",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+        "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "/test/", "vendor", "generated", "/docs/"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q02",
+      "category": "ask",
+      "query_text": "How does availability correlation work at a high level?",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK", "INSUFFICIENT"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "allowed_if_labeled_weak",
+      "expected_action_output": { "surface": "plan_steps", "must_not_claim": ["executed"] }
+    },
+    {
+      "id": "s2.q03",
+      "category": "ask",
+      "query_text": "Where is ingestion pipeline configured for parser timeouts?",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor", "/test/"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q04",
+      "category": "ask",
+      "query_text": "List unrelated metrics dashboard JSON files for topology",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java",
+        "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK", "INSUFFICIENT"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q05",
+      "category": "debug",
+      "query_text": "Debug alert AvailabilityCorrelationEngine duplicate incidents correlate",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/nms/ObjectManager.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q06",
+      "category": "debug",
+      "query_text": "Stack trace in ObjectManager during topology refresh",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/nms/ObjectManager.java",
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q07",
+      "category": "debug",
+      "query_text": "Explain NullPointer in DependencyQueryProcessor",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "allowed_if_labeled_weak",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q08",
+      "category": "debug",
+      "query_text": "Intermittent failure in MetricsParser line parsing",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q09",
+      "category": "plan",
+      "query_text": "Plan change impact for ingestion pipeline parser timeout",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "plan_steps", "must_not_claim": ["executed"] }
+    },
+    {
+      "id": "s2.q10",
+      "category": "plan",
+      "query_text": "Rollout plan for topology cache store changes",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java",
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "allowed_if_labeled_weak",
+      "expected_action_output": { "surface": "plan_steps", "must_not_claim": ["executed"] }
+    },
+    {
+      "id": "s2.q11",
+      "category": "plan",
+      "query_text": "com.mindarray.nms.MetricEnricher metric enrichment migration",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java",
+        "motadata/src/main/java/com/mindarray/nms/MetricPoller.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "plan_steps", "must_not_claim": ["executed"] }
+    },
+    {
+      "id": "s2.q12",
+      "category": "code",
+      "query_text": "Where is MetricsAggregator referenced in metric processing?",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/metrics/MetricsAggregator.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q13",
+      "category": "code",
+      "query_text": "Find call sites of CorrelationService",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java",
+        "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q14",
+      "category": "code",
+      "query_text": "Refactor target: DependencyQueryProcessor query batching",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q15",
+      "category": "weak_ambiguous",
+      "query_text": "Fix it without any code context zzzz_token_zzzz",
+      "expected_primary_owner": "",
+      "acceptable_anchors": [],
+      "unacceptable_top5_paths": [],
+      "expected_evidence_class": { "primary": "NO_MATCH", "allow": [] },
+      "expected_behavior": "refuse",
+      "expected_distractor_behavior": "n/a",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q16",
+      "category": "weak_ambiguous",
+      "query_text": "The pipeline is slow",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java"
+      ],
+      "unacceptable_top5_paths": [],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK", "INSUFFICIENT"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "allowed_if_labeled_weak",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q17",
+      "category": "weak_ambiguous",
+      "query_text": "Something broke in AIops zzzz_nonexistent_ref",
+      "expected_primary_owner": "",
+      "acceptable_anchors": [],
+      "unacceptable_top5_paths": [],
+      "expected_evidence_class": { "primary": "NO_MATCH", "allow": [] },
+      "expected_behavior": "refuse",
+      "expected_distractor_behavior": "n/a",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q18",
+      "category": "distractor",
+      "query_text": "TopologyEngine ERROR tail -f /var/log/motadata/engine.log line 99231 null",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+        "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "log/", ".log"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q19",
+      "category": "distractor",
+      "query_text": "Correlation duplicate incidents vendor_static noise com.vendor.FakeCorrelationStub",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+      ],
+      "unacceptable_top5_paths": ["vendor", "stub", "fake"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "anchored_explanation",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q20",
+      "category": "distractor",
+      "query_text": "MetricsParser test/ only junit failure stacktrace",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "test/", "junit"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q21",
+      "category": "compound",
+      "query_text": "Debug duplicate incidents and plan ingestion timeout impact",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+      ],
+      "unacceptable_top5_paths": ["/logs/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "must_not_rank_in_top5",
+      "expected_action_output": { "surface": "plan_steps", "must_not_claim": ["executed"] }
+    },
+    {
+      "id": "s2.q22",
+      "category": "compound",
+      "query_text": "Explain topology refresh TopologyEngine.java and TraceProcessor role",
+      "expected_primary_owner": "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+        "motadata/src/main/java/com/mindarray/trace/TraceProcessor.java"
+      ],
+      "unacceptable_top5_paths": ["/test/", "vendor"],
+      "expected_evidence_class": { "primary": "STRONG", "allow": ["WEAK"] },
+      "expected_behavior": "cautious",
+      "expected_distractor_behavior": "allowed_if_labeled_weak",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q23",
+      "category": "no_match",
+      "query_text": "Where is NonExistentCorrelationSymbol999 used?",
+      "expected_primary_owner": "",
+      "acceptable_anchors": [
+        "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java"
+      ],
+      "unacceptable_top5_paths": [],
+      "expected_evidence_class": { "primary": "NO_MATCH", "allow": [] },
+      "expected_behavior": "refuse",
+      "expected_distractor_behavior": "n/a",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    },
+    {
+      "id": "s2.q24",
+      "category": "no_match",
+      "query_text": "zzzz_unknown_subsystem_XYZABC_99999 module search",
+      "expected_primary_owner": "",
+      "acceptable_anchors": [],
+      "unacceptable_top5_paths": [],
+      "expected_evidence_class": { "primary": "NO_MATCH", "allow": [] },
+      "expected_behavior": "refuse",
+      "expected_distractor_behavior": "n/a",
+      "expected_action_output": { "surface": "none", "must_not_claim": [] }
+    }
+  ]
+}
