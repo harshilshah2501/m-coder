@@ -2,6 +2,19 @@
 
 **Status:** Stage 3 runtime loop implementation is **accepted for burn-in** (deterministic pytest coverage). This document gives **exact commands** for local validation and for the **governed vertical slice** (WSL evidence → GPU Plan-Gate + vLLM → sandbox / spool), without implying the IDE yet calls `Stage3LoopController` directly (that integration is a separate wiring step).
 
+> **Framing:** “**Stage 3**” here means the **controlled runtime loop** burn-in and validation workstream (`Stage3LoopController` and related modules). This runbook is **not** introducing or claiming a separate numbered **program stage** beyond how the live tracker uses “Stage 3” (`docs/LIVE_ROADMAP_TRACKER.md`, **§7** disambiguation). It is **Stage 3 loop burn-in** plus **WSL→GPU governed-stack demo validation** — not “stage-4 WSL validation” or any extra stage label.
+
+### Proves / does not prove
+
+**This document proves (when steps pass):**
+
+- **Part A:** The Stage 3 loop implementation behaves as intended in **Python** on WSL (or equivalent): schemas, state machine, controller, executor normalization, ledger linkage — via **`runtime/tests/test_stage3_loop.py`** with test doubles (offline).
+- **Parts B–E:** The **existing** governed **WSL → GPU** vertical slice (Context Layer, tunneled Plan-Gate, Ask/Execute-related HTTP paths, spool/logging) can be brought up and checked with the commands below.
+
+**This document does not yet prove:**
+
+- That a **real IDE or product request** traverses **`Stage3LoopController`** end-to-end with live evidence, Plan-Gate, sandbox, and final response — unless and until that **product wiring** is landed and validated separately.
+
 ---
 
 ## 1. Machine roles and paths
@@ -17,7 +30,7 @@ Adjust usernames if your WSL user is not `root`; keep **`MOTADATA_ROOT`** pointi
 
 ## 2. Part A — Burn-in from WSL (Stage 3 pytest)
 
-**Purpose:** Reproduce the **22** Stage 3 scenarios under pressure (CI parity on your laptop/WSL).
+**Purpose:** Run **all** Stage 3 burn-in tests in `runtime/tests/test_stage3_loop.py` and confirm **every test passes** (CI parity on your laptop/WSL). *Current baseline when this runbook was last tightened: **22** tests passed (2026-04-02); the file may grow — the acceptance bar is **0 failures**, not a fixed count.*
 
 **Prerequisites**
 
@@ -32,7 +45,7 @@ cd "$M_CODER_ROOT"
 python3 -m pytest runtime/tests/test_stage3_loop.py -v --tb=short
 ```
 
-**Expected:** `22 passed` (0 failed).
+**Expected:** **All** tests in `test_stage3_loop.py` **pass** (0 failed). *(Baseline: 22 passed as of 2026-04-02.)*
 
 ### 2.1 Scenario → test mapping (targeted runs)
 
@@ -41,7 +54,7 @@ Use these when you want **one scenario at a time** (`-k` matches test name subst
 | Burn-in scenario | Pytest filter (example) | What it proves |
 |------------------|---------------------------|----------------|
 | **ASK — no-tool success** | `-k terminal_correctness_success_no_tool_not_run` | `COMPLETED`, `execution_result.status == not_run` |
-| **DEBUG — fake / invalid evidence refs** | `-k fake_evidence_refs_rejected` | Evidence integrity fails closed; no sandbox run (test envelope defaults to **ASK**; ref validation is what matters) |
+| **Evidence integrity — refs outside bundle (fail-closed)** | `-k fake_evidence_refs_rejected` | Proposal cites evidence refs not in the task envelope; runtime rejects; no sandbox run *(task_type in test is **ASK** by default — this scenario tests **ref/bundle integrity**, not DEBUG-specific semantics)* |
 | **CODE — blocked tool path** | `-k tool_denied_path_is_blocked` | `BLOCKED`, `execution_result.status == blocked` |
 | **EXECUTE — pre-loop refusal** | `-k plan_gate_refusal` | `REFUSED` before model; `not_run` |
 | **EXECUTE — in-loop Plan-Gate recheck failure** | `-k inloop_plan_gate_recheck_exception` | Fail-closed `inloop_plan_gate_failed`; **sandbox calls == 0** |
@@ -57,7 +70,7 @@ python3 -m pytest runtime/tests/test_stage3_loop.py -v --tb=short \
   -k "terminal_correctness_success_no_tool_not_run or fake_evidence_refs_rejected or tool_denied_path_is_blocked or plan_gate_refusal or inloop_plan_gate_recheck_exception_fail_closed or timeout_normalization_and_failed_truth or terminal_tool_failure_after_tool_result_ready_regression or insufficiency_after_tool_result or tool_success_execution_truth_executed or ledger_trace_linkage_contains_refs"
 ```
 
-Expect **10 passed** from that filter (subset of the full 22).
+Expect **all** tests matched by that filter to **pass** (*10* tests matched as of 2026-04-02; count may change if names evolve).
 
 ---
 
@@ -135,6 +148,8 @@ Details: `packaging/motadata-context-layer/README.md`, `docs/runtime/WSL_CONTEXT
 
 The JetBrains plugin talks to **Plan-Gate** at a configurable base URL (default `http://127.0.0.1:8089`). Context Layer stays on **WSL `127.0.0.1:8091`**.
 
+**Caveat (Windows ↔ WSL):** A process on **Windows** (including the IDE) cannot assume `127.0.0.1:8091` reaches the Context Layer in WSL — depending on setup, you may need **port forwarding** (`localhostForwarding`, `netsh` portproxy, or running the client **inside** WSL). Verify with `curl` from the **same environment the plugin uses** before debugging “Context Layer down.”
+
 **Typical pattern:** run Plan-Gate (+ vLLM) on the **GPU host**, then from **Windows** open an SSH local forward so the IDE sees Plan-Gate on localhost:
 
 ```powershell
@@ -150,15 +165,15 @@ curl.exe http://127.0.0.1:8089/healthz
 **IDE / JVM options** (see `jetbrains-plugin/.../MotadataRuntimeConfig.kt`):
 
 - `-Dmotadata.plan_gate.url=http://127.0.0.1:8089` or env `MOTADATA_PLAN_GATE_URL`
-- Context Layer: `-Dmotadata.context_layer.url=http://127.0.0.1:8091` (WSL port forwarded if needed, or native WSL localhost from plugin depending on your setup)
+- Context Layer: `-Dmotadata.context_layer.url=http://127.0.0.1:8091` — must resolve to the running service from the **plugin host** (see caveat above; not automatic for all Windows+WSL layouts)
 
 Extended walkthrough: `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md`.
 
 ---
 
-## 6. Part E — End-to-end checklist (governed slice)
+## 6. Part E — End-to-end checklist (governed vertical slice only)
 
-Use this as a **manual demo script** after Parts B–D are green.
+Use this as a **manual demo script** after Parts B–D are green. It validates the **current product stack** (Context Layer → Plan-Gate → Ask/Execute / vLLM paths **as implemented today**). It does **not** assert a single user request flows **evidence → `Stage3LoopController` → Plan-Gate → sandbox → final response** — that chained product path is **not** what this checklist exercises unless separate wiring exists and is documented elsewhere.
 
 | Step | Where | Action | Pass criterion |
 |------|--------|--------|----------------|
@@ -178,6 +193,8 @@ Use this as a **manual demo script** after Parts B–D are green.
 - **Burn-in (Part A)** validates the **Python** loop: state machine, schemas, decision engine, tool executor normalization, ledger trace reconstruction — **fully offline** with test doubles.
 - **Parts B–E** validate the **existing product vertical**: Context Layer → Plan-Gate → Ask/Execute services → vLLM, as wired today.
 - Wiring **production** traffic so a single user request flows through **real** evidence, **real** Plan-Gate, **real** vLLM, **real** sandbox, and **`Stage3LoopController`** is a **follow-on integration** task; use this doc to keep **environment variables, ports, and health commands** identical across WSL and GPU while that wiring lands.
+
+**Acceptance boundary:** Passing Part A burn-in and this governed-slice checklist does **not** by itself equal **final product-path acceptance** for the integrated runtime loop; **direct** `Stage3LoopController` product integration requires the **later wiring milestone** and its own sign-off criteria.
 
 ---
 
