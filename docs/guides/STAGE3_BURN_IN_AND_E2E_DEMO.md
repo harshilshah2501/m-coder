@@ -2,6 +2,8 @@
 
 **Status:** Stage 3 runtime loop implementation is **accepted for burn-in** (deterministic pytest coverage). This document gives **exact commands** for local validation and for the **governed vertical slice** (WSL evidence → GPU Plan-Gate + vLLM → sandbox / spool), without implying the IDE yet calls `Stage3LoopController` directly (that integration is a separate wiring step).
 
+**See also:** [JetBrains Plugin Demo Guide](../runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md) — IDE + Plan-Gate + **v0/v1 Ask** demo flows; **does not** exercise `Stage3LoopController` (same boundary as below).
+
 > **Framing:** “**Stage 3**” here means the **controlled runtime loop** burn-in and validation workstream (`Stage3LoopController` and related modules). This runbook is **not** introducing or claiming a separate numbered **program stage** beyond how the live tracker uses “Stage 3” (`docs/LIVE_ROADMAP_TRACKER.md`, **§7** disambiguation). It is **Stage 3 loop burn-in** plus **WSL→GPU governed-stack demo validation** — not “stage-4 WSL validation” or any extra stage label.
 
 ### Proves / does not prove

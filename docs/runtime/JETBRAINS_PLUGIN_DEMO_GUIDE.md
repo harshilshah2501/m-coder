@@ -2,7 +2,18 @@
 
 Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit interception (shadow mode)**, **Repo-Aware Ask (plan-only)**, and **Explain/Debug selected code**. Use this when testing or presenting the plugin.
 
-**Related:** [JETBRAINS_PLUGIN_MVP_SPIKE.md](JETBRAINS_PLUGIN_MVP_SPIKE.md) — architecture and contracts. **Explain/Debug (Phase-2):** [PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md](../demo/PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md) — implementation and contracts. **Wiring fix:** [JETBRAINS_PLUGIN_RUNTIME_WIRING_FIX.md](JETBRAINS_PLUGIN_RUNTIME_WIRING_FIX.md).
+**Related**
+
+| Doc | Role |
+|-----|------|
+| [JETBRAINS_PLUGIN_MVP_SPIKE.md](JETBRAINS_PLUGIN_MVP_SPIKE.md) | Architecture and contracts |
+| [PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md](../demo/PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md) | Explain/Debug (Phase-2) implementation |
+| [JETBRAINS_PLUGIN_RUNTIME_WIRING_FIX.md](JETBRAINS_PLUGIN_RUNTIME_WIRING_FIX.md) | Runtime wiring fix |
+| [WSL_CONTEXT_LAYER_CLIENT.md](WSL_CONTEXT_LAYER_CLIENT.md) | Context Layer client / `8091` |
+| [STAGE3_BURN_IN_AND_E2E_DEMO.md](../guides/STAGE3_BURN_IN_AND_E2E_DEMO.md) | Stage 3 loop burn-in + WSL→GPU governed slice (pytest + health checks) |
+| [LIVE_ROADMAP_TRACKER.md](../LIVE_ROADMAP_TRACKER.md) | Canonical program status (**§1**, **§5**, **§6**, **§7**) |
+
+**Scope note (2026-04):** This guide covers **Plan-Gate–mediated plugin demos** (commit shadow, Ask, Explain/Debug). It does **not** describe a full product request through **`Stage3LoopController`** — that integration is **not** wired through the IDE path yet; see **STAGE3** doc *Proves / does not prove* and tracker **§6.20** / **§B7**.
 
 ---
 
@@ -49,6 +60,12 @@ Must return:
 - GPU Plan-Gate receives a structured context/evidence bundle rather than depending on direct repo-path access.
 - GPU-side direct repository access is not required in this mode.
 
+**Shipped pieces (align with tracker, not aspirational only):** installable wheel + HTTP — `packaging/motadata-context-layer` → `runtime.context_layer_service` on **`127.0.0.1:8091`** by default. Plan-Gate **`POST /v1/ask`** consumes `layer5.evidence_bundle.v1` when evidence-first is used.
+
+**Evidence-first Ask (opt-in):** default plugin path may still be **`POST /v0/ask`**. Evidence-first is enabled via JVM property `motadata.ask.evidence_first` or env `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST` (see `jetbrains-plugin/.../MotadataAskFlags.kt`; tracker **§1.1**). When ON, flow is: export evidence from Context Layer → **`/v1/ask`** with bundle.
+
+**Windows ↔ WSL caveat:** the IDE on Windows may not reach **`127.0.0.1:8091`** in WSL without **port forwarding** or running the client in the same network namespace as the service — verify with `curl` from the **same host environment** the plugin uses (see **STAGE3** doc Part D caveat).
+
 ---
 
 ## 1. Prerequisites
@@ -91,7 +108,7 @@ Defaults: host `127.0.0.1`, port **8089**. To use another port:
 PLAN_GATE_PORT=9090 python3 -m runtime.plan_gate_service.app
 ```
 
-(The plugin is hardcoded to `127.0.0.1:8089`; if you change the port, you must change it in the plugin or run on 8089.)
+(Default Plan-Gate base URL is `http://127.0.0.1:8089` in `MotadataRuntimeConfig`; override with **`-Dmotadata.plan_gate.url=...`** or env **`MOTADATA_PLAN_GATE_URL`**. If you change the service port without overriding these, the plugin will not match the server.)
 
 ### Then establish SSH tunnel (on Windows)
 
@@ -329,6 +346,7 @@ Check: plugin logs (**Help → Show Log**), RuntimeBridge errors, **stale plugin
 | **runIde fails: GradleJvmSupportMatrix / Java 25** | Use JDK 17: `export JAVA_HOME=/path/to/jdk17` then `./gradlew runIde`. Clear sandbox: `rm -rf jetbrains-plugin/build/idea-sandbox` if needed. |
 | **runIde fails: libsecret-1.so** | On Linux/WSL install `libsecret-1-dev` or ignore if you do not need stored passwords in the sandbox. |
 | **Explain/Debug shows Reasoning unavailable** | vLLM (or compatible) service must be running (default `http://127.0.0.1:8000`). Set `MOTADATA_EXPLAIN_VLLM_URL` if elsewhere. |
+| **Context Layer / evidence-first fails from Windows IDE** | Service binds WSL `127.0.0.1:8091` — Windows may need forwarding or WSL-side client; see Mode B caveat above and `WSL_CONTEXT_LAYER_CLIENT.md`. |
 
 ---
 

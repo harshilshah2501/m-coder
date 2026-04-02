@@ -37,7 +37,8 @@
 - **Evidence-first default:** **OFF** in plugin — alignment with `**layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
 - **Observability gap:** Plan-Gate HTTP does **not** log each request by default; **no unified trace** (Context Layer ↔ Plan-Gate ↔ vLLM) without further work — see **§1.4 Track OBS**.
 - **Retrieval:** PR-6 true-positive debug retrieval baseline is **COMPLETE / LOCKED** (deterministic, workspace-local). Active risk is **generalization + validation thresholds** under **§B1** / **§1.4 Track RET** (feeds **L5.8**-class metrics maturity; **L5.8 harness closure** itself is **COMPLETE** per **B2** — not contradictory).
-- **Host profiles:** **Windows+WSL+GPU** and **native Linux** are charter targets; plugin **Plan-Gate URL is hardcoded** `127.0.0.1:8089` today — config externalization is backlog, not done.
+- **Host profiles:** **Windows+WSL+GPU** and **native Linux** are charter targets; plugin **Plan-Gate base URL defaults to** `127.0.0.1:8089` (**`motadata.plan_gate.url`** / **`MOTADATA_PLAN_GATE_URL`** override) — full externalization backlog in **§B5**.
+- **IDE operator demo:** `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md` — Plan-Gate + plugin flows; **does not** exercise **`Stage3LoopController`** (see **§6.20**, **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md**).
 
 ### 1.2 Current truth state (honest)
 
