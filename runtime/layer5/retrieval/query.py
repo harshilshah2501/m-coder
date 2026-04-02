@@ -5,10 +5,37 @@ Query normalization for lexical retrieval (deterministic).
 from __future__ import annotations
 
 import re
-from typing import Tuple
+from typing import Set, Tuple
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+# Deterministic query-side token expansions for lexical recall (no index change).
+# Pairs: base token present in query → extra tokens matched against paths/basenames.
+_RECALL_EXPAND: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    ("poll", ("polling", "poller", "polled")),
+    ("collect", ("collector", "collection", "collecting")),
+    ("collection", ("collect", "collector", "collecting")),
+    ("process", ("processor", "processing", "processed")),
+)
+# When a role-shaped token is present, also add its short root (basename/path overlap).
+_RECALL_ROOT: Tuple[Tuple[str, str], ...] = (
+    ("collector", "collect"),
+    ("processor", "process"),
+    ("poller", "poll"),
+)
+
+
+def _expand_recall_tokens(tokens: Set[str], min_token_len: int) -> None:
+    for base, extras in _RECALL_EXPAND:
+        if base not in tokens:
+            continue
+        for e in extras:
+            if len(e) >= min_token_len:
+                tokens.add(e)
+    for role, root in _RECALL_ROOT:
+        if role in tokens and len(root) >= min_token_len:
+            tokens.add(root)
 
 
 def _split_camel_identifier(token: str) -> Tuple[str, ...]:
@@ -37,4 +64,5 @@ def normalize_query(raw: str, min_token_len: int = 2) -> Tuple[str, ...]:
         for tok in split:
             if len(tok) >= min_token_len:
                 tokens.add(tok)
+    _expand_recall_tokens(tokens, min_token_len)
     return tuple(sorted(tokens))

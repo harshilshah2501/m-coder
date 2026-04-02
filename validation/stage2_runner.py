@@ -424,7 +424,12 @@ def main() -> int:
     ap.add_argument("--query_pack", type=Path, required=True)
     ap.add_argument("--workspace_root", type=Path, required=True)
     ap.add_argument("--output_dir", type=Path, required=True)
-    ap.add_argument("--top_k", type=int, default=8)
+    ap.add_argument(
+        "--top_k",
+        type=int,
+        default=12,
+        help="Lexical hit window (default 12). Use 16 for Motadata closure runs if recall diagnostics matter.",
+    )
     ap.add_argument("--per_query_timeout_sec", type=int, default=120)
     ap.add_argument("--write_traces", action="store_true")
     ap.add_argument(

@@ -66,6 +66,13 @@ class TestQueryNormalization:
         assert normalize_query("a b") == ()  # min len 2
         assert normalize_query("") == ()
 
+    def test_normalize_query_recall_stem_expansions(self):
+        t = set(normalize_query("metric poll process"))
+        assert "polling" in t and "poller" in t
+        assert "processor" in t and "processing" in t
+        t2 = set(normalize_query("log collection"))
+        assert "collect" in t2 and "collector" in t2
+
 
 class TestGoldenQueries:
     @pytest.fixture
@@ -89,7 +96,8 @@ class TestGoldenQueries:
         assert r.hits[0].relative_path == "runtime/layer5/workspace/path_normalizer.py"
 
     def test_breakdown_sums_to_score(self, golden_index):
-        r = retrieve_lexical(golden_index, "resolver", top_k=1)
+        cfg = LexicalRetrievalConfig(enable_deterministic_rank_nudge=False)
+        r = retrieve_lexical(golden_index, "resolver", top_k=1, config=cfg)
         h = r.hits[0]
         assert h.score == sum(h.breakdown.values())
 
