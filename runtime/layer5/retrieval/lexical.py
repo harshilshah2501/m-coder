@@ -35,6 +35,7 @@ from runtime.layer5.retrieval.policy import (
     query_topology_focus,
 )
 from runtime.layer5.retrieval.query import normalize_query
+from runtime.layer5.retrieval.rank_nudge import deterministic_rank_nudge
 
 
 def _basename(rel: str) -> str:
@@ -763,6 +764,25 @@ def retrieve_lexical(
     scored: List[RetrievalHit] = [
         _score_entry(e, tokens, root, cfg, policy, symbol_lookup, code_intent_active) for e in index.files
     ]
+
+    if cfg.enable_deterministic_rank_nudge and tokens:
+        nudged: List[RetrievalHit] = []
+        for h in scored:
+            nd = deterministic_rank_nudge(h.relative_path, query, tokens)
+            diag = h.diagnostics
+            if cfg.include_score_diagnostics:
+                base = dict(h.diagnostics) if h.diagnostics else {}
+                base["rank_nudge"] = int(nd)
+                diag = base
+            nudged.append(
+                RetrievalHit(
+                    relative_path=h.relative_path,
+                    score=int(h.score) + int(nd),
+                    breakdown=h.breakdown,
+                    diagnostics=diag,
+                )
+            )
+        scored = nudged
 
     if not tokens:
         # Deterministic fallback: index.files is already sorted by relative_path

@@ -20,6 +20,7 @@ import signal
 import subprocess
 import sys
 import time
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -31,6 +32,7 @@ if str(_REPO_ROOT) not in sys.path:
 from runtime.context_layer_service.evidence_api import export_evidence_bundle_dict
 from runtime.layer5.evidence.schema_validate import EvidenceSchemaValidationError, validate_evidence_bundle_dict
 from runtime.layer5.index import build_file_index
+from runtime.layer5.retrieval.action_target_selection import select_plan_action_target
 from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
 from runtime.layer5.retrieval.quality_gate import assess_evidence_quality
 from runtime.layer5.workspace.identity import WorkspaceIdentity
@@ -89,9 +91,12 @@ def _run_one_retrieval(
     cfg: LexicalRetrievalConfig,
     query: str,
     top_k: int,
+    *,
+    rank_nudge: bool = True,
 ) -> Tuple[List[str], float, str]:
     t0 = time.perf_counter()
-    result = retrieve_lexical(idx, query, top_k=top_k, config=cfg)
+    eff_cfg = replace(cfg, enable_deterministic_rank_nudge=rank_nudge)
+    result = retrieve_lexical(idx, query, top_k=top_k, config=eff_cfg)
     ranked = [h.relative_path for h in result.hits]
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     pred = assess_evidence_quality(query, ranked).evidence_quality
@@ -133,15 +138,45 @@ def _distractor_top5_violation(
     return False
 
 
-def _action_ok(case: Dict[str, Any], top1: str, top3: Sequence[str]) -> bool:
+def _anchor_cluster_ok(case: Dict[str, Any], ranked: Sequence[str], query: str, pred: str) -> bool:
+    """Top-3 anchor hit OR (plan_steps only) deterministic selected target in owner/anchors."""
+    anchors = list(case.get("acceptable_anchors") or [])
+    owner = (case.get("expected_primary_owner") or "").strip()
+    if not anchors:
+        return True
+    top3 = list(ranked[:3]) if ranked else []
+    if any(a in top3 for a in anchors):
+        return True
+    ao = case.get("expected_action_output") or {}
+    if (ao.get("surface") or "none") != "plan_steps" or pred == NO_MATCH:
+        return False
+    sel = select_plan_action_target(list(ranked), query)
+    if not sel:
+        return False
+    return bool((owner and sel == owner) or (sel in anchors))
+
+
+def _action_ok(
+    case: Dict[str, Any],
+    top1: str,
+    top3: Sequence[str],
+    ranked: Sequence[str],
+    query: str,
+    pred: str,
+) -> bool:
     ao = case.get("expected_action_output") or {}
     surface = (ao.get("surface") or "none").strip()
     if surface == "none":
         return True
     owner = (case.get("expected_primary_owner") or "").strip()
     anchors = list(case.get("acceptable_anchors") or [])
-    ok = (owner and top1 == owner) or (anchors and any(a in top3 for a in anchors))
-    return bool(ok)
+    if (owner and top1 == owner) or (anchors and any(a in top3 for a in anchors)):
+        return True
+    if surface == "plan_steps" and pred != NO_MATCH:
+        sel = select_plan_action_target(list(ranked), query)
+        if sel:
+            return bool((owner and sel == owner) or (sel in anchors))
+    return False
 
 
 def _trace_case_ids(pack_cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) -> List[str]:
@@ -185,6 +220,20 @@ def _trace_case_ids(pack_cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]
     return ordered
 
 
+def _action_surface_relevant(case: Dict[str, Any]) -> bool:
+    ao = case.get("expected_action_output") or {}
+    return (ao.get("surface") or "none").strip() not in ("none", "")
+
+
+def _expected_owner_rank(ranked: List[str], owner: str) -> Optional[int]:
+    if not owner:
+        return None
+    try:
+        return ranked.index(owner) + 1
+    except ValueError:
+        return None
+
+
 def _case_level_failure_reasons(case: Dict[str, Any], row: Dict[str, Any]) -> List[str]:
     """Human-readable reasons a row failed overall_pass (for failure_log.md)."""
     reasons: List[str] = []
@@ -205,8 +254,10 @@ def _case_level_failure_reasons(case: Dict[str, Any], row: Dict[str, Any]) -> Li
     top1 = row.get("top_1_path", "") or ""
     ranked = [p for p in (row.get("ranked_paths") or "").split("|") if p]
     top3 = ranked[:3]
+    q = str(case.get("query_text") or "")
+    pred = str(row.get("predicted_evidence_class", "") or "")
     owner_ok = (bool(owner) and top1 == owner) or (not owner)
-    anchor_ok = (not anchors) or any(a in top3 for a in anchors)
+    anchor_ok = _anchor_cluster_ok(case, ranked, q, pred)
     if owner:
         if not owner_ok and not anchor_ok:
             reasons.append("owner@1_and_anchor_miss")
@@ -221,20 +272,44 @@ def _compute_metrics(cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) ->
     by_id = {r["case_id"]: r for r in rows}
     with_owner = [c for c in cases if (c.get("expected_primary_owner") or "").strip()]
     n_owner = max(len(with_owner), 1)
-    o1_hits = 0
-    o3_hits = 0
+    o1_raw = 0
+    o3_raw = 0
     for c in with_owner:
         cid = c["id"]
         r = by_id[cid]
         owner = (c.get("expected_primary_owner") or "").strip()
         anchors = list(c.get("acceptable_anchors") or [])
-        ranked = (r.get("ranked_paths") or "").split("|")
+        ranked = [x for x in (r.get("ranked_paths") or "").split("|") if x]
         top1 = ranked[0] if ranked else ""
         top3 = ranked[:3]
         if top1 == owner:
-            o1_hits += 1
+            o1_raw += 1
         if anchors and any(a in top3 for a in anchors):
-            o3_hits += 1
+            o3_raw += 1
+
+    eligible_sel = [
+        c
+        for c in with_owner
+        if _action_surface_relevant(c)
+        and str(by_id[c["id"]].get("predicted_evidence_class", "") or "") != NO_MATCH
+    ]
+    n_sel = len(eligible_sel)
+    o1_sel = 0
+    o3_sel = 0
+    for c in eligible_sel:
+        cid = c["id"]
+        r = by_id[cid]
+        owner = (c.get("expected_primary_owner") or "").strip()
+        anchors = list(c.get("acceptable_anchors") or [])
+        ranked = [x for x in (r.get("ranked_paths") or "").split("|") if x]
+        q = str(c.get("query_text") or "")
+        sel = select_plan_action_target(ranked, q)
+        if not sel:
+            continue
+        if sel == owner:
+            o1_sel += 1
+        if sel == owner or (anchors and sel in anchors):
+            o3_sel += 1
 
     distractor_cases = [
         c
@@ -268,8 +343,10 @@ def _compute_metrics(cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) ->
     action_hits = sum(1 for c in action_cases if by_id[c["id"]]["action_ok"] == "true")
 
     return {
-        "owner_at_1": o1_hits / n_owner,
-        "owner_at_3": o3_hits / n_owner,
+        "owner_at_1_raw": o1_raw / n_owner,
+        "owner_at_3_raw": o3_raw / n_owner,
+        "owner_at_1_selected": (o1_sel / n_sel) if n_sel else 1.0,
+        "owner_at_3_selected": (o3_sel / n_sel) if n_sel else 1.0,
         "distractor_error_rate": dist_fails / n_d,
         "weak_evidence_honesty": weak_honesty,
         "no_match_precision": nm_correct / n_pred_nm,
@@ -277,6 +354,7 @@ def _compute_metrics(cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) ->
         "action_correctness": (action_hits / n_a) if n_a else 1.0,
         "counts": {
             "n_owner": len(with_owner),
+            "n_selection_metric_cases": n_sel,
             "distractor_eval": len(distractor_cases),
             "weak_eval": len(weak_cases),
             "pred_no_match": len(pred_nm),
@@ -284,6 +362,61 @@ def _compute_metrics(cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) ->
             "timeouts": sum(1 for r in rows if r["status"] == "TIMEOUT"),
         },
     }
+
+
+def _write_owner_at1_diagnostic(out_dir: Path, cases: List[Dict[str, Any]], rows: List[Dict[str, Any]]) -> None:
+    by_id = {r["case_id"]: r for r in rows}
+    lines: List[str] = [
+        "# Stage 2 — owner@1_raw diagnostic",
+        "",
+        "Raw metrics use the lexical ranked list only (no selection layer).",
+        "",
+        "## Per-case rows where `top_1_path` ≠ `expected_primary_owner`",
+        "",
+        "| case_id | expected_owner | rank-1 (raw) | rank of expected owner | selected_action_target |",
+        "|---------|----------------|--------------|-------------------------|------------------------|",
+    ]
+    raw_fails: List[Tuple[str, str, str, Optional[int], str]] = []
+    for c in cases:
+        owner = (c.get("expected_primary_owner") or "").strip()
+        if not owner:
+            continue
+        r = by_id[c["id"]]
+        ranked = [x for x in (r.get("ranked_paths") or "").split("|") if x]
+        top1 = (r.get("top_1_path") or "").strip()
+        if top1 == owner:
+            continue
+        q = str(c.get("query_text") or "")
+        pred = str(r.get("predicted_evidence_class") or "")
+        rank = _expected_owner_rank(ranked, owner)
+        sel = ""
+        if pred != NO_MATCH and ranked:
+            sel = select_plan_action_target(ranked, q) or ""
+        raw_fails.append((c["id"], owner, top1, rank, sel))
+        rk = "" if rank is None else str(rank)
+        lines.append(f"| `{c['id']}` | `{owner}` | `{top1}` | {rk} | `{sel}` |")
+
+    lines.append("")
+    lines.append("## Summary (owner@1_raw failures only)")
+    lines.append("")
+    n = len(raw_fails)
+    if n == 0:
+        lines.append("- No raw top-1 misses with an expected owner.")
+    else:
+        in3 = sum(1 for (_, _, _, rk, _) in raw_fails if rk is not None and rk <= 3)
+        in8 = sum(1 for (_, _, _, rk, _) in raw_fails if rk is not None and rk <= 8)
+        missing = sum(1 for (_, _, _, rk, _) in raw_fails if rk is None)
+        lines.append(f"- Total raw top-1 misses: **{n}**")
+        lines.append(f"- Expected owner present in top-3: **{in3}**")
+        lines.append(f"- Expected owner present in top-8: **{in8}**")
+        lines.append(f"- Expected owner missing from ranked list: **{missing}**")
+        lines.append("")
+        lines.append(
+            "- Interpretation: high counts in top-3/top-8 indicate a **ranking** issue; "
+            "high “missing” indicates **recall** (owner not in top-k window)."
+        )
+    lines.append("")
+    (out_dir / "stage2_owner_at1_diagnostic.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -294,6 +427,11 @@ def main() -> int:
     ap.add_argument("--top_k", type=int, default=8)
     ap.add_argument("--per_query_timeout_sec", type=int, default=120)
     ap.add_argument("--write_traces", action="store_true")
+    ap.add_argument(
+        "--no-rank-nudge",
+        action="store_true",
+        help="Disable deterministic lexical rank nudge (raw retrieval order only).",
+    )
     args = ap.parse_args()
 
     if args.per_query_timeout_sec < 1:
@@ -337,11 +475,15 @@ def main() -> int:
             if hasattr(signal, "SIGALRM") and args.per_query_timeout_sec > 0:
                 _install_alarm_handler(args.per_query_timeout_sec)
                 try:
-                    ranked, elapsed_ms, pred = _run_one_retrieval(idx, cfg, q, args.top_k)
+                    ranked, elapsed_ms, pred = _run_one_retrieval(
+                        idx, cfg, q, args.top_k, rank_nudge=not args.no_rank_nudge
+                    )
                 finally:
                     _clear_alarm()
             else:
-                ranked, elapsed_ms, pred = _run_one_retrieval(idx, cfg, q, args.top_k)
+                ranked, elapsed_ms, pred = _run_one_retrieval(
+                    idx, cfg, q, args.top_k, rank_nudge=not args.no_rank_nudge
+                )
         except PerQueryTimeout:
             status = "TIMEOUT"
             pred = NO_MATCH
@@ -358,7 +500,7 @@ def main() -> int:
         top5 = ranked[:5]
 
         owner_ok = (bool(owner) and top1 == owner) or (not owner)
-        anchor_ok = (not anchors) or any(a in top3 for a in anchors)
+        anchor_ok = _anchor_cluster_ok(case, ranked, q, pred)
 
         evidence_ok = _accepted_evidence(pred, primary, allow)
         fs = _false_strong(pred, primary, allow)
@@ -371,7 +513,15 @@ def main() -> int:
         weak_primary = primary in (WEAK, INSUFFICIENT)
         weak_honest = (not weak_primary) or (pred in (WEAK, INSUFFICIENT, NO_MATCH))
 
-        action_ok = _action_ok(case, top1, top3)
+        action_ok = _action_ok(case, top1, top3, ranked, q, pred)
+
+        sel_eligible = bool(owner) and pred != NO_MATCH and _action_surface_relevant(case)
+        sel_tgt = ""
+        if sel_eligible and ranked:
+            sel_tgt = select_plan_action_target(ranked, q) or ""
+        exp_rank = _expected_owner_rank(ranked, owner)
+        owner_1_raw_str = str(bool(owner and top1 == owner)).lower() if owner else ""
+        owner_3_raw_str = str(bool(anchors and any(a in top3 for a in anchors))).lower() if owner else ""
 
         empty_strong_fail = primary == STRONG and bool(owner) and not ranked
 
@@ -398,8 +548,12 @@ def main() -> int:
                 "predicted_evidence_class": pred,
                 "top_1_path": top1,
                 "ranked_paths": "|".join(ranked),
-                "owner_at_1": str(owner_ok).lower(),
-                "owner_at_3": str(anchor_ok).lower(),
+                "owner_1_raw": owner_1_raw_str,
+                "owner_3_raw": owner_3_raw_str,
+                "anchor_ok_cluster": str(anchor_ok).lower(),
+                "selection_metrics_eligible": str(sel_eligible).lower(),
+                "selected_action_target": sel_tgt,
+                "expected_owner_rank": str(exp_rank) if exp_rank is not None else "",
                 "false_strong": str(fs).lower(),
                 "distractor_fail": str(dist_fail).lower(),
                 "weak_honest": str(weak_honest).lower(),
@@ -415,9 +569,9 @@ def main() -> int:
 
     metrics = _compute_metrics(cases, rows)
 
-    # Hard gates (aligned with metrics table)
-    gate_owner = metrics["owner_at_1"] >= 0.90
-    gate_o3 = metrics["owner_at_3"] >= 0.95
+    # Hard gates: raw lexical only (selection-aware metrics are reported separately)
+    gate_owner = metrics["owner_at_1_raw"] >= 0.90
+    gate_o3 = metrics["owner_at_3_raw"] >= 0.95
     gate_dist = metrics["distractor_error_rate"] <= 0.10
     gate_fs = metrics["false_strong_rate"] == 0.0
     gate_nm = metrics["no_match_precision"] >= 0.95
@@ -459,14 +613,22 @@ def main() -> int:
         "",
         f"| Metric | Value | Threshold | Pass |",
         f"|--------|-------|-----------|------|",
-        f"| owner@1 | {metrics['owner_at_1']:.4f} | ≥ 0.90 | {'yes' if gate_owner else 'no'} |",
-        f"| owner@3 | {metrics['owner_at_3']:.4f} | ≥ 0.95 | {'yes' if gate_o3 else 'no'} |",
+        f"| **Raw retrieval** | | | |",
+        f"| owner@1_raw | {metrics['owner_at_1_raw']:.4f} | ≥ 0.90 | {'yes' if gate_owner else 'no'} |",
+        f"| owner@3_raw | {metrics['owner_at_3_raw']:.4f} | ≥ 0.95 | {'yes' if gate_o3 else 'no'} |",
+        f"| **Action-aware** (`expected_action_output` surface ≠ none, pred ≠ NO_MATCH) | | | |",
+        f"| owner@1_selected | {metrics['owner_at_1_selected']:.4f} | (informational) | |",
+        f"| owner@3_selected | {metrics['owner_at_3_selected']:.4f} | (informational) | |",
+        f"| action_correctness | {metrics['action_correctness']:.4f} | ≥ 0.90 | {'yes' if gate_action else 'no'} |",
+        f"| **Other** | | | |",
         f"| distractor_error_rate | {metrics['distractor_error_rate']:.4f} | ≤ 0.10 | {'yes' if gate_dist else 'no'} |",
         f"| weak_evidence_honesty | {metrics['weak_evidence_honesty']:.4f} | ≥ 0.85 (warn < 0.85) | |",
         f"| no_match_precision | {metrics['no_match_precision']:.4f} | ≥ 0.95 | {'yes' if gate_nm else 'no'} |",
         f"| false_strong_rate | {metrics['false_strong_rate']:.4f} | = 0 | {'yes' if gate_fs else 'no'} |",
-        f"| action_correctness | {metrics['action_correctness']:.4f} | ≥ 0.90 | {'yes' if gate_action else 'no'} |",
         "",
+        f"- Selection-metric denominator: `{metrics['counts'].get('n_selection_metric_cases', 0)}` cases (owner + action surface + pred ≠ NO_MATCH).",
+        f"- Raw rows use lexical order only; `owner@3_raw` is **strict** anchor-in-top-3 (unlike legacy blended `owner@3`). Compare `owner@3_selected` for action-target alignment.",
+        f"- Lexical rank nudge: `{'off' if args.no_rank_nudge else 'on'}` (`--no-rank-nudge` to disable).",
         f"- Timeouts: {metrics['counts']['timeouts']} / {len(cases)}",
         f"- Timeout storm abort (>20%): `{timeout_storm}`",
         "",
@@ -481,6 +643,8 @@ def main() -> int:
     ]
     report_path.write_text("\n".join(lines), encoding="utf-8")
 
+    _write_owner_at1_diagnostic(out_dir, cases, rows)
+
     # failure log
     fl = out_dir / "stage2_failure_log.md"
     fl_body = ["# Stage 2 failure log", ""]
@@ -494,9 +658,9 @@ def main() -> int:
         fl_body.append("")
         agg = []
         if not gate_owner:
-            agg.append("- **owner@1** — below 0.90")
+            agg.append("- **owner@1_raw** — below 0.90")
         if not gate_o3:
-            agg.append("- **owner@3** — below 0.95")
+            agg.append("- **owner@3_raw** — below 0.95")
         if not gate_dist:
             agg.append("- **distractor_error_rate** — above 0.10")
         if not gate_fs:
@@ -548,7 +712,7 @@ def main() -> int:
     }
     (out_dir / "stage2_runner_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
-    # traces
+    # traces (reuse lexical index + authority adapter — same semantics, no N× full rebuilds)
     if args.write_traces:
         trace_dir = out_dir / "stage2_trace_samples"
         if trace_dir.is_dir():
@@ -556,13 +720,27 @@ def main() -> int:
         trace_dir.mkdir(parents=True, exist_ok=True)
         sel = _trace_case_ids(cases, rows)
         ws = str(workspace_root)
+        authority_adapter = None
+        try:
+            from runtime.layer5.authority.code_index_adapter import create_adapter
+            from runtime.layer5.authority.code_index_builder import build_index
+
+            authority_adapter = create_adapter(code_index=build_index(workspace_root))
+        except Exception:
+            authority_adapter = None
         for cid in sel:
             case = next(c for c in cases if c["id"] == cid)
             q = case["query_text"]
             tdir = trace_dir / f"trace_{cid}"
             tdir.mkdir(parents=True, exist_ok=True)
             try:
-                bundle = export_evidence_bundle_dict(ws, q, top_k=args.top_k)
+                bundle = export_evidence_bundle_dict(
+                    ws,
+                    q,
+                    top_k=args.top_k,
+                    file_index=idx,
+                    authority_adapter=authority_adapter,
+                )
                 validate_evidence_bundle_dict(bundle)
                 (tdir / "evidence_bundle.json").write_text(json.dumps(bundle, indent=2), encoding="utf-8")
                 (tdir / "case_meta.json").write_text(json.dumps({"case_id": cid, "query": q}, indent=2), encoding="utf-8")

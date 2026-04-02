@@ -281,3 +281,8 @@ class LexicalRetrievalConfig:
     owner-signal-strong for generic-content cap exemptions. Keeps one-token overlaps
     (e.g. generic *Engine.java) from escaping deterministic caps.
     """
+    enable_deterministic_rank_nudge: bool = True
+    """
+    When True, apply a small bounded integer adjustment to each hit's score before sorting
+    (see ``rank_nudge.deterministic_rank_nudge``). Does not change the candidate set.
+    """

@@ -7,16 +7,25 @@ Does not change retrieval or evidence semantics — delegates to existing L5 mod
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+# Forward type for callers that already built a lexical index (e.g. Stage 2 runner).
+_FileIndex = Any
 
 
 def export_evidence_bundle_dict(
     workspace_root: str,
     query: str,
     top_k: int = 8,
+    *,
+    file_index: Optional[_FileIndex] = None,
+    authority_adapter: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """
     Build ``layer5.evidence_bundle.v1`` as a plain dict.
+
+    Optional ``file_index`` and ``authority_adapter`` avoid rebuilding the lexical
+    index and authority code index on every call (batch / trace export).
 
     Raises:
         ValueError: empty workspace/query or invalid top_k.
@@ -34,14 +43,17 @@ def export_evidence_bundle_dict(
     from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
     from runtime.layer5.workspace.resolver import ResolverConfig, WorkspaceResolver
 
-    resolver = WorkspaceResolver(ResolverConfig())
-    identity, err = resolver.resolve(w)
-    if err:
-        raise RuntimeError(f"workspace resolve failed: {err.message}")
-    try:
-        idx = build_file_index(identity)
-    except (OSError, FileNotFoundError, NotADirectoryError) as e:
-        raise RuntimeError(f"index build failed: {e}") from e
+    if file_index is not None:
+        idx = file_index
+    else:
+        resolver = WorkspaceResolver(ResolverConfig())
+        identity, err = resolver.resolve(w)
+        if err:
+            raise RuntimeError(f"workspace resolve failed: {err.message}")
+        try:
+            idx = build_file_index(identity)
+        except (OSError, FileNotFoundError, NotADirectoryError) as e:
+            raise RuntimeError(f"index build failed: {e}") from e
     r = retrieve_lexical(idx, q, top_k, LexicalRetrievalConfig())
 
     authority_resolution = None
@@ -58,11 +70,12 @@ def export_evidence_bundle_dict(
 
         reg_path = Path(__file__).resolve().parents[1] / "layer5" / "authority" / "product_authority_registry.yaml"
         registry = load_registry(reg_path)
-        adapter = None
-        try:
-            adapter = create_adapter(code_index=build_index(Path(w)))
-        except Exception:
-            adapter = None
+        adapter = authority_adapter
+        if adapter is None:
+            try:
+                adapter = create_adapter(code_index=build_index(Path(w)))
+            except Exception:
+                adapter = None
         authority_resolution = build_authority_resolution(q, registry, adapter)
         if authority_resolution and adapter:
             mm = match_concepts_for_query(q, registry)

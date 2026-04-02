@@ -76,6 +76,40 @@ def test_export_evidence_bundle_dict_minimal_workspace(tmp_path):
     assert isinstance(d.get("entries"), list)
 
 
+def test_export_evidence_bundle_dict_reuses_file_index_and_adapter(tmp_path):
+    """Batch callers can pass pre-built index + adapter to avoid repeated full scans."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "foo.py").write_text("def hello():\n    pass\n", encoding="utf-8")
+    from runtime.layer5.authority.code_index_adapter import create_adapter
+    from runtime.layer5.authority.code_index_builder import build_index
+    from runtime.layer5.index import build_file_index
+    from runtime.layer5.workspace.identity import WorkspaceIdentity
+
+    root_s = str(tmp_path.resolve())
+    ident = WorkspaceIdentity(
+        canonical_root=root_s,
+        identity_hash=WorkspaceIdentity.compute_identity_hash(root_s),
+        original_input=root_s,
+        path_type="posix",
+        is_git_repo=False,
+    )
+    idx = build_file_index(ident)
+    adapter = None
+    try:
+        adapter = create_adapter(code_index=build_index(tmp_path))
+    except Exception:
+        pass
+    d = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        file_index=idx,
+        authority_adapter=adapter,
+    )
+    assert d.get("schema_hint") == "layer5.evidence_bundle.v1"
+    assert isinstance(d.get("entries"), list)
+
+
 def test_export_evidence_bundle_dict_empty_query_raises():
     with pytest.raises(ValueError):
         export_evidence_bundle_dict("/tmp", "   ")

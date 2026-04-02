@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from runtime.context.contracts import ContextBundle
+from runtime.layer5.retrieval.action_target_selection import select_plan_action_target
 
 from .authority_synthesis import merge_plan_with_authority, synthesize_authority_plan_steps
 
@@ -55,8 +56,10 @@ class PlanOnlyPlanner:
         tokens = [t for t in _tokenize(query) if t]
         primary_token = max(tokens, key=len) if tokens else None
 
-        top_paths = [item.path for item in bundle.items[:3]]
-        focus_file = top_paths[0] if top_paths else None
+        ranked = [item.path for item in bundle.items[:8]]
+        selected = select_plan_action_target(ranked, query)
+        focus_file = selected or (ranked[0] if ranked else None)
+        top_paths = ranked[:3]
 
         steps: List[str] = []
 
