@@ -5,12 +5,12 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-04-01  
-- **Program state**: **Architecture + PR-6 locked; Actions 4 / 5 / 11 closed; Product Authority + Code Understanding v1 (Phases 1–5) complete — program emphasis on Stage 2 (validation depth, deployment trust, Action 14)**
+- **Last updated**: 2026-04-02  
+- **Program state**: **Stage 2 COMPLETE (locked).** Trust and action metrics are green; no behavioral failures remain. Raw retrieval metrics (`owner@1_raw`, `owner@3_raw`) are diagnostic and do not reopen Stage 2 closure.
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
-- **Program objective (next):** **Action #9** audit-pack closure and host-profile validation evidence; **Action 4** (plugin truth) and **Action 5** (HTTP observability) are **CLOSED** (**§6.18**, **§6.19**).  
-- **Current active milestone focus**: **Action #9 — FUNCTIONALLY CLOSED (Audit pack pending)** — per `docs/production_closure_handbook_corrected_canonical_version.md`. Host-A **functional** validation (Ask, Explain/Debug, Execute boundary, No-match, Failure) is complete; **no new TRUE_PRODUCT_BLOCKER** proven in this slice. **Audit pack** work (formal `mapping_request_ids.md`, per-scenario folder packaging, validation sheets) is **tracked, non-blocking** — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md` and `docs/guides/HOST_A_PLAN_GATE_LOG_MAPPING.md`. **Action #7 — Validate Execute path rigorously** is **COMPLETE** (live HTTP `POST /v0/execute` product path: **`EXECUTED_FAILED` vs `BLOCKED`** honesty; **`plan_gate_*` client hints rejected by default** unless explicit test-only env). **Action #8 — Validate no-match honesty** remains **SATISFIED** under **L5.8 / Action 3** closure (not reactivated). **Action #6 — Validate Explain/Debug path rigorously** is **COMPLETE** (server-side Explain/Debug trust proof; plugin truth-surface preservation and rendering proof). **Caveat:** Explain/Debug trust proof is complete across server and plugin contract surfaces. Remaining IntelliJ plugin `:test` runtime execution is environment/tooling debt, not unfinished Action 6 product logic. **Action #5 — Plan-Gate observability (L5-OBS-1 HTTP surface)** is **✅ CLOSED** (**§6.19**; guide `docs/guides/ACTION_5_OBSERVABILITY_CORRELATION.md`): unified `PLAN_GATE request` lines (`trace_id`, `routing_mode`, `outcome`, `duration_ms`); `[ASK]` / `[ASK_V1]` / `EXPLAIN_DEBUG` / `[EXECUTE]` grep anchors; failure paths keep correlation. **Action 4 — Close plugin truthfulness gaps** — **Status: ✅ CLOSED** (**§6.18**). UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id`, `plugin_ask_routing`, and structured routing decisions. Fallback paths are explicitly visible (summary + WARNING notification) and no longer presented as normal success. Full-dialog routing is auditable and compact; notification summary is concise on success and explicit on fallback. Legacy AskClient is isolated and documented. Compilation and targeted tests pass; Gradle test failure is environment-related (IntelliJ plugin setup), not implementation-related. **L5.8 — Grounded Ask Validation + Metrics** is **COMPLETE** (hard gates satisfied). **Action 11 / L5.9 — Compatibility Path Hardening** is **CLOSED** (2026-03-31; evidence **§6.17**). **M3.18** remains downstream. **Backend HTTP** chain remains: **WSL Context Layer wheel** (`motadata-context-layer`) → GPU **m-coder** Plan-Gate → `POST /v1/ask` (provable with `**docs/Backend Production Validation Sheet.md`**). North star: `**docs/PRODUCT_SLICE_CHARTER.md`**. Operator paths: `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md**` + `**docs/MOTADATA_DEMO_SCENARIOS.md**` + `**docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md**`.  
+- **Program objective (next):** **Controlled Runtime Loop (Hybrid Model)** — runtime-owned control loop with schema-driven model proposals and bounded retries before any fluency expansion.  
+- **Current active milestone focus**: **Stage 3 foundation (L5.9 loop integration)** with strict trust preservation: runtime owns control, model proposes, and all transitions are observable/ledgered.
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -778,26 +778,80 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Stage 2 — Fully Functional & Ready System** (**§7.4**): deepen **L5.8** validation beyond the locked PR-6 slice, strengthen **authority robustness** and **host-profile** evidence, and drive toward **Action 14** acceptance — while preserving the locked PR-6 baseline. **Actions 4 / 5 / 11** and **Product Authority Phases 1–5** are **closed / complete**; remaining **§B3** plugin polish and optional **`./gradlew :test`** are follow-through, not Stage 2 “truth” rework.
+- **Current objective**: **Controlled Runtime Loop (Hybrid Model)** — runtime-controlled, schema-driven reasoning loop with bounded retries and full observability.  
+  Stage 2 is closed/locked for behavioral trust and is no longer an active feature track.
 - **Active tasks**:
-  - Run deployment/validation flow using `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (order: **GPU → WSL → Windows**): **GPU** = m-coder + Plan-Gate + vLLM; **WSL** = wheel + indexed repo path; **Windows** = plugin + tunnels as documented. Treat `**docs/MOTADATA_DEMO_SCENARIOS.md`** as **acceptance scenarios**, not “demo-only.”
-  - Verify **Deployment Success Criteria** (`docs/MOTADATA_DEMO_SCENARIOS.md` §4) where applicable; **plugin** must have **evidence-first ON** for apples-to-apples comparison with backend `/v1/ask` scripts.
-  - Plan-Gate `/version` must show `**ask_request_v1`**. **Full Explain/Debug stack** requires vLLM + `**MOTADATA_EXPLAIN_VLLM_URL`** (see runbook). *Exception:* local automated smoke (§6.15) may unset vLLM env for pytest-only Plan-Gate — not the production validation path.
-  - **B1 control-layer note (historical):** query `Which files implement topology anomaly scoring pipeline?` classification correction remains valid (`CODE_INTENT` vs prior `GENERIC_INTENT`). PR-6 now closes baseline retrieval dominance for the locked debug set; active work is generalized validation in L5.8.
+  - **L5.8 — grounded validation follow-through (active):** keep Stage 2 trust metrics stable and reproducible.
+  - **L5-OBS-1 — observability hardening (active):** preserve request correlation and replay-ready artifacts.
+  - **Plugin truthfulness enforcement (active):** keep UI strictly aligned with backend truth surfaces (`routing_mode`, insufficiency, fallback visibility).
+  - **L5.9 — controlled loop integration (active):** add bounded runtime-owned loop orchestration over existing grounded contracts.
+  - Continue deployment/validation flow from `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (**GPU → WSL → Windows**) with WSL workspace as source-of-truth.
 - **Next execution order**:
-  1. **L5.8** Grounded Ask Validation + Metrics (active)
-  2. ~~**L5-OBS-1 (Action #5)**~~ **CLOSED** (**§6.19**); Context Layer / CI log parity = ops follow-through
-  3. ~~**Action 4 — Close plugin truthfulness gaps**~~ **✅ CLOSED** (**§6.18**); residual **§B3** checklist; **`./gradlew :test`** when IDE/Gradle plugin environment permits
-  4. **M3.18** task-level Ask/Debug/Plan/Code evaluation (downstream)
-  5. ~~**L5.9** compatibility path hardening~~ **DONE** (Action 11, §6.17)
-  6. Host readiness / acceptance / release sign-off
-- **Related (M3.12):** Manifest + `doc_selector` repo-aware slice **merged** into `feature/l5-context-layer-v1-ask-packaging`. **M3.13** (Jira) / **M3.14** (PR) ingestion — NOT_STARTED.
+  1. **L5.8** grounded validation follow-through
+  2. **L5-OBS-1** observability hardening
+  3. **Plugin truthfulness enforcement**
+  4. **L5.9** controlled loop integration
+  5. Host readiness / acceptance / release sign-off
 - **Current blockers**:
-  - None for **contract coherence** (A7/A8 done). Operational: Gradle JetBrains `:test` task **Index: 1, Size: 1** (separate infra debt); local exporter requires Python + script discoverability.
-  - Resolver test env fragility (**Caveat-F1**); harness latency vs spine (**Caveat-F2**).
+  - No contract blocker for Stage 2 trust closure.
+  - Operational debt only (plugin Gradle environment reproducibility, auxiliary test environment consistency).
 - **Immediate next action**:
-  - Push `**feature/l5-context-layer-v1-ask-packaging*`* after review; delete **local** merged topic branches (`feature/m3.12-narrow-context-engine`, `cursor/m3.12-narrow-context-engine`, `integration/m3.12-context-demo`, `feature/m3.17-task-schema`, `feature/jetbrains-plugin-golden-demo-path`) to reduce clutter — **do not** delete `integration/l5-wave1-foundation` until integration owners confirm.
-  - Execute validation path from runbook + validation sheets; file environment breakages as tickets (not contract redesign).
+  - Implement and validate bounded loop schemas + state transitions under runtime control (no autonomy expansion).
+
+### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
+
+Next milestone is **not** direct agentic coding expansion.  
+Next milestone is a **bounded, schema-driven reasoning loop under runtime control**.
+
+### 5.2 Hybrid Loop Architecture (Stage 3 foundation)
+
+**Core principles**
+
+- Runtime-controlled loop (state machine owns transitions and termination).
+- Model emits **structured proposals only** (no direct orchestration authority).
+- Bounded retries and deterministic stop policies.
+- No uncontrolled recursion.
+- Full observability / ledgering per transition.
+
+**Core contracts**
+
+- `TaskEnvelope.v1`: runtime-owned task context + hard constraints.
+- `ModelProposal.v1`: model-proposed next step in validated schema.
+- `ToolExecutionRequest.v1`: bounded runtime-issued tool request.
+- `ToolExecutionResult.v1`: normalized tool result for the loop.
+- `LoopDecision.v1`: runtime decision (continue/revise/stop/refuse).
+- `FinalResponse.v1`: grounded user-facing outcome.
+
+**Loop states**
+
+- `CONTEXT_READY`
+- `PLAN_GATED`
+- `MODEL_PROPOSED`
+- `PROPOSAL_VALIDATED`
+- `TOOL_EXECUTING`
+- `TOOL_RESULT_READY`
+- `MODEL_REVISED`
+- terminal: `COMPLETED` / `REFUSED` / `BLOCKED` / `FAILED` / `INSUFFICIENT`
+
+**Loop policy**
+
+| Task    | Attempts | Tool use  | Output           |
+| ------- | -------- | --------- | ---------------- |
+| ASK     | 1        | optional  | grounded answer  |
+| DEBUG   | 2–3      | read-only | hypothesis       |
+| PLAN    | 1–2      | read-only | steps            |
+| CODE    | 2–3      | bounded   | diff             |
+| EXECUTE | 1–2      | sandboxed | truthful outcome |
+
+### 5.3 Do Not Do (discipline guardrails)
+
+- Do not add Neo4j in this phase.
+- Do not add graph DB in this phase.
+- Do not introduce uncontrolled agent loops.
+- Do not allow LLM-driven orchestration to replace runtime control.
+- Do not enable premature coding autonomy.
+
+**Architecture alignment remains mandatory**: WSL workspace is source-of-truth, Context Layer stays near workspace, GPU hosts Plan-Gate + vLLM, and plugin remains a thin client.
 
 ---
 
@@ -1144,16 +1198,16 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 
 - Validation **deterministic** and **repeatable**; no hallucinated ownership; weak/no-match honest; coding behavior grounded and safe; **deployment-ready** bar satisfied.
 
-### 7.5 Stage 3 — Future Development
+### 7.5 Stage 3 — Controlled Intelligence Expansion (post-trust)
 
-**Goal:** Expand capability **without** compromising grounding and truthfulness.
+**Goal:** Add bounded fluency **without** compromising grounding, truthfulness, or runtime control.
 
 **Themes**
 
 - **Deeper context layer** — e.g. dirty-buffer overlay, richer symbol/call coverage.
 - **Broader authority coverage** — subsystem maps, versioned snapshots, more concepts.
 - **Jira / PR / doc ingestion expansion** — M3.12–M3.18 follow-ons, task evaluation harness.
-- **Stronger coding workflows** — multi-file patch flows, iterative fix-validation loops (still grounded).
+- **Stronger coding workflows (bounded)** — multi-file patch flows and iterative fix-validation loops under runtime-owned loop policy.
 - **Model benchmarking** — e.g. Qwen3 / Qwen3-Coder vs grounded reasoning baselines.
 - **Enterprise / operator maturity** — packaging, audit/export, operator workflows.
 

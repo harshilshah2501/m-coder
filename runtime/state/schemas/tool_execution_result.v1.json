@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ToolExecutionResult.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "output_schema_version",
+    "output",
+    "artifacts",
+    "error_class"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "tool_execution_result.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "partial",
+        "denied",
+        "failed_retryable",
+        "failed_terminal",
+        "timeout"
+      ]
+    },
+    "output_schema_version": {
+      "type": "string",
+      "enum": [
+        "tool_output.v1"
+      ]
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "data"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_ref",
+          "kind",
+          "uri"
+        ],
+        "properties": {
+          "artifact_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "log",
+              "file",
+              "report",
+              "diff",
+              "stdout",
+              "stderr"
+            ]
+          },
+          "uri": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "uniqueItems": true
+    },
+    "error_class": {
+      "type": "string",
+      "enum": [
+        "none",
+        "policy_denied",
+        "validation_error",
+        "runtime_error",
+        "timeout",
+        "tool_internal_error"
+      ]
+    }
+  }
+}
