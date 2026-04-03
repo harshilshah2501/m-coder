@@ -12,6 +12,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from runtime.layer5.build_info import layer5_build_info
+
 from . import config
 from . import handlers
 
@@ -106,7 +108,7 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"status": "ok"})
             return
         if self.path == "/version":
-            self._send_json(200, {
+            body: dict = {
                 "service_version": "v0.1",
                 "supported_schemas": {
                     "plan_request": "v0.1",
@@ -121,7 +123,9 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                     "execute_request": "v0.1",
                     "execute_response": "v0.1"
                 },
-            })
+            }
+            body.update(layer5_build_info())
+            self._send_json(200, body)
             return
         self._send_json(404, {"error": "Not found"})
 

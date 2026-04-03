@@ -276,6 +276,8 @@ cmd_start() {
         export MOTADATA_EXPLAIN_VLLM_URL MOTADATA_EXPLAIN_MODEL
         export PLAN_GATE_PORT
         [[ -n "$ASK_DEFAULT_REPO_ROOT" ]] && export ASK_DEFAULT_REPO_ROOT
+        export M_CODER_REPO_ROOT="$REPO_ROOT"
+        export M_CODER_GIT_COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || true)"
         PLAN_GATE_LOG="$RUN_DIR/plan_gate.log"
         cd "$REPO_ROOT"
         python3 -m runtime.plan_gate_service.app > "$PLAN_GATE_LOG" 2>&1 &

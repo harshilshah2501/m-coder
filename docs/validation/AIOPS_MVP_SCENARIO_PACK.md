@@ -100,6 +100,32 @@ curl -sS "$PLAN_GATE_URL/healthz" && echo " ✓ Plan-Gate"
 curl -sS "$VLLM_URL/v1/models" 2>/dev/null && echo " ✓ vLLM" || echo " ⚠ vLLM optional (Explain/Debug only)"
 ```
 
+### 2.5a Confirm running code revision (Layer-5 retrieval + v1 Ask)
+
+Retrieval and snippet behavior come from **Context Layer** (`export_evidence`); Plan-Gate serves **v1 Ask** metadata. Both expose **`GET /version`** with overlapping fields:
+
+| JSON field | Meaning |
+|------------|--------|
+| `git_commit` | Short git SHA (from env `M_CODER_GIT_COMMIT`, or `git rev-parse` next to the running tree) |
+| `repo_root` | Checkout root (`M_CODER_REPO_ROOT` or inferred) |
+| `layer5_snippet_py` | Resolved path to `snippet.py` actually imported |
+| `layer5_lexical_py` | Resolved path to `lexical.py` actually imported |
+| `ask_v1_ingest_py` | Plan-Gate only — path to `v1_ingest.py` |
+
+```bash
+curl -sS "$CONTEXT_URL/version" | python3 -m json.tool
+curl -sS "$PLAN_GATE_URL/version" | python3 -m json.tool
+```
+
+**Sanity check:** `layer5_snippet_py` / `layer5_lexical_py` should sit under **your intended m-coder tree** (e.g. `.../Harshil-PoCs/m-coder/runtime/layer5/...`). If they point at **`site-packages`**, the process is using an **installed wheel** — rebuild/reinstall the wheel or run from repo with `PYTHONPATH` so exports pick up the latest commit.
+
+**Plan-Gate** started via `./runtime/scripts/governed_services.sh` exports `M_CODER_REPO_ROOT` and `M_CODER_GIT_COMMIT` automatically. For Context Layer, export the same before starting the service if you need explicit SHAs:
+
+```bash
+export M_CODER_REPO_ROOT="$M_CODER_ROOT"
+export M_CODER_GIT_COMMIT="$(git -C "$M_CODER_ROOT" rev-parse --short HEAD)"
+```
+
 ### 2.6 API contracts (this repo — no placeholder field names)
 
 **`POST /v1/export_evidence`** (Context Layer) — body fields used by `runtime/context_layer_service/app.py`:

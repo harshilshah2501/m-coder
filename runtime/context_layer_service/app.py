@@ -10,6 +10,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from runtime.layer5.workspace.path_normalizer import PathNormalizer
+from runtime.layer5.build_info import layer5_build_info
 
 from . import config
 from .evidence_api import export_evidence_bundle_dict
@@ -221,20 +222,19 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
             )
             return
         if self.path == "/version":
-            self._send_json(
-                200,
-                {
-                    "package": "motadata-context-layer",
-                    "package_version": _package_version(),
-                    "service_version": "v0.1",
-                    "evidence_schema_hint": "layer5.evidence_bundle.v1",
-                    "endpoints": [
-                        "GET /healthz",
-                        "GET /version",
-                        "POST /v1/export_evidence",
-                    ],
-                },
-            )
+            ver: dict = {
+                "package": "motadata-context-layer",
+                "package_version": _package_version(),
+                "service_version": "v0.1",
+                "evidence_schema_hint": "layer5.evidence_bundle.v1",
+                "endpoints": [
+                    "GET /healthz",
+                    "GET /version",
+                    "POST /v1/export_evidence",
+                ],
+            }
+            ver.update(layer5_build_info())
+            self._send_json(200, ver)
             return
         self._send_json(404, _error_payload("not_found", "Not found", failure_class="route_not_found"))
 
