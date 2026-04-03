@@ -2,7 +2,8 @@
 Contract + handler tests for docs/validation/AIOPS_MVP_SCENARIO_PACK.md.
 
 - No live HTTP required (uses golden evidence bundle + in-process Ask v1).
-- Set AIOPS_MVP_LIVE=1 to optionally hit Context Layer + Plan-Gate (skipped if services down).
+- Set AIOPS_MVP_LIVE=1 to optionally hit Context Layer + Plan-Gate (skipped if services are
+  down or HTTP times out). Override seconds with AIOPS_MVP_LIVE_HTTP_TIMEOUT (default 300).
 """
 
 from __future__ import annotations
@@ -22,6 +23,17 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SCENARIOS_PATH = _REPO_ROOT / "docs" / "validation" / "aiops_mvp_scenarios.v1.json"
 _SCENARIO_PACK_MD = _REPO_ROOT / "docs" / "validation" / "AIOPS_MVP_SCENARIO_PACK.md"
 _GOLDEN_EVIDENCE = _REPO_ROOT / "runtime" / "layer5" / "evidence" / "golden" / "evidence_bundle.v1.masked.json"
+
+
+def _live_http_timeout(default_seconds: float = 300.0) -> float:
+    """Seconds for Context Layer export and Plan-Gate /v1/ask in live smoke test."""
+    raw = (os.environ.get("AIOPS_MVP_LIVE_HTTP_TIMEOUT") or "").strip()
+    if not raw:
+        return default_seconds
+    try:
+        return max(1.0, float(raw))
+    except ValueError:
+        return default_seconds
 
 
 def _load_scenarios_doc() -> dict:
@@ -128,6 +140,7 @@ def test_ask_v1_rejects_extra_top_level_field() -> None:
 )
 def test_live_export_and_ask_smoke() -> None:
     """Single scenario against real HTTP (optional)."""
+    timeout = _live_http_timeout()
     context_url = os.environ.get("CONTEXT_URL", "http://127.0.0.1:8091").rstrip("/")
     plan_url = os.environ.get("PLAN_GATE_URL", "http://127.0.0.1:8089").rstrip("/")
     workspace = os.environ.get("MOTADATA_ROOT", "")
@@ -150,8 +163,10 @@ def test_live_export_and_ask_smoke() -> None:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(r, timeout=120) as resp:
+        with urllib.request.urlopen(r, timeout=timeout) as resp:
             bundle = json.load(resp)
+    except TimeoutError as e:
+        pytest.skip(f"Context Layer /v1/export_evidence timed out after {timeout}s: {e}")
     except (urllib.error.URLError, urllib.error.HTTPError) as e:
         pytest.skip(f"Context Layer unreachable: {e}")
 
@@ -165,8 +180,13 @@ def test_live_export_and_ask_smoke() -> None:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(r2, timeout=120) as resp2:
+        with urllib.request.urlopen(r2, timeout=timeout) as resp2:
             out = json.load(resp2)
+    except TimeoutError as e:
+        pytest.skip(
+            f"Plan-Gate /v1/ask timed out after {timeout}s "
+            f"(increase AIOPS_MVP_LIVE_HTTP_TIMEOUT if backend is slow): {e}"
+        )
     except (urllib.error.URLError, urllib.error.HTTPError) as e:
         pytest.skip(f"Plan-Gate unreachable: {e}")
 

@@ -148,6 +148,7 @@ export MOTADATA_ROOT  # e.g. /path/to/Motadata
 # Optional overrides:
 # export CONTEXT_URL=http://127.0.0.1:8091
 # export PLAN_GATE_URL=http://127.0.0.1:8089
+# export AIOPS_MVP_LIVE_HTTP_TIMEOUT=600   # seconds per export + ask (default 300); timeouts skip, not fail
 python3 -m pytest runtime/tests/test_aiops_mvp_scenario_pack.py -v -k live_export
 ```
 
