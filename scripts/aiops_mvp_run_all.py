@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""
+Run all AIOps MVP scenarios (export → ask), write artifacts, emit automated verdict summary.
+
+Requires repo root on PYTHONPATH. Uses docs/validation/aiops_mvp_scenarios.v1.json as source of truth.
+
+Environment:
+  MOTADATA_ROOT       — required (workspace checkout)
+  CONTEXT_URL         — default http://127.0.0.1:8091
+  PLAN_GATE_URL       — default http://127.0.0.1:8089
+  AIOPS_MVP_LIVE_HTTP_TIMEOUT — seconds for export + ask HTTP (default 600)
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCENARIOS_JSON = REPO_ROOT / "docs" / "validation" / "aiops_mvp_scenarios.v1.json"
+
+
+def _http_timeout() -> float:
+    raw = (os.environ.get("AIOPS_MVP_LIVE_HTTP_TIMEOUT") or "").strip()
+    if not raw:
+        return 600.0
+    try:
+        return max(1.0, float(raw))
+    except ValueError:
+        return 600.0
+
+
+def _load_scenarios() -> Dict[str, Any]:
+    with open(SCENARIOS_JSON, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _verdict_from_ask_response(data: Dict[str, Any]) -> Tuple[str, str]:
+    """
+    Automated signal (not human rubric): ERROR | FAIL | PARTIAL | PASS + reason line.
+    Aligns with metadata.evidence_quality from Plan-Gate v1 ingest.
+    """
+    if not isinstance(data, dict):
+        return "ERROR", "response_not_object"
+    if data.get("schema_version") != "plan_only_response.v0.1":
+        return "FAIL", "unexpected_schema_version"
+    if data.get("governance_posture") != "PLAN_ONLY":
+        return "FAIL", "governance_posture_not_plan_only"
+    meta = data.get("metadata") or {}
+    eq = str(meta.get("evidence_quality") or "")
+    steps = (data.get("plan_summary") or {}).get("steps") or []
+    notes = (data.get("plan_summary") or {}).get("notes") or []
+    ui_title = str((data.get("ui") or {}).get("title") or "")
+
+    if "Grounding blocked" in ui_title or (eq in ("NO_MATCH", "INSUFFICIENT") and not steps):
+        return "FAIL", f"blocked_or_insufficient:{eq}"
+
+    if eq == "NO_MATCH":
+        return "FAIL", "evidence_quality:NO_MATCH"
+    if eq == "INSUFFICIENT":
+        return "PARTIAL", "evidence_quality:INSUFFICIENT"
+    if eq == "WEAK":
+        return "PARTIAL", "evidence_quality:WEAK"
+    if eq == "STRONG":
+        if any("WEAK" in str(n) for n in notes):
+            return "PARTIAL", "notes_mention_weak"
+        return "PASS", "evidence_quality:STRONG"
+
+    return "PARTIAL", f"evidence_quality:{eq or 'unknown'}"
+
+
+def _post_json(url: str, body: bytes, timeout: float) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    try:
+        r = urllib.request.Request(
+            url,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(r, timeout=timeout) as resp:
+            return json.load(resp), None
+    except TimeoutError as e:
+        return None, f"timeout:{e}"
+    except urllib.error.HTTPError as e:
+        try:
+            detail = e.read().decode("utf-8", errors="replace")[:2000]
+        except Exception:
+            detail = str(e)
+        return None, f"http_{e.code}:{detail}"
+    except urllib.error.URLError as e:
+        return None, f"urlerror:{e}"
+    except json.JSONDecodeError as e:
+        return None, f"json_decode:{e}"
+
+
+def _run_one(
+    scenario: Dict[str, Any],
+    artifact_root: Path,
+    context_url: str,
+    plan_url: str,
+    timeout: float,
+    top_k: int,
+) -> Dict[str, Any]:
+    sid = scenario["id"]
+    query = scenario["query"]
+    base = artifact_root / f"scenario_{sid}"
+    base.mkdir(parents=True, exist_ok=True)
+
+    workspace = (os.environ.get("MOTADATA_ROOT") or "").strip()
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    rid_export = f"aiops-mvp-export-{sid}-{ts}"
+    rid_ask = f"aiops-mvp-{sid}-{ts}"
+
+    (base / "request.txt").write_text(query, encoding="utf-8")
+
+    export_req = {
+        "workspace_root": workspace,
+        "query": query,
+        "top_k": top_k,
+        "request_id": rid_export,
+    }
+    (base / "export_request.json").write_text(
+        json.dumps(export_req, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    out: Dict[str, Any] = {
+        "scenario_id": sid,
+        "category": scenario.get("category"),
+        "artifact_dir": str(base.relative_to(REPO_ROOT)),
+    }
+
+    if not workspace or not Path(workspace).is_dir():
+        out["status"] = "ERROR"
+        out["error"] = "MOTADATA_ROOT missing or not a directory"
+        out["automated_verdict"] = "ERROR"
+        return out
+
+    bundle, err = _post_json(
+        f"{context_url}/v1/export_evidence",
+        json.dumps(
+            {
+                "workspace_root": workspace,
+                "query": query,
+                "top_k": top_k,
+                "request_id": rid_export,
+            }
+        ).encode("utf-8"),
+        timeout,
+    )
+    if err:
+        out["status"] = "ERROR"
+        out["error"] = f"export:{err}"
+        out["automated_verdict"] = "ERROR"
+        return out
+
+    (base / "export_response.json").write_text(
+        json.dumps(bundle, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    ask = {
+        "schema_version": "ask_request.v1.0",
+        "request_id": rid_ask,
+        "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "query": query,
+        "evidence_bundle": bundle,
+        "task_type": "general",
+        "trace_id": rid_ask,
+    }
+    h = (bundle.get("workspace_identity_hash") or "").strip()
+    if h:
+        ask["expected_workspace_identity_hash"] = h
+
+    (base / "ask_request.json").write_text(
+        json.dumps(ask, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    ask_resp, err2 = _post_json(
+        f"{plan_url}/v1/ask",
+        json.dumps(ask).encode("utf-8"),
+        timeout,
+    )
+    if err2:
+        out["status"] = "ERROR"
+        out["error"] = f"ask:{err2}"
+        out["automated_verdict"] = "ERROR"
+        return out
+
+    (base / "ask_response.json").write_text(
+        json.dumps(ask_resp, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    verdict, reason = _verdict_from_ask_response(ask_resp)
+    out["status"] = "ok"
+    out["automated_verdict"] = verdict
+    out["verdict_reason"] = reason
+    meta = ask_resp.get("metadata") or {}
+    out["evidence_quality"] = meta.get("evidence_quality")
+    out["quality_reasons"] = list(meta.get("quality_reasons") or [])
+    return out
+
+
+def _write_summary_md(rows: List[Dict[str, Any]], summary_dir: Path, counts: Dict[str, int]) -> None:
+    lines = [
+        "# AIOps MVP batch run summary",
+        "",
+        f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}",
+        "",
+        "## Automated counts (machine signal, not full rubric)",
+        "",
+        f"| Verdict | Count |",
+        f"|---------|-------|",
+    ]
+    for k in ("PASS", "PARTIAL", "FAIL", "ERROR"):
+        lines.append(f"| {k} | {counts.get(k, 0)} |")
+    lines.extend(
+        [
+            "",
+            "Use `judgement.txt` per scenario and **AIOPS_MVP_FINAL_REPORT_TEMPLATE.md** for human PASS/PARTIAL/FAIL.",
+            "",
+            "## Per scenario",
+            "",
+            "| ID | Category | Automated verdict | Evidence quality | Reason |",
+            "|----|----------|-------------------|------------------|--------|",
+        ]
+    )
+    for r in rows:
+        lines.append(
+            f"| {r.get('scenario_id','')} | {r.get('category','')} | {r.get('automated_verdict','')} | "
+            f"{r.get('evidence_quality','')} | {r.get('verdict_reason') or r.get('error', '')} |"
+        )
+    summary_dir.mkdir(parents=True, exist_ok=True)
+    (summary_dir / "run_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Run full AIOps MVP scenario pack (HTTP export + ask).")
+    ap.add_argument(
+        "--artifact-root",
+        type=Path,
+        default=REPO_ROOT / "docs" / "validation" / "artifacts" / "aiops_mvp",
+        help="Directory for scenario_A1, scenario_A2, ... and summary/",
+    )
+    ap.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="Stop on first ERROR.",
+    )
+    ap.add_argument(
+        "--scenario",
+        action="append",
+        help="Run only this scenario id (repeatable), e.g. --scenario A1",
+    )
+    args = ap.parse_args()
+
+    artifact_root = args.artifact_root
+    if not artifact_root.is_absolute():
+        artifact_root = (REPO_ROOT / artifact_root).resolve()
+
+    context_url = os.environ.get("CONTEXT_URL", "http://127.0.0.1:8091").rstrip("/")
+    plan_url = os.environ.get("PLAN_GATE_URL", "http://127.0.0.1:8089").rstrip("/")
+    timeout = _http_timeout()
+
+    doc = _load_scenarios()
+    top_k = int(doc.get("top_k_default") or 12)
+    scenarios: List[Dict[str, Any]] = list(doc["scenarios"])
+    if args.scenario:
+        want = set(args.scenario)
+        scenarios = [s for s in scenarios if s["id"] in want]
+        missing = want - {s["id"] for s in scenarios}
+        if missing:
+            print(f"Unknown scenario id(s): {sorted(missing)}", file=sys.stderr)
+            return 2
+
+    rows: List[Dict[str, Any]] = []
+    for s in scenarios:
+        row = _run_one(s, artifact_root, context_url, plan_url, timeout, top_k)
+        rows.append(row)
+        v = row.get("automated_verdict", "?")
+        e = row.get("error", "")
+        print(f"{s['id']}: {row.get('status')} automated={v} {e or row.get('verdict_reason', '')}")
+        if args.fail_fast and row.get("automated_verdict") == "ERROR":
+            break
+
+    counts = {"PASS": 0, "PARTIAL": 0, "FAIL": 0, "ERROR": 0}
+    for r in rows:
+        v = r.get("automated_verdict", "ERROR")
+        counts[v] = counts.get(v, 0) + 1
+
+    summary_dir = artifact_root / "summary"
+    summary_dir.mkdir(parents=True, exist_ok=True)
+    summary_path = summary_dir / "run_summary.json"
+    payload = {
+        "schema_version": "aiops_mvp_batch_run.v1",
+        "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "context_url": context_url,
+        "plan_gate_url": plan_url,
+        "http_timeout_seconds": timeout,
+        "motadata_root": (os.environ.get("MOTADATA_ROOT") or "").strip(),
+        "counts": counts,
+        "scenarios": rows,
+        "note": "Automated verdict uses Plan-Gate metadata.evidence_quality; human rubric is in AIOPS_MVP_SCENARIO_PACK.md §6.",
+    }
+    summary_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    _write_summary_md(rows, summary_dir, counts)
+
+    print(f"\nWrote {summary_path}")
+    print(f"Wrote {summary_dir / 'run_summary.md'}")
+
+    if any(r.get("automated_verdict") == "ERROR" for r in rows):
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

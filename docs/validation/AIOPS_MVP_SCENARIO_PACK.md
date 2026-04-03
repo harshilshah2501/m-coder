@@ -144,7 +144,7 @@ This validates: export-request shape (`workspace_root`, `query`, `top_k`), `ask_
 
 ```bash
 export AIOPS_MVP_LIVE=1
-export MOTADATA_ROOT  # e.g. /path/to/Motadata
+export MOTADATA_ROOT=/home/harshil/Projects/Motadata
 # Optional overrides:
 # export CONTEXT_URL=http://127.0.0.1:8091
 # export PLAN_GATE_URL=http://127.0.0.1:8089
@@ -158,6 +158,21 @@ python3 -m pytest runtime/tests/test_aiops_mvp_scenario_pack.py -v -k live_expor
 |---------------------|---------------------|--------|
 | ASK / PLAN / DEBUG / CODE scenarios | `general` | Plan-only / grounded response from evidence |
 | Explain/Debug with selection | `EXPLAIN_DEBUG` | Requires `selected_file`, `client_context.selection` — use plugin or construct JSON like production |
+
+### 2.9 Batch run (all 8 scenarios + machine summary)
+
+Runs every scenario from **`aiops_mvp_scenarios.v1.json`**, writes **`docs/validation/artifacts/aiops_mvp/scenario_<ID>/`** (same files as §3), and emits **`summary/run_summary.json`** and **`summary/run_summary.md`** with an **automated** verdict per row (`PASS` / `PARTIAL` / `FAIL` / `ERROR`) derived from Plan-Gate **`metadata.evidence_quality`**. That is a **quick signal**, not a substitute for human **`judgement.txt`** and **§6** when filling **`AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`**.
+
+```bash
+cd "$M_CODER_ROOT"
+export MOTADATA_ROOT=/home/harshil/Projects/Motadata
+export CONTEXT_URL=http://127.0.0.1:8091
+export PLAN_GATE_URL=http://127.0.0.1:8089
+export AIOPS_MVP_LIVE_HTTP_TIMEOUT=600   # optional
+./scripts/run_aiops_mvp_scenario_pack.sh
+# One scenario only: ./scripts/run_aiops_mvp_scenario_pack.sh --scenario A1
+# Stop on first HTTP error: ./scripts/run_aiops_mvp_scenario_pack.sh --fail-fast
+```
 
 ---
 
@@ -326,6 +341,8 @@ docs/validation/artifacts/aiops_mvp/
 ├── scenario_A2/
 │   └── ...
 └── summary/
+    ├── run_summary.json         # batch script only
+    └── run_summary.md
 ```
 
 ### Required per scenario
