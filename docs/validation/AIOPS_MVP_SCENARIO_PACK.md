@@ -8,6 +8,7 @@
 
 - Answers are driven by **exported evidence**, not generic LLM-only text.
 - Weak or ambiguous queries get **honest** handling (see rubric + D2).
+- Plan-Gate responses include **deterministic retrieval-usefulness signals** (`metadata.operator_hints`, `metadata.usefulness_metrics`) so you can correlate weak/strong evidence with path mix and snippet anchoring without guessing (**§2.7**).
 - This pack is **usefulness / demo validation**, not production sign-off (**§1** “does not validate”, **§8** scope guard).
 
 ### Prerequisites
@@ -126,7 +127,20 @@ Successful **HTTP 200** body is the **`layer5.evidence_bundle.v1` object itself*
 
 There is **no** `mode: ask|debug|plan|code` field in v1. Express **ASK vs DEBUG vs PLAN vs CODE** intent **in the natural-language `query`** and in operator notes; the backend uses **`task_type`** and evidence quality gates.
 
-### 2.7 Automated contract tests (no live HTTP)
+### 2.7 Retrieval usefulness fields (Plan-Gate `metadata`)
+
+On **`POST /v1/ask`**, the v1 ingest path adds two **JSON-serializable** fields beside the existing quality keys (`intent_type`, `evidence_quality`, `quality_reasons`, `dominance_metrics`, `policy_version`). They are safe to log and to diff across scenarios on WSL.
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `operator_hints` | `string[]` | Short explanations keyed off `quality_reasons` (e.g. low core-AIOps share, noisy top-k, no core file in top-3). Empty when there is nothing extra to say beyond the reason codes. |
+| `usefulness_metrics` | `object` | Bundle-level stats from **`evidence_bundle.entries`**: `entry_count`, `top1_retrieval_score`, min/max score and spread, counts of snippet rows anchored on query tokens vs weaker `selection_reason` values, per–file-class counts (same policy as the quality gate), and `noise_class_entry_count`. |
+
+**How to use on WSL:** after each run, open **`ask_response.json`** (§3 / §5) and inspect `metadata.operator_hints` and `metadata.usefulness_metrics`. For example, **WEAK** or **PARTIAL** automated verdicts (**§2.10**) should often show non-empty `operator_hints` or a high `snippet_non_anchor_hits` / noisy `file_class_counts` — that confirms retrieval shape, not just LLM tone.
+
+**Code references:** `runtime/ask_service/v1_ingest.py`, `runtime/layer5/retrieval/quality_gate.py` (`operator_hints_for_assessment`), `runtime/layer5/evidence/usefulness_metrics.py` (`bundle_usefulness_metrics`).
+
+### 2.8 Automated contract tests (no live HTTP)
 
 Canonical scenario IDs and **exact query strings** live in **`docs/validation/aiops_mvp_scenarios.v1.json`** (single source of truth for §4 and CI).
 
@@ -152,16 +166,16 @@ export MOTADATA_ROOT=/home/harshil/Projects/Motadata
 python3 -m pytest runtime/tests/test_aiops_mvp_scenario_pack.py -v -k live_export
 ```
 
-### 2.8 Scenario labels vs `task_type`
+### 2.9 Scenario labels vs `task_type`
 
 | Pack label (rubric) | Typical `task_type` | Notes |
 |---------------------|---------------------|--------|
 | ASK / PLAN / DEBUG / CODE scenarios | `general` | Plan-only / grounded response from evidence |
 | Explain/Debug with selection | `EXPLAIN_DEBUG` | Requires `selected_file`, `client_context.selection` — use plugin or construct JSON like production |
 
-### 2.9 Batch run (all 8 scenarios + machine summary)
+### 2.10 Batch run (all 8 scenarios + machine summary)
 
-Runs every scenario from **`aiops_mvp_scenarios.v1.json`**, writes **`docs/validation/artifacts/aiops_mvp/scenario_<ID>/`** (same files as §3), and emits **`summary/run_summary.json`** and **`summary/run_summary.md`** with an **automated** verdict per row (`PASS` / `PARTIAL` / `FAIL` / `ERROR`) derived from Plan-Gate **`metadata.evidence_quality`**. That is a **quick signal**, not a substitute for human **`judgement.txt`** and **§6** when filling **`AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`**.
+Runs every scenario from **`aiops_mvp_scenarios.v1.json`**, writes **`docs/validation/artifacts/aiops_mvp/scenario_<ID>/`** (same files as §3), and emits **`summary/run_summary.json`** and **`summary/run_summary.md`** with an **automated** verdict per row (`PASS` / `PARTIAL` / `FAIL` / `ERROR`) derived from Plan-Gate **`metadata.evidence_quality`**. Per-scenario **`ask_response.json`** still contains full **`metadata`** including **`operator_hints`** and **`usefulness_metrics`** (**§2.7**) for retrieval-usefulness review. That summary is a **quick signal**, not a substitute for human **`judgement.txt`** and **§6** when filling **`AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`**.
 
 ```bash
 cd "$M_CODER_ROOT"
@@ -364,7 +378,7 @@ docs/validation/artifacts/aiops_mvp/
 1. **Grounding** — Tied to evidence paths / bundle, not generic prose.  
 2. **Truthfulness** — Strong claims justified; uncertainty explicit.  
 3. **Usefulness** — Addresses the query.  
-4. **Evidence visibility** — Files / selectors / plan steps traceable.  
+4. **Evidence visibility** — Files / selectors / plan steps traceable; optional cross-check **`metadata.usefulness_metrics`** (path mix, snippet anchors) vs narrative (**§2.7**).  
 5. **Weak-evidence honesty** — No fake ownership; asks for scope when needed.  
 6. **Multi-file** (when applicable) — Coherent cross-file narrative.
 

@@ -16,7 +16,13 @@ from runtime.layer5.evidence.schema_validate import (
     EvidenceSchemaValidationError,
     validate_evidence_bundle_dict,
 )
-from runtime.layer5.retrieval.quality_gate import NO_MATCH, WEAK, assess_evidence_quality
+from runtime.layer5.evidence.usefulness_metrics import bundle_usefulness_metrics
+from runtime.layer5.retrieval.quality_gate import (
+    NO_MATCH,
+    WEAK,
+    assess_evidence_quality,
+    operator_hints_for_assessment,
+)
 
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
@@ -117,12 +123,15 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     quality = assess_evidence_quality(query, [item.path for item in bundle.items])
     ar_dict = evidence_bundle.get("authority_resolution")
     authority_resolution = ar_dict if isinstance(ar_dict, dict) else None
+    entries_list = evidence_bundle.get("entries") if isinstance(evidence_bundle.get("entries"), list) else []
     metadata = {
         "intent_type": quality.intent_type,
         "evidence_quality": quality.evidence_quality,
         "quality_reasons": list(quality.quality_reasons),
         "dominance_metrics": quality.dominance_metrics,
         "policy_version": quality.policy_version,
+        "operator_hints": list(operator_hints_for_assessment(quality)),
+        "usefulness_metrics": bundle_usefulness_metrics(entries_list),
     }
     if authority_resolution:
         metadata["authority_resolution_present"] = True

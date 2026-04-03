@@ -199,6 +199,19 @@ def test_v1_blocked_has_refusal_shape_and_metadata():
     assert isinstance(md.get("quality_reasons"), list) and len(md["quality_reasons"]) >= 1
 
 
+def test_v1_metadata_includes_operator_hints_and_usefulness_metrics():
+    req = _minimal_v1_ask(_load_golden_evidence())
+    resp = handle_ask_v1_request(req)
+    md = resp.get("metadata") or {}
+    assert "operator_hints" in md
+    assert isinstance(md["operator_hints"], list)
+    assert "usefulness_metrics" in md
+    um = md["usefulness_metrics"]
+    assert isinstance(um, dict)
+    assert um.get("entry_count") == 1
+    assert um.get("snippet_anchor_hits") == 1
+
+
 def test_v0_v1_metadata_semantics_match_on_quality_keys(tmp_path):
     from runtime.ask_service.handlers import handle_ask_request
 

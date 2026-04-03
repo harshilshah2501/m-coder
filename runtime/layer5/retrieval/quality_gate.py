@@ -176,3 +176,31 @@ def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessm
         policy_version=QUALITY_GATE_VERSION,
     )
 
+
+def operator_hints_for_assessment(assessment: QualityAssessment) -> Tuple[str, ...]:
+    """Human-oriented explanations for weak or ambiguous evidence (Plan-Gate metadata)."""
+    hints: List[str] = []
+    reasons = set(assessment.quality_reasons)
+    if "LOW_CORE_RATIO" in reasons:
+        hints.append(
+            "Fewer than 30% of retrieved paths are classified as core AIOps packages "
+            "(e.g. com/mindarray/aiops). Relevant modules may still appear but are diluted by broad support files."
+        )
+    if "LOW_CODE_RATIO" in reasons:
+        hints.append(
+            "Low share of production Java paths in top-k; retrieval may be dominated by non-implementation classes."
+        )
+    if "NO_CORE_IN_TOP3" in reasons:
+        hints.append(
+            "No core AIOps file in the top-3 ranks; inspect entries below or add domain tokens to the query."
+        )
+    if "QUERY_TOO_GENERIC" in reasons and assessment.evidence_quality == STRONG:
+        hints.append(
+            "Generic-intent classification: STRONG does not imply pinpoint engineering grounding."
+        )
+    if "NOISE_DOMINATED" in reasons or "DIVERSITY_VIOLATION" in reasons:
+        hints.append(
+            "Retrieval window is noisy or repetitive; consider narrowing subsystem or file-class scope."
+        )
+    return tuple(hints)
+

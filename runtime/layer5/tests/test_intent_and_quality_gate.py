@@ -13,6 +13,7 @@ from runtime.layer5.retrieval.quality_gate import (
     STRONG,
     WEAK,
     assess_evidence_quality,
+    operator_hints_for_assessment,
 )
 
 
@@ -114,3 +115,19 @@ def test_quality_gate_noise_only_non_symbol_code_intent_is_insufficient():
     )
     assert q.evidence_quality == INSUFFICIENT
     assert q.blocked is True
+
+
+def test_operator_hints_surface_low_core_and_noise():
+    q = assess_evidence_quality(
+        "where implemented engine",
+        [
+            "tests/engine_test.py",
+            "logs/engine.log",
+            "vendor/engine.js",
+            "src/main/java/com/mindarray/aiops/ingestion/EngineProcessor.java",
+        ],
+    )
+    hints = operator_hints_for_assessment(q)
+    assert len(hints) >= 1
+    joined = " ".join(hints).lower()
+    assert "core" in joined or "noisy" in joined or "production" in joined or "top-3" in joined
