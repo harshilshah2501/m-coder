@@ -13,7 +13,7 @@
       },
       "retrieval_score": 7,
       "snippet": {
-        "anchor_line": 2,
+        "anchor_line": 3,
         "end_byte_utf8": 110,
         "end_line": 3,
         "matched_tokens": [

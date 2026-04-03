@@ -27,6 +27,8 @@ def test_bundle_usefulness_metrics_scores_and_anchors():
     assert m["entry_count"] == 2
     assert m["top1_retrieval_score"] == 9
     assert m["retrieval_score_spread"] == 6
+    assert m["retrieval_score_sum"] == 12
     assert m["snippet_anchor_hits"] == 1
     assert m["snippet_non_anchor_hits"] == 1
     assert m["noise_class_entry_count"] >= 1
+    assert "header_anchor_rate" in m and "domain_anchor_rate" in m

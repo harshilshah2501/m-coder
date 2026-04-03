@@ -1,15 +1,14 @@
 """
 Bounded snippet extraction — deterministic, no rescoring of A5 results.
 
-Anchor selection (first match wins)
------------------------------------
-Scan physical lines in order (0-based line index increasing). For each line, take
-the line body (segment without trailing ``\\r\\n`` / ``\\n``). If any token from
-``query_tokens`` appears as a **substring** of the lowercased body, this line is
-the anchor. Among tokens matching that line, record ``matched_tokens`` as the
-sorted tuple of all such tokens (lexicographic).
-
-If no line matches and ``query_tokens`` is non-empty: anchor at line 1 with
+Anchor selection (deterministic quality-aware)
+---------------------------------------------
+Scan physical lines; collect every line where any ``query_tokens`` token appears as
+a **substring** of the lowercased line body. Among those candidates, pick the
+line with highest **anchor quality score** (domain tokens, code shape, penalties
+for copyright/legal/import-only/header zone) — see ``snippet_anchor_quality``.
+Tie-break: higher score, then **larger line index** (prefer implementation body
+below file banners). If no line matches and ``query_tokens`` is non-empty: anchor at line 1 with
 ``selection_reason=no_query_token_in_body_file_start`` and a window starting at
 the first line.
 
@@ -27,6 +26,7 @@ from typing import Tuple
 
 from runtime.layer5.evidence.config import SnippetConfig
 from runtime.layer5.evidence.selection_reason import SelectionReason
+from runtime.layer5.evidence.snippet_anchor_quality import pick_best_anchor_line
 
 
 @dataclass(frozen=True)
@@ -138,18 +138,10 @@ def extract_snippet(
     if not query_tokens:
         reason = SelectionReason.NO_QUERY_TOKENS_FILE_START
         anchor_idx = 0
-        matched: Tuple[str, ...] = ()
-    else:
-        anchor_idx = None
         matched = ()
-        for i, body in enumerate(bodies):
-            low = body.lower()
-            hit = [t for t in query_tokens if t in low]
-            if hit:
-                anchor_idx = i
-                matched = tuple(sorted(hit))
-                break
-        if anchor_idx is None:
+    else:
+        anchor_idx, matched = pick_best_anchor_line(bodies, query_tokens)
+        if not matched:
             anchor_idx = 0
             matched = ()
             reason = SelectionReason.NO_QUERY_TOKEN_IN_BODY_FILE_START

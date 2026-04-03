@@ -32,6 +32,8 @@ _REQUIRED_DIAG_FIELDS = {
     "generic_integration_demotion",
     "ingestion_log_parser_demotion",
     "duplicate_incident_core_boost",
+    "engineering_aiops_prior",
+    "content_mass_lexical_trimmed",
     "total",
 }
 

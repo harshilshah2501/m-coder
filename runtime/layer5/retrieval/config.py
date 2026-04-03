@@ -162,7 +162,11 @@ RETRIEVAL_POLICY_V5: Final[Mapping[str, object]] = MappingProxyType(
         # Slice 5: boost core AIOps behavioral names on duplicate+incident queries.
         "code_intent_duplicate_incident_core_boost": 18.0,
         # Slice 5: demote log/*Parser.java when query is ingestion/pipeline-focused (pipeline owner vs log parse).
-        "code_intent_ingestion_log_parser_demotion": 30.0,
+        # Usefulness: slightly stronger so core AIOps owners can outrank broad log parsers on Motadata trees
+        # where log parsers carry huge keyword mass (PR-6 anchor order).
+        "code_intent_ingestion_log_parser_demotion": 42.0,
+        # Usefulness: modest tilt for core AIOps Java under non-generic engineering intent (scaled).
+        "engineering_aiops_path_prior": 1.2,
     }
 )
 """
@@ -286,3 +290,9 @@ class LexicalRetrievalConfig:
     When True, apply a small bounded integer adjustment to each hit's score before sorting
     (see ``rank_nudge.deterministic_rank_nudge``). Does not change the candidate set.
     """
+    enable_content_mass_diminishing: bool = True
+    """Apply sublinear damping to very large raw content keyword counts (lexical mass)."""
+    content_mass_linear_cap: int = 2200
+    """Raw content score above this uses ``isqrt(excess)`` tail so giant files do not dominate."""
+    enable_engineering_aiops_path_prior: bool = True
+    """Small extra scaled score for ``.../com/mindarray/aiops/...`` core files when intent is engineering-like."""

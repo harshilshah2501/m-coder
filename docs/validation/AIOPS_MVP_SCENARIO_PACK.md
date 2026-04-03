@@ -422,3 +422,4 @@ docs/validation/artifacts/aiops_mvp/
 | `docs/runtime/WSL_CONTEXT_LAYER_CLIENT.md` | Context Layer client behavior |
 | `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md` | Plugin / tunnel defaults |
 | `docs/validation/STAGE3_BURN_IN_REPORT.md` | Stage 3 pytest burn-in (separate from this pack) |
+| `docs/validation/AIOPS_MVP_USEFULNESS_GROUND_TRUTH_CAPTURE.md` | Labeled usefulness failure-mode capture (quality_reasons, hints, core %, anchors, human snippet judgment) |

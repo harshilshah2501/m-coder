@@ -7,6 +7,7 @@ before merge.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -19,7 +20,7 @@ from runtime.layer5.index.symbol_inventory import (
 )
 
 from runtime.layer5.retrieval.config import LexicalRetrievalConfig, get_retrieval_policy
-from runtime.layer5.retrieval.intent import classify_intent
+from runtime.layer5.retrieval.intent import GENERIC_INTENT, classify_intent
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
 from runtime.layer5.retrieval.policy import (
     FilePolicy,
@@ -42,6 +43,17 @@ def _basename(rel: str) -> str:
     if "/" not in rel:
         return rel
     return rel.rsplit("/", 1)[-1]
+
+
+def _diminish_content_mass(raw: int, cfg: LexicalRetrievalConfig) -> int:
+    """Sublinear tail so files with extreme token repetition do not swamp sharper peers."""
+    if not cfg.enable_content_mass_diminishing or raw <= 0:
+        return raw
+    cap = max(64, int(cfg.content_mass_linear_cap))
+    if raw <= cap:
+        return raw
+    excess = raw - cap
+    return cap + int(math.isqrt(max(0, excess)))
 
 
 def _raw_content_score(
@@ -547,6 +559,7 @@ def _score_entry(
     policy: Mapping,
     symbol_lookup: Mapping[str, Tuple[str, ...]],
     code_intent_active: bool,
+    intent_type: str = GENERIC_INTENT,
 ) -> RetrievalHit:
     if not tokens:
         return RetrievalHit(
@@ -568,7 +581,14 @@ def _score_entry(
 
     path_part = sum(rel_l.count(t) * cfg.weight_path for t in tokens)
     base_part = sum(base_l.count(t) * cfg.weight_basename for t in tokens)
-    raw_content = _raw_content_score(root, entry, tokens, cfg)
+    raw_content_raw = _raw_content_score(root, entry, tokens, cfg)
+    # Damp lexical mass mainly on supporting paths (broad keyword sinks). Core implementation
+    # files keep full raw mass so PR-6 anchor ordering stays stable.
+    if fpolicy.file_class == "supporting_prod_code":
+        raw_content = _diminish_content_mass(raw_content_raw, cfg)
+    else:
+        raw_content = raw_content_raw
+    content_mass_trimmed = raw_content_raw - raw_content
 
     symbol_boost = _symbol_boost(entry, tokens, cfg, policy) if cfg.enable_policy_bias else 0
     symbol_inventory_boost = (
@@ -651,6 +671,18 @@ def _score_entry(
     duplicate_incident_core_boost = _duplicate_incident_core_boost(
         base_name, rel_l, fpolicy, code_intent_active, policy, cfg, tokens
     )
+    engineering_aiops_prior = 0
+    if (
+        cfg.enable_engineering_aiops_path_prior
+        and cfg.enable_policy_bias
+        and intent_type != GENERIC_INTENT
+        and code_intent_active
+        and "/com/mindarray/aiops/" in rel_l
+        and fpolicy.file_class == "core_aiops_code"
+    ):
+        ep = float(policy.get("engineering_aiops_path_prior", 0.0))
+        if ep > 0:
+            engineering_aiops_prior = _scaled(ep, cfg)
     total = (
         path_part
         + base_part
@@ -667,6 +699,7 @@ def _score_entry(
         - generic_integration_demotion
         - ingestion_log_parser_demotion
         + duplicate_incident_core_boost
+        + engineering_aiops_prior
     )
     policy_part = (
         path_prior
@@ -681,6 +714,7 @@ def _score_entry(
         - generic_integration_demotion
         - ingestion_log_parser_demotion
         + duplicate_incident_core_boost
+        + engineering_aiops_prior
     )
     diagnostics: Optional[Dict[str, int]] = None
     if cfg.include_score_diagnostics:
@@ -708,6 +742,8 @@ def _score_entry(
             "generic_integration_demotion": generic_integration_demotion,
             "ingestion_log_parser_demotion": ingestion_log_parser_demotion,
             "duplicate_incident_core_boost": duplicate_incident_core_boost,
+            "engineering_aiops_prior": engineering_aiops_prior,
+            "content_mass_lexical_trimmed": content_mass_trimmed,
             "facade_cap_basename_or_symbol_owner_signal": 1 if narrow_owner_signal_for_facade else 0,
             "total": total,
         }
@@ -745,6 +781,7 @@ def retrieve_lexical(
     policy = get_retrieval_policy(cfg.policy_version)
     tokens = normalize_query(query, min_token_len=cfg.min_token_len)
     intent = classify_intent(query)
+    intent_type = intent.intent_type
     code_intent_active = (
         bool(cfg.code_debug_intent) if cfg.code_debug_intent is not None else infer_code_debug_intent(tokens)
     )
@@ -762,7 +799,8 @@ def retrieve_lexical(
         )
 
     scored: List[RetrievalHit] = [
-        _score_entry(e, tokens, root, cfg, policy, symbol_lookup, code_intent_active) for e in index.files
+        _score_entry(e, tokens, root, cfg, policy, symbol_lookup, code_intent_active, intent_type)
+        for e in index.files
     ]
 
     if cfg.enable_deterministic_rank_nudge and tokens:
