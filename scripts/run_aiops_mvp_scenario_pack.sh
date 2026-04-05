@@ -7,8 +7,8 @@
 #   export AIOPS_MVP_LIVE_HTTP_TIMEOUT=600      # optional
 #   ./scripts/run_aiops_mvp_scenario_pack.sh
 #
-# Optional: ./scripts/run_aiops_mvp_scenario_pack.sh --fail-fast
-# Optional: ./scripts/run_aiops_mvp_scenario_pack.sh --scenario A1
+# Optional: --fail-fast  --scenario A1  -v / --verbose (timestamps on stderr per HTTP phase)
+# Optional: export AIOPS_MVP_VERBOSE=1
 
 set -euo pipefail
 

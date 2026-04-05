@@ -220,4 +220,4 @@ Copy for the next capture (e.g. post–**218ebca** Plan-Gate or post–usefulnes
 
 Use **§2** + **§3** as the **labeled “before”** for ranking/snippet work; use **§5** to record **after** without conflating **diagnostic-only** releases with **retrieval** changes.
 
-Related: `docs/validation/AIOPS_MVP_SCENARIO_PACK.md` §2.7 (`metadata.operator_hints`, `metadata.usefulness_metrics`).
+Related: `docs/validation/AIOPS_MVP_SCENARIO_PACK.md` — Plan-Gate `metadata` fields (`metadata.operator_hints`, `metadata.usefulness_metrics`).

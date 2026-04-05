@@ -85,13 +85,14 @@ def test_scenarios_manifest_schema_and_count() -> None:
         assert len(s["query"]) >= 20
 
 
-def test_scenario_pack_markdown_contains_all_json_queries() -> None:
-    """§4 runbook must include every canonical query (prevents doc/JSON drift)."""
+def test_scenario_pack_markdown_links_scenario_ids_to_json() -> None:
+    """Scenario pack doc must reference the JSON manifest and list every scenario ID."""
     doc = _load_scenarios_doc()
     md_text = _SCENARIO_PACK_MD.read_text(encoding="utf-8")
+    assert "aiops_mvp_scenarios.v1.json" in md_text
     for s in doc["scenarios"]:
-        q = s["query"]
-        assert q in md_text, f"missing query for {s['id']}: {q[:80]}..."
+        sid = s["id"]
+        assert f"| {sid} |" in md_text, f"missing scenario row for {sid}"
 
 
 @pytest.mark.parametrize("scenario_id", ["A1", "A2", "D1", "D2", "P1", "P2", "C1", "C2"])

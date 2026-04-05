@@ -9,6 +9,7 @@ Environment:
   CONTEXT_URL         — default http://127.0.0.1:8091
   PLAN_GATE_URL       — default http://127.0.0.1:8089
   AIOPS_MVP_LIVE_HTTP_TIMEOUT — seconds for export + ask HTTP (default 600)
+  AIOPS_MVP_VERBOSE   — if 1/true/yes, same as --verbose (progress on stderr)
 """
 
 from __future__ import annotations
@@ -25,6 +26,16 @@ from typing import Any, Dict, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCENARIOS_JSON = REPO_ROOT / "docs" / "validation" / "aiops_mvp_scenarios.v1.json"
+
+
+def _utc_ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _vlog(verbose: bool, msg: str) -> None:
+    """Progress to stderr so stdout stays easy to pipe; always flushed."""
+    if verbose:
+        print(f"[{_utc_ts()}] aiops_mvp_run_all: {msg}", file=sys.stderr, flush=True)
 
 
 def _http_timeout() -> float:
@@ -107,6 +118,8 @@ def _run_one(
     plan_url: str,
     timeout: float,
     top_k: int,
+    *,
+    verbose: bool = False,
 ) -> Dict[str, Any]:
     sid = scenario["id"]
     query = scenario["query"]
@@ -143,8 +156,14 @@ def _run_one(
         out["automated_verdict"] = "ERROR"
         return out
 
+    export_url = f"{context_url}/v1/export_evidence"
+    _vlog(
+        verbose,
+        f"{sid} POST {export_url} (request_id={rid_export}, timeout={timeout}s) — "
+        "first export can take many minutes (cold index); Context Layer stderr shows export_evidence lines.",
+    )
     bundle, err = _post_json(
-        f"{context_url}/v1/export_evidence",
+        export_url,
         json.dumps(
             {
                 "workspace_root": workspace,
@@ -160,6 +179,9 @@ def _run_one(
         out["error"] = f"export:{err}"
         out["automated_verdict"] = "ERROR"
         return out
+
+    n_ent = len(bundle.get("entries") or []) if isinstance(bundle, dict) else 0
+    _vlog(verbose, f"{sid} export_evidence OK — entries={n_ent}, writing {base / 'export_response.json'}")
 
     (base / "export_response.json").write_text(
         json.dumps(bundle, indent=2, ensure_ascii=False) + "\n",
@@ -184,8 +206,10 @@ def _run_one(
         encoding="utf-8",
     )
 
+    ask_url = f"{plan_url}/v1/ask"
+    _vlog(verbose, f"{sid} POST {ask_url} (request_id={rid_ask}, timeout={timeout}s)")
     ask_resp, err2 = _post_json(
-        f"{plan_url}/v1/ask",
+        ask_url,
         json.dumps(ask).encode("utf-8"),
         timeout,
     )
@@ -194,6 +218,8 @@ def _run_one(
         out["error"] = f"ask:{err2}"
         out["automated_verdict"] = "ERROR"
         return out
+
+    _vlog(verbose, f"{sid} /v1/ask OK — writing {base / 'ask_response.json'}")
 
     (base / "ask_response.json").write_text(
         json.dumps(ask_resp, indent=2, ensure_ascii=False) + "\n",
@@ -261,7 +287,15 @@ def main() -> int:
         action="append",
         help="Run only this scenario id (repeatable), e.g. --scenario A1",
     )
+    ap.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Log each HTTP phase to stderr (timestamps; use during long export). "
+        "Or set AIOPS_MVP_VERBOSE=1.",
+    )
     args = ap.parse_args()
+    verbose = bool(args.verbose or (os.environ.get("AIOPS_MVP_VERBOSE", "").strip() in ("1", "true", "yes")))
 
     artifact_root = args.artifact_root
     if not artifact_root.is_absolute():
@@ -282,9 +316,17 @@ def main() -> int:
             print(f"Unknown scenario id(s): {sorted(missing)}", file=sys.stderr)
             return 2
 
+    if verbose:
+        root = (os.environ.get("MOTADATA_ROOT") or "").strip()
+        _vlog(
+            True,
+            f"start scenarios={len(scenarios)} CONTEXT_URL={context_url} PLAN_GATE_URL={plan_url} "
+            f"timeout={timeout}s MOTADATA_ROOT={root or '(unset)'} artifact_root={artifact_root}",
+        )
+
     rows: List[Dict[str, Any]] = []
     for s in scenarios:
-        row = _run_one(s, artifact_root, context_url, plan_url, timeout, top_k)
+        row = _run_one(s, artifact_root, context_url, plan_url, timeout, top_k, verbose=verbose)
         rows.append(row)
         v = row.get("automated_verdict", "?")
         e = row.get("error", "")
@@ -309,7 +351,7 @@ def main() -> int:
         "motadata_root": (os.environ.get("MOTADATA_ROOT") or "").strip(),
         "counts": counts,
         "scenarios": rows,
-        "note": "Automated verdict uses Plan-Gate metadata.evidence_quality; human rubric is in AIOPS_MVP_SCENARIO_PACK.md §6.",
+        "note": "Automated verdict uses Plan-Gate metadata.evidence_quality; human rubric is in AIOPS_MVP_SCENARIO_PACK.md (Rubric section).",
     }
     summary_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     _write_summary_md(rows, summary_dir, counts)

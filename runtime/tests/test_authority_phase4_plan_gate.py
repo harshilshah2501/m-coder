@@ -131,6 +131,52 @@ def test_planner_uses_authority_when_present():
     assert any("Primary implementation owner" in s for s in ps.steps)
 
 
+def test_alert_correlation_no_method_in_registry_emits_schema_valid_owner():
+    """YAML may omit primary_owner.method; evidence JSON must not use null for optional method."""
+    registry = load_registry(REG)
+    ar = build_authority_resolution("alert correlation", registry, None)
+    assert ar is not None
+    assert "method" not in (ar["primary_owner"] or {})
+    for mc in ar.get("matched_concepts") or []:
+        assert "method" not in (mc.get("primary_owner") or {})
+    bundle = {
+        "provisional": False,
+        "schema_hint": "layer5.evidence_bundle.v1",
+        "query_raw": "alert correlation",
+        "query_tokens": ["alert", "correlation"],
+        "top_k": 2,
+        "index_schema_version": "layer5.file_index.v1",
+        "workspace_identity_hash": "h",
+        "canonical_root": "/",
+        "a5_authority_note": (
+            "Candidate order and retrieval_score come from A5 lexical retrieval only; "
+            "A6 must not rescore or reorder based on snippets."
+        ),
+        "entries": [
+            {
+                "provisional": False,
+                "rank": 0,
+                "relative_path": ar["primary_owner"]["file"],
+                "retrieval_score": 1,
+                "retrieval_breakdown": {"path_substrings": 1, "basename_substrings": 0, "content_substrings": 0},
+                "snippet": {
+                    "text": "",
+                    "start_line": 1,
+                    "end_line": 1,
+                    "start_byte_utf8": 0,
+                    "end_byte_utf8": 0,
+                    "anchor_line": 1,
+                    "matched_tokens": [],
+                    "selection_reason": "no_query_tokens_file_start",
+                    "truncated_by_max_bytes": False,
+                },
+            }
+        ],
+        "authority_resolution": ar,
+    }
+    validate_evidence_bundle_dict(bundle)
+
+
 def test_eval_runner_smoke():
     registry = load_registry(REG)
     ar = build_authority_resolution("incident deduplication", registry, None)

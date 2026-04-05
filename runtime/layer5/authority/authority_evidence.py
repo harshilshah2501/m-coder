@@ -54,12 +54,16 @@ def _owner_dict_from_concept(c: Concept) -> Dict[str, Any]:
     po = c.primary_owner
     conf = po.confidence if po.confidence in ("high", "medium", "low") else "medium"
     mapped = {"high": "high", "medium": "medium", "low": "weak"}
-    return {
+    # Schema: method is optional but if present must be a string (not JSON null).
+    method = (po.method or "").strip()
+    out: Dict[str, Any] = {
         "file": po.file,
         "class": po.class_name,
-        "method": po.method,
         "confidence": mapped.get(conf, "medium"),
     }
+    if method:
+        out["method"] = method
+    return out
 
 
 def _control_flow_to_list(control_flow: Optional[Dict[str, Any]]) -> List[str]:
