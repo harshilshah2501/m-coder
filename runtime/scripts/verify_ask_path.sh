@@ -14,6 +14,7 @@
 #   CONTEXT_URL=http://127.0.0.1:8091
 #   PLAN_GATE_URL=http://127.0.0.1:8089
 #   TOP_K=8
+#   CURL_MAX_TIME_SEC — if set, curl --max-time for export and ask (omit for no limit)
 #
 
 set -euo pipefail
@@ -23,6 +24,12 @@ PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
 TOP_K="${TOP_K:-8}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-}"
 QUERY="${QUERY:-}"
+CURL_MAX_TIME_SEC="${CURL_MAX_TIME_SEC:-}"
+if [[ -n "${CURL_MAX_TIME_SEC}" ]]; then
+  CURL_MAX=(--max-time "${CURL_MAX_TIME_SEC}")
+else
+  CURL_MAX=()
+fi
 
 info() { echo "[INFO]  $*"; }
 ok()   { echo "[OK]    $*"; }
@@ -57,6 +64,7 @@ echo ""
 
 info "Step 1/3: POST /v1/export_evidence"
 EVIDENCE_HTTP_CODE="$(curl -sS -o "$EVIDENCE_JSON" -w "%{http_code}" \
+  "${CURL_MAX[@]}" \
   -X POST "$CONTEXT_URL/v1/export_evidence" \
   -H 'Content-Type: application/json' \
   -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$QUERY\",\"top_k\":$TOP_K}")"
@@ -106,6 +114,7 @@ PY
 echo ""
 info "Step 3/3: POST /v1/ask"
 ASK_HTTP_CODE="$(curl -sS -o "$ASK_RESP_JSON" -w "%{http_code}" \
+  "${CURL_MAX[@]}" \
   -X POST "$PLAN_GATE_URL/v1/ask" \
   -H 'Content-Type: application/json' \
   --data-binary "@$ASK_REQ_JSON")"

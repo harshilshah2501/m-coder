@@ -68,6 +68,33 @@ Use this as the **before** row for the **real usefulness fix**. Columns match th
 
 ---
 
+## 2.1) Post-fix HTTP rerun (2026-04-06) — **in-repo artifact sync**
+
+| Field | Value |
+|-------|--------|
+| Batch `generated_utc` | **2026-04-06T10:21:00Z** |
+| Artifact root | **`docs/validation/artifacts/aiops_mvp/`** (repo-relative) |
+| `MOTADATA_ROOT` | `/home/harshil/Projects/Motadata` |
+| Automated mix | **1 PASS / 7 PARTIAL / 0 FAIL** (unchanged vs §2 baseline) |
+| Dominant `quality_reasons` | **`LOW_CORE_RATIO`** (Plan-Gate metadata; **seven** scenarios); **A2** only **`QUERY_TOO_GENERIC`** |
+
+**Gate vs HTTP export paths** (local `assess_evidence_quality` on `export_response.json` top-12 paths — **must match** Plan-Gate):
+
+| Scenario | `core_aiops_code` count in top-12 | `core_code_in_top_k_pct` | `LOW_CORE_RATIO`? | `evidence_quality` |
+|----------|-------------------------------------|--------------------------|---------------------|----------------------|
+| A1 | 3 | 0.25 | Yes | WEAK |
+| A2 | 3 | 0.25 | No | STRONG |
+| D1 | 3 | 0.25 | Yes | WEAK |
+| D2 | 2 | 0.1667 | Yes | WEAK |
+| P1 | 3 | 0.25 | Yes | WEAK |
+| P2 | 2 | 0.1667 | Yes | WEAK |
+| C1 | 2 | 0.1667 | Yes | WEAK |
+| C2 | 3 | 0.25 | Yes | WEAK |
+
+**Proof vs HTTP:** In-repo `retrieve_lexical` checks can disagree with **Context Layer** top-12 — see **`LOW_CORE_RATIO_DECISION.md` §C**.
+
+---
+
 ## 3) Full record per scenario (8)
 
 Fields: **`automated_verdict`** · **`evidence_quality`** · **`quality_reasons`** · **`operator_hints`** (recomputed) · **`usefulness_metrics`** (recomputed) · **top 3 paths** · **first visible snippet** · **header vs body** · **human note**

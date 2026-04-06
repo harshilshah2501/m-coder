@@ -4,7 +4,9 @@
 #   export MOTADATA_ROOT=/home/harshil/Projects/Motadata
 #   export CONTEXT_URL=http://127.0.0.1:8091
 #   export PLAN_GATE_URL=http://127.0.0.1:8089   # or tunneled URL
-#   export AIOPS_MVP_LIVE_HTTP_TIMEOUT=600      # optional
+#   export AIOPS_MVP_LIVE_HTTP_TIMEOUT=600      # export_evidence; default ask timeout too
+#   export AIOPS_MVP_ASK_HTTP_TIMEOUT=7200      # optional: longer /v1/ask (tunnel + LLM)
+#   export AIOPS_MVP_ASK_RETRIES=3              # optional: retries on connection reset through SSH
 #   ./scripts/run_aiops_mvp_scenario_pack.sh
 #
 # Optional: --fail-fast  --scenario A1  -v / --verbose (timestamps on stderr per HTTP phase)

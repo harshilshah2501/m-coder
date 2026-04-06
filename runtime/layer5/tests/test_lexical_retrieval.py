@@ -18,6 +18,7 @@ from runtime.layer5.retrieval.lexical import (
     _apply_engineering_intent_top_k_composition,
     _apply_top_k_core_correction,
     _is_core_aiops_hit,
+    global_lexical_sorted_hits,
 )
 from runtime.layer5.retrieval.models import RetrievalHit
 from runtime.layer5.workspace.identity import WorkspaceIdentity
@@ -256,6 +257,18 @@ class TestPolicyRanking:
                 config=LexicalRetrievalConfig(),
             )
             assert r.hits[0].relative_path.endswith("TopologyAnomalyDetector.java")
+
+    def test_global_lexical_sorted_hits_prefix_matches_retrieve_lexical_order(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(root / "a.py", "alpha beta gamma")
+            _touch(root / "b.py", "alpha delta")
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            cfg = LexicalRetrievalConfig()
+            full = global_lexical_sorted_hits(idx, "alpha beta", cfg)
+            r = retrieve_lexical(idx, "alpha beta", top_k=2, config=cfg)
+            assert [h.relative_path for h in full[:2]] == [h.relative_path for h in r.hits]
 
     def test_top_k_core_correction_unit_swap(self):
         """Direct test: correction inserts a core hit into the top-3 window."""

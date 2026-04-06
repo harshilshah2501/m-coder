@@ -7,6 +7,22 @@
 
 Canonical queries and IDs: `docs/validation/aiops_mvp_scenarios.v1.json`.
 
+### Workability smoke (do this before the 8-scenario batch)
+
+The full pack is for **evidence + verdict**; it is slow on a cold index. To establish **confidence that the chain works** (export → ask → HTTP 200) without scenario artifacts, run the bundled verifier once services are up:
+
+```bash
+export WORKSPACE_ROOT="$MOTADATA_ROOT"   # same absolute path Context Layer uses
+export QUERY='How does alert correlation work in this repo?'   # or any short Motadata question
+export CONTEXT_URL=http://127.0.0.1:8091
+export PLAN_GATE_URL=http://127.0.0.1:8089
+# Optional: omit CURL_MAX_TIME_SEC for no curl limit (long cold exports).
+# Or set a ceiling, e.g. export CURL_MAX_TIME_SEC=7200
+bash runtime/scripts/verify_ask_path.sh
+```
+
+That script performs `POST /v1/export_evidence` then `POST /v1/ask` and prints compact PASS/FAIL. **After** the first successful export, the Context Layer process will usually reuse indexes for repeat calls (same clean snapshot). Only when smoke passes is it worth running `./scripts/run_aiops_mvp_scenario_pack.sh` and waiting on full scenario artifacts.
+
 ---
 
 ## One-time files (before any terminal)
@@ -180,7 +196,28 @@ Run Terminal 1 on the Linux host that has the GPU and `demo_stack.env`. On WSL, 
 
 ## If export succeeds but `/v1/ask` fails (`connection:ConnectionResetError`, etc.)
 
-Large evidence JSON can stress Plan-Gate while parsing or building the response. Check **`runtime/.run/plan_gate.log`** on the Plan-Gate host; look for OOM, traceback, or process restart. Prefer **Plan-Gate on the same machine as WSL** or a **stable LAN path** (no flaky tunnel). The batch script records `ask:connection:…` instead of crashing.
+`Connection reset by peer` is usually **not** a client “timeout too short” in the sense of `AIOPS_MVP_LIVE_HTTP_TIMEOUT` — the TCP connection was **closed** while the ask was in flight (SSH tunnel dropped, NAT idle timeout, or Plan-Gate/vLLM restarted). **`Broken pipe` on the SSH session** means the tunnel died; raising timeout to 1500s does not fix that.
+
+**Mitigations:**
+
+1. **Keep the tunnel alive** (SSH example):  
+   `ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -L 8000:127.0.0.1:8000 -L 8089:127.0.0.1:8089 user@host`  
+   Or use **`autossh`** for automatic reconnect.
+
+2. **Batch script:** set a **longer ask-only** timeout and **retries** on transient connection errors (export stays unchanged):  
+   `export AIOPS_MVP_ASK_HTTP_TIMEOUT=7200`  
+   `export AIOPS_MVP_ASK_RETRIES=3`  
+   `export AIOPS_MVP_ASK_RETRY_DELAY_SEC=10`
+
+3. **Prefer** Plan-Gate + vLLM on the **same host** as the client running the pack, or a **stable LAN** path without port-forward.
+
+Large evidence JSON can still stress Plan-Gate while parsing or building the response. Check **`runtime/.run/plan_gate.log`** on the Plan-Gate host; look for OOM, traceback, or process restart.
 
 **Speed:** the first `export_evidence` per clean snapshot pays full index build; **repeat exports** in the same long-lived Context Layer process reuse indexes (see above). Long **first-export** times on a huge Motadata tree are still expected; faster iteration also helps with a **smaller checkout** or **same machine** for all services.
+
+---
+
+## MVP closure (automated bar vs demo)
+
+**Authoritative:** `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md` — acceptance **MVP READY WITH CAVEATS**; **`LOW_CORE_RATIO`** on engineering intents is a **frozen known limitation** (no further heuristic pass in that closure). Use **`verify_ask_path.sh`** for workability confidence before the full pack. Fill **`AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`** after a real batch when artifacts exist.
 

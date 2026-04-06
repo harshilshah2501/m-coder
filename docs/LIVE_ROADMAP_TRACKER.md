@@ -5,7 +5,7 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-04-02  
+- **Last updated**: 2026-04-06  
 - **Program state**: **Stage 2 COMPLETE (locked).** Trust and action metrics are green; no behavioral failures remain. Raw retrieval metrics (`owner@1_raw`, `owner@3_raw`) are diagnostic and do not reopen Stage 2 closure.
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
@@ -42,6 +42,7 @@
 
 ### 1.2 Current truth state (honest)
 
+**MVP production closure (single source):** `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md` — **MVP READY WITH CAVEATS**: evidence-first path + Stage 3 + Context Layer index reuse are **proven**; **8-scenario automated usefulness** remains **weak** (`LOW_CORE_RATIO` **frozen** as limitation, not “next tweak”).
 
 | Surface                                                                     | State                                                                                                                                    |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
@@ -255,7 +256,7 @@ Make system fully traceable and debuggable
 
 System is considered production-grade only if:
 
-[ ] Retrieval produces AIOps-dominant evidence
+[ ] Retrieval produces AIOps-dominant evidence — **see `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md`:** lexical **automated** 8-pack bar **not** met; **LOW_CORE_RATIO** documented as **known limitation** (2026-04-06 closure); no threshold gaming.
 [ ] Ask/Debug/Plan/Code scenarios pass
 [ ] Plugin reflects backend truth
 [ ] Observability fully implemented

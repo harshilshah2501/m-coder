@@ -845,23 +845,14 @@ def _score_entry(
     )
 
 
-def retrieve_lexical(
+def global_lexical_sorted_hits(
     index: WorkspaceFileIndex,
     query: str,
-    top_k: int,
     config: Optional[LexicalRetrievalConfig] = None,
-) -> RetrievalResult:
+) -> List[RetrievalHit]:
     """
-    Return top-k files from ``index`` for ``query`` using MVP lexical rules.
-
-    Args:
-        index: A4 workspace file index (may be stale vs disk).
-        query: Raw user query string.
-        top_k: Maximum hits (non-negative).
-        config: Optional lexical config.
-
-    Returns:
-        ``RetrievalResult`` with deterministic ``hits`` ordering.
+    Full workspace list scored and sorted (deterministic). Same ordering ``retrieve_lexical``
+    uses before top-k corrections. Intended for diagnostics (e.g. LOW_CORE_RATIO pool proof).
     """
     cfg = config or LexicalRetrievalConfig()
     policy = get_retrieval_policy(cfg.policy_version)
@@ -873,16 +864,6 @@ def retrieve_lexical(
     )
     root = Path(index.canonical_root)
     symbol_lookup = resolve_symbol_lookup_for_index(index)
-
-    if top_k <= 0:
-        return RetrievalResult(
-            query_raw=query,
-            query_tokens=tokens,
-            top_k=top_k,
-            hits=(),
-            index_schema_version=index.schema_version,
-            workspace_identity_hash=index.workspace_identity_hash,
-        )
 
     scored: List[RetrievalHit] = [
         _score_entry(e, tokens, root, cfg, policy, symbol_lookup, code_intent_active, intent_type)
@@ -909,6 +890,48 @@ def retrieve_lexical(
         scored = nudged
 
     if not tokens:
+        return scored
+
+    scored.sort(key=lambda h: (-h.score, h.relative_path))
+    return scored
+
+
+def retrieve_lexical(
+    index: WorkspaceFileIndex,
+    query: str,
+    top_k: int,
+    config: Optional[LexicalRetrievalConfig] = None,
+) -> RetrievalResult:
+    """
+    Return top-k files from ``index`` for ``query`` using MVP lexical rules.
+
+    Args:
+        index: A4 workspace file index (may be stale vs disk).
+        query: Raw user query string.
+        top_k: Maximum hits (non-negative).
+        config: Optional lexical config.
+
+    Returns:
+        ``RetrievalResult`` with deterministic ``hits`` ordering.
+    """
+    cfg = config or LexicalRetrievalConfig()
+    tokens = normalize_query(query, min_token_len=cfg.min_token_len)
+    intent = classify_intent(query)
+    intent_type = intent.intent_type
+
+    if top_k <= 0:
+        return RetrievalResult(
+            query_raw=query,
+            query_tokens=tokens,
+            top_k=top_k,
+            hits=(),
+            index_schema_version=index.schema_version,
+            workspace_identity_hash=index.workspace_identity_hash,
+        )
+
+    scored = global_lexical_sorted_hits(index, query, cfg)
+
+    if not tokens:
         # Deterministic fallback: index.files is already sorted by relative_path
         chosen = tuple(
             RetrievalHit(
@@ -924,7 +947,6 @@ def retrieve_lexical(
             for e in index.files[:top_k]
         )
     else:
-        scored.sort(key=lambda h: (-h.score, h.relative_path))
         if cfg.enable_top_k_core_correction:
             corrected = _apply_top_k_core_correction(scored, top_k)
             corrected = _apply_top_k_symbol_owner_correction(corrected, top_k, intent.symbol_tokens)
@@ -935,7 +957,8 @@ def retrieve_lexical(
             DEBUG_INTENT,
             PLAN_INTENT,
         ):
-            tgt = min(cfg.engineering_intent_target_core_in_top_k, top_k)
+            global_core_total = sum(1 for h in scored if _is_core_aiops_hit(h))
+            tgt = min(cfg.engineering_intent_target_core_in_top_k, global_core_total, top_k)
             corrected = _apply_engineering_intent_top_k_composition(
                 corrected,
                 scored,

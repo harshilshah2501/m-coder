@@ -8,7 +8,10 @@ Environment:
   MOTADATA_ROOT       — required (workspace checkout)
   CONTEXT_URL         — default http://127.0.0.1:8091
   PLAN_GATE_URL       — default http://127.0.0.1:8089
-  AIOPS_MVP_LIVE_HTTP_TIMEOUT — seconds for export + ask HTTP (default 600)
+  AIOPS_MVP_LIVE_HTTP_TIMEOUT — seconds for export_evidence HTTP (default 600); also default for /v1/ask unless overridden
+  AIOPS_MVP_ASK_HTTP_TIMEOUT — optional; seconds for POST /v1/ask only (large body + LLM; use with SSH tunnels)
+  AIOPS_MVP_ASK_RETRIES — max extra attempts when /v1/ask fails with connection/url errors (default 0); try 2–3 through flaky SSH
+  AIOPS_MVP_ASK_RETRY_DELAY_SEC — delay between ask retries (default 5)
   AIOPS_MVP_VERBOSE   — if 1/true/yes, same as --verbose (progress on stderr)
 """
 
@@ -18,6 +21,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -46,6 +50,35 @@ def _http_timeout() -> float:
         return max(1.0, float(raw))
     except ValueError:
         return 600.0
+
+
+def _ask_http_timeout(export_timeout: float) -> float:
+    """Longer ask timeouts help tunneled Plan-Gate + LLM; export stays on export_timeout."""
+    raw = (os.environ.get("AIOPS_MVP_ASK_HTTP_TIMEOUT") or "").strip()
+    if not raw:
+        return export_timeout
+    try:
+        return max(1.0, float(raw))
+    except ValueError:
+        return export_timeout
+
+
+def _ask_retry_config() -> Tuple[int, float]:
+    raw_r = (os.environ.get("AIOPS_MVP_ASK_RETRIES") or "").strip()
+    retries = 0
+    if raw_r:
+        try:
+            retries = max(0, int(raw_r))
+        except ValueError:
+            retries = 0
+    raw_d = (os.environ.get("AIOPS_MVP_ASK_RETRY_DELAY_SEC") or "").strip()
+    delay = 5.0
+    if raw_d:
+        try:
+            delay = max(0.0, float(raw_d))
+        except ValueError:
+            delay = 5.0
+    return retries, delay
 
 
 def _load_scenarios() -> Dict[str, Any]:
@@ -119,7 +152,10 @@ def _run_one(
     artifact_root: Path,
     context_url: str,
     plan_url: str,
-    timeout: float,
+    export_timeout: float,
+    ask_timeout: float,
+    ask_max_retries: int,
+    ask_retry_delay: float,
     top_k: int,
     *,
     verbose: bool = False,
@@ -162,7 +198,7 @@ def _run_one(
     export_url = f"{context_url}/v1/export_evidence"
     _vlog(
         verbose,
-        f"{sid} POST {export_url} (request_id={rid_export}, timeout={timeout}s) — "
+        f"{sid} POST {export_url} (request_id={rid_export}, timeout={export_timeout}s) — "
         "first export can take many minutes (cold index); Context Layer stderr shows export_evidence lines.",
     )
     bundle, err = _post_json(
@@ -175,7 +211,7 @@ def _run_one(
                 "request_id": rid_export,
             }
         ).encode("utf-8"),
-        timeout,
+        export_timeout,
     )
     if err:
         out["status"] = "ERROR"
@@ -210,12 +246,29 @@ def _run_one(
     )
 
     ask_url = f"{plan_url}/v1/ask"
-    _vlog(verbose, f"{sid} POST {ask_url} (request_id={rid_ask}, timeout={timeout}s)")
-    ask_resp, err2 = _post_json(
-        ask_url,
-        json.dumps(ask).encode("utf-8"),
-        timeout,
+    ask_body = json.dumps(ask).encode("utf-8")
+    _vlog(
+        verbose,
+        f"{sid} POST {ask_url} (request_id={rid_ask}, timeout={ask_timeout}s, "
+        f"max_connection_retries={ask_max_retries})",
     )
+    ask_resp: Optional[Dict[str, Any]] = None
+    err2: Optional[str] = None
+    for attempt in range(ask_max_retries + 1):
+        if attempt > 0:
+            _vlog(
+                verbose,
+                f"{sid} POST {ask_url} connection retry {attempt}/{ask_max_retries} "
+                f"(delay {ask_retry_delay}s) — last_error={err2!r}",
+            )
+            time.sleep(ask_retry_delay)
+        ask_resp, err2 = _post_json(ask_url, ask_body, ask_timeout)
+        if err2 is None:
+            break
+        if not (err2.startswith("connection:") or err2.startswith("urlerror:")):
+            break
+        if attempt >= ask_max_retries:
+            break
     if err2:
         out["status"] = "ERROR"
         out["error"] = f"ask:{err2}"
@@ -306,7 +359,9 @@ def main() -> int:
 
     context_url = os.environ.get("CONTEXT_URL", "http://127.0.0.1:8091").rstrip("/")
     plan_url = os.environ.get("PLAN_GATE_URL", "http://127.0.0.1:8089").rstrip("/")
-    timeout = _http_timeout()
+    export_timeout = _http_timeout()
+    ask_timeout = _ask_http_timeout(export_timeout)
+    ask_max_retries, ask_retry_delay = _ask_retry_config()
 
     doc = _load_scenarios()
     top_k = int(doc.get("top_k_default") or 12)
@@ -324,12 +379,24 @@ def main() -> int:
         _vlog(
             True,
             f"start scenarios={len(scenarios)} CONTEXT_URL={context_url} PLAN_GATE_URL={plan_url} "
-            f"timeout={timeout}s MOTADATA_ROOT={root or '(unset)'} artifact_root={artifact_root}",
+            f"export_timeout={export_timeout}s ask_timeout={ask_timeout}s "
+            f"ask_max_retries={ask_max_retries} MOTADATA_ROOT={root or '(unset)'} artifact_root={artifact_root}",
         )
 
     rows: List[Dict[str, Any]] = []
     for s in scenarios:
-        row = _run_one(s, artifact_root, context_url, plan_url, timeout, top_k, verbose=verbose)
+        row = _run_one(
+            s,
+            artifact_root,
+            context_url,
+            plan_url,
+            export_timeout,
+            ask_timeout,
+            ask_max_retries,
+            ask_retry_delay,
+            top_k,
+            verbose=verbose,
+        )
         rows.append(row)
         v = row.get("automated_verdict", "?")
         e = row.get("error", "")
@@ -350,7 +417,10 @@ def main() -> int:
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "context_url": context_url,
         "plan_gate_url": plan_url,
-        "http_timeout_seconds": timeout,
+        "http_timeout_seconds": export_timeout,
+        "ask_http_timeout_seconds": ask_timeout,
+        "ask_max_connection_retries": ask_max_retries,
+        "ask_retry_delay_seconds": ask_retry_delay,
         "motadata_root": (os.environ.get("MOTADATA_ROOT") or "").strip(),
         "counts": counts,
         "scenarios": rows,

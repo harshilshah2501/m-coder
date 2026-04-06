@@ -31,7 +31,9 @@ This pass targets **visible snippet quality**, **lexical mass on supporting path
 - **Tie-break:** Higher score, then **larger line index** (prefer body below banners).
 - **`selection_reason`:** Unchanged enum; still `query_token_substring_anchor` when any line matches (schema-compatible).
 
-## 4) Before / after — AIOps MVP pack (operator-run)
+## 4) Before / after — AIOps MVP pack (operator-run) — **HISTORICAL (2026-04-05 snapshot)**
+
+> **Current HTTP truth:** `docs/validation/LOW_CORE_RATIO_DECISION.md` §B + `docs/validation/artifacts/aiops_mvp/summary/run_summary.json` (**2026-04-06**). Do **not** use §4.1–4.2 below as live MVP status.
 
 Re-run **`./scripts/run_aiops_mvp_scenario_pack.sh`** on WSL with the same Motadata checkout and compare to `AIOPS_MVP_USEFULNESS_GROUND_TRUTH_CAPTURE.md` §2.
 
@@ -78,3 +80,13 @@ Fill **After snippet useful?** after inspecting `export_response.json` → `entr
 - **Stronger log-parser demotion** may reorder other ingestion-style queries; monitor diagnostics `ingestion_log_parser_demotion`.
 - **Anchor scoring** is heuristic; if a file has tokens only in headers, the best line may still be weak — but should be **less** often pure copyright.
 - Re-enable **full PR-6 guard** in CI when a Motadata path is available.
+
+## 7) MVP / LOW_CORE_RATIO — **current truth (2026-04-06 sync)**
+
+**Authoritative:** `docs/validation/LOW_CORE_RATIO_DECISION.md`
+
+- **§A:** In-repo global pool diagnostics (script) — **≥5** cores per query on measured tree.
+- **§B:** **HTTP** `export_response.json` top-12 — **2–3** cores; **`LOW_CORE_RATIO`** present on engineering scenarios; **1 PASS / 7 PARTIAL** in `run_summary.json`.
+- **§C:** **Mismatch** between offline `retrieve_lexical` proof and **running Context Layer** — MVP claims must follow **§B** until services match repo.
+
+**Packaging:** `MVP_PRODUCTION_CLOSURE_NOTE.md` (HTTP-primary).
