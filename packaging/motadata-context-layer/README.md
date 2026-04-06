@@ -98,11 +98,16 @@ Logs go to **stderr** of that process unless `MOTADATA_CONTEXT_LAYER_LOG_PATH` i
 | `MOTADATA_CONTEXT_LAYER_WORKSPACE_FILE` | Path to a text file whose **first line** is the repo root (optional). | — |
 | `~/.motadata_context_layer_workspace` | If unset, first line of this file is used as repo root (same as `WORKSPACE_FILE`). | — |
 | (heuristic) | If still unset: **`~/Projects/Motadata`** or **`~/Motadata`**. If the service runs as **root**, also scan **`/home/*/Projects/Motadata`** and use it when **exactly one** exists. | — |
+| `MOTADATA_CONTEXT_LAYER_INDEX_CACHE` | In-process reuse of file + authority code index for the same workspace **snapshot** (path identity + git SHA). Set `0`/`false` to disable. | on |
+| `MOTADATA_CONTEXT_LAYER_INDEX_CACHE_MAX_KEYS` | LRU cap (multi-root or long-lived process). | `4` |
+| `MOTADATA_CONTEXT_LAYER_INDEX_CACHE_TTL_SEC` | Time-based eviction; `0` = none (use key + dirty bypass + restart). | `0` |
+
+Git **dirty** working trees bypass the cache (always rebuild). This is **service latency** only; it does not change retrieval ranking or evidence semantics.
 
 ## Endpoints
 
 - `GET /healthz` — process up.
-- `GET /version` — package version + schema hints.
+- `GET /version` — package version + schema hints (includes `index_cache_entries` when index cache is enabled).
 - `POST /v1/export_evidence` — JSON `{ "workspace_root", "query", "top_k" }` → `layer5.evidence_bundle.v1` or explicit error JSON with `failure_class`.
 
 ## Error contract (plugin)

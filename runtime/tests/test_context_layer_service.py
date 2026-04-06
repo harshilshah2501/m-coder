@@ -18,6 +18,7 @@ from runtime.context_layer_service.app import (
     _normalize_workspace_root,
 )
 from runtime.context_layer_service.evidence_api import export_evidence_bundle_dict
+from runtime.context_layer_service.workspace_index_cache import WorkspaceIndexCache
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -113,6 +114,35 @@ def test_export_evidence_bundle_dict_reuses_file_index_and_adapter(tmp_path):
 def test_export_evidence_bundle_dict_empty_query_raises():
     with pytest.raises(ValueError):
         export_evidence_bundle_dict("/tmp", "   ")
+
+
+def test_export_evidence_bundle_dict_index_cache_second_request_hits(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "foo.py").write_text("def hello():\n    pass\n", encoding="utf-8")
+    cache = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
+    m1: dict = {}
+    m2: dict = {}
+    root_s = str(tmp_path.resolve())
+    d1 = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        index_cache=cache,
+        index_cache_metrics=m1,
+    )
+    d2 = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        index_cache=cache,
+        index_cache_metrics=m2,
+    )
+    assert d1.get("schema_hint") == "layer5.evidence_bundle.v1"
+    assert d2.get("schema_hint") == "layer5.evidence_bundle.v1"
+    assert m1.get("index_cache_hit") is False
+    assert m2.get("index_cache_hit") is True
+    assert m2.get("file_index_build_ms") == 0.0
+    assert m2.get("code_index_build_ms") == 0.0
 
 
 def test_context_layer_http_export_evidence(tmp_path):

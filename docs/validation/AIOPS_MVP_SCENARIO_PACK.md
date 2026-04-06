@@ -44,7 +44,9 @@ Do **not** run the batch script until Terminal 1 and Terminal 2 are both running
 
 ### Optional go / no-go before the full 8-scenario batch
 
-Full exports are expensive (full index per request). Before `./scripts/run_aiops_mvp_scenario_pack.sh -v`, confirm **plausible core AIOps paths already appear in an expanded lexical window** (e.g. top-20) for 1–2 hard scenarios; if the right files are **not** in that window, the issue is recall in the candidate pool, not the pack run. See `docs/validation/RETRIEVAL_USEFULNESS_HARDENING_PASS.md` (engineering top-k composition) and use `retrieve_lexical(..., top_k=20)` from repo root with `PYTHONPATH` + `MOTADATA_ROOT` set.
+The Context Layer **reuses** the workspace file index and authority code index per workspace snapshot (clean git tree, same commit) after the first export in a process — see `index_cache_entries` on `GET /v1/version` and `CONTEXT_LAYER index_cache` log lines (`index_cache_hit`, `file_index_build_ms`, `code_index_build_ms`). Git **dirty** trees bypass the cache. Disable with `MOTADATA_CONTEXT_LAYER_INDEX_CACHE=0` if you need a cold build every time. This is **latency / service efficiency** only; it does not change retrieval quality.
+
+Before `./scripts/run_aiops_mvp_scenario_pack.sh -v`, confirm **plausible core AIOps paths already appear in an expanded lexical window** (e.g. top-20) for 1–2 hard scenarios; if the right files are **not** in that window, the issue is recall in the candidate pool, not the pack run. See `docs/validation/RETRIEVAL_USEFULNESS_HARDENING_PASS.md` (engineering top-k composition) and use `retrieve_lexical(..., top_k=20)` from repo root with `PYTHONPATH` + `MOTADATA_ROOT` set.
 
 ---
 
@@ -180,5 +182,5 @@ Run Terminal 1 on the Linux host that has the GPU and `demo_stack.env`. On WSL, 
 
 Large evidence JSON can stress Plan-Gate while parsing or building the response. Check **`runtime/.run/plan_gate.log`** on the Plan-Gate host; look for OOM, traceback, or process restart. Prefer **Plan-Gate on the same machine as WSL** or a **stable LAN path** (no flaky tunnel). The batch script records `ask:connection:…` instead of crashing.
 
-**Speed:** each `export_evidence` still does a **full workspace index** per request in the current Context Layer HTTP path — long runs are expected on a large Motadata tree. Re-running the pack does not change that; faster iteration requires a **smaller checkout**, **same machine** for all services, or future **index reuse** in the service (not this pack).
+**Speed:** the first `export_evidence` per clean snapshot pays full index build; **repeat exports** in the same long-lived Context Layer process reuse indexes (see above). Long **first-export** times on a huge Motadata tree are still expected; faster iteration also helps with a **smaller checkout** or **same machine** for all services.
 

@@ -18,6 +18,23 @@ from .logging_setup import get_logger, setup_logging_from_env
 
 LOG = get_logger(__name__)
 
+_index_cache_singleton = None
+
+
+def _get_workspace_index_cache():
+    """Lazily construct in-process index cache when enabled (see config.index_cache_enabled)."""
+    global _index_cache_singleton
+    if not config.index_cache_enabled():
+        return None
+    if _index_cache_singleton is None:
+        from runtime.context_layer_service.workspace_index_cache import WorkspaceIndexCache
+
+        _index_cache_singleton = WorkspaceIndexCache(
+            max_keys=config.index_cache_max_keys(),
+            ttl_sec=config.index_cache_ttl_sec(),
+        )
+    return _index_cache_singleton
+
 
 def _normalize_workspace_root(raw: str) -> str:
     """Canonicalize workspace_root at HTTP boundary (JetBrains WSL bridge paths, symlinks)."""
@@ -234,6 +251,9 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
                 ],
             }
             ver.update(layer5_build_info())
+            ic = _get_workspace_index_cache()
+            if ic is not None:
+                ver["index_cache_entries"] = ic.entry_count()
             self._send_json(200, ver)
             return
         self._send_json(404, _error_payload("not_found", "Not found", failure_class="route_not_found"))
@@ -301,8 +321,15 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
             _context_layer_request_log(_EXPORT_PATH, rid, "error", t0, wmark)
             return
 
+        index_metrics: dict = {}
         try:
-            bundle = export_evidence_bundle_dict(workspace, query, top_k=top_k)
+            bundle = export_evidence_bundle_dict(
+                workspace,
+                query,
+                top_k=top_k,
+                index_cache=_get_workspace_index_cache(),
+                index_cache_metrics=index_metrics,
+            )
         except ValueError as e:
             self._send_json(
                 400,
@@ -379,6 +406,15 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
             return
 
         self._send_json(200, bundle)
+        if index_metrics:
+            LOG.info(
+                "CONTEXT_LAYER index_cache request_id=%s index_cache_hit=%s "
+                "file_index_build_ms=%.2f code_index_build_ms=%.2f",
+                rid,
+                index_metrics.get("index_cache_hit"),
+                float(index_metrics.get("file_index_build_ms", 0.0)),
+                float(index_metrics.get("code_index_build_ms", 0.0)),
+            )
         _context_layer_request_log(_EXPORT_PATH, rid, "success", t0, wmark)
 
     def _send_json(self, status: int, obj: object) -> None:
