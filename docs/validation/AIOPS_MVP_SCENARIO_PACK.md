@@ -42,6 +42,10 @@ Use **three** terminal windows attached to **the same WSL distro**. Execute **in
 
 Do **not** run the batch script until Terminal 1 and Terminal 2 are both running and Terminal 3’s `curl` checks below succeed.
 
+### Optional go / no-go before the full 8-scenario batch
+
+Full exports are expensive (full index per request). Before `./scripts/run_aiops_mvp_scenario_pack.sh -v`, confirm **plausible core AIOps paths already appear in an expanded lexical window** (e.g. top-20) for 1–2 hard scenarios; if the right files are **not** in that window, the issue is recall in the candidate pool, not the pack run. See `docs/validation/RETRIEVAL_USEFULNESS_HARDENING_PASS.md` (engineering top-k composition) and use `retrieve_lexical(..., top_k=20)` from repo root with `PYTHONPATH` + `MOTADATA_ROOT` set.
+
 ---
 
 ### Terminal 1 — Plan-Gate + vLLM

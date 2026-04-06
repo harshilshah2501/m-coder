@@ -296,3 +296,16 @@ class LexicalRetrievalConfig:
     """Raw content score above this uses ``isqrt(excess)`` tail so giant files do not dominate."""
     enable_engineering_aiops_path_prior: bool = True
     """Small extra scaled score for ``.../com/mindarray/aiops/...`` core files when intent is engineering-like."""
+    enable_engineering_intent_top_k_composition: bool = True
+    """
+    CODE/DEBUG/PLAN intents only: after lexical sort + PR-6 corrections, promote ``core_aiops_code``
+    hits from the global ranked list into ranks 1..top_k-1 (never rank 0) until
+    ``engineering_intent_target_core_in_top_k`` core files appear in top-k or candidates run out.
+    Replaces lowest-priority non-core slots first (supporting → noise → config → …).
+    """
+    engineering_intent_target_core_in_top_k: int = 4
+    """
+    Minimum core AIOps files to place in top-k when enough distinct core candidates exist
+    in the full ranked list (quality gate ``min_core_ratio_code_intent`` is 0.30 → 4/12).
+    Capped by ``top_k``.
+    """

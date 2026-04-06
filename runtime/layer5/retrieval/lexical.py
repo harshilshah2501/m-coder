@@ -20,7 +20,13 @@ from runtime.layer5.index.symbol_inventory import (
 )
 
 from runtime.layer5.retrieval.config import LexicalRetrievalConfig, get_retrieval_policy
-from runtime.layer5.retrieval.intent import GENERIC_INTENT, classify_intent
+from runtime.layer5.retrieval.intent import (
+    CODE_INTENT,
+    DEBUG_INTENT,
+    GENERIC_INTENT,
+    PLAN_INTENT,
+    classify_intent,
+)
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
 from runtime.layer5.retrieval.policy import (
     FilePolicy,
@@ -500,6 +506,86 @@ def _apply_top_k_core_correction(sorted_hits: List[RetrievalHit], top_k: int) ->
     return tops
 
 
+def _composition_replace_priority(rel: str) -> Tuple[int, str]:
+    """
+    Lower (priority, class) tuple → replace this slot first when promoting cores.
+    Keeps rank-0 untouched elsewhere; here indices are 1..top_k-1.
+    """
+    fc = classify_file(rel).file_class
+    if fc == "core_aiops_code":
+        return (99, fc)  # never chosen — callers skip core slots
+    if fc == "supporting_prod_code":
+        return (0, fc)
+    if is_noise_class(fc):
+        return (1, fc)
+    if fc == "config":
+        return (2, fc)
+    return (3, fc)
+
+
+def _apply_engineering_intent_top_k_composition(
+    tops: List[RetrievalHit],
+    full_sorted_hits: List[RetrievalHit],
+    top_k: int,
+    intent_type: str,
+    *,
+    target_core: int,
+) -> List[RetrievalHit]:
+    """
+    Deterministic top-k composition for engineering intents (matches quality-gate CODE/DEBUG/PLAN).
+
+    Preserves lexical rank 0 (PR-6 anchor at top-1). Fills ranks 1..top_k-1 toward ``target_core``
+    total ``core_aiops_code`` paths by swapping in the best globally ranked cores not yet in top-k,
+    displacing lowest-priority non-core rows first.
+    """
+    if top_k <= 1 or not tops or intent_type not in (CODE_INTENT, DEBUG_INTENT, PLAN_INTENT):
+        return tops
+    if len(tops) != top_k:
+        return tops
+    goal = min(max(1, target_core), top_k)
+    out = list(tops)
+    paths = {h.relative_path for h in out}
+    core_now = sum(1 for h in out if _is_core_aiops_hit(h))
+    if core_now >= goal:
+        return out
+
+    # Globally score-ordered cores not currently in top-k (same pool as lexical sort).
+    promote_queue: List[RetrievalHit] = []
+    for h in full_sorted_hits:
+        if h.relative_path in paths:
+            continue
+        if _is_core_aiops_hit(h):
+            promote_queue.append(h)
+
+    qi = 0
+    while core_now < goal and qi < len(promote_queue):
+        # Slots we may replace: 1..top_k-1 only (never rank 0).
+        replaceable = [
+            i
+            for i in range(1, top_k)
+            if not _is_core_aiops_hit(out[i])
+        ]
+        if not replaceable:
+            break
+        replace_i = min(
+            replaceable,
+            key=lambda i: (
+                _composition_replace_priority(out[i].relative_path),
+                out[i].score,
+                out[i].relative_path,
+            ),
+        )
+        new_hit = promote_queue[qi]
+        qi += 1
+        old_path = out[replace_i].relative_path
+        paths.discard(old_path)
+        paths.add(new_hit.relative_path)
+        out[replace_i] = new_hit
+        core_now += 1
+
+    return out
+
+
 def _symbol_aligned_basename(hit: RetrievalHit, symbol_tokens: Tuple[str, ...]) -> bool:
     if not symbol_tokens:
         return False
@@ -842,10 +928,22 @@ def retrieve_lexical(
         if cfg.enable_top_k_core_correction:
             corrected = _apply_top_k_core_correction(scored, top_k)
             corrected = _apply_top_k_symbol_owner_correction(corrected, top_k, intent.symbol_tokens)
-            chosen = tuple(corrected)
         else:
             corrected = _apply_top_k_symbol_owner_correction(scored, top_k, intent.symbol_tokens)
-            chosen = tuple(corrected)
+        if cfg.enable_engineering_intent_top_k_composition and intent_type in (
+            CODE_INTENT,
+            DEBUG_INTENT,
+            PLAN_INTENT,
+        ):
+            tgt = min(cfg.engineering_intent_target_core_in_top_k, top_k)
+            corrected = _apply_engineering_intent_top_k_composition(
+                corrected,
+                scored,
+                top_k,
+                intent_type,
+                target_core=tgt,
+            )
+        chosen = tuple(corrected)
 
     return RetrievalResult(
         query_raw=query,

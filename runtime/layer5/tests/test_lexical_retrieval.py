@@ -13,7 +13,12 @@ import pytest
 
 from runtime.layer5.index import WorkspaceFileIndex, build_file_index
 from runtime.layer5.retrieval import LexicalRetrievalConfig, normalize_query, retrieve_lexical
-from runtime.layer5.retrieval.lexical import _apply_top_k_core_correction
+from runtime.layer5.retrieval.intent import CODE_INTENT
+from runtime.layer5.retrieval.lexical import (
+    _apply_engineering_intent_top_k_composition,
+    _apply_top_k_core_correction,
+    _is_core_aiops_hit,
+)
 from runtime.layer5.retrieval.models import RetrievalHit
 from runtime.layer5.workspace.identity import WorkspaceIdentity
 
@@ -607,3 +612,32 @@ class TestSlice5MandatoryTop1Closure:
             )
             assert r.hits[0].relative_path.endswith("UIActionEventHandler.java")
             assert (r.hits[0].diagnostics or {}).get("generic_facade_content_trimmed", 0) == 0
+
+
+def test_engineering_intent_top_k_composition_promotes_cores_without_touching_rank0():
+    """Deterministic composition: pull core_aiops_code from below top-k into slots 1..k-1 up to target."""
+
+    def H(p: str, s: int) -> RetrievalHit:
+        return RetrievalHit(
+            p,
+            s,
+            {"path_substrings": s, "basename_substrings": 0, "content_substrings": 0},
+        )
+
+    support = "motadata/src/main/java/com/mindarray/api/Support{}.java"
+    core = "motadata/src/main/java/com/mindarray/aiops/Core{}.java"
+    # Lexical order: 12 high-scoring supporting files first, then cores (weaker scores).
+    full: list[RetrievalHit] = [H(support.format(i), 5000 - i) for i in range(12)]
+    full.extend(H(core.format(i), 100 - i) for i in range(6))
+    tops = list(full[:12])
+    assert sum(1 for h in tops if _is_core_aiops_hit(h)) == 0
+
+    out = _apply_engineering_intent_top_k_composition(
+        tops,
+        full,
+        12,
+        CODE_INTENT,
+        target_core=4,
+    )
+    assert out[0].relative_path == tops[0].relative_path
+    assert sum(1 for h in out if _is_core_aiops_hit(h)) == 4
