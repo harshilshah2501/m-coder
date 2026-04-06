@@ -16,12 +16,13 @@ export WORKSPACE_ROOT="$MOTADATA_ROOT"   # same absolute path Context Layer uses
 export QUERY='How does alert correlation work in this repo?'   # or any short Motadata question
 export CONTEXT_URL=http://127.0.0.1:8091
 export PLAN_GATE_URL=http://127.0.0.1:8089
+export TOP_K=12   # optional: align smoke window with scenario-pack default
 # Optional: omit CURL_MAX_TIME_SEC for no curl limit (long cold exports).
 # Or set a ceiling, e.g. export CURL_MAX_TIME_SEC=7200
 bash runtime/scripts/verify_ask_path.sh
 ```
 
-That script performs `POST /v1/export_evidence` then `POST /v1/ask` and prints compact PASS/FAIL. **After** the first successful export, the Context Layer process will usually reuse indexes for repeat calls (same clean snapshot). Only when smoke passes is it worth running `./scripts/run_aiops_mvp_scenario_pack.sh` and waiting on full scenario artifacts.
+That script performs `POST /v1/export_evidence` then `POST /v1/ask` and prints compact PASS/FAIL. **After** the first successful export, the Context Layer process will usually reuse indexes for repeat calls that resolve to the same workspace snapshot. Dirty git trees bypass cache by default. In non-git workspaces, snapshot identity falls back to a deterministic file-manifest fingerprint. Only when smoke passes is it worth running `./scripts/run_aiops_mvp_scenario_pack.sh` and waiting on full scenario artifacts.
 
 ---
 
@@ -118,10 +119,21 @@ curl -fsS "$PLAN_GATE_URL/healthz"
 git -C "$M_CODER_ROOT" rev-parse --short HEAD
 ```
 
+Also verify `MOTADATA_ROOT` parity before the batch:
+
+```bash
+printf 'Terminal3 MOTADATA_ROOT=%s\n' "$MOTADATA_ROOT"
+grep '^MOTADATA_ROOT=' "$M_CODER_ROOT/runtime/.run/effective_config.env" || true
+# In Terminal 2 logs, ensure export begin lines show the expected workspace marker.
+```
+
 Run the pack (**stdout** = one result line per scenario; **stderr** = verbose phases):
 
 ```bash
 export AIOPS_MVP_LIVE_HTTP_TIMEOUT=1200
+export AIOPS_MVP_ASK_HTTP_TIMEOUT=7200
+export AIOPS_MVP_ASK_RETRIES=3
+export AIOPS_MVP_ASK_RETRY_DELAY_SEC=10
 ./scripts/run_aiops_mvp_scenario_pack.sh -v --scenario A1
 ```
 
@@ -151,6 +163,12 @@ Full pack (all 8 scenarios):
 ## HTTP bodies (contract)
 
 **`POST /v1/export_evidence`** — JSON fields: `workspace_root` (absolute `MOTADATA_ROOT`), `query`, `top_k` (pack uses **12** from `aiops_mvp_scenarios.v1.json`). Response body is the evidence bundle object.
+
+Additive snapshot metadata you should expect in export responses:
+- `workspace_snapshot_hash`
+- `workspace_snapshot_source`
+- `workspace_is_dirty`
+- `workspace_commit_sha` (when available)
 
 **`POST /v1/ask`** — Schema `ask_request.v1.0`: `schema_version`, `request_id`, `timestamp_utc`, `query`, `evidence_bundle`, `task_type` (`general` for this pack). Schema file: `runtime/ide/schemas/ask_request.v1.0.schema.json`.
 
