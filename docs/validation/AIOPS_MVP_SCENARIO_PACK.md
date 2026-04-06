@@ -173,3 +173,12 @@ Judge each scenario using `ask_response.json` and evidence paths: grounding, tru
 ## Split host (Plan-Gate not on this WSL)
 
 Run Terminal 1 on the Linux host that has the GPU and `demo_stack.env`. On WSL, set `export PLAN_GATE_URL=http://<that-host-LAN-IP>:8089` (or the tunneled URL) in Terminal 3 before `curl` and the batch script. Terminal 2 stays on WSL. Three terminals remain: **remote shell for governed stack**, **WSL Context Layer**, **WSL batch**.
+
+---
+
+## If export succeeds but `/v1/ask` fails (`connection:ConnectionResetError`, etc.)
+
+Large evidence JSON can stress Plan-Gate while parsing or building the response. Check **`runtime/.run/plan_gate.log`** on the Plan-Gate host; look for OOM, traceback, or process restart. Prefer **Plan-Gate on the same machine as WSL** or a **stable LAN path** (no flaky tunnel). The batch script records `ask:connection:…` instead of crashing.
+
+**Speed:** each `export_evidence` still does a **full workspace index** per request in the current Context Layer HTTP path — long runs are expected on a large Motadata tree. Re-running the pack does not change that; faster iteration requires a **smaller checkout**, **same machine** for all services, or future **index reuse** in the service (not this pack).
+

@@ -107,6 +107,9 @@ def _post_json(url: str, body: bytes, timeout: float) -> Tuple[Optional[Dict[str
         return None, f"http_{e.code}:{detail}"
     except urllib.error.URLError as e:
         return None, f"urlerror:{e}"
+    except ConnectionError as e:
+        # e.g. ConnectionResetError while reading /v1/ask response (Plan-Gate OOM/crash, proxy drop).
+        return None, f"connection:{type(e).__name__}:{e}"
     except json.JSONDecodeError as e:
         return None, f"json_decode:{e}"
 
