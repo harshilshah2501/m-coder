@@ -24,8 +24,7 @@ def test_cache_hit_returns_zero_build_ms():
     c = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
     key = IndexCacheKey(
         canonical_root="/tmp/ws",
-        identity_hash="ab" * 32,
-        commit_sha="deadbeef" * 5,
+        snapshot_hash="ab" * 32,
     )
     calls = {"n": 0}
 
@@ -54,8 +53,7 @@ def test_cache_miss_when_code_index_none_not_stored():
     c = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
     key = IndexCacheKey(
         canonical_root="/tmp/ws",
-        identity_hash="cd" * 32,
-        commit_sha="cafe",
+        snapshot_hash="cd" * 32,
     )
     calls = {"n": 0}
 
@@ -80,8 +78,7 @@ def test_lru_evicts_oldest():
     def make_key(suffix: str) -> IndexCacheKey:
         return IndexCacheKey(
             canonical_root=f"/tmp/{suffix}",
-            identity_hash=("aa" + suffix).ljust(64, "0")[:64],
-            commit_sha="s",
+            snapshot_hash=("aa" + suffix).ljust(64, "0")[:64],
         )
 
     k1, k2, k3 = make_key("1"), make_key("2"), make_key("3")
@@ -113,8 +110,7 @@ def test_single_flight_one_build():
     c = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
     key = IndexCacheKey(
         canonical_root="/tmp/sf",
-        identity_hash="ef" * 32,
-        commit_sha="single",
+        snapshot_hash="ef" * 32,
     )
     builds = {"n": 0}
     gate = threading.Event()

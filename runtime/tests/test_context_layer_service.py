@@ -19,6 +19,9 @@ from runtime.context_layer_service.app import (
 )
 from runtime.context_layer_service.evidence_api import export_evidence_bundle_dict
 from runtime.context_layer_service.workspace_index_cache import WorkspaceIndexCache
+from runtime.layer5.index import build_file_index
+from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
+from runtime.layer5.workspace.resolver import ResolverConfig, WorkspaceResolver
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -145,6 +148,141 @@ def test_export_evidence_bundle_dict_index_cache_second_request_hits(tmp_path):
     assert m2.get("code_index_build_ms") == 0.0
 
 
+def test_export_identity_same_snapshot_local_and_export_match(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "foo.py").write_text("def hello():\n    return 1\n", encoding="utf-8")
+    root_s = str(tmp_path.resolve())
+
+    resolver = WorkspaceResolver(ResolverConfig())
+    identity, err = resolver.resolve(root_s)
+    assert err is None
+    assert identity is not None
+
+    idx = build_file_index(identity)
+    local = retrieve_lexical(idx, "hello", 4, LexicalRetrievalConfig())
+
+    cache = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
+    m1: dict = {}
+    m2: dict = {}
+    exported_1 = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        index_cache=cache,
+        index_cache_metrics=m1,
+    )
+    exported_2 = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        index_cache=cache,
+        index_cache_metrics=m2,
+    )
+
+    assert exported_1.get("workspace_snapshot_hash") == local.workspace_snapshot_hash
+    assert exported_1.get("workspace_snapshot_source") == local.workspace_snapshot_source
+    assert exported_1.get("workspace_is_dirty") == local.workspace_is_dirty
+    assert exported_2.get("workspace_snapshot_hash") == exported_1.get("workspace_snapshot_hash")
+    assert m1.get("index_cache_hit") is False
+    assert m2.get("index_cache_hit") is True
+
+
+def test_export_identity_changes_when_snapshot_changes_and_cache_miss(tmp_path):
+    (tmp_path / "src").mkdir()
+    target = tmp_path / "src" / "foo.py"
+    target.write_text("def hello():\n    return 1\n", encoding="utf-8")
+    root_s = str(tmp_path.resolve())
+
+    cache = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
+    m1: dict = {}
+    b1 = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        index_cache=cache,
+        index_cache_metrics=m1,
+    )
+    assert m1.get("index_cache_hit") is False
+
+    target.write_text("def hello():\n    return 2\n", encoding="utf-8")
+
+    m2: dict = {}
+    b2 = export_evidence_bundle_dict(
+        root_s,
+        "hello",
+        top_k=4,
+        index_cache=cache,
+        index_cache_metrics=m2,
+    )
+    assert b1.get("workspace_snapshot_hash") != b2.get("workspace_snapshot_hash")
+    assert m2.get("index_cache_hit") is False
+
+
+def test_export_identity_git_dirty_bypasses_cache_and_marks_dirty(tmp_path):
+    if subprocess.run(["git", "--version"], capture_output=True, text=True).returncode != 0:
+        pytest.skip("git not available")
+
+    root_s = str(tmp_path.resolve())
+    subprocess.run(["git", "init"], cwd=root_s, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "tests@example.com"], cwd=root_s, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Tests"], cwd=root_s, check=True, capture_output=True)
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    subprocess.run(["git", "add", "a.py"], cwd=root_s, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "init"], cwd=root_s, check=True, capture_output=True, text=True)
+
+    # Dirty working tree after HEAD commit.
+    (tmp_path / "a.py").write_text("x = 2\n", encoding="utf-8")
+
+    cache = WorkspaceIndexCache(max_keys=4, ttl_sec=0.0)
+    m1: dict = {}
+    m2: dict = {}
+    b1 = export_evidence_bundle_dict(
+        root_s,
+        "x",
+        top_k=2,
+        index_cache=cache,
+        index_cache_metrics=m1,
+    )
+    b2 = export_evidence_bundle_dict(
+        root_s,
+        "x",
+        top_k=2,
+        index_cache=cache,
+        index_cache_metrics=m2,
+    )
+
+    assert b1.get("workspace_is_dirty") is True
+    assert b1.get("workspace_snapshot_source") == "git_head_dirty_manifest_v1"
+    assert b2.get("workspace_is_dirty") is True
+    assert m1.get("index_cache_hit") is False
+    assert m2.get("index_cache_hit") is False
+
+
+def test_export_reproducible_for_fixed_snapshot(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "foo.py").write_text("def hello():\n    return 7\n", encoding="utf-8")
+    root_s = str(tmp_path.resolve())
+
+    b1 = export_evidence_bundle_dict(root_s, "hello", top_k=4)
+    b2 = export_evidence_bundle_dict(root_s, "hello", top_k=4)
+
+    assert b1.get("workspace_snapshot_hash") == b2.get("workspace_snapshot_hash")
+    assert b1.get("entries") == b2.get("entries")
+
+
+def test_export_no_cache_path_unchanged_behavior(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "foo.py").write_text("def hello():\n    pass\n", encoding="utf-8")
+    root_s = str(tmp_path.resolve())
+
+    d1 = export_evidence_bundle_dict(root_s, "hello", top_k=4)
+    d2 = export_evidence_bundle_dict(root_s, "hello", top_k=4)
+    assert d1.get("schema_hint") == "layer5.evidence_bundle.v1"
+    assert d2.get("schema_hint") == "layer5.evidence_bundle.v1"
+    assert isinstance(d1.get("entries"), list)
+    assert isinstance(d2.get("entries"), list)
+
+
 def test_context_layer_http_export_evidence(tmp_path):
     port = random.randint(30000, 49151)
     env = os.environ.copy()
@@ -191,7 +329,18 @@ def test_context_layer_http_export_evidence(tmp_path):
         with urllib.request.urlopen(req, timeout=30) as r:
             assert r.status == 200
             out = json.loads(r.read().decode("utf-8"))
+        resolver = WorkspaceResolver(ResolverConfig())
+        identity, err = resolver.resolve(str(tmp_path))
+        assert err is None
+        assert identity is not None
+        idx = build_file_index(identity)
+        local = retrieve_lexical(idx, "x", 2, LexicalRetrievalConfig())
         assert out.get("schema_hint") == "layer5.evidence_bundle.v1"
+        assert isinstance(out.get("workspace_snapshot_hash"), str)
+        assert out.get("workspace_snapshot_hash")
+        assert out.get("workspace_snapshot_hash") == local.workspace_snapshot_hash
+        assert out.get("workspace_snapshot_source") == local.workspace_snapshot_source
+        assert out.get("workspace_is_dirty") == local.workspace_is_dirty
         assert len(out.get("entries") or []) >= 1
 
         bad_body = json.dumps(

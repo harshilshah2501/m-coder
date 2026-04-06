@@ -36,6 +36,10 @@ class RetrievalResult:
     hits: Tuple[RetrievalHit, ...]
     index_schema_version: str
     workspace_identity_hash: str
+    workspace_snapshot_hash: str = ""
+    workspace_snapshot_source: str = "path_only"
+    workspace_is_dirty: bool = False
+    workspace_commit_sha: str = ""
     """
     Callers must not assume the index matches current disk (A4 full rebuild / staleness).
     """

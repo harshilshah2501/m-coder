@@ -28,6 +28,10 @@
     "top_k": { "type": "integer", "minimum": 0 },
     "index_schema_version": { "type": "string" },
     "workspace_identity_hash": { "type": "string" },
+    "workspace_snapshot_hash": { "type": "string" },
+    "workspace_snapshot_source": { "type": "string" },
+    "workspace_is_dirty": { "type": "boolean" },
+    "workspace_commit_sha": { "type": "string" },
     "canonical_root": { "type": "string" },
     "a5_authority_note": {
       "const": "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets."

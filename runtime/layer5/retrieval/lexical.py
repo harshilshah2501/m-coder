@@ -927,6 +927,10 @@ def retrieve_lexical(
             hits=(),
             index_schema_version=index.schema_version,
             workspace_identity_hash=index.workspace_identity_hash,
+            workspace_snapshot_hash=index.workspace_snapshot_hash,
+            workspace_snapshot_source=index.workspace_snapshot_source,
+            workspace_is_dirty=index.workspace_is_dirty,
+            workspace_commit_sha=index.workspace_commit_sha,
         )
 
     scored = global_lexical_sorted_hits(index, query, cfg)
@@ -975,4 +979,8 @@ def retrieve_lexical(
         hits=chosen,
         index_schema_version=index.schema_version,
         workspace_identity_hash=index.workspace_identity_hash,
+        workspace_snapshot_hash=index.workspace_snapshot_hash,
+        workspace_snapshot_source=index.workspace_snapshot_source,
+        workspace_is_dirty=index.workspace_is_dirty,
+        workspace_commit_sha=index.workspace_commit_sha,
     )

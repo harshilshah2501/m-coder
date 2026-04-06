@@ -141,6 +141,9 @@ class WorkspaceIdentity:
     revision: Optional[WorkspaceRevision] = None
     resolved_at_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     is_git_repo: bool = False
+    snapshot_hash: str = ""
+    snapshot_source: str = "path_only"
+    snapshot_dirty: bool = False
 
     @classmethod
     def compute_identity_hash(cls, canonical_root: str) -> str:
@@ -153,11 +156,19 @@ class WorkspaceIdentity:
         normalized = canonical_root.lower().rstrip("/")
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
+    @classmethod
+    def compute_snapshot_hash(cls, snapshot_descriptor: str) -> str:
+        """Compute SHA-256 hash for a deterministic workspace snapshot descriptor."""
+        return hashlib.sha256(snapshot_descriptor.encode("utf-8")).hexdigest()
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary for API responses."""
         result = {
             "canonical_root": self.canonical_root,
             "identity_hash": self.identity_hash,
+            "snapshot_hash": self.snapshot_hash,
+            "snapshot_source": self.snapshot_source,
+            "snapshot_dirty": self.snapshot_dirty,
             "original_input": self.original_input,
             "path_type": self.path_type,
             "resolved_at_utc": self.resolved_at_utc,

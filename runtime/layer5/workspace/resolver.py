@@ -14,6 +14,7 @@ A4 can index within this root without worrying about path ambiguity.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import subprocess
 from dataclasses import dataclass, field
@@ -148,6 +149,10 @@ class WorkspaceResolver:
 
         # Step 6: Build identity
         identity_hash = WorkspaceIdentity.compute_identity_hash(root_path)
+        snapshot_hash, snapshot_source, snapshot_dirty = self._compute_snapshot_identity(
+            root_path,
+            revision,
+        )
 
         identity = WorkspaceIdentity(
             canonical_root=root_path,
@@ -156,6 +161,9 @@ class WorkspaceResolver:
             path_type=norm_result.detected_type,
             revision=revision,
             is_git_repo=is_git_repo,
+            snapshot_hash=snapshot_hash,
+            snapshot_source=snapshot_source,
+            snapshot_dirty=snapshot_dirty,
         )
 
         return identity, None
@@ -304,6 +312,81 @@ class WorkspaceResolver:
             return None
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return None
+
+    def _compute_snapshot_identity(
+        self,
+        root_path: str,
+        revision: Optional[WorkspaceRevision],
+    ) -> Tuple[str, str, bool]:
+        """
+        Compute snapshot identity hash used by retrieval/cache parity.
+
+        Priority:
+        1) git clean: commit SHA based identity
+        2) git dirty: commit SHA + deterministic manifest fingerprint
+        3) non-git: deterministic manifest fingerprint
+        """
+        if revision and revision.is_versioned():
+            commit = revision.commit_sha.strip() or "unknown"
+            if revision.is_dirty:
+                manifest_fp = self._workspace_manifest_fingerprint(root_path)
+                descriptor = f"git:{commit}:dirty:{manifest_fp}"
+                return WorkspaceIdentity.compute_snapshot_hash(descriptor), "git_head_dirty_manifest_v1", True
+            descriptor = f"git:{commit}:clean"
+            return WorkspaceIdentity.compute_snapshot_hash(descriptor), "git_head_clean", False
+
+        manifest_fp = self._workspace_manifest_fingerprint(root_path)
+        descriptor = f"manifest:{manifest_fp}"
+        return WorkspaceIdentity.compute_snapshot_hash(descriptor), "manifest_v1", False
+
+    def _workspace_manifest_fingerprint(self, root_path: str) -> str:
+        """
+        Deterministic fallback fingerprint over file manifest fields.
+
+        Fingerprint input per file: relative_path, size_bytes, mtime_ns.
+        """
+        root = Path(root_path)
+        if not root.exists() or not root.is_dir():
+            return "manifest_unavailable"
+
+        exclude_lower = {
+            ".git",
+            ".svn",
+            ".hg",
+            "node_modules",
+            "__pycache__",
+            ".venv",
+            "venv",
+            ".idea",
+            ".mypy_cache",
+            ".pytest_cache",
+            ".tox",
+            "dist",
+            "build",
+            ".gradle",
+            "target",
+            ".cargo",
+        }
+        parts: List[str] = []
+        try:
+            for dirpath, dirnames, filenames in os.walk(root, topdown=True, followlinks=False):
+                dirnames[:] = [d for d in sorted(dirnames, key=lambda x: x) if d.lower() not in exclude_lower]
+                for name in sorted(filenames, key=lambda x: x):
+                    full = Path(dirpath) / name
+                    try:
+                        if full.is_symlink() or not full.is_file():
+                            continue
+                        st = full.stat()
+                    except (OSError, PermissionError):
+                        continue
+                    rel = full.relative_to(root).as_posix()
+                    mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
+                    parts.append(f"{rel}|{int(st.st_size)}|{mtime_ns}")
+        except (OSError, PermissionError):
+            return "manifest_unavailable"
+
+        manifest_payload = "\n".join(parts)
+        return hashlib.sha256(manifest_payload.encode("utf-8")).hexdigest()
 
 
 def resolve_workspace(input_path: str) -> Tuple[Optional[WorkspaceIdentity], Optional[WorkspaceError]]:

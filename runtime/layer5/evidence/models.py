@@ -101,6 +101,10 @@ class EvidenceBundle:
     authority_resolution: Optional[Dict[str, Any]] = None
     owner_evidence: Tuple[Dict[str, Any], ...] = ()
     structural_context: Optional[Dict[str, Any]] = None
+    workspace_snapshot_hash: str = ""
+    workspace_snapshot_source: str = "path_only"
+    workspace_is_dirty: bool = False
+    workspace_commit_sha: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         d: Dict[str, Any] = {
@@ -115,6 +119,13 @@ class EvidenceBundle:
             "a5_authority_note": self.a5_authority_note,
             "entries": [e.to_dict() for e in self.entries],
         }
+        if self.workspace_snapshot_hash:
+            d["workspace_snapshot_hash"] = self.workspace_snapshot_hash
+        if self.workspace_snapshot_source:
+            d["workspace_snapshot_source"] = self.workspace_snapshot_source
+        d["workspace_is_dirty"] = bool(self.workspace_is_dirty)
+        if self.workspace_commit_sha:
+            d["workspace_commit_sha"] = self.workspace_commit_sha
         if self.authority_resolution is not None:
             d["authority_resolution"] = self.authority_resolution
         if self.owner_evidence:

@@ -98,12 +98,19 @@ def build_file_index(
         workspace_identity_hash=identity.identity_hash,
         canonical_root=str(root),
         files=tuple(collected),
+        workspace_snapshot_hash=identity.snapshot_hash,
+        workspace_snapshot_source=identity.snapshot_source,
+        workspace_is_dirty=identity.snapshot_dirty,
+        workspace_commit_sha=(
+            identity.revision.commit_sha if identity.revision and identity.revision.commit_sha != "unversioned" else ""
+        ),
     )
 
 
 def index_matches_workspace(index: WorkspaceFileIndex, identity: WorkspaceIdentity) -> bool:
-    """True if index was built for the same canonical root hash as ``identity``."""
+    """True if index was built for the same canonical root and snapshot hash."""
     return (
         index.workspace_identity_hash == identity.identity_hash
+        and index.workspace_snapshot_hash == identity.snapshot_hash
         and index.canonical_root == str(Path(identity.canonical_root).resolve())
     )

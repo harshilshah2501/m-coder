@@ -19,11 +19,10 @@ from runtime.layer5.workspace.identity import WorkspaceIdentity
 
 @dataclass(frozen=True)
 class IndexCacheKey:
-    """Snapshot key: path identity + revision (not path alone)."""
+    """Snapshot key: root path + snapshot identity hash (not path alone)."""
 
     canonical_root: str
-    identity_hash: str
-    commit_sha: str
+    snapshot_hash: str
 
 
 @dataclass
@@ -55,12 +54,9 @@ class WorkspaceIndexCache:
 
     @staticmethod
     def key_from_identity(identity: WorkspaceIdentity) -> IndexCacheKey:
-        rev = identity.revision
-        sha = rev.commit_sha if rev else "unversioned"
         return IndexCacheKey(
             canonical_root=identity.canonical_root,
-            identity_hash=identity.identity_hash,
-            commit_sha=sha,
+            snapshot_hash=(identity.snapshot_hash or identity.identity_hash),
         )
 
     @staticmethod
@@ -74,7 +70,7 @@ class WorkspaceIndexCache:
         return True
 
     def _key_str(self, key: IndexCacheKey) -> str:
-        return f"{key.identity_hash}\n{key.commit_sha}\n{key.canonical_root}"
+        return f"{key.snapshot_hash}\n{key.canonical_root}"
 
     def _expired(self, stored_at: float) -> bool:
         if self._ttl_sec <= 0.0:

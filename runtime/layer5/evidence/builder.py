@@ -108,4 +108,8 @@ def build_evidence_bundle(
         authority_resolution=authority_resolution,
         owner_evidence=oe,
         structural_context=structural_context,
+        workspace_snapshot_hash=retrieval.workspace_snapshot_hash,
+        workspace_snapshot_source=retrieval.workspace_snapshot_source,
+        workspace_is_dirty=retrieval.workspace_is_dirty,
+        workspace_commit_sha=retrieval.workspace_commit_sha,
     )

@@ -41,6 +41,10 @@ class WorkspaceFileIndex:
     workspace_identity_hash: str
     canonical_root: str
     files: Tuple[FileIndexEntry, ...]
+    workspace_snapshot_hash: str = ""
+    workspace_snapshot_source: str = "path_only"
+    workspace_is_dirty: bool = False
+    workspace_commit_sha: str = ""
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         """Deterministic payload: same tree on disk -> same structure (ordering fixed)."""
@@ -48,6 +52,10 @@ class WorkspaceFileIndex:
             "schema_version": self.schema_version,
             "workspace_identity_hash": self.workspace_identity_hash,
             "canonical_root": self.canonical_root,
+            "workspace_snapshot_hash": self.workspace_snapshot_hash,
+            "workspace_snapshot_source": self.workspace_snapshot_source,
+            "workspace_is_dirty": self.workspace_is_dirty,
+            "workspace_commit_sha": self.workspace_commit_sha,
             "files": [e.to_canonical_dict() for e in self.files],
         }
 
