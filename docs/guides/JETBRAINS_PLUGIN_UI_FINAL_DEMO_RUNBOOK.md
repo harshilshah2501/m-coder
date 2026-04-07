@@ -24,7 +24,35 @@ A demo is accepted only if plugin-visible behavior matches backend truth for all
 - Execute outcome truthfulness (executed, blocked, refused, executed_failed)
 - Explicit fallback visibility
 
-## <u>2) Terminal Setup (WSL)</u>
+## <u>2) Host Topology and Ownership</u>
+
+**Goal:** enforce clear ownership boundaries across GPU host, WSL client, and Windows IDE.
+
+**Host 1: GPU server (45.195.82.10)**
+
+- Runs vLLM service
+- Runs Plan-Gate service on 127.0.0.1:8089
+- Is managed on GPU host terminal using:
+
+```bash
+cd /home/harshil/Harshil-PoCs/m-coder
+./runtime/scripts/governed_services.sh restart
+```
+
+**Host 2: WSL client**
+
+- Runs SSH tunnel that forwards local 127.0.0.1:8089 to GPU 127.0.0.1:8089
+- Runs Context Layer locally on 127.0.0.1:8091
+- Is managed in WSL using scripts/wsl_plugin_mvp_stack.sh
+
+**Host 3: Windows IntelliJ IDEA (with WSL backend workflow)**
+
+- Plugin requests must resolve to WSL-backed runtime endpoints:
+  - Plan-Gate URL: http://127.0.0.1:8089
+  - Context Layer URL: http://127.0.0.1:8091
+- Do not run local Plan-Gate directly in WSL when using GPU tunnel, or it can shadow the forwarded endpoint and serve stale commit metadata.
+
+## <u>3) Terminal Setup (WSL)</u>
 
 **Goal:** bring up WSL services and tunnel with strict compatibility checks.
 
@@ -49,7 +77,7 @@ export CONTEXT_URL=http://127.0.0.1:8091
 export AUTO_ALIGN_CONTEXT_COMMIT=1
 export CONTEXT_PORT_RECLAIM=1
 
-./scripts/wsl_plugin_mvp_stack.sh up
+./scripts/wsl_plugin_mvp_stack.sh restart
 ```
 
 **Expected:**
@@ -90,7 +118,7 @@ CONTEXT_PORT_RECLAIM=1 \
 ./scripts/wsl_plugin_mvp_stack.sh up
 ```
 
-## <u>3) JetBrains Plugin Launch Config</u>
+## <u>4) JetBrains Plugin Launch Config</u>
 
 **Goal:** ensure plugin uses the exact runtime endpoints and evidence-first mode.
 
@@ -127,7 +155,7 @@ CONTEXT_PORT_RECLAIM=1 \
 Note for strict provenance checks:
 - If you require Context Layer to publish `git_commit` in `/version` for every run, use `REQUIRE_CONTEXT_GIT_COMMIT=1` during `check`.
 
-## <u>4) Generate Backend Truth Pack (WSL)</u>
+## <u>5) Generate Backend Truth Pack (WSL)</u>
 
 **Goal:** generate backend-truth artifacts used as the authoritative UI parity baseline.
 
@@ -161,7 +189,7 @@ cd /home/harshil/Harshil-PoCs/m-coder
 - `scenario_S*/backend_truth.json`: authoritative expected truth for each scenario (path/outcome/evidence signals). Plugin UI is judged against this.
 - `scenario_S*/operator_checklist.md`: operator evidence sheet where screenshot path, plugin log snippet, and PASS/FAIL/NOT_PROVEN are recorded.
 
-## <u>5) Execute Plugin UI Scenarios and Capture Proof</u>
+## <u>6) Execute Plugin UI Scenarios and Capture Proof</u>
 
 **Goal:** prove plugin UI tells the same story as backend truth for each scenario class.
 
@@ -215,7 +243,7 @@ cd /home/harshil/Harshil-PoCs/m-coder
 1. Help -> Show Log in Explorer/Finder/File Manager
 2. Capture lines around the scenario timestamp with fields such as trace_id, routing_mode, plugin_ask_routing, or startup stack check findings.
 
-## <u>6) Aggregate Certification</u>
+## <u>7) Aggregate Certification</u>
 
 **Goal:** convert per-scenario checklists into a single deterministic PASS/FAIL certification result.
 
@@ -239,7 +267,7 @@ cd /home/harshil/Harshil-PoCs/m-coder
 - exit 0 only when all scenarios are PASS
 - exit 1 when any FAIL or NOT_PROVEN remains
 
-## <u>7) Final Demo Gate</u>
+## <u>8) Final Demo Gate</u>
 
 **Goal:** block demo claims unless UI truth certification is complete and clean.
 
@@ -262,7 +290,7 @@ If not PASS, do defect isolation before stagecraft:
 - plugin log snippet file
 - completed operator_checklist.md with PASS/FAIL/NOT_PROVEN
 
-## <u>8) Quick Shutdown (WSL)</u>
+## <u>9) Quick Shutdown (WSL)</u>
 
 **Goal:** cleanly stop local managed demo processes after run completion.
 
@@ -280,7 +308,7 @@ cd /home/harshil/Harshil-PoCs/m-coder
 ./scripts/wsl_plugin_mvp_stack.sh restart
 ```
 
-## <u>9) One-Command Cheat Sheet</u>
+## <u>10) One-Command Cheat Sheet</u>
 
 **Goal:** provide copy-paste shortcuts for operators during live demo prep.
 
