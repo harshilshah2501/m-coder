@@ -34,7 +34,7 @@ A demo is accepted only if plugin-visible behavior matches backend truth for all
 cd /home/harshil/Harshil-PoCs/m-coder
 
 export MOTADATA_ROOT=/home/harshil/Projects/Motadata
-export M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder
+export M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder"
 export ENABLE_SSH_TUNNEL=1
 export TUNNEL_TARGET=harshil@45.195.82.10
 export PLAN_GATE_URL=http://127.0.0.1:8089
@@ -58,7 +58,7 @@ export CONTEXT_PORT_RECLAIM=1
 cd /home/harshil/Harshil-PoCs/m-coder
 
 export MOTADATA_ROOT=/home/harshil/Projects/Motadata
-export M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder
+export M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder"
 export ENABLE_SSH_TUNNEL=1
 export TUNNEL_TARGET=harshil@45.195.82.10
 export AUTO_ALIGN_CONTEXT_COMMIT=1
@@ -74,7 +74,7 @@ cd /home/harshil/Harshil-PoCs/m-coder
 
 ./scripts/wsl_plugin_mvp_stack.sh down
 
-M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder \
+M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder" \
 MOTADATA_ROOT=/home/harshil/Projects/Motadata \
 ENABLE_SSH_TUNNEL=1 \
 TUNNEL_TARGET=harshil@45.195.82.10 \
@@ -266,6 +266,13 @@ cd /home/harshil/Harshil-PoCs/m-coder
 ./scripts/wsl_plugin_mvp_stack.sh down
 ```
 
+Full managed restart (down -> up):
+
+```bash
+cd /home/harshil/Harshil-PoCs/m-coder
+./scripts/wsl_plugin_mvp_stack.sh restart
+```
+
 ## <u>9) One-Command Cheat Sheet</u>
 
 **Goal:** provide copy-paste shortcuts for operators during live demo prep.
@@ -275,12 +282,25 @@ cd /home/harshil/Harshil-PoCs/m-coder
 ```bash
 cd /home/harshil/Harshil-PoCs/m-coder && \
 MOTADATA_ROOT=/home/harshil/Projects/Motadata \
-M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder \
+M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder" \
 ENABLE_SSH_TUNNEL=1 \
 TUNNEL_TARGET=harshil@45.195.82.10 \
 AUTO_ALIGN_CONTEXT_COMMIT=1 \
 CONTEXT_PORT_RECLAIM=1 \
 ./scripts/wsl_plugin_mvp_stack.sh up
+```
+
+**Restart**:
+
+```bash
+cd /home/harshil/Harshil-PoCs/m-coder && \
+MOTADATA_ROOT=/home/harshil/Projects/Motadata \
+M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder" \
+ENABLE_SSH_TUNNEL=1 \
+TUNNEL_TARGET=harshil@45.195.82.10 \
+AUTO_ALIGN_CONTEXT_COMMIT=1 \
+CONTEXT_PORT_RECLAIM=1 \
+./scripts/wsl_plugin_mvp_stack.sh restart
 ```
 
 **Truth pack**:

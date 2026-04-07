@@ -11,6 +11,7 @@
 #   ./scripts/wsl_plugin_mvp_stack.sh check
 #   ./scripts/wsl_plugin_mvp_stack.sh status
 #   ./scripts/wsl_plugin_mvp_stack.sh down
+#   ./scripts/wsl_plugin_mvp_stack.sh restart
 #
 # Common env:
 #   MOTADATA_ROOT=/home/you/Projects/Motadata
@@ -326,7 +327,11 @@ check_versions_and_commit_match() {
   fi
 
   if [[ -n "$context_commit" && "$context_commit" != "$plan_commit" ]]; then
-    fail "Context Layer and Plan-Gate git_commit mismatch ($context_commit vs $plan_commit)"
+    if [[ "$ALLOW_COMMIT_MISMATCH" == "1" ]]; then
+      warn "Context Layer and Plan-Gate git_commit mismatch (allowed): $context_commit vs $plan_commit"
+    else
+      fail "Context Layer and Plan-Gate git_commit mismatch ($context_commit vs $plan_commit)"
+    fi
   fi
 
   if [[ "$plan_commit" != "$local_commit" ]]; then
@@ -381,21 +386,27 @@ ensure_context_commit_aligned() {
     return 0
   fi
 
-  if [[ "$context_commit" == "$local_commit" ]] && { [[ -z "$plan_commit" ]] || [[ "$context_commit" == "$plan_commit" ]]; }; then
-    info "Context Layer commit already aligned (context=$context_commit local=$local_commit plan=${plan_commit:-n/a})"
+  if [[ "$context_commit" == "$local_commit" ]]; then
+    if [[ -n "$plan_commit" && "$plan_commit" != "$local_commit" ]]; then
+      warn "Plan-Gate commit differs from local/context (plan=$plan_commit local/context=$local_commit); Context Layer restart will not fix remote drift"
+    fi
+    info "Context Layer commit already aligned with local repo (context=$context_commit local=$local_commit)"
     return 0
   fi
 
-  warn "Context Layer commit drift detected (context=$context_commit local=$local_commit plan=${plan_commit:-n/a}); restarting Context Layer for alignment"
+  warn "Context Layer commit drift detected (context=$context_commit local=$local_commit); restarting Context Layer for alignment"
   restart_context_layer_aligned
 
   context_commit="$(get_git_commit_field "$CONTEXT_URL/version")"
-  if [[ -n "$context_commit" && "$context_commit" == "$local_commit" ]] && { [[ -z "$plan_commit" ]] || [[ "$context_commit" == "$plan_commit" ]]; }; then
+  if [[ -n "$context_commit" && "$context_commit" == "$local_commit" ]]; then
+    if [[ -n "$plan_commit" && "$plan_commit" != "$local_commit" ]]; then
+      warn "Context aligned to local repo but Plan-Gate remains on different commit (plan=$plan_commit local=$local_commit)"
+    fi
     ok "Context Layer commit aligned after restart (context=$context_commit)"
     return 0
   fi
 
-  fail "Context Layer commit remains misaligned after restart (context=${context_commit:-<missing>} local=$local_commit plan=${plan_commit:-<missing>})"
+  fail "Context Layer commit remains misaligned after restart (context=${context_commit:-<missing>} local=$local_commit)"
 }
 
 print_plugin_env_hint() {
@@ -477,15 +488,22 @@ cmd_down() {
   ok "Shutdown complete"
 }
 
+cmd_restart() {
+  info "Restarting WSL MVP plugin stack (down -> up)"
+  cmd_down
+  cmd_up
+}
+
 usage() {
   cat <<'EOF'
-Usage: ./scripts/wsl_plugin_mvp_stack.sh {up|check|status|down}
+Usage: ./scripts/wsl_plugin_mvp_stack.sh {up|check|status|down|restart}
 
 Commands:
   up      Start tunnel (optional) + start Context Layer + run all checks
   check   Run health + /version + commit match + compatibility checks
   status  Show managed PIDs and health snapshot
   down    Stop managed Context Layer and tunnel
+  restart Clean managed down then full up with checks
 
 Important env:
   M_CODER_REPO_ROOT          Optional explicit repo root for Context Layer startup/checks
@@ -506,5 +524,6 @@ case "${1:-}" in
   check) cmd_check ;;
   status) cmd_status ;;
   down) cmd_down ;;
+  restart) cmd_restart ;;
   *) usage; exit 1 ;;
 esac
