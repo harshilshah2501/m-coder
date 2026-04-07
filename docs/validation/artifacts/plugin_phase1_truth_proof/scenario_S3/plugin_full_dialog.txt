@@ -1,0 +1,48 @@
+request_id: req-f9e894fa-c88a-4fef-839f-edd15eea1d1d
+
+Routing (correlation)
+────────────────────
+trace_id: trace-2204c802-e207-4a85-b090-be07befb9c68
+routing_mode: plan_only
+plugin_ask_routing: context_export_then_v0
+plugin_ask_routing_decision: attempt=context_export, result=unreachable, fallback_to=v0
+
+Grounding calibration (backend)
+──────────────────────────────
+Evidence quality: STRONG
+intent_type: GENERIC_INTENT
+Quality reasons:
+  • QUERY_TOO_GENERIC
+Dominance metrics (backend): top_k_size=1.0, core_code_in_top_k_pct=0.0, code_in_top_k_pct=1.0, noise_in_top_k_pct=0.0, core_in_top_3_count=0.0, max_consecutive_noise=0.0
+Policy: quality_gate.v1
+
+Response provenance (backend)
+──────────────────────────
+(no evidence_first_meta or evidence_bundle in response)
+
+═══════════════════════════════════════════
+  PLAN ONLY — No execution performed
+═══════════════════════════════════════════
+
+Query: How does alert correlation work in this repo?
+
+Governance Outcome: Bounded Allowance (No Execution)
+
+Repo-Aware Plan (PLAN ONLY)
+Deterministic context bundle and plan-only steps generated. No execution performed.
+
+Context bundle @ phase1-proof
+Files:
+  - GOLDEN_EXEMPLARS_GUIDE.md (reason: symbol:hint:how)
+
+Selectors used: symbols
+
+Plan:
+  1. Open GOLDEN_EXEMPLARS_GUIDE.md and scan for logic related to "correlation".
+  2. Search the repository for usages of "correlation" to locate related call sites and configuration.
+  3. Trace the control flow from the entry points you find to understand how the behavior is orchestrated.
+
+───────────────────────────────────────────
+This is a PLAN ONLY response. No code was executed.
+To execute actions, use 'Submit to Runtime'.
+───────────────────────────────────────────

@@ -1,0 +1,108 @@
+request_id: req-600ac65b-87b5-4902-b6c4-39b22f16afea
+
+Routing (correlation)
+────────────────────
+trace_id: trace-11805f8f-9191-4a52-9970-886c094d8bdd
+routing_mode: plan_only
+plugin_ask_routing: v1_success
+plugin_ask_routing_decision: attempt=v1, result=success
+
+Grounding calibration (backend)
+──────────────────────────────
+Evidence quality: NO_MATCH
+intent_type: CODE_INTENT
+Quality reasons:
+  • NO_SYMBOL_MATCH
+Dominance metrics (backend): top_k_size=8.0, core_code_in_top_k_pct=0.5, code_in_top_k_pct=0.75, noise_in_top_k_pct=0.125, core_in_top_3_count=1.0, max_consecutive_noise=1.0
+Policy: quality_gate.v1
+Context resolution:
+  context_source: layer5.evidence_bundle.v1
+  no_repo_filesystem: true
+
+Response provenance (backend)
+──────────────────────────
+evidence_bundle: present in response
+  ask_path: v1_evidence
+  context_source: layer5.evidence_bundle.v1
+  no_context_engine: true
+
+═══════════════════════════════════════════
+  PLAN ONLY — No execution performed
+═══════════════════════════════════════════
+
+Query: abcxyz definitely_not_existing_symbol_92134
+
+Governance Outcome: Bounded Allowance (No Execution)
+
+Grounding blocked (PLAN ONLY)
+No context files matched relevant code evidence for this ask.
+
+Grounding — layer5.evidence_bundle.v1 (primary)
+────────────────────────────────────────
+schema_hint: layer5.evidence_bundle.v1
+ask_path: v1_evidence (POST /v1/ask)
+
+1. motadata/src/main/java/com/mindarray/policy/PolicyEngineConstants.java  (retrieval_score=548.0)
+   preview:
+   | * This method handles notifications, runbooks, and other actions defined in the policy.
+   |      */
+   |     private static void triggerRUMAction(String severity, boolean trigger, JsonObject policy, JsonObject context, Set<String> renotificationEmailRecipients, Set<String> renotificationSMSRecipients, Map<String, Set<String>> renotificationChannelRecipients, long applicationId, String message, Logger logger, Set<String> mappers, StringBuilder builder)
+   |     {
+2. motadata/src/main/resources/entity-schemas/event-policies.json  (retrieval_score=438.0)
+   preview:
+   | "operand": "message",
+   |                         "operator": "contain",
+   |                         "value": "failed (2: The system cannot find the file specified)"
+   |                       }
+   |                     ]
+3. motadata/src/main/java/com/mindarray/aiops/DependencyManager.java  (retrieval_score=77.0)
+   preview:
+   | //for service rediscover application we map application direct to object and in service case dependent field is null
+   |         // second and third condition is for network topology if in scanning we find any neighbor with interface 1 but we are not monitor interface 1 in that case we will not build dependent dependencies (source + "" + dependentfield)
+   |         if (event.getString(AIOpsConstants.DEPENDENCY_DEPENDENT_FIELD) != null && localDomainDependencies.get(source).get(AIOpsConstants.DependencyLevel.FOUR.getName()) != null
+   |                 && localDomainDependencies.get(source).get(AIOpsConstants.DependencyLevel.FOUR.getName()).contains(getHashCode(event.getString(AIOpsConstants.DEPENDENCY_DEPENDENT_FIELD))))
+4. motadata/src/main/java/com/mindarray/notification/Notification.java  (retrieval_score=279.0)
+   preview:
+   | * display name that is used in the user interface and API.
+   |      */
+   |     public enum NotificationType
+   |     {
+   |         /**
+5. motadata/db-files/counters-description.json  (retrieval_score=210.0)
+   preview:
+   | "interpretation": {
+   |         "high_values": "A high value (1) indicates the server is acting as PAM, responsible for active database management.",
+   |         "low_values": "A low value (0) means the server is not the PAM, but a Standby Active Manager (SAM)."
+   |       },
+   |       "rca": {
+6. motadata/src/main/java/com/mindarray/aiops/AIOpsConstants.java  (retrieval_score=27.0)
+   preview:
+   | *
+   |          * @param name The string name of the availability probe type
+   |          * @return The corresponding AvailabilityProbeType enum value, or null if not found
+   |          */
+   |         public static AvailabilityProbeType valueOfName(String name)
+7. motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java  (retrieval_score=59.0)
+   preview:
+   | else
+   |                                                     {
+   |                                                         LOGGER.warn(String.format("failed to map dependency for monitor %s with dependency level %s , reason : %s", object.getString(AIOpsObject.OBJECT_IP), link.getValue(AIOpsConstants.DEPENDENCY_LEVEL), "Either interface not present in store or connected targets not found"));
+   |                                                     }
+   |                                                 }
+8. motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java  (retrieval_score=63.0)
+   preview:
+   | else
+   |                         {
+   |                             correlationLogs.add(String.format("n level parent not found for object %s from dependencies at %s", ObjectConfigStore.getStore().getObjectName(parent), DateTimeUtil.timestamp()));
+   |                         }
+   |                     }
+
+(Planner context is derived from evidence_bundle above; duplicate file list omitted.)
+
+Plan:
+  (no steps returned)
+
+───────────────────────────────────────────
+This is a PLAN ONLY response. No code was executed.
+To execute actions, use 'Submit to Runtime'.
+───────────────────────────────────────────

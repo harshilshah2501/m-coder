@@ -204,7 +204,7 @@ class RuntimeBridge(
                 AskRoutingDecisionLog.log(decision)
                 return postV0Ask(
                     request.requestId,
-                    buildAskRequestV0(request, includeEvidenceFirstFlag = true, traceId = traceId),
+                    buildAskRequestV0(request, includeEvidenceFirstFlag = false, traceId = traceId),
                     traceId = traceId,
                     pluginAskRouting = AskPluginRouting.CONTEXT_EXPORT_THEN_V0,
                     decision = decision,
@@ -258,7 +258,7 @@ class RuntimeBridge(
                     AskRoutingDecisionLog.log(decision)
                     postV0Ask(
                         request.requestId,
-                        buildAskRequestV0(request, includeEvidenceFirstFlag = true, traceId = traceId),
+                        buildAskRequestV0(request, includeEvidenceFirstFlag = false, traceId = traceId),
                         traceId = traceId,
                         pluginAskRouting = AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK,
                         decision = decision,

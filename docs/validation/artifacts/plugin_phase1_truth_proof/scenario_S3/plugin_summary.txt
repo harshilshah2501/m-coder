@@ -1,0 +1,19 @@
+Outcome: Bounded Allowance (No Execution)
+request_id: req-f9e894fa-c88a-4fef-839f-edd15eea1d1d
+Query: How does alert correlation work in this repo?
+ask_path: (not set)
+evidence_bundle_present: false
+plan_summary.notes_present: false
+trace_id: trace-2204c802-e207-4a85-b090-be07befb9c68
+routing_mode: plan_only
+plugin_ask_routing: context_export_then_v0
+Note: plugin fallback path — open full response for details.
+quality=STRONG · intent=GENERIC_INTENT
+Repo-Aware Plan (PLAN ONLY)
+Deterministic context bundle and plan-only steps generated. No execution performed.
+
+Plan (3 steps): Open GOLDEN_EXEMPLARS_GUIDE.md and scan for logic related to "correlation".
+(+2 more in full response)
+Context: 1 file
+
+— PLAN ONLY — Use View full response or Copy full response for complete diagnostics.
