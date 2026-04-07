@@ -5,7 +5,7 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-04-06  
+- **Last updated**: 2026-04-07  
 - **Program state**: **Stage 2 COMPLETE (locked).** Trust and action metrics are green; no behavioral failures remain. Raw retrieval metrics (`owner@1_raw`, `owner@3_raw`) are diagnostic and do not reopen Stage 2 closure.
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
@@ -42,7 +42,7 @@
 
 ### 1.2 Current truth state (honest)
 
-**MVP production closure (single source):** `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md` — **MVP READY WITH CAVEATS**: evidence-first path + Stage 3 + Context Layer index reuse are **proven**; **8-scenario automated usefulness** remains **weak** (`LOW_CORE_RATIO` **frozen** as limitation, not “next tweak”).
+**MVP production closure state:** baseline closure note remains `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md` (historical 1 PASS / 7 PARTIAL caveat). Latest rerun evidence in `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md` records an **automated 8 PASS / 0 PARTIAL** batch with STRONG evidence quality metadata and no `LOW_CORE_RATIO` signal in that run.
 
 | Surface                                                                     | State                                                                                                                                    |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
@@ -256,7 +256,7 @@ Make system fully traceable and debuggable
 
 System is considered production-grade only if:
 
-[ ] Retrieval produces AIOps-dominant evidence — **see `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md`:** lexical **automated** 8-pack bar **not** met; **LOW_CORE_RATIO** documented as **known limitation** (2026-04-06 closure); no threshold gaming.
+[x] Retrieval produces AIOps-dominant evidence in latest automated batch — see `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md` (8 PASS / 0 PARTIAL, STRONG metadata across all scenarios). Historical caveat note remains in `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md`; no threshold gaming.
 [ ] Ask/Debug/Plan/Code scenarios pass
 [ ] Plugin reflects backend truth
 [ ] Observability fully implemented
@@ -1162,6 +1162,13 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
   - **Fail-closed handling:** validation exceptions, in-loop Plan-Gate recheck failures, terminal alignment.
   - **Tests:** `runtime/tests/test_stage3_loop.py` — **22** passing cases (automated regression for blocked/refused/failed semantics and execution truth).
 - **Evidence summary:** bounded, runtime-owned semantics; truthful **blocked** / **refused** / **failed** / **insufficient** outcomes; fail-closed gate and validation behavior covered by automated tests; product **burn-in** = operator paths in `docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`.
+
+### 6.21 AIOps MVP automated rerun evidence refresh (2026-04-06; tracker update 2026-04-07)
+
+- **Milestone context:** refresh of grounded Ask usefulness signal using Stage-4 artifact batch.
+- **Artifacts:** `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`; `/home/harshil/Harshil-PoCs/Stage-4-Artifacts/aiops_mvp/summary/run_summary.json`; `/home/harshil/Harshil-PoCs/Stage-4-Artifacts/aiops_mvp/summary/run_summary.md`.
+- **Evidence:** automated counts are PASS=8, PARTIAL=0, FAIL=0, ERROR=0; per-scenario `evidence_quality=STRONG` for A1/A2/D1/D2/P1/P2/C1/C2; A2 includes `QUERY_TOO_GENERIC` while remaining PASS.
+- **Interpretation guardrail:** this entry updates the latest automated signal; production-grade closure still requires remaining gates in **§1.3**, **§B3**, **§B5**, and **§B7**.
 
 ---
 

@@ -65,6 +65,8 @@ object Layer5EvidenceExporter {
         return DEFAULT_SERVICE_URL
     }
 
+    fun contextLayerBaseUrl(): String = resolveContextLayerBaseUrl()
+
     /**
      * @param requestId optional; forwarded as `request_id` on HTTP POST `/v1/export_evidence` for log correlation with Plan-Gate.
      */

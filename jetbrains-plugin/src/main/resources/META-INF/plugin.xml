@@ -28,6 +28,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <checkinHandlerFactory implementation="ai.motadata.plugin.vcs.MotadataCheckinHandlerFactory"/>
+        <postStartupActivity implementation="ai.motadata.plugin.startup.MotadataStartupStackCheckActivity"/>
         <notificationGroup id="Motadata AI" displayType="BALLOON" isLogByDefault="true"/>
     </extensions>
 
