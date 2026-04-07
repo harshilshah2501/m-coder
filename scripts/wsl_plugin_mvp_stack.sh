@@ -32,7 +32,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "${M_CODER_REPO_ROOT:-$SCRIPT_DIR/..}" && pwd)"
 RUN_DIR="$REPO_ROOT/runtime/.run"
 mkdir -p "$RUN_DIR"
 
@@ -60,6 +60,8 @@ REMOTE_VLLM_PORT="${REMOTE_VLLM_PORT:-8000}"
 
 ALLOW_COMMIT_MISMATCH="${ALLOW_COMMIT_MISMATCH:-0}"
 REQUIRE_CONTEXT_GIT_COMMIT="${REQUIRE_CONTEXT_GIT_COMMIT:-0}"
+AUTO_ALIGN_CONTEXT_COMMIT="${AUTO_ALIGN_CONTEXT_COMMIT:-1}"
+CONTEXT_PORT_RECLAIM="${CONTEXT_PORT_RECLAIM:-1}"
 
 info() { echo "[INFO] $*"; }
 ok() { echo "[OK]   $*"; }
@@ -81,6 +83,20 @@ if port is None:
     port = 443 if u.scheme == "https" else 80
 print(port)
 PY
+}
+
+kill_port_listener_if_needed() {
+  local port="$1"
+  if [[ "$CONTEXT_PORT_RECLAIM" != "1" ]]; then
+    return 0
+  fi
+  if command -v fuser >/dev/null 2>&1; then
+    if fuser "${port}/tcp" >/dev/null 2>&1; then
+      warn "Reclaiming :$port listener (fuser -k) to align Context Layer commit"
+      fuser -k "${port}/tcp" >/dev/null 2>&1 || true
+      sleep 1
+    fi
+  fi
 }
 
 http_get_or_fail() {
@@ -181,6 +197,15 @@ start_context_layer() {
   ) &
   echo "$!" > "$CONTEXT_PID_FILE"
   ok "Context Layer PID: $(cat "$CONTEXT_PID_FILE") (log: $CONTEXT_LOG)"
+}
+
+restart_context_layer_aligned() {
+  local context_port
+  context_port="$(extract_port_from_url "$CONTEXT_URL")"
+  stop_pid_file "Context Layer" "$CONTEXT_PID_FILE"
+  kill_port_listener_if_needed "$context_port"
+  start_context_layer
+  wait_http_ok "Context Layer" "$CONTEXT_URL/healthz" 90
 }
 
 build_tunnel_target() {
@@ -342,6 +367,37 @@ check_endpoint_compatibility() {
   ok "Compatibility route checks passed (endpoints exist; payload validation code is acceptable)"
 }
 
+ensure_context_commit_aligned() {
+  local local_commit
+  local context_commit
+  local plan_commit
+
+  local_commit="$(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+  context_commit="$(get_git_commit_field "$CONTEXT_URL/version")"
+  plan_commit="$(get_git_commit_field "$PLAN_GATE_URL/version")"
+
+  if [[ -z "$context_commit" ]]; then
+    warn "Context Layer /version has no git_commit; skipping auto-alignment"
+    return 0
+  fi
+
+  if [[ "$context_commit" == "$local_commit" ]] && { [[ -z "$plan_commit" ]] || [[ "$context_commit" == "$plan_commit" ]]; }; then
+    info "Context Layer commit already aligned (context=$context_commit local=$local_commit plan=${plan_commit:-n/a})"
+    return 0
+  fi
+
+  warn "Context Layer commit drift detected (context=$context_commit local=$local_commit plan=${plan_commit:-n/a}); restarting Context Layer for alignment"
+  restart_context_layer_aligned
+
+  context_commit="$(get_git_commit_field "$CONTEXT_URL/version")"
+  if [[ -n "$context_commit" && "$context_commit" == "$local_commit" ]] && { [[ -z "$plan_commit" ]] || [[ "$context_commit" == "$plan_commit" ]]; }; then
+    ok "Context Layer commit aligned after restart (context=$context_commit)"
+    return 0
+  fi
+
+  fail "Context Layer commit remains misaligned after restart (context=${context_commit:-<missing>} local=$local_commit plan=${plan_commit:-<missing>})"
+}
+
 print_plugin_env_hint() {
   echo
   echo "JetBrains plugin target URLs:"
@@ -360,6 +416,9 @@ cmd_up() {
   start_tunnel_if_enabled
   start_context_layer
   check_health
+  if [[ "$AUTO_ALIGN_CONTEXT_COMMIT" == "1" ]]; then
+    ensure_context_commit_aligned
+  fi
   check_versions_and_commit_match
   check_endpoint_compatibility
   print_plugin_env_hint
@@ -429,12 +488,15 @@ Commands:
   down    Stop managed Context Layer and tunnel
 
 Important env:
+  M_CODER_REPO_ROOT          Optional explicit repo root for Context Layer startup/checks
   MOTADATA_ROOT               Required for up (workspace root for Context Layer)
   CONTEXT_URL                Default: http://127.0.0.1:8091
   PLAN_GATE_URL              Default: http://127.0.0.1:8089
   ENABLE_SSH_TUNNEL          1 to create SSH local forwards, else 0
   TUNNEL_TARGET              user@host (or set TUNNEL_USER + TUNNEL_HOST)
   TUNNEL_SSH_KEY             Optional identity file
+  AUTO_ALIGN_CONTEXT_COMMIT  1(default) to auto-restart Context Layer on commit drift
+  CONTEXT_PORT_RECLAIM       1(default) allows reclaiming port 8091 listener via fuser during alignment
   ALLOW_COMMIT_MISMATCH      1 to warn instead of fail on local-vs-service commit mismatch
 EOF
 }

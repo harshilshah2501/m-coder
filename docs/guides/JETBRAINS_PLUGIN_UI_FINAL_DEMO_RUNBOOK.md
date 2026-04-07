@@ -34,10 +34,13 @@ A demo is accepted only if plugin-visible behavior matches backend truth for all
 cd /home/harshil/Harshil-PoCs/m-coder
 
 export MOTADATA_ROOT=/home/harshil/Projects/Motadata
+export M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder
 export ENABLE_SSH_TUNNEL=1
 export TUNNEL_TARGET=harshil@45.195.82.10
 export PLAN_GATE_URL=http://127.0.0.1:8089
 export CONTEXT_URL=http://127.0.0.1:8091
+export AUTO_ALIGN_CONTEXT_COMMIT=1
+export CONTEXT_PORT_RECLAIM=1
 
 ./scripts/wsl_plugin_mvp_stack.sh up
 ```
@@ -55,10 +58,29 @@ export CONTEXT_URL=http://127.0.0.1:8091
 cd /home/harshil/Harshil-PoCs/m-coder
 
 export MOTADATA_ROOT=/home/harshil/Projects/Motadata
+export M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder
 export ENABLE_SSH_TUNNEL=1
 export TUNNEL_TARGET=harshil@45.195.82.10
+export AUTO_ALIGN_CONTEXT_COMMIT=1
+export CONTEXT_PORT_RECLAIM=1
 
 ./scripts/wsl_plugin_mvp_stack.sh check
+```
+
+If commit mismatch still appears, force clean re-alignment:
+
+```bash
+cd /home/harshil/Harshil-PoCs/m-coder
+
+./scripts/wsl_plugin_mvp_stack.sh down
+
+M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder \
+MOTADATA_ROOT=/home/harshil/Projects/Motadata \
+ENABLE_SSH_TUNNEL=1 \
+TUNNEL_TARGET=harshil@45.195.82.10 \
+AUTO_ALIGN_CONTEXT_COMMIT=1 \
+CONTEXT_PORT_RECLAIM=1 \
+./scripts/wsl_plugin_mvp_stack.sh up
 ```
 
 ## <u>3) JetBrains Plugin Launch Config</u>
@@ -94,6 +116,9 @@ export TUNNEL_TARGET=harshil@45.195.82.10
 - Motadata Stack Check: FAIL
 
 **Do not continue demo if FAIL** unless the scenario intentionally demonstrates failure handling.
+
+Note for strict provenance checks:
+- If you require Context Layer to publish `git_commit` in `/version` for every run, use `REQUIRE_CONTEXT_GIT_COMMIT=1` during `check`.
 
 ## <u>4) Generate Backend Truth Pack (WSL)</u>
 
@@ -250,8 +275,11 @@ cd /home/harshil/Harshil-PoCs/m-coder
 ```bash
 cd /home/harshil/Harshil-PoCs/m-coder && \
 MOTADATA_ROOT=/home/harshil/Projects/Motadata \
+M_CODER_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder \
 ENABLE_SSH_TUNNEL=1 \
 TUNNEL_TARGET=harshil@45.195.82.10 \
+AUTO_ALIGN_CONTEXT_COMMIT=1 \
+CONTEXT_PORT_RECLAIM=1 \
 ./scripts/wsl_plugin_mvp_stack.sh up
 ```
 
