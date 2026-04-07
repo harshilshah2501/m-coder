@@ -151,6 +151,14 @@ def ask_v1(plan_gate_url: str, query: str, evidence: dict[str, Any], timeout: in
     return req, resp
 
 
+def _should_call_v1_ask(export_result: HttpResult) -> bool:
+    if export_result.status != 200:
+        return False
+    if not isinstance(export_result.json_obj, dict):
+        return False
+    return bool((export_result.json_obj or {}).get("entries"))
+
+
 def ask_v0(plan_gate_url: str, workspace_root: str, query: str, timeout: int, task_type: str | None = None) -> tuple[dict[str, Any], HttpResult]:
     req: dict[str, Any] = {
         "schema_version": "ask_request.v0.1",
@@ -254,7 +262,27 @@ def main() -> int:
     s1_query = "How does alert correlation work in this repo?"
     s1_export = export_evidence(args.context_url, workspace_root, s1_query, args.top_k, args.export_timeout_sec)
     write_json(s1_dir / "export_response.json", {"status": s1_export.status, "body": s1_export.json_obj, "raw": s1_export.text})
-    s1_req, s1_ask = ask_v1(args.plan_gate_url, s1_query, s1_export.json_obj or {}, args.ask_timeout_sec)
+    s1_req: dict[str, Any]
+    s1_ask: HttpResult
+    if _should_call_v1_ask(s1_export):
+        s1_req, s1_ask = ask_v1(args.plan_gate_url, s1_query, s1_export.json_obj or {}, args.ask_timeout_sec)
+    else:
+        s1_req = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": f"ui-cert-{uuid.uuid4()}",
+            "timestamp_utc": now_utc_iso(),
+            "query": s1_query,
+            "evidence_bundle": "<skipped: export failed>",
+        }
+        s1_ask = HttpResult(
+            status=-1,
+            text=f"skipped_v1_ask_due_to_export_status={s1_export.status}",
+            json_obj={
+                "error": "export_failed",
+                "export_status": s1_export.status,
+                "export_error": s1_export.text,
+            },
+        )
     write_json(s1_dir / "ask_request.json", s1_req)
     write_json(s1_dir / "ask_response.json", {"status": s1_ask.status, "body": s1_ask.json_obj, "raw": s1_ask.text})
     s1_truth = {
@@ -264,6 +292,8 @@ def main() -> int:
         "routing_mode": (s1_ask.json_obj or {}).get("routing_mode"),
         "trace_id": (s1_ask.json_obj or {}).get("trace_id") or ((s1_ask.json_obj or {}).get("metadata") or {}).get("trace_id"),
         "evidence_quality": ((s1_ask.json_obj or {}).get("metadata") or {}).get("evidence_quality"),
+        "export_status": s1_export.status,
+        "export_error": (None if s1_export.status == 200 else s1_export.text),
     }
     write_json(s1_dir / "backend_truth.json", s1_truth)
     write_text(
@@ -365,7 +395,27 @@ def main() -> int:
     s4_query = "Which files implement topology anomaly scoring pipeline?"
     s4_export = export_evidence(args.context_url, workspace_root, s4_query, args.top_k, args.export_timeout_sec)
     write_json(s4_dir / "export_response.json", {"status": s4_export.status, "body": s4_export.json_obj, "raw": s4_export.text})
-    s4_req, s4_ask = ask_v1(args.plan_gate_url, s4_query, s4_export.json_obj or {}, args.ask_timeout_sec)
+    s4_req: dict[str, Any]
+    s4_ask: HttpResult
+    if _should_call_v1_ask(s4_export):
+        s4_req, s4_ask = ask_v1(args.plan_gate_url, s4_query, s4_export.json_obj or {}, args.ask_timeout_sec)
+    else:
+        s4_req = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": f"ui-cert-{uuid.uuid4()}",
+            "timestamp_utc": now_utc_iso(),
+            "query": s4_query,
+            "evidence_bundle": "<skipped: export failed>",
+        }
+        s4_ask = HttpResult(
+            status=-1,
+            text=f"skipped_v1_ask_due_to_export_status={s4_export.status}",
+            json_obj={
+                "error": "export_failed",
+                "export_status": s4_export.status,
+                "export_error": s4_export.text,
+            },
+        )
     write_json(s4_dir / "ask_request.json", s4_req)
     write_json(s4_dir / "ask_response.json", {"status": s4_ask.status, "body": s4_ask.json_obj, "raw": s4_ask.text})
     s4_truth = {
@@ -376,6 +426,8 @@ def main() -> int:
         "trace_id": (s4_ask.json_obj or {}).get("trace_id") or ((s4_ask.json_obj or {}).get("metadata") or {}).get("trace_id"),
         "evidence_quality": ((s4_ask.json_obj or {}).get("metadata") or {}).get("evidence_quality"),
         "quality_reasons": ((s4_ask.json_obj or {}).get("metadata") or {}).get("quality_reasons"),
+        "export_status": s4_export.status,
+        "export_error": (None if s4_export.status == 200 else s4_export.text),
     }
     write_json(s4_dir / "backend_truth.json", s4_truth)
     write_text(
@@ -403,7 +455,27 @@ def main() -> int:
     s5_query = "Where is the quantum flux capacitor serializer pipeline?"
     s5_export = export_evidence(args.context_url, workspace_root, s5_query, args.top_k, args.export_timeout_sec)
     write_json(s5_dir / "export_response.json", {"status": s5_export.status, "body": s5_export.json_obj, "raw": s5_export.text})
-    s5_req, s5_ask = ask_v1(args.plan_gate_url, s5_query, s5_export.json_obj or {}, args.ask_timeout_sec)
+    s5_req: dict[str, Any]
+    s5_ask: HttpResult
+    if _should_call_v1_ask(s5_export):
+        s5_req, s5_ask = ask_v1(args.plan_gate_url, s5_query, s5_export.json_obj or {}, args.ask_timeout_sec)
+    else:
+        s5_req = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": f"ui-cert-{uuid.uuid4()}",
+            "timestamp_utc": now_utc_iso(),
+            "query": s5_query,
+            "evidence_bundle": "<skipped: export failed>",
+        }
+        s5_ask = HttpResult(
+            status=-1,
+            text=f"skipped_v1_ask_due_to_export_status={s5_export.status}",
+            json_obj={
+                "error": "export_failed",
+                "export_status": s5_export.status,
+                "export_error": s5_export.text,
+            },
+        )
     write_json(s5_dir / "ask_request.json", s5_req)
     write_json(s5_dir / "ask_response.json", {"status": s5_ask.status, "body": s5_ask.json_obj, "raw": s5_ask.text})
     s5_truth = {
@@ -414,6 +486,8 @@ def main() -> int:
         "trace_id": (s5_ask.json_obj or {}).get("trace_id") or ((s5_ask.json_obj or {}).get("metadata") or {}).get("trace_id"),
         "evidence_quality": ((s5_ask.json_obj or {}).get("metadata") or {}).get("evidence_quality"),
         "quality_reasons": ((s5_ask.json_obj or {}).get("metadata") or {}).get("quality_reasons"),
+        "export_status": s5_export.status,
+        "export_error": (None if s5_export.status == 200 else s5_export.text),
     }
     write_json(s5_dir / "backend_truth.json", s5_truth)
     write_text(
