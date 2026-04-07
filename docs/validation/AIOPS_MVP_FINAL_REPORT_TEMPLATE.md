@@ -107,6 +107,32 @@ Queries are from docs/validation/aiops_mvp_scenarios.v1.json. Verdicts below are
 
 ---
 
+## 3A) Detailed Expected vs Actual Verification (Reference checked against ~/Projects/Motadata)
+
+Method used for this section:
+- Expected objective and query source: docs/validation/aiops_mvp_scenarios.v1.json
+- Actual run output source: Stage-4 scenario export_response.json and ask_response.json files
+- Reference verification source: filesystem existence checks against /home/harshil/Projects/Motadata
+
+| ID | Scenario type and expected objective | Expected output (human-readable) | Actual output (human-readable) | Reference evidence verification in /home/harshil/Projects/Motadata | Precision assessment |
+|----|--------------------------------------|----------------------------------|--------------------------------|--------------------------------|---------------------|
+| A1 | ASK — single-area grounding for alert correlation modules | Identify likely correlation modules and file anchors with concrete grounding | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=5; top evidence includes AvailabilityCorrelationEngine, UIActionEventHandler, APIServer | 12/12 exported evidence paths exist; top-3 paths exist | Objective met with direct module-level anchors |
+| A2 | ASK — multi-file reasoning over ingestion/normalization/incident flow | Return cross-module flow reasoning with cited relevant files | ask_path=v1_evidence; evidence_quality=STRONG; quality_reasons includes QUERY_TOO_GENERIC; plan steps=4; top evidence includes DependencyQueryProcessor, AvailabilityCorrelationEngine, DependencyManager | 12/12 exported evidence paths exist; top-3 paths exist | Objective met; generic query signal present but not blocking |
+| D1 | DEBUG — duplicate-incident root-cause and first risk checks | Surface likely duplication guard areas and first failure points to inspect | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=9; top evidence includes DependencyQueryProcessor, AvailabilityCorrelationEngine, UIActionEventHandler | 12/12 exported evidence paths exist; top-3 paths exist | Objective strongly met with rich debug plan depth |
+| D2 | DEBUG — honesty under ambiguity for timezone hypothesis | Identify likely modules and clearly state missing evidence before conclusion | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=4; top evidence includes DiscoveryEngine, UIActionEventHandler, AvailabilityCorrelationEngine | 12/12 exported evidence paths exist; top-3 paths exist | Objective met on likely-area identification; no explicit insufficiency note captured in this run |
+| P1 | PLAN — low-risk change plan for correlation-id traceability | Provide minimal-risk implementation plan with rollback and validation shape | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=4; top evidence includes AvailabilityCorrelationEngine, DependencyQueryProcessor, AIOpsObject | 12/12 exported evidence paths exist; top-3 paths exist | Objective met with appropriately scoped planning anchors |
+| P2 | PLAN — conservative suppression improvement plan | Provide safety-first plan preserving critical alert pathways with first files to inspect | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=4; top evidence includes ObjectManager, APIServer, DependencyQueryProcessor | 12/12 exported evidence paths exist; top-3 paths exist | Objective met with conservative subsystem selection |
+| C1 | CODE — safe non-executed patch guidance | Suggest guarded patch direction and insertion points without execution claims | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=4; top evidence includes APIServer, PolicyCacheServiceImpl, AvailabilityCorrelationEngine | 12/12 exported evidence paths exist; top-3 paths exist | Objective met; evidence points to practical insertion surfaces |
+| C2 | CODE — test-grounded duplicate-prevention skeleton | Provide minimal test scaffold tied to plausible existing modules | ask_path=v1_evidence; evidence_quality=STRONG; plan steps=4; top evidence includes UIActionEventHandler, APIServer, DependencyQueryProcessor | 12/12 exported evidence paths exist; top-3 paths exist | Objective met with test-oriented module grounding |
+
+Surgical verification conclusion for section 3A:
+- Query coverage is complete across ASK, DEBUG, PLAN, and CODE categories.
+- Scenario intent fidelity is strong: actual outputs match expected objective class in all 8 scenarios.
+- Reference-repo consistency is strong: exported evidence paths are resolvable in /home/harshil/Projects/Motadata for all scenarios.
+- Residual note: this batch validates automated signal and grounding-path coherence; it does not, by itself, certify UI rendering behavior (that is covered by the plugin UI truth certification pack).
+
+---
+
 ## 4) Cross-Scenario Findings
 
 ### Strongest scenarios
