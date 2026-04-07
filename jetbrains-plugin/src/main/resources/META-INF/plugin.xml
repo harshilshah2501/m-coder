@@ -33,17 +33,24 @@
     </extensions>
 
     <actions>
+        <action id="ai.motadata.plugin.actions.MotadataAssistantAction"
+                class="ai.motadata.plugin.assistant.MotadataAssistantAction"
+                text="Motadata Assistant"
+                description="Primary assistant shell with explicit Ask/Explain/Plan vs Execute modes.">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
         <action id="ai.motadata.plugin.actions.AskMotadataAiAction"
                 class="ai.motadata.plugin.ask.AskMotadataAiAction"
                 text="Ask Motadata AI"
-                description="Repo-aware Ask / Explain selection (PLAN ONLY). Hover this menu entry for details.">
+                description="Compatibility shortcut to assistant Ask/Explain/Plan mode.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         <action id="ai.motadata.plugin.actions.SubmitToRuntimeAction"
                 class="ai.motadata.plugin.actions.SubmitToRuntimeAction"
                 text="Submit to Runtime"
-                description="Send a governed execution request through Plan-Gate (not plan-only). Hover for details.">
+                description="Compatibility shortcut to assistant Execute mode.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>

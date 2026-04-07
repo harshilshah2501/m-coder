@@ -1,6 +1,8 @@
 package ai.motadata.plugin.ask
 
+import ai.motadata.plugin.assistant.HostContract
 import ai.motadata.plugin.bridge.*
+import ai.motadata.plugin.logging.DecisionLogger
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -34,6 +36,9 @@ class AskMotadataAiAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
+        if (!HostContract.enforceOrShow(project, "ask_explain_plan")) {
+            return
+        }
 
         val editor = e.getData(CommonDataKeys.EDITOR)
         val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
@@ -85,7 +90,41 @@ class AskMotadataAiAction : AnAction() {
 
         val response = bridge.askPlan(request)
 
+        logAskDecision(response, workspaceRoot, branch, revision, if (useExplainDebug) "explain_debug" else "ask_plan")
         handleResponse(project, q, response)
+    }
+
+    private fun logAskDecision(
+        response: RuntimeResponse,
+        repoRoot: String,
+        branch: String,
+        revision: String,
+        mode: String,
+    ) {
+        val routingMode = response.metadata["routing_mode"] as? String ?: "(none)"
+        val pluginRoute = response.metadata[AskPluginRouting.METADATA_KEY] as? String ?: "(none)"
+        val traceId = response.metadata["trace_id"] as? String ?: "(none)"
+        val evidenceMeta = response.metadata["evidence_first_meta"] as? Map<*, *>
+        val askPath = evidenceMeta?.get("ask_path")?.toString() ?: "(none)"
+        val hasEvidenceBundle = response.metadata["evidence_bundle"] != null
+        val planSummary = response.metadata["plan_summary"] as? Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        val notes = planSummary?.get("notes") as? List<*>
+        val notesPresent = !(notes.isNullOrEmpty())
+        @Suppress("UNCHECKED_CAST")
+        val decision = response.metadata["plugin_ask_routing_decision"] as? Map<*, *>
+        val fallbackReason = decision?.get("reason")?.toString() ?: "(none)"
+
+        val decisionStr =
+            "mode=$mode outcome=${response.outcome.name} path=$askPath routing_mode=$routingMode plugin_route=$pluginRoute trace_id=$traceId evidence_bundle=$hasEvidenceBundle notes_present=$notesPresent fallback_reason=$fallbackReason"
+
+        DecisionLogger.log(
+            action = "ask",
+            decision = decisionStr,
+            repoRoot = repoRoot,
+            branch = branch,
+            revision = revision,
+        )
     }
 
     private fun handleResponse(project: Project, question: String, response: RuntimeResponse) {

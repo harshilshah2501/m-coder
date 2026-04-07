@@ -1,5 +1,6 @@
 package ai.motadata.plugin.actions
 
+import ai.motadata.plugin.assistant.HostContract
 import ai.motadata.plugin.bridge.MotadataRuntimeConfig
 import ai.motadata.plugin.bridge.*
 import ai.motadata.plugin.logging.DecisionLogger
@@ -31,6 +32,9 @@ class SubmitToRuntimeAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
+        if (!HostContract.enforceOrShow(project, "execute")) {
+            return
+        }
 
         if (!bridge.isRuntimeAvailable()) {
             showRuntimeUnavailableDialog(project)
@@ -111,15 +115,8 @@ class SubmitToRuntimeAction : AnAction() {
     }
 
     private fun logDecision(response: RuntimeResponse, repoRoot: String, branch: String, revision: String) {
-        val outcomeStr = buildString {
-            append(response.outcome.name)
-            if (response.wasExecuted) {
-                append(" [EXECUTED]")
-            } else {
-                append(" [NOT_EXECUTED]")
-            }
-            response.ledgerRowId?.let { append(" ledger=$it") }
-        }
+        val outcomeStr =
+            "mode=execute route=/v0/execute outcome=${response.outcome.name} executed=${response.wasExecuted} ledger=${response.ledgerRowId ?: "(none)"} plan_hash=${response.planHash ?: "(none)"}"
 
         DecisionLogger.log(
             action = "execute",

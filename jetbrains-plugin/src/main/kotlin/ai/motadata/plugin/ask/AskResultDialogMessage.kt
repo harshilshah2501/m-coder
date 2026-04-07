@@ -255,16 +255,33 @@ private fun appendPluginAskTruthSummaryLines(sb: StringBuilder, response: Runtim
     val tid = response.metadata["trace_id"] as? String
     val rm = response.metadata["routing_mode"] as? String
     val par = response.metadata[AskPluginRouting.METADATA_KEY] as? String
+    val evidenceMeta = response.metadata["evidence_first_meta"] as? Map<*, *>
+    val askPath = evidenceMeta?.get("ask_path")?.toString() ?: "(not set)"
+    val hasEvidenceBundle = response.metadata["evidence_bundle"] != null
+    val planSummary = response.metadata["plan_summary"] as? Map<*, *>
+    @Suppress("UNCHECKED_CAST")
+    val notes = planSummary?.get("notes") as? List<*>
+    val notesPresent = !(notes.isNullOrEmpty())
+    @Suppress("UNCHECKED_CAST")
+    val decision = response.metadata["plugin_ask_routing_decision"] as? Map<*, *>
+    val fallbackReason = decision?.get("reason")?.toString()
     val isFallback = par == AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK ||
         par == AskPluginRouting.CONTEXT_EXPORT_THEN_V0
 
-    if (tid.isNullOrBlank() && rm.isNullOrBlank() && par.isNullOrBlank()) return
+    if (tid.isNullOrBlank() && rm.isNullOrBlank() && par.isNullOrBlank() && askPath == "(not set)") return
+
+    sb.appendLine("ask_path: $askPath")
+    sb.appendLine("evidence_bundle_present: $hasEvidenceBundle")
+    sb.appendLine("plan_summary.notes_present: $notesPresent")
 
     if (isFallback) {
         if (!tid.isNullOrBlank()) sb.appendLine("trace_id: $tid")
         if (!rm.isNullOrBlank()) sb.appendLine("routing_mode: $rm")
         if (!par.isNullOrBlank()) {
             sb.appendLine("plugin_ask_routing: $par")
+            if (!fallbackReason.isNullOrBlank()) {
+                sb.appendLine("fallback_reason: $fallbackReason")
+            }
             sb.appendLine("Note: plugin fallback path — open full response for details.")
         }
         return
