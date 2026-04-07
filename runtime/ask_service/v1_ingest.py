@@ -63,6 +63,27 @@ def validate_ask_v1_request(data: dict) -> List[str]:
     return errs
 
 
+def _normalize_legacy_authority_validation_details(evidence_bundle: Dict[str, Any]) -> None:
+    """
+    Backfill optional legacy omissions in authority validation_details.
+
+    Older Context Layer builds may omit ``method_exists`` / ``is_referenced`` in
+    ``authority_resolution.validation_details`` even though they are accepted as
+    null in the current schema. Populate missing keys with ``None`` so strict
+    schema validation remains deterministic across mixed deploy versions.
+    """
+    ar = evidence_bundle.get("authority_resolution")
+    if not isinstance(ar, dict):
+        return
+    vd = ar.get("validation_details")
+    if not isinstance(vd, dict):
+        return
+    if "method_exists" not in vd:
+        vd["method_exists"] = None
+    if "is_referenced" not in vd:
+        vd["is_referenced"] = None
+
+
 def handle_ask_v1_request(ask_request: dict) -> dict:
     """
     Process AskRequest v1.0: strict evidence validation, bundle → ContextBundle, plan / explain_debug.
@@ -86,6 +107,8 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             "evidence_bundle must be an object",
             None,
         )
+
+    _normalize_legacy_authority_validation_details(evidence_bundle)
 
     try:
         validate_evidence_bundle_dict(evidence_bundle)

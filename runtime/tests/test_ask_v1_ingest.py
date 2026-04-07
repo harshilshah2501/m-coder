@@ -102,6 +102,43 @@ def test_handle_ask_v1_identity_mismatch():
     assert ei.value.details is not None
 
 
+def test_handle_ask_v1_legacy_validation_details_missing_method_exists_accepted():
+    ev = deepcopy(_load_golden_evidence())
+    if not isinstance(ev.get("authority_resolution"), dict):
+        ev["authority_resolution"] = {
+            "matched_concepts": [],
+            "primary_owner": {
+                "file": "runtime/ask_service/v1_ingest.py",
+                "class": "AskV1Ingest",
+                "confidence": "medium",
+            },
+            "authority_confidence": "medium",
+            "authority_status": "unverified",
+            "control_flow": [],
+            "notes": [],
+            "forbidden_distractors": [],
+            "validation_details": {
+                "file_exists": True,
+                "class_exists": False,
+                "freshness_ok": True,
+                "days_since_verification": 0,
+            },
+        }
+
+    ar = ev["authority_resolution"]
+    vd = ar.get("validation_details")
+    assert isinstance(vd, dict)
+
+    # Simulate older producer that omitted now-required nullable keys.
+    vd.pop("method_exists", None)
+    vd.pop("is_referenced", None)
+
+    req = _minimal_v1_ask(ev)
+    resp = handle_ask_v1_request(req)
+    assert resp["schema_version"] == "plan_only_response.v0.1"
+    assert resp.get("request_id") == "req-v1-1"
+
+
 def test_ask_v1_via_plan_gate_http(tmp_path):
     port = random.randint(20000, 49151)
     env = os.environ.copy()
