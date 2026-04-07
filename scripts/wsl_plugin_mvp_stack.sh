@@ -194,6 +194,7 @@ start_context_layer() {
     export MOTADATA_ROOT
     export M_CODER_REPO_ROOT="$REPO_ROOT"
     export M_CODER_GIT_COMMIT="$launched_commit"
+    export MOTADATA_CONTEXT_DISABLE_CODE_INDEX="${MOTADATA_CONTEXT_DISABLE_CODE_INDEX:-1}"
     python3 -m runtime.context_layer_service.app >>"$CONTEXT_LOG" 2>&1
   ) &
   echo "$!" > "$CONTEXT_PID_FILE"

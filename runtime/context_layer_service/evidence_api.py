@@ -7,6 +7,7 @@ Does not change retrieval or evidence semantics — delegates to existing L5 mod
 from __future__ import annotations
 
 import time
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
@@ -15,6 +16,12 @@ _FileIndex = Any
 
 if TYPE_CHECKING:
     from runtime.layer5.authority.code_index_models import CodeIndex
+
+
+def _code_index_enabled() -> bool:
+    """Return True when authority code-index build is enabled for exports."""
+    raw = str(os.environ.get("MOTADATA_CONTEXT_DISABLE_CODE_INDEX", "")).strip().lower()
+    return raw not in {"1", "true", "yes", "on"}
 
 
 def export_evidence_bundle_dict(
@@ -56,6 +63,7 @@ def export_evidence_bundle_dict(
 
     authority_code_index: Optional["CodeIndex"] = None
     authority_code_index_attempted = False
+    code_index_enabled = _code_index_enabled()
 
     if file_index is not None:
         idx = file_index
@@ -84,14 +92,15 @@ def export_evidence_bundle_dict(
                     t1 = time.perf_counter()
                     ci: Optional["CodeIndex"] = None
                     t2 = t1
-                    try:
-                        from runtime.layer5.authority.code_index_builder import (
-                            build_index,
-                        )
+                    if code_index_enabled:
+                        try:
+                            from runtime.layer5.authority.code_index_builder import (
+                                build_index,
+                            )
 
-                        ci = build_index(Path(w))
-                    except Exception:
-                        ci = None
+                            ci = build_index(Path(w))
+                        except Exception:
+                            ci = None
                     t2 = time.perf_counter()
                     return (
                         fi,
@@ -115,14 +124,20 @@ def export_evidence_bundle_dict(
                 except (OSError, FileNotFoundError, NotADirectoryError) as e:
                     raise RuntimeError(f"index build failed: {e}") from e
                 t1 = time.perf_counter()
-                try:
-                    from runtime.layer5.authority.code_index_builder import build_index
+                if code_index_enabled:
+                    try:
+                        from runtime.layer5.authority.code_index_builder import build_index
 
+                        t2 = time.perf_counter()
+                        authority_code_index = build_index(Path(w))
+                        t3 = time.perf_counter()
+                        ci_ms = (t3 - t2) * 1000.0
+                    except Exception:
+                        authority_code_index = None
+                        t3 = time.perf_counter()
+                        ci_ms = (t3 - t2) * 1000.0
+                else:
                     t2 = time.perf_counter()
-                    authority_code_index = build_index(Path(w))
-                    t3 = time.perf_counter()
-                    ci_ms = (t3 - t2) * 1000.0
-                except Exception:
                     authority_code_index = None
                     t3 = time.perf_counter()
                     ci_ms = (t3 - t2) * 1000.0
@@ -168,9 +183,12 @@ def export_evidence_bundle_dict(
                 else:
                     adapter = None
             else:
-                try:
-                    adapter = create_adapter(code_index=build_index(Path(w)))
-                except Exception:
+                if code_index_enabled:
+                    try:
+                        adapter = create_adapter(code_index=build_index(Path(w)))
+                    except Exception:
+                        adapter = None
+                else:
                     adapter = None
         authority_resolution = build_authority_resolution(q, registry, adapter)
         if authority_resolution and adapter:
