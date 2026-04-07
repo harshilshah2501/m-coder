@@ -7,6 +7,10 @@ Environment values fixed for this runbook:
 - MOTADATA_ROOT=/home/harshil/Projects/Motadata
 - TUNNEL_TARGET=harshil@45.195.82.10
 
+Plugin package for install from disk:
+
+- jetbrains-plugin/build/distributions/motadata-jetbrains-plugin-0.2.7.zip
+
 ## 1) Outcome target
 
 A demo is accepted only if plugin-visible behavior matches backend truth for all scenario classes:
@@ -41,7 +45,25 @@ Expected:
 - health checks pass
 - version and compatibility checks pass
 
+Run explicit check command before opening IDE:
+
+```bash
+cd /home/harshil/Harshil-PoCs/m-coder
+
+export MOTADATA_ROOT=/home/harshil/Projects/Motadata
+export ENABLE_SSH_TUNNEL=1
+export TUNNEL_TARGET=harshil@45.195.82.10
+
+./scripts/wsl_plugin_mvp_stack.sh check
+```
+
 ## 3) JetBrains plugin launch config
+
+Install plugin ZIP in IntelliJ IDEA:
+
+1. Settings -> Plugins
+2. Gear icon -> Install Plugin from Disk...
+3. Select: jetbrains-plugin/build/distributions/motadata-jetbrains-plugin-0.2.7.zip
 
 Start IDE with plugin enabled and configure runtime URLs in the same host context as the plugin process:
 
@@ -52,6 +74,12 @@ Start IDE with plugin enabled and configure runtime URLs in the same host contex
 Optional strict startup toggle:
 
 - motadata.startup.stack.check.enabled=true
+
+Recommended VM options for deterministic demo runs:
+
+-Dmotadata.plan_gate.url=http://127.0.0.1:8089
+-Dmotadata.context_layer.url=http://127.0.0.1:8091
+-Dmotadata.ask.evidence_first=true
 
 On project load, plugin startup check should show one of:
 
@@ -82,6 +110,35 @@ Generated artifacts include:
 
 ## 5) Execute plugin UI scenarios and capture proof
 
+Use these exact UI inputs for each scenario in order:
+
+1. S1 Strong v1 ask
+  - Keep evidence-first ON.
+  - Ask query: How does alert correlation work in this repo?
+2. S2 Default v0 ask
+  - Start IDE with evidence-first OFF (remove -Dmotadata.ask.evidence_first=true and unset MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST).
+  - Ask query: How does alert correlation work in this repo?
+3. S3 v1 fallback to v0 (operator-induced)
+  - Keep evidence-first ON.
+  - Temporarily set Context Layer URL to an unreachable port (for example: -Dmotadata.context_layer.url=http://127.0.0.1:65535).
+  - Ask query: How does alert correlation work in this repo?
+  - Restore context URL to http://127.0.0.1:8091 after capture.
+4. S4 Weak evidence
+  - Evidence-first ON.
+  - Ask query: Which files implement topology anomaly scoring pipeline?
+5. S5 No-match
+  - Evidence-first ON.
+  - Ask query: Where is the quantum flux capacitor serializer pipeline?
+6. S6 Execute blocked
+  - Action: Submit to Runtime
+  - Command: false
+7. S7 Execute refused
+  - Action: Submit to Runtime
+  - Command: curl https://example.com
+8. S8 Execute failed after run
+  - Action: Submit to Runtime
+  - Command: python3 -c "import sys; sys.exit(1)"
+
 For each scenario S1..S8 in the generated matrix:
 
 1. Run the scenario action from plugin UI.
@@ -97,6 +154,11 @@ Minimum capture per scenario:
 - backend JSON: already in scenario folder
 - UI screenshot
 - plugin log snippet
+
+Plugin log source in IntelliJ:
+
+1. Help -> Show Log in Explorer/Finder/File Manager
+2. Capture lines around the scenario timestamp with fields such as trace_id, routing_mode, plugin_ask_routing, or startup stack check findings.
 
 ## 6) Aggregate certification
 
@@ -133,6 +195,13 @@ If not PASS, do defect isolation before stagecraft:
 - compare backend_truth.json vs plugin screenshot/log for the failing scenario
 - fix plugin projection gap
 - rerun that scenario and aggregate again
+
+Final proof pack must contain per scenario:
+
+- backend_truth.json
+- screenshot file
+- plugin log snippet file
+- completed operator_checklist.md with PASS/FAIL/NOT_PROVEN
 
 ## 8) Quick shutdown (WSL)
 
