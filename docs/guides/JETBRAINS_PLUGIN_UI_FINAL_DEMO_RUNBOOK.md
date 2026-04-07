@@ -28,13 +28,20 @@ A demo is accepted only if plugin-visible behavior matches backend truth for all
 
 **Goal:** bring up WSL services and tunnel with strict compatibility checks.
 
-**Command (Terminal A):**
+If Plan-Gate on GPU host is stale, restart it on the GPU server first (Terminal G on GPU host):
 
 ```bash
 cd /home/harshil/Harshil-PoCs/m-coder
+./runtime/scripts/governed_services.sh restart
+```
+
+**Command (Terminal A):**
+
+```bash
+cd /root/Harshil-PoCs/m-coder
 
 export MOTADATA_ROOT=/home/harshil/Projects/Motadata
-export M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder"
+export M_CODER_REPO_ROOT=/root/Harshil-PoCs/m-coder
 export ENABLE_SSH_TUNNEL=1
 export TUNNEL_TARGET=harshil@45.195.82.10
 export PLAN_GATE_URL=http://127.0.0.1:8089
@@ -55,10 +62,10 @@ export CONTEXT_PORT_RECLAIM=1
 **Command (pre-IDE explicit check):**
 
 ```bash
-cd /home/harshil/Harshil-PoCs/m-coder
+cd /root/Harshil-PoCs/m-coder
 
 export MOTADATA_ROOT=/home/harshil/Projects/Motadata
-export M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder"
+export M_CODER_REPO_ROOT=/root/Harshil-PoCs/m-coder
 export ENABLE_SSH_TUNNEL=1
 export TUNNEL_TARGET=harshil@45.195.82.10
 export AUTO_ALIGN_CONTEXT_COMMIT=1
@@ -70,11 +77,11 @@ export CONTEXT_PORT_RECLAIM=1
 If commit mismatch still appears, force clean re-alignment:
 
 ```bash
-cd /home/harshil/Harshil-PoCs/m-coder
+cd /root/Harshil-PoCs/m-coder
 
 ./scripts/wsl_plugin_mvp_stack.sh down
 
-M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder" \
+M_CODER_REPO_ROOT=/root/Harshil-PoCs/m-coder \
 MOTADATA_ROOT=/home/harshil/Projects/Motadata \
 ENABLE_SSH_TUNNEL=1 \
 TUNNEL_TARGET=harshil@45.195.82.10 \
@@ -280,9 +287,9 @@ cd /home/harshil/Harshil-PoCs/m-coder
 **Bring-up**:
 
 ```bash
-cd /home/harshil/Harshil-PoCs/m-coder && \
+cd /root/Harshil-PoCs/m-coder && \
 MOTADATA_ROOT=/home/harshil/Projects/Motadata \
-M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder" \
+M_CODER_REPO_ROOT=/root/Harshil-PoCs/m-coder \
 ENABLE_SSH_TUNNEL=1 \
 TUNNEL_TARGET=harshil@45.195.82.10 \
 AUTO_ALIGN_CONTEXT_COMMIT=1 \
@@ -293,9 +300,9 @@ CONTEXT_PORT_RECLAIM=1 \
 **Restart**:
 
 ```bash
-cd /home/harshil/Harshil-PoCs/m-coder && \
+cd /root/Harshil-PoCs/m-coder && \
 MOTADATA_ROOT=/home/harshil/Projects/Motadata \
-M_CODER_REPO_ROOT="$HOME/Harshil-PoCs/m-coder" \
+M_CODER_REPO_ROOT=/root/Harshil-PoCs/m-coder \
 ENABLE_SSH_TUNNEL=1 \
 TUNNEL_TARGET=harshil@45.195.82.10 \
 AUTO_ALIGN_CONTEXT_COMMIT=1 \
