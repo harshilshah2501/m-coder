@@ -28,6 +28,18 @@ class HttpResult:
     json_obj: dict[str, Any] | None
 
 
+class RunLogger:
+    def __init__(self, log_path: pathlib.Path):
+        self.log_path = log_path
+
+    def info(self, message: str) -> None:
+        line = f"[{now_utc_iso()}] {message}"
+        print(line, flush=True)
+        self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.log_path.open("a", encoding="utf-8") as f:
+            f.write(line + "\n")
+
+
 def now_utc_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -115,16 +127,16 @@ def preflight(context_url: str, plan_gate_url: str, local_repo: pathlib.Path) ->
     return out
 
 
-def export_evidence(context_url: str, workspace_root: str, query: str, top_k: int) -> HttpResult:
+def export_evidence(context_url: str, workspace_root: str, query: str, top_k: int, timeout: int) -> HttpResult:
     payload = {
         "workspace_root": workspace_root,
         "query": query,
         "top_k": top_k,
     }
-    return request_json("POST", f"{context_url}/v1/export_evidence", payload=payload, timeout=120)
+    return request_json("POST", f"{context_url}/v1/export_evidence", payload=payload, timeout=timeout)
 
 
-def ask_v1(plan_gate_url: str, query: str, evidence: dict[str, Any]) -> tuple[dict[str, Any], HttpResult]:
+def ask_v1(plan_gate_url: str, query: str, evidence: dict[str, Any], timeout: int) -> tuple[dict[str, Any], HttpResult]:
     req: dict[str, Any] = {
         "schema_version": "ask_request.v1.0",
         "request_id": f"ui-cert-{uuid.uuid4()}",
@@ -135,11 +147,11 @@ def ask_v1(plan_gate_url: str, query: str, evidence: dict[str, Any]) -> tuple[di
     ws_hash = evidence.get("workspace_identity_hash")
     if ws_hash:
         req["expected_workspace_identity_hash"] = ws_hash
-    resp = request_json("POST", f"{plan_gate_url}/v1/ask", payload=req, timeout=180)
+    resp = request_json("POST", f"{plan_gate_url}/v1/ask", payload=req, timeout=timeout)
     return req, resp
 
 
-def ask_v0(plan_gate_url: str, workspace_root: str, query: str, task_type: str | None = None) -> tuple[dict[str, Any], HttpResult]:
+def ask_v0(plan_gate_url: str, workspace_root: str, query: str, timeout: int, task_type: str | None = None) -> tuple[dict[str, Any], HttpResult]:
     req: dict[str, Any] = {
         "schema_version": "ask_request.v0.1",
         "request_id": f"ui-cert-{uuid.uuid4()}",
@@ -150,11 +162,11 @@ def ask_v0(plan_gate_url: str, workspace_root: str, query: str, task_type: str |
     }
     if task_type:
         req["task_type"] = task_type
-    resp = request_json("POST", f"{plan_gate_url}/v0/ask", payload=req, timeout=180)
+    resp = request_json("POST", f"{plan_gate_url}/v0/ask", payload=req, timeout=timeout)
     return req, resp
 
 
-def execute_v0(plan_gate_url: str, workspace_root: str, command: str) -> tuple[dict[str, Any], HttpResult]:
+def execute_v0(plan_gate_url: str, workspace_root: str, command: str, timeout: int) -> tuple[dict[str, Any], HttpResult]:
     req = {
         "schema_version": "execute_request.v0.1",
         "request_id": f"ui-cert-{uuid.uuid4()}",
@@ -162,7 +174,7 @@ def execute_v0(plan_gate_url: str, workspace_root: str, command: str) -> tuple[d
         "repo_root": workspace_root,
         "command": command,
     }
-    resp = request_json("POST", f"{plan_gate_url}/v0/execute", payload=req, timeout=180)
+    resp = request_json("POST", f"{plan_gate_url}/v0/execute", payload=req, timeout=timeout)
     return req, resp
 
 
@@ -199,6 +211,9 @@ def main() -> int:
     parser.add_argument("--plan-gate-url", default=os.environ.get("PLAN_GATE_URL", "http://127.0.0.1:8089"))
     parser.add_argument("--top-k", type=int, default=int(os.environ.get("TOP_K", "8")))
     parser.add_argument("--out-dir", default="")
+    parser.add_argument("--export-timeout-sec", type=int, default=int(os.environ.get("PLUGIN_UI_CERT_EXPORT_TIMEOUT_SEC", "120")))
+    parser.add_argument("--ask-timeout-sec", type=int, default=int(os.environ.get("PLUGIN_UI_CERT_ASK_TIMEOUT_SEC", "180")))
+    parser.add_argument("--execute-timeout-sec", type=int, default=int(os.environ.get("PLUGIN_UI_CERT_EXECUTE_TIMEOUT_SEC", "180")))
     args = parser.parse_args()
 
     repo_root = pathlib.Path(__file__).resolve().parents[1]
@@ -207,18 +222,39 @@ def main() -> int:
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     out_dir = pathlib.Path(args.out_dir) if args.out_dir else repo_root / "docs" / "validation" / "artifacts" / f"plugin_ui_truth_{stamp}"
     out_dir.mkdir(parents=True, exist_ok=True)
+    run_log = out_dir / "run.log"
+    logger = RunLogger(run_log)
+    logger.info(f"artifact_root={out_dir}")
+    logger.info(f"context_url={args.context_url}")
+    logger.info(f"plan_gate_url={args.plan_gate_url}")
+    logger.info(f"workspace_root={workspace_root}")
+    logger.info(f"timeouts export={args.export_timeout_sec}s ask={args.ask_timeout_sec}s execute={args.execute_timeout_sec}s")
 
+    logger.info("preflight: begin")
     pref = preflight(args.context_url, args.plan_gate_url, repo_root)
     write_json(out_dir / "preflight.json", pref)
+    logger.info("preflight: written preflight.json")
+
+    log_hints = {
+        "local_context_log": str(repo_root / "runtime" / ".run" / "wsl_context_layer.log"),
+        "local_tunnel_log": str(repo_root / "runtime" / ".run" / "wsl_plan_gate_tunnel.log"),
+        "remote_plan_gate_log_hint": "~/Harshil-PoCs/m-coder/runtime/.run/plan_gate.log on TUNNEL_TARGET host",
+        "remote_vllm_log_hint": "~/Harshil-PoCs/m-coder/runtime/.run/vllm.log on TUNNEL_TARGET host",
+        "intellij_log_hint": "IntelliJ: Help -> Show Log in Explorer/Finder/File Manager",
+        "this_run_log": str(run_log),
+    }
+    write_json(out_dir / "log_locations.json", log_hints)
+    logger.info("preflight: written log_locations.json")
 
     matrix_rows: list[dict[str, Any]] = []
 
     # S1: v1 strong evidence
+    logger.info("scenario S1: begin")
     s1_dir = scenario_dir(out_dir, "S1")
     s1_query = "How does alert correlation work in this repo?"
-    s1_export = export_evidence(args.context_url, workspace_root, s1_query, args.top_k)
+    s1_export = export_evidence(args.context_url, workspace_root, s1_query, args.top_k, args.export_timeout_sec)
     write_json(s1_dir / "export_response.json", {"status": s1_export.status, "body": s1_export.json_obj, "raw": s1_export.text})
-    s1_req, s1_ask = ask_v1(args.plan_gate_url, s1_query, s1_export.json_obj or {})
+    s1_req, s1_ask = ask_v1(args.plan_gate_url, s1_query, s1_export.json_obj or {}, args.ask_timeout_sec)
     write_json(s1_dir / "ask_request.json", s1_req)
     write_json(s1_dir / "ask_response.json", {"status": s1_ask.status, "body": s1_ask.json_obj, "raw": s1_ask.text})
     s1_truth = {
@@ -249,11 +285,13 @@ def main() -> int:
         ),
     )
     matrix_rows.append({"scenario_id": "S1", "title": "v1 ask strong evidence", **s1_truth})
+    logger.info(f"scenario S1: done (export={s1_export.status}, ask={s1_ask.status})")
 
     # S2: v0 default path
+    logger.info("scenario S2: begin")
     s2_dir = scenario_dir(out_dir, "S2")
     s2_query = "How does alert correlation work in this repo?"
-    s2_req, s2_resp = ask_v0(args.plan_gate_url, workspace_root, s2_query)
+    s2_req, s2_resp = ask_v0(args.plan_gate_url, workspace_root, s2_query, args.ask_timeout_sec)
     write_json(s2_dir / "ask_request.json", s2_req)
     write_json(s2_dir / "ask_response.json", {"status": s2_resp.status, "body": s2_resp.json_obj, "raw": s2_resp.text})
     s2_truth = {
@@ -280,11 +318,13 @@ def main() -> int:
         ),
     )
     matrix_rows.append({"scenario_id": "S2", "title": "v0 ask default", **s2_truth})
+    logger.info(f"scenario S2: done (ask={s2_resp.status})")
 
     # S3: fallback expected (operator-induced)
+    logger.info("scenario S3: begin")
     s3_dir = scenario_dir(out_dir, "S3")
     s3_query = "How does alert correlation work in this repo?"
-    s3_req, s3_resp = ask_v0(args.plan_gate_url, workspace_root, s3_query)
+    s3_req, s3_resp = ask_v0(args.plan_gate_url, workspace_root, s3_query, args.ask_timeout_sec)
     write_json(s3_dir / "ask_request_backend_truth_baseline.json", s3_req)
     write_json(s3_dir / "ask_response_backend_truth_baseline.json", {"status": s3_resp.status, "body": s3_resp.json_obj, "raw": s3_resp.text})
     s3_truth = {
@@ -317,13 +357,15 @@ def main() -> int:
         "- Validate backend still reachable at Plan-Gate v0 so fallback can complete.\n",
     )
     matrix_rows.append({"scenario_id": "S3", "title": "v1 fallback to v0", **s3_truth})
+    logger.info(f"scenario S3: done (ask={s3_resp.status})")
 
     # S4: weak evidence
+    logger.info("scenario S4: begin")
     s4_dir = scenario_dir(out_dir, "S4")
     s4_query = "Which files implement topology anomaly scoring pipeline?"
-    s4_export = export_evidence(args.context_url, workspace_root, s4_query, args.top_k)
+    s4_export = export_evidence(args.context_url, workspace_root, s4_query, args.top_k, args.export_timeout_sec)
     write_json(s4_dir / "export_response.json", {"status": s4_export.status, "body": s4_export.json_obj, "raw": s4_export.text})
-    s4_req, s4_ask = ask_v1(args.plan_gate_url, s4_query, s4_export.json_obj or {})
+    s4_req, s4_ask = ask_v1(args.plan_gate_url, s4_query, s4_export.json_obj or {}, args.ask_timeout_sec)
     write_json(s4_dir / "ask_request.json", s4_req)
     write_json(s4_dir / "ask_response.json", {"status": s4_ask.status, "body": s4_ask.json_obj, "raw": s4_ask.text})
     s4_truth = {
@@ -353,13 +395,15 @@ def main() -> int:
         ),
     )
     matrix_rows.append({"scenario_id": "S4", "title": "weak evidence", **s4_truth})
+    logger.info(f"scenario S4: done (export={s4_export.status}, ask={s4_ask.status})")
 
     # S5: no-match
+    logger.info("scenario S5: begin")
     s5_dir = scenario_dir(out_dir, "S5")
     s5_query = "Where is the quantum flux capacitor serializer pipeline?"
-    s5_export = export_evidence(args.context_url, workspace_root, s5_query, args.top_k)
+    s5_export = export_evidence(args.context_url, workspace_root, s5_query, args.top_k, args.export_timeout_sec)
     write_json(s5_dir / "export_response.json", {"status": s5_export.status, "body": s5_export.json_obj, "raw": s5_export.text})
-    s5_req, s5_ask = ask_v1(args.plan_gate_url, s5_query, s5_export.json_obj or {})
+    s5_req, s5_ask = ask_v1(args.plan_gate_url, s5_query, s5_export.json_obj or {}, args.ask_timeout_sec)
     write_json(s5_dir / "ask_request.json", s5_req)
     write_json(s5_dir / "ask_response.json", {"status": s5_ask.status, "body": s5_ask.json_obj, "raw": s5_ask.text})
     s5_truth = {
@@ -389,6 +433,7 @@ def main() -> int:
         ),
     )
     matrix_rows.append({"scenario_id": "S5", "title": "no-match", **s5_truth})
+    logger.info(f"scenario S5: done (export={s5_export.status}, ask={s5_ask.status})")
 
     # S6-S8 execute outcome truthfulness
     execute_cases = [
@@ -398,8 +443,9 @@ def main() -> int:
     ]
 
     for sid, title, command, expected_outcome in execute_cases:
+        logger.info(f"scenario {sid}: begin")
         sdir = scenario_dir(out_dir, sid)
-        req, resp = execute_v0(args.plan_gate_url, workspace_root, command)
+        req, resp = execute_v0(args.plan_gate_url, workspace_root, command, args.execute_timeout_sec)
         write_json(sdir / "execute_request.json", req)
         write_json(sdir / "execute_response.json", {"status": resp.status, "body": resp.json_obj, "raw": resp.text})
         truth = {
@@ -429,6 +475,7 @@ def main() -> int:
             ),
         )
         matrix_rows.append({"scenario_id": sid, "title": title, **truth})
+        logger.info(f"scenario {sid}: done (execute={resp.status}, outcome={(resp.json_obj or {}).get('outcome')})")
 
     write_json(out_dir / "matrix_backend_truth.json", matrix_rows)
 
@@ -454,7 +501,11 @@ def main() -> int:
     ]
     write_text(out_dir / "MATRIX.md", "".join(matrix_md))
 
+    logger.info("matrix: written MATRIX.md and matrix_backend_truth.json")
+    logger.info("done: Plugin UI truth certification pack created")
     print(f"[OK] Plugin UI truth certification pack created: {out_dir}")
+    print(f"[INFO] Run log: {run_log}")
+    print(f"[INFO] Log locations: {out_dir / 'log_locations.json'}")
     print("[INFO] Next: execute each scenario from plugin UI and fill operator_checklist.md files.")
     return 0
 
