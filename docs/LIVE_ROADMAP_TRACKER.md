@@ -5,7 +5,7 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-04-07  
+- **Last updated**: 2026-04-08  
 - **Program state**: **Stage 2 COMPLETE (locked).** Trust and action metrics are green; no behavioral failures remain. Raw retrieval metrics (`owner@1_raw`, `owner@3_raw`) are diagnostic and do not reopen Stage 2 closure.
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
@@ -44,10 +44,12 @@
 
 **MVP production closure state:** baseline closure note remains `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md` (historical 1 PASS / 7 PARTIAL caveat). Latest rerun evidence in `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md` records an **automated 8 PASS / 0 PARTIAL** batch with STRONG evidence quality metadata and no `LOW_CORE_RATIO` signal in that run.
 
+**Plugin Phase-1 truth proof:** **LOCKED** — frozen matrix and scenario artifacts under `docs/validation/artifacts/plugin_phase1_truth_proof/`; closure authority `docs/validation/PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md`; evidence log **§6.22**. Offline regression: `Phase1TruthProofHarnessTest.phase1ProofMatrixFrozenContract`. **Distinct from** residual **§B3** checklist items (e.g. `plan_summary.notes` visibility on all product surfaces).
+
 | Surface                                                                     | State                                                                                                                                    |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **Backend** (Context Layer + Plan-Gate + vLLM stack when started)           | **Functional** for HTTP contracts per validation sheet                                                                                   |
-| **JetBrains plugin**                                                        | **Primary user surface** — **Action 4 CLOSED** (**§6.18**): `routing_mode`-driven UI, routing metadata, visible fallback; Gradle `:test` may still fail in some environments (tooling). Remaining **§B3** items. Treat as **critical component**. |
+| **JetBrains plugin**                                                        | **Primary user surface** — **Action 4 CLOSED** (**§6.18**); **Phase-1 truth proof LOCKED** (**§6.22**, `PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md`). Residual **§B3** items remain for full production-grade UI parity. Gradle `:test` may still fail in some environments (tooling). Treat as **critical component**. |
 | **True end-to-end** (IDE → evidence → `/v1/ask` → honest UI + traceability) | **Not** production-complete until **§1.3** gates and **Track OBS** are satisfied                                                         |
 
 
@@ -136,6 +138,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 
 ### B3 — Plugin Truthfulness
 - **Action 4 — Close plugin truthfulness gaps** — **Status: ✅ CLOSED** — canonical paragraph **§6.18** (tracker-ready wording).
+- **Phase-1 truth proof (S1–S8, exact_match)** — **Status: ✅ LOCKED** — **§6.22**; not a reopen of Action 4; frozen artifacts + offline contract test.
 - Show evidence_bundle entries
 - Show ask_path
 - Show plan_summary.notes
@@ -1170,6 +1173,14 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 - **Evidence:** automated counts are PASS=8, PARTIAL=0, FAIL=0, ERROR=0; per-scenario `evidence_quality=STRONG` for A1/A2/D1/D2/P1/P2/C1/C2; A2 includes `QUERY_TOO_GENERIC` while remaining PASS.
 - **Interpretation guardrail:** this entry updates the latest automated signal; production-grade closure still requires remaining gates in **§1.3**, **§B3**, **§B5**, and **§B7**.
 
+### 6.22 Plugin Phase-1 truth proof — LOCKED (Stage 2 closure chronology item 1)
+
+- **Milestone:** JetBrains plugin **Phase-1** operator-visible truth aligned to backend JSON for **S1–S8**; **`exact_match`: true** for every scenario in the frozen matrix.
+- **Closure authority:** `docs/validation/PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md`.
+- **Artifacts:** `docs/validation/artifacts/plugin_phase1_truth_proof/` (`proof_matrix.json`, `proof_matrix.md`, `scenario_S1` … `scenario_S8`, `host_contract_check.json`).
+- **Implementation / regression:** `jetbrains-plugin/src/test/kotlin/ai/motadata/plugin/ask/Phase1TruthProofHarnessTest.kt` — **`phase1ProofMatrixFrozenContract`** (default Gradle test); **`generatePhase1ProofPack`** tagged **`live`** (regenerate only with Context Layer + Plan-Gate up).
+- **Guardrail:** Do not conflate this lock with **§B3** residual checklist or with **HTTP AIOps MVP** usefulness bars — orthogonal evidence surfaces.
+
 ---
 
 ## 7. Stage-based execution model (recalibrated, 2026)
@@ -1184,6 +1195,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 | Retrieval baseline (PR-6) | Locked |
 | Action 11 — compatibility / path hardening (L5.9) | Closed — **§6.17** |
 | Action 4 — plugin truthfulness | Closed — **§6.18** |
+| Plugin Phase-1 truth proof (S1–S8) | Locked — **§6.22** |
 | Action 5 — observability closure (L5-OBS-1) | Closed — **§6.19** |
 | Stage 3 — controlled runtime loop (implementation) | Implemented — burn-in / validation / integration — **§6.20**, **§B7** |
 

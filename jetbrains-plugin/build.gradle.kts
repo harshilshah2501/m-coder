@@ -35,7 +35,9 @@ dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("live")
+    }
     // Note: With IntelliJ 2025.3, the gradle-intellij-plugin can fail with "Index: 1, Size: 1"
     // in resolveIdeHomeVariable when running :test. RuntimeBridgeTest verifies availability
     // and error classification; validate manually on Windows or after upgrading to the

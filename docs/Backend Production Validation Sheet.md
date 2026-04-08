@@ -4,6 +4,8 @@
 
 **Companion doc:** After this sheet passes, use `docs/JetBrains Plugin Defect Isolation Sheet.md` to compare IDE behavior to the same backends.
 
+**Plugin truth (Phase-1, locked):** Operator-visible Ask/execute copy vs backend JSON for scenarios S1–S8 is governed by `docs/validation/PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md` and frozen artifacts under `docs/validation/artifacts/plugin_phase1_truth_proof/` — orthogonal to the HTTP-only checks in this sheet.
+
 **Print as:** 1 preflight page + 6 scenario pages + 1 final summary page (optional).
 
 ---

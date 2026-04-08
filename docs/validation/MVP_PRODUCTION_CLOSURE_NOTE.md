@@ -81,3 +81,9 @@
 ## Executive truth (one paragraph)
 
 The **evidence-first HTTP path** completes and writes **fresh** **`run_summary.json` (2026-04-06)** with **1 PASS / 7 PARTIAL** and **`LOW_CORE_RATIO`** still dominant in Plan-Gate metadata for engineering scenarios. **Export** top-12 paths contain **2–3** `core_aiops_code` entries — **not** enough for the gate — and **local `assess_evidence_quality` on those paths matches** Plan-Gate. **In-repo** lexical proof **without** HTTP can show **more** cores in top-12; **that does not ship** until **Context Layer** runs the **same** retrieval code as verification. **Index reuse** remains **latency-only**. **Next hard requirement:** run Context Layer from **repo** `PYTHONPATH` at **documented commit** (or rebuild wheel) and **re-verify** §B table.
+
+---
+
+## Addendum — Plugin Phase-1 truth proof (orthogonal)
+
+**JetBrains plugin Phase-1 truth proof** (S1–S8, backend ↔ plugin-visible copy) is **locked** under `docs/validation/PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md` with frozen artifacts in `docs/validation/artifacts/plugin_phase1_truth_proof/`. This **does not** revise the HTTP usefulness table above; it is a **separate** Stage 2 closure surface documented in `docs/LIVE_ROADMAP_TRACKER.md` **§6.22**.

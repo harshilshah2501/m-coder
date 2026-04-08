@@ -9,6 +9,10 @@ import ai.motadata.plugin.bridge.RuntimeBridge
 import ai.motadata.plugin.bridge.RuntimeRequest
 import ai.motadata.plugin.bridge.RuntimeResponse
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.lang.reflect.Method
 import java.nio.file.Files
@@ -19,6 +23,33 @@ class Phase1TruthProofHarnessTest {
 
     private val gson = Gson()
 
+    /**
+     * Offline regression: committed proof matrix must stay green (8 scenarios, exact_match true).
+     * Does not call Context Layer or Plan-Gate.
+     */
+    @Test
+    fun phase1ProofMatrixFrozenContract() {
+        val repoRoot = resolveRepoRoot()
+        val matrixPath = repoRoot.resolve("docs/validation/artifacts/plugin_phase1_truth_proof/proof_matrix.json")
+        assertTrue(Files.exists(matrixPath), "missing proof matrix at $matrixPath")
+        val json = Files.readString(matrixPath)
+        val type = object : TypeToken<List<Map<String, @JvmSuppressWildcards Any?>>>() {}.type
+        @Suppress("UNCHECKED_CAST")
+        val rows = gson.fromJson<List<Map<String, Any?>>>(json, type)
+        assertEquals(8, rows.size, "expected 8 scenarios S1–S8")
+        val ids = rows.mapNotNull { it["scenario"] as? String }.toSet()
+        assertEquals(setOf("S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"), ids)
+        for (row in rows) {
+            val scenario = row["scenario"] as? String ?: continue
+            val exact = row["exact_match"]
+            assertTrue(
+                exact is Boolean && exact,
+                "scenario $scenario must have exact_match=true (Boolean), got $exact",
+            )
+        }
+    }
+
+    @Tag("live")
     @Test
     fun generatePhase1ProofPack() {
         val repoRoot = resolveRepoRoot()
