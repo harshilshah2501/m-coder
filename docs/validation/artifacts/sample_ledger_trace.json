@@ -1,0 +1,245 @@
+{
+  "_meta": {
+    "scenario": "EXECUTE success with tool (same setup as test_ledger_trace_linkage_contains_refs)",
+    "terminal_state": "COMPLETED"
+  },
+  "iteration_linkage": {
+    "0": {
+      "proposal_ref": "proposal:8ed5a28b49339d5a",
+      "decision_ref": "decision:29a1de87a61a1b3b",
+      "tool_result_ref": "tool_result:3262b1e763cd8c44",
+      "events": [
+        "state_transition",
+        "state_transition",
+        "state_transition",
+        "loop_decision",
+        "state_transition",
+        "tool_dispatch",
+        "tool_result_normalized",
+        "state_transition",
+        "loop_decision",
+        "state_transition"
+      ]
+    }
+  },
+  "terminal_decision_summary": {
+    "state": "COMPLETED",
+    "reason_code": "tool_success",
+    "outcome": "completed"
+  },
+  "execution_truth_summary": "executed",
+  "proposal_refs": [
+    "proposal:8ed5a28b49339d5a",
+    "proposal:8ed5a28b49339d5a",
+    "proposal:8ed5a28b49339d5a",
+    "proposal:8ed5a28b49339d5a",
+    "proposal:8ed5a28b49339d5a"
+  ],
+  "decision_refs": [
+    "decision:65c4f74dcd83d71c",
+    "decision:29a1de87a61a1b3b"
+  ],
+  "tool_result_refs": [
+    "tool_result:3262b1e763cd8c44",
+    "tool_result:3262b1e763cd8c44",
+    "tool_result:3262b1e763cd8c44"
+  ],
+  "full_trace": {
+    "request_id": "req-1",
+    "events": [
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "state_transition",
+        "state_from": "CONTEXT_READY",
+        "state_to": "PLAN_GATED",
+        "proposal_ref": null,
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.325971+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "state_transition",
+        "state_from": "PLAN_GATED",
+        "state_to": "MODEL_PROPOSED",
+        "proposal_ref": null,
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.326197+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "state_transition",
+        "state_from": "MODEL_PROPOSED",
+        "state_to": "PROPOSAL_VALIDATED",
+        "proposal_ref": null,
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.326444+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "loop_decision",
+        "state_from": null,
+        "state_to": null,
+        "proposal_ref": "proposal:8ed5a28b49339d5a",
+        "decision_ref": "decision:65c4f74dcd83d71c",
+        "tool_result_ref": null,
+        "reason_code": "tool_required",
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.326601+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "state_transition",
+        "state_from": "PROPOSAL_VALIDATED",
+        "state_to": "TOOL_EXECUTING",
+        "proposal_ref": null,
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.326613+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "tool_dispatch",
+        "state_from": null,
+        "state_to": null,
+        "proposal_ref": "proposal:8ed5a28b49339d5a",
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.326621+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "tool_result_normalized",
+        "state_from": null,
+        "state_to": null,
+        "proposal_ref": "proposal:8ed5a28b49339d5a",
+        "decision_ref": null,
+        "tool_result_ref": "tool_result:3262b1e763cd8c44",
+        "reason_code": "success",
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.327047+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "state_transition",
+        "state_from": "TOOL_EXECUTING",
+        "state_to": "TOOL_RESULT_READY",
+        "proposal_ref": null,
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.327058+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "loop_decision",
+        "state_from": null,
+        "state_to": null,
+        "proposal_ref": "proposal:8ed5a28b49339d5a",
+        "decision_ref": "decision:29a1de87a61a1b3b",
+        "tool_result_ref": "tool_result:3262b1e763cd8c44",
+        "reason_code": "tool_success",
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.327106+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": 0,
+        "event_type": "state_transition",
+        "state_from": "TOOL_RESULT_READY",
+        "state_to": "COMPLETED",
+        "proposal_ref": null,
+        "decision_ref": null,
+        "tool_result_ref": null,
+        "reason_code": null,
+        "payload": null,
+        "timestamp_utc": "2026-04-02T12:19:46.327112+00:00"
+      },
+      {
+        "request_id": "req-1",
+        "iteration_index": -1,
+        "event_type": "terminal_decision",
+        "state_from": null,
+        "state_to": "COMPLETED",
+        "proposal_ref": "proposal:8ed5a28b49339d5a",
+        "decision_ref": null,
+        "tool_result_ref": "tool_result:3262b1e763cd8c44",
+        "reason_code": "tool_success",
+        "payload": {
+          "outcome": "completed",
+          "execution_status": "executed"
+        },
+        "timestamp_utc": "2026-04-02T12:19:46.327313+00:00"
+      }
+    ],
+    "reason_code_chain": [
+      "tool_required",
+      "success",
+      "tool_success",
+      "tool_success"
+    ],
+    "proposal_refs": [
+      "proposal:8ed5a28b49339d5a",
+      "proposal:8ed5a28b49339d5a",
+      "proposal:8ed5a28b49339d5a",
+      "proposal:8ed5a28b49339d5a",
+      "proposal:8ed5a28b49339d5a"
+    ],
+    "decision_refs": [
+      "decision:65c4f74dcd83d71c",
+      "decision:29a1de87a61a1b3b"
+    ],
+    "tool_result_refs": [
+      "tool_result:3262b1e763cd8c44",
+      "tool_result:3262b1e763cd8c44",
+      "tool_result:3262b1e763cd8c44"
+    ],
+    "iteration_linkage": {
+      "0": {
+        "proposal_ref": "proposal:8ed5a28b49339d5a",
+        "decision_ref": "decision:29a1de87a61a1b3b",
+        "tool_result_ref": "tool_result:3262b1e763cd8c44",
+        "events": [
+          "state_transition",
+          "state_transition",
+          "state_transition",
+          "loop_decision",
+          "state_transition",
+          "tool_dispatch",
+          "tool_result_normalized",
+          "state_transition",
+          "loop_decision",
+          "state_transition"
+        ]
+      }
+    },
+    "terminal_decision_summary": {
+      "state": "COMPLETED",
+      "reason_code": "tool_success",
+      "outcome": "completed"
+    },
+    "execution_truth_summary": "executed"
+  }
+}

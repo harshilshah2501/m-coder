@@ -172,9 +172,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 **Closure bar (numbered):** *Fallback rules documented and controlled; no silent path ambiguity remains.*
 
 ### B7 — Stage 3 controlled runtime loop — burn-in / acceptance
-**Status:** **IN PROGRESS** (implementation **COMPLETE** per **§6.20** — this blocker is **integration and operational acceptance**, not missing code).  
-- Prove governed stack + loop contracts under **WSL evidence → GPU Plan-Gate / vLLM → sandbox** with reproducible ledger/trace linkage (**docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md** operator path).  
-- Close burn-in checklist (pytest subset + live smoke) before treating the loop as **production-closure eligible** alongside **§1.3** / **§B1**.
+**Status:** **IN PROGRESS** — **deterministic pytest burn-in is CLOSED in-repo** (`docs/validation/STAGE3_BURN_IN_REPORT.md`, `docs/validation/artifacts/stage3_pytest_output*.txt`, `sample_ledger_trace.json`; native re-capture **2026-04-08** at **`d4a2807`**). **Remaining** for full **§B7** acceptance: live governed-stack smoke (Parts B–E, **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md**) — **WSL evidence → GPU Plan-Gate / vLLM → sandbox** — alongside **§1.3** / **§B1** production gates. Implementation remains **COMPLETE** per **§6.20**; this blocker is **not** missing loop code.
 
 ## L5-RET — RETRIEVAL POLICY BASELINE + VALIDATION TRACK
 
@@ -1164,6 +1162,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
   - **Ledger / observability:** append-only events, trace reconstruction with iteration linkage (`runtime/obs/ledger.py`).
   - **Fail-closed handling:** validation exceptions, in-loop Plan-Gate recheck failures, terminal alignment.
   - **Tests:** `runtime/tests/test_stage3_loop.py` — **22** passing cases (automated regression for blocked/refused/failed semantics and execution truth).
+- **Committed burn-in record (offline pytest + artifacts):** `docs/validation/STAGE3_BURN_IN_REPORT.md`; `docs/validation/artifacts/stage3_pytest_output.txt` (native), `stage3_pytest_output_wsl.txt`, `stage3_pytest_subset_wsl.txt`, `sample_ledger_trace.json`. Native log re-captured **2026-04-08** at **`d4a2807`**. Live WSL→GPU vertical slice remains **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md** (**§B7**).
 - **Evidence summary:** bounded, runtime-owned semantics; truthful **blocked** / **refused** / **failed** / **insufficient** outcomes; fail-closed gate and validation behavior covered by automated tests; product **burn-in** = operator paths in `docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`.
 
 ### 6.21 AIOps MVP automated rerun evidence refresh (2026-04-06; tracker update 2026-04-07)

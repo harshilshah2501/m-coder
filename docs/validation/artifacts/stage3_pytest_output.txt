@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-7.4.4, pluggy-1.4.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/harshil/Harshil-PoCs/m-coder
+collecting ... collected 22 items
+
+runtime/tests/test_stage3_loop.py::test_invalid_proposal_schema PASSED   [  4%]
+runtime/tests/test_stage3_loop.py::test_fake_evidence_refs_rejected PASSED [  9%]
+runtime/tests/test_stage3_loop.py::test_tool_denied_path_is_blocked_execution_truth PASSED [ 13%]
+runtime/tests/test_stage3_loop.py::test_retry_loop_exhaustion PASSED     [ 18%]
+runtime/tests/test_stage3_loop.py::test_plan_gate_refusal PASSED         [ 22%]
+runtime/tests/test_stage3_loop.py::test_terminal_correctness_success_no_tool_not_run PASSED [ 27%]
+runtime/tests/test_stage3_loop.py::test_no_silent_fallback PASSED        [ 31%]
+runtime/tests/test_stage3_loop.py::test_terminal_tool_failure_after_tool_result_ready_regression PASSED [ 36%]
+runtime/tests/test_stage3_loop.py::test_tool_success_execution_truth_executed PASSED [ 40%]
+runtime/tests/test_stage3_loop.py::test_timeout_normalization_and_failed_truth PASSED [ 45%]
+runtime/tests/test_stage3_loop.py::test_explicit_failed_terminal_normalization PASSED [ 50%]
+runtime/tests/test_stage3_loop.py::test_insufficiency_after_tool_result PASSED [ 54%]
+runtime/tests/test_stage3_loop.py::test_canonical_execution_identity_changes_with_args PASSED [ 59%]
+runtime/tests/test_stage3_loop.py::test_ledger_trace_linkage_contains_refs PASSED [ 63%]
+runtime/tests/test_stage3_loop.py::test_recheck_gate_blocked_path_semantics PASSED [ 68%]
+runtime/tests/test_stage3_loop.py::test_fail_closed_illegal_transition_path PASSED [ 72%]
+runtime/tests/test_stage3_loop.py::test_tool_result_validation_failure_fail_closed_no_nameerror PASSED [ 77%]
+runtime/tests/test_stage3_loop.py::test_final_response_validation_failure_consistency PASSED [ 81%]
+runtime/tests/test_stage3_loop.py::test_preloop_invalid_task_envelope_fail_closed PASSED [ 86%]
+runtime/tests/test_stage3_loop.py::test_preloop_plan_gate_error_fail_closed PASSED [ 90%]
+runtime/tests/test_stage3_loop.py::test_loop_context_frame_validation_fail_closed PASSED [ 95%]
+runtime/tests/test_stage3_loop.py::test_inloop_plan_gate_recheck_exception_fail_closed PASSED [100%]
+
+============================== 22 passed in 0.07s ==============================
