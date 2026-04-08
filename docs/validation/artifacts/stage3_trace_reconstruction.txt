@@ -1,0 +1,31 @@
+=== Trace / ledger reconstruction evidence (Stage 2 B7 live slice) ===
+captured_utc: 2026-04-08T06:41:23Z
+repo_commit: aaef044eff5e6c6b0f87c716296e570c08078eba (aaef044)
+
+=== A) Governed HTTP path — Plan-Gate log correlation (grep-stable)
+Source: runtime/.run/plan_gate.log — lines matching last successful /v1/ask from live smoke window.
+INFO __main__ PLAN_GATE request path=/v1/ask request_type=ask_v1 request_id=unknown trace_id=(none) routing_mode=n/a outcome=validation_error status=error duration_ms=0.39
+INFO __main__ PLAN_GATE request path=/v1/ask request_type=ask_v1 request_id=unknown trace_id=(none) routing_mode=n/a outcome=validation_error status=error duration_ms=0.25
+INFO __main__ PLAN_GATE request path=/v1/ask request_type=ask_v1 request_id=0c7bc714-0304-431f-8bbc-ace75fe35bbf trace_id=(none) routing_mode=plan_only outcome=ok status=success duration_ms=2.13
+INFO __main__ PLAN_GATE request path=/v1/ask request_type=ask_v1 request_id=3a3e03dd-a0be-48c6-abd9-1c18307e0b5f trace_id=(none) routing_mode=plan_only outcome=ok status=success duration_ms=2.62
+INFO __main__ PLAN_GATE request path=/v1/ask request_type=ask_v1 request_id=ca1aecee-2f71-48a4-988b-c72bf6f9294d trace_id=(none) routing_mode=plan_only outcome=ok status=success duration_ms=2.61
+
+INFO runtime.ask_service.v1_ingest [ASK_V1] trace_id=(none) request_id=0c7bc714-0304-431f-8bbc-ace75fe35bbf task_type=general
+INFO runtime.ask_service.v1_ingest [ASK_V1] trace_id=(none) request_id=3a3e03dd-a0be-48c6-abd9-1c18307e0b5f task_type=general
+INFO runtime.ask_service.v1_ingest [ASK_V1] trace_id=(none) request_id=ca1aecee-2f71-48a4-988b-c72bf6f9294d task_type=general
+
+Interpretation: request_id on PLAN_GATE line matches ASK_V1 ingest line for the same request (Action 5 closure pattern).
+
+=== B) Stage3LoopController — offline ledger reconstruct_trace (deterministic)
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-7.4.4, pluggy-1.4.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/harshil/Harshil-PoCs/m-coder
+collecting ... collected 22 items / 21 deselected / 1 selected
+
+runtime/tests/test_stage3_loop.py::test_ledger_trace_linkage_contains_refs PASSED [100%]
+
+======================= 1 passed, 21 deselected in 0.06s =======================
+
+=== C) Ledger sample (offline, committed separately) ===
+See `docs/validation/artifacts/sample_ledger_trace.json` for a full `reconstruct_trace`-style shape from the Stage 3 loop test harness (not from live Plan-Gate spool).

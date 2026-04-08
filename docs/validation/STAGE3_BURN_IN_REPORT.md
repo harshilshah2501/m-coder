@@ -181,6 +181,20 @@ If any criterion becomes **fuzzy** (e.g. non-deterministic hashes without docume
 | `docs/validation/artifacts/stage3_pytest_output_wsl.txt` | Full pytest stdout — **WSL** (`docs/Notes.md` capture) |
 | `docs/validation/artifacts/stage3_pytest_subset_wsl.txt` | WSL nine-scenario `-k` subset (10 passed) |
 | `docs/validation/artifacts/sample_ledger_trace.json` | One **EXECUTE** success run: `Stage3LoopController` + test doubles (offline; not WSL-specific) |
+| `docs/validation/artifacts/stage3_live_smoke_output.txt` | **Live** governed path: `/healthz`, `/version`, then `runtime/scripts/verify_ask_path.sh` (export → `/v1/ask`) — **PASS** |
+| `docs/validation/artifacts/stage3_trace_reconstruction.txt` | **Traceability:** grep-stable `PLAN_GATE request` + `[ASK_V1]` lines for matching `request_id`; plus **offline** `test_ledger_trace_linkage_contains_refs` **PASS** |
+
+---
+
+## 9. Live governed HTTP slice (B7 remainder — 2026-04-08)
+
+**Purpose:** Artifact-backed proof that **Context Layer → Plan-Gate** is healthy for real `export_evidence` → `ask_request.v1.0` → `/v1/ask` traffic, with **grep-stable** correlation in `runtime/.run/plan_gate.log` (Action 5 pattern).
+
+**Topology note:** Capture was performed on a **single native Linux host** with **8091 / 8089 / 8000** on localhost (runbook Parts B–C collapsed onto one machine). HTTP contracts match the **WSL Context Layer + GPU Plan-Gate** split; a **separate WSL-only** transcript is **not** duplicated here — use the same commands from **`docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`** on WSL for charter parity if required.
+
+**Commit alignment:** The artifact records **`repo_commit_short`** at documentation time. Long-running services may report an older `git_commit` in `GET /version` until restarted from the same tree — see **Commit / process alignment note** inside `stage3_live_smoke_output.txt`.
+
+**Stage 3 loop product path:** This slice **does not** assert IDE or live traffic through **`Stage3LoopController`** end-to-end (unchanged from runbook **§7**).
 
 ---
 
@@ -193,6 +207,7 @@ If any criterion becomes **fuzzy** (e.g. non-deterministic hashes without docume
 | Raw logs stored (native + WSL) | Done — §8 artifact index |
 | Ledger trace sample | Done — `sample_ledger_trace.json` |
 | Report states **WSL validated** (not “WSL unused”) | Done — §“Burn-in validation status” + §1.2 |
+| Live HTTP smoke + trace snippet | Done — §9 + `stage3_live_smoke_output.txt` + `stage3_trace_reconstruction.txt` |
 
 ---
 
