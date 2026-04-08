@@ -5,12 +5,12 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-04-08  
+- **Last updated**: 2026-04-09  
 - **Program state**: **Stage 2 COMPLETE (locked).** Trust and action metrics are green; no behavioral failures remain. Raw retrieval metrics (`owner@1_raw`, `owner@3_raw`) are diagnostic and do not reopen Stage 2 closure.
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
 - **Program objective (next):** **Controlled Runtime Loop — burn-in, validation, and product integration** — the schema-driven, runtime-owned loop is **implemented** (see **§6.20**); current work is **not** greenfield design: exercise WSL/GPU paths, wire governed services, and prove traceability under load before broader fluency expansion.  
-- **Current active milestone focus**: **Stage 3 runtime loop (implementation)** — **burn-in / validation / integration** with strict trust preservation: runtime owns control, model proposes only, fail-closed gates, observable ledger linkage; **not** production sign-off yet.
+- **Current active milestone focus**: **Stage 3 runtime loop** — **§B7 burn-in / acceptance CLOSED** (2026-04-09); remaining program work is **retrieval generalization**, **§1.3** product gates, host validation — **not** missing loop implementation.
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -81,7 +81,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Context Layer + Plan-Gate + vLLM path is **contract-correct and governed**
 - `/v1/ask` evidence-first path validated
 - execution path (`/v0/execute`) is honest and deterministic
-- **Stage 3 controlled runtime loop** — **implemented** in-repo (`runtime/loop/`, schema contracts, validators, tests); **burn-in / validation / integration** with live Plan-Gate + Context Layer is **in progress**, not claimed as production-complete (**§6.20**)
+- **Stage 3 controlled runtime loop** — **implemented** in-repo (`runtime/loop/`, schema contracts, validators, tests); **§B7** burn-in / acceptance **CLOSED** (offline pytest + native live smoke + WSL+tunnel `verify_ask_path` — **§B7**, `STAGE3_BURN_IN_REPORT.md` §9). **Product `Stage3LoopController` E2E** with live IDE traffic remains **follow-on** per runbook **§7** (**§6.20**).
 
 ### Retrieval
 - Deterministic lexical + symbol retrieval foundation is materially strengthened
@@ -103,8 +103,8 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Backend: FUNCTIONAL
 - Retrieval: BASELINE LOCKED (PR-6); **generalization / expanded validation** PENDING (**§B1**); **L5.8 harness** CLOSED (**B2**) — do not conflate harness closure with open-ended RET work
 - Plugin: **IMPROVING** — Action **4** **CLOSED** per **§6.18**; not full production-grade until **§B3** + **§1.3** gates
-- Stage 3 loop: **IMPLEMENTED** (pytest-green); **product path** = burn-in + integration (**§5**, **§6.20**)
-- End-to-end: NOT YET PRODUCTION-GRADE (observability + validation gates + residual plugin UX + Stage 3 loop burn-in acceptance pending)
+- Stage 3 loop: **IMPLEMENTED** (pytest-green); **§B7** **CLOSED**; **product path** follow-on = runbook §7 where needed (**§5**, **§6.20**)
+- End-to-end: NOT YET PRODUCTION-GRADE (observability + validation gates + residual plugin UX; **§B7** burn-in **closed** — remaining gaps are **§1.3** / **§B3** / **§B5**, not Stage 3 loop pytest or governed HTTP smoke)
 
 ## CRITICAL BLOCKERS FOR PRODUCTION CLOSURE
 
@@ -172,7 +172,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 **Closure bar (numbered):** *Fallback rules documented and controlled; no silent path ambiguity remains.*
 
 ### B7 — Stage 3 controlled runtime loop — burn-in / acceptance
-**Status:** **PARTIALLY CLOSED** (2026-04-08) — **Offline pytest burn-in:** CLOSED (same artifacts as before). **Live governed HTTP slice:** committed `docs/validation/artifacts/stage3_live_smoke_output.txt` + `docs/validation/artifacts/stage3_trace_reconstruction.txt` + **§9** in `docs/validation/STAGE3_BURN_IN_REPORT.md` — `verify_ask_path.sh` **PASS**, Plan-Gate **`PLAN_GATE request` ↔ `ASK_V1`** correlation for `request_id`, offline `test_ledger_trace_linkage_contains_refs` **PASS**. **Caveats:** capture is **native Linux collapsed topology** (8091/8089/8000 localhost), **not** a WSL-only transcript; running service **`/version` git_commit** may lag repo tip until restart — see report §9. **Remaining** for charter **WSL → tunneled GPU** operator parity: re-run the same commands on WSL per **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md** if a **separate** topology proof is required. **Product `Stage3LoopController` E2E** remains a **follow-on** wiring milestone (runbook §7). Implementation **COMPLETE** per **§6.20**.
+**Status:** **CLOSED** (2026-04-09) — **Offline pytest:** `docs/validation/artifacts/stage3_pytest_output*.txt`, `sample_ledger_trace.json`. **Native live smoke:** `stage3_live_smoke_output.txt`, `stage3_trace_reconstruction.txt`. **WSL + SSH tunnel → GPU:** `docs/validation/artifacts/stage3_b7_wsl_tunnel_verify_ask_path.txt` — `verify_ask_path.sh` **PASS**. Authority: **`docs/validation/STAGE3_BURN_IN_REPORT.md` §9**. **Out of scope (unchanged):** IDE → **`Stage3LoopController`** E2E — follow-on (**STAGE3_BURN_IN_AND_E2E_DEMO.md** §7). Keep **GPU/WSL commit alignment** via **`wsl_plugin_mvp_stack.sh check`**. Implementation **COMPLETE** per **§6.20**.
 
 ## L5-RET — RETRIEVAL POLICY BASELINE + VALIDATION TRACK
 
@@ -321,7 +321,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)            | **COMPLETE / LOCKED**     | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.                                                                                                                                                                                                                                                                                                                                                                             |
 | **L3** | Runtime Enforcement / Execution        | **COMPLETE** (M3.0–M3.11) + **Stage 3 loop impl. (burn-in)** | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. **Stage 3 controlled runtime loop** code path exists (**§6.20**); canonical **M3.x** table unchanged — loop work is tracked operationally, not as a new M3 ID.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **L4** | Observation / Drift Detection          | **COMPLETE** (Track-C)    | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).                                                                                                                                                                                                                                                                                                                                        |
-| **L5** | Workspace Intelligence / Ask Grounding | **VALIDATING**            | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **L5.8 harness:** **COMPLETE** (**B2**). **Active work:** retrieval **generalization** (**§B1**); **Stage 3 controlled runtime loop** — **burn-in / integration** (**§6.20**); backend HTTP validation ✅ operator path; residual plugin checklist (**§B3**). **Not** “full e2e” until **§1.3** + **§B7** + validation gates pass. **Deployment/validation:** runbook + `**docs/Backend Production Validation Sheet.md`** / `**docs/JetBrains Plugin Defect Isolation Sheet.md**`. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
+| **L5** | Workspace Intelligence / Ask Grounding | **VALIDATING**            | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **L5.8 harness:** **COMPLETE** (**B2**). **§B7** (Stage 3 loop burn-in / acceptance): **CLOSED**. **Active work:** retrieval **generalization** (**§B1**); residual plugin checklist (**§B3**); **§1.3** / **§B5** product gates. **Not** “full e2e” until **§1.3** + validation gates pass. **Deployment/validation:** runbook + `**docs/Backend Production Validation Sheet.md`** / `**docs/JetBrains Plugin Defect Isolation Sheet.md**`. Deferred: **Caveat-F1**, **Caveat-F2**; JetBrains `:test` sandbox quirk. |
 
 
 ---
@@ -796,18 +796,18 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   Stage 2 is closed/locked for behavioral trust and is no longer an active feature track.
 - **Active tasks**:
   - **§B1 / L5-RET — retrieval generalization + validation expansion (active):** golden suites, perturbations, drift thresholds — feeds Stage 2 program bar; **L5.8 harness** remains **closed** (**B2**).
-  - **Stage 3 runtime loop — burn-in / integration (active):** execute operator runbook (`docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`); pytest suite; WSL → GPU smoke; ledger/trace checks — **§B7**.
+  - **Stage 3 runtime loop — §B7 CLOSED** (2026-04-09): artifacts under `docs/validation/` + `STAGE3_BURN_IN_REPORT.md` §9; follow-on **product** wiring per runbook §7 if needed.
   - **L5-OBS-1:** **Action #5 CLOSED** (**§6.19**) — **no** reopened HTTP observability project; **operational** follow-through only (Context Layer / vLLM process logs, CI collection) if needed.
   - **Plugin truthfulness:** **Action 4 CLOSED** (**§6.18**) — **residual §B3 checklist** items only (non-closed UX gaps), not a reopened Action 4.
   - Continue deployment/validation flow from `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (**GPU → WSL → Windows**) with WSL workspace as source-of-truth.
 - **Next execution order**:
-  1. **Stage 3 loop** burn-in + integration (**§B7**, **§6.20**)
+  1. **Stage 3 loop** — §B7 **closed**; product integration only where planned (**§6.20**, runbook §7)
   2. **§B1** retrieval validation / expanded goldens
   3. Residual **§B3** plugin checklist (non-Action-4 scope)
   4. Host readiness / **Action 14** acceptance / release sign-off
 - **Current blockers**:
   - No contract blocker for Stage 2 **behavioral** trust closure.
-  - **§B7** — Stage 3 loop **acceptance** (integration + operational), not missing implementation.
+  - **§B7** — Stage 3 loop **burn-in / acceptance CLOSED** (artifact-backed); not missing implementation.
   - Operational debt (plugin Gradle environment reproducibility, auxiliary test environment consistency).
 - **Immediate next action**:
   - Run Stage 3 burn-in matrix (pytest + WSL/GPU smoke per **STAGE3_BURN_IN_AND_E2E_DEMO**); wire product path to governed loop where planned — **no** duplicate “implement schemas” work (already landed).
@@ -1150,7 +1150,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 ### 6.20 Stage 3 — Controlled Runtime Loop (implementation) — BURN-IN / VALIDATION (2026-04)
 
 - **Workstream:** **Stage 3 controlled runtime loop** — runtime-owned, schema-driven, bounded, observable hybrid loop (**not** ML pipeline “Stage 3”; see **§7** nomenclature).
-- **Milestone / tracking:** Operational implementation + tests (**no new M3.x ID**); **§4.3** operational note; **§B7** acceptance gate.
+- **Milestone / tracking:** Operational implementation + tests (**no new M3.x ID**); **§4.3** operational note; **§B7** burn-in / acceptance **CLOSED** (see **§B7** header).
 - **Artifacts (factual scope):**
   - **Schemas:** JSON Schema contracts for task ingress, model proposals, tool request/result, loop decisions, final response, loop context frame (`runtime/state/schemas/` `*.v1.json`).
   - **Validators:** strict validation + evidence-integrity checks (`runtime/state/validators.py`).
@@ -1162,7 +1162,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
   - **Ledger / observability:** append-only events, trace reconstruction with iteration linkage (`runtime/obs/ledger.py`).
   - **Fail-closed handling:** validation exceptions, in-loop Plan-Gate recheck failures, terminal alignment.
   - **Tests:** `runtime/tests/test_stage3_loop.py` — **22** passing cases (automated regression for blocked/refused/failed semantics and execution truth).
-- **Committed burn-in record (offline pytest + artifacts):** `docs/validation/STAGE3_BURN_IN_REPORT.md`; `docs/validation/artifacts/stage3_pytest_output.txt` (native), `stage3_pytest_output_wsl.txt`, `stage3_pytest_subset_wsl.txt`, `sample_ledger_trace.json`. Native log re-captured **2026-04-08** at **`d4a2807`**. **Live governed HTTP slice (2026-04-08):** `stage3_live_smoke_output.txt`, `stage3_trace_reconstruction.txt`, report **§9** — **§B7** = **PARTIALLY CLOSED** (see **§B7** header). Full runbook: **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md**.
+- **Committed burn-in record (offline pytest + artifacts):** `docs/validation/STAGE3_BURN_IN_REPORT.md`; `docs/validation/artifacts/stage3_pytest_output.txt` (native), `stage3_pytest_output_wsl.txt`, `stage3_pytest_subset_wsl.txt`, `sample_ledger_trace.json`. Native log re-captured **2026-04-08** at **`d4a2807`**. **Live governed HTTP:** `stage3_live_smoke_output.txt`, `stage3_trace_reconstruction.txt`, **`stage3_b7_wsl_tunnel_verify_ask_path.txt`**, report **§9** — **§B7** = **CLOSED** (2026-04-09). Full runbook: **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md**.
 - **Evidence summary:** bounded, runtime-owned semantics; truthful **blocked** / **refused** / **failed** / **insufficient** outcomes; fail-closed gate and validation behavior covered by automated tests; product **burn-in** = operator paths in `docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`.
 
 ### 6.21 AIOps MVP automated rerun evidence refresh (2026-04-06; tracker update 2026-04-07)
@@ -1170,7 +1170,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 - **Milestone context:** refresh of grounded Ask usefulness signal using Stage-4 artifact batch.
 - **Artifacts:** `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`; `/home/harshil/Harshil-PoCs/Stage-4-Artifacts/aiops_mvp/summary/run_summary.json`; `/home/harshil/Harshil-PoCs/Stage-4-Artifacts/aiops_mvp/summary/run_summary.md`.
 - **Evidence:** automated counts are PASS=8, PARTIAL=0, FAIL=0, ERROR=0; per-scenario `evidence_quality=STRONG` for A1/A2/D1/D2/P1/P2/C1/C2; A2 includes `QUERY_TOO_GENERIC` while remaining PASS.
-- **Interpretation guardrail:** this entry updates the latest automated signal; production-grade closure still requires remaining gates in **§1.3**, **§B3**, **§B5**, and **§B7**.
+- **Interpretation guardrail:** this entry updates the latest automated signal; production-grade closure still requires remaining gates in **§1.3**, **§B3**, and **§B5** (**§B7** burn-in **closed**).
 
 ### 6.22 Plugin Phase-1 truth proof — LOCKED (Stage 2 closure chronology item 1)
 
@@ -1196,7 +1196,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 | Action 4 — plugin truthfulness | Closed — **§6.18** |
 | Plugin Phase-1 truth proof (S1–S8) | Locked — **§6.22** |
 | Action 5 — observability closure (L5-OBS-1) | Closed — **§6.19** |
-| Stage 3 — controlled runtime loop (implementation) | Implemented — burn-in / validation / integration — **§6.20**, **§B7** |
+| Stage 3 — controlled runtime loop (implementation) | Implemented — **§B7 burn-in / acceptance CLOSED** — **§6.20** |
 
 ### 7.2 Product Authority + Code Understanding Layer (v1) — status
 
