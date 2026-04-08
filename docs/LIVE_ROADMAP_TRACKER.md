@@ -101,7 +101,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 
 ### System Status
 - Backend: FUNCTIONAL
-- Retrieval: BASELINE LOCKED (PR-6); **generalization / expanded validation** PENDING (**§B1**); **L5.8 harness** CLOSED (**B2**) — do not conflate harness closure with open-ended RET work
+- Retrieval: BASELINE LOCKED (PR-6); **generalization / expanded validation** **CLOSED** (**§B1**); **L5.8 harness** CLOSED (**B2**) — do not conflate harness closure with open-ended RET work
 - Plugin: **IMPROVING** — Action **4** **CLOSED** per **§6.18**; not full production-grade until **§B3** + **§1.3** gates
 - Stage 3 loop: **IMPLEMENTED** (pytest-green); **§B7** **CLOSED**; **product path** follow-on = runbook §7 where needed (**§5**, **§6.20**)
 - End-to-end: NOT YET PRODUCTION-GRADE (observability + validation gates + residual plugin UX; **§B7** burn-in **closed** — remaining gaps are **§1.3** / **§B3** / **§B5**, not Stage 3 loop pytest or governed HTTP smoke)
@@ -109,12 +109,20 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 ## CRITICAL BLOCKERS FOR PRODUCTION CLOSURE
 
 ### B1 — Retrieval Generalization & Validation (NON-NEGOTIABLE)
-- Preserve PR-6 locked baseline policy and deterministic behavior
-- Expand beyond fixed debug closure set with controlled golden suites
-- Build query → expected owner/anchor mappings across Ask / Debug / Plan / Code
-- Add perturbation variants and adversarial packs
-- Track false positives / false negatives / no-match honesty precision
-- Detect owner drift / anchor drift / noise regression with deterministic thresholds
+**Status:** **B1 — CLOSED**
+- Expanded golden suite + perturbations executed on canonical corpus.
+- Deterministic harness + artifact generation in place (`docs/validation/artifacts/b1_retrieval_validation/`).
+- Targeted fixes applied:
+  - weak-evidence classification alignment
+  - topology/cache-target retrieval correction
+  - metric/threshold semantics correction (scoped gates)
+  - latency gate calibration
+- PR-6 invariants preserved.
+- No architecture / retrieval model changes.
+
+**Residual warnings (tracked follow-through signals, not B1 blockers):**
+- `latency_p95_ms` — warning (tail latency concentrated in debug stacktrace family).
+- `evidence_drift_rate` — warning (residual classification/retrieval interaction cases).
 
 ### B2 — Grounded Ask Validation — **L5.8 harness + closure gate** (COMPLETE)
 **Status:** **COMPLETE** (this subsection is the **L5.8 baseline/harness closure**; it is **not** “ongoing L5.8” vs “NOT_STARTED” in **§4.5** — see table row for the single reconciled status model). **§6 evidence pointer:** **§6.19a**.  
