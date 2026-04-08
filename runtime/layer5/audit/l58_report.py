@@ -32,9 +32,29 @@ def _evidence_distribution(cases: List[EvaluatedCase]) -> Dict[str, float]:
 
 def build_report_payload(cases: List[EvaluatedCase], pr6: PR6ProtectedMetrics, drift: DriftResult) -> Dict[str, object]:
     n = max(1, len(cases))
+    owner_cases = [c for c in cases if c.must_hit_top1_owner]
+    anchor_cases = [c for c in cases if c.must_hit_top3_anchor]
     latencies = sorted(c.latency_ms for c in cases)
     p50 = latencies[max(0, int(len(latencies) * 0.50) - 1)] if latencies else 0.0
     p95 = latencies[max(0, int(len(latencies) * 0.95) - 1)] if latencies else 0.0
+    first_ranks = [c.first_relevant_rank for c in cases if c.first_relevant_rank is not None]
+    weak_cases = [c for c in cases if c.expected_evidence_primary == "WEAK"]
+    weak_evidence_precision = (
+        sum(1 for c in weak_cases if c.predicted_evidence_class == "WEAK") / len(weak_cases)
+        if weak_cases
+        else 1.0
+    )
+    no_match_cases = [c for c in cases if c.expect_no_match_honesty]
+    no_match_honesty_precision = (
+        sum(1 for c in no_match_cases if c.no_match_honesty_ok) / len(no_match_cases)
+        if no_match_cases
+        else 1.0
+    )
+    drift_detection_rate = (
+        sum(1 for c in cases if c.hard_fail_reasons) / n
+        if cases
+        else 0.0
+    )
     payload: Dict[str, object] = {
         "total_cases": len(cases),
         "hard_fail_count": len(drift.hard_failures),
@@ -42,6 +62,24 @@ def build_report_payload(cases: List[EvaluatedCase], pr6: PR6ProtectedMetrics, d
         "case_pass_rate": sum(1 for c in cases if not c.hard_fail_reasons) / n,
         "pr6_protected_subset": asdict(pr6),
         "drift_metrics": drift.metrics,
+        "gate_metrics": {
+            "top1_owner_accuracy": (
+                sum(1 for c in owner_cases if c.top1_owner_match) / len(owner_cases)
+                if owner_cases
+                else 1.0
+            ),
+            "top3_anchor_hit_rate": (
+                sum(1 for c in anchor_cases if c.top3_anchor_hit) / len(anchor_cases)
+                if anchor_cases
+                else 1.0
+            ),
+            "mean_first_relevant_rank": (sum(first_ranks) / len(first_ranks)) if first_ranks else 0.0,
+            "mean_noise_dominance_top5": sum(c.noise_dominance_top5 for c in cases) / n,
+            "mean_code_ratio_topk": sum(c.code_ratio_topk for c in cases) / n,
+            "weak_evidence_precision": weak_evidence_precision,
+            "no_match_honesty_precision": no_match_honesty_precision,
+            "drift_detection_rate": drift_detection_rate,
+        },
         "flow_breakdown": _flow_breakdown(cases),
         "evidence_distribution": _evidence_distribution(cases),
         "latency": {
@@ -98,6 +136,9 @@ def write_reports(
         lines.append(f"- HARD: {reason}\n")
     for reason in drift.warnings:
         lines.append(f"- WARN: {reason}\n")
+    lines.append("\n## Gate metrics\n\n")
+    for k, v in payload["gate_metrics"].items():
+        lines.append(f"- {k}: {v:.4f}\n")
     lines.append("\n## Evidence distribution\n\n")
     for k, v in payload["evidence_distribution"].items():
         lines.append(f"- {k}: {v:.2%}\n")

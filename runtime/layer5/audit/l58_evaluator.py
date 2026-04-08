@@ -42,6 +42,10 @@ class EvaluatedCase:
     case_id: str
     flow_type: str
     query: str
+    expected_evidence_primary: str
+    expect_no_match_honesty: bool
+    must_hit_top1_owner: bool
+    must_hit_top3_anchor: bool
     ranked_paths: List[str]
     top1_owner_match: bool
     top3_anchor_hit: bool
@@ -167,6 +171,10 @@ def evaluate_cases(cases: Iterable[GoldenCase], top_k: int = 8) -> tuple[List[Ev
                 case_id=case.id,
                 flow_type=case.flow_type,
                 query=case.query,
+                expected_evidence_primary=case.expected_evidence_class.primary,
+                expect_no_match_honesty=case.expectations.expect_no_match_honesty,
+                must_hit_top1_owner=case.expectations.must_hit_top1_owner,
+                must_hit_top3_anchor=case.expectations.must_hit_top3_anchor,
                 ranked_paths=ranked,
                 top1_owner_match=top1,
                 top3_anchor_hit=top3,

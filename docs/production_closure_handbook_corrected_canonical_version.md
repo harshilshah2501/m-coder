@@ -99,8 +99,8 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 ### 5. Host Validation
 
-- Profiles defined
-- Not production-validated across both profiles
+- Backend host modes documented (single distributed topology)
+- Not production-validated across both **backend host modes** (WSL vs native Linux workspace-side) against the same GPU-governed stack
 
 ---
 
@@ -112,7 +112,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 | Truthfulness   | Weak or insufficient evidence must not produce confident reasoning | OPEN   | Hard guard + reason codes enforced                  |     |
 | Plugin Honesty | UI must reflect backend truth and path class                       | OPEN   | Evidence, ask\_path, notes, execute outcome visible |     |
 | Observability  | Request must be traceable across Context Layer, Plan-Gate, vLLM    | OPEN   | Request ID + endpoint logging                       |     |
-| Host Readiness | Windows + WSL + GPU and native Linux profiles validated            | OPEN   | Deployment/validation runbook passes both           |     |
+| Host Readiness | Both **backend host modes** (WSL vs native Linux) validated against the same **GPU-governed** stack | OPEN   | Deployment/validation runbook passes both modes   |     |
 
 ---
 
@@ -261,22 +261,34 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 ---
 
-## WS-6: Host-Profile Readiness
+## WS-6: Host Readiness
 
 **Closure status:** Mandatory before closure
 
-**Objective:** Ensure system behaves identically across supported environments.
+**Objective:** Ensure reproducible behavior of the **canonical distributed setup** across **backend host modes** (workspace-side backend on **WSL** vs **native Linux**), with **Plan-Gate + vLLM on the GPU server** in both cases.
+
+> **Canonical Host Model**
+>
+> The system operates as a **distributed architecture**:
+>
+> * Backend (Context Layer, retrieval) runs near the workspace
+>   → either **WSL** or **native Linux**
+>
+> * Plan-Gate and vLLM run on a **GPU server**
+>
+> These are not separate deployment profiles.
+> They are **backend host modes within the same system topology**.
 
 **Includes:**
 
-- Windows + WSL + GPU validation
-- Native Linux + JetBrains + GPU validation
+- Validation with **WSL** workspace-side backend + GPU governed stack
+- Validation with **native Linux** workspace-side backend + same GPU governed stack
 - Config externalization
 - Removal of implicit localhost assumptions
 
 **Exit condition:**
 
-- Both profiles pass validation runbook
+- Both **backend host modes** pass the validation runbook against the **same** GPU-governed behavior
 
 ---
 
@@ -327,7 +339,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 These action items are executed strictly in alignment with the Phase sequence defined in Section 6. No item should be progressed out of phase.
 
-Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline, L5.8 closure validation, completed plugin product-truthfulness logic, completed main HTTP-path observability (Context Layer, Plan-Gate, explain/debug logging), completed Explain/Debug trust validation (server and plugin contract), and completed Execute-path trust validation on the **live HTTP product path** (`POST /v0/execute`). **Action 8 (Validate no-match honesty)** remains **satisfied** under the **L5.8 / Action 3** closure already recorded below (strict no-match honesty); it is **not** reactivated as unfinished work. The current active action is **9 (Close host profile A)**.
+Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline, L5.8 closure validation, completed plugin product-truthfulness logic, completed main HTTP-path observability (Context Layer, Plan-Gate, explain/debug logging), completed Explain/Debug trust validation (server and plugin contract), and completed Execute-path trust validation on the **live HTTP product path** (`POST /v0/execute`). **Action 8 (Validate no-match honesty)** remains **satisfied** under the **L5.8 / Action 3** closure already recorded below (strict no-match honesty); it is **not** reactivated as unfinished work. The current active action is **9 (Close release validation — WSL backend host)**.
 
 | **#**     | **Action item**                        | **What it includes**                                                              | **Done means done**                               |
 | --------- | -------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
@@ -339,8 +351,8 @@ Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline
 | **~~6~~** | ~~Validate Explain/Debug path rigorously~~ | ~~Prove vLLM use when required; prove no hidden repo access~~                         | ~~Debug path contract and logs are trustworthy~~      |
 | **~~7~~** | ~~Validate Execute path rigorously~~       | ~~Refused/blocked/executed (incl. executed-failed vs blocked) always distinct and truthful; `plan_gate_*` server-rejected by default on live HTTP~~ | ~~No fake success; no ambiguity; trust boundary enforced~~ |
 | **~~8~~** | ~~Validate no-match honesty~~              | ~~Out-of-scope and absent-symbol queries return explicit insufficiency~~              | ~~Satisfied under L5.8 / Action 3 closure; see note below~~ |
-| **9**     | Close host profile A                   | Windows + WSL + GPU full release validation pass                                  | **Functional closure:** checklist + runbook (**FUNCTIONALLY CLOSED**); **audit pack** (trace file + packaging + validation sheets) pending, non-blocking |
-| **10**    | Close host profile B                   | Native Linux full release validation pass                                         | Checklist passes; config documented               |
+| **9**     | Close release validation (WSL backend host) | Full release validation pass (Windows IDE + **WSL** workspace backend; **GPU**: Plan-Gate + vLLM) | **Functional closure:** checklist + runbook (**FUNCTIONALLY CLOSED**); **audit pack** (trace file + packaging + validation sheets) pending, non-blocking |
+| **10**    | Close release validation (native Linux backend host) | Full release validation pass (**native Linux** workspace backend; **same** GPU stack) | Checklist passes; config documented               |
 | **11**    | Close compatibility path hardening     | Fallback rules documented and controlled                                          | No silent path ambiguity remains                  |
 | **12**    | Mainline convergence                   | Feature branch/integration line/main are operationally unambiguous                | Release branch truth is clear                     |
 | **13**    | Canonical doc finalization             | Roadmap, charter, runbook, validation sheets, retrieval policy linked and current | No active contradiction across docs               |
@@ -361,7 +373,7 @@ L5.8 Action 3 closure: PR-6 baseline preserved; guard-context hardening complete
 
 **Action 8:** Action 8 (no-match honesty) remains satisfied under the L5.8 / Action 3 closure already recorded above; it is not reactivated as the current frontier.
 
-**Action 9:** **FUNCTIONALLY CLOSED (Audit pack pending).** Host Profile A has passed the **functional** bar (Ask, Explain/Debug, Execute boundary, No-match, Failure) per `docs/guides/ACTION_7_TRUST_AUDIT.md`; no new product blocker has been proven in this slice. **Remaining** work is **audit discipline** only: formal `mapping_request_ids.md`, per-scenario `hostA_proof_pack/` packaging, and the two validation sheets — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md`. This follow-through is **non-blocking** for product iteration; it is **required** for enterprise audit-grade submission.
+**Action 9:** **FUNCTIONALLY CLOSED (Audit pack pending).** Release validation for the **WSL backend host** mode has passed the **functional** bar (Ask, Explain/Debug, Execute boundary, No-match, Failure) per `docs/guides/ACTION_7_TRUST_AUDIT.md`; no new product blocker has been proven in this slice. **Remaining** work is **audit discipline** only: formal `mapping_request_ids.md`, per-scenario `hostA_proof_pack/` packaging, and the two validation sheets — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md`. This follow-through is **non-blocking** for product iteration; it is **required** for enterprise audit-grade submission.
 
 # 4. Critical Correction (NEW — Architecture Reality)
 
@@ -510,13 +522,13 @@ This sequence is refined based on real validation learnings. PR-6 baseline closu
 
 **Includes:**
 
-- Windows + WSL + GPU validation
-- Native Linux validation
+- Validation — **WSL** workspace-side backend + **GPU** governed stack
+- Validation — **native Linux** workspace-side backend + **same** GPU governed stack
 - Compatibility path control
 
 **Exit criteria:**
 
-- Both host profiles pass identical validation
+- Both **backend host modes** pass identical validation against the **same** GPU-side behavior
 - No hidden localhost/tunnel assumptions
 
 ---

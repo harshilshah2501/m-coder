@@ -146,6 +146,9 @@ def _path_hints_exempt_topic_supporting_cap(
     supporting-class content cap (PR-6 Slice 5).
     """
     if topology_focus:
+        # Path-structure hints only: bare substring "metric" matches many *Metric*.java basenames
+        # (e.g. VisualizationMetricManager) and incorrectly exempts them from the supporting
+        # topic content cap (B1 topology/cache-target vs broad metric-manager noise).
         topo_hints = (
             "topology",
             "topo",
@@ -155,12 +158,13 @@ def _path_hints_exempt_topic_supporting_cap(
             "anomaly",
             "cache",
             "store",
-            "metric",
             "aiops",
             "ingestion",
             "dependency",
         )
         if any(h in rel_l for h in topo_hints):
+            return True
+        if "/metrics/" in rel_l or "/metric/" in rel_l:
             return True
     if ingestion_focus:
         ing_hints = (
@@ -398,6 +402,36 @@ def _support_file_demotion(
     if not is_support_style_java_basename(basename):
         return 0
     return _scaled(dem, cfg)
+
+
+def _basename_stem_exact_boost(
+    base_name: str,
+    tokens: Tuple[str, ...],
+    code_intent_active: bool,
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+) -> int:
+    """
+    When a normalized query token equals the full Java basename stem (typically a compound
+    CamelCase symbol such as ``topologycachestore``), add a strong deterministic boost so the
+    defining file outranks generic keyword repetition in sibling owners.
+
+    Gated by minimum token length to avoid colliding with short ambiguous stems.
+    """
+    raw = float(policy.get("code_intent_basename_stem_exact_boost", 0.0))
+    if raw <= 0 or not code_intent_active or not cfg.enable_policy_bias:
+        return 0
+    stem = Path(base_name).stem.lower()
+    if not stem:
+        return 0
+    min_len = int(policy.get("code_intent_basename_stem_exact_min_token_len", 12))
+    min_len = max(8, min_len)
+    for t in tokens:
+        if len(t) < min_len:
+            continue
+        if t == stem:
+            return _scaled(raw, cfg)
+    return 0
 
 
 def _symbol_boost(
@@ -757,6 +791,9 @@ def _score_entry(
     duplicate_incident_core_boost = _duplicate_incident_core_boost(
         base_name, rel_l, fpolicy, code_intent_active, policy, cfg, tokens
     )
+    basename_stem_exact_boost = _basename_stem_exact_boost(
+        base_name, tokens, code_intent_active, policy, cfg
+    )
     engineering_aiops_prior = 0
     if (
         cfg.enable_engineering_aiops_path_prior
@@ -785,6 +822,7 @@ def _score_entry(
         - generic_integration_demotion
         - ingestion_log_parser_demotion
         + duplicate_incident_core_boost
+        + basename_stem_exact_boost
         + engineering_aiops_prior
     )
     policy_part = (
@@ -800,6 +838,7 @@ def _score_entry(
         - generic_integration_demotion
         - ingestion_log_parser_demotion
         + duplicate_incident_core_boost
+        + basename_stem_exact_boost
         + engineering_aiops_prior
     )
     diagnostics: Optional[Dict[str, int]] = None
@@ -828,6 +867,7 @@ def _score_entry(
             "generic_integration_demotion": generic_integration_demotion,
             "ingestion_log_parser_demotion": ingestion_log_parser_demotion,
             "duplicate_incident_core_boost": duplicate_incident_core_boost,
+            "basename_stem_exact_boost": basename_stem_exact_boost,
             "engineering_aiops_prior": engineering_aiops_prior,
             "content_mass_lexical_trimmed": content_mass_trimmed,
             "facade_cap_basename_or_symbol_owner_signal": 1 if narrow_owner_signal_for_facade else 0,

@@ -16,9 +16,9 @@
 
 ---
 
-## Operating profile for this setup
+## Operating topology (this runbook)
 
-This runbook assumes this concrete topology (the one used in your current validation):
+This runbook assumes one **distributed** layout: **Context Layer** near the workspace (**WSL** here); **Plan-Gate + vLLM** on the **GPU** host — the same architecture as **native Linux** workspace-side; only placement differs. Concrete instance used in validation. **B5 proof artifacts (health + minimal Ask):** `docs/validation/artifacts/b5_linux_backend_gpu/` (native Linux co-located run); **WSL prerequisite checklist:** `docs/validation/artifacts/b5_wsl_backend_gpu/README.md`.
 
 - **JetBrains IDEA runs on Windows** (plugin process lives on Windows).
 - **Motadata AIOps repo is hosted in WSL Linux FS** and opened through WSL backend so `project.basePath` is Linux.

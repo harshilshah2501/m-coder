@@ -97,6 +97,8 @@ export PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
 export VLLM_URL="${VLLM_URL:-http://127.0.0.1:8000}"
 export WORKSPACE_ROOT="${WORKSPACE_ROOT:-/ABSOLUTE/PATH/TO/REPO}"
 export TOP_K="${TOP_K:-8}"
+export REQUEST_ID="${REQUEST_ID:-req-$(date +%s)-$RANDOM}"
+export TRACE_ID="${TRACE_ID:-trace-$REQUEST_ID}"
 # Default Ask (scenario B) query; override per scenario when re-running other sections
 export QUERY="${QUERY:-How does alert correlation work in this repo?}"
 ```
@@ -172,7 +174,7 @@ Use these exact queries first before custom ones:
 # 1) Export evidence
 curl -sS -X POST "$CONTEXT_URL/v1/export_evidence" \
   -H "Content-Type: application/json" \
-  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$QUERY\",\"top_k\":$TOP_K}" \
+  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$QUERY\",\"top_k\":$TOP_K,\"request_id\":\"$REQUEST_ID\",\"trace_id\":\"$TRACE_ID\"}" \
   > /tmp/evidence.json
 
 # 2) Build ask_request.v1.0 from evidence
@@ -182,8 +184,9 @@ ev = json.load(open('/tmp/evidence.json', 'r', encoding='utf-8'))
 q = os.environ.get("QUERY", "How does alert correlation work in this repo?")
 req = {
   "schema_version": "ask_request.v1.0",
-  "request_id": str(uuid.uuid4()),
+  "request_id": os.environ.get("REQUEST_ID", str(uuid.uuid4())),
   "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
+  "trace_id": os.environ.get("TRACE_ID", ""),
   "query": q,
   "evidence_bundle": ev,
 }

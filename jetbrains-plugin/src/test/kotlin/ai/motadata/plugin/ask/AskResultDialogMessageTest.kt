@@ -207,4 +207,48 @@ class AskResultDialogMessageTest {
         assertTrue(msg.contains("used_layer5: true"), msg)
         assertTrue(msg.contains("workspace_input_path: /tmp/ws"), msg)
     }
+
+    @Test
+    fun `plan summary notes are rendered when backend provides them`() {
+        val response = RuntimeResponse(
+            outcome = RuntimeOutcome.BOUNDED_ALLOW,
+            requestId = "r5",
+            ui = null,
+            metadata = planTruthMeta(requestId = "r5", traceId = "trace-r5") + mapOf(
+                "plan_summary" to mapOf(
+                    "steps" to listOf("step-1"),
+                    "notes" to listOf("note A", "note B"),
+                ),
+                "context_bundle" to mapOf(
+                    "revision" to "rev5",
+                    "files" to emptyList<Any>(),
+                    "selectors_used" to emptyList<Any>(),
+                ),
+            ),
+        )
+        val msg = buildAskResultDialogMessage("q", response)
+        assertTrue(msg.contains("Plan notes:"), msg)
+        assertTrue(msg.contains("  - note A"), msg)
+        assertTrue(msg.contains("  - note B"), msg)
+    }
+
+    @Test
+    fun `empty context files wording is backend-truthful`() {
+        val response = RuntimeResponse(
+            outcome = RuntimeOutcome.BOUNDED_ALLOW,
+            requestId = "r6",
+            ui = null,
+            metadata = planTruthMeta(requestId = "r6", traceId = "trace-r6") + mapOf(
+                "plan_summary" to mapOf("steps" to listOf("s")),
+                "context_bundle" to mapOf(
+                    "revision" to "rev6",
+                    "files" to emptyList<Any>(),
+                    "selectors_used" to emptyList<Any>(),
+                ),
+            ),
+        )
+        val msg = buildAskResultDialogMessage("q", response)
+        assertTrue(msg.contains("(backend returned context_bundle.files: empty)"), msg)
+        assertTrue(!msg.contains("(no files selected)"), msg)
+    }
 }

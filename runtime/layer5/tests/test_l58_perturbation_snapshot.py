@@ -14,27 +14,22 @@ def test_l58_generated_perturbation_snapshot_ids_order_count() -> None:
     rows = load_golden_cases(_DATASET)
     generated = generate_deterministic_variants(rows)
     generated_ids = [r.id for r in generated]
-    expected_ids = [
-        "l58.ask.topology.where.base::abbreviated_symbol",
-        "l58.ask.topology.where.base::package_omitted",
-        "l58.ask.topology.where.base::camelcase_split",
-        "l58.ask.topology.where.base::typo_light_wording",
-        "l58.ask.topology.where.base::phrasing_shift",
-        "l58.code.metrics.parser.target.base::abbreviated_symbol",
-        "l58.code.metrics.parser.target.base::package_omitted",
-        "l58.code.metrics.parser.target.base::camelcase_split",
-        "l58.code.metrics.parser.target.base::typo_light_wording",
-        "l58.code.metrics.parser.target.base::phrasing_shift",
-        "l58.debug.correlation.duplicate.base::abbreviated_symbol",
-        "l58.debug.correlation.duplicate.base::package_omitted",
-        "l58.debug.correlation.duplicate.base::camelcase_split",
-        "l58.debug.correlation.duplicate.base::typo_light_wording",
-        "l58.debug.correlation.duplicate.base::phrasing_shift",
-        "l58.plan.ingestion.impact.base::abbreviated_symbol",
-        "l58.plan.ingestion.impact.base::package_omitted",
-        "l58.plan.ingestion.impact.base::camelcase_split",
-        "l58.plan.ingestion.impact.base::typo_light_wording",
-        "l58.plan.ingestion.impact.base::phrasing_shift",
+    base_ids = [r.id for r in rows if r.perturbation.kind == "base"]
+    expected_kinds = [
+        "abbreviated_symbol",
+        "package_omitted",
+        "camelcase_split",
+        "error_text_only",
+        "typo_light_wording",
+        "subsystem_alias_wording",
+        "phrasing_shift",
     ]
-    assert generated_ids == expected_ids
-    assert len(generated_ids) == 20
+    assert len(generated_ids) == len(base_ids) * len(expected_kinds)
+
+    for base in base_ids:
+        observed = [
+            gid.split("::", 1)[1]
+            for gid in generated_ids
+            if gid.startswith(f"{base}::")
+        ]
+        assert observed == expected_kinds, f"{base}: generated kinds mismatch/order"

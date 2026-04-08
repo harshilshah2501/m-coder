@@ -5,7 +5,7 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
-- **Last updated**: 2026-04-09  
+- **Last updated**: 2026-04-08  
 - **Program state**: **Stage 2 COMPLETE (locked).** Trust and action metrics are green; no behavioral failures remain. Raw retrieval metrics (`owner@1_raw`, `owner@3_raw`) are diagnostic and do not reopen Stage 2 closure.
 - **Current active layer**: **Layer-5 — Workspace Intelligence**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
@@ -16,13 +16,13 @@
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
   - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) exists on Plan-Gate; **Ask → Plan → Execute** continuum is not fully reflected in L5 tracker rows until plugin + execute UX are explicitly gated together.  
   - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Product Authority + Code Understanding v1 — Phases 1–5 COMPLETE** (registry → index → ranking → Plan-Gate anchoring + eval → authority → action reasoning bridge). **L5.8 — harness + closure gate:** **COMPLETE** (see **B2**; **§4.5** milestone row). **Ongoing Stage 2 program work:** retrieval **generalization** and validation depth (**§B1**, **§1.4 Track RET**), authority robustness / drift, multi-file coding validation, host-profile readiness, **Action 14** final acceptance — **reliability, repeatability, deployment trust** (not re-opening closed plugin / observability / compatibility work — **§6.17–§6.19**). **Stage 3 runtime loop:** implemented — **burn-in / integration** (**§6.20**).
+  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Product Authority + Code Understanding v1 — Phases 1–5 COMPLETE** (registry → index → ranking → Plan-Gate anchoring + eval → authority → action reasoning bridge). **L5.8 — harness + closure gate:** **COMPLETE** (see **B2**; **§4.5** milestone row). **Ongoing Stage 2 program work:** retrieval **generalization** and validation depth (**§B1**, **§1.4 Track RET**), authority robustness / drift, multi-file coding validation, host readiness (**§B5** — backend host modes), **Action 14** final acceptance — **reliability, repeatability, deployment trust** (not re-opening closed plugin / observability / compatibility work — **§6.17–§6.19** / **§B4**). **Stage 3 runtime loop:** implemented — **burn-in / integration** (**§6.20**).
 
 ### Action 9 — sub-status (surgical)
 
 | Action | Status |
 |--------|--------|
-| 9 — Host Profile A | ✅ Functional pass |
+| 9 — WSL backend host (release validation) | ✅ Functional pass |
 | 9 — Audit pack (trace + packaging) | ⚠️ Pending (non-blocking) |
 
 **What remains (tracked, not blocking — required for audit-grade closure):**
@@ -37,7 +37,7 @@
 - **Evidence-first default:** **OFF** in plugin — alignment with `**layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
 - **Observability gap:** Plan-Gate HTTP does **not** log each request by default; **no unified trace** (Context Layer ↔ Plan-Gate ↔ vLLM) without further work — see **§1.4 Track OBS**.
 - **Retrieval:** PR-6 true-positive debug retrieval baseline is **COMPLETE / LOCKED** (deterministic, workspace-local). Active risk is **generalization + validation thresholds** under **§B1** / **§1.4 Track RET** (feeds **L5.8**-class metrics maturity; **L5.8 harness closure** itself is **COMPLETE** per **B2** — not contradictory).
-- **Host profiles:** **Windows+WSL+GPU** and **native Linux** are charter targets; plugin **Plan-Gate base URL defaults to** `127.0.0.1:8089` (**`motadata.plan_gate.url`** / **`MOTADATA_PLAN_GATE_URL`** override) — full externalization backlog in **§B5**.
+- **Distributed topology (single architecture):** backend (Context Layer, retrieval) near the workspace (**WSL or native Linux**); **Plan-Gate + vLLM on GPU** — not separate product “profiles.” Validate both **backend host modes** against the same GPU-governed stack; plugin **Plan-Gate base URL defaults to** `127.0.0.1:8089` (**`motadata.plan_gate.url`** / **`MOTADATA_PLAN_GATE_URL`** override) — full externalization backlog in **§B5**.
 - **IDE operator demo:** `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md` — Plan-Gate + plugin flows; **does not** exercise **`Stage3LoopController`** (see **§6.20**, **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md**).
 
 ### 1.2 Current truth state (honest)
@@ -104,7 +104,7 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 - Retrieval: BASELINE LOCKED (PR-6); **generalization / expanded validation** **CLOSED** (**§B1**); **L5.8 harness** CLOSED (**B2**) — do not conflate harness closure with open-ended RET work
 - Plugin: **IMPROVING** — Action **4** **CLOSED** per **§6.18**; not full production-grade until **§B3** + **§1.3** gates
 - Stage 3 loop: **IMPLEMENTED** (pytest-green); **§B7** **CLOSED**; **product path** follow-on = runbook §7 where needed (**§5**, **§6.20**)
-- End-to-end: NOT YET PRODUCTION-GRADE (observability + validation gates + residual plugin UX; **§B7** burn-in **closed** — remaining gaps are **§1.3** / **§B3** / **§B5**, not Stage 3 loop pytest or governed HTTP smoke)
+- End-to-end: NOT YET PRODUCTION-GRADE (validation gates + residual plugin UX; **§B4** trace reconstruction **CLOSED**; **§B7** burn-in **closed** — remaining gaps are **§1.3** / **§B3** / **§B5**, not Stage 3 loop pytest or governed HTTP smoke)
 
 ## CRITICAL BLOCKERS FOR PRODUCTION CLOSURE
 
@@ -155,19 +155,15 @@ Treat as **release blockers** for claiming production-grade slice (iterate in ch
 
 ### B4 — Observability (L5-OBS-1)
 - **Action #5 (2026-03-31):** **CLOSED** — **§6.19**, `docs/guides/ACTION_5_OBSERVABILITY_CORRELATION.md`. Plan-Gate and Ask/Execute services emit grep-stable correlation; proof-pack reconstruction without inference for the HTTP path.
-- **Caveat:** Context Layer wheel / vLLM process logs and CI runbook collection remain **operational** follow-through (not Action 5 HTTP closure scope).
-- request_id propagation across:
-  - Context Layer
-  - Plan-Gate
-  - vLLM
-- Plan-Gate request logging
-- endpoint path visibility
-- traceability for Ask / Debug / Execute
+- **B4 follow-through — trace reconstruction (2026-04-08):** **CLOSED** — artifact-backed proof that a single `REQUEST_ID` + `TRACE_ID` spine reconstructs the full lifecycle across **Context Layer** (`/v1/export_evidence`), **Ask** (`[ASK_V1]` ingest + Plan-Gate `POST /v1/ask`), **Plan-Gate execution** (`POST /v0/execute`), and **execution outcome** (response + `PLAN_GATE request` logs). Prior Ask/explain path proof plus this execute-path proof complete **§B4** closure bar.
+- **Residual (operational, not §B4 closure scope):** vLLM process logs and CI runbook collection as needed; **Action 9** audit-pack packaging remains tracked separately.
+- **Coverage (locked):** `request_id` / `trace_id` propagation (Context Layer, Plan-Gate, reasoner/explain where exercised); Plan-Gate request logging with endpoint path; traceability for Ask / Debug / Execute.
 
-### B5 — Host Profile Readiness
-- Windows + WSL + GPU validated
-- Native Linux + JetBrains validated
-- Config externalization (no hardcoded localhost assumptions)
+### B5 — Host Readiness (environment hardening)
+**Status:** **B5 PARTIALLY CLOSED** — **`docs/validation/B5_HOST_READINESS.md`** (§I **B5 Fix Pass 2** — **workspace backend on native Linux** proof: `docs/validation/artifacts/b5_linux_backend_gpu/`; **workspace backend on WSL** checklist: `docs/validation/artifacts/b5_wsl_backend_gpu/README.md`)
+- **Hardening:** `runtime/config/host_local.env.example` (ports + URLs + `WORKSPACE_ROOT`), `runtime/scripts/run_local_stack.sh` (Context Layer start/stop/health + persisted port), `runtime/config/README.md`, `demo_stack.env.example` documents `PLAN_GATE_PORT`; `runtime/config/host_local.env` gitignored; legacy `runtime/.config/.env.example` points to m-coder templates.
+- **Realistic on fresh host:** HTTP slice (Context Layer + Plan-Gate + validation sheet) **yes**; **full vLLM + GPU** remains **per-host** (`VLLM_BASE_MODEL`, `pip install vllm`).
+- **Canonical model:** one **distributed** topology — workspace-side backend on **WSL or native Linux**; **Plan-Gate + vLLM on GPU**. Runbook coverage (WSL backend + GPU) is prior evidence; **not** re-done in the B5 doc slice alone.
 
 ### B6 — Compatibility Path Hardening (L5.9)
 **Status:** **CLOSED** (Action 11, 2026-03-31) — tracker row **L5.9**; evidence **§6.17**.
@@ -269,7 +265,7 @@ System is considered production-grade only if:
 [ ] Ask/Debug/Plan/Code scenarios pass
 [ ] Plugin reflects backend truth
 [ ] Observability fully implemented
-[ ] Host profiles validated
+[ ] Both backend host modes validated against the same GPU-governed stack
 [ ] Compatibility path resolved
 [ ] Documentation aligned and canonical
 
@@ -805,7 +801,7 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 - **Active tasks**:
   - **§B1 / L5-RET — retrieval generalization + validation expansion (active):** golden suites, perturbations, drift thresholds — feeds Stage 2 program bar; **L5.8 harness** remains **closed** (**B2**).
   - **Stage 3 runtime loop — §B7 CLOSED** (2026-04-09): artifacts under `docs/validation/` + `STAGE3_BURN_IN_REPORT.md` §9; follow-on **product** wiring per runbook §7 if needed.
-  - **L5-OBS-1:** **Action #5 CLOSED** (**§6.19**) — **no** reopened HTTP observability project; **operational** follow-through only (Context Layer / vLLM process logs, CI collection) if needed.
+  - **L5-OBS-1 / §B4:** **Action #5 CLOSED** (**§6.19**); **§B4 trace reconstruction CLOSED** (2026-04-08 — Context Layer + Ask + `/v0/execute` ID spine proof). **Operational** follow-through only (vLLM process logs, CI collection) if needed — **not** a reopened observability program.
   - **Plugin truthfulness:** **Action 4 CLOSED** (**§6.18**) — **residual §B3 checklist** items only (non-closed UX gaps), not a reopened Action 4.
   - Continue deployment/validation flow from `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (**GPU → WSL → Windows**) with WSL workspace as source-of-truth.
 - **Next execution order**:
@@ -1245,7 +1241,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 
 ### 7.4 Stage 2 — Fully Functional & Ready System
 
-**Framing:** **Reliability**, **repeatability**, and **deployment trust** — expanding validation depth, hardening behavior under drift and host profiles, and driving **final acceptance (Action 14)**. This stage does **not** re-do closed truthfulness, observability, or compatibility work (**§6.17–§6.19**); it builds on them.
+**Framing:** **Reliability**, **repeatability**, and **deployment trust** — expanding validation depth, hardening behavior under drift and **backend host modes**, and driving **final acceptance (Action 14)**. This stage does **not** re-do closed truthfulness, observability, or compatibility work (**§6.17–§6.19**); it builds on them.
 
 **Scope**
 
@@ -1253,7 +1249,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 - **S2.2 — Authority robustness:** drift handling, registry correctness, multi-owner / compound queries.
 - **S2.3 — Broader coding capability validation:** repeatable **multi-file** reasoning, change-impact understanding, safe proposals, grounded diffs, execution honesty.
 - **S2.4 — Observability at scale (post-closure):** trace reconstruction, production-grade logging reliability, artifact-based debugging — **extension** of closed L5-OBS-1 baselines, not reinvention.
-- **S2.5 — Host-profile readiness:** Windows + WSL + GPU, Linux native, consistent runtime behavior (**§B5**).
+- **S2.5 — Host readiness:** validate **WSL** and **native Linux** backend host modes against the **same GPU-governed** Plan-Gate + vLLM stack; consistent runtime behavior (**§B5**).
 - **S2.6 — Final acceptance (Action 14):** unified suite (Ask, Debug, Plan, Code, No-match), deterministic pass, production sign-off.
 
 **Exit criteria (Stage 2)**

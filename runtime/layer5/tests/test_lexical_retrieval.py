@@ -626,6 +626,35 @@ class TestSlice5MandatoryTop1Closure:
             assert r.hits[0].relative_path.endswith("UIActionEventHandler.java")
             assert (r.hits[0].diagnostics or {}).get("generic_facade_content_trimmed", 0) == 0
 
+    def test_topology_named_class_query_prefers_owner_over_metric_manager_keyword_mass(self):
+        """B1: *Metric* in a basename must not exempt broad supporting files from topic caps."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            noise = "topology graph engine node edge cache store " * 200
+            _touch(
+                root
+                / "motadata/src/main/java/com/mindarray/visualization/VisualizationMetricManager.java",
+                "package com.mindarray.visualization;\npublic class VisualizationMetricManager {\n"
+                + noise
+                + "\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java",
+                "package com.mindarray.store;\npublic class TopologyCacheStore {\n"
+                "  // small owner body\n}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Where is TopologyCacheStore used by topology graph engine?",
+                top_k=4,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("TopologyCacheStore.java")
+            mm = next(h for h in r.hits if "VisualizationMetricManager" in h.relative_path)
+            assert (mm.diagnostics or {}).get("topic_focus_supporting_content_trimmed", 0) > 0
+
 
 def test_engineering_intent_top_k_composition_promotes_cores_without_touching_rank0():
     """Deterministic composition: pull core_aiops_code from below top-k into slots 1..k-1 up to target."""

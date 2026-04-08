@@ -74,6 +74,7 @@ object Layer5EvidenceExporter {
         workspaceRoot: String,
         query: String,
         requestId: String? = null,
+        traceId: String? = null,
     ): EvidenceExportOutcome {
         val root = workspaceRoot.trim()
         val q = query.trim()
@@ -82,7 +83,7 @@ object Layer5EvidenceExporter {
         }
 
         if (!isHttpDisabled()) {
-            when (val http = tryHttpExport(resolveContextLayerBaseUrl(), root, q, requestId)) {
+            when (val http = tryHttpExport(resolveContextLayerBaseUrl(), root, q, requestId, traceId)) {
                 is EvidenceExportOutcome.ServiceFailure -> return http
                 is EvidenceExportOutcome.Success -> return http
                 is EvidenceExportOutcome.Unreachable -> { /* try CLI / dev */ }
@@ -102,6 +103,7 @@ object Layer5EvidenceExporter {
         workspaceRoot: String,
         query: String,
         requestId: String?,
+        traceId: String?,
     ): EvidenceExportOutcome {
         val base = baseUrl.trimEnd('/')
         if (base.isEmpty()) return EvidenceExportOutcome.Unreachable("empty_context_layer_url")
@@ -120,6 +122,10 @@ object Layer5EvidenceExporter {
                 val rid = requestId?.trim()
                 if (!rid.isNullOrEmpty()) {
                     put("request_id", rid)
+                }
+                val tid = traceId?.trim()
+                if (!tid.isNullOrEmpty()) {
+                    put("trace_id", tid)
                 }
             }
             OutputStreamWriter(conn.outputStream, StandardCharsets.UTF_8).use { it.write(gson.toJson(payload)) }

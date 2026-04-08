@@ -186,6 +186,7 @@ class RuntimeBridge(
             request.repoRoot,
             request.payload ?: "",
             request.requestId,
+            traceId,
         )
         val localEvidenceJson = when (exportOutcome) {
             is EvidenceExportOutcome.ServiceFailure ->

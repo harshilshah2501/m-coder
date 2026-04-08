@@ -18,6 +18,7 @@ backup_v16_2_to_hf.py
 # Runtime governed-services run dir (pids, logs, effective config)
 runtime/.run/
 runtime/config/demo_stack.env
+runtime/config/host_local.env
 
 # Python cache
 __pycache__/

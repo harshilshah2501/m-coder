@@ -83,6 +83,20 @@ def test_quality_gate_no_relevant_hits_is_weak_for_generic():
     assert q.blocked is False
 
 
+def test_quality_gate_generic_with_code_paths_stays_weak_not_strong():
+    q = assess_evidence_quality(
+        "why where fix engine parser issue",
+        [
+            "src/main/java/com/mindarray/visualization/VisualizationMetricManager.java",
+            "src/main/java/com/mindarray/store/ObjectConfigStore.java",
+            "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        ],
+    )
+    assert q.evidence_quality == WEAK
+    assert "QUERY_TOO_GENERIC" in q.quality_reasons
+    assert q.blocked is False
+
+
 def test_quality_gate_nonexistent_symbol_is_no_match():
     q = assess_evidence_quality("Where is FooBarMissingSymbol() implemented?", [])
     assert q.evidence_quality == NO_MATCH

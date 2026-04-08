@@ -207,7 +207,7 @@ internal fun buildAskResultDialogMessage(question: String, response: RuntimeResp
             sb.appendLine("Context bundle @ ${revision ?: "unknown-revision"}")
             val files = contextBundle["files"] as? List<*>
             if (files.isNullOrEmpty()) {
-                sb.appendLine("(no files selected)")
+                sb.appendLine("(backend returned context_bundle.files: empty)")
             } else {
                 sb.appendLine("Files:")
                 files.forEach { f ->
@@ -237,6 +237,18 @@ internal fun buildAskResultDialogMessage(question: String, response: RuntimeResp
             } else {
                 steps.forEachIndexed { idx, step ->
                     sb.appendLine("  ${idx + 1}. $step")
+                }
+            }
+            @Suppress("UNCHECKED_CAST")
+            val notes = planSummary["notes"] as? List<*>
+            if (!notes.isNullOrEmpty()) {
+                sb.appendLine()
+                sb.appendLine("Plan notes:")
+                notes.forEach { n ->
+                    val line = n?.toString()?.trim()
+                    if (!line.isNullOrEmpty()) {
+                        sb.appendLine("  - $line")
+                    }
                 }
             }
         }

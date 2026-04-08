@@ -27,6 +27,18 @@ def _phrasing_shift(text: str) -> str:
     return f"why/where/fix: {text}"
 
 
+def _subsystem_alias(text: str) -> str:
+    return (
+        text.replace("alert correlation", "incident dedupe")
+        .replace("TopologyEngine", "topology graph engine")
+        .replace("ingestion pipeline", "collector flow")
+    )
+
+
+def _error_text_only(text: str) -> str:
+    return f"ERROR stack trace only: {text}"
+
+
 def _package_omitted(text: str) -> str:
     return text.replace("com.mindarray.", "")
 
@@ -44,7 +56,9 @@ def generate_deterministic_variants(base_cases: Iterable[GoldenCase]) -> List[Go
             ("abbreviated_symbol", _abbreviated_symbol),
             ("package_omitted", _package_omitted),
             ("camelcase_split", _split_camel_tokens),
+            ("error_text_only", _error_text_only),
             ("typo_light_wording", _typo_light),
+            ("subsystem_alias_wording", _subsystem_alias),
             ("phrasing_shift", _phrasing_shift),
         ]
         for kind, fn in transforms:

@@ -156,6 +156,9 @@ def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessm
         quality = WEAK
     elif intent.intent_type == GENERIC_INTENT and noise_ratio >= float(QUALITY_GATE_THRESHOLDS_V1["noise_dominated_ratio"]):
         quality = INSUFFICIENT
+    elif intent.intent_type == GENERIC_INTENT:
+        # Generic asks should not be reported as strong grounding.
+        quality = WEAK
     else:
         quality = STRONG
 

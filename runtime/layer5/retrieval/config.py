@@ -167,6 +167,10 @@ RETRIEVAL_POLICY_V5: Final[Mapping[str, object]] = MappingProxyType(
         "code_intent_ingestion_log_parser_demotion": 42.0,
         # Usefulness: modest tilt for core AIOps Java under non-generic engineering intent (scaled).
         "engineering_aiops_path_prior": 1.2,
+        # B1: compound query token matching full basename stem (e.g. topologycachestore → TopologyCacheStore.java)
+        # beats generic topology/store keyword mass in sibling *Store* / *Engine* files.
+        "code_intent_basename_stem_exact_boost": 380.0,
+        "code_intent_basename_stem_exact_min_token_len": 12,
     }
 )
 """

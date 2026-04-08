@@ -49,16 +49,28 @@ This is **Track A — Production Core Slice** (the real product path for this re
 
 ---
 
-## Supported host profiles
+## Backend host modes (single distributed topology)
 
-At least these **deployment profiles** are in scope for the slice:
+> **Canonical Host Model**
+>
+> The system operates as a **distributed architecture**:
+>
+> * Backend (Context Layer, retrieval) runs near the workspace
+>   → either **WSL** or **native Linux**
+>
+> * Plan-Gate and vLLM run on a **GPU server**
+>
+> These are not separate deployment profiles.
+> They are **backend host modes within the same system topology**.
 
-| Profile | Description | Notes (from audit / plan) |
-|---------|-------------|---------------------------|
-| **A — Windows + JetBrains + WSL + GPU** | IDE on Windows; Context Layer / repo access on WSL; GPU where governed services run | **ASK_DEFAULT_REPO_ROOT** on the Ask host when the IDE sends a Windows `repo_root` that does not exist on the server. |
-| **B — Native Linux + JetBrains + local repo + GPU** | IDE and repo on Linux; GPU local or reachable | Plugin and Plan-Gate today default **127.0.0.1**; remote services require tunnels or **config externalization** (known gap). |
+At least these **two backend host modes** are in scope for validation (same topology; different placement of the workspace-side backend):
 
-Profiles must be **documented as deployment profiles**, not one-off demo notes. Validation for each profile belongs in the **release validation checklist** (scripts + IDE acceptance scenarios).
+| Mode | Workspace-side backend (Context Layer / repo) | Notes (from audit / plan) |
+|------|-----------------------------------------------|---------------------------|
+| **A — Windows IDE + WSL backend** | IDE on Windows; repo + Context Layer on **WSL**; governed compute (**Plan-Gate + vLLM**) on **GPU** | **ASK_DEFAULT_REPO_ROOT** on the Ask host when the IDE sends a Windows `repo_root` that does not exist on the server. |
+| **B — Native Linux backend** | IDE and repo on **native Linux**; governed compute on **GPU** (same as A) | Plugin and Plan-Gate **URLs** default **127.0.0.1**; remote GPU requires tunnels or **config externalization** (known gap). |
+
+These modes must be **documented**, not one-off demo notes. Validation for each **backend host mode** belongs in the **release validation checklist** (scripts + IDE acceptance scenarios).
 
 ---
 
@@ -118,7 +130,7 @@ Release of this slice (or merge to mainline) should not pass unless:
 
 1. **Contracts** — Schemas and version strings for v0/v1 Ask and evidence bundle are **frozen for the release** and listed in release notes.
 2. **Branch / mainline clarity** — Integration line is **unambiguous** (feature branch vs `main` documented; audit noted feature ahead of `main`).
-3. **Deployment profiles** — At least profiles A and B are **documented** with ports, env vars, and known limitations (localhost, tunnels).
+3. **Backend host modes** — Modes A and B are **documented** with ports, env vars, and known limitations (localhost, tunnels).
 4. **Observability minimum** — Health endpoints green for deployed components; **Plan-Gate request logging or documented workaround** for correlation (gap acknowledged in audit).
 5. **Acceptance scenarios** — Core Ask / Explain / Plan / Code scenarios **pass** on a reference environment (release validation checklist).
 6. **No silent theater** — Documented fallback behavior only; errors from Context Layer HTTP **surface** per contract (no fake “unreachable” when the service returned 422/500 with a body).
@@ -156,7 +168,7 @@ Explicitly **out of product** for this slice unless the charter is revised:
 | Track | Name | Contents |
 |-------|------|----------|
 | **A** | **Production Core Slice** | Plugin, Context Layer, Plan-Gate, Ask/Debug/Plan/Code, governed services, packaging/deployment |
-| **B** | **Production Readiness** | Logs, health, host profiles, config externalization, branch/mainline clarity, **canonical docs**, release validation checklist |
+| **B** | **Production Readiness** | Logs, health, host readiness (backend modes), config externalization, branch/mainline clarity, **canonical docs**, release validation checklist |
 | **C** | **Quality and Intelligence** | Retrieval/ranking, editor awareness, richer UI, multi-model orchestration — **after** A/B are solid |
 
 Sequence matches the surgical plan: **prove path → prove scenario → perception/defects → configurability → retrieval last**.
@@ -170,7 +182,7 @@ Derived from **P0–P2** in `docs/audit/SURGICAL_NEXT_STEPS_PLAN.md` and audit g
 1. **Mainline and docs** — Unambiguous integration branch vs `main`; rename/align **deployment and validation runbook** language with reality.
 2. **Honest UX** — Surface `plan_summary.notes` or align API/UI so operators never see “silent” failure modes.
 3. **Execute path clarity** — No surprise “integrity not configured” without preflight documentation or UI warning.
-4. **Cross-host** — `ASK_DEFAULT_REPO_ROOT` and evidence-first flags **documented** in deployment profiles; **Plan-Gate URL** configurability when profile B goes beyond localhost.
+4. **Cross-host** — `ASK_DEFAULT_REPO_ROOT` and evidence-first flags **documented** for backend host modes; **Plan-Gate URL** configurability when the native Linux backend goes beyond localhost.
 5. **Observability** — Plan-Gate access or structured logging with `request_id`.
 6. **Debt cleanup** — Dead `AskClient`, glossary for PlanGate naming.
 7. **Track C** — Retrieval and ranking only when acceptance scenarios show **concrete** failure modes.
@@ -190,4 +202,4 @@ Derived from **P0–P2** in `docs/audit/SURGICAL_NEXT_STEPS_PLAN.md` and audit g
 
 ---
 
-*This charter is the product-grade anchor for implementation; update it when the slice’s contracts or profiles change.*
+*This charter is the product-grade anchor for implementation; update it when the slice’s contracts or host-mode documentation change.*

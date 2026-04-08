@@ -1,0 +1,2 @@
+keys ['provisional', 'schema_hint', 'query_raw', 'query_tokens', 'top_k', 'index_schema_version', 'workspace_identity_hash', 'canonical_root', 'a5_authority_note', 'entries', 'workspace_snapshot_hash', 'workspace_snapshot_source']
+entries 3

@@ -18,6 +18,14 @@ def test_request_id_from_body() -> None:
     assert cl_app._request_id_from_body("not dict") == "unknown"
 
 
+def test_trace_id_from_body() -> None:
+    assert cl_app._trace_id_from_body({}) == "(none)"
+    assert cl_app._trace_id_from_body({"trace_id": None}) == "(none)"
+    assert cl_app._trace_id_from_body({"trace_id": "  "}) == "(none)"
+    assert cl_app._trace_id_from_body({"trace_id": "t-1"}) == "t-1"
+    assert cl_app._trace_id_from_body("not dict") == "(none)"
+
+
 def test_workspace_marker() -> None:
     assert cl_app._workspace_marker("") == "empty"
     assert cl_app._workspace_marker("/a/b/myproject") == "myproject"
@@ -28,10 +36,11 @@ def test_context_layer_request_log_format() -> None:
     mock_log = MagicMock(spec=logging.Logger)
     with patch.object(cl_app, "LOG", mock_log):
         t0 = cl_app.time.perf_counter()
-        cl_app._context_layer_request_log("/v1/export_evidence", "rid-9", "success", t0, "proj")
+        cl_app._context_layer_request_log("/v1/export_evidence", "rid-9", "trace-9", "success", t0, "proj")
     mock_log.info.assert_called_once()
     args = mock_log.info.call_args[0][1:]
     assert "/v1/export_evidence" in args
     assert "rid-9" in args
+    assert "trace-9" in args
     assert "success" in args
     assert "proj" in args
