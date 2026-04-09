@@ -1,6 +1,6 @@
 # B5 — Host Readiness (Production-Grade Environment Hardening)
 
-**Doc status:** artifact-driven. **Verdict:** **B5 PARTIALLY CLOSED** (see §H).
+**Doc status:** artifact-driven. **Verdict:** **B5 CLOSED** (2026-04-09) — see **§0** below; §H–§I retain history.
 
 **Scope:** Reproducible clone → configure → start → validate for the **canonical distributed setup**: backend (Context Layer, retrieval) near the workspace (**WSL or native Linux**), **Plan-Gate + vLLM on the GPU server** — same topology in every case. B5 validates reproducibility of that setup for **both workspace placements** (**WSL** vs **native Linux**) with the **same** HTTP contracts and **consistent GPU-side behavior**; only **where** the workspace backend runs differs. Governed HTTP slice: Context Layer, Plan-Gate, optional vLLM. Does not claim GPU/model parity across every machine.
 
@@ -15,6 +15,55 @@
 >
 > These are not separate deployment profiles.
 > They are **workspace-side placements within the same system topology** (same behavior; different location).
+
+---
+
+## 0. B5 — Host Readiness: CLOSED
+
+**Status:** ✅ CLOSED  
+**Date:** 2026-04-09
+
+### Scope
+
+Validate the **canonical distributed topology**:
+
+> Workspace-side Context Layer (WSL or native Linux) + Plan-Gate + vLLM on GPU
+
+Across both workspace placements:
+
+- **Native Linux backend**
+- **WSL backend**
+
+With:
+
+- identical HTTP contracts
+- consistent GPU-side behavior
+- no environment-dependent divergence
+
+### Proof Summary
+
+| Placement | Status | Evidence |
+| --------- | ------ | -------- |
+| Workspace backend on native Linux | ✅ PASS | `docs/validation/artifacts/b5_linux_backend_gpu/` |
+| Workspace backend on WSL | ✅ PASS | `docs/validation/artifacts/b5_wsl_backend_gpu/` |
+
+Both runs confirm:
+
+- Context Layer reachable and exporting evidence
+- Plan-Gate reachable and responding correctly
+- vLLM serving expected model
+- `/v0/ask` returns `PLAN_ONLY`, `execution=false`, and no application error in the success path (`error` absent or null in contract responses)
+- No silent failures or misleading responses
+
+### Conclusion
+
+- The system behaves **identically across workspace placements**
+- Differences are limited to **location (WSL vs native Linux)**, not behavior
+- The **canonical topology is reproducible and stable**
+
+### Final Verdict
+
+> **B5 CLOSED — Host readiness is fully validated and artifact-backed**
 
 ---
 
@@ -113,14 +162,11 @@ Ports must match `CONTEXT_URL` / `PLAN_GATE_URL` in **`docs/Backend Production V
 
 ---
 
-## H. B5 verdict
+## H. B5 verdict (historical — superseded by §0)
 
-**B5 PARTIALLY CLOSED**
+**Prior state (before 2026-04-09):** **B5 PARTIALLY CLOSED** — native Linux proof only; WSL end-to-end transcript not yet in-repo.
 
-- **Closed enough for:** HTTP-only validation path (Context Layer + Plan-Gate + `WORKSPACE_ROOT`), reproducible ports/env, scripted Context Layer start, gitignored local overrides.
-- **Not fully closed for:** turnkey GPU stack (model weights, vLLM install) and identical behavior across all backend host modes without per-machine `demo_stack.env`.
-
-**Primary artifact:** `runtime/config/host_local.env.example` + `runtime/scripts/run_local_stack.sh` + this document.
+**Current state:** **B5 CLOSED** — see **§0** (artifact-backed proof for **both** workspace placements).
 
 ---
 
@@ -131,15 +177,15 @@ Ports must match `CONTEXT_URL` / `PLAN_GATE_URL` in **`docs/Backend Production V
 | Backend host placement | Current readiness | What already works | What is still uncertain | Blocking for B5? |
 | ----------------- | ----------------- | -------------------- | ------------------------ | ----------------- |
 | **workspace backend on native Linux** (GPU stack) | **Proven** on reference host | Health (Context Layer, Plan-Gate, vLLM `/v1/models`); `POST /v1/export_evidence`; `POST /v0/ask` with honest `PLAN_ONLY` / `execution: false` | Remote-GPU-only split not re-tested as a **separate** machine in this pass (same-host localhost proof) | **No** for closure of “canonical path works”; **Yes** if product requires mandatory remote-GPU-only transcript |
-| **workspace backend on WSL** (GPU server) | **Not executed** on proof host | Prerequisites + failure-proof documented | End-to-end transcript from WSL → tunneled GPU | **Yes** for full closure across **both** workspace placements until operator runs WSL proof |
+| **workspace backend on WSL** (GPU server) | **Proven** (2026-04-09) | Same HTTP contracts; artifacts under `docs/validation/artifacts/b5_wsl_backend_gpu/` and `docs/validation/b5_wsl_backend_gpu/` | Optional: remote-GPU-only transcript if product mandates | **No** — **B5 CLOSED** per §0 |
 
-**C. Executed proof (native Linux workspace backend only):** `docs/validation/artifacts/b5_linux_backend_gpu/` (`SUMMARY.md`, `b5_linux_backend_proof_run.txt`, `b5_v0_ask_response.json`). **WSL workspace backend:** `docs/validation/artifacts/b5_wsl_backend_gpu/README.md` (checklist only).
+**C. Executed proof:** **Native Linux:** `docs/validation/artifacts/b5_linux_backend_gpu/` (`SUMMARY.md`, `b5_linux_backend_proof_run.txt`, `b5_v0_ask_response.json`). **WSL:** `docs/validation/artifacts/b5_wsl_backend_gpu/` + `docs/validation/b5_wsl_backend_gpu/` (README + operator artifacts).
 
 **G. Fix Pass 2 gaps (strict)**
 
 | Gap | Backend placement | Severity | Blocks B5 closure? | Minimal next action |
 | --- | ------------ | -------- | ------------------ | ------------------- |
-| No WSL E2E transcript in-repo | workspace backend on WSL | Medium | **Yes** for claiming both workspace placements proven | Run checklist in `docs/validation/artifacts/b5_wsl_backend_gpu/README.md` on real WSL + GPU, save artifacts |
+| WSL E2E transcript (resolved 2026-04-09) | workspace backend on WSL | — | **Resolved** | See §0; artifacts in `docs/validation/artifacts/b5_wsl_backend_gpu/` and `docs/validation/b5_wsl_backend_gpu/` |
 | Remote GPU vs co-located | workspace backend on native Linux | Low | **No** | Optional: repeat health/ask with `PLAN_GATE_URL` pointing at remote GPU only |
 
-**Verdict (Fix Pass 2):** **B5 PARTIALLY CLOSED** — **workspace backend on native Linux** canonical path is **artifact-backed** with vLLM model present; **workspace backend on WSL** remains **prerequisite-only** on this host.
+**Verdict (Fix Pass 2 — historical):** Superseded by **§0** — **B5 CLOSED** (2026-04-09) with **both** placements artifact-backed.
