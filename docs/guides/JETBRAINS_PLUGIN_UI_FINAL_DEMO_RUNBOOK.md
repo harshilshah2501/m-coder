@@ -41,7 +41,7 @@ cd /home/harshil/Harshil-PoCs/m-coder
 
 **Host 2: WSL client**
 
-- Runs SSH tunnel that forwards local 127.0.0.1:8089 to GPU 127.0.0.1:8089
+- Runs SSH tunnel that forwards **both** Plan-Gate **8089** and vLLM **8000** from the GPU (`127.0.0.1:8089` and `127.0.0.1:8000` on the GPU host → same ports on WSL localhost by default; see `scripts/wsl_plugin_mvp_stack.sh`)
 - Runs Context Layer locally on 127.0.0.1:8091
 - Is managed in WSL using scripts/wsl_plugin_mvp_stack.sh
 

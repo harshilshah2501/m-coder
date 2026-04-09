@@ -162,6 +162,7 @@ Leave the session open. Then on Windows:
 
 ```powershell
 curl.exe http://127.0.0.1:8089/healthz
+curl.exe http://127.0.0.1:8000/v1/models
 ```
 
 **IDE / JVM options** (see `jetbrains-plugin/.../MotadataRuntimeConfig.kt`):
@@ -181,7 +182,7 @@ Use this as a **manual demo script** after Parts B–D are green. It validates t
 |------|--------|--------|----------------|
 | 1 | GPU | `governed_services.sh status` | Plan-Gate **8089** and vLLM **8000** respond |
 | 2 | WSL | Context Layer **8091** | `/healthz` OK |
-| 3 | Windows | SSH tunnel to GPU | `curl` to `127.0.0.1:8089/healthz` OK |
+| 3 | Windows | SSH tunnel to GPU | `curl` to `127.0.0.1:8089/healthz` OK; **`curl` to `127.0.0.1:8000/v1/models`** OK when Explain / vLLM is in use |
 | 4 | IDE | Open `MOTADATA_ROOT`, trigger **Ask** or flow that hits Plan-Gate | No connection errors; spool or logs show `request_id` |
 | 5 | GPU | Inspect `PLAN_GATE_SPOOL_DIR` (or default `.spool/plan_gate`) | `plan.json` / `decision_response.json` for the run |
 | 6 | WSL | `export_evidence` log line **`CONTEXT_LAYER export_evidence begin`** | Confirms evidence path, not a stale 8091 listener |

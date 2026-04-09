@@ -193,7 +193,7 @@ If any criterion becomes **fuzzy** (e.g. non-deterministic hashes without docume
 
 **Topology A — native Linux (collapsed):** **`stage3_live_smoke_output.txt`** — **8091 / 8089 / 8000** on one host (2026-04-08).
 
-**Topology B — charter WSL + GPU (SSH tunnel):** **`stage3_b7_wsl_tunnel_verify_ask_path.txt`** — Context Layer on WSL **127.0.0.1:8091**, Plan-Gate on GPU reached via tunnel at WSL **127.0.0.1:8089**; **`verify_ask_path.sh` PASS** (operator transcript).
+**Topology B — charter WSL + GPU (SSH tunnel):** **`stage3_b7_wsl_tunnel_verify_ask_path.txt`** — Context Layer on WSL **127.0.0.1:8091**, Plan-Gate on GPU reached via tunnel at WSL **127.0.0.1:8089**; forward **vLLM** **8000** the same way when Explain / `MOTADATA_EXPLAIN_VLLM_URL` needs localhost vLLM (**`docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`** §5, **`scripts/wsl_plugin_mvp_stack.sh`**); **`verify_ask_path.sh` PASS** (operator transcript).
 
 **Commit alignment:** Align **WSL repo**, **GPU repo**, and **`./scripts/wsl_plugin_mvp_stack.sh check`** (`git_commit` on both `/version` bodies) before treating deployments as parity-complete — see **`docs/guides/JETBRAINS_PLUGIN_UI_FINAL_DEMO_RUNBOOK.md`**. Long-running processes may lag until restart; see **Commit / process alignment note** inside `stage3_live_smoke_output.txt`.
 

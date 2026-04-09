@@ -26,7 +26,7 @@
 #   LOCAL_PLAN_GATE_PORT=8089             # defaults to PLAN_GATE_URL port
 #   REMOTE_PLAN_GATE_HOST=127.0.0.1
 #   REMOTE_PLAN_GATE_PORT=8089
-#   LOCAL_VLLM_PORT=8000                  # optional extra forward when >0
+#   LOCAL_VLLM_PORT=8000                  # default: forward vLLM with Plan-Gate; set 0 to disable
 #   REMOTE_VLLM_HOST=127.0.0.1
 #   REMOTE_VLLM_PORT=8000
 
@@ -55,7 +55,7 @@ TUNNEL_SSH_KEY="${TUNNEL_SSH_KEY:-}"
 LOCAL_PLAN_GATE_PORT="${LOCAL_PLAN_GATE_PORT:-}"
 REMOTE_PLAN_GATE_HOST="${REMOTE_PLAN_GATE_HOST:-127.0.0.1}"
 REMOTE_PLAN_GATE_PORT="${REMOTE_PLAN_GATE_PORT:-8089}"
-LOCAL_VLLM_PORT="${LOCAL_VLLM_PORT:-0}"
+LOCAL_VLLM_PORT="${LOCAL_VLLM_PORT:-8000}"
 REMOTE_VLLM_HOST="${REMOTE_VLLM_HOST:-127.0.0.1}"
 REMOTE_VLLM_PORT="${REMOTE_VLLM_PORT:-8000}"
 
@@ -262,6 +262,11 @@ start_tunnel_if_enabled() {
   ssh_cmd+=( "$target" )
 
   info "Starting SSH tunnel to $target"
+  if [[ "$LOCAL_VLLM_PORT" != "0" ]]; then
+    info "  SSH -L: Plan-Gate ${LOCAL_PLAN_GATE_PORT}→${REMOTE_PLAN_GATE_HOST}:${REMOTE_PLAN_GATE_PORT}; vLLM ${LOCAL_VLLM_PORT}→${REMOTE_VLLM_HOST}:${REMOTE_VLLM_PORT}"
+  else
+    info "  SSH -L: Plan-Gate ${LOCAL_PLAN_GATE_PORT}→${REMOTE_PLAN_GATE_HOST}:${REMOTE_PLAN_GATE_PORT} (vLLM forward disabled; LOCAL_VLLM_PORT=0)"
+  fi
   "${ssh_cmd[@]}" >>"$TUNNEL_LOG" 2>&1 &
   echo "$!" > "$TUNNEL_PID_FILE"
   ok "Tunnel PID: $(cat "$TUNNEL_PID_FILE") (log: $TUNNEL_LOG)"
@@ -514,6 +519,8 @@ Important env:
   ENABLE_SSH_TUNNEL          1 to create SSH local forwards, else 0
   TUNNEL_TARGET              user@host (or set TUNNEL_USER + TUNNEL_HOST)
   TUNNEL_SSH_KEY             Optional identity file
+  LOCAL_PLAN_GATE_PORT       Default: port from PLAN_GATE_URL (8089)
+  LOCAL_VLLM_PORT            Default: 8000 (forward vLLM with Plan-Gate); set 0 to disable vLLM forward
   AUTO_ALIGN_CONTEXT_COMMIT  1(default) to auto-restart Context Layer on commit drift
   CONTEXT_PORT_RECLAIM       1(default) allows reclaiming port 8091 listener via fuser during alignment
   ALLOW_COMMIT_MISMATCH      1 to warn instead of fail on local-vs-service commit mismatch

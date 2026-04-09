@@ -112,11 +112,13 @@ PLAN_GATE_PORT=9090 python3 -m runtime.plan_gate_service.app
 
 ### Then establish SSH tunnel (on Windows)
 
+Forward **Plan-Gate (8089)** and **vLLM (8000)** on the GPU host (Explain/Debug needs vLLM reachable at `MOTADATA_EXPLAIN_VLLM_URL`, typically `http://127.0.0.1:8000` after tunnel):
+
 ```powershell
-ssh -N -L 8089:127.0.0.1:8089 <user>@<gpu-server>
+ssh -N -L 8089:127.0.0.1:8089 -L 8000:127.0.0.1:8000 <user>@<gpu-server>
 ```
 
-Leave this session running so `localhost:8089` on Windows forwards to the GPU server’s Plan-Gate.
+Leave this session running so `localhost:8089` / `localhost:8000` on Windows forward to the GPU server’s Plan-Gate and vLLM.
 
 ### Verify from Windows
 
@@ -316,7 +318,7 @@ Now means **only**:
 | Cause | Fix |
 |-------|-----|
 | Plan-Gate not running | Start service on GPU (Section 3). |
-| SSH tunnel not active | Recreate tunnel: `ssh -N -L 8089:127.0.0.1:8089 <user>@<gpu-server>`. |
+| SSH tunnel not active | Recreate tunnel: `ssh -N -L 8089:127.0.0.1:8089 -L 8000:127.0.0.1:8000 <user>@<gpu-server>`. |
 | Wrong port | Ensure 8089 on both sides. |
 | Windows cannot reach localhost:8089 | Check `netstat`, firewall, tunnel process. |
 
