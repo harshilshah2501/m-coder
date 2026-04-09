@@ -69,7 +69,7 @@
 | Scenario / class | Result | Evidence | Regression found? | Notes |
 | ---------------- | ------ | -------- | ----------------- | ----- |
 | Stage 3 loop / fail-closed | **PASS** | `pytest_action14_core.txt` (`test_stage3_loop.py`) | No | B7 parity |
-| AIOPS MVP scenario pack (offline) | **PASS** | Same log | No | 8 scenarios; v1 ingest |
+| AIOPS MVP scenario pack (offline) | **PASS** | `pytest_action14_core.txt` | No | 8 scenarios; v1 ingest |
 | AIOPS live smoke (optional) | **SKIPPED** | — | No | Run with `AIOPS_MVP_LIVE=1` if needed |
 | Ask v0/v1 / PLAN_ONLY / weak / no-match | **PASS** | `test_ask_service`, `test_ask_v1_ingest`, `test_ask_validation_harness` | No | |
 | Explain / Debug | **PASS** | `test_explain_debug_action6_proof`, `test_reasoner_explain_debug_logging` | No | Test fixed for log format |
