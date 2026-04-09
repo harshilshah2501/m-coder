@@ -95,8 +95,10 @@ def test_explain_debug_logs_error_on_network(mock_log: MagicMock, mock_urlopen: 
     mock_log.info.assert_called()
     args = mock_log.info.call_args[0]
     assert "EXPLAIN_DEBUG" in args[0]
-    assert args[1] == "req-err"
-    assert args[4] == "error"
+    # Log format: trace_id, request_id, base_url, model, status, duration_ms (see reasoner._explain_debug_request_log)
+    assert args[1] == "(none)"  # no trace_id
+    assert args[2] == "req-err"
+    assert args[5] == "error"
 
 
 def test_explain_debug_request_log_helper() -> None:

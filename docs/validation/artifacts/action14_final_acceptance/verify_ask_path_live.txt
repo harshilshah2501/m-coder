@@ -1,0 +1,26 @@
+[INFO]  Context URL:   http://127.0.0.1:8091
+[INFO]  Plan-Gate URL: http://127.0.0.1:8089
+[INFO]  Workspace:     /home/harshil/Projects/Motadata
+[INFO]  Query:         How does alert correlation work?
+[INFO]  top_k:         8
+
+[INFO]  Step 1/3: POST /v1/export_evidence
+[OK]    /v1/export_evidence HTTP 200
+[INFO]  schema_hint=layer5.evidence_bundle.v1
+[INFO]  entries_count=8
+[INFO]  workspace_identity_hash=b9d432fe5fe0f734e2ea6c8c4e5c2f0115502d34736c888c408b9f57a4595b86
+[INFO]  top_paths=['motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java', 'motadata/src/main/java/com/mindarray/nms/MetricPoller.java', 'motadata/src/main/java/com/mindarray/notification/Notification.java', 'motadata/src/main/java/com/mindarray/nms/RediscoverEngine.java', 'motadata/src/main/java/com/mindarray/integration/LAMAIntegration.java']
+
+[INFO]  Step 2/3: Build ask_request.v1.0 payload
+<stdin>:7: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+[OK]    ask_request.v1.0 payload ready
+
+[INFO]  Step 3/3: POST /v1/ask
+[OK]    /v1/ask HTTP 200
+[INFO]  ask_path=v1_evidence
+[INFO]  context_files_count=8
+[INFO]  plan_steps_count=5
+[INFO]  plan_notes=['Evidence quality is WEAK; plan/explanation may be incomplete.']
+[OK]    verification complete
+
+[OK]    Done. Artifacts were validated via /v1/export_evidence and /v1/ask.
