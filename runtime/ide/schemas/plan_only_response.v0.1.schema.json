@@ -159,6 +159,76 @@
     "trace_id": {
       "type": "string",
       "description": "Echo of ask_request.trace_id when provided, for log/response correlation."
+    },
+    "assist_layer": {
+      "type": "object",
+      "description": "Optional Assist Layer v1 advisory metadata; non-authoritative and additive.",
+      "required": [
+        "request_id",
+        "trace_id",
+        "original_query",
+        "augmented_query",
+        "reason",
+        "suggestions",
+        "confidence_enum",
+        "assist_status",
+        "transform_codes_applied",
+        "suggestion_sources",
+        "errors"
+      ],
+      "properties": {
+        "request_id": { "type": "string" },
+        "trace_id": { "type": "string" },
+        "original_query": { "type": "string" },
+        "augmented_query": { "type": "string" },
+        "reason": { "type": "string" },
+        "suggestions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "confidence_enum": {
+          "type": "string",
+          "enum": ["none", "low", "medium"]
+        },
+        "assist_status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "degraded_empty_context",
+            "input_invalid",
+            "timeout_or_internal_error",
+            "blocked_by_policy"
+          ]
+        },
+        "transform_codes_applied": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suggestion_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["user_input", "context_meta", "static_template"]
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "retrieval_drift_validation": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

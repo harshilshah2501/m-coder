@@ -1,0 +1,219 @@
+from __future__ import annotations
+
+from runtime.assist_layer.assist_contracts import (
+    AssistInput,
+    AssistStatus,
+    ConfidenceEnum,
+    SUGGESTION_SOURCES,
+)
+from runtime.assist_layer.augmenter import apply_deterministic_augmentation
+from runtime.assist_layer.observability import build_assist_event, input_hash_sha256
+from runtime.assist_layer.service import run_assist_layer_v1
+from runtime.plan_gate_service.app import _apply_assist_to_ask_payload
+
+
+def _base_input(**overrides):
+    payload = {
+        "request_id": "req-1",
+        "trace_id": "trace-1",
+        "original_query": "Where is retry logic implemented?",
+        "session_id": "s-1",
+        "context_meta": {
+            "active_file_path": "src/retry.py",
+            "evidence_presence_or_count": 1,
+            "selector_names_used": ["symbols"],
+            "task_type_label": "general",
+            "evidence_file_paths_or_ids": ["src/retry.py"],
+            "diagnostics_labels": ["none"],
+        },
+        "task_type_label": "general",
+    }
+    payload.update(overrides)
+    return AssistInput(**payload)
+
+
+def test_contract_invariant_original_query_preserved():
+    assist_input = _base_input(original_query="Where  is retry logic??")
+    out, _ = run_assist_layer_v1(assist_input)
+    assert out.original_query == "Where  is retry logic??"
+
+
+def test_no_safe_transform_augmented_equals_original():
+    assist_input = _base_input(original_query="Where is retry logic implemented?")
+    out, _ = run_assist_layer_v1(assist_input)
+    assert out.augmented_query == out.original_query
+
+
+def test_confidence_is_enum_only():
+    assist_input = _base_input(original_query="Where  is retry logic??")
+    out, _ = run_assist_layer_v1(assist_input)
+    assert out.confidence_enum in (ConfidenceEnum.NONE, ConfidenceEnum.LOW, ConfidenceEnum.MEDIUM)
+
+
+def test_additive_metadata_shape_from_hook():
+    ask_request = {
+        "request_id": "r-1",
+        "trace_id": "t-1",
+        "query": "Where  is retry logic??",
+        "task_type": "general",
+        "selected_file": "src/retry.py",
+        "client_context": {"diagnostics_labels": ["lint"]},
+    }
+    ask_payload, assist_meta = _apply_assist_to_ask_payload(ask_request, "/v0/ask")
+    assert ask_payload["original_query"] == "Where  is retry logic??"
+    assert ask_payload["query"] == "Where  is retry logic??"
+    assert "assist_status" in assist_meta
+    assert "confidence_enum" in assist_meta
+
+
+def test_allowed_transform_whitespace_normalization():
+    res = apply_deterministic_augmentation("Where   is   retry logic implemented?", {})
+    assert "normalize_whitespace" in res.transform_codes_applied
+
+
+def test_allowed_transform_punctuation_normalization():
+    res = apply_deterministic_augmentation("Where is retry logic??!!", {})
+    assert "normalize_punctuation" in res.transform_codes_applied
+
+
+def test_allowed_transform_abbreviation_expansion():
+    res = apply_deterministic_augmentation("Where is retry cfg?", {})
+    assert "expand_static_abbreviation" in res.transform_codes_applied
+    assert "config" in res.augmented_query.lower()
+
+
+def test_allowed_transform_typo_light_unambiguous_only():
+    res = apply_deterministic_augmentation("Where is retrive logic?", {})
+    assert "normalize_typo_light" in res.transform_codes_applied
+    assert "retrieve" in res.augmented_query.lower()
+
+
+def test_forbidden_transform_cannot_change_task_type(monkeypatch):
+    from runtime.assist_layer import augmenter
+
+    monkeypatch.setitem(augmenter._ABBREVIATION_MAP, "where", "why")
+    res = apply_deterministic_augmentation("Where is retry logic?", {})
+    assert res.blocked_by_policy is True
+
+
+def test_forbidden_transform_cannot_introduce_symbol_like_tokens():
+    res = apply_deterministic_augmentation("Where is retry logic?", {})
+    assert "/" not in res.augmented_query
+    assert "(" not in res.augmented_query
+
+
+def test_blocked_by_policy_path_exercised(monkeypatch):
+    from runtime.assist_layer import augmenter
+
+    monkeypatch.setitem(augmenter._ABBREVIATION_MAP, "retry", "RootCauseModule")
+    res = apply_deterministic_augmentation("Where is retry logic?", {})
+    assert res.blocked_by_policy is True
+
+
+def test_failure_path_invalid_input():
+    bad_input = AssistInput(
+        request_id="",
+        trace_id="",
+        original_query="",
+        session_id="",
+        context_meta={},
+        task_type_label="general",
+    )
+    out, _ = run_assist_layer_v1(bad_input)
+    assert out.assist_status == AssistStatus.INPUT_INVALID
+    assert out.augmented_query == out.original_query
+
+
+def test_failure_path_timeout_internal(monkeypatch):
+    from runtime.assist_layer import service
+
+    def _raise_timeout(*_args, **_kwargs):
+        raise TimeoutError("timeout")
+
+    monkeypatch.setattr(service, "apply_deterministic_augmentation", _raise_timeout)
+    out, _ = run_assist_layer_v1(_base_input())
+    assert out.assist_status == AssistStatus.TIMEOUT_OR_INTERNAL_ERROR
+    assert out.augmented_query == out.original_query
+
+
+def test_failure_path_empty_context_degraded():
+    out, _ = run_assist_layer_v1(_base_input(context_meta={}))
+    assert out.assist_status == AssistStatus.DEGRADED_EMPTY_CONTEXT
+    assert out.augmented_query == out.original_query
+
+
+def test_observability_required_fields_and_hash_stability():
+    assist_input = _base_input()
+    out, _ = run_assist_layer_v1(assist_input)
+    event = build_assist_event(assist_input, out, reason_code="test", latency_ms=1.0)
+    required = {
+        "event_name",
+        "timestamp_utc",
+        "request_id",
+        "trace_id",
+        "session_id",
+        "assist_version",
+        "assist_status",
+        "confidence_enum",
+        "reason_code",
+        "transform_codes_applied",
+        "suggestions_source_tags",
+        "latency_ms",
+        "input_hash",
+        "input_hash_scope",
+        "canonicalization_version",
+        "error_class",
+    }
+    assert required.issubset(set(event.keys()))
+    assert input_hash_sha256("abc\r\n") == input_hash_sha256("abc\n")
+    assert event["request_id"] == assist_input.request_id
+    assert event["trace_id"] == assist_input.trace_id
+
+
+def test_suggestion_provenance_only_allowlisted_sources():
+    out, _ = run_assist_layer_v1(_base_input(context_meta={"active_file_path": "src/main.py", "evidence_presence_or_count": 0}))
+    assert set(out.suggestion_sources).issubset(SUGGESTION_SOURCES)
+
+
+def test_retrieval_drift_validation_hook_modes():
+    # no-op path must force exact retrieval match checks
+    out_noop, _ = run_assist_layer_v1(_base_input(original_query="Where is retry logic implemented?"))
+    assert out_noop.retrieval_drift_validation.get("mode") == "exact_match_required"
+
+    # transform path can enable bounded drift validation policy downstream
+    out_tx, _ = run_assist_layer_v1(_base_input(original_query="Where   is retrive cfg??"))
+    assert out_tx.retrieval_drift_validation.get("mode") in {"exact_match_required", "bounded_drift_candidate"}
+
+
+def test_authority_correction_runtime_query_remains_original_when_augmented_differs():
+    ask_request = {
+        "request_id": "r-2",
+        "trace_id": "t-2",
+        "query": "Where   is retrive cfg??",
+        "task_type": "general",
+        "selected_file": "src/retry.py",
+        "client_context": {"diagnostics_labels": ["lint"]},
+    }
+    ask_payload, assist_meta = _apply_assist_to_ask_payload(ask_request, "/v0/ask")
+
+    assert assist_meta["original_query"] == "Where   is retrive cfg??"
+    assert assist_meta["augmented_query"] != assist_meta["original_query"]
+    assert ask_payload["query"] == assist_meta["original_query"]
+    assert ask_payload["query"] != assist_meta["augmented_query"]
+
+
+def test_authority_correction_v1_path_keeps_original_query_with_drift_metadata():
+    ask_request = {
+        "request_id": "r-3",
+        "trace_id": "t-3",
+        "query": "Where   is retrive cfg??",
+        "task_type": "general",
+        "evidence_bundle": {"entries": [{"path": "src/retry.py"}]},
+    }
+    ask_payload, assist_meta = _apply_assist_to_ask_payload(ask_request, "/v1/ask")
+
+    assert ask_payload["query"] == ask_payload["original_query"]
+    assert assist_meta["retrieval_drift_validation"]["mode"] in {
+        "exact_match_required",
+        "bounded_drift_candidate",
+    }

@@ -12,6 +12,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from runtime.assist_layer import AssistInput, run_assist_layer_v1
+from runtime.assist_layer.observability import emit_assist_event
 from runtime.layer5.build_info import layer5_build_info
 
 from . import config
@@ -28,6 +30,62 @@ _PATH_TO_REQUEST_TYPE = {
     "/v1/ask": "ask_v1",
     "/v0/execute": "execute",
 }
+
+
+def _build_assist_context_meta(data: dict, path: str) -> dict:
+    meta: dict = {}
+    selected_file = data.get("selected_file")
+    if isinstance(selected_file, str) and selected_file.strip():
+        meta["active_file_path"] = selected_file.strip()
+
+    client_context = data.get("client_context")
+    if isinstance(client_context, dict):
+        selector_names = client_context.get("selector_names")
+        if isinstance(selector_names, list):
+            meta["selector_names_used"] = [str(s) for s in selector_names]
+        diagnostics_labels = client_context.get("diagnostics_labels")
+        if isinstance(diagnostics_labels, list):
+            meta["diagnostics_labels"] = [str(s) for s in diagnostics_labels]
+
+    if path == "/v1/ask":
+        evidence_bundle = data.get("evidence_bundle")
+        if isinstance(evidence_bundle, dict):
+            entries = evidence_bundle.get("entries")
+            if isinstance(entries, list):
+                refs: list[str] = []
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        continue
+                    p = entry.get("path")
+                    i = entry.get("id")
+                    if isinstance(p, str) and p.strip():
+                        refs.append(p.strip())
+                    elif isinstance(i, str) and i.strip():
+                        refs.append(i.strip())
+                meta["evidence_file_paths_or_ids"] = refs
+                meta["evidence_presence_or_count"] = len(entries)
+
+    return meta
+
+
+def _apply_assist_to_ask_payload(data: dict, path: str) -> tuple[dict, dict]:
+    original_query = str(data.get("query") or "")
+    assist_input = AssistInput(
+        request_id=_request_id_from_body(data),
+        trace_id=_trace_id_from_body(data),
+        session_id=str(data.get("session_id") or "").strip(),
+        original_query=original_query,
+        context_meta=_build_assist_context_meta(data, path),
+        task_type_label=str(data.get("task_type") or "general"),
+    )
+    assist_output, assist_event = run_assist_layer_v1(assist_input)
+    emit_assist_event(LOG, assist_event)
+
+    ask_payload = dict(data)
+    ask_payload["original_query"] = assist_output.original_query
+    # Assist v1 is advisory-only: runtime Ask logic remains anchored to original query.
+    ask_payload["query"] = assist_output.original_query
+    return ask_payload, assist_output.to_dict()
 
 
 def _request_id_from_body(data: object) -> str:
@@ -225,7 +283,9 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                 return
 
             try:
-                response = handle_ask_request(data)
+                ask_payload, assist_meta = _apply_assist_to_ask_payload(data, path)
+                response = handle_ask_request(ask_payload)
+                response["assist_layer"] = assist_meta
                 self._send_json(200, response)
                 rm = str(response.get("routing_mode") or "n/a")
                 _plan_gate_request_log(
@@ -279,7 +339,9 @@ class PlanGateHandler(BaseHTTPRequestHandler):
                 return
 
             try:
-                response = handle_ask_v1_request(data)
+                ask_payload, assist_meta = _apply_assist_to_ask_payload(data, path)
+                response = handle_ask_v1_request(ask_payload)
+                response["assist_layer"] = assist_meta
                 self._send_json(200, response)
                 rm = str(response.get("routing_mode") or "n/a")
                 _plan_gate_request_log(
