@@ -1,7 +1,21 @@
-# Production-grade MVP — closure note (authoritative)
+# Production-grade MVP — closure note (historical baseline)
 
 **Date:** 2026-04-06  
-**Single source of truth for MVP usefulness + HTTP alignment:** **`docs/validation/LOW_CORE_RATIO_DECISION.md` §B–C** and **`docs/validation/artifacts/aiops_mvp/summary/run_summary.json`** (`generated_utc` **2026-04-06T10:21:00Z**).
+**Current source of truth (post-closure):** `docs/validation/artifacts/action14_final_acceptance/ACTION14_FINAL_ACCEPTANCE_REPORT.md` (**Action 14 PASS**) and `docs/LIVE_ROADMAP_TRACKER.md` (program closure state).
+
+**Important:** This document is retained as a historical pre-closure baseline snapshot and should not be used as the current program verdict.
+
+---
+
+## Current closure truth (superseding this historical note)
+
+- B1 CLOSED
+- B3 CLOSED
+- B4 CLOSED
+- B5 CLOSED
+- B7 CLOSED
+- Action 14 PASS
+- System status: **production-grade validated vertical slice**
 
 ---
 

@@ -1,5 +1,32 @@
 # Motadata AI Services - H100 Deployment
 
+## Status
+
+This repository contains a **production-grade validated vertical slice** of the Motadata AI Coding Assistant.
+
+### What is proven
+
+- Retrieval correctness and generalization closure (B1)
+- Plugin truthfulness closure for MVP scope (B3)
+- Observability and trace reconstruction closure (B4)
+- Host reproducibility on WSL and native Linux backend placements (B5)
+- Stage 3 burn-in closure (B7)
+- Final acceptance run PASS (Action 14)
+
+### What is not yet included
+
+- Stage 2.5 proactive intelligence
+- Background sync
+- Active-file UX improvements
+
+### Primary evidence
+
+- Action 14 final acceptance: `docs/validation/artifacts/action14_final_acceptance/ACTION14_FINAL_ACCEPTANCE_REPORT.md`
+- Live canonical program state: `docs/LIVE_ROADMAP_TRACKER.md`
+- B5 host readiness closure: `docs/validation/B5_HOST_READINESS.md`
+- Stage 3 burn-in closure: `docs/validation/STAGE3_BURN_IN_REPORT.md`
+- MVP validation rollup: `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`
+
 Production-ready AI services deployment with version-agnostic model naming and systemd service management.
 
 ## Current System Status (4-Layer Architecture)

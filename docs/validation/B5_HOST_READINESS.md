@@ -1,6 +1,6 @@
 # B5 — Host Readiness (Production-Grade Environment Hardening)
 
-**Doc status:** artifact-driven. **Verdict:** **B5 CLOSED** (2026-04-09) — see **§0** below; §H–§I retain history.
+**Doc status:** artifact-driven. **Verdict:** **B5 CLOSED** (2026-04-09).
 
 **Scope:** Reproducible clone → configure → start → validate for the **canonical distributed setup**: backend (Context Layer, retrieval) near the workspace (**WSL or native Linux**), **Plan-Gate + vLLM on the GPU server** — same topology in every case. B5 validates reproducibility of that setup for **both workspace placements** (**WSL** vs **native Linux**) with the **same** HTTP contracts and **consistent GPU-side behavior**; only **where** the workspace backend runs differs. Governed HTTP slice: Context Layer, Plan-Gate, optional vLLM. Does not claim GPU/model parity across every machine.
 
@@ -162,30 +162,3 @@ Ports must match `CONTEXT_URL` / `PLAN_GATE_URL` in **`docs/Backend Production V
 
 ---
 
-## H. B5 verdict (historical — superseded by §0)
-
-**Prior state (before 2026-04-09):** **B5 PARTIALLY CLOSED** — native Linux proof only; WSL end-to-end transcript not yet in-repo.
-
-**Current state:** **B5 CLOSED** — see **§0** (artifact-backed proof for **both** workspace placements).
-
----
-
-## I. B5 Fix Pass 2 — canonical distributed proof (2026-04-08)
-
-**A. Backend host placement status**
-
-| Backend host placement | Current readiness | What already works | What is still uncertain | Blocking for B5? |
-| ----------------- | ----------------- | -------------------- | ------------------------ | ----------------- |
-| **workspace backend on native Linux** (GPU stack) | **Proven** on reference host | Health (Context Layer, Plan-Gate, vLLM `/v1/models`); `POST /v1/export_evidence`; `POST /v0/ask` with honest `PLAN_ONLY` / `execution: false` | Remote-GPU-only split not re-tested as a **separate** machine in this pass (same-host localhost proof) | **No** for closure of “canonical path works”; **Yes** if product requires mandatory remote-GPU-only transcript |
-| **workspace backend on WSL** (GPU server) | **Proven** (2026-04-09) | Same HTTP contracts; artifacts under `docs/validation/artifacts/b5_wsl_backend_gpu/` and `docs/validation/b5_wsl_backend_gpu/` | Optional: remote-GPU-only transcript if product mandates | **No** — **B5 CLOSED** per §0 |
-
-**C. Executed proof:** **Native Linux:** `docs/validation/artifacts/b5_linux_backend_gpu/` (`SUMMARY.md`, `b5_linux_backend_proof_run.txt`, `b5_v0_ask_response.json`). **WSL:** `docs/validation/artifacts/b5_wsl_backend_gpu/` + `docs/validation/b5_wsl_backend_gpu/` (README + operator artifacts).
-
-**G. Fix Pass 2 gaps (strict)**
-
-| Gap | Backend placement | Severity | Blocks B5 closure? | Minimal next action |
-| --- | ------------ | -------- | ------------------ | ------------------- |
-| WSL E2E transcript (resolved 2026-04-09) | workspace backend on WSL | — | **Resolved** | See §0; artifacts in `docs/validation/artifacts/b5_wsl_backend_gpu/` and `docs/validation/b5_wsl_backend_gpu/` |
-| Remote GPU vs co-located | workspace backend on native Linux | Low | **No** | Optional: repeat health/ask with `PLAN_GATE_URL` pointing at remote GPU only |
-
-**Verdict (Fix Pass 2 — historical):** Superseded by **§0** — **B5 CLOSED** (2026-04-09) with **both** placements artifact-backed.

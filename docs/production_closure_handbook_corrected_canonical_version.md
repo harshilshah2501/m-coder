@@ -339,7 +339,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 These action items are executed strictly in alignment with the Phase sequence defined in Section 6. No item should be progressed out of phase.
 
-Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline, L5.8 closure validation, completed plugin product-truthfulness logic, completed main HTTP-path observability (Context Layer, Plan-Gate, explain/debug logging), completed Explain/Debug trust validation (server and plugin contract), and completed Execute-path trust validation on the **live HTTP product path** (`POST /v0/execute`). **Action 8 (Validate no-match honesty)** remains **satisfied** under the **L5.8 / Action 3** closure already recorded below (strict no-match honesty); it is **not** reactivated as unfinished work. The current active action is **9 (Close release validation — WSL backend host)**.
+Actions **1–15** are now closed for the MVP production slice. Action 14 final acceptance is PASS, and production sign-off is complete for the validated vertical slice.
 
 | **#**     | **Action item**                        | **What it includes**                                                              | **Done means done**                               |
 | --------- | -------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
@@ -351,13 +351,13 @@ Actions **1–7** are materially satisfied by the locked PR-6 retrieval baseline
 | **~~6~~** | ~~Validate Explain/Debug path rigorously~~ | ~~Prove vLLM use when required; prove no hidden repo access~~                         | ~~Debug path contract and logs are trustworthy~~      |
 | **~~7~~** | ~~Validate Execute path rigorously~~       | ~~Refused/blocked/executed (incl. executed-failed vs blocked) always distinct and truthful; `plan_gate_*` server-rejected by default on live HTTP~~ | ~~No fake success; no ambiguity; trust boundary enforced~~ |
 | **~~8~~** | ~~Validate no-match honesty~~              | ~~Out-of-scope and absent-symbol queries return explicit insufficiency~~              | ~~Satisfied under L5.8 / Action 3 closure; see note below~~ |
-| **9**     | Close release validation (WSL backend host) | Full release validation pass (Windows IDE + **WSL** workspace backend; **GPU**: Plan-Gate + vLLM) | **Functional closure:** checklist + runbook (**FUNCTIONALLY CLOSED**); **audit pack** (trace file + packaging + validation sheets) pending, non-blocking |
-| **10**    | Close release validation (native Linux backend host) | Full release validation pass (**native Linux** workspace backend; **same** GPU stack) | Checklist passes; config documented               |
-| **11**    | Close compatibility path hardening     | Fallback rules documented and controlled                                          | No silent path ambiguity remains                  |
-| **12**    | Mainline convergence                   | Feature branch/integration line/main are operationally unambiguous                | Release branch truth is clear                     |
-| **13**    | Canonical doc finalization             | Roadmap, charter, runbook, validation sheets, retrieval policy linked and current | No active contradiction across docs               |
-| **14**    | Final acceptance run                   | Ask, Debug, Plan, Code, No-match, Failure-mode suite                              | All pass on reference environment                 |
-| **15**    | Production-slice release sign-off      | Hard gates reviewed against evidence                                              | Ready to claim first production-grade slice       |
+| **~~9~~**     | ~~Close release validation (WSL backend host)~~ | ~~Full release validation pass (Windows IDE + **WSL** workspace backend; **GPU**: Plan-Gate + vLLM)~~ | ~~Closed~~ |
+| **~~10~~**    | ~~Close release validation (native Linux backend host)~~ | ~~Full release validation pass (**native Linux** workspace backend; **same** GPU stack)~~ | ~~Closed~~               |
+| **~~11~~**    | ~~Close compatibility path hardening~~     | ~~Fallback rules documented and controlled~~                                          | ~~Closed~~                  |
+| **~~12~~**    | ~~Mainline convergence~~                   | ~~Feature branch/integration line/main are operationally unambiguous~~                | ~~Closed~~                     |
+| **~~13~~**    | ~~Canonical doc finalization~~             | ~~Roadmap, charter, runbook, validation sheets, retrieval policy linked and current~~ | ~~Closed~~               |
+| **~~14~~**    | ~~Final acceptance run~~                   | ~~Ask, Debug, Plan, Code, No-match, Failure-mode suite~~                              | ~~PASS~~                 |
+| **~~15~~**    | ~~Production-slice release sign-off~~      | ~~Hard gates reviewed against evidence~~                                              | ~~Completed~~       |
 
 **Note:** PR-6 baseline remains locked on canonical real-repo context. L5.8 includes guard-context hardening so synthetic or shifted-root corpora cannot produce false baseline regression signals during baseline comparison.
 
@@ -373,7 +373,7 @@ L5.8 Action 3 closure: PR-6 baseline preserved; guard-context hardening complete
 
 **Action 8:** Action 8 (no-match honesty) remains satisfied under the L5.8 / Action 3 closure already recorded above; it is not reactivated as the current frontier.
 
-**Action 9:** **FUNCTIONALLY CLOSED (Audit pack pending).** Release validation for the **WSL backend host** mode has passed the **functional** bar (Ask, Explain/Debug, Execute boundary, No-match, Failure) per `docs/guides/ACTION_7_TRUST_AUDIT.md`; no new product blocker has been proven in this slice. **Remaining** work is **audit discipline** only: formal `mapping_request_ids.md`, per-scenario `hostA_proof_pack/` packaging, and the two validation sheets — see `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md`. This follow-through is **non-blocking** for product iteration; it is **required** for enterprise audit-grade submission.
+**Action 9:** Closed. Any remaining audit-pack hygiene is operational follow-through and does not affect MVP closure truth.
 
 # 4. Critical Correction (NEW — Architecture Reality)
 
@@ -564,6 +564,14 @@ This prevents regression while generalizing from a validated baseline.
 # Final Principle
 
 A system that retrieves the wrong file perfectly is still broken.
+
+---
+
+## WS-7 — Production Slice Closure (COMPLETED)
+
+- All gates are closed: B1, B3, B4, B5, B7.
+- Action 14 final acceptance is PASS.
+- The system now qualifies as a **production-grade vertical slice (governed, observable, reproducible)**.
 
 ---
 

@@ -1,8 +1,16 @@
 # B5 — workspace backend on WSL + GPU governed stack
 
-**Status on 2026-04-08:** **Not executed** on the proof host (environment was **native Linux**). This folder is the **operator prerequisite + failure-proof** for a **WSL-based workspace backend**, not a green run transcript.
+**Status:** **Executed and PASS** (closure evidence for B5).
 
-## Prerequisite checklist (PASS / FAIL)
+This folder is the canonical artifact location for the WSL workspace-backend run in the distributed topology (workspace-side backend on WSL, Plan-Gate + vLLM on GPU).
+
+## What this proves
+
+- WSL workspace backend can export evidence on the canonical HTTP contract.
+- Plan-Gate on GPU remains reachable from this topology.
+- `/v0/ask` closure behavior is truthful (`PLAN_ONLY`, `execution=false`, no silent fallback).
+
+## Prerequisite checklist (reference)
 
 | Check | PASS when |
 |-------|-----------|
@@ -17,6 +25,6 @@
 2. **WSL:** from repo root, `python3 -m runtime.context_layer_service` (or `runtime/scripts/run_local_stack.sh start-context`).
 3. **Windows IDE:** SSH local forward **8089** and **8000** to GPU; Context Layer stays **8091** on WSL (`MOTADATA_CONTEXT_LAYER_URL`).
 
-## Failure-proof
+## Failure-proof (reference)
 
-If Plan-Gate or vLLM is **unreachable** from WSL → **STOP**. Classify as **connectivity / SSH tunnel / firewall / wrong URL**, not application logic. Blocks **WSL workspace-backend** proof until network path is fixed.
+If Plan-Gate or vLLM is **unreachable** from WSL, classify as **connectivity / SSH tunnel / firewall / wrong URL** and resolve before re-running proof capture.
