@@ -102,6 +102,45 @@ logs/
 .env
 .env.local
 
+# Local tooling and scratch files
+.coderabbit.yaml
+.cursor/
+.tmp_patch_tracker.py
+git_diff.txt
+
+# Local workspace-only folders
+OKR/
+jetbrains-plugin/motadata-jetbrains-plugin/
+
+# Local packaging virtualenvs
+packaging/motadata-context-layer/.venv-build/
+packaging/motadata-context-layer/.venv-build-pipeline/
+packaging/motadata-context-layer/.venv-smoke-pipeline/
+
+# Local validation artifacts (untracked working outputs)
+docs/validation/artifacts/aiops_mvp/
+docs/validation/artifacts/b1_retrieval_validation/l58_grounded_report.json
+docs/validation/artifacts/b1_retrieval_validation/l58_grounded_report.md
+docs/validation/artifacts/plugin_ui_truth_final_demo/
+docs/validation/artifacts/plugin_ui_truth_final_demo_gate/
+docs/validation/artifacts/plugin_ui_truth_final_demo_gate2/
+docs/validation/artifacts/plugin_ui_truth_final_demo_skipcheck/
+docs/validation/artifacts/plugin_ui_truth_final_demo_smoke/
+docs/validation/b5_wsl_backend_gpu/
+
+# Local L5 audit output folders
+runtime/layer5/audit/l58_blocker_diag_output/
+runtime/layer5/audit/l58_code_rank_depth_full_output/
+runtime/layer5/audit/l58_code_slice_probe/
+runtime/layer5/audit/l58_full_audit_output/
+runtime/layer5/audit/l58_hardening_slice_full_output/
+runtime/layer5/audit/l58_hardening_slice_test_output/
+runtime/layer5/audit/l58_latency_slice_full_output/
+runtime/layer5/audit/l58_nomatch_probe_before/
+runtime/layer5/audit/l58_nomatch_slice_full_output/
+runtime/layer5/audit/l58_nomatch_slice_test_output/
+runtime/layer5/audit/l58_slice_check/
+
 
 # Dataset payloads (data-plane)
 ml/training/datasets/**/golden_exemplars*_*.jsonl
