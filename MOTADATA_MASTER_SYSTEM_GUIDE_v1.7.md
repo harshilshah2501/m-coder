@@ -2239,9 +2239,9 @@ The compilation pipeline prepares the model to **cooperate with these runtime ga
 
 **ML Compilation:** 25 Motadata bases (BASE-001 through BASE-025) derived from doctrine: REF (3), CONF (10), DES (4), MIX (4), CODE (4). Target: 100 variants (4 per base); expansion from 17→25 bases was for REF/DES/MIX coverage. Variants in progress. Stability validated for locked bases. CONF skew detected. Mutation taxonomy built. Freeze gate defined. Not yet compiled. Not yet trained.
 
-**Runtime:** Architected. Not instantiated.
+**Runtime:** Implemented and validated for the governed production vertical slice (Plan-Gate, Ask/Execute posture enforcement, plugin-mediated flows, and ledgered outcomes).
 
-**Observation:** Governance endurance proven. ML endurance not yet tested post-training.
+**Observation:** Implemented and validated for traceability/drift evidence in the production vertical slice; governance endurance proven. ML endurance after future training iterations remains a separate evaluation track.
 
 ---
 
@@ -2254,4 +2254,8 @@ The compilation pipeline prepares the model to **cooperate with these runtime ga
 * **Runtime** will answer: *Does execution preserve constitutional behavior?*
 * **Observation** will answer: *Does it stay preserved over time?*
 
-No overlap. No ambiguity. No phase/stage confusion. You are standing at: **Stage-7 Dataset Freeze → Stage-8 SFT.** The only unknown left is model behavior.
+No overlap. No ambiguity. No phase/stage confusion.
+
+For the **ML compilation track**, the standing point is **Stage-7 Dataset Freeze → Stage-8 SFT**.
+
+For the **runtime/observation product track**, the governed vertical slice is already validated and closed in current program records (see `docs/LIVE_ROADMAP_TRACKER.md`).

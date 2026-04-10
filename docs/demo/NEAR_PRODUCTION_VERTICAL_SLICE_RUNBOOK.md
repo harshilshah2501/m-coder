@@ -2,6 +2,13 @@
 
 **Purpose:** One coherent operator-facing demo that proves the governed product story end-to-end: repo-aware intelligence, dangerous-action refusal, safe governed execution, and deterministic evidence with trace/summary/explanation.
 
+**Canonical role:** This is the source of truth for operator-facing end-to-end demo execution.
+
+**Latest inclusions (2026-04):**
+- Closure declaration: [../mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](../mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)
+- Current status authority: [../LIVE_ROADMAP_TRACKER.md](../LIVE_ROADMAP_TRACKER.md)
+- Stage 2.5 Assist Layer v1 exists as advisory metadata; runtime Ask authority remains unchanged.
+
 **Scope:** Demo assembly only. No new milestones, no retrieval expansion, no plugin redesign. All capabilities referenced here are already verified on the baseline branch.
 
 ---

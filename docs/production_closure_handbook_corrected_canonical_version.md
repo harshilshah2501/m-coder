@@ -331,7 +331,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 **Exit condition:**
 
-- Single source of truth across code, docs, and runtime
+- Canonical authority alignment across code, docs, and runtime
 
 ---
 

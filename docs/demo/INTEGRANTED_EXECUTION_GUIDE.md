@@ -1,5 +1,16 @@
 # Motadata AI Coding Assistant — Final Integrated Execution & Demo Guide
 
+> Status (2026-04): historical consolidated guide.
+>
+> For canonical setup and demo execution, use this golden path:
+> - [../MOTADATA_DEMO_SETUP_RUNBOOK.md](../MOTADATA_DEMO_SETUP_RUNBOOK.md)
+> - [../runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md](../runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md)
+> - [NEAR_PRODUCTION_VERTICAL_SLICE_RUNBOOK.md](NEAR_PRODUCTION_VERTICAL_SLICE_RUNBOOK.md)
+>
+> For current closure state and latest inclusions, use:
+> - [../LIVE_ROADMAP_TRACKER.md](../LIVE_ROADMAP_TRACKER.md)
+> - [../mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](../mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)
+
 * * *
 
 ## 1. Purpose

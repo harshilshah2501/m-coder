@@ -2,20 +2,44 @@
 
 Comprehensive documentation for the Motadata AI system including model training, RAG implementation, and evaluation.
 
+## Documentation Authority Model (Canonical vs Supporting)
+
+To avoid multiple competing sources of truth, use this authority model:
+
+- Canonical system truth: [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
+- Canonical live status and closures: [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)
+- Canonical production closure declaration: [mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)
+
+### Golden Path (Operator + Demo)
+
+Use only these in sequence for setup and usage:
+
+1. [MOTADATA_DEMO_SETUP_RUNBOOK.md](MOTADATA_DEMO_SETUP_RUNBOOK.md) - setup/configure (GPU -> WSL -> Windows)
+2. [runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md](runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md) - plugin-mediated usage and checks
+3. [demo/NEAR_PRODUCTION_VERTICAL_SLICE_RUNBOOK.md](demo/NEAR_PRODUCTION_VERTICAL_SLICE_RUNBOOK.md) - end-to-end operator demo flow
+
+### Latest Inclusions (2026-04)
+
+- Stage 2.5 Assist Layer v1 implemented and evaluated as advisory-only (no runtime query authority)
+- Assist v2 evaluation artifacts and policy published under [validation/artifacts/assist_layer_v2_eval/](validation/artifacts/assist_layer_v2_eval/)
+- MVP closure evidence index maintained in [mvp_declaration/MVP_EVIDENCE_INDEX.md](mvp_declaration/MVP_EVIDENCE_INDEX.md)
+
+### Historical / Supporting Docs
+
+- [demo/INTEGRANTED_EXECUTION_GUIDE.md](demo/INTEGRANTED_EXECUTION_GUIDE.md) is retained as historical consolidated context and should not override the golden path docs above.
+
 **Canonical reading path:** root [README.md](../README.md) → [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md). **Master system guide (long-form, Layer-3/Layer-4 demos):** [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md).
 
 **Motadata AI Coding Assistant (Windows / WSL / GPU):** [MOTADATA_DEMO_SETUP_RUNBOOK.md](MOTADATA_DEMO_SETUP_RUNBOOK.md) (setup), [MOTADATA_DEMO_SCENARIOS.md](MOTADATA_DEMO_SCENARIOS.md) (demo + success criteria), [MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md) (architecture).
 
 **Artifact governance:** Model/checkpoint and runtime packaging policy is defined in [Artifact Governance — LoRA, Checkpoints, and Runtime](architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md). Do not commit large adapters, checkpoints, or merged model binaries to the repo.
 
-**Current Status:** 🚀 **V16.1 Model - Training In Progress**
-- Model: Qwen/Qwen2.5-Coder-14B-Instruct (Fine-tuning V16.1)
-- Dataset: v16_1_surgical.jsonl (3,912 examples, 100% valid, 0 duplicates)
-  - V15: 2,598 real Motadata code edits (66.4%)
-  - Motadata: 1,314 JavaDoc Q&A pairs (33.6%)
-- Training: Started (screen session: v16_1_training)
-- Splits: Train 3,129 | Val 391 | Test 392
-- Previous V16: ✅ Production Ready (7/7 capability tests passed)
+**Current Program Status:** ✅ **Production closure baseline achieved**
+- Governed production vertical slice closed and accepted (see [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) and [mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)).
+- Stage 2.5 Assist Layer v1: implemented + evaluated, advisory-only (no runtime query authority).
+
+**Parallel ML Stream Status (separate from closure baseline):**
+- V16.1 model training and dataset iteration documents remain available under `docs/training/`, `docs/evaluation/`, and `docs/datasets/`.
 
 ## Directory Structure
 

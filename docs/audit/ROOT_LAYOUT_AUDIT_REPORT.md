@@ -114,7 +114,7 @@ For each canonical entrypath we state: current path; whether it is obvious from 
 | Entrypoint | Current path | Obvious from root? | Competes with another? | Confidence |
 |------------|--------------|--------------------|------------------------|------------|
 | **Canonical architecture** | `docs/MASTER_SYSTEM_SPEC.md` (TOC); `docs/ARCHITECTURE_4_LAYER.md` (directory philosophy) | Yes — README “Canonical spec entry point” and “4-layer architecture” point to these | Slightly: root `motadata-coder-a-complete-guide_v1.7.md` is also a referenced “guide” | **clear** |
-| **Canonical roadmap / tracker** | `docs/LIVE_ROADMAP_TRACKER.md` | Yes — README “Live execution tracker” and “single source of truth” | No | **clear** |
+| **Canonical roadmap / tracker** | `docs/LIVE_ROADMAP_TRACKER.md` | Yes — README “Live execution tracker” and canonical authority wording | No | **clear** |
 | **Canonical governance** | `governance/` (content); root `AGENT_EXECUTION_RULES.md` (canonical rules); `docs/governance/README.md` (pointer to root rules) | Yes — README points to MASTER_SYSTEM_SPEC and governance; AGENT_EXECUTION_RULES at root is documented canonical | No; docs copy is explicit pointer | **clear** |
 | **Canonical runtime** | `runtime/` (code); `docs/LAYER3_RUNTIME_SPEC.md`; `docs/runtime/README.md` (layer index) | Yes — README Layer-3 and “runtime/README” referenced in MASTER_SYSTEM_SPEC | No | **clear** |
 | **Canonical observation** | `observation/` (Layer-4 CLIs); `observation/README.md` | Partially — README links to `observation/README.md`; MASTER_SYSTEM_SPEC and MIGRATION_NOTE use `OBSERVATION/README.md` (case mismatch) | Case mismatch in docs only | **partially clear** |

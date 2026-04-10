@@ -112,7 +112,7 @@ maintainer: "harshil@motadata.com"
 concepts:
 
   incident_deduplication:
-    # Primary owner - the single source of truth for this concept
+    # Primary owner - the canonical authority for this concept
     primary_owner:
       file: "motadata/src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java"
       class: "IncidentDeduplicationProcessor"

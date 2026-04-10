@@ -32,7 +32,7 @@ For each chain we state: canonical current path(s); whether it is obvious; wheth
 | Chain | Canonical current path(s) | Obvious? | Competes? | Confidence |
 |-------|----------------------------|----------|------------|------------|
 | **Architecture** | README.md → docs/MASTER_SYSTEM_SPEC.md → docs/ARCHITECTURE_4_LAYER.md | Yes — README “Canonical spec entry point” and “4-layer architecture” | Slightly: root motadata-coder-a-complete-guide_v1.7.md referenced as “Golden Exemplars guide”; docs/README.md as “Documentation Index” | **clear** |
-| **Roadmap / tracker** | docs/LIVE_ROADMAP_TRACKER.md | Yes — README “Live execution tracker,” “single source of truth”; verification docs cite it | docs/ROADMAP_L2_L3_L4.md, docs/SYSTEM_EXECUTION_ROADMAP.md are supporting; no conflict | **clear** |
+| **Roadmap / tracker** | docs/LIVE_ROADMAP_TRACKER.md | Yes — README “Live execution tracker,” “canonical live status authority”; verification docs cite it | docs/ROADMAP_L2_L3_L4.md, docs/SYSTEM_EXECUTION_ROADMAP.md are supporting; no conflict | **clear** |
 | **Governance** | Root AGENT_EXECUTION_RULES.md (canonical); governance/CONSTITUTIONAL_MANIFEST_v1.0.md; docs/governance/README.md (pointer to root rules) | Yes — docs/governance/README states root is canonical; MASTER_SYSTEM_SPEC links governance/README | No | **clear** |
 | **Runtime** | docs/LAYER3_RUNTIME_SPEC.md; docs/runtime/README.md (layer index); docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md; runtime/ (code) | Yes — README and MASTER_SYSTEM_SPEC point to LAYER3_RUNTIME_SPEC and runtime/README | No | **clear** |
 | **Observation** | docs/LAYER4_OBSERVATION_SPEC.md; MASTER_SYSTEM_SPEC links to docs/OBSERVATION/README.md (Layer-4 index); root observation/README.md (layer package) | Partially — root README links to observation/README.md; MASTER_SYSTEM_SPEC links to OBSERVATION/README.md (docs subdir). Two index locations; case OBSERVATION vs observation. Split with runtime/observation/ not explained in spine | Yes — dual index paths; split unexplained | **partially clear** |
@@ -49,7 +49,7 @@ Structured inventory of major doc clusters. Classification: canonical, canonical
 | README.md (root) | Repo entry; layer status; links to MASTER_SYSTEM_SPEC | canonical | canonical | good | Single root entry; points to docs/MASTER_SYSTEM_SPEC, observation/README.md |
 | docs/MASTER_SYSTEM_SPEC.md | Single spec entry; TOC; doctrine immutability | canonical | canonical | good | Links to OBSERVATION/README.md (docs subdir), not observation/README |
 | docs/ARCHITECTURE_4_LAYER.md | 4-layer directory mapping, allowed/forbidden | canonical | canonical | good | References MASTER_SYSTEM_SPEC |
-| docs/LIVE_ROADMAP_TRACKER.md | Live milestone status and evidence | canonical | canonical | good | Referenced as single source of truth |
+| docs/LIVE_ROADMAP_TRACKER.md | Live milestone status and evidence | canonical | canonical | good | Referenced as canonical live status authority |
 | docs/ROADMAP_L2_L3_L4.md | L2/L3/L4 milestone conditions | explanatory / supporting | non-canonical | good | Linked from MASTER_SYSTEM_SPEC |
 | docs/SYSTEM_EXECUTION_ROADMAP.md | End-to-end roadmap, artifact matrix | explanatory / supporting | non-canonical | good | |
 | docs/README.md | Broad documentation index (training, RAG, dir structure) | explanatory | non-canonical | questionable | Reads like system index; one line cites MASTER_SYSTEM_SPEC; can be mistaken for canonical entry |
@@ -164,7 +164,7 @@ This section answers the required audit target.
 |------|---------------------|---------------|----------------------|---------------------|
 | docs/MASTER_SYSTEM_SPEC.md | Canonical spec entry | README, verification docs, E2E-flow, ARCHITECTURE_4_LAYER | High | Do not move; link target for many docs |
 | docs/ARCHITECTURE_4_LAYER.md | Layer mapping authority | MASTER_SYSTEM_SPEC, README, verification | High | Do not move |
-| docs/LIVE_ROADMAP_TRACKER.md | Single source of truth for milestones | README, verification, reports | High | Do not move |
+| docs/LIVE_ROADMAP_TRACKER.md | Canonical authority for milestones | README, verification, reports | High | Do not move |
 | docs/LAYER4_OBSERVATION_SPEC.md | Layer-4 spec | MASTER_SYSTEM_SPEC | High | Do not move |
 | docs/LAYER3_RUNTIME_SPEC.md | Layer-3 spec | MASTER_SYSTEM_SPEC, README | High | Do not move |
 | docs/OBSERVATION/README.md | Layer-4 index in docs | MASTER_SYSTEM_SPEC, MIGRATION_NOTE, E2E-flow | Medium | Case-sensitive; link from MASTER_SYSTEM_SPEC; clarify vs observation/README |

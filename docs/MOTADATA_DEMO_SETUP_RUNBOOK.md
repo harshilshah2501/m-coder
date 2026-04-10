@@ -2,6 +2,13 @@
 
 **Purpose:** **Ordered** steps **GPU-server → WSL → Windows** with **commands**, **expected outputs**, and **validation gates**. No architecture theory here — see [MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md).
 
+**Canonical role:** This is the setup/configuration source of truth for the demo stack.
+
+**Latest program context (2026-04):**
+- Production closure declaration: [mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)
+- Live status tracker: [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)
+- Assist Layer v1 is implemented as advisory-only (no runtime query authority).
+
 **Rule:** Do **not** start WSL Context Layer until **Phase 1** passes on the GPU. Do **not** rely on the IDE until **Phase 3** passes on the Windows client.
 
 ---
@@ -67,10 +74,11 @@ Change only if your infrastructure differs.
 cd ~
 git clone git@github.com:harshilshah2501/m-coder.git m-coder
 cd ~/m-coder
-git checkout feature/l5-context-layer-v1-ask-packaging
+# Use your active validated branch (for example: stage-2.5-assist-layer-v1)
+git branch --show-current
 ```
 
-**Expected:** `git status` shows clean checkout on the intended branch.
+**Expected:** `git status` shows clean checkout on the intended branch; closure-relevant status can be cross-checked in [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md).
 
 ## 1.3 Configure stack env
 

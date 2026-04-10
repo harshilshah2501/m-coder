@@ -26,7 +26,7 @@ Establish canonical truth before any other audit: roadmap authority, milestone s
 
 | Authority | Source | Decision |
 |----------|--------|----------|
-| **Canonical roadmap** | `docs/LIVE_ROADMAP_TRACKER.md` | Single source of truth for milestone status and layer scope. |
+| **Canonical roadmap** | `docs/LIVE_ROADMAP_TRACKER.md` | Canonical authority for milestone status and layer scope. |
 | **Milestone status when header vs table conflict** | Tracker §1 header overrides §4.3.1 table for “complete on main” | Header states: “Layer-3 M3.0–M3.11 complete on main.” Table shows M3.0 and M3.2 as VALIDATING. **Authority:** Header is canonical. For audit purposes, M3.0–M3.11 are treated as COMPLETE on main; table VALIDATING is traceability only. |
 | **Layer boundary definitions** | `docs/ARCHITECTURE_4_LAYER.md`, `docs/MASTER_SYSTEM_SPEC.md` | Layer-1 → governance/; Layer-2 → ml/; Layer-3 → runtime/; Layer-4 → observation/. |
 

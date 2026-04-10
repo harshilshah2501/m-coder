@@ -20,7 +20,7 @@
 
 ### What is NOT included yet
 
-- Stage 2.5 proactive intelligence
+- Stage 2.5 proactive intelligence is not influence-enabled in production (Assist remains advisory-only)
 - Background sync
 - Active-file UX improvements
 

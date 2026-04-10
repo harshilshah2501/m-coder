@@ -404,7 +404,7 @@ The m-coder repo implements a **governed runtime stack** centered on a **stdlib 
 ## 18. Recommended next decisions (read-only)
 
 1. **Merge policy:** Decide when to merge `feature/l5-context-layer-v1-ask-packaging` → `main` (currently **ahead**).
-2. **Single source of truth** for operator docs: pick one architecture doc per slice or link index.
+2. **Canonical authority** for operator docs: pick one architecture doc per slice or link index.
 3. **Plugin configuration:** Plan-Gate base URL (env) vs hardcoded `127.0.0.1:8089`.
 4. **UI parity:** Surface `plan_summary.notes` or remove from API contract.
 5. **Dead code:** Remove or wire `AskClient` in a follow-up (not done in audit).

@@ -156,7 +156,7 @@ Consolidated from Phases 0–5. Deduplicated; contract type and affinity group a
   - **Verification docs vs canonical layer specs:** docs/runtime/verification/* contains audits and completion reports that reference canonical spine. They do **not** compete as entrypoints; they **reference** them. **Harmful?** No. **Remediation theme:** report convention (where verification reports live).
   - **Milestone docs vs canonical docs:** M4.x milestones list runtime/observation/ modules and thus carry **structural truth** that should live in LAYER4_OBSERVATION_SPEC or ARCHITECTURE_4_LAYER. **Harmful?** Yes — architecture ownership inferred from milestones, not spine. **Remediation theme:** observation split clarification; canonical docs spine.
 
-- **Assessment:** Canonical-entry competition is **moderate**. No **critical** conflict (no two docs claim to be the single source of truth for the same contract). Clarification and one-sentence additions to spine resolve the issues.
+- **Assessment:** Canonical-entry competition is **moderate**. No **critical** conflict (no two docs claim to be the canonical authority for the same contract). Clarification and one-sentence additions to spine resolve the issues.
 
 ---
 

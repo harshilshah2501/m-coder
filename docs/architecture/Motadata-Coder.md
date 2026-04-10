@@ -130,7 +130,7 @@ python -m vllm.entrypoints.openai.api_server \
 3.  **From Coding to Critiquing:** We added a "Reviewer" capability to catch bad code before it merges.
 4.  **Cost:** Built on open-source (Qwen), running locally/privately. **Zero data leak risk.**
 
-This document serves as the **single source of truth** for the Motadata AI System.
+This document serves as a **consolidated system reference** for the Motadata AI System.
 
 This checklist directly targets the failures (Empty Responses, Missed Security Patterns) and reinforces the successes (Knowledge, RCA).
 

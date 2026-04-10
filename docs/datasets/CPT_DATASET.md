@@ -381,7 +381,7 @@ Total Timeline: 16-26 GPU hours → +50-80% cumulative improvement
 - ✅ **Multi-language:** Added JSON (414), Python (15), YAML (5)
 - ✅ **Security:** 187 sensitive files excluded
 - ✅ **Token count:** 8M tokens from 850 complete files
-- ✅ **Documentation:** Consolidated single source of truth
+- ✅ **Documentation:** Consolidated canonical reference
 
 ### Previous Versions (Obsolete)
 - ❌ v1 (datasets/cpt_old): EventBus-heavy, wrong format - **REMOVED**

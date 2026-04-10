@@ -2,6 +2,13 @@
 
 Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit interception (shadow mode)**, **Repo-Aware Ask (plan-only)**, and **Explain/Debug selected code**. Use this when testing or presenting the plugin.
 
+**Canonical role:** This is the source of truth for plugin-mediated demo usage.
+
+**Latest inclusions (2026-04):**
+- Production closure declaration: [../mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](../mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)
+- Live status and closure ledger: [../LIVE_ROADMAP_TRACKER.md](../LIVE_ROADMAP_TRACKER.md)
+- Stage 2.5 Assist Layer v1 remains advisory-only; plugin/runtime Ask authority stays with the original query.
+
 **Related**
 
 | Doc | Role |

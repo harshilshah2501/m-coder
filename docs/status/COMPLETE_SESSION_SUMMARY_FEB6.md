@@ -112,7 +112,7 @@
 ✅ **Clarity:** Only current docs in main folder  
 ✅ **Navigation:** Clear entry point (JUDGMENT_SYSTEM_README.md)  
 ✅ **History:** All legacy docs preserved with context  
-✅ **Maintenance:** Single source of truth (v1.5)  
+✅ **Maintenance:** Canonical authority model (v1.5)  
 
 ---
 
@@ -213,7 +213,7 @@ archives/ (16 docs + 1 README)
 - **Clarity:** 100% (only current docs in main folder)
 - **Navigation:** 100% (clear entry point and README)
 - **History Preservation:** 100% (all files archived with context)
-- **Maintenance:** 100% (single source of truth, clear versioning)
+- **Maintenance:** 100% (canonical authority, clear versioning)
 
 ---
 

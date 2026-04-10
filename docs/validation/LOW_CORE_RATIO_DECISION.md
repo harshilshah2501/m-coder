@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-04-06 (consistency pass)
 
-This document is the **single source of truth** for:
+This document is the **canonical authority** for:
 - **In-repo pool analysis** (diagnostic script; global lexical pool).
 - **HTTP pipeline truth** (`export_response.json` from Context Layer + Plan-Gate metadata).
 

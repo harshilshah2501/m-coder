@@ -1,6 +1,8 @@
 Here’s a **ready-to-print trace sheet** for brutal, step-by-step validation from **JetBrains UI**.
 
-Use this as the single source of truth while testing. It is built for the production slice defined in your charter: plugin → Context Layer → Plan-Gate → vLLM/execute, with explicit path visibility and no silent theater.
+Use this as an operator trace sheet while testing. Canonical authority remains in `docs/README.md` (documentation authority model) and `docs/LIVE_ROADMAP_TRACKER.md` (live program status).
+
+It is built for the production slice defined in your charter: plugin → Context Layer → Plan-Gate → vLLM/execute, with explicit path visibility and no silent theater.
 
 * * *
 

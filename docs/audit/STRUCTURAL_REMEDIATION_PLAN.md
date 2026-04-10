@@ -48,7 +48,7 @@ No action is justified by "cleanup" or "tidiness" alone. Justification must cite
 
 Each important structural truth must have **one canonical owner**. Duplicate ownership must later be reduced to exactly one of:
 
-- **Canonical owner** — The single source of truth for that truth.
+- **Canonical owner** — The canonical authority for that truth.
 - **Pointer** — Explicit pointer to the canonical owner; no restatement of the truth.
 - **Supporting context** — Explanation or operator guidance that does not restate structural truth; may reference canonical owner.
 - **Historical record** — Archived or milestone doc that is explicitly non-canonical; structural truth moved to spine.
