@@ -19,7 +19,7 @@ This update finalizes Phase-4 MIX semantics, introduces Phase-5 coding exemplar 
 
 **Doc status:** canonical-current for judgment encoding, exemplar authoring, compilation pipeline, and dataset freeze. For governance of LoRA adapters, checkpoints, merged models, and runtime packaging (storage, DVC/HF/Ollama policy), see [docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md).
 
-This document is the **master system guide** for the Motadata system. It spans all four layers — Governance, Compilation, Runtime, Observation — and their artifacts, including **detailed Layer-3 (runtime) and Layer-4 (observation) sections and demo instructions** in Appendix H. Golden exemplars are the constitutional encoding at Layer 1; the ML Compilation layer derives product-specific bases (25 Motadata bases, 100 variants) from them.
+This document is the **master system guide** for the Motadata system. It spans all four layers — Governance, Compilation, Runtime, Observation — and their artifacts, including **detailed Layer-3 (runtime) and Layer-4 (observation) sections and demo instructions** in Appendix H. Golden exemplars are the constitutional encoding at Layer 1; the ML Compilation layer derives product-specific bases (25 Motadata bases, 100 variants) from them. The 4-layer model is the constitutional core architecture; product expansion tracks (for example Layer-5 workspace intelligence and Stage 2.5 assist advisory capabilities) are additive operational layers and do not alter core doctrine.
 
 ---
 

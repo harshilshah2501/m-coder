@@ -4,7 +4,7 @@
 
 ## 1. Header
 
-- **Project**: Motadata AI Coding Assistant — 4-Layer Governed Architecture  
+- **Project**: Motadata AI Coding Assistant — 4-Layer Governed Core + Layer-5 Product Extensions  
 - **Last updated**: 2026-04-10  
 - **Program state**: **Production-grade vertical slice achieved.** All production gates are closed with artifact-backed acceptance.
 - **Current active layer**: **Program closure baseline (all core layers validated)**  

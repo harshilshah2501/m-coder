@@ -1,4 +1,4 @@
-# 4-Layer Architecture — Directory Philosophy
+# 4-Layer Core Architecture — Directory Philosophy
 
 **Doc status:** canonical-current.
 
@@ -6,7 +6,7 @@
 
 ## Purpose & Scope
 
-This document provides **structural clarity** for the m-coder repository layout. It defines the four layers, directory mapping, allowed/forbidden boundaries, and axis separation between constitutional phases and pipeline stages. **No doctrine change.** Constitutional semantics (REF, CONF, DES, MIX, CODE, REACH), dominance rules, exemplar counts, and policy gates remain defined in canonical sources only.
+This document provides **structural clarity** for the m-coder 4-layer core architecture. It defines the four layers, directory mapping, allowed/forbidden boundaries, and axis separation between constitutional phases and pipeline stages. Product extension tracks (Layer-5 workspace intelligence and Stage 2.5 assist advisory layer) are governed by the live tracker and product-slice docs, and do not redefine the 4-layer constitutional core. **No doctrine change.** Constitutional semantics (REF, CONF, DES, MIX, CODE, REACH), dominance rules, exemplar counts, and policy gates remain defined in canonical sources only.
 
 ## 4 Layers Overview
 

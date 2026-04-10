@@ -212,7 +212,7 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 - **[iterations/](iterations/)** - Per-iteration notes and progress
 - **[archive/](archive/)** - Historical and deprecated documentation
 
-### 📌 4-Layer Architecture (Golden Exemplars)
+### 📌 Core 4-Layer Architecture (Golden Exemplars) + Product Extensions
 - **[MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)** - Canonical entry point; Doctrine Immutability; links to GOVERNANCE, COMPILATION, RUNTIME, OBSERVATION, CONTRACTS
 - **[MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md)** - Master system guide (judgment, compilation, runtime, observation; Appendix H: Layer-3/Layer-4 demos)
 

@@ -1,8 +1,8 @@
-# Master System Spec — Golden Exemplars 4-Layer Architecture
+# Master System Spec — Golden Exemplars 4-Layer Core + Product Extensions
 
 **Doc status:** canonical-current.
 
-Single entry point for the m-coder 4-layer specification. Canonical specs live in the linked documents below; this document provides navigation and the Doctrine Immutability Clause.
+Single entry point for the m-coder 4-layer core specification, with explicit product extension tracks (Layer-5 workspace intelligence and Stage 2.5 assist). Canonical specs live in the linked documents below; this document provides navigation and the Doctrine Immutability Clause.
 
 ---
 
