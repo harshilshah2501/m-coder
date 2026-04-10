@@ -1,0 +1,96 @@
+{
+  "schema_version": "plan_only_response.v0.1",
+  "request_id": "assist-proof-live-1",
+  "timestamp_utc": "2026-04-10T06:43:30.603110+00:00",
+  "context_bundle": {
+    "revision": "stage-2.5-assist-layer-v1",
+    "files": [
+      {
+        "path": ".coderabbit.yaml",
+        "selection_reason": "symbol:hint:where"
+      },
+      {
+        "path": "archive/docs/Motadata-AI-Guide-v2.pdf",
+        "selection_reason": "symbol:hint:cfg"
+      },
+      {
+        "path": "docs/ARCHITECTURE_4_LAYER.md",
+        "selection_reason": "direct:file"
+      }
+    ],
+    "selectors_used": [
+      "direct",
+      "siblings",
+      "symbols"
+    ]
+  },
+  "plan_summary": {
+    "steps": [
+      "Open .coderabbit.yaml and scan for logic related to \"retrive\".",
+      "Review neighboring context files: archive/docs/Motadata-AI-Guide-v2.pdf, docs/ARCHITECTURE_4_LAYER.md.",
+      "Search the repository for usages of \"retrive\" to locate related call sites and configuration.",
+      "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+    ],
+    "notes": [
+      "Repo-aware selection: 50 file(s) by adjacent:dir, heading_match.",
+      "Evidence quality is WEAK; plan/explanation may be incomplete."
+    ]
+  },
+  "governance_posture": "PLAN_ONLY",
+  "execution": false,
+  "ui": {
+    "title": "Repo-Aware Plan (PLAN ONLY)",
+    "message": "Deterministic context bundle and plan-only steps generated. No execution performed.",
+    "severity": "info"
+  },
+  "metadata": {
+    "intent_type": "GENERIC_INTENT",
+    "evidence_quality": "WEAK",
+    "quality_reasons": [
+      "QUERY_TOO_GENERIC"
+    ],
+    "dominance_metrics": {
+      "top_k_size": 3.0,
+      "core_code_in_top_k_pct": 0.0,
+      "code_in_top_k_pct": 0.6667,
+      "noise_in_top_k_pct": 0.0,
+      "core_in_top_3_count": 0.0,
+      "max_consecutive_noise": 0.0
+    },
+    "policy_version": "quality_gate.v1"
+  },
+  "routing_mode": "plan_only",
+  "trace_id": "assist-proof-trace-1",
+  "assist_layer": {
+    "request_id": "assist-proof-live-1",
+    "trace_id": "assist-proof-trace-1",
+    "original_query": "Where   is retrive cfg??",
+    "augmented_query": "Where is retrieve config?",
+    "reason": "applied conservative deterministic normalization",
+    "suggestions": [
+      "Provide at least one evidence file path or selector hint for stronger grounding."
+    ],
+    "confidence_enum": "medium",
+    "assist_status": "ok",
+    "transform_codes_applied": [
+      "normalize_whitespace",
+      "normalize_punctuation",
+      "normalize_typo_light",
+      "expand_static_abbreviation"
+    ],
+    "suggestion_sources": [
+      "context_meta"
+    ],
+    "errors": [],
+    "retrieval_drift_validation": {
+      "mode": "bounded_drift_candidate",
+      "is_noop": false,
+      "transform_codes_applied": [
+        "normalize_whitespace",
+        "normalize_punctuation",
+        "normalize_typo_light",
+        "expand_static_abbreviation"
+      ]
+    }
+  }
+}

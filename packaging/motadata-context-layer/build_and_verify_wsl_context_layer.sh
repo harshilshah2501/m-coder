@@ -70,6 +70,34 @@ trap cleanup EXIT
 require_cmd python3
 require_cmd curl
 
+# curl to localhost must not go through HTTP(S)_PROXY (often yields empty reply / exit 52 on CI).
+curl_local() {
+    curl -4 --noproxy '*' "$@"
+}
+
+# Wait until GET returns HTTP 200 with a body (handles slow startup; retries empty reply / refused).
+wait_http_ready() {
+    local url=$1
+    local out=$2
+    local label=$3
+    local max_attempts="${4:-90}"
+    local i=0
+    local err
+    err="$(mktemp)"
+    while [[ $i -lt $max_attempts ]]; do
+        if curl_local -fsS "$url" -o "$out" 2>"$err"; then
+            rm -f "$err"
+            return 0
+        fi
+        sleep 1
+        i=$((i + 1))
+    done
+    warn "curl failed for $label after ${max_attempts}s; last stderr:"
+    cat "$err" >&2 || true
+    rm -f "$err"
+    return 1
+}
+
 step "Preflight checks"
 [[ -d "$REPO_ROOT/runtime/context_layer_service" ]] || fail "runtime/context_layer_service not found under $REPO_ROOT"
 [[ -d "$REPO_ROOT/runtime/layer5" ]] || fail "runtime/layer5 not found under $REPO_ROOT"
@@ -121,12 +149,22 @@ MOTADATA_CONTEXT_LAYER_LOG_PATH="$SMOKE_LOG" \
 SMOKE_PID=$!
 sleep 1
 if ! kill -0 "$SMOKE_PID" >/dev/null 2>&1; then
+    warn "Smoke process not running; tail of $SMOKE_LOG:"
+    tail -n 80 "$SMOKE_LOG" 2>/dev/null || true
     fail "Smoke service exited immediately. Check log: $SMOKE_LOG"
 fi
 
 step "Validate /healthz and /version"
-curl -sS "$SMOKE_BASE_URL/healthz" > "$HEALTH_JSON_FILE"
-curl -sS "$SMOKE_BASE_URL/version" > "$VERSION_JSON_FILE"
+if ! wait_http_ready "$SMOKE_BASE_URL/healthz" "$HEALTH_JSON_FILE" "GET /healthz"; then
+    warn "Context Layer smoke log (tail):"
+    tail -n 120 "$SMOKE_LOG" 2>/dev/null || true
+    fail "/healthz did not become ready. See log: $SMOKE_LOG"
+fi
+if ! wait_http_ready "$SMOKE_BASE_URL/version" "$VERSION_JSON_FILE" "GET /version"; then
+    warn "Context Layer smoke log (tail):"
+    tail -n 120 "$SMOKE_LOG" 2>/dev/null || true
+    fail "/version did not become ready. See log: $SMOKE_LOG"
+fi
 python3 - "$HEALTH_JSON_FILE" "$VERSION_JSON_FILE" <<'PY'
 import json
 import sys
@@ -142,7 +180,7 @@ print("[OK]    /healthz + /version checks passed")
 PY
 
 step "Run /v1/export_evidence sanity check"
-curl -sS -X POST "$SMOKE_BASE_URL/v1/export_evidence" \
+curl_local -sS -X POST "$SMOKE_BASE_URL/v1/export_evidence" \
   -H 'Content-Type: application/json' \
   -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$SANITY_QUERY\",\"top_k\":$TOP_K}" \
   > "$EVIDENCE_JSON_FILE"
@@ -165,7 +203,7 @@ PY
 
 if [[ -n "$PLAN_GATE_URL" ]]; then
     step "Optional Plan-Gate compatibility check: $PLAN_GATE_URL/version"
-    curl -sS "$PLAN_GATE_URL/version" > "$PLAN_GATE_VERSION_FILE"
+    curl_local -sS "$PLAN_GATE_URL/version" > "$PLAN_GATE_VERSION_FILE"
     python3 - "$PLAN_GATE_VERSION_FILE" <<'PY'
 import json
 import sys

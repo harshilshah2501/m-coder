@@ -1,0 +1,14 @@
+{
+  "schema_version": "ask_request.v0.1",
+  "request_id": "assist-proof-live-1",
+  "timestamp_utc": "2026-04-10T12:00:00Z",
+  "repo_root": "/home/harshil/Harshil-PoCs/m-coder",
+  "revision": "stage-2.5-assist-layer-v1",
+  "query": "Where   is retrive cfg??",
+  "task_type": "general",
+  "selected_file": "runtime/ask_service/handlers.py",
+  "client_context": {
+    "diagnostics_labels": ["proof"]
+  },
+  "trace_id": "assist-proof-trace-1"
+}

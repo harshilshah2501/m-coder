@@ -1,0 +1,22 @@
+# Assist Layer v1 Integration Proof — command transcript
+
+# 1) Start Plan-Gate service on isolated proof port
+export PLAN_GATE_PORT=28089
+export ASK_DEFAULT_REPO_ROOT=/home/harshil/Harshil-PoCs/m-coder
+/home/harshil/Harshil-PoCs/m-coder/.venv/bin/python -m runtime.plan_gate_service.app
+
+# 2) Live Ask proof request (representative transform-triggering query)
+curl -sS -X POST http://127.0.0.1:28089/v0/ask \
+  -H 'Content-Type: application/json' \
+  --data-binary @docs/validation/artifacts/assist_layer_v1_integration_proof/live_ask_request.json \
+  > docs/validation/artifacts/assist_layer_v1_integration_proof/live_ask_response.json
+
+# 3) Extract proof fields from response
+/home/harshil/Harshil-PoCs/m-coder/.venv/bin/python - << 'PY'
+# writes live_ask_response_excerpt.json
+PY
+
+# 4) Authority + drift control comparison
+/home/harshil/Harshil-PoCs/m-coder/.venv/bin/python - << 'PY'
+# writes authority_and_drift_comparison.json
+PY

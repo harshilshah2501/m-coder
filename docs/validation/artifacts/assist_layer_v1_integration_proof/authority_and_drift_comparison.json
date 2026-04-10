@@ -1,0 +1,41 @@
+{
+  "authority_proof": {
+    "ask_payload_query": "Where   is retrive cfg??",
+    "ask_payload_original_query": "Where   is retrive cfg??",
+    "assist_augmented_query": "Where is retrieve config?",
+    "runtime_query_is_original": true,
+    "runtime_query_differs_from_augmented": true
+  },
+  "behavior_control_comparison": {
+    "same_core_fields": {
+      "schema_version": true,
+      "governance_posture": true,
+      "execution": true,
+      "routing_mode": true
+    },
+    "assist_context_files": [
+      ".coderabbit.yaml",
+      "archive/docs/Motadata-AI-Guide-v2.pdf",
+      "docs/ARCHITECTURE_4_LAYER.md"
+    ],
+    "baseline_context_files": [
+      ".coderabbit.yaml",
+      "archive/docs/Motadata-AI-Guide-v2.pdf",
+      "docs/ARCHITECTURE_4_LAYER.md"
+    ],
+    "same_context_files": true,
+    "assist_plan_steps": [
+      "Open .coderabbit.yaml and scan for logic related to \"retrive\".",
+      "Review neighboring context files: archive/docs/Motadata-AI-Guide-v2.pdf, docs/ARCHITECTURE_4_LAYER.md.",
+      "Search the repository for usages of \"retrive\" to locate related call sites and configuration.",
+      "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+    ],
+    "baseline_plan_steps": [
+      "Open .coderabbit.yaml and scan for logic related to \"retrive\".",
+      "Review neighboring context files: archive/docs/Motadata-AI-Guide-v2.pdf, docs/ARCHITECTURE_4_LAYER.md.",
+      "Search the repository for usages of \"retrive\" to locate related call sites and configuration.",
+      "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+    ],
+    "same_plan_steps": true
+  }
+}

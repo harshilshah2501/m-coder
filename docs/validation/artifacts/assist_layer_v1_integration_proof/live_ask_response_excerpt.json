@@ -1,0 +1,25 @@
+{
+  "has_assist_layer": true,
+  "assist_original_query": "Where   is retrive cfg??",
+  "assist_augmented_query": "Where is retrieve config?",
+  "assist_status": "ok",
+  "transform_codes_applied": [
+    "normalize_whitespace",
+    "normalize_punctuation",
+    "normalize_typo_light",
+    "expand_static_abbreviation"
+  ],
+  "retrieval_drift_validation": {
+    "mode": "bounded_drift_candidate",
+    "is_noop": false,
+    "transform_codes_applied": [
+      "normalize_whitespace",
+      "normalize_punctuation",
+      "normalize_typo_light",
+      "expand_static_abbreviation"
+    ]
+  },
+  "routing_mode": "plan_only",
+  "governance_posture": "PLAN_ONLY",
+  "execution": false
+}
