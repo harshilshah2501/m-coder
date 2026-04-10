@@ -1,0 +1,138 @@
+{
+  "schema_version": "assist_eval_summary.v1",
+  "timestamp_utc": "2026-04-10T07:14:53.565489+00:00",
+  "dataset_schema_version": "assist_eval_dataset.v1",
+  "dataset_entries": 35,
+  "total_runs": 35,
+  "improved_count": 0,
+  "same_count": 17,
+  "degraded_minor_count": 16,
+  "degraded_major_count": 2,
+  "counts_by_transform_code": {
+    "no_transform": {
+      "total": 13,
+      "improved": 0,
+      "same": 13,
+      "degraded_minor": 0,
+      "degraded_major": 0
+    },
+    "normalize_punctuation": {
+      "total": 7,
+      "improved": 0,
+      "same": 2,
+      "degraded_minor": 3,
+      "degraded_major": 2
+    },
+    "normalize_typo_light": {
+      "total": 8,
+      "improved": 0,
+      "same": 2,
+      "degraded_minor": 5,
+      "degraded_major": 1
+    },
+    "normalize_whitespace": {
+      "total": 1,
+      "improved": 0,
+      "same": 0,
+      "degraded_minor": 1,
+      "degraded_major": 0
+    },
+    "expand_static_abbreviation": {
+      "total": 9,
+      "improved": 0,
+      "same": 0,
+      "degraded_minor": 9,
+      "degraded_major": 0
+    },
+    "append_neutral_workspace_qualifier": {
+      "total": 8,
+      "improved": 0,
+      "same": 0,
+      "degraded_minor": 8,
+      "degraded_major": 0
+    }
+  },
+  "counts_by_query_category": {
+    "clean_control": {
+      "total": 7,
+      "improved": 0,
+      "same": 6,
+      "degraded_minor": 0,
+      "degraded_major": 1
+    },
+    "typo_normalization": {
+      "total": 7,
+      "improved": 0,
+      "same": 2,
+      "degraded_minor": 5,
+      "degraded_major": 0
+    },
+    "abbreviation_expansion": {
+      "total": 7,
+      "improved": 0,
+      "same": 0,
+      "degraded_minor": 7,
+      "degraded_major": 0
+    },
+    "ambiguous_query": {
+      "total": 7,
+      "improved": 0,
+      "same": 4,
+      "degraded_minor": 3,
+      "degraded_major": 0
+    },
+    "garbage_or_fragment": {
+      "total": 7,
+      "improved": 0,
+      "same": 5,
+      "degraded_minor": 1,
+      "degraded_major": 1
+    }
+  },
+  "notable_patterns": [
+    "transform no_transform is mostly stable (100% same/improved)",
+    "transform normalize_punctuation shows elevated major degradation (29%)",
+    "category abbreviation_expansion frequently degrades (100%)",
+    "category typo_normalization frequently degrades (71%)",
+    "failure cluster: category=abbreviation_expansion, transform=expand_static_abbreviation, count=7",
+    "failure cluster: category=typo_normalization, transform=normalize_typo_light, count=3",
+    "failure cluster: category=ambiguous_query, transform=append_neutral_workspace_qualifier, count=3"
+  ],
+  "run_ids": [
+    "assist_v2_batch_001_clean-01",
+    "assist_v2_batch_002_clean-02",
+    "assist_v2_batch_003_clean-03",
+    "assist_v2_batch_004_clean-04",
+    "assist_v2_batch_005_clean-05",
+    "assist_v2_batch_006_clean-06",
+    "assist_v2_batch_007_clean-07",
+    "assist_v2_batch_008_typo-01",
+    "assist_v2_batch_009_typo-02",
+    "assist_v2_batch_010_typo-03",
+    "assist_v2_batch_011_typo-04",
+    "assist_v2_batch_012_typo-05",
+    "assist_v2_batch_013_typo-06",
+    "assist_v2_batch_014_typo-07",
+    "assist_v2_batch_015_abbr-01",
+    "assist_v2_batch_016_abbr-02",
+    "assist_v2_batch_017_abbr-03",
+    "assist_v2_batch_018_abbr-04",
+    "assist_v2_batch_019_abbr-05",
+    "assist_v2_batch_020_abbr-06",
+    "assist_v2_batch_021_abbr-07",
+    "assist_v2_batch_022_amb-01",
+    "assist_v2_batch_023_amb-02",
+    "assist_v2_batch_024_amb-03",
+    "assist_v2_batch_025_amb-04",
+    "assist_v2_batch_026_amb-05",
+    "assist_v2_batch_027_amb-06",
+    "assist_v2_batch_028_amb-07",
+    "assist_v2_batch_029_gar-01",
+    "assist_v2_batch_030_gar-02",
+    "assist_v2_batch_031_gar-03",
+    "assist_v2_batch_032_gar-04",
+    "assist_v2_batch_033_gar-05",
+    "assist_v2_batch_034_gar-06",
+    "assist_v2_batch_035_gar-07"
+  ]
+}

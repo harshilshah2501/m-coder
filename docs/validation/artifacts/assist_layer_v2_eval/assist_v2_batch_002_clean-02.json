@@ -1,0 +1,530 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_002_clean-02",
+  "timestamp_utc": "2026-04-10T07:12:16.360638+00:00",
+  "request_id": "assist-v2-batch-clean-02",
+  "trace_id": "assist-v2-batch-trace-clean-02",
+  "query_category": "clean_control",
+  "query_note": "already clean explain query",
+  "original_query": "How does Plan-Gate work?",
+  "augmented_query": "How does Plan-Gate work?",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "low",
+    "transform_codes_applied": [],
+    "retrieval_drift_validation": {
+      "mode": "exact_match_required",
+      "is_noop": true,
+      "transform_codes_applied": []
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:12:11.623028+00:00",
+      "request_id": "assist-v2-batch-clean-02",
+      "trace_id": "assist-v2-batch-trace-clean-02",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "low",
+      "reason_code": "no_transform",
+      "transform_codes_applied": [],
+      "suggestions_source_tags": [
+        "context_meta"
+      ],
+      "latency_ms": 0.105,
+      "input_hash": "37e2f85bc45ab6b9334b5b97fc4d55955651b10fcd6baf2894646466c5219bb8",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-clean-02",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:how"
+        },
+        {
+          "path": ".github/workflows/wsl-context-layer-package.yml",
+          "selection_reason": "symbol:hint:does"
+        },
+        {
+          "path": ".gitignore",
+          "selection_reason": "symbol:hint:plan"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LIVE_ROADMAP_TRACKER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Assistant-Evaluation-Framework.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Evaluation-Quick-Reference.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MAIN_MERGE_READINESS_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/MASTER_SYSTEM_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/MIGRATION_NOTE.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/ML_DIR_SURVEY_STAGE_MAP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_COMMIT_WORKFLOW.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_DEMO_SCENARIOS.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/MOTADATA_DEMO_SETUP_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/NON_NEGOTIABLE_INVARIANTS.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Notes.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PHASE_ALIGNMENT_TABLE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PR6_TRUE_POSITIVE_DEBUG_AND_MINIMAL_SEMANTIC_LIFT_PLAN.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PRODUCT_SLICE_CHARTER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PROGRAM_STATE_SNAPSHOT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/QUICK_REFERENCE.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/ROADMAP_L2_L3_L4.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/SHADOW_MODE_PROTOCOL_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/STAGE7_FREEZE_REFINEMENTS_PATCH.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/STAGE_LAYOUT_CANONICAL.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/SYSTEM_EXECUTION_ROADMAP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/V16_1_MODEL_UPGRADE_HYPOTHESIS.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/agents/AGENTS_IMPLEMENTATION_PLAN.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .github/workflows/wsl-context-layer-package.yml and scan for logic related to \"does\".",
+        "Review neighboring context files: .github/workflows/wsl-context-layer-package.yml, .gitignore.",
+        "Search the repository for usages of \"does\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by heading_match, path_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "PLAN_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-clean-02",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:how"
+        },
+        {
+          "path": ".github/workflows/wsl-context-layer-package.yml",
+          "selection_reason": "symbol:hint:does"
+        },
+        {
+          "path": ".gitignore",
+          "selection_reason": "symbol:hint:plan"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LIVE_ROADMAP_TRACKER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Assistant-Evaluation-Framework.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Evaluation-Quick-Reference.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MAIN_MERGE_READINESS_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/MASTER_SYSTEM_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/MIGRATION_NOTE.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/ML_DIR_SURVEY_STAGE_MAP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_COMMIT_WORKFLOW.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_DEMO_SCENARIOS.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/MOTADATA_DEMO_SETUP_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/NON_NEGOTIABLE_INVARIANTS.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Notes.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PHASE_ALIGNMENT_TABLE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PR6_TRUE_POSITIVE_DEBUG_AND_MINIMAL_SEMANTIC_LIFT_PLAN.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PRODUCT_SLICE_CHARTER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/PROGRAM_STATE_SNAPSHOT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/QUICK_REFERENCE.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/ROADMAP_L2_L3_L4.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/SHADOW_MODE_PROTOCOL_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/STAGE7_FREEZE_REFINEMENTS_PATCH.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/STAGE_LAYOUT_CANONICAL.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/SYSTEM_EXECUTION_ROADMAP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/V16_1_MODEL_UPGRADE_HYPOTHESIS.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/agents/AGENTS_IMPLEMENTATION_PLAN.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .github/workflows/wsl-context-layer-package.yml and scan for logic related to \"does\".",
+        "Review neighboring context files: .github/workflows/wsl-context-layer-package.yml, .gitignore.",
+        "Search the repository for usages of \"does\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by heading_match, path_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "PLAN_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 48,
+      "candidate_count": 48,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "selectors_used": {
+      "baseline_count": 3,
+      "candidate_count": 3,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "plan_steps": {
+      "baseline_count": 4,
+      "candidate_count": 4,
+      "exact_match": true,
+      "normalized_equal": true
+    },
+    "evidence_quality": {
+      "baseline": "WEAK",
+      "candidate": "WEAK",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": true,
+      "key_fields_equal": true,
+      "structural_equal": true
+    }
+  },
+  "final_verdict": "same",
+  "verdict_reasons": [
+    "outputs equivalent across compared dimensions"
+  ]
+}

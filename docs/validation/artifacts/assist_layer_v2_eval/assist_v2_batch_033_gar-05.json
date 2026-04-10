@@ -1,0 +1,311 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_033_gar-05",
+  "timestamp_utc": "2026-04-10T07:14:48.488838+00:00",
+  "request_id": "assist-v2-batch-gar-05",
+  "trace_id": "assist-v2-batch-trace-gar-05",
+  "query_category": "garbage_or_fragment",
+  "query_note": "garbage with typo token",
+  "original_query": "!!! retrive ???",
+  "augmented_query": "! retrieve?",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "medium",
+    "transform_codes_applied": [
+      "normalize_punctuation",
+      "normalize_typo_light"
+    ],
+    "retrieval_drift_validation": {
+      "mode": "bounded_drift_candidate",
+      "is_noop": false,
+      "transform_codes_applied": [
+        "normalize_punctuation",
+        "normalize_typo_light"
+      ]
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:14:43.351991+00:00",
+      "request_id": "assist-v2-batch-gar-05",
+      "trace_id": "assist-v2-batch-trace-gar-05",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "medium",
+      "reason_code": "deterministic_normalization",
+      "transform_codes_applied": [
+        "normalize_punctuation",
+        "normalize_typo_light"
+      ],
+      "suggestions_source_tags": [
+        "context_meta"
+      ],
+      "latency_ms": 0.093,
+      "input_hash": "734b91bfaea4852c4ffe6f7c2bfa24f243971778751d42b4baef33ecc03dc4c5",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-gar-05",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": "docs/validation/artifacts/assist_layer_v1_integration_proof/authority_and_drift_comparison.json",
+          "selection_reason": "symbol:hint:retrive"
+        },
+        {
+          "path": "runtime/ask_service/authority_synthesis.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "runtime/ask_service/evidence_bridge.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "runtime/ask_service/handlers.py",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "runtime/ask_service/planner.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "runtime/ask_service/reasoner.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "runtime/ask_service/v1_ingest.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "runtime/context/contracts.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/context/doc_selector.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/context/engine.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/context/manifest_builder.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/context/manifest_models.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/authority/authority_code_reasoning.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/authority/authority_evidence.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/authority/code_index_adapter.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/authority/code_index_builder.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/authority/registry_loader.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/evidence/schema_validate.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/evidence/usefulness_metrics.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/retrieval/action_target_selection.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/retrieval/quality_gate.py",
+          "selection_reason": "import:neighbor"
+        },
+        {
+          "path": "runtime/layer5/workspace/resolver.py",
+          "selection_reason": "import:neighbor"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "imports",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open runtime/ask_service/authority_synthesis.py and scan for logic related to \"retrive\".",
+        "Review neighboring context files: runtime/ask_service/authority_synthesis.py, runtime/ask_service/evidence_bridge.py.",
+        "Search the repository for usages of \"retrive\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "GENERIC_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-gar-05",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:retrieve"
+        },
+        {
+          "path": "docs/architecture/ARCHITECTURE.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/Golden_Exemplars_Architecture_Map.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/MOTADATA_CODER_SUMMARY.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/Motadata-AI-System-Guide-v2.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/Motadata-Coder.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/PROJECT_STRUCTURE.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/workplace_intelligence_layer_spec_critique.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/architecture/workspace_intelligence_layer_final_architecture_spec.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/design/PRODUCT_AUTHORITY_CODE_UNDERSTANDING_LAYER_v1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/guides/ACTION_11_LINUX_TEST_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/guides/ACTION_5_OBSERVABILITY_CORRELATION.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/guides/ACTION_7_TRUST_AUDIT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/guides/Agents.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/guides/Dominance_Grammar.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/guides/E2E-flow.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .pytest_cache/v/cache/nodeids and scan for logic related to \"retrieve\".",
+        "Review neighboring context files: docs/architecture/ARCHITECTURE.md, docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md.",
+        "Search the repository for usages of \"retrieve\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 46 file(s) by adjacent:dir, heading_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "GENERIC_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 22,
+      "candidate_count": 17,
+      "overlap_ratio": 0.0,
+      "exact_match": false
+    },
+    "selectors_used": {
+      "baseline_count": 4,
+      "candidate_count": 3,
+      "overlap_ratio": 0.75,
+      "exact_match": false
+    },
+    "plan_steps": {
+      "baseline_count": 4,
+      "candidate_count": 4,
+      "exact_match": false,
+      "normalized_equal": false
+    },
+    "evidence_quality": {
+      "baseline": "WEAK",
+      "candidate": "WEAK",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": false,
+      "key_fields_equal": true,
+      "structural_equal": false
+    }
+  },
+  "final_verdict": "degraded_major",
+  "verdict_reasons": [
+    "selectors diverged with low file overlap"
+  ]
+}

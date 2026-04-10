@@ -1,0 +1,40 @@
+{
+  "schema_version": "assist_confidence_policy.v1",
+  "trust_zones": [
+    "safe",
+    "caution",
+    "block"
+  ],
+  "safe_transforms": [],
+  "caution_transforms": [
+    "append_neutral_workspace_qualifier",
+    "expand_static_abbreviation",
+    "no_transform",
+    "normalize_typo_light",
+    "normalize_whitespace"
+  ],
+  "blocked_transforms_or_conditions": {
+    "transforms": [
+      "normalize_punctuation"
+    ],
+    "conditions": []
+  },
+  "degradation_thresholds": {
+    "block_major_ratio_gte": 0.2,
+    "caution_minor_ratio_gte": 0.35,
+    "category_block_major_ratio_gte": 0.3
+  },
+  "evidence_snapshot": {
+    "total_runs": 35,
+    "verdict_counts": {
+      "same": 17,
+      "degraded_major": 2,
+      "degraded_minor": 16
+    }
+  },
+  "notes": [
+    "Policy is evidence-derived from shadow evaluation runs only.",
+    "This artifact is advisory and not runtime-enforced in this pass.",
+    "Transform mapping should be regenerated after each benchmark batch."
+  ]
+}

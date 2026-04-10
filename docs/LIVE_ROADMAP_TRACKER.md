@@ -82,6 +82,62 @@ All production gates are now **closed** for the MVP vertical slice:
 
 **Related audit artifacts:** `docs/audit/END_TO_END_SYSTEM_AUDIT_REPORT.md`, `docs/audit/SURGICAL_NEXT_STEPS_PLAN.md`.
 
+### 1.5 Stage 2.5 — Assist Layer v1 (Advisory) closure
+
+**Status:** **IMPLEMENTED + EVALUATED**
+
+- Assist Layer v1 is implemented and integrated as an advisory-only layer.
+- Runtime authority is preserved:
+  - original query remains runtime Ask input.
+  - augmented query is additive metadata only.
+- Runtime behavior remains unchanged by Assist (no Plan-Gate behavior change, no execution authority, no query-flow authority).
+
+**Actions 15–17 closure (evaluation / benchmark / confidence policy):**
+
+- Dual-path evaluation harness is in place (original vs augmented) with deterministic comparator and severity scorer.
+- Batch benchmark runner is in place with categorized dataset and artifact generation at:
+  - `docs/validation/artifacts/assist_layer_v2_eval/`
+- Dataset size and coverage:
+  - 35 queries across `typo_normalization`, `abbreviation_expansion`, `clean_control`, `ambiguous_query`, `garbage_or_fragment`.
+
+**Measured results (artifact-backed):**
+
+- improved: **0**
+- same: **17**
+- degraded_minor: **16**
+- degraded_major: **2**
+
+**Interpretation:**
+
+- Assist is often neutral.
+- Minor retrieval drift is frequent.
+- Major degradation exists but is uncommon.
+- No consistent measurable improvement is demonstrated in the current batch.
+
+**Confidence policy artifact:**
+
+- `docs/validation/artifacts/assist_layer_v2_eval/assist_confidence_policy.v1.json`
+- Current policy outcome:
+  - no transforms qualify as SAFE.
+  - transforms are in caution or block zones only.
+- Policy is evidence-derived, advisory-only, and not runtime-enforced in this pass.
+
+**Final system stance (locked for this stage):**
+
+**Assist Layer v1 is advisory-only and not trusted to influence runtime query behavior.**
+
+- `augmented_query` is not used for retrieval or reasoning runtime inputs.
+- Assist outputs are used for inspection, observability, and future evaluation only.
+
+**Closure classification:**
+
+- Stage 2.5 v1: **IMPLEMENTED + EVALUATED**
+- Assist influence: **NOT ENABLED (by design, based on evidence)**
+
+**Forward dependency note:**
+
+- Any future Assist influence depends on reducing degraded cases, establishing measurable safe zones, and passing stricter evaluation thresholds.
+
 ## CURRENT SYSTEM REALITY (POST VALIDATION)
 
 ### Backend

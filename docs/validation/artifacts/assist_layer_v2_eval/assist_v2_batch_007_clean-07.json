@@ -1,0 +1,278 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_007_clean-07",
+  "timestamp_utc": "2026-04-10T07:12:41.567719+00:00",
+  "request_id": "assist-v2-batch-clean-07",
+  "trace_id": "assist-v2-batch-trace-clean-07",
+  "query_category": "clean_control",
+  "query_note": "clean diagnostics query",
+  "original_query": "How is trace_id propagated?",
+  "augmented_query": "How is trace_id propagated?",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "low",
+    "transform_codes_applied": [],
+    "retrieval_drift_validation": {
+      "mode": "exact_match_required",
+      "is_noop": true,
+      "transform_codes_applied": []
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:12:36.184908+00:00",
+      "request_id": "assist-v2-batch-clean-07",
+      "trace_id": "assist-v2-batch-trace-clean-07",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "low",
+      "reason_code": "no_transform",
+      "transform_codes_applied": [],
+      "suggestions_source_tags": [
+        "context_meta"
+      ],
+      "latency_ms": 0.091,
+      "input_hash": "a03839b475158742102c696dec98bead54d409155e7b145ded76af3e322db858",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-clean-07",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:how"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:trace_id"
+        },
+        {
+          "path": "archive/docs/unsloth_compiled_cache/UnslothGRPOTrainer.py",
+          "selection_reason": "symbol:hint:propagated"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [],
+      "notes": [
+        "No context files matched relevant code evidence for this ask."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "NO_MATCH",
+      "intent_type": "CODE_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-clean-07",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:how"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:trace_id"
+        },
+        {
+          "path": "archive/docs/unsloth_compiled_cache/UnslothGRPOTrainer.py",
+          "selection_reason": "symbol:hint:propagated"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [],
+      "notes": [
+        "No context files matched relevant code evidence for this ask."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "NO_MATCH",
+      "intent_type": "CODE_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 18,
+      "candidate_count": 18,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "selectors_used": {
+      "baseline_count": 3,
+      "candidate_count": 3,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "plan_steps": {
+      "baseline_count": 0,
+      "candidate_count": 0,
+      "exact_match": true,
+      "normalized_equal": true
+    },
+    "evidence_quality": {
+      "baseline": "NO_MATCH",
+      "candidate": "NO_MATCH",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": true,
+      "key_fields_equal": true,
+      "structural_equal": true
+    }
+  },
+  "final_verdict": "same",
+  "verdict_reasons": [
+    "outputs equivalent across compared dimensions"
+  ]
+}

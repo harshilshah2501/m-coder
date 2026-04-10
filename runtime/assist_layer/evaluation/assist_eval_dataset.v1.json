@@ -1,0 +1,45 @@
+{
+  "schema_version": "assist_eval_dataset.v1",
+  "description": "Deterministic shadow evaluation dataset for Assist Layer v2",
+  "entries": [
+    {"id": "clean-01", "category": "clean_control", "query": "Where is retry logic implemented?", "note": "already clean location query"},
+    {"id": "clean-02", "category": "clean_control", "query": "How does Plan-Gate work?", "note": "already clean explain query"},
+    {"id": "clean-03", "category": "clean_control", "query": "What files define context selection?", "note": "already specific"},
+    {"id": "clean-04", "category": "clean_control", "query": "Where is ask_request.v0.1 schema used?", "note": "symbolized clean query"},
+    {"id": "clean-05", "category": "clean_control", "query": "Explain evidence quality gating.", "note": "clean punctuation"},
+    {"id": "clean-06", "category": "clean_control", "query": "Where is assist metadata added to responses?", "note": "already grounded"},
+    {"id": "clean-07", "category": "clean_control", "query": "How is trace_id propagated?", "note": "clean diagnostics query"},
+
+    {"id": "typo-01", "category": "typo_normalization", "query": "Where is retrive logic implemented?", "note": "retrive typo"},
+    {"id": "typo-02", "category": "typo_normalization", "query": "How does retrival quality gate work?", "note": "retrival typo"},
+    {"id": "typo-03", "category": "typo_normalization", "query": "What does teh ask handler return?", "note": "teh typo"},
+    {"id": "typo-04", "category": "typo_normalization", "query": "Where is plangte request logging done?", "note": "plangte typo"},
+    {"id": "typo-05", "category": "typo_normalization", "query": "Where   is retrive   cfg??", "note": "mixed typo + spacing"},
+    {"id": "typo-06", "category": "typo_normalization", "query": "Why retrival degrades sometimes??", "note": "typo with punctuation"},
+    {"id": "typo-07", "category": "typo_normalization", "query": "How to debug teh context selector", "note": "typo with debug"},
+
+    {"id": "abbr-01", "category": "abbreviation_expansion", "query": "Where is retry cfg loaded?", "note": "cfg expansion"},
+    {"id": "abbr-02", "category": "abbreviation_expansion", "query": "show repo ask flow", "note": "repo expansion"},
+    {"id": "abbr-03", "category": "abbreviation_expansion", "query": "Which repo files mention plan gate?", "note": "repo expansion in sentence"},
+    {"id": "abbr-04", "category": "abbreviation_expansion", "query": "cfg validation path", "note": "short abbreviation-heavy"},
+    {"id": "abbr-05", "category": "abbreviation_expansion", "query": "repo selector cfg", "note": "multiple abbreviations"},
+    {"id": "abbr-06", "category": "abbreviation_expansion", "query": "where is cfg for ask defaults", "note": "lowercase abbreviation"},
+    {"id": "abbr-07", "category": "abbreviation_expansion", "query": "repo evidence bundle flow", "note": "repo expansion with evidence"},
+
+    {"id": "amb-01", "category": "ambiguous_query", "query": "engine", "note": "single token ambiguous"},
+    {"id": "amb-02", "category": "ambiguous_query", "query": "fix bug", "note": "underspecified action"},
+    {"id": "amb-03", "category": "ambiguous_query", "query": "this not working", "note": "vague debug query"},
+    {"id": "amb-04", "category": "ambiguous_query", "query": "in this system", "note": "scope-only ambiguous"},
+    {"id": "amb-05", "category": "ambiguous_query", "query": "update logic", "note": "ambiguous change request"},
+    {"id": "amb-06", "category": "ambiguous_query", "query": "where this", "note": "short ambiguous location"},
+    {"id": "amb-07", "category": "ambiguous_query", "query": "why fail", "note": "short ambiguous why"},
+
+    {"id": "gar-01", "category": "garbage_or_fragment", "query": ".... ???", "note": "punctuation fragment"},
+    {"id": "gar-02", "category": "garbage_or_fragment", "query": "asdf qwer zxcv", "note": "nonsense tokens"},
+    {"id": "gar-03", "category": "garbage_or_fragment", "query": "123 456 ???", "note": "numeric fragment"},
+    {"id": "gar-04", "category": "garbage_or_fragment", "query": "<xml><tag>", "note": "markup-like fragment"},
+    {"id": "gar-05", "category": "garbage_or_fragment", "query": "!!! retrive ???", "note": "garbage with typo token"},
+    {"id": "gar-06", "category": "garbage_or_fragment", "query": "repo ??? cfg ???", "note": "fragment with abbreviations"},
+    {"id": "gar-07", "category": "garbage_or_fragment", "query": "__ __ __", "note": "symbolic fragment"}
+  ]
+}

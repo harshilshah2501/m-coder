@@ -1,0 +1,264 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_015_abbr-01",
+  "timestamp_utc": "2026-04-10T07:13:22.121420+00:00",
+  "request_id": "assist-v2-batch-abbr-01",
+  "trace_id": "assist-v2-batch-trace-abbr-01",
+  "query_category": "abbreviation_expansion",
+  "query_note": "cfg expansion",
+  "original_query": "Where is retry cfg loaded?",
+  "augmented_query": "Where is retry config loaded?",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "medium",
+    "transform_codes_applied": [
+      "expand_static_abbreviation"
+    ],
+    "retrieval_drift_validation": {
+      "mode": "bounded_drift_candidate",
+      "is_noop": false,
+      "transform_codes_applied": [
+        "expand_static_abbreviation"
+      ]
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:13:17.035028+00:00",
+      "request_id": "assist-v2-batch-abbr-01",
+      "trace_id": "assist-v2-batch-trace-abbr-01",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "medium",
+      "reason_code": "deterministic_normalization",
+      "transform_codes_applied": [
+        "expand_static_abbreviation"
+      ],
+      "suggestions_source_tags": [
+        "context_meta"
+      ],
+      "latency_ms": 0.099,
+      "input_hash": "2b6914f112584ae9c9756473a52a69b121a7c943b0fdbef019715240f06a0fd3",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-abbr-01",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:where"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:retry"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .coderabbit.yaml and scan for logic related to \"loaded\".",
+        "Review neighboring context files: .pytest_cache/v/cache/nodeids.",
+        "Search the repository for usages of \"loaded\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by adjacent:dir, heading_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "CODE_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-abbr-01",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:where"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:retry"
+        },
+        {
+          "path": "AGENT_EXECUTION_RULES.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "Hardware-Profile.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "Makefile",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "cuda-pytorch_test.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "sibling:directory"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .coderabbit.yaml and scan for logic related to \"config\".",
+        "Review neighboring context files: .pytest_cache/v/cache/nodeids, AGENT_EXECUTION_RULES.md.",
+        "Search the repository for usages of \"config\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by heading_match, path_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "CODE_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 2,
+      "candidate_count": 26,
+      "overlap_ratio": 0.07692307692307693,
+      "exact_match": false
+    },
+    "selectors_used": {
+      "baseline_count": 3,
+      "candidate_count": 3,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "plan_steps": {
+      "baseline_count": 4,
+      "candidate_count": 4,
+      "exact_match": false,
+      "normalized_equal": false
+    },
+    "evidence_quality": {
+      "baseline": "WEAK",
+      "candidate": "WEAK",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": false,
+      "key_fields_equal": true,
+      "structural_equal": false
+    }
+  },
+  "final_verdict": "degraded_minor",
+  "verdict_reasons": [
+    "context file overlap below threshold"
+  ]
+}

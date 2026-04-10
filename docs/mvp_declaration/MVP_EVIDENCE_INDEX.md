@@ -4,6 +4,7 @@
 
 - Program closure tracker: `docs/LIVE_ROADMAP_TRACKER.md`
 - Final acceptance authority: `docs/validation/artifacts/action14_final_acceptance/ACTION14_FINAL_ACCEPTANCE_REPORT.md`
+- Governed system closure declaration: `docs/mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md`
 
 ## Evidence Directories and What They Prove
 

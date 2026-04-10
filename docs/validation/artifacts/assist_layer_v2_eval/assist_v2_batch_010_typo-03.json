@@ -1,0 +1,376 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_010_typo-03",
+  "timestamp_utc": "2026-04-10T07:12:56.769714+00:00",
+  "request_id": "assist-v2-batch-typo-03",
+  "trace_id": "assist-v2-batch-trace-typo-03",
+  "query_category": "typo_normalization",
+  "query_note": "teh typo",
+  "original_query": "What does teh ask handler return?",
+  "augmented_query": "What does the ask handler return?",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "medium",
+    "transform_codes_applied": [
+      "normalize_typo_light"
+    ],
+    "retrieval_drift_validation": {
+      "mode": "bounded_drift_candidate",
+      "is_noop": false,
+      "transform_codes_applied": [
+        "normalize_typo_light"
+      ]
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:12:51.899661+00:00",
+      "request_id": "assist-v2-batch-typo-03",
+      "trace_id": "assist-v2-batch-trace-typo-03",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "medium",
+      "reason_code": "deterministic_normalization",
+      "transform_codes_applied": [
+        "normalize_typo_light"
+      ],
+      "suggestions_source_tags": [
+        "context_meta"
+      ],
+      "latency_ms": 0.116,
+      "input_hash": "4c1168bf0c79562fedaefccdb278cc92d0fa1e13b5b1e5b6e55084b125fb8a5f",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-typo-03",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:what"
+        },
+        {
+          "path": ".github/workflows/wsl-context-layer-package.yml",
+          "selection_reason": "symbol:hint:does"
+        },
+        {
+          "path": ".pytest_cache/v/cache/lastfailed",
+          "selection_reason": "symbol:hint:ask"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:teh"
+        },
+        {
+          "path": "AGENT_EXECUTION_RULES.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "Hardware-Profile.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "Makefile",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "cuda-pytorch_test.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .coderabbit.yaml and scan for logic related to \"handler\".",
+        "Review neighboring context files: .github/workflows/wsl-context-layer-package.yml, .pytest_cache/v/cache/lastfailed.",
+        "Search the repository for usages of \"handler\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by heading_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "GENERIC_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-typo-03",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:what"
+        },
+        {
+          "path": ".github/workflows/wsl-context-layer-package.yml",
+          "selection_reason": "symbol:hint:does"
+        },
+        {
+          "path": ".pytest_cache/v/cache/lastfailed",
+          "selection_reason": "symbol:hint:ask"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:handler"
+        },
+        {
+          "path": "AGENT_EXECUTION_RULES.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "Hardware-Profile.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "Makefile",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "cuda-pytorch_test.py",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "sibling:directory"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .coderabbit.yaml and scan for logic related to \"handler\".",
+        "Review neighboring context files: .github/workflows/wsl-context-layer-package.yml, .pytest_cache/v/cache/lastfailed.",
+        "Search the repository for usages of \"handler\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by heading_match, path_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "GENERIC_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 28,
+      "candidate_count": 28,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "selectors_used": {
+      "baseline_count": 3,
+      "candidate_count": 3,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "plan_steps": {
+      "baseline_count": 4,
+      "candidate_count": 4,
+      "exact_match": true,
+      "normalized_equal": true
+    },
+    "evidence_quality": {
+      "baseline": "WEAK",
+      "candidate": "WEAK",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": true,
+      "key_fields_equal": true,
+      "structural_equal": true
+    }
+  },
+  "final_verdict": "same",
+  "verdict_reasons": [
+    "outputs equivalent across compared dimensions"
+  ]
+}

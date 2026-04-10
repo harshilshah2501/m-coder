@@ -1,0 +1,144 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_030_gar-02",
+  "timestamp_utc": "2026-04-10T07:14:33.797287+00:00",
+  "request_id": "assist-v2-batch-gar-02",
+  "trace_id": "assist-v2-batch-trace-gar-02",
+  "query_category": "garbage_or_fragment",
+  "query_note": "nonsense tokens",
+  "original_query": "asdf qwer zxcv",
+  "augmented_query": "asdf qwer zxcv",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "low",
+    "transform_codes_applied": [],
+    "retrieval_drift_validation": {
+      "mode": "exact_match_required",
+      "is_noop": true,
+      "transform_codes_applied": []
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:14:27.993412+00:00",
+      "request_id": "assist-v2-batch-gar-02",
+      "trace_id": "assist-v2-batch-trace-gar-02",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "low",
+      "reason_code": "no_transform",
+      "transform_codes_applied": [],
+      "suggestions_source_tags": [
+        "context_meta"
+      ],
+      "latency_ms": 0.083,
+      "input_hash": "7dd8d7e3057f3f10e275853e10b5cd32919de166991eeffe7f346a78456d2046",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-gar-02",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [],
+      "selectors_used": [
+        "direct",
+        "imports",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Search the repository for usages of \"asdf\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated.",
+        "Review relevant configuration and error-handling code paths to understand failure behavior."
+      ],
+      "notes": [
+        "Evidence quality is WEAK; plan/explanation may be incomplete.",
+        "No grounded context files were found; selectors produced no matching files. Plan steps are ungrounded."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "GENERIC_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-gar-02",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [],
+      "selectors_used": [
+        "direct",
+        "imports",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Search the repository for usages of \"asdf\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated.",
+        "Review relevant configuration and error-handling code paths to understand failure behavior."
+      ],
+      "notes": [
+        "Evidence quality is WEAK; plan/explanation may be incomplete.",
+        "No grounded context files were found; selectors produced no matching files. Plan steps are ungrounded."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "GENERIC_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 0,
+      "candidate_count": 0,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "selectors_used": {
+      "baseline_count": 4,
+      "candidate_count": 4,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "plan_steps": {
+      "baseline_count": 3,
+      "candidate_count": 3,
+      "exact_match": true,
+      "normalized_equal": true
+    },
+    "evidence_quality": {
+      "baseline": "WEAK",
+      "candidate": "WEAK",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": true,
+      "key_fields_equal": true,
+      "structural_equal": true
+    }
+  },
+  "final_verdict": "same",
+  "verdict_reasons": [
+    "outputs equivalent across compared dimensions"
+  ]
+}

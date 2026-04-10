@@ -1,0 +1,371 @@
+{
+  "schema_version": "assist_layer_v2_eval.v1",
+  "run_id": "assist_v2_batch_026_amb-05",
+  "timestamp_utc": "2026-04-10T07:14:17.800994+00:00",
+  "request_id": "assist-v2-batch-amb-05",
+  "trace_id": "assist-v2-batch-trace-amb-05",
+  "query_category": "ambiguous_query",
+  "query_note": "ambiguous change request",
+  "original_query": "update logic",
+  "augmented_query": "update logic",
+  "assist_metadata": {
+    "assist_status": "ok",
+    "confidence_enum": "low",
+    "transform_codes_applied": [],
+    "retrieval_drift_validation": {
+      "mode": "exact_match_required",
+      "is_noop": true,
+      "transform_codes_applied": []
+    },
+    "assist_event": {
+      "event_name": "assist_layer_event",
+      "timestamp_utc": "2026-04-10T07:14:12.731184+00:00",
+      "request_id": "assist-v2-batch-amb-05",
+      "trace_id": "assist-v2-batch-trace-amb-05",
+      "session_id": "",
+      "assist_version": "assist.v1",
+      "assist_status": "ok",
+      "confidence_enum": "low",
+      "reason_code": "no_transform",
+      "transform_codes_applied": [],
+      "suggestions_source_tags": [
+        "user_input",
+        "context_meta"
+      ],
+      "latency_ms": 0.084,
+      "input_hash": "ec87376b49a53b44dbd6fc0b7925b16ac22bf75a3c38a9950b69c3841bbce17c",
+      "input_hash_scope": "original_query_only",
+      "canonicalization_version": "assist_input_canonicalization.v1",
+      "error_class": null
+    }
+  },
+  "path_a_baseline_original": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-amb-05",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:logic"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:update"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LIVE_ROADMAP_TRACKER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Assistant-Evaluation-Framework.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Evaluation-Quick-Reference.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MAIN_MERGE_READINESS_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MASTER_SYSTEM_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MIGRATION_NOTE.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/ML_DIR_SURVEY_STAGE_MAP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .coderabbit.yaml and scan for logic related to \"update\".",
+        "Review neighboring context files: .pytest_cache/v/cache/nodeids, docs/ARCHITECTURE_4_LAYER.md.",
+        "Search the repository for usages of \"update\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by adjacent:dir, heading_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "PLAN_INTENT"
+    }
+  },
+  "path_b_candidate_augmented": {
+    "schema_version": "plan_only_response.v0.1",
+    "request_id": "assist-v2-batch-amb-05",
+    "governance_posture": "PLAN_ONLY",
+    "execution": false,
+    "routing_mode": "plan_only",
+    "context_bundle": {
+      "revision": "stage-2.5-assist-layer-v1",
+      "files": [
+        {
+          "path": ".coderabbit.yaml",
+          "selection_reason": "symbol:hint:logic"
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "selection_reason": "symbol:hint:update"
+        },
+        {
+          "path": "docs/ARCHITECTURE_4_LAYER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Backend Production Validation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_ARTIFACTS_README.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/DVC_R2_SETUP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/Dataset-analysis.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/First-Production-MVP-Slice.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/GLOSSARY.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER2_COMPILATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER3_RUNTIME_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LIVE_ROADMAP_TRACKER.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Assistant-Evaluation-Framework.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/LLM-Code-Evaluation-Quick-Reference.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MAIN_MERGE_READINESS_REPORT.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MASTER_SYSTEM_SPEC.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MIGRATION_NOTE.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/ML_DIR_SURVEY_STAGE_MAP.md",
+          "selection_reason": "direct:file"
+        },
+        {
+          "path": "docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md",
+          "selection_reason": "direct:file"
+        }
+      ],
+      "selectors_used": [
+        "direct",
+        "siblings",
+        "symbols"
+      ]
+    },
+    "plan_summary": {
+      "steps": [
+        "Open .coderabbit.yaml and scan for logic related to \"update\".",
+        "Review neighboring context files: .pytest_cache/v/cache/nodeids, docs/ARCHITECTURE_4_LAYER.md.",
+        "Search the repository for usages of \"update\" to locate related call sites and configuration.",
+        "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+      ],
+      "notes": [
+        "Repo-aware selection: 50 file(s) by adjacent:dir, heading_match.",
+        "Evidence quality is WEAK; plan/explanation may be incomplete."
+      ]
+    },
+    "metadata": {
+      "evidence_quality": "WEAK",
+      "intent_type": "PLAN_INTENT"
+    }
+  },
+  "comparison": {
+    "files": {
+      "baseline_count": 28,
+      "candidate_count": 28,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "selectors_used": {
+      "baseline_count": 3,
+      "candidate_count": 3,
+      "overlap_ratio": 1.0,
+      "exact_match": true
+    },
+    "plan_steps": {
+      "baseline_count": 4,
+      "candidate_count": 4,
+      "exact_match": true,
+      "normalized_equal": true
+    },
+    "evidence_quality": {
+      "baseline": "WEAK",
+      "candidate": "WEAK",
+      "exact_match": true
+    },
+    "core_flags": {
+      "governance_posture_equal": true,
+      "execution_equal": true,
+      "routing_mode_equal": true
+    },
+    "output_equivalence": {
+      "normalized_plan_steps_equal": true,
+      "key_fields_equal": true,
+      "structural_equal": true
+    }
+  },
+  "final_verdict": "same",
+  "verdict_reasons": [
+    "outputs equivalent across compared dimensions"
+  ]
+}
