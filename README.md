@@ -1,4 +1,4 @@
-# Motadata AI Services - H100 Deployment
+# m-coder: Motadata AI Services 
 
 Production-ready AI services deployment with version-agnostic model naming and systemd service management.
 
