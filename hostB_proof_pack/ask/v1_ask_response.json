@@ -1,0 +1,302 @@
+{
+  "schema_version": "plan_only_response.v0.1",
+  "request_id": "hostB-ask-primary-1",
+  "timestamp_utc": "2026-03-30T12:35:41.053992+00:00",
+  "context_bundle": {
+    "revision": "evidence_bundle.v1",
+    "files": [
+      {
+        "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "motadata/src/main/java/com/mindarray/api/AIOpsObject.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "motadata/src/main/java/com/mindarray/log/LogParser.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "motadata/src/main/java/com/mindarray/policy/AIOpsMetricPolicyManager.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "motadata/src/main/java/com/mindarray/api/DependencyMapper.java",
+        "selection_reason": "query_token_substring_anchor"
+      },
+      {
+        "path": "GOLDEN_EXEMPLARS_REFERENCE_ARCHIVE.md",
+        "selection_reason": "query_token_substring_anchor"
+      }
+    ],
+    "selectors_used": [
+      "plan_gate:v1_ask:evidence_bundle.v1"
+    ]
+  },
+  "plan_summary": {
+    "steps": [
+      "Open motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java and scan for logic related to \"normalization\".",
+      "Review neighboring context files: motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java, motadata/src/main/java/com/mindarray/aiops/DependencyManager.java.",
+      "Search the repository for usages of \"normalization\" to locate related call sites and configuration.",
+      "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+    ]
+  },
+  "governance_posture": "PLAN_ONLY",
+  "execution": false,
+  "ui": {
+    "title": "Evidence-driven Plan (PLAN ONLY)",
+    "message": "Context was built only from evidence_bundle.v1 (no repository reads on this path). Plan-only steps generated; no execution performed.",
+    "severity": "info"
+  },
+  "context_resolution": {
+    "context_source": "layer5.evidence_bundle.v1",
+    "no_repo_filesystem": true
+  },
+  "evidence_bundle": {
+    "provisional": false,
+    "schema_hint": "layer5.evidence_bundle.v1",
+    "query_raw": "Where is alert ingestion or normalization implemented in this Motadata codebase?",
+    "query_tokens": [
+      "alert",
+      "codebase",
+      "implemented",
+      "in",
+      "ingestion",
+      "is",
+      "motadata",
+      "normalization",
+      "or",
+      "this",
+      "where"
+    ],
+    "top_k": 8,
+    "index_schema_version": "layer5.file_index.v1",
+    "workspace_identity_hash": "b9d432fe5fe0f734e2ea6c8c4e5c2f0115502d34736c888c408b9f57a4595b86",
+    "canonical_root": "/home/harshil/Projects/Motadata",
+    "a5_authority_note": "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets.",
+    "entries": [
+      {
+        "provisional": false,
+        "rank": 0,
+        "relative_path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "retrieval_score": 2597,
+        "retrieval_breakdown": {
+          "basename_substrings": 4,
+          "content_substrings": 2564,
+          "path_substrings": 29
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 1,
+        "relative_path": "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "retrieval_score": 2124,
+        "retrieval_breakdown": {
+          "basename_substrings": 2,
+          "content_substrings": 2094,
+          "path_substrings": 28
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 2,
+        "relative_path": "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+        "retrieval_score": 1874,
+        "retrieval_breakdown": {
+          "basename_substrings": 0,
+          "content_substrings": 1847,
+          "path_substrings": 27
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 3,
+        "relative_path": "motadata/src/main/java/com/mindarray/api/AIOpsObject.java",
+        "retrieval_score": 1726,
+        "retrieval_breakdown": {
+          "basename_substrings": 0,
+          "content_substrings": 1707,
+          "path_substrings": 19
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 4,
+        "relative_path": "motadata/src/main/java/com/mindarray/log/LogParser.java",
+        "retrieval_score": 1253,
+        "retrieval_breakdown": {
+          "basename_substrings": 0,
+          "content_substrings": 1294,
+          "path_substrings": -41
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 5,
+        "relative_path": "motadata/src/main/java/com/mindarray/policy/AIOpsMetricPolicyManager.java",
+        "retrieval_score": 1200,
+        "retrieval_breakdown": {
+          "basename_substrings": 0,
+          "content_substrings": 1181,
+          "path_substrings": 19
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 6,
+        "relative_path": "motadata/src/main/java/com/mindarray/api/DependencyMapper.java",
+        "retrieval_score": 1155,
+        "retrieval_breakdown": {
+          "basename_substrings": 0,
+          "content_substrings": 1136,
+          "path_substrings": 19
+        },
+        "snippet": {
+          "text": "/*\n *   Copyright (c) Motadata 2025. All rights reserved.\n *\n *   This source code is the property of Motadata and constitutes\n",
+          "start_line": 1,
+          "end_line": 4,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 127,
+          "anchor_line": 2,
+          "matched_tokens": [
+            "motadata"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      },
+      {
+        "provisional": false,
+        "rank": 7,
+        "relative_path": "GOLDEN_EXEMPLARS_REFERENCE_ARCHIVE.md",
+        "retrieval_score": 923,
+        "retrieval_breakdown": {
+          "basename_substrings": 0,
+          "content_substrings": 918,
+          "path_substrings": 5
+        },
+        "snippet": {
+          "text": "# Golden Exemplars \u2014 Complete Production Guide\n\n**Purpose**: Define, author, validate, and scale golden SFT exemplars with strong behavioral DNA for enterprise AI training.\n\n**Audience**: Engineers, SREs, architects authoring and reviewing golden exemplars\n",
+          "start_line": 1,
+          "end_line": 5,
+          "start_byte_utf8": 0,
+          "end_byte_utf8": 259,
+          "anchor_line": 3,
+          "matched_tokens": [
+            "in",
+            "is",
+            "or"
+          ],
+          "selection_reason": "query_token_substring_anchor",
+          "truncated_by_max_bytes": false
+        }
+      }
+    ]
+  },
+  "evidence_first_meta": {
+    "ask_path": "v1_evidence",
+    "context_source": "layer5.evidence_bundle.v1",
+    "no_context_engine": true
+  },
+  "metadata": {
+    "intent_type": "CODE_INTENT",
+    "evidence_quality": "STRONG",
+    "quality_reasons": [],
+    "dominance_metrics": {
+      "top_k_size": 8.0,
+      "core_code_in_top_k_pct": 0.375,
+      "code_in_top_k_pct": 1.0,
+      "noise_in_top_k_pct": 0.0,
+      "core_in_top_3_count": 3.0,
+      "max_consecutive_noise": 0.0
+    },
+    "policy_version": "quality_gate.v1"
+  }
+}

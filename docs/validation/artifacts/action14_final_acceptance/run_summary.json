@@ -1,0 +1,34 @@
+{
+  "action": "Action 14 — Final Acceptance Run",
+  "run_date_utc": "2026-04-09",
+  "repo": "m-coder",
+  "verdict": "PASS",
+  "verdict_notes": "Unified offline pytest core (132 passed, 1 skipped) + live verify_ask_path + offline Phase-1 proof_matrix check. Minimal test fix: explain_debug log assertion aligned to trace_id-first log format (not a behavior change).",
+  "commands": [
+    "python3 -m pytest runtime/tests/test_stage3_loop.py runtime/tests/test_aiops_mvp_scenario_pack.py runtime/tests/test_explain_debug_action6_proof.py runtime/tests/test_reasoner_explain_debug_logging.py runtime/tests/test_ask_service.py runtime/tests/test_ask_v1_ingest.py runtime/tests/test_execute_service.py runtime/tests/test_execute_service_plan_gate_boundary.py runtime/tests/test_action5_observability.py runtime/tests/test_ask_validation_harness.py -v --tb=short",
+    "bash runtime/scripts/verify_ask_path.sh (with WORKSPACE_ROOT, QUERY, CONTEXT_URL, PLAN_GATE_URL)",
+    "bash scripts/verify_plugin_phase1_proof_matrix.sh"
+  ],
+  "pytest": {
+    "passed": 132,
+    "failed": 0,
+    "skipped": 1,
+    "skipped_tests": ["runtime/tests/test_aiops_mvp_scenario_pack.py::test_live_export_and_ask_smoke"],
+    "log_file": "docs/validation/artifacts/action14_final_acceptance/pytest_action14_core.txt"
+  },
+  "live_http": {
+    "verify_ask_path": "PASS",
+    "log_file": "docs/validation/artifacts/action14_final_acceptance/verify_ask_path_live.txt"
+  },
+  "offline_checks": {
+    "plugin_phase1_proof_matrix": "PASS",
+    "log_file": "docs/validation/artifacts/action14_final_acceptance/verify_plugin_phase1_proof_matrix.txt"
+  },
+  "prior_closure_artifacts_referenced": [
+    "docs/validation/B5_HOST_READINESS.md",
+    "docs/validation/STAGE3_BURN_IN_REPORT.md",
+    "docs/validation/artifacts/b5_linux_backend_gpu/",
+    "docs/validation/artifacts/plugin_phase1_truth_proof/",
+    "docs/validation/artifacts/b1_retrieval_validation/"
+  ]
+}

@@ -13,7 +13,7 @@ This pass classifies legacy Layer-2 lineage material only. It performs **no** mo
 
 ## 3. Scope inspected
 
-- **Directories inspected:** `ml/training/src/data/`, `ml/training/src/dataset_creation/`, `ml/training/src/finetuning/`, `ml/training/src/evaluation/`, `ml/training/src/utils/`, `ml/training/scripts/`, `ml/training/data/processed/`, `ml/training/artifacts/`, `ml/training/results/`, `ml/training/evaluation/`, `ml/datasets/`, `ml/evaluation/`, `docs/training/`, `docs/datasets/`, `docs/evaluation/`, `docs/status_reports/`, `docs/audit/`, `docs/benchmark/`, `archive/docs/`, `archive/okr/`.
+- **Directories inspected:** `ml/training/src/data/`, `ml/training/src/dataset_creation/`, `ml/training/src/finetuning/`, `ml/training/src/evaluation/`, `ml/training/src/utils/`, `ml/training/scripts/`, `ml/training/data/processed/`, `ml/training/artifacts/`, `ml/training/results/`, `ml/training/evaluation/`, `ml/datasets/`, `ml/evaluation/`, `docs/training/`, `docs/datasets/`, `docs/evaluation/`, `docs/audit/`, `docs/benchmark/`, `archive/docs/`, `archive/okr/`. *(docs/status_reports/ removed from repo.)*
 - **Patterns used:** Path or filename contains `v15`, `v16`, `v16_1`, or `v16_2`.
 - **Intentionally excluded:** Files outside the above areas that do not match the version patterns; runtime/ and non–Layer-2 code not in the legacy lineage surface.
 
@@ -26,11 +26,11 @@ This pass classifies legacy Layer-2 lineage material only. It performs **no** mo
 | ml/training/src/data/deduplicate_v16_1.py | file | ACTIVE | Deduplicates v16_1_upgraded → v16_1_upgraded_dedup | INPUT/OUTPUT in ml/datasets; consumed by fix_motadata_categories, verify_category_consistency | Part of v16_1 chain |
 | ml/training/src/data/create_v16_1_splits.py | file | ACTIVE | Splits v16_1_surgical into train/val/test | OUTPUT_DIR = ml/datasets/v16_1_splits; consumed by fix_dataset_v16_1; referenced in Phase 14E | In path-remediation surface |
 | ml/training/src/finetuning/train_v16_1_surgical.py | file | ACTIVE | Trains v16_1 from v16_1_fixed splits | DATASET_DIR = ml/datasets/v16_1_fixed; Phase 14D converted to data root; docs/README status | Live training entrypoint |
-| ml/training/src/finetuning/train_v16_2.py | file | ACTIVE | Trains v16_2 from v16_2 splits | DATASET_DIR = ml/datasets/v16_2; merge_v16_2.py next step; V16_2_TRAINING_STATUS.md | Live training entrypoint |
+| ml/training/src/finetuning/train_v16_2.py | file | **REMOVED** | *(deleted from repo — obsolete)* | Inference: `runtime/scripts/governed_services.sh` | — |
 | ml/training/src/finetuning/validate_v16_1_fixed.py | file | ACTIVE | Validates v16_1_fixed dataset | DATASET_DIR = ml/datasets/v16_1_fixed; Phase 14D path contract | Validation for active pipeline |
 | ml/training/src/finetuning/test_v16_1_merged.py | file | ACTIVE | Tests merged v16_1 model on v16_1_fixed | DATASET_DIR = v16_1_fixed; Phase 14D; part of merge validation | Post-merge validation |
 | ml/training/src/finetuning/merge_v16_1.py | file | ACTIVE | Merges v16_1 LoRA into base model | ADAPTER_PATH, OUTPUT_PATH; Phase 14D converted | Merge step for v16_1 |
-| ml/training/src/finetuning/merge_v16_2.py | file | ACTIVE | Merges v16_2 LoRA into base model | LORA_MODEL_PATH, OUTPUT_PATH; Phase 14D; V16_2_TRAINING_STATUS.md | Merge step for v16_2 |
+| ml/training/src/finetuning/merge_v16_2.py | file | **REMOVED** | *(deleted from repo — obsolete)* | Use external merge tooling + `VLLM_BASE_MODEL` in `runtime/config/demo_stack.env` | — |
 | ml/training/scripts/fix_dataset_v16_1.py | file | ACTIVE | Fixes v16_1_splits → v16_1_fixed (chat template) | INPUT_DIR = v16_1_splits, OUTPUT_DIR = v16_1_fixed; consumed by train_v16_1_surgical, data_curation; Phase 14E | Required for v16_1 training |
 | ml/training/scripts/train_v16_1.sh | file | ACTIVE | Shell entrypoint for v16_1 training | Wraps train_v16_1_surgical flow | Operational script |
 | ml/training/src/dataset_creation/v16_2/data_curation.py | file | ACTIVE | Curates v16_1_fixed → v16_2 dataset | INPUT_DIR = v16_1_fixed, OUTPUT_DIR = v16_2; Phase 14E; feeds v16_2 pipeline | v16_2 dataset construction |
@@ -86,11 +86,10 @@ This pass classifies legacy Layer-2 lineage material only. It performs **no** mo
 | ml/evaluation/results/evaluation_report_v16_1.html | file | RETAINED_LINEAGE | v16_1 evaluation report | Eval output | Artifact |
 | ml/evaluation/analysis/v16_1_RCA.md | file | RETAINED_LINEAGE | v16_1 RCA | Analysis doc | Forensics |
 | docs/audit/V16_PRE_GOVERNANCE_DATA_SCRUB_PLAN.md | file | RETAINED_LINEAGE | v16 pre-governance scrub plan | Audit doc; references v16 lineage | Audit |
-| docs/status_reports/V16_PERFORMANCE_MONITORING_PLAN.md | file | RETAINED_LINEAGE | v16 performance monitoring | Status doc | Methodology |
-| docs/status_reports/V16_REGRESSION_TEST_REPORT.md | file | RETAINED_LINEAGE | v16 regression test report | Status doc | Audit |
+| docs/status_reports/* (removed) | dir | **REMOVED** | *(directory deleted — obsolete)* | — | — |
 | docs/training/V16_TRAINING_SUMMARY.md | file | RETAINED_LINEAGE | v16 training summary | Training doc | Methodology |
 | docs/training/V16_2_TRAINING_PLAN.md | file | RETAINED_LINEAGE | v16_2 training plan | Plan doc | Methodology |
-| docs/training/V16_2_TRAINING_STATUS.md | file | RETAINED_LINEAGE | v16_2 training status | References merge_v16_2.py; runbook | Methodology |
+| docs/training/V16_2_TRAINING_STATUS.md | file | **REMOVED** | *(deleted — obsolete)* | See `runtime/scripts/` + `demo_stack.env` | — |
 | docs/evaluation/v16_inference_results.json | file | RETAINED_LINEAGE | v16 inference results | Eval artifact | Artifact |
 | docs/evaluation/V16_INFERENCE_TEST_REPORT.md | file | RETAINED_LINEAGE | v16 inference test report | Eval doc | Methodology |
 | docs/evaluation/V16_POST_TRAINING_EVALUATION.md | file | RETAINED_LINEAGE | v16 post-training evaluation | Eval doc | Methodology |
@@ -131,13 +130,13 @@ This pass classifies legacy Layer-2 lineage material only. It performs **no** mo
 ### ACTIVE
 
 - **Count:** 26 items (all files).
-- **Items:** validate_v16_1_surgical.py, create_v16_upgrade.py, deduplicate_v16_1.py, create_v16_1_splits.py, train_v16_1_surgical.py, train_v16_2.py, validate_v16_1_fixed.py, test_v16_1_merged.py, merge_v16_1.py, merge_v16_2.py, fix_dataset_v16_1.py, train_v16_1.sh, v16_2/data_curation.py, v16_2/surgical_fixer.py, v16_2/final_polish.py, prepare_v17_dataset.py, surgical_precision_fix.py, final_dataset_validation.py, fix_motadata_categories.py, verify_category_consistency.py, evaluate_v16_1_model.py, evaluate_v16_1_on_motadata_tasks.py, evaluate_v16_1_motadata_bench.py, evaluate_v16_2.py, evaluate_v16_2_enriched.py, evaluate_v16_2_motadata_bench.py.
+- **Items:** validate_v16_1_surgical.py, create_v16_upgrade.py, deduplicate_v16_1.py, create_v16_1_splits.py, train_v16_1_surgical.py, validate_v16_1_fixed.py, test_v16_1_merged.py, merge_v16_1.py, fix_dataset_v16_1.py, train_v16_1.sh, v16_2/data_curation.py, v16_2/surgical_fixer.py, v16_2/final_polish.py, prepare_v17_dataset.py, surgical_precision_fix.py, final_dataset_validation.py, fix_motadata_categories.py, verify_category_consistency.py, evaluate_v16_1_model.py, evaluate_v16_1_on_motadata_tasks.py, evaluate_v16_1_motadata_bench.py, evaluate_v16_2.py, evaluate_v16_2_enriched.py, evaluate_v16_2_motadata_bench.py. *(train_v16_2.py, merge_v16_2.py removed from repo.)*
 - **Common reasons:** They are entrypoints or steps in the current v16_1/v16_2 dataset construction, training, merge, and evaluation pipelines; they are explicitly referenced by Phase 14D/14E path-remediation work; they read/write ml/datasets paths (v16_1_splits, v16_1_fixed, v16_2, v16_1_upgraded, v16_1_surgical) or model/checkpoint paths; prepare_v17_dataset and create_v16_upgrade use v15_gold as input, so the v15_gold contract remains active.
 
 ### RETAINED_LINEAGE
 
 - **Count:** 64 items (all files).
-- **Items:** train_v16_enhanced.py, test_v16_inference.py; all v15-named utils (survey_v15_balanced, remove_v15_duplicates, final_v15_verification); merge_v15_model, train_v15_search_replace, train_v15_balanced, finetune_v15_qwen, finetune_v15_claude; v15 evaluation scripts (v15_post_finetuning_eval, test_v15_inference, validate_v15_dataset, test_v15_model, inspect_v15_samples, benchmark_v15_model); all create_v15_* and convert_v15_* in dataset_creation; v15 processed data and artifacts (v15_search_replace_20251231.jsonl, v15_test_results.json, v15_benchmark_results.json); v16_1 results and plans (v16_1_test_results.json, v16_1_merged_model_analysis.md, v16_1_kpi_evaluation_plan.md); ml/datasets v15 specs and reports; ml/evaluation v16_1/v16_2 results and v16_1_RCA; all docs under docs/training, docs/datasets, docs/evaluation, docs/status_reports, docs/audit (V15/V16/V16_1/V16_2), docs/benchmark (benchmark_v15_results.json), docs/v16_1eval.xml, docs/V16_1_MODEL_UPGRADE_HYPOTHESIS.md.
+- **Items:** train_v16_enhanced.py, test_v16_inference.py; all v15-named utils (survey_v15_balanced, remove_v15_duplicates, final_v15_verification); merge_v15_model, train_v15_search_replace, train_v15_balanced, finetune_v15_qwen, finetune_v15_claude; v15 evaluation scripts (v15_post_finetuning_eval, test_v15_inference, validate_v15_dataset, test_v15_model, inspect_v15_samples, benchmark_v15_model); all create_v15_* and convert_v15_* in dataset_creation; v15 processed data and artifacts (v15_search_replace_20251231.jsonl, v15_test_results.json, v15_benchmark_results.json); v16_1 results and plans (v16_1_test_results.json, v16_1_merged_model_analysis.md, v16_1_kpi_evaluation_plan.md); ml/datasets v15 specs and reports; ml/evaluation v16_1/v16_2 results and v16_1_RCA; all docs under docs/training, docs/datasets, docs/evaluation, docs/audit (V15/V16/V16_1/V16_2), docs/benchmark (benchmark_v15_results.json), docs/v16_1eval.xml, docs/V16_1_MODEL_UPGRADE_HYPOTHESIS.md. *(docs/status_reports/ removed — see table row above.)*
 - **Common reasons:** They provide provenance (v15→v16_1 upgrade, v15_gold creation), lineage continuity (v15 training/eval scripts), forensic traceability (reports, RCAs), comparison baseline (v15 benchmarks, v16 inference tests), and rebuild/debug context (create_v15_* scripts, v15_balanced path shape). Several are ambiguous (e.g. train_v16_enhanced) and thus classified RETAINED_LINEAGE per the ambiguity rule.
 
 ### ARCHIVE_CANDIDATE

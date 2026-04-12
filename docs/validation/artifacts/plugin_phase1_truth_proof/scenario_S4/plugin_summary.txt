@@ -1,0 +1,16 @@
+Outcome: Bounded Allowance (No Execution)
+request_id: req-f41971c3-a2b6-48a7-9a0a-fb2923de26b9
+Query: where is README for docker compose setup?
+ask_path: v1_evidence
+evidence_bundle_present: true
+plan_summary.notes_present: true
+Routing: trace=trace-3fa3ebdf-297f-4bd8-a49c-eb0d191abdf1 · mode=plan_only · plugin=v1_success
+quality=WEAK · intent=CODE_INTENT
+Evidence-driven Plan (PLAN ONLY)
+Context was built only from evidence_bundle.v1 (no repository reads on this path). Plan-only steps generated; no execution performed.
+
+Plan (4 steps): Open motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java and scan for logic related to "compose".
+(+3 more in full response)
+Grounding: 8 evidence entries
+
+— PLAN ONLY — Use View full response or Copy full response for complete diagnostics.

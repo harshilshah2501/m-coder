@@ -5,6 +5,8 @@
 **Date:** 2026-03-15  
 **Mode:** Planning only. No moves, renames, or structural execution.
 
+**Update (2026-03):** `docs/status_reports/` was **removed** from the repository. Mentions of that path below reflect the layout when this plan was written.
+
 ---
 
 ## 1. Purpose and scope

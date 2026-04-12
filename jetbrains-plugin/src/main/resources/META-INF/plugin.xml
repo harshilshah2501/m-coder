@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>ai.motadata.runtime-plugin</id>
     <name>Motadata Runtime Governance (MVP)</name>
-    <version>0.1.0</version>
+    <version>0.2.6</version>
     <vendor email="dev@motadata.ai">Motadata</vendor>
 
     <description>
@@ -17,28 +17,42 @@
 
         No IDE action of interest bypasses runtime governance.
         Fails closed when runtime unavailable in enforcing mode.
+
+        Git Integration (Git4Idea) is optional: install JetBrains &quot;Git&quot; if you want the
+        standard Git commit UI to register the check-in handler; Ask / Submit to Runtime work without it.
     </description>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>Git4Idea</depends>
+    <!-- Hard dependency breaks JBC/minimal IDEs; we do not call git4idea APIs (GitInfoUtil uses git CLI). -->
+    <depends optional="true">Git4Idea</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <checkinHandlerFactory implementation="ai.motadata.plugin.vcs.MotadataCheckinHandlerFactory"/>
+        <postStartupActivity implementation="ai.motadata.plugin.startup.MotadataStartupStackCheckActivity"/>
         <notificationGroup id="Motadata AI" displayType="BALLOON" isLogByDefault="true"/>
     </extensions>
 
     <actions>
+        <action id="ai.motadata.plugin.actions.MotadataAssistantAction"
+                class="ai.motadata.plugin.assistant.MotadataAssistantAction"
+                text="Motadata Assistant"
+                description="Primary assistant shell with explicit Ask/Explain/Plan vs Execute modes.">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
         <action id="ai.motadata.plugin.actions.AskMotadataAiAction"
                 class="ai.motadata.plugin.ask.AskMotadataAiAction"
                 text="Ask Motadata AI"
-                description="Repo-aware Ask / Safe Planning (PLAN ONLY)">
+                description="Compatibility shortcut to assistant Ask/Explain/Plan mode.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         <action id="ai.motadata.plugin.actions.SubmitToRuntimeAction"
                 class="ai.motadata.plugin.actions.SubmitToRuntimeAction"
                 text="Submit to Runtime"
-                description="Submit action for governed execution through runtime Plan-Gate">
+                description="Compatibility shortcut to assistant Execute mode.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>

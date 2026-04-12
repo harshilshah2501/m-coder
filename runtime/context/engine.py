@@ -77,9 +77,10 @@ class ContextEngine:
         deduped = self._deduplicate(refs)
         items, limits = self._materialize(root, deduped, request.max_files, request.max_bytes)
 
+        contributing_selectors = sorted(set(r.selector for r in deduped))
         provenance = ContextBundleProvenance(
             root_path=str(root),
-            selectors=list(request.selectors),
+            selectors=contributing_selectors,
             requested_files=list(request.files),
             symbol_hints=list(request.symbol_hints),
         )

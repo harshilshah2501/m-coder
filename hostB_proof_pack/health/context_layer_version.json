@@ -1,0 +1,1 @@
+{"package": "motadata-context-layer", "package_version": "0.1.4", "service_version": "v0.1", "evidence_schema_hint": "layer5.evidence_bundle.v1", "endpoints": ["GET /healthz", "GET /version", "POST /v1/export_evidence"]}

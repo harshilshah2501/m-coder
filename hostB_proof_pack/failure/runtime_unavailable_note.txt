@@ -1,0 +1,3 @@
+When Plan-Gate on 127.0.0.1:8089 was stopped (SIGTERM to plan_gate PID), curl to /healthz returned connection refused (see curl_when_down.txt). Any client (including the plugin RuntimeBridge) would fail HTTP connection — not a silent 200 success. Plan-Gate was restarted via runtime/scripts/governed_services.sh start; after_healthz.txt shows {"status":"ok"}.
+
+Plugin UI capture of RUNTIME_UNAVAILABLE during outage: NOT_PROVEN in this pass (manual paste/screenshot not collected).

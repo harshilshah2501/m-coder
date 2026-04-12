@@ -66,8 +66,8 @@ journalctl -u motadata-orchestrator -f
 ```bash
 # If you need to run the orchestrator script directly:
 cd /home/harshil/Harshil-PoCs
-bash rag/scripts/orchestrator_unified.sh start
-bash rag/scripts/orchestrator_unified.sh stop
+bash runtime/scripts/governed_services.sh start
+bash runtime/scripts/governed_services.sh stop
 ```
 
 ### Check Logs
@@ -201,8 +201,6 @@ GET /health
 
 For detailed information about the orchestrator service, see:
 - **[ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** - Complete service management guide
-- **[IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
-
 ## Contact & Resources
 
 - **Documentation**: `/docs/RAG_SYSTEM_ITERATIONS_ANALYSIS.md`

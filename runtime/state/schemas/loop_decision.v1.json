@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LoopDecision.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proposal_ref",
+    "decision_ref",
+    "decision",
+    "reason_code",
+    "remaining_budget"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "loop_decision.v1"
+    },
+    "proposal_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "PROCEED_TO_TOOL",
+        "REVISE_PROPOSAL",
+        "TERMINATE_SUCCESS",
+        "TERMINATE_INSUFFICIENT",
+        "TERMINATE_FAILED",
+        "TERMINATE_REFUSED"
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "remaining_budget": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5
+    }
+  }
+}

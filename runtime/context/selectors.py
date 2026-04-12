@@ -13,6 +13,28 @@ from typing import Iterable, List
 
 from runtime.context.contracts import ContextRequest, SelectedContextRef
 
+# Skip these path segments when scanning for symbol hints (vendor / VCS / caches).
+_SYMBOL_SCAN_SKIP_PARTS = frozenset({
+    ".git",
+    ".dvc",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "node_modules",
+    "dist",
+    "build",
+    ".gradle",
+    ".idea",
+})
+
+
+def _path_ok_for_symbol_scan(p: Path) -> bool:
+    try:
+        parts = p.parts
+    except (OSError, ValueError):
+        return False
+    return not _SYMBOL_SCAN_SKIP_PARTS.intersection(parts)
+
 
 def _normalize_root(root_path: str) -> Path:
     """Return normalized absolute root path."""
@@ -173,10 +195,12 @@ def select_symbol_hints(root_path: str, symbol_hints: Iterable[str]) -> List[Sel
     if not hints:
         return []
 
-    # Precompute sorted candidate files.
+    # Precompute sorted candidate files. Skip symlinks so we never read through
+    # e.g. .venv/bin/python → /usr/bin/python3.12 (binary matches token substrings;
+    # resolve() then escapes repo and breaks relative_to).
     all_files: List[Path] = []
     for p in sorted(root.rglob("*")):
-        if p.is_file():
+        if p.is_file() and not p.is_symlink() and _path_ok_for_symbol_scan(p):
             all_files.append(p)
 
     refs: List[SelectedContextRef] = []
@@ -187,8 +211,11 @@ def select_symbol_hints(root_path: str, symbol_hints: Iterable[str]) -> List[Sel
                 text = f.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            if hint in text:
-                selected_path = _normalize_rel_path(root, f)
+            if hint in text.lower():
+                try:
+                    selected_path = _normalize_rel_path(root, f)
+                except ValueError:
+                    continue
                 break
         if selected_path is not None:
             refs.append(

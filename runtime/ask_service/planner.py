@@ -10,9 +10,12 @@ future runtime could investigate the question.
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from runtime.context.contracts import ContextBundle
+from runtime.layer5.retrieval.action_target_selection import select_plan_action_target
+
+from .authority_synthesis import merge_plan_with_authority, synthesize_authority_plan_steps
 
 
 @dataclass
@@ -31,13 +34,32 @@ class PlanOnlyPlanner:
     - No hidden model autonomy.
     """
 
-    def plan(self, query: str, bundle: ContextBundle) -> PlanSummary:
+    def plan(
+        self,
+        query: str,
+        bundle: ContextBundle,
+        authority_resolution: Optional[Dict[str, Any]] = None,
+    ) -> PlanSummary:
+        generic = self._plan_generic(query, bundle)
+        auth_steps, meta = synthesize_authority_plan_steps(query, bundle, authority_resolution)
+        steps = merge_plan_with_authority(generic.steps, auth_steps, authority_resolution)
+        notes: List[str] | None = None
+        if meta.get("anchor_mode") and meta.get("anchor_mode") != "none":
+            notes = [
+                f"authority_anchor_mode={meta.get('anchor_mode')}",
+                f"authority_uncertainty={meta.get('uncertainty', False)}",
+            ]
+        return PlanSummary(steps=steps, notes=notes)
+
+    def _plan_generic(self, query: str, bundle: ContextBundle) -> PlanSummary:
         # Simple deterministic symbol hint extraction: longest alphanumeric token.
         tokens = [t for t in _tokenize(query) if t]
         primary_token = max(tokens, key=len) if tokens else None
 
-        top_paths = [item.path for item in bundle.items[:3]]
-        focus_file = top_paths[0] if top_paths else None
+        ranked = [item.path for item in bundle.items[:8]]
+        selected = select_plan_action_target(ranked, query)
+        focus_file = selected or (ranked[0] if ranked else None)
+        top_paths = ranked[:3]
 
         steps: List[str] = []
 

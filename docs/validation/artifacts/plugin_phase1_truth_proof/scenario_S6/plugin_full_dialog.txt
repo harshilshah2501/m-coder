@@ -1,0 +1,14 @@
+═══════════════════════════════════════════
+  BLOCKED — Policy blocked execution
+═══════════════════════════════════════════
+
+Command: false
+
+Outcome: Blocked by Policy
+
+The execution path was reached but blocked
+by runtime or sandbox policy.
+
+Reason: Command 'false' not in allowed list
+
+The action was NOT executed.

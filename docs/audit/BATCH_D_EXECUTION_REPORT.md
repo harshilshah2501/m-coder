@@ -5,6 +5,8 @@
 **Date:** 2026-03-15  
 **Governing plan:** [STRUCTURAL_REMEDIATION_PLAN.md](STRUCTURAL_REMEDIATION_PLAN.md)
 
+**Update (2026-03):** `docs/status_reports/` was **removed** from the repository as obsolete. Sections below describe Batch D state at the time of writing; treat that directory as historical.
+
 ---
 
 ## 1. Purpose
@@ -19,7 +21,7 @@ Batch D **defines report convention and documentation placement only**. It estab
 |----------|-----------|--------------------------|
 | `docs/reports/` | Yes | M4X integration/freeze/verification/merge completion reports |
 | `docs/status/` | Yes | Session summaries, training monitor, progress, streaming fix; has README describing "living operational journal" |
-| `docs/status_reports/` | Yes | Periodic progress (JANUARY_*), findings, V16/V17 planning, system_status; has README describing progress reports |
+| `docs/status_reports/` | **Removed** (2026-03) | Was: periodic progress, findings, V16/V17 planning; directory deleted as obsolete |
 | `docs/runtime/verification/` | Yes | Audits (LAYER3, ML_PIPELINE, NOMENCLATURE, REPOSITORY_STRUCTURE, SYSTEM_*, RUNTIME_CONSTITUTIONAL_REFERENCE, E2E_VALIDATION) |
 | `docs/README.md` | Yes | Documentation index; canonical reading path; directory structure; no prior report-placement convention |
 

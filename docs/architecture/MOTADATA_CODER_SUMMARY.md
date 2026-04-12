@@ -233,7 +233,6 @@ TrainingArguments(
 ## File Organization
 
 ### Key Documentation
-- 📘 **[ITERATION_9_JOURNAL.md](docs/ITERATION_9_JOURNAL.md)** - Detailed 16-part chronicle of Iter9 (4-bit corruption discovery, analysis, resolution)
 - 📊 **[ITER8_AND_ITER9_RESULTS.md](evaluation/ITER8_AND_ITER9_RESULTS.md)** - Comparative performance analysis across iterations
 - 🏗️ **[ARCHITECTURE.md](rag-system/ARCHITECTURE.md)** - System design and component interactions
 - 🚀 **[README.md](README.md)** - Quick start and overview

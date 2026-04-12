@@ -1,0 +1,91 @@
+{
+  "lock_notice": "PR-6 closure fixture — DO NOT MODIFY without version bump",
+  "schema_version": "pr6.ambiguous_debug_fixtures.v1",
+  "description": "Ambiguous / indirect / soft-noise PR-6 queries (multi-anchor).",
+  "fixtures": [
+    {
+      "id": "ambiguous_correlation_alerts",
+      "query": "Correlation issue in alerts",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/eventbus/UIActionEventHandler.java",
+        "motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "ambiguous_topology_graph",
+      "query": "Topology graph inconsistency",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/nms/TopologyEngine.java",
+        "motadata/src/main/java/com/mindarray/store/TopologyCacheStore.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "ambiguous_metrics_ingestion_intermittent",
+      "query": "Metrics ingestion failing intermittently",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/nms/MetricEnricher.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+        "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "indirect_duplicate_incidents",
+      "query": "duplicate incident handling",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.55
+    },
+    {
+      "id": "soft_noise_helper_utils",
+      "query": "correlation helper utilities",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationUtils.java",
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.55
+    },
+    {
+      "id": "multi_file_pipeline_orchestration",
+      "query": "orchestrate collector pipeline end to end",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+        "motadata/src/main/java/com/mindarray/eventbus/LocalEventChangeNotificationHandler.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.5
+    },
+    {
+      "id": "soft_collision_shared_facade",
+      "query": "service facade delegation correlation",
+      "expected_anchor_paths": [
+        "motadata/src/main/java/com/mindarray/aiops/shared/ServiceFacade.java",
+        "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationService.java",
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+      ],
+      "required_top_k": 8,
+      "min_anchor_hits_top_3": 1,
+      "max_noise_ratio_top_5": 0.55
+    }
+  ]
+}

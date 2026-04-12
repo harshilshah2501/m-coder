@@ -195,6 +195,10 @@ class TestOnlyIntentReachesSandbox:
 class TestPlanGatePostureUnchanged:
     """Existing Plan-Gate posture fixtures retain same behavior; only safe_execute reaches sandbox."""
 
+    @pytest.fixture(autouse=True)
+    def _allow_plan_gate_overrides(self, monkeypatch):
+        monkeypatch.setenv("MOTADATA_EXECUTE_ALLOW_PLAN_GATE_OVERRIDES", "1")
+
     def test_explicit_plan_gate_refuse_still_refuses(self) -> None:
         """plan_gate_refuse=True still refuses (Plan-Gate sees it via overrides)."""
         with tempfile.TemporaryDirectory() as tmp:

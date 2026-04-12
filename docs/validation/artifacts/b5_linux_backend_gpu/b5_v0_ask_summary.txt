@@ -1,0 +1,5 @@
+schema plan_only_response.v0.1
+governance_posture PLAN_ONLY
+execution False
+routing plan_only
+error None

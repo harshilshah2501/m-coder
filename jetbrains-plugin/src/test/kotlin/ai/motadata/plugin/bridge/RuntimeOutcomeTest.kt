@@ -67,6 +67,7 @@ class RuntimeOutcomeTest {
         assertFalse(RuntimeOutcome.BLOCKED.isSuccess)
         assertFalse(RuntimeOutcome.RUNTIME_UNAVAILABLE.isSuccess)
         assertFalse(RuntimeOutcome.UNKNOWN.isSuccess)
+        assertFalse(RuntimeOutcome.EXECUTED_FAILED.isSuccess)
     }
 
     @Test
@@ -77,11 +78,13 @@ class RuntimeOutcomeTest {
         assertFalse(RuntimeOutcome.EXECUTED.isError)
         assertFalse(RuntimeOutcome.DEFERRED.isError)
         assertFalse(RuntimeOutcome.BOUNDED_ALLOW.isError)
+        assertTrue(RuntimeOutcome.EXECUTED_FAILED.isError)
     }
 
     @Test
-    fun `wasExecuted is true only for EXECUTED`() {
+    fun `wasExecuted is true for EXECUTED and EXECUTED_FAILED`() {
         assertTrue(RuntimeOutcome.EXECUTED.wasExecuted)
+        assertTrue(RuntimeOutcome.EXECUTED_FAILED.wasExecuted)
         assertFalse(RuntimeOutcome.REFUSED.wasExecuted)
         assertFalse(RuntimeOutcome.BOUNDED_ALLOW.wasExecuted)
         assertFalse(RuntimeOutcome.RUNTIME_UNAVAILABLE.wasExecuted)
@@ -94,6 +97,7 @@ class RuntimeOutcomeTest {
         assertEquals("Bounded Allowance (No Execution)", RuntimeOutcome.BOUNDED_ALLOW.toHumanReadable())
         assertEquals("Blocked by Policy", RuntimeOutcome.BLOCKED.toHumanReadable())
         assertEquals("Executed Successfully", RuntimeOutcome.EXECUTED.toHumanReadable())
+        assertEquals("Executed but Failed", RuntimeOutcome.EXECUTED_FAILED.toHumanReadable())
         assertEquals("Runtime Unavailable", RuntimeOutcome.RUNTIME_UNAVAILABLE.toHumanReadable())
         assertEquals("Unknown Outcome", RuntimeOutcome.UNKNOWN.toHumanReadable())
     }
@@ -101,7 +105,7 @@ class RuntimeOutcomeTest {
     @Test
     fun `all outcomes are distinct - no collapsing`() {
         val outcomes = RuntimeOutcome.values()
-        assertEquals(7, outcomes.size)
+        assertEquals(8, outcomes.size)
         assertEquals(outcomes.toSet().size, outcomes.size)
     }
 }

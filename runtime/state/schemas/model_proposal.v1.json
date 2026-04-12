@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModelProposal.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "intent_type",
+    "reasoning_trace",
+    "confidence",
+    "requires_revision"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "model_proposal.v1"
+    },
+    "intent_type": {
+      "type": "string",
+      "enum": [
+        "answer_only",
+        "plan_only",
+        "tool_needed",
+        "refuse"
+      ]
+    },
+    "reasoning_trace": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "step_id",
+          "kind",
+          "content",
+          "evidence_refs"
+        ],
+        "properties": {
+          "step_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observe",
+              "infer",
+              "hypothesis",
+              "plan_step",
+              "tool_rationale",
+              "risk_note"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "tool_call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool_name",
+        "args"
+      ],
+      "properties": {
+        "tool_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "object"
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "requires_revision": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "intent_type": {
+            "const": "tool_needed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "tool_call"
+        ]
+      }
+    }
+  ]
+}

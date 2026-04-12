@@ -5,6 +5,8 @@
 **Date:** 2026-03-15  
 **Scope:** Consolidation of Phases 0–5 into a single cross-layer view of naming inconsistencies, duplicate structural truth, report sprawl, layer-boundary shadowing, root leakage, and path-contract risk. No moves, renames, edits, or remediation performed.
 
+**Update (2026-03):** `docs/status_reports/` was **removed** from the repository. Mentions of that path describe layout at audit time.
+
 ---
 
 ## 1. Purpose and scope

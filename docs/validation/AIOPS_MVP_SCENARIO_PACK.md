@@ -1,0 +1,241 @@
+# AIOps MVP — WSL runbook (fixed layout)
+
+## What this validates
+
+- **Workability:** `POST /v1/export_evidence` (Context Layer) and `POST /v1/ask` (Plan-Gate) complete with HTTP 200 and written artifacts under `docs/validation/artifacts/aiops_mvp/`.
+- **Reliability:** Same `git` revision of m-coder running in Context Layer and Plan-Gate; same `MOTADATA_ROOT` for every export.
+
+Canonical queries and IDs: `docs/validation/aiops_mvp_scenarios.v1.json`.
+
+### Workability smoke (do this before the 8-scenario batch)
+
+The full pack is for **evidence + verdict**; it is slow on a cold index. To establish **confidence that the chain works** (export → ask → HTTP 200) without scenario artifacts, run the bundled verifier once services are up:
+
+```bash
+export WORKSPACE_ROOT="$MOTADATA_ROOT"   # same absolute path Context Layer uses
+export QUERY='How does alert correlation work in this repo?'   # or any short Motadata question
+export CONTEXT_URL=http://127.0.0.1:8091
+export PLAN_GATE_URL=http://127.0.0.1:8089
+export TOP_K=12   # optional: align smoke window with scenario-pack default
+# Optional: omit CURL_MAX_TIME_SEC for no curl limit (long cold exports).
+# Or set a ceiling, e.g. export CURL_MAX_TIME_SEC=7200
+bash runtime/scripts/verify_ask_path.sh
+```
+
+That script performs `POST /v1/export_evidence` then `POST /v1/ask` and prints compact PASS/FAIL. **After** the first successful export, the Context Layer process will usually reuse indexes for repeat calls that resolve to the same workspace snapshot. Dirty git trees bypass cache by default. In non-git workspaces, snapshot identity falls back to a deterministic file-manifest fingerprint. Only when smoke passes is it worth running `./scripts/run_aiops_mvp_scenario_pack.sh` and waiting on full scenario artifacts.
+
+---
+
+## One-time files (before any terminal)
+
+1. Copy `runtime/config/demo_stack.env.example` to `runtime/config/demo_stack.env`.
+2. Set `VLLM_BASE_MODEL` inside `demo_stack.env` to an **absolute path** to a model directory on the machine that runs `governed_services.sh`.
+3. Set `MOTADATA_ROOT` to the **absolute path** to your Motadata git checkout on **WSL** (the indexer reads this tree).
+
+---
+
+## Environment (export in Terminal 3 before verification; Terminal 2 needs `M_CODER_ROOT`, `MOTADATA_ROOT`, `PYTHONPATH`)
+
+Replace the example path with your real Motadata path.
+
+```bash
+export M_CODER_ROOT="$HOME/Harshil-PoCs/m-coder"
+export MOTADATA_ROOT="/home/youruser/Projects/Motadata"
+export CONTEXT_URL="http://127.0.0.1:8091"
+export PLAN_GATE_URL="http://127.0.0.1:8089"
+```
+
+---
+
+## Three terminals — processes and order
+
+Use **three** terminal windows attached to **the same WSL distro**. Execute **in this order**: Terminal 1 → Terminal 2 → Terminal 3.
+
+| Order | Terminal | Process | Listens |
+|-------|----------|---------|---------|
+| 1 | **Terminal 1** | `governed_services.sh` → vLLM + Plan-Gate | `:8000` (vLLM), `:8089` (Plan-Gate) |
+| 2 | **Terminal 2** | `python3 -m runtime.context_layer_service` | `:8091` |
+| 3 | **Terminal 3** | `run_aiops_mvp_scenario_pack.sh` (batch client) | no listen; calls 8091 and 8089 |
+
+Do **not** run the batch script until Terminal 1 and Terminal 2 are both running and Terminal 3’s `curl` checks below succeed.
+
+### Optional go / no-go before the full 8-scenario batch
+
+The Context Layer **reuses** the workspace file index and authority code index per workspace snapshot (clean git tree, same commit) after the first export in a process — see `index_cache_entries` on `GET /v1/version` and `CONTEXT_LAYER index_cache` log lines (`index_cache_hit`, `file_index_build_ms`, `code_index_build_ms`). Git **dirty** trees bypass the cache. Disable with `MOTADATA_CONTEXT_LAYER_INDEX_CACHE=0` if you need a cold build every time. This is **latency / service efficiency** only; it does not change retrieval quality.
+
+Before `./scripts/run_aiops_mvp_scenario_pack.sh -v`, confirm **plausible core AIOps paths already appear in an expanded lexical window** (e.g. top-20) for 1–2 hard scenarios; if the right files are **not** in that window, the issue is recall in the candidate pool, not the pack run. See `docs/validation/RETRIEVAL_USEFULNESS_HARDENING_PASS.md` (engineering top-k composition) and use `retrieve_lexical(..., top_k=20)` from repo root with `PYTHONPATH` + `MOTADATA_ROOT` set.
+
+---
+
+### Terminal 1 — Plan-Gate + vLLM
+
+```bash
+cd "$M_CODER_ROOT"
+git -C "$M_CODER_ROOT" pull --ff-only
+export M_CODER_REPO_ROOT="$M_CODER_ROOT"
+export M_CODER_GIT_COMMIT="$(git -C "$M_CODER_ROOT" rev-parse --short HEAD)"
+./runtime/scripts/governed_services.sh restart
+```
+
+Leave this window open. Wait until the script returns to the shell prompt and the last messages report Plan-Gate and vLLM healthy.
+
+---
+
+### Terminal 2 — Context Layer
+
+```bash
+export M_CODER_ROOT="$HOME/Harshil-PoCs/m-coder"
+export MOTADATA_ROOT="/home/youruser/Projects/Motadata"
+export M_CODER_REPO_ROOT="$M_CODER_ROOT"
+export M_CODER_GIT_COMMIT="$(git -C "$M_CODER_ROOT" rev-parse --short HEAD)"
+export PYTHONPATH="$M_CODER_ROOT"
+cd "$M_CODER_ROOT"
+python3 -m runtime.context_layer_service
+```
+
+Leave this window open. Log lines for each export appear **in this terminal** (stderr).
+
+---
+
+### Terminal 3 — Checks, then MVP batch
+
+```bash
+export M_CODER_ROOT="$HOME/Harshil-PoCs/m-coder"
+export MOTADATA_ROOT="/home/youruser/Projects/Motadata"
+export CONTEXT_URL="http://127.0.0.1:8091"
+export PLAN_GATE_URL="http://127.0.0.1:8089"
+export PYTHONPATH="$M_CODER_ROOT"
+cd "$M_CODER_ROOT"
+
+curl -fsS "$CONTEXT_URL/version" | python3 -m json.tool
+curl -fsS "$PLAN_GATE_URL/version" | python3 -m json.tool
+curl -fsS "$CONTEXT_URL/healthz"
+curl -fsS "$PLAN_GATE_URL/healthz"
+```
+
+`git_commit` in both `/version` JSON bodies must match:
+
+```bash
+git -C "$M_CODER_ROOT" rev-parse --short HEAD
+```
+
+Also verify `MOTADATA_ROOT` parity before the batch:
+
+```bash
+printf 'Terminal3 MOTADATA_ROOT=%s\n' "$MOTADATA_ROOT"
+grep '^MOTADATA_ROOT=' "$M_CODER_ROOT/runtime/.run/effective_config.env" || true
+# In Terminal 2 logs, ensure export begin lines show the expected workspace marker.
+```
+
+Run the pack (**stdout** = one result line per scenario; **stderr** = verbose phases):
+
+```bash
+export AIOPS_MVP_LIVE_HTTP_TIMEOUT=1200
+export AIOPS_MVP_ASK_HTTP_TIMEOUT=7200
+export AIOPS_MVP_ASK_RETRIES=3
+export AIOPS_MVP_ASK_RETRY_DELAY_SEC=10
+./scripts/run_aiops_mvp_scenario_pack.sh -v --scenario A1
+```
+
+Full pack (all 8 scenarios):
+
+```bash
+./scripts/run_aiops_mvp_scenario_pack.sh -v
+```
+
+---
+
+## Where output goes
+
+| Output | Exact location |
+|--------|----------------|
+| Scenario pack **verbose** lines (`-v`) | **stderr** of Terminal 3 only. Not a file. To save: `./scripts/run_aiops_mvp_scenario_pack.sh -v --scenario A1 2> /tmp/aiops_mvp_verbose.stderr.log` |
+| Scenario pack **result** lines | **stdout** of Terminal 3: `A1: ok automated=…` |
+| Context Layer service log | **stderr** of Terminal 2. Optional file: `export MOTADATA_CONTEXT_LAYER_LOG_PATH=/tmp/context_layer.log` in Terminal 2 before starting the service |
+| Plan-Gate file log | `$M_CODER_ROOT/runtime/.run/plan_gate.log` on the machine that ran `governed_services.sh` |
+| vLLM file log | `$M_CODER_ROOT/runtime/.run/vllm.log` |
+| Launcher snapshot | `$M_CODER_ROOT/runtime/.run/effective_config.env` |
+| Per-scenario JSON | `$M_CODER_ROOT/docs/validation/artifacts/aiops_mvp/scenario_<ID>/` |
+| Batch summary | `$M_CODER_ROOT/docs/validation/artifacts/aiops_mvp/summary/run_summary.json` |
+
+---
+
+## HTTP bodies (contract)
+
+**`POST /v1/export_evidence`** — JSON fields: `workspace_root` (absolute `MOTADATA_ROOT`), `query`, `top_k` (pack uses **12** from `aiops_mvp_scenarios.v1.json`). Response body is the evidence bundle object.
+
+Additive snapshot metadata you should expect in export responses:
+- `workspace_snapshot_hash`
+- `workspace_snapshot_source`
+- `workspace_is_dirty`
+- `workspace_commit_sha` (when available)
+
+**`POST /v1/ask`** — Schema `ask_request.v1.0`: `schema_version`, `request_id`, `timestamp_utc`, `query`, `evidence_bundle`, `task_type` (`general` for this pack). Schema file: `runtime/ide/schemas/ask_request.v1.0.schema.json`.
+
+---
+
+## Plan-Gate `metadata` fields to read in `ask_response.json`
+
+| Field | Use |
+|-------|-----|
+| `evidence_quality` | `STRONG` / `WEAK` / `INSUFFICIENT` / `NO_MATCH` |
+| `quality_reasons` | Machine-readable reasons |
+| `operator_hints` | Short operator-facing strings |
+| `usefulness_metrics` | Bundle-level retrieval stats |
+
+---
+
+## Scenarios (IDs)
+
+| ID | Category |
+|----|----------|
+| A1 | ASK |
+| A2 | ASK |
+| D1 | DEBUG |
+| D2 | DEBUG |
+| P1 | PLAN |
+| P2 | PLAN |
+| C1 | CODE |
+| C2 | CODE |
+
+---
+
+## Rubric (human)
+
+Judge each scenario using `ask_response.json` and evidence paths: grounding, truthfulness, usefulness, weak-evidence honesty. Record `PASS` / `PARTIAL` / `FAIL` in `judgement.txt` beside the artifacts.
+
+---
+
+## Split host (Plan-Gate not on this WSL)
+
+Run Terminal 1 on the Linux host that has the GPU and `demo_stack.env`. On WSL, set `export PLAN_GATE_URL=http://<that-host-LAN-IP>:8089` (or the tunneled URL) in Terminal 3 before `curl` and the batch script. Terminal 2 stays on WSL. Three terminals remain: **remote shell for governed stack**, **WSL Context Layer**, **WSL batch**.
+
+---
+
+## If export succeeds but `/v1/ask` fails (`connection:ConnectionResetError`, etc.)
+
+`Connection reset by peer` is usually **not** a client “timeout too short” in the sense of `AIOPS_MVP_LIVE_HTTP_TIMEOUT` — the TCP connection was **closed** while the ask was in flight (SSH tunnel dropped, NAT idle timeout, or Plan-Gate/vLLM restarted). **`Broken pipe` on the SSH session** means the tunnel died; raising timeout to 1500s does not fix that.
+
+**Mitigations:**
+
+1. **Keep the tunnel alive** (SSH example):  
+   `ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -L 8000:127.0.0.1:8000 -L 8089:127.0.0.1:8089 user@host`  
+   Or use **`autossh`** for automatic reconnect.
+
+2. **Batch script:** set a **longer ask-only** timeout and **retries** on transient connection errors (export stays unchanged):  
+   `export AIOPS_MVP_ASK_HTTP_TIMEOUT=7200`  
+   `export AIOPS_MVP_ASK_RETRIES=3`  
+   `export AIOPS_MVP_ASK_RETRY_DELAY_SEC=10`
+
+3. **Prefer** Plan-Gate + vLLM on the **same host** as the client running the pack, or a **stable LAN** path without port-forward.
+
+Large evidence JSON can still stress Plan-Gate while parsing or building the response. Check **`runtime/.run/plan_gate.log`** on the Plan-Gate host; look for OOM, traceback, or process restart.
+
+**Speed:** the first `export_evidence` per clean snapshot pays full index build; **repeat exports** in the same long-lived Context Layer process reuse indexes (see above). Long **first-export** times on a huge Motadata tree are still expected; faster iteration also helps with a **smaller checkout** or **same machine** for all services.
+
+---
+
+## MVP closure (automated bar vs demo)
+
+**Authoritative:** `docs/validation/MVP_PRODUCTION_CLOSURE_NOTE.md` — acceptance **MVP READY WITH CAVEATS**; **`LOW_CORE_RATIO`** on engineering intents is a **frozen known limitation** (no further heuristic pass in that closure). Use **`verify_ask_path.sh`** for workability confidence before the full pack. Fill **`AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`** after a real batch when artifacts exist.
+

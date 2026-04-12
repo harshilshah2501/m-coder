@@ -90,7 +90,7 @@ Transitions are one-way where appropriate: e.g. local scratch → DVC (governed)
 ## 7. Naming and versioning policy
 
 - **Adapters / checkpoints:** Use a consistent, auditable label: e.g. `{model_family}-{variant}-{run_id}` or `v{version}_{run_id}` (e.g. `motadata-coder-v16_1-merged`, `v16_2-checkpoint-1053`). Run id or timestamp should be derivable from path or metadata so lineage is clear.
-- **Merged outputs:** Name to reflect adapter and merge time (e.g. `motadata-coder-v16_2-merged`). Avoid reusing the same name for different artifacts.
+- **Merged outputs:** Name to reflect adapter and merge time (e.g. `motadata-coder-{run_id}-merged`). Avoid reusing the same name for different artifacts.
 - **Eval artifacts:** Tie to adapter/run (e.g. `v16_1_test_results.json`, `evaluation_report_v16_1.html`). Include run id or date in filename when multiple evals exist.
 - **Runtime packages:** Use a convention that links back to source adapter/version (e.g. Modelfile or image tag includes version). No over-engineering; enough to trace back to DVC/HF source.
 

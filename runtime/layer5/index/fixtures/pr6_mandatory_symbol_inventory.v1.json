@@ -1,0 +1,31 @@
+{
+  "lock_notice": "PR-6 closure fixture — DO NOT MODIFY without version bump",
+  "schema_version": "layer5.symbol_inventory.v1.fixture",
+  "description": "Frozen mandatory symbols for PR-6 validation (motadata-prefixed paths).",
+  "entries": [
+    {
+      "symbol_name": "AvailabilityCorrelationEngine",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "module": "unknown",
+      "normalized_tokens": ["availability", "correlation", "engine"]
+    },
+    {
+      "symbol_name": "correlateDuplicateIncidents",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "module": "unknown",
+      "normalized_tokens": ["correlate", "duplicate", "incidents"]
+    },
+    {
+      "symbol_name": "IngestionPipeline",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/ingestion/IngestionPipeline.java",
+      "module": "ingestion",
+      "normalized_tokens": ["ingestion", "pipeline"]
+    },
+    {
+      "symbol_name": "MetricsParser",
+      "relative_path": "motadata/src/main/java/com/mindarray/aiops/ingestion/MetricsParser.java",
+      "module": "ingestion",
+      "normalized_tokens": ["metrics", "parser"]
+    }
+  ]
+}

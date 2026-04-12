@@ -4,6 +4,8 @@ Comprehensive documentation for the Motadata AI system including model training,
 
 **Canonical reading path:** root [README.md](../README.md) → [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md). **Master system guide (long-form, Layer-3/Layer-4 demos):** [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md).
 
+**Motadata AI Coding Assistant (Windows / WSL / GPU):** [MOTADATA_DEMO_SETUP_RUNBOOK.md](MOTADATA_DEMO_SETUP_RUNBOOK.md) (setup), [MOTADATA_DEMO_SCENARIOS.md](MOTADATA_DEMO_SCENARIOS.md) (demo + success criteria), [MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md) (architecture).
+
 **Artifact governance:** Model/checkpoint and runtime packaging policy is defined in [Artifact Governance — LoRA, Checkpoints, and Runtime](architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md). Do not commit large adapters, checkpoints, or merged model binaries to the repo.
 
 **Current Status:** 🚀 **V16.1 Model - Training In Progress**
@@ -105,7 +107,6 @@ Comprehensive documentation for the Motadata AI system including model training,
 
 - **docs/reports/** — Milestone completion, integration, merge, and freeze reports (e.g. merge readiness, verification, completion).
 - **docs/status/** — Status snapshots, session summaries, and short-term operational context (living journal).
-- **docs/status_reports/** — Periodic progress reports, findings, and planning updates (dated or topic-based).
 - **docs/runtime/verification/** — Runtime and structure verification: audits, E2E validation, constitutional reference, completion reports for Layer-3/runtime.
 
 **Historical tolerance:** Materials already in these locations remain valid; this convention defines placement for new documents only.
@@ -192,7 +193,6 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 - **[MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md)** - Master system guide (judgment, compilation, runtime, observation; Appendix H: Layer-3/Layer-4 demos)
 
 ### 📌 Core References
-- **[reference/IMPLEMENTATION_SUMMARY.md](reference/IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
 - **[reference/MODEL_VERIFICATION_REPORT.md](reference/MODEL_VERIFICATION_REPORT.md)** - Model verification and rollback decisions
 - **[reference/DIRECTORY_STRUCTURE_ANALYSIS.md](reference/DIRECTORY_STRUCTURE_ANALYSIS.md)** - Repository structure and disk usage analysis
 
@@ -219,46 +219,18 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 
 ## Quick Start
 
-### Start/Stop/Restart Services (Systemd - Recommended)
+### m-coder governed stack (vLLM + Plan-Gate)
+
+From repo root with **`runtime/config/demo_stack.env`** configured (**`VLLM_BASE_MODEL`** set):
+
 ```bash
-# Start all services via systemd
-sudo systemctl start motadata-orchestrator
-
-# Stop all services
-sudo systemctl stop motadata-orchestrator
-
-# Restart all services
-sudo systemctl restart motadata-orchestrator
-
-# Check status
-sudo systemctl status motadata-orchestrator
-
-# View logs
-journalctl -u motadata-orchestrator -f
+./runtime/scripts/governed_services.sh start
+./runtime/scripts/governed_services.sh status
+./runtime/scripts/governed_services.sh stop
+./runtime/scripts/governed_services.sh restart   # clean stop → port cleanup → start
 ```
 
-> **ℹ️ NOTE:** The orchestrator is now managed as a systemd service (`motadata-orchestrator`) with auto-start on boot. This is the recommended way to manage services.
-
-### Manual Service Management (Legacy)
-```bash
-# If you need to run the orchestrator script directly from the repo:
-bash runtime/rag/scripts/orchestrator_unified.sh start
-bash runtime/rag/scripts/orchestrator_unified.sh stop
-bash runtime/rag/scripts/orchestrator_unified.sh restart
-bash runtime/rag/scripts/orchestrator_unified.sh status
-```
-
-### Auto-Start on Boot
-```bash
-# Verify auto-start is enabled:
-sudo systemctl is-enabled motadata-orchestrator  # Should show "enabled"
-
-# To disable auto-start:
-sudo systemctl disable motadata-orchestrator
-
-# To re-enable auto-start:
-sudo systemctl enable motadata-orchestrator
-```
+See **`docs/guides/ORCHESTRATOR_GUIDE.md`**. Optional systemd: **`docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md`** (no unit file is shipped in-repo).
 
 ### Test Endpoints
 ```bash
@@ -295,38 +267,9 @@ curl -X POST http://localhost:8081/search/semantic \
 | Neo4j | 10,262 nodes, 337K edges |
 | GPU | H100 (90% VRAM, 32K context) |
 
-## Service Management (Systemd)
+## Service Management (governed stack)
 
-### Systemd Service (Recommended)
-```bash
-# Start/Stop/Restart via systemd
-sudo systemctl start motadata-orchestrator
-sudo systemctl stop motadata-orchestrator
-sudo systemctl restart motadata-orchestrator
-
-# Check status
-sudo systemctl status motadata-orchestrator
-
-# View logs
-journalctl -u motadata-orchestrator -f              # Follow logs
-journalctl -u motadata-orchestrator -n 50           # Last 50 lines
-journalctl -u motadata-orchestrator --since "1 hour ago"  # Last hour
-```
-
-### Service Configuration
-- **Service File**: `/etc/systemd/system/motadata-orchestrator.service`
-- **User**: `harshil` (with passwordless sudo via sudoers)
-- **Auto-start**: Enabled (starts on system boot)
-- **Restart Policy**: Automatic restart on failure (10s delay)
-
-### Manual Service Management (Legacy)
-```bash
-# Direct script execution (if needed)
-bash rag/scripts/orchestrator_unified.sh start      # Start all services
-bash rag/scripts/orchestrator_unified.sh stop       # Stop all services
-bash rag/scripts/orchestrator_unified.sh restart    # Full restart
-bash rag/scripts/orchestrator_unified.sh status     # Show service status
-```
+Use **`runtime/scripts/governed_services.sh`** (`start` | `stop` | `restart` | `status`). Logs: **`runtime/.run/`** (`vllm.log`, `plan_gate.log`). Optional systemd: **`docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md`**.
 
 ### View Component Logs
 ```bash
@@ -341,8 +284,8 @@ tail -f rag/logs/monitor.log
 ```
 
 ### Documentation
-- **[ORCHESTRATOR_SERVICE_GUIDE.md](../ORCHESTRATOR_SERVICE_GUIDE.md)** - Complete service management guide
-- **[IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md)** - Technical implementation details
+- **[guides/ORCHESTRATOR_GUIDE.md](guides/ORCHESTRATOR_GUIDE.md)** — Governed stack (`governed_services.sh`)
+- **[guides/ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** — Optional systemd
 
 **Startup Sequence (automatic with health checks):**
 1. Docker containers (Qdrant + Neo4j) - waits for HTTP health (60s timeout)
@@ -356,7 +299,7 @@ tail -f rag/logs/monitor.log
 **Service Paths:**
 | Component | Path | Port |
 |-----------|------|------|
-| Orchestrator | `rag/scripts/orchestrator_unified.sh` | - |
+| Governed launcher | `runtime/scripts/governed_services.sh` | vLLM + Plan-Gate |
 | vLLM | `venv/vllm/bin/python -m vllm.entrypoints.openai.api_server` | 8000 |
 | API Wrapper | `training/src/utils/api_server.py` | 8080 |
 | RAG API | `rag/src/api/rag_api.py` | 8081 |
@@ -383,7 +326,6 @@ tail -f rag/logs/monitor.log
 - **Lesson: Never mix quantization levels between training and deployment**
 
 **Documentation:**
-- 📘 **[ITERATION_9_JOURNAL.md](iterations/ITERATION_9_JOURNAL.md)** - Detailed account of 4-bit corruption discovery and resolution
 - 📊 **[ITER8_AND_ITER9_RESULTS.md](evaluation/ITER8_AND_ITER9_RESULTS.md)** - Comparative performance analysis
 
 
@@ -392,4 +334,3 @@ tail -f rag/logs/monitor.log
 - **[README.md](README.md)** - This documentation index
 - **[architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)** - System architecture
 - **[evaluation/README.md](evaluation/README.md)** - Evaluation guide
-- **[iterations/ITERATION_9_JOURNAL.md](iterations/ITERATION_9_JOURNAL.md)** - Iter9 4-bit corruption discovery

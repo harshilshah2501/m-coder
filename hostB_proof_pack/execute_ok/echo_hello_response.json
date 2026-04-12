@@ -1,0 +1,18 @@
+{
+  "schema_version": "execute_response.v0.1",
+  "request_id": "hostB-exec-ok-1",
+  "timestamp_utc": "2026-03-30T12:35:47.058212+00:00",
+  "outcome": "EXECUTED",
+  "posture": "safe_execute",
+  "executed": true,
+  "reason": "Execution completed successfully.",
+  "plan_hash": "154a427e311517096cdaecc70154444efcf142a661809dd3caf1bb2b867dd5b3",
+  "ui": {
+    "title": "Execution Complete",
+    "message": "Action executed through governed sandbox.",
+    "severity": "info"
+  },
+  "ledger_row_id": "sbx-4c338719b29e4f27f04dea30116e808c",
+  "exit_code": 0,
+  "stdout_summary": "hello\n"
+}

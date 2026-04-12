@@ -1,0 +1,16 @@
+Outcome: Bounded Allowance (No Execution)
+request_id: req-513faba8-edc6-40d6-8416-cb451c74bfd0
+Query: How does alert correlation work in this repo?
+ask_path: v1_evidence
+evidence_bundle_present: true
+plan_summary.notes_present: false
+Routing: trace=trace-5bb535b7-c801-4773-81b5-b919162e8d87 · mode=plan_only · plugin=v1_success
+quality=STRONG · intent=GENERIC_INTENT
+Evidence-driven Plan (PLAN ONLY)
+Context was built only from evidence_bundle.v1 (no repository reads on this path). Plan-only steps generated; no execution performed.
+
+Plan (5 steps): Authority status is unverified (confidence: medium). Treat the following as provisional; verify against the current codebase.
+(+4 more in full response)
+Grounding: 8 evidence entries
+
+— PLAN ONLY — Use View full response or Copy full response for complete diagnostics.

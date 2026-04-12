@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "motadata-context-layer"
+version = "0.1.4"
+description = "Motadata WSL Context Layer — Layer-5 evidence HTTP service (no full m-coder repo required on WSL)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "LicenseRef-Motadata-Proprietary" }
+
+[project.scripts]
+motadata-context-layer = "runtime.context_layer_service.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["../.."]
+include = ["runtime.layer5*", "runtime.context_layer_service*"]
+exclude = [
+    "runtime.layer5.tests*",
+    "runtime.layer5.evidence.golden*",
+    "runtime.layer5.evidence.golden.*",
+    "runtime.layer5.evidence.golden.fixture_workspace*",
+    "runtime.layer5.evidence.golden.fixture_workspace.module",
+    "runtime.layer5.evidence.samples*",
+]
+
+[tool.setuptools.package-data]
+"runtime.layer5.evidence" = ["evidence_bundle.v1.schema.json", "evidence_bundle.v1.md"]

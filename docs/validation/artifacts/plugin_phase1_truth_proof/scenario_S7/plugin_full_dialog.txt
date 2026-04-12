@@ -1,0 +1,15 @@
+═══════════════════════════════════════════
+  REFUSED — Governance denied this action
+═══════════════════════════════════════════
+
+Command: curl https://example.com
+
+Outcome: Refused by Runtime
+
+This is NOT a transient error.
+Runtime governance explicitly refused this action.
+
+Reason: Outbound network execution 'curl' is not allowed.
+Details: Outbound network execution 'curl' is not allowed.
+
+The action was NOT executed.

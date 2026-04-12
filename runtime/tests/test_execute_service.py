@@ -16,6 +16,12 @@ from runtime.execute_service.handlers import (
 from runtime.sandbox.sandbox_ledger_store import SandboxLedgerStore
 
 
+@pytest.fixture(autouse=True)
+def _allow_plan_gate_overrides_for_execute_service_tests(monkeypatch):
+    """Tests in this module use plan_gate_* for posture; production default rejects them."""
+    monkeypatch.setenv("MOTADATA_EXECUTE_ALLOW_PLAN_GATE_OVERRIDES", "1")
+
+
 class TestValidateExecuteRequest:
     """Tests for request validation."""
 
@@ -160,6 +166,45 @@ class TestHandleExecuteRequest:
         response = handle_execute_request(data)
         assert response["outcome"] == "BLOCKED"
         assert response["executed"] is False
+
+    def test_nonzero_exit_is_executed_failed_not_blocked(self):
+        """Sandbox ran the command but process failed — distinct from policy BLOCKED."""
+        with tempfile.TemporaryDirectory() as tmp:
+            data = {
+                "request_id": "req-false",
+                "repo_root": tmp,
+                "command": 'python3 -c "import sys; sys.exit(1)"',
+            }
+            response = handle_execute_request(data)
+        assert response["outcome"] == "EXECUTED_FAILED"
+        assert response["executed"] is True
+        assert response["outcome"] != "BLOCKED"
+        assert "pre-execution" in response["ui"]["message"].lower() or "not" in response["ui"]["message"].lower()
+        assert response.get("exit_code") == 1
+
+    def test_echo_success_remains_executed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data = {
+                "request_id": "req-ok",
+                "repo_root": tmp,
+                "command": "echo ok",
+            }
+            response = handle_execute_request(data)
+        assert response["outcome"] == "EXECUTED"
+        assert response["executed"] is True
+
+    def test_policy_disallowed_command_stays_blocked_not_executed_failed(self):
+        """Command blocked by sandbox allowlist before run — not EXECUTED_FAILED."""
+        with tempfile.TemporaryDirectory() as tmp:
+            data = {
+                "request_id": "req-not-allowed",
+                "repo_root": tmp,
+                "command": "false",
+            }
+            response = handle_execute_request(data)
+        assert response["outcome"] == "BLOCKED"
+        assert response["executed"] is False
+        assert response["outcome"] != "EXECUTED_FAILED"
 
     def test_request_id_echoed_back(self):
         data = {

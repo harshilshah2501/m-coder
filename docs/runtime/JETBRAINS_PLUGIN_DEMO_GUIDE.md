@@ -1,8 +1,70 @@
 # JetBrains Plugin MVP — Demo Guide
 
-Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit interception (shadow mode)** and **Repo-Aware Ask (plan-only)**. Use this when testing or presenting the plugin.
+Step-by-step guide to run the Motadata Runtime Governance plugin demo: **commit interception (shadow mode)**, **Repo-Aware Ask (plan-only)**, and **Explain/Debug selected code**. Use this when testing or presenting the plugin.
 
-**Related:** [JETBRAINS_PLUGIN_MVP_SPIKE.md](JETBRAINS_PLUGIN_MVP_SPIKE.md) — architecture and contracts.
+**Related**
+
+| Doc | Role |
+|-----|------|
+| [JETBRAINS_PLUGIN_MVP_SPIKE.md](JETBRAINS_PLUGIN_MVP_SPIKE.md) | Architecture and contracts |
+| [PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md](../demo/PHASE2_JETBRAINS_GOLDEN_DEMO_RESULT.md) | Explain/Debug (Phase-2) implementation |
+| [JETBRAINS_PLUGIN_RUNTIME_WIRING_FIX.md](JETBRAINS_PLUGIN_RUNTIME_WIRING_FIX.md) | Runtime wiring fix |
+| [WSL_CONTEXT_LAYER_CLIENT.md](WSL_CONTEXT_LAYER_CLIENT.md) | Context Layer client / `8091` |
+| [STAGE3_BURN_IN_AND_E2E_DEMO.md](../guides/STAGE3_BURN_IN_AND_E2E_DEMO.md) | Stage 3 loop burn-in + WSL→GPU governed slice (pytest + health checks) |
+| [LIVE_ROADMAP_TRACKER.md](../LIVE_ROADMAP_TRACKER.md) | Canonical program status (**§1**, **§5**, **§6**, **§7**) |
+
+**Scope note (2026-04):** This guide covers **Plan-Gate–mediated plugin demos** (commit shadow, Ask, Explain/Debug). It does **not** describe a full product request through **`Stage3LoopController`** — that integration is **not** wired through the IDE path yet; see **STAGE3** doc *Proves / does not prove* and tracker **§6.20** / **§B7**.
+
+---
+
+## 0. Deployment Topology (IMPORTANT)
+
+> This demo runs in a **split environment**:
+
+| Component                                  | Location   |
+| ------------------------------------------ | ---------- |
+| **m-coder repo + runtime + plugin source** | GPU server |
+| **Plan-Gate service (`:8089`)**            | GPU server |
+| **SSH tunnel (port forward)**              | Windows    |
+| **IntelliJ (plugin execution)**            | Windows    |
+
+### Required condition
+
+From **Windows PowerShell**:
+
+```powershell
+curl.exe http://127.0.0.1:8089/healthz
+```
+
+Must return:
+
+```json
+{"status":"ok"}
+```
+
+**If this fails → STOP.** Plugin will not work.
+
+---
+
+## Deployment Modes
+
+### Mode A — Demo Mode (current)
+
+- GPU runtime reads repository content from a repo copy available on the GPU side.
+- Ask fallback may use `ASK_DEFAULT_REPO_ROOT` when client-provided `repo_root` is not valid on the server.
+- This mode is useful for controlled demos and quick validation, but it is not the final architecture target.
+
+### Mode B — Workspace Intelligence Mode (target)
+
+- Context Layer runs near the workspace in WSL and reads/indexes the repository where code actually lives.
+- GPU Plan-Gate receives a structured context/evidence bundle rather than depending on direct repo-path access.
+- GPU-side direct repository access is not required in this mode.
+
+**Shipped pieces (align with tracker, not aspirational only):** installable wheel + HTTP — `packaging/motadata-context-layer` → `runtime.context_layer_service` on **`127.0.0.1:8091`** by default. Plan-Gate **`POST /v1/ask`** consumes `layer5.evidence_bundle.v1` when evidence-first is used.
+
+**Evidence-first Ask (opt-in):** default plugin path may still be **`POST /v0/ask`**. Evidence-first is enabled via JVM property `motadata.ask.evidence_first` or env `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST` (see `jetbrains-plugin/.../MotadataAskFlags.kt`; tracker **§1.1**). When ON, flow is: export evidence from Context Layer → **`/v1/ask`** with bundle.
+
+**Windows ↔ WSL caveat:** the IDE on Windows may not reach **`127.0.0.1:8091`** in WSL without **port forwarding** or running the client in the same network namespace as the service — verify with `curl` from the **same host environment** the plugin uses (see **STAGE3** doc Part D caveat).
 
 ---
 
@@ -26,55 +88,125 @@ Optional: a Python venv at repo root if you prefer isolated runtime deps.
 
 ---
 
-## 3. Start the Plan-Gate service
+## 3. Start Plan-Gate service (on GPU machine)
 
-The plugin talks to a single HTTP service that exposes both `/v0/plan` (commit flow) and `/v0/ask` (Ask flow).
+The plugin talks to a single HTTP service that exposes `/v0/plan`, `/v0/ask`, `/v0/execute`, and `GET /healthz`.
 
-1. **From the repository root** (directory that contains `runtime/` and `jetbrains-plugin/`):
+> For this guide's runnable flow, Section 3 is **Mode A (Demo Mode)** setup.  
+> Any assumption that runtime-local filesystem access is sufficient for retrieval is demo-only, not a final architecture rule.
 
-   ```bash
-   cd /path/to/m-coder
-   python3 -m runtime.plan_gate_service.app
-   ```
+**On the GPU machine** (repository root):
 
-   Defaults: host `127.0.0.1`, port **8089**. To use another port:
+```bash
+cd /path/to/m-coder
+python3 -m runtime.plan_gate_service.app
+```
 
-   ```bash
-   PLAN_GATE_PORT=9090 python3 -m runtime.plan_gate_service.app
-   ```
+Defaults: host `127.0.0.1`, port **8089**. To use another port:
 
-   (The plugin is hardcoded to `127.0.0.1:8089`; if you change the port, you must change it in the plugin or run on 8089.)
+```bash
+PLAN_GATE_PORT=9090 python3 -m runtime.plan_gate_service.app
+```
 
-2. **Confirm the service is up:**
+(Default Plan-Gate base URL is `http://127.0.0.1:8089` in `MotadataRuntimeConfig`; override with **`-Dmotadata.plan_gate.url=...`** or env **`MOTADATA_PLAN_GATE_URL`**. If you change the service port without overriding these, the plugin will not match the server.)
 
-   ```bash
-   curl http://127.0.0.1:8089/healthz
-   # Expect: {"status":"ok"}
+### Then establish SSH tunnel (on Windows)
 
-   curl http://127.0.0.1:8089/version
-   # Expect: JSON with service_version, supported_schemas (plan_request, decision_response, ask_request, plan_only_response, ...)
-   ```
+Forward **Plan-Gate (8089)** and **vLLM (8000)** on the GPU host (Explain/Debug needs vLLM reachable at `MOTADATA_EXPLAIN_VLLM_URL`, typically `http://127.0.0.1:8000` after tunnel):
 
-3. Leave this terminal running for the whole demo.
+```powershell
+ssh -N -L 8089:127.0.0.1:8089 -L 8000:127.0.0.1:8000 <user>@<gpu-server>
+```
+
+Leave this session running so `localhost:8089` / `localhost:8000` on Windows forward to the GPU server’s Plan-Gate and vLLM.
+
+### Verify from Windows
+
+```powershell
+curl.exe http://127.0.0.1:8089/healthz
+# Expect: {"status":"ok"}
+```
 
 ---
 
-## 4. Build and run the plugin (sandbox IDE)
+## 4. Build plugin (GPU) → Install (Windows IntelliJ)
 
-1. **From the `jetbrains-plugin/` directory:**
+**Local-only alternative:** If runtime and IDE are on the same machine, you can still use **Section 4 (alt)** below (sandbox `runIde`). For the **distributed demo** (GPU + Windows), follow this section.
+
+### Step 1 — Build plugin on GPU
+
+```bash
+cd jetbrains-plugin
+./gradlew clean buildPlugin
+```
+
+Output: `build/distributions/*.zip`
+
+### Step 2 — Copy plugin ZIP to Windows
+
+Use `scp`, WinSCP, or a shared drive.
+
+### Step 3 — Install in Windows IntelliJ
+
+1. Open IntelliJ (Windows).
+2. Go to **Settings → Plugins**.
+3. **Remove old plugin** (important to avoid stale builds).
+4. **Install from disk** → select the ZIP.
+5. **Restart IntelliJ**.
+
+### Step 4 — Open m-coder repo
+
+Open the same repo in IntelliJ (clone or synced copy). Ensure **Git** is active (branch visible in status bar or Version Control).
+
+---
+
+### 4.1 Runtime connectivity sanity check (MANDATORY)
+
+Before running the demo, from **Windows PowerShell**:
+
+```powershell
+curl.exe -i http://127.0.0.1:8089/healthz
+```
+
+Optional deeper checks:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8089/v0/plan -d "{}"
+curl.exe -X POST http://127.0.0.1:8089/v0/ask -d "{}"
+curl.exe -X POST http://127.0.0.1:8089/v0/execute -d "{}"
+```
+
+Expected:
+
+- **No** connection error.
+- **400** = ✅ GOOD (service is reachable; schema validation failure is expected for empty body).
+
+---
+
+### 4.2 Expected plugin behavior (after wiring fix)
+
+- `GET /healthz` = **200** → plugin considers runtime **available**.
+- `POST /v0/*` = **400** → plugin shows **runtime error** (e.g. schema validation), **not** “Runtime service is not available”.
+
+You should **never** see “Runtime service is not available” unless:
+
+- Plan-Gate is down, or
+- The SSH tunnel is broken.
+
+---
+
+### 4 (alt). Build and run the plugin (local sandbox IDE)
+
+If runtime and IDE are on the **same machine** (e.g. local dev):
+
+1. From `jetbrains-plugin/`:
 
    ```bash
    cd jetbrains-plugin
    ./gradlew runIde
    ```
 
-   Or in IntelliJ: open `jetbrains-plugin` as project, then run the **Run > runIde** (Gradle) task.
-
-2. A **new IntelliJ instance** (sandbox) starts with the Motadata plugin already loaded. You use this instance for all demo steps.
-
-3. **Open the m-coder repo in the sandbox:**  
-   In the sandbox IDE, **File → Open** and select the **m-coder** root directory (the same repo that contains `runtime/` and `jetbrains-plugin/`).  
-   Ensure the project is recognized and **Git** is active (branch name visible, e.g. in status bar or Version Control tool window).
+2. A sandbox IntelliJ starts with the plugin loaded. **File → Open** → m-coder root. Ensure Git is active.
 
 ---
 
@@ -135,7 +267,36 @@ Shows: question → `/v0/ask` → context bundle + plan summary; no execution, n
 
 ---
 
-## 7. Verification checklist
+## 7. Demo 3 — Explain/Debug selected code
+
+Shows: select code in editor → Ask Motadata AI with selection → optional real reasoning (vLLM) → structured explain/debug response (Summary, Logic flow, Likely bug/risk, Evidence, Confidence/limitations) or "Reasoning unavailable" when the service is down. No execution.
+
+**Prerequisite for real reasoning:** A vLLM-compatible HTTP completion service (e.g. vLLM on port 8000). Default URL: `http://127.0.0.1:8000`. Override with env `MOTADATA_EXPLAIN_VLLM_URL` if your service is elsewhere. If the service is not running, the plugin still shows a response with "Reasoning unavailable" and no template steps.
+
+1. **Ensure Plan-Gate is running** (Section 3) and the sandbox IDE has **m-coder** open. For structured reasoning, start your vLLM (or compatible) service on port 8000 if desired.
+
+2. **Select code** in the editor (e.g. a function or block in a source file).
+
+3. **Open the Ask action:**  
+   **Tools → Ask Motadata AI** (or **Help → Find Action** → "Ask Motadata AI").
+
+4. **Observe the dialog prompt:**  
+   It shows **"Explain/Debug selected code (PLAN ONLY). Optional: add a question or leave as-is."**  
+   Enter an optional question (e.g. "What does this do?" or "Where might this fail?") or leave as-is and confirm.
+
+5. **Observe the response dialog:**
+   - **Title:** "Ask Motadata AI — Explain/Debug".
+   - **When the reasoning service is available:** Structured sections — **Summary**, **Logic flow**, **Likely bug/risk**, **Evidence**, **Confidence / limitations** — from the model. No plan steps are substituted.
+   - **When the reasoning service is unavailable:** Message "Reasoning unavailable: ..." and a note that no template steps were substituted; ensure the reasoning service is running and `MOTADATA_EXPLAIN_VLLM_URL` is set if needed.
+
+6. **Verify guardrails:**  
+   No code edits, no execution. Only one runtime call: `POST /v0/ask` with `task_type=EXPLAIN_DEBUG`, `selected_file`, and `client_context.selection`.
+
+**Success criteria:** With code selected, the dialog shows "Explain/Debug — PLAN ONLY" and either structured explain_debug sections (when vLLM is running) or a clear "Reasoning unavailable" message (when it is not); nothing is executed.
+
+---
+
+## 8. Verification checklist
 
 Before considering the demo complete:
 
@@ -144,25 +305,54 @@ Before considering the demo complete:
 - [ ] m-coder is open in the sandbox with Git integration active.
 - [ ] **Commit demo:** Each commit produces a “Motadata AI” notification (REFUSAL / CONDITIONAL_BLOCK or BOUNDING / APPROVE) and the commit succeeds; `~/.motadata-ai/plugin-decisions.log` has a new entry.
 - [ ] **Ask demo:** “Ask Motadata AI” returns a dialog with PLAN ONLY, context bundle (files + reasons), selectors used, and 3–6 plan steps; no execution or edits.
+- [ ] **Explain/Debug demo:** With code selected, "Ask Motadata AI" shows "Explain/Debug — PLAN ONLY" and either structured sections (Summary, Logic flow, etc.) when the reasoning service is running, or "Reasoning unavailable" when it is not; no execution.
 
 ---
 
-## 8. Troubleshooting
+## 9. Troubleshooting
+
+### 🔴 "Runtime service is not available"
+
+Now means **only**:
+
+| Cause | Fix |
+|-------|-----|
+| Plan-Gate not running | Start service on GPU (Section 3). |
+| SSH tunnel not active | Recreate tunnel: `ssh -N -L 8089:127.0.0.1:8089 -L 8000:127.0.0.1:8000 <user>@<gpu-server>`. |
+| Wrong port | Ensure 8089 on both sides. |
+| Windows cannot reach localhost:8089 | Check `netstat`, firewall, tunnel process. |
+
+### 🟡 400 / Schema validation error
+
+- ✅ Plugin **reached** the runtime successfully.
+- ❌ Request payload issue (expected in early stages or malformed requests).
+
+### 🟡 Ask works but Submit fails
+
+Check: `/v0/execute` reachable from Windows, payload construction, runtime permissions.
+
+### 🟡 Nothing happens on click
+
+Check: plugin logs (**Help → Show Log**), RuntimeBridge errors, **stale plugin install** (uninstall → reinstall ZIP → restart).
+
+### Other
 
 | Issue | What to check |
-|-------|----------------|
-| **`curl` to 8089 fails** | Start the service from repo root: `python3 -m runtime.plan_gate_service.app`. Confirm no firewall and port 8089 free (`lsof -i :8089` or equivalent). |
-| **Plugin not in sandbox** | Run from `jetbrains-plugin/`: `./gradlew runIde`. Confirm build succeeds and the run configuration uses the plugin module. |
-| **No notification on commit** | Confirm Plan-Gate is running and reachable at `127.0.0.1:8089`. Check sandbox **Help → Show Log in Explorer/Finder** for plugin or HTTP errors. |
-| **Commit fails with “Unresolved reference: CommitContext”** | Known IDE/Gradle classpath issue with the VCS API. See spike doc and plugin README; fix is in progress (e.g. correct IntelliJ platform / bundled module for your IDE version). |
-| **Ask shows “error” or no context** | Ensure `/v0/ask` is served (same process as `/v0/plan`). Check `curl http://127.0.0.1:8089/version` lists `ask_request` and `plan_only_response`. Check runtime logs for Python tracebacks. |
-| **Log file missing** | Plugin creates `~/.motadata-ai/plugin-decisions.log` on first decision. Ensure you have write permission to `~/.motadata-ai` (plugin may create the directory). |
-| **runIde fails: GradleJvmSupportMatrix / IllegalArgumentException: 25** | IntelliJ 2023.3’s Gradle plugin cannot parse Java 25. **Workaround:** (1) Run with JDK 17: `export JAVA_HOME=/path/to/jdk17` then `./gradlew runIde`. (2) If the system has JDK 25, point `JAVA_HOME` to JDK 17 before running. (3) Clear the sandbox: `rm -rf jetbrains-plugin/build/idea-sandbox` then run `./gradlew runIde` again. |
-| **runIde fails: libsecret-1.so / PasswordSafeSettings** | On Linux (e.g. WSL, minimal containers) the credential store native library may be missing. The IDE often continues with a fallback; if it still exits, install `libsecret-1-dev` (e.g. `apt install libsecret-1-dev`) or ignore if you do not need stored passwords in the sandbox. |
+|-------|---------------|
+| **`curl` to 8089 fails (GPU)** | Start the service from repo root; confirm port 8089 free (`lsof -i :8089`). |
+| **Plugin not in sandbox (local)** | Run from `jetbrains-plugin/`: `./gradlew runIde`. |
+| **No notification on commit** | Confirm Plan-Gate running and reachable; from Windows run `curl.exe http://127.0.0.1:8089/healthz`. Check **Help → Show Log** for plugin/HTTP errors. |
+| **Commit fails with Unresolved reference: CommitContext** | Known IDE/Gradle classpath issue with the VCS API; see spike doc / plugin README. |
+| **Ask shows error or no context** | Ensure `/v0/ask` is served. Check `curl.exe http://127.0.0.1:8089/version` from Windows. Check runtime logs. |
+| **Log file missing** | Plugin creates `~/.motadata-ai/plugin-decisions.log` on first decision; ensure write permission to `~/.motadata-ai`. |
+| **runIde fails: GradleJvmSupportMatrix / Java 25** | Use JDK 17: `export JAVA_HOME=/path/to/jdk17` then `./gradlew runIde`. Clear sandbox: `rm -rf jetbrains-plugin/build/idea-sandbox` if needed. |
+| **runIde fails: libsecret-1.so** | On Linux/WSL install `libsecret-1-dev` or ignore if you do not need stored passwords in the sandbox. |
+| **Explain/Debug shows Reasoning unavailable** | vLLM (or compatible) service must be running (default `http://127.0.0.1:8000`). Set `MOTADATA_EXPLAIN_VLLM_URL` if elsewhere. |
+| **Context Layer / evidence-first fails from Windows IDE** | Service binds WSL `127.0.0.1:8091` — Windows may need forwarding or WSL-side client; see Mode B caveat above and `WSL_CONTEXT_LAYER_CLIENT.md`. |
 
 ---
 
-## 9. Log and artifact locations
+## 10. Log and artifact locations
 
 | Item | Location |
 |------|----------|
@@ -172,10 +362,11 @@ Before considering the demo complete:
 | Ask handler | `runtime/ask_service/handlers.py` |
 | Plugin source | `jetbrains-plugin/src/main/kotlin/` |
 | Plugin descriptor | `jetbrains-plugin/src/main/resources/META-INF/plugin.xml` |
+| Explain/Debug reasoner | `runtime/ask_service/reasoner.py` |
 
 ---
 
-## 10. Quick reference — commands
+## 11. Quick reference — commands
 
 ```bash
 # Terminal 1 — Plan-Gate (from repo root)
@@ -187,9 +378,26 @@ cd jetbrains-plugin
 ./gradlew runIde
 # Then in sandbox: File → Open → m-coder repo
 # Demo 1: make change → Git → Commit
-# Demo 2: Tools → Ask Motadata AI → enter question
+# Demo 2: Tools → Ask Motadata AI → enter question (no selection)
+# Demo 3: select code → Tools → Ask Motadata AI → (optional question) → Explain/Debug result
+# Optional for Demo 3: start vLLM on 8000 or set MOTADATA_EXPLAIN_VLLM_URL
 
 # Verify
 curl http://127.0.0.1:8089/healthz
 cat ~/.motadata-ai/plugin-decisions.log
+```
+
+---
+
+## 12. Known real-world pitfall
+
+**Stale plugin builds cause most issues.**
+
+If behavior does not match expectations:
+
+```powershell
+# On GPU
+./gradlew clean buildPlugin
+
+# On Windows: uninstall plugin → reinstall ZIP → restart IntelliJ
 ```

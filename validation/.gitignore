@@ -1,0 +1,7 @@
+# Stage 2 runner outputs (regenerate locally)
+stage2_results_sheet.csv
+stage2_metrics_report.md
+stage2_failure_log.md
+stage2_runner_manifest.json
+stage2_trace_samples/
+runs/

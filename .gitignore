@@ -15,6 +15,11 @@ backup_v16_2_to_hf.py
 # Plan-gate spool (runtime output)
 .spool/
 
+# Runtime governed-services run dir (pids, logs, effective config)
+runtime/.run/
+runtime/config/demo_stack.env
+runtime/config/host_local.env
+
 # Python cache
 __pycache__/
 *.py[cod]
@@ -28,6 +33,7 @@ build/
 # IDE
 .vscode/
 .idea/
+jetbrains-plugin/.gradle/
 *.swp
 *.swo
 *~

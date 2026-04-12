@@ -5,6 +5,8 @@
 **Date:** 2026-03-15  
 **Governing plan:** [STRUCTURAL_REMEDIATION_PLAN.md](STRUCTURAL_REMEDIATION_PLAN.md)
 
+**Update (2026-03):** `docs/status_reports/` was later **removed** from the repository as obsolete. Mentions below describe Batch A execution at the time.
+
 ---
 
 ## 1. Purpose

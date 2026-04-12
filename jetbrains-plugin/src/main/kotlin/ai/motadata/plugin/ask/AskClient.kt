@@ -3,7 +3,10 @@ package ai.motadata.plugin.ask
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.bridge.AskPluginRouting
+import ai.motadata.plugin.bridge.MotadataRuntimeConfig
+import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -20,6 +23,12 @@ data class AskContextFile(
     val selectionReason: String
 )
 
+/**
+ * Result of a **legacy** direct POST `/v0/ask` call.
+ * Does not participate in [ai.motadata.plugin.bridge.RuntimeBridge] v1/evidence/fallback flows;
+ * [pluginAskRouting] is always [AskPluginRouting.V0_DIRECT] by construction.
+ * Prefer [AskMotadataAiAction] / [RuntimeBridge.askPlan] for governed Ask UX.
+ */
 data class AskResult(
     val success: Boolean,
     val contextRevision: String?,
@@ -28,12 +37,22 @@ data class AskResult(
     val planSteps: List<String>,
     val uiTitle: String?,
     val uiMessage: String?,
-    val error: String?
+    val error: String?,
+    /** Backend correlation; null if absent from JSON. */
+    val traceId: String? = null,
+    /** Backend [routing_mode]; null if absent. */
+    val routingMode: String? = null,
+    /** Always [AskPluginRouting.V0_DIRECT] for this client (POST /v0/ask only). */
+    val pluginAskRouting: String = AskPluginRouting.V0_DIRECT,
 )
 
+/**
+ * Standalone HTTP client for `/v0/ask` only. Not wired from plugin actions today; kept for tests/ad-hoc use.
+ * Truth semantics differ from [RuntimeBridge.askPlan] (no merged `plugin_ask_routing_decision`, no v1 path).
+ */
 class AskClient(
     private val gson: Gson = Gson(),
-    private val baseUrl: String = "http://127.0.0.1:8089"
+    private val baseUrl: String = MotadataRuntimeConfig.planGateBaseUrl(),
 ) {
 
     fun ask(project: Project, question: String): AskResult {
@@ -50,7 +69,10 @@ class AskClient(
                 planSteps = emptyList(),
                 uiTitle = null,
                 uiMessage = null,
-                error = e.message ?: "Unknown error calling /v0/ask"
+                error = e.message ?: "Unknown error calling /v0/ask",
+                traceId = null,
+                routingMode = null,
+                pluginAskRouting = AskPluginRouting.V0_DIRECT,
             )
         }
     }
@@ -59,16 +81,15 @@ class AskClient(
         val requestId = "req-ask-${UUID.randomUUID()}"
         val timestamp = Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT)
 
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
 
         val askRequest = mapOf(
             "schema_version" to "ask_request.v0.1",
             "request_id" to requestId,
             "timestamp_utc" to timestamp,
-            "repo_root" to (project.basePath ?: ""),
+            "repo_root" to ProjectWorkspacePaths.layer5WorkspaceRoot(project),
             "revision" to revision,
             "query" to question,
             "branch" to branch
@@ -82,6 +103,8 @@ class AskClient(
 
         val posture = root.getAsJsonPrimitive("governance_posture")?.asString
         val execution = root.getAsJsonPrimitive("execution")?.asBoolean
+        val traceId = root.getAsJsonPrimitive("trace_id")?.asString
+        val routingMode = root.getAsJsonPrimitive("routing_mode")?.asString
 
         val contextBundle = root.getAsJsonObject("context_bundle")
         val revision = contextBundle?.getAsJsonPrimitive("revision")?.asString
@@ -116,7 +139,10 @@ class AskClient(
             planSteps = steps,
             uiTitle = uiTitle,
             uiMessage = uiMessage,
-            error = if (postureOk && executionOk) null else "Invalid posture/execution in response"
+            error = if (postureOk && executionOk) null else "Invalid posture/execution in response",
+            traceId = traceId,
+            routingMode = routingMode,
+            pluginAskRouting = AskPluginRouting.V0_DIRECT,
         )
     }
 

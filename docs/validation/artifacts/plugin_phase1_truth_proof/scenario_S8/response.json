@@ -1,0 +1,1 @@
+{"outcome":"EXECUTED_FAILED","request_id":"req-cb1107b2-13b0-4cda-8b9d-1f9643d88922","reason":"Command ran in the governed sandbox but did not succeed (exit_code\u003d1). (executed_failed)","was_executed":true,"ledger_row_id":"sbx-fb7c15739c693a5b8dd6a0f37d96d773","plan_hash":"0cc9aad4ef7df0586699755e20e48aa9234bda5e3a81f0845040b77780065ce8","metadata":{}}

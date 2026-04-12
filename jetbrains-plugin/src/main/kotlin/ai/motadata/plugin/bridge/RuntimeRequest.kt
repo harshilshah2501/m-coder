@@ -70,7 +70,25 @@ data class RuntimeRequest(
         .format(DateTimeFormatter.ISO_INSTANT),
 
     /** Plugin client policy. */
-    val clientPolicy: ClientPolicy = ClientPolicy()
+    val clientPolicy: ClientPolicy = ClientPolicy(),
+
+    /** Repo-relative path of the selected file (for Ask EXPLAIN_DEBUG). */
+    val selectedFile: String? = null,
+
+    /** Selected code text (for Ask EXPLAIN_DEBUG). */
+    val selection: String? = null,
+
+    /** Task mode for Ask: EXPLAIN_DEBUG or general. */
+    val taskType: String? = null,
+
+    /**
+     * When true, the plugin prefers [POST /v1/ask] with [ask_request.v1.0] after obtaining
+     * `layer5.evidence_bundle.v1` from the **WSL Context Layer** (HTTP service or installed CLI;
+     * see [Layer5EvidenceExporter]). Repo-relative scripts are dev-only (opt-in). If export or v1
+     * is unavailable, falls back to [POST /v0/ask] with `evidence_first`. Contract failures from v1
+     * are never silently downgraded.
+     */
+    val evidenceFirst: Boolean = false
 ) {
     /**
      * Convert to JSON-compatible map for serialization.
@@ -87,8 +105,15 @@ data class RuntimeRequest(
             "plan_hash" to planHash,
             "ide_context" to ideContext.toMap(),
             "timestamp_utc" to timestampUtc,
-            "client_policy" to clientPolicy.toMap()
-        ).filterValues { it != null }
+            "client_policy" to clientPolicy.toMap(),
+            "selected_file" to selectedFile,
+            "selection" to selection,
+            "task_type" to taskType
+        ).filterValues { it != null }.toMutableMap().apply {
+            if (evidenceFirst) {
+                this["evidence_first"] = true
+            }
+        }
     }
 }
 

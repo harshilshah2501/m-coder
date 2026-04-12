@@ -15,11 +15,11 @@
 - `ml/training/src/config/test_data_root.py` — **new**: minimal tests for env override and repo fallback.
 - `ml/training/src/config/v17_training_config.py` — output_dir and train_data_path resolved from get_data_root().
 - `ml/training/src/finetuning/train_v16_1_surgical.py` — DATASET_DIR, OUTPUT_DIR, CHECKPOINT_DIR converted.
-- `ml/training/src/finetuning/train_v16_2.py` — DATASET_DIR, OUTPUT_DIR, CHECKPOINT_DIR converted.
+- `ml/training/src/finetuning/train_v16_2.py` — **removed** from repo (obsolete).
 - `ml/training/src/finetuning/validate_v16_1_fixed.py` — DATASET_DIR, OUTPUT_DIR converted.
 - `ml/training/src/finetuning/test_v16_1_merged.py` — MERGED_MODEL_PATH, DATASET_DIR, results_file path converted.
 - `ml/training/src/finetuning/merge_v16_1.py` — ADAPTER_PATH, OUTPUT_PATH converted.
-- `ml/training/src/finetuning/merge_v16_2.py` — LORA_MODEL_PATH, OUTPUT_PATH converted.
+- `ml/training/src/finetuning/merge_v16_2.py` — **removed** from repo (obsolete); serving uses `runtime/config/demo_stack.env` + `runtime/scripts/governed_services.sh`.
 - `ml/training/src/finetuning/train_v17_dpo.py` — BASE_DIR replaced by get_data_root(); SFT_MODEL_PATH, DPO_DATASET_*, OUTPUT_DIR, LOGS_DIR converted.
 
 ### Exact files intentionally not changed
@@ -52,11 +52,11 @@ Per Phase 14C, the first target cluster was (1) finetuning/training entrypoints,
 | File | Old absolute path pattern | New resolution method | Path type |
 |------|----------------------------|------------------------|-----------|
 | train_v16_1_surgical.py | `/home/harshil/Harshil-PoCs/datasets/v16_1_fixed`, `.../models/v16_1_finetuned`, `.../training/checkpoints/v16_1` | `_ROOT = get_data_root(); _ROOT / "ml/datasets/v16_1_fixed"`, `_ROOT / "models/v16_1_finetuned"`, `_ROOT / "training/checkpoints/v16_1"` | dataset, model, checkpoint |
-| train_v16_2.py | Same pattern for v16_2 | Same | dataset, model, checkpoint |
+| train_v16_2.py | *(file removed)* | Superseded / out of repo | — |
 | validate_v16_1_fixed.py | `.../datasets/v16_1_fixed`, `.../training/checkpoints/v16_1_validation` | Same pattern | dataset, training output |
 | test_v16_1_merged.py | `.../models/v16_1_merged`, `.../datasets/v16_1_fixed`, `.../training/results/v16_1_test_results.json` | Same pattern; results_file = _ROOT / "training/results/..." | model, dataset, training output |
 | merge_v16_1.py | `.../models/v16_1_finetuned`, `.../models/v16_1_merged` | _ROOT / "models/v16_1_finetuned", _ROOT / "models/v16_1_merged" | model |
-| merge_v16_2.py | `.../training/checkpoints/v16_2/checkpoint-1053`, `.../models/v16_2/motadata-coder-v16_2-merged` | _ROOT / "training/checkpoints/v16_2/...", _ROOT / "models/v16_2/..." | checkpoint, model |
+| merge_v16_2.py | *(file removed)* | Superseded by `runtime/config/demo_stack.env` (`VLLM_BASE_MODEL`) + governed scripts | — |
 | train_v17_dpo.py | BASE_DIR = Path("/home/..."); BASE_DIR / "models/...", "datasets/...", "training/logs/..." | _ROOT = get_data_root(); _ROOT / "models/...", _ROOT / "ml/datasets/...", _ROOT / "training/logs/..." | model, dataset, training output |
 | v17_training_config.py | output_dir and train_data_path defaulted to `/home/.../training/artifacts/...`, `.../datasets/v17_training_data.jsonl` | In __post_init__, get_data_root() and _root / "training/artifacts/...", _root / "ml/datasets/v17_training_data.jsonl" when None | training output, dataset |
 

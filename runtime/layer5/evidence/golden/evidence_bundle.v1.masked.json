@@ -1,0 +1,39 @@
+{
+  "a5_authority_note": "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets.",
+  "canonical_root": "",
+  "entries": [
+    {
+      "provisional": false,
+      "rank": 0,
+      "relative_path": "module/sample.py",
+      "retrieval_breakdown": {
+        "basename_substrings": 0,
+        "content_substrings": 2,
+        "path_substrings": 5
+      },
+      "retrieval_score": 7,
+      "snippet": {
+        "anchor_line": 3,
+        "end_byte_utf8": 110,
+        "end_line": 3,
+        "matched_tokens": [
+          "hello"
+        ],
+        "selection_reason": "query_token_substring_anchor",
+        "start_byte_utf8": 0,
+        "start_line": 1,
+        "text": "# golden fixture - do not change without regenerating golden hash + JSON\ndef hello_unit():\n    return \"hello\"\n",
+        "truncated_by_max_bytes": false
+      }
+    }
+  ],
+  "index_schema_version": "layer5.file_index.v1",
+  "provisional": false,
+  "query_raw": "hello",
+  "query_tokens": [
+    "hello"
+  ],
+  "schema_hint": "layer5.evidence_bundle.v1",
+  "top_k": 1,
+  "workspace_identity_hash": ""
+}

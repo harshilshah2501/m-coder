@@ -1,0 +1,160 @@
+{
+  "schema_version": "plan_only_response.v0.1",
+  "request_id": "b5-proof-v0-ask",
+  "timestamp_utc": "2026-04-08T10:42:26.119425+00:00",
+  "context_bundle": {
+    "revision": "b5-proof",
+    "files": [
+      {
+        "path": ".github/workflows/wsl-context-layer-package.yml",
+        "selection_reason": "symbol:hint:file"
+      },
+      {
+        "path": ".gitignore",
+        "selection_reason": "symbol:hint:plan"
+      },
+      {
+        "path": ".pytest_cache/v/cache/nodeids",
+        "selection_reason": "symbol:hint:list"
+      },
+      {
+        "path": "AGENT_EXECUTION_RULES.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "Hardware-Profile.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "Makefile",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "README.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "cuda-pytorch_test.py",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/ARCHITECTURE_4_LAYER.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/Backend Production Validation Sheet.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/CASE_STUDIES_VALIDATION_REPORT.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/DEBUG_PATH_VALIDATION_RUNBOOK.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/DVC_ARTIFACTS_README.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/DVC_R2_SETUP.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/Dataset-analysis.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/First-Production-MVP-Slice.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/GLOSSARY.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/JETBRAINS_PLUGIN_FLOW_V0_1.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/JetBrains Plugin Defect Isolation Sheet.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/LAYER1_GOVERNANCE_SPEC.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/LAYER2_COMPILATION_SPEC.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/LAYER3_BASELINE_COMPLETION_REPORT.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/LAYER3_INTEGRATION_REPORT.md",
+        "selection_reason": "sibling:directory"
+      },
+      {
+        "path": "docs/LAYER3_RUNTIME_SPEC.md",
+        "selection_reason": "direct:file"
+      },
+      {
+        "path": "docs/LAYER4_OBSERVATION_SPEC.md",
+        "selection_reason": "direct:file"
+      }
+    ],
+    "selectors_used": [
+      "direct",
+      "siblings",
+      "symbols"
+    ]
+  },
+  "plan_summary": {
+    "steps": [
+      "Open Makefile and scan for logic related to \"related\".",
+      "Review neighboring context files: .gitignore, .pytest_cache/v/cache/nodeids.",
+      "Search the repository for usages of \"related\" to locate related call sites and configuration.",
+      "Trace the control flow from the entry points you find to understand how the behavior is orchestrated."
+    ],
+    "notes": [
+      "Repo-aware selection: 50 file(s) by heading_match, path_match.",
+      "Evidence quality is WEAK; plan/explanation may be incomplete."
+    ]
+  },
+  "governance_posture": "PLAN_ONLY",
+  "execution": false,
+  "ui": {
+    "title": "Repo-Aware Plan (PLAN ONLY)",
+    "message": "Deterministic context bundle and plan-only steps generated. No execution performed.",
+    "severity": "info"
+  },
+  "metadata": {
+    "intent_type": "CODE_INTENT",
+    "evidence_quality": "WEAK",
+    "quality_reasons": [
+      "LOW_CORE_RATIO",
+      "NO_CORE_IN_TOP3"
+    ],
+    "dominance_metrics": {
+      "top_k_size": 27.0,
+      "core_code_in_top_k_pct": 0.0,
+      "code_in_top_k_pct": 0.9259,
+      "noise_in_top_k_pct": 0.037,
+      "core_in_top_3_count": 0.0,
+      "max_consecutive_noise": 1.0
+    },
+    "policy_version": "quality_gate.v1"
+  },
+  "routing_mode": "plan_only"
+}

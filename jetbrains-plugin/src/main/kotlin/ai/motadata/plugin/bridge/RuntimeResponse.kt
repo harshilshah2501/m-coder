@@ -80,6 +80,7 @@ data class RuntimeResponse(
     fun getSeverity(): RuntimeSeverity {
         return when (outcome) {
             RuntimeOutcome.EXECUTED -> RuntimeSeverity.INFO
+            RuntimeOutcome.EXECUTED_FAILED -> RuntimeSeverity.WARNING
             RuntimeOutcome.BOUNDED_ALLOW -> RuntimeSeverity.WARNING
             RuntimeOutcome.DEFERRED -> RuntimeSeverity.WARNING
             RuntimeOutcome.REFUSED -> RuntimeSeverity.ERROR

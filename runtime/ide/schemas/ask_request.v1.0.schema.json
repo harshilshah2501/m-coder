@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ask_request.v1.0",
+  "title": "Ask Request v1.0 — evidence-first Plan-Gate ingestion",
+  "description": "Primary context is layer5.evidence_bundle.v1; no repo_root / ContextEngine on this path.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request_id",
+    "timestamp_utc",
+    "query",
+    "evidence_bundle"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ask_request.v1.0"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "type": "string"
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_bundle": {
+      "type": "object",
+      "description": "Full layer5.evidence_bundle.v1 object; validated separately with strict L5 schema."
+    },
+    "expected_workspace_identity_hash": {
+      "type": "string",
+      "description": "If set, must equal evidence_bundle.workspace_identity_hash or request is rejected."
+    },
+    "revision": {
+      "type": "string",
+      "description": "Optional display revision for context_bundle (e.g. git SHA); not used for filesystem access."
+    },
+    "branch": {
+      "type": "string"
+    },
+    "selected_file": {
+      "type": "string"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": ["EXPLAIN_DEBUG", "general"]
+    },
+    "client_context": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "End-to-end correlation ID (same across v1 and fallback v0 for one logical Ask)."
+    }
+  },
+  "additionalProperties": false
+}

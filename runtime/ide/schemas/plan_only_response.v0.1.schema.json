@@ -114,6 +114,51 @@
         }
       },
       "additionalProperties": false
+    },
+    "explain_debug": {
+      "type": "object",
+      "description": "Present when task_type was EXPLAIN_DEBUG; contains real reasoning or error.",
+      "properties": {
+        "summary": { "type": "string" },
+        "logic_flow": { "type": "string" },
+        "likely_bug_risk": { "type": "string" },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "confidence_limits": { "type": "string" },
+        "error": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "context_resolution": {
+      "type": "object",
+      "description": "Present when server used ASK_DEFAULT_REPO_ROOT because requested repo_root was invalid on server.",
+      "properties": {
+        "requested_repo_root": { "type": "string" },
+        "effective_repo_root": { "type": "string" },
+        "fallback_used": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "evidence_bundle": {
+      "type": "object",
+      "description": "layer5.evidence_bundle.v1 JSON when evidence_first path succeeded (opaque; validate with L5 schema).",
+      "additionalProperties": true
+    },
+    "evidence_first_meta": {
+      "type": "object",
+      "description": "Whether Layer-5 evidence path was used or legacy ContextEngine fallback.",
+      "additionalProperties": true
+    },
+    "routing_mode": {
+      "type": "string",
+      "enum": ["plan_only", "explain_debug"],
+      "description": "Which handler branch produced the plan: template planner vs explain_debug (vLLM)."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Echo of ask_request.trace_id when provided, for log/response correlation."
     }
   },
   "additionalProperties": false

@@ -1,0 +1,32 @@
+{
+  "schema_version": "l58.thresholds.v1",
+  "description": "L5.8 drift thresholds (hard fail + warning only).",
+  "hard_fail": {
+    "max_owner_drift_rate": 0.8,
+    "max_anchor_drift_rate": 0.3,
+    "max_evidence_drift_rate": 0.15,
+    "max_noise_regression_rate": 0.2,
+    "max_mean_first_relevant_rank": 4.0,
+    "max_mean_noise_dominance_top5": 0.35,
+    "min_top1_owner_accuracy": 0.2,
+    "min_top3_anchor_hit_rate": 0.7,
+    "min_mean_code_ratio_topk": 0.45,
+    "min_weak_evidence_precision": 0.5,
+    "max_latency_p95_ms": 475.0,
+    "min_no_match_honesty_precision": 0.95
+  },
+  "warning": {
+    "max_owner_drift_rate": 0.65,
+    "max_anchor_drift_rate": 0.2,
+    "max_evidence_drift_rate": 0.1,
+    "max_noise_regression_rate": 0.1,
+    "max_mean_first_relevant_rank": 3.2,
+    "max_mean_noise_dominance_top5": 0.25,
+    "min_top1_owner_accuracy": 0.35,
+    "min_top3_anchor_hit_rate": 0.8,
+    "min_mean_code_ratio_topk": 0.55,
+    "min_weak_evidence_precision": 0.7,
+    "max_latency_p95_ms": 430.0,
+    "min_no_match_honesty_precision": 0.98
+  }
+}

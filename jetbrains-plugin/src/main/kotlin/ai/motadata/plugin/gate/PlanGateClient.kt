@@ -3,7 +3,9 @@ package ai.motadata.plugin.gate
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.intellij.openapi.project.Project
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.bridge.MotadataRuntimeConfig
+import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -23,7 +25,7 @@ import java.util.UUID
  */
 class PlanGateClient(
     private val gson: Gson = Gson(),
-    private val baseUrl: String = "http://127.0.0.1:8089"
+    private val baseUrl: String = MotadataRuntimeConfig.planGateBaseUrl(),
 ) {
 
     data class DecisionUi(
@@ -71,10 +73,9 @@ class PlanGateClient(
         val requestId = "req-${UUID.randomUUID()}"
         val timestamp = now.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT)
 
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
 
         val ideEvent = mapOf(
             "schema_version" to "ide_event.v0.1",
@@ -84,7 +85,7 @@ class PlanGateClient(
                 "product" to "jetbrains",
                 "ide" to "intellij",
                 "project" to project.name,
-                "repo_root" to (project.basePath ?: ""),
+                "repo_root" to ProjectWorkspacePaths.layer5WorkspaceRoot(project),
                 "branch" to branch,
                 "revision" to revision,
                 "user" to (System.getProperty("user.name") ?: "unknown-user")

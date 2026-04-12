@@ -1,0 +1,16 @@
+=== b5 proof slice 2026-04-08T10:42:15+00:00 ===
+host: GNU/Linux kernel 6.8.0-106-generic
+wsl: WSL_DISTRO_NAME=<empty>
+
+--- Step 1 Context Layer ---
+{"status": "ok", "service": "motadata_context_layer", "package_version": "0.1.4"}
+HTTP 200
+
+--- Step 2 Plan-Gate ---
+{
+  "status": "ok"
+}
+HTTP 200
+
+--- Step 2 vLLM /v1/models (first 800 chars) ---
+{"object":"list","data":[{"id":"motadata-coder","object":"model","created":1775644935,"owned_by":"vllm","root":"/home/harshil/Harshil-PoCs/m-coder/ml/training/pipeline/stage08/base_model","parent":null,"max_model_len":32768,"permission":[{"id":"modelperm-8de909503ce97a28","object":"model_permission","created":1775644935,"allow_create_engine":false,"allow_sampling":true,"allow_logprobs":true,"allow_search_indices":false,"allow_view":true,"allow_fine_tuning":false,"organization":"*","group":null,"is_blocking":false}]},{"id":"motadata-coder","object":"model","created":1775644935,"owned_by":"vllm","root":"/home/harshil/Harshil-PoCs/m-coder/ml/artifacts/checkpoints/phase08D_conf_patch2/checkpoint-58","parent":"motadata-coder","max_model_len":null,"permission":[{"id":"modelperm-ad6c9df7d64361c1"

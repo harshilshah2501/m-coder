@@ -9,7 +9,8 @@ import com.intellij.openapi.vcs.CheckinProjectPanel
 import com.intellij.openapi.vcs.changes.CommitContext
 import com.intellij.openapi.vcs.checkin.CheckinHandler
 import com.intellij.openapi.vcs.checkin.CheckinHandlerFactory
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 
 class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
     override fun createHandler(panel: CheckinProjectPanel, commitContext: CommitContext): CheckinHandler {
@@ -23,7 +24,7 @@ class MotadataCheckinHandlerFactory : CheckinHandlerFactory() {
  * M3.4 Architecture:
  * - Uses RuntimeBridge as the single integration point
  * - Routes ALL commits through runtime governance
- * - Surfaces distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED)
+ * - Surfaces distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED, EXECUTED_FAILED)
  * - Fails closed if runtime unavailable in enforcing mode
  * - Shadow mode: logs decisions but allows commits to proceed
  * - Enforcing mode: blocks commits based on runtime decision
@@ -40,11 +41,10 @@ class MotadataCheckinHandler(
 ) : CheckinHandler() {
 
     override fun beforeCheckin(): ReturnResult {
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
-        val repoRoot = project.basePath ?: ""
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
+        val repoRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
 
         val request = RuntimeRequest(
             actionType = RuntimeActionType.VCS_COMMIT,
@@ -158,6 +158,15 @@ class MotadataCheckinHandler(
                 )
             }
 
+            RuntimeOutcome.EXECUTED_FAILED -> {
+                Triple(
+                    response.ui?.title ?: "Commit decision — executed but failed",
+                    response.ui?.message
+                        ?: "Unexpected outcome for commit path (execute-failed).",
+                    NotificationType.WARNING
+                )
+            }
+
             RuntimeOutcome.UNKNOWN -> {
                 Triple(
                     "Runtime returned unknown decision (shadow mode)",
@@ -182,6 +191,7 @@ class MotadataCheckinHandler(
             RuntimeOutcome.REFUSED -> ReturnResult.CANCEL
             RuntimeOutcome.DEFERRED -> ReturnResult.CANCEL
             RuntimeOutcome.BLOCKED -> ReturnResult.CANCEL
+            RuntimeOutcome.EXECUTED_FAILED -> ReturnResult.CANCEL
             RuntimeOutcome.UNKNOWN -> ReturnResult.CANCEL
         }
     }

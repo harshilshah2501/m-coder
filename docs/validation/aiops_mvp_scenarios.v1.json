@@ -1,0 +1,55 @@
+{
+  "schema_version": "aiops_mvp_scenarios.v1",
+  "description": "Canonical AIOps MVP scenario pack — queries and IDs. Single source of truth for tests and runbooks.",
+  "top_k_default": 12,
+  "scenarios": [
+    {
+      "id": "A1",
+      "category": "ASK",
+      "focus": "Single-area grounding",
+      "query": "In the Motadata repo, where does alert correlation logic likely live, and which modules appear involved in deriving correlation keys from incoming events?"
+    },
+    {
+      "id": "A2",
+      "category": "ASK",
+      "focus": "Multi-file reasoning",
+      "query": "Compare likely data flow across ingestion, normalization, and incident creation for high-cardinality alerts, and cite which files appear relevant."
+    },
+    {
+      "id": "D1",
+      "category": "DEBUG",
+      "focus": "Root-cause + risk",
+      "query": "Debug hypothesis: duplicate incidents are created for repeated alerts. Based on repo evidence, where are likely duplication guards implemented and what failure points should be checked first?"
+    },
+    {
+      "id": "D2",
+      "category": "DEBUG",
+      "focus": "Honesty under ambiguity",
+      "query": "I suspect a timezone mismatch in alert windowing, but I do not know the responsible module. Identify likely areas and state what evidence is missing before concluding."
+    },
+    {
+      "id": "P1",
+      "category": "PLAN",
+      "focus": "Low-risk execution planning",
+      "query": "Propose a minimal, low-risk plan to add traceable correlation-id propagation from ingest to incident records, with rollback and validation steps."
+    },
+    {
+      "id": "P2",
+      "category": "PLAN",
+      "focus": "Conservative safety planning",
+      "query": "Provide a plan to improve noisy-alert suppression logic while preserving current critical alert pathways; identify likely files to inspect first."
+    },
+    {
+      "id": "C1",
+      "category": "CODE",
+      "focus": "Safe code suggestions",
+      "query": "Suggest a safe, non-executed patch snippet to add guardrail logging around correlation decision branches, and point to likely insertion points from evidence."
+    },
+    {
+      "id": "C2",
+      "category": "CODE",
+      "focus": "Test grounding",
+      "query": "Provide a minimal test skeleton to validate duplicate-incident prevention logic, grounded in likely existing test structure and related modules."
+    }
+  ]
+}

@@ -2,6 +2,7 @@ package ai.motadata.plugin.bridge
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -9,6 +10,34 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.UUID
+
+/**
+ * Merges plugin-side Ask truth into [RuntimeResponse.metadata] for UI and tests.
+ * UI mode must use backend [routing_mode] only; this adds trace and routing labels.
+ */
+internal fun mergeAskPluginRoutingMetadata(
+    response: RuntimeResponse,
+    traceId: String,
+    pluginAskRouting: String,
+    decision: AskRoutingDecision,
+): RuntimeResponse {
+    val md = response.metadata.toMutableMap()
+    val existingTrace = md["trace_id"] as? String
+    if (existingTrace.isNullOrBlank()) {
+        md["trace_id"] = traceId
+    }
+    md[AskPluginRouting.METADATA_KEY] = pluginAskRouting
+    md["plugin_ask_routing_decision"] = decision.toMetadataMap()
+    return response.copy(metadata = md)
+}
+
+/**
+ * Thrown when the runtime returns an HTTP error status (4xx/5xx).
+ * Service was reachable; the request or server state was invalid.
+ * Must NOT be mapped to RUNTIME_UNAVAILABLE.
+ */
+internal class RuntimeHttpException(val statusCode: Int, val responseBody: String) :
+    RuntimeException("Runtime HTTP $statusCode: $responseBody")
 
 /**
  * RuntimeBridge — The single integration point between IDE plugin and runtime.
@@ -26,7 +55,7 @@ import java.util.UUID
  */
 class RuntimeBridge(
     private val gson: Gson = Gson(),
-    private val baseUrl: String = "http://127.0.0.1:8089",
+    private val baseUrl: String = MotadataRuntimeConfig.planGateBaseUrl(),
     private val timeoutMs: Int = 5000
 ) {
 
@@ -127,18 +156,147 @@ class RuntimeBridge(
         return try {
             val responseJson = postJson("$baseUrl/v0/plan", planRequest)
             parsePlanResponse(request.requestId, responseJson)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
         }
     }
 
     private fun callAskEndpoint(request: RuntimeRequest): RuntimeResponse {
-        val askRequest = buildAskRequest(request)
+        val traceId = "trace-" + UUID.randomUUID().toString()
+        if (!request.evidenceFirst) {
+            val decision = AskRoutingDecision(
+                requestId = request.requestId,
+                traceId = traceId,
+                attempt = "v0",
+                result = "direct",
+            )
+            AskRoutingDecisionLog.log(decision)
+            return postV0Ask(
+                request.requestId,
+                buildAskRequestV0(request, includeEvidenceFirstFlag = false, traceId = traceId),
+                traceId = traceId,
+                pluginAskRouting = AskPluginRouting.V0_DIRECT,
+                decision = decision,
+            )
+        }
+
+        val exportOutcome = Layer5EvidenceExporter.tryExportEvidenceBundle(
+            request.repoRoot,
+            request.payload ?: "",
+            request.requestId,
+            traceId,
+        )
+        val localEvidenceJson = when (exportOutcome) {
+            is EvidenceExportOutcome.ServiceFailure ->
+                return RuntimeResponse.unknown(
+                    request.requestId,
+                    formatContextLayerServiceFailure(exportOutcome),
+                )
+            is EvidenceExportOutcome.Unreachable -> {
+                val decision = AskRoutingDecision(
+                    requestId = request.requestId,
+                    traceId = traceId,
+                    attempt = "context_export",
+                    result = "unreachable",
+                    fallbackTo = "v0",
+                )
+                AskRoutingDecisionLog.log(decision)
+                return postV0Ask(
+                    request.requestId,
+                    buildAskRequestV0(request, includeEvidenceFirstFlag = false, traceId = traceId),
+                    traceId = traceId,
+                    pluginAskRouting = AskPluginRouting.CONTEXT_EXPORT_THEN_V0,
+                    decision = decision,
+                )
+            }
+            is EvidenceExportOutcome.Success -> exportOutcome.bundleJson
+        }
+
+        val evidenceObj = try {
+            JsonParser.parseString(localEvidenceJson).asJsonObject
+        } catch (_: Exception) {
+            return RuntimeResponse.unknown(
+                request.requestId,
+                "Context Layer returned evidence that is not valid JSON; evidence-first path aborted (no silent /v0/ask fallback).",
+            )
+        }
+
+        val v1Body = AskV1Contract.buildAskRequestV1Json(gson, request, evidenceObj, traceId)
         return try {
-            val responseJson = postJson("$baseUrl/v0/ask", askRequest)
-            parseAskResponse(request.requestId, responseJson)
+            val responseJson = postJson("$baseUrl/v1/ask", v1Body)
+            val v1Decision = AskRoutingDecision(
+                requestId = request.requestId,
+                traceId = traceId,
+                attempt = "v1",
+                result = "success",
+            )
+            AskRoutingDecisionLog.log(v1Decision)
+            val parsed = parseAskResponse(request.requestId, responseJson)
+            mergeAskPluginRoutingMetadata(
+                parsed,
+                traceId,
+                AskPluginRouting.V1_SUCCESS,
+                v1Decision,
+            )
+        } catch (e: RuntimeHttpException) {
+            when {
+                AskV1Contract.isContractClientFailure(e.statusCode, e.responseBody) ->
+                    RuntimeResponse.unknown(
+                        request.requestId,
+                        AskV1Contract.formatV1FailureMessage(e.statusCode, e.responseBody),
+                    )
+                AskV1Contract.shouldFallbackV1ToV0(e.statusCode) -> {
+                    val decision = AskRoutingDecision(
+                        requestId = request.requestId,
+                        traceId = traceId,
+                        attempt = "v1",
+                        result = "failed",
+                        reason = e.statusCode.toString(),
+                        fallbackTo = "v0",
+                    )
+                    AskRoutingDecisionLog.log(decision)
+                    postV0Ask(
+                        request.requestId,
+                        buildAskRequestV0(request, includeEvidenceFirstFlag = false, traceId = traceId),
+                        traceId = traceId,
+                        pluginAskRouting = AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK,
+                        decision = decision,
+                    )
+                }
+                else ->
+                    RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
+            }
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
+        }
+    }
+
+    private fun formatContextLayerServiceFailure(out: EvidenceExportOutcome.ServiceFailure): String {
+        val preview = out.responseBody.take(1200)
+        return if (out.httpStatus > 0) {
+            "Context Layer HTTP ${out.httpStatus}: $preview"
+        } else {
+            "Context Layer provider failure: $preview"
+        }
+    }
+
+    private fun postV0Ask(
+        requestId: String,
+        body: String,
+        traceId: String,
+        pluginAskRouting: String,
+        decision: AskRoutingDecision,
+    ): RuntimeResponse {
+        return try {
+            val responseJson = postJson("$baseUrl/v0/ask", body)
+            val parsed = parseAskResponse(requestId, responseJson)
+            mergeAskPluginRoutingMetadata(parsed, traceId, pluginAskRouting, decision)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(requestId, e.message ?: "Bad request")
+        } catch (e: Exception) {
+            RuntimeResponse.runtimeUnavailable(requestId, e.message ?: "Unknown error")
         }
     }
 
@@ -147,6 +305,8 @@ class RuntimeBridge(
         return try {
             val responseJson = postJson("$baseUrl/v0/execute", executeRequest)
             parseExecuteResponse(request.requestId, responseJson)
+        } catch (e: RuntimeHttpException) {
+            RuntimeResponse.unknown(request.requestId, e.message ?: "Bad request")
         } catch (e: Exception) {
             RuntimeResponse.runtimeUnavailable(request.requestId, e.message ?: "Unknown error")
         }
@@ -190,8 +350,16 @@ class RuntimeBridge(
         return gson.toJson(planRequest)
     }
 
-    private fun buildAskRequest(request: RuntimeRequest): String {
-        val askRequest = mapOf(
+    /** Legacy AskRequest v0.1 for [POST /v0/ask] only. */
+    private fun buildAskRequestV0(
+        request: RuntimeRequest,
+        includeEvidenceFirstFlag: Boolean,
+        traceId: String,
+    ): String {
+        val clientContext = mutableMapOf<String, Any?>()
+        request.selection?.let { clientContext["selection"] = it }
+
+        val askRequest = mutableMapOf<String, Any?>(
             "schema_version" to "ask_request.v0.1",
             "request_id" to request.requestId,
             "timestamp_utc" to request.timestampUtc,
@@ -199,9 +367,16 @@ class RuntimeBridge(
             "revision" to (request.revision ?: "unknown-revision"),
             "query" to (request.payload ?: ""),
             "branch" to request.branch
-        ).filterValues { it != null }
+        )
+        if (traceId.isNotBlank()) {
+            askRequest["trace_id"] = traceId
+        }
+        if (request.selectedFile != null) askRequest["selected_file"] = request.selectedFile
+        if (request.taskType != null) askRequest["task_type"] = request.taskType
+        if (includeEvidenceFirstFlag) askRequest["evidence_first"] = true
+        if (clientContext.isNotEmpty()) askRequest["client_context"] = clientContext
 
-        return gson.toJson(askRequest)
+        return gson.toJson(askRequest.filterValues { it != null })
     }
 
     private fun buildExecuteRequest(request: RuntimeRequest): String {
@@ -260,7 +435,7 @@ class RuntimeBridge(
         )
     }
 
-    private fun parseAskResponse(requestId: String, json: String): RuntimeResponse {
+    internal fun parseAskResponse(requestId: String, json: String): RuntimeResponse {
         val root = gson.fromJson(json, JsonObject::class.java)
 
         val posture = root.getAsJsonPrimitive("governance_posture")?.asString
@@ -272,21 +447,58 @@ class RuntimeBridge(
             else -> RuntimeOutcome.UNKNOWN
         }
 
-        val ui = RuntimeUi(
-            title = "Repo-Aware Plan (PLAN ONLY)",
-            message = "Planning complete. No execution performed.",
-            severity = "info"
-        )
+        val uiObj = root.getAsJsonObject("ui")
+        val ui = if (uiObj != null) {
+            RuntimeUi(
+                title = uiObj.getAsJsonPrimitive("title")?.asString,
+                message = uiObj.getAsJsonPrimitive("message")?.asString,
+                severity = uiObj.getAsJsonPrimitive("severity")?.asString,
+            )
+        } else {
+            null
+        }
 
         val contextBundle = root.getAsJsonObject("context_bundle")
         val planSummary = root.getAsJsonObject("plan_summary")
+        val explainDebugObj = root.getAsJsonObject("explain_debug")
 
         val metadata = mutableMapOf<String, Any?>()
+        root.getAsJsonPrimitive("request_id")?.asString?.let { metadata["backend_request_id"] = it }
+        root.getAsJsonPrimitive("routing_mode")?.asString?.let { metadata["routing_mode"] = it }
+        root.getAsJsonPrimitive("trace_id")?.asString?.let { metadata["trace_id"] = it }
+        posture?.let { metadata["governance_posture"] = it }
+        metadata["execution"] = execution
         if (contextBundle != null) {
             metadata["context_bundle"] = gson.fromJson(contextBundle, Map::class.java)
         }
         if (planSummary != null) {
             metadata["plan_summary"] = gson.fromJson(planSummary, Map::class.java)
+        }
+        if (explainDebugObj != null) {
+            metadata["explain_debug"] = gson.fromJson(explainDebugObj, Map::class.java)
+        }
+
+        val evidenceBundleObj = root.getAsJsonObject("evidence_bundle")
+        if (evidenceBundleObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["evidence_bundle"] = gson.fromJson(evidenceBundleObj, Map::class.java) as Map<String, Any?>
+        }
+        val evidenceMetaObj = root.getAsJsonObject("evidence_first_meta")
+        if (evidenceMetaObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["evidence_first_meta"] = gson.fromJson(evidenceMetaObj, Map::class.java) as Map<String, Any?>
+        }
+
+        val backendMetadataObj = root.getAsJsonObject("metadata")
+        if (backendMetadataObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["backend_metadata"] = gson.fromJson(backendMetadataObj, Map::class.java) as Map<String, Any?>
+        }
+
+        val contextResolutionObj = root.getAsJsonObject("context_resolution")
+        if (contextResolutionObj != null) {
+            @Suppress("UNCHECKED_CAST")
+            metadata["context_resolution"] = gson.fromJson(contextResolutionObj, Map::class.java) as Map<String, Any?>
         }
 
         return RuntimeResponse(
@@ -299,7 +511,7 @@ class RuntimeBridge(
         )
     }
 
-    private fun parseExecuteResponse(requestId: String, json: String): RuntimeResponse {
+    internal fun parseExecuteResponse(requestId: String, json: String): RuntimeResponse {
         val root = gson.fromJson(json, JsonObject::class.java)
 
         val outcomeStr = root.getAsJsonPrimitive("outcome")?.asString
@@ -307,6 +519,7 @@ class RuntimeBridge(
 
         val outcome = when (outcomeStr?.uppercase()) {
             "EXECUTED" -> RuntimeOutcome.EXECUTED
+            "EXECUTED_FAILED" -> RuntimeOutcome.EXECUTED_FAILED
             "REFUSED" -> RuntimeOutcome.REFUSED
             "BLOCKED" -> RuntimeOutcome.BLOCKED
             "DEFERRED" -> RuntimeOutcome.DEFERRED
@@ -328,7 +541,8 @@ class RuntimeBridge(
         val reason = root.getAsJsonPrimitive("reason")?.asString
         val ledgerRowId = root.getAsJsonPrimitive("ledger_row_id")?.asString
         val planHash = root.getAsJsonPrimitive("plan_hash")?.asString
-        val wasExecuted = root.getAsJsonPrimitive("executed")?.asBoolean ?: (outcome == RuntimeOutcome.EXECUTED)
+        val wasExecuted = root.getAsJsonPrimitive("executed")?.asBoolean
+            ?: (outcome == RuntimeOutcome.EXECUTED || outcome == RuntimeOutcome.EXECUTED_FAILED)
 
         return RuntimeResponse(
             outcome = outcome,
@@ -370,7 +584,7 @@ class RuntimeBridge(
         }
 
         if (status !in 200..299) {
-            throw RuntimeException("Runtime HTTP $status: $response")
+            throw RuntimeHttpException(status, response.toString())
         }
 
         return response.toString()

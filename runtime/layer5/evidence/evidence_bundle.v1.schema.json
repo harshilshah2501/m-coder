@@ -1,0 +1,297 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:motadata:layer5:evidence_bundle:v1",
+  "title": "Layer-5 EvidenceBundle v1 (frozen contract surface)",
+  "description": "Strict schema for layer5.evidence_bundle.v1. Unknown properties are rejected. Phase 4: optional authority_resolution, owner_evidence, structural_context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provisional",
+    "schema_hint",
+    "query_raw",
+    "query_tokens",
+    "top_k",
+    "index_schema_version",
+    "workspace_identity_hash",
+    "canonical_root",
+    "a5_authority_note",
+    "entries"
+  ],
+  "properties": {
+    "provisional": { "const": false },
+    "schema_hint": { "const": "layer5.evidence_bundle.v1" },
+    "query_raw": { "type": "string" },
+    "query_tokens": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "top_k": { "type": "integer", "minimum": 0 },
+    "index_schema_version": { "type": "string" },
+    "workspace_identity_hash": { "type": "string" },
+    "workspace_snapshot_hash": { "type": "string" },
+    "workspace_snapshot_source": { "type": "string" },
+    "workspace_is_dirty": { "type": "boolean" },
+    "workspace_commit_sha": { "type": "string" },
+    "canonical_root": { "type": "string" },
+    "a5_authority_note": {
+      "const": "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets."
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/evidence_entry" }
+    },
+    "authority_resolution": {
+      "$ref": "#/definitions/authority_resolution"
+    },
+    "owner_evidence": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/evidence_entry" }
+    },
+    "structural_context": {
+      "$ref": "#/definitions/structural_context"
+    }
+  },
+  "definitions": {
+    "authority_primary_owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "class", "confidence"],
+      "properties": {
+        "file": { "type": "string" },
+        "class": { "type": "string" },
+        "method": { "type": "string" },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "weak"]
+        }
+      }
+    },
+    "authority_matched_concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["concept_id", "match_type", "confidence"],
+      "properties": {
+        "concept_id": { "type": "string" },
+        "match_type": { "type": "string", "enum": ["exact", "alias", "partial"] },
+        "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "primary_owner": { "$ref": "#/definitions/authority_primary_owner" }
+      }
+    },
+    "authority_forbidden_distractor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "reason"],
+      "properties": {
+        "file": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "authority_collaborator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "role", "relationship"],
+      "properties": {
+        "file": { "type": "string" },
+        "role": { "type": "string" },
+        "relationship": { "type": "string" }
+      }
+    },
+    "authority_validation_details": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file_exists",
+        "class_exists",
+        "method_exists",
+        "is_referenced",
+        "freshness_ok",
+        "days_since_verification"
+      ],
+      "properties": {
+        "file_exists": { "type": "boolean" },
+        "class_exists": { "type": "boolean" },
+        "method_exists": { "type": ["boolean", "null"] },
+        "is_referenced": { "type": ["boolean", "null"] },
+        "freshness_ok": { "type": "boolean" },
+        "days_since_verification": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "authority_entry_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "file", "method"],
+      "properties": {
+        "type": { "type": "string" },
+        "file": { "type": "string" },
+        "method": { "type": "string" }
+      }
+    },
+    "authority_entry_trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "entry_point": { "$ref": "#/definitions/authority_entry_point" },
+        "path": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "authority_resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matched_concepts",
+        "primary_owner",
+        "authority_confidence",
+        "authority_status",
+        "control_flow",
+        "notes",
+        "forbidden_distractors"
+      ],
+      "properties": {
+        "matched_concepts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/authority_matched_concept" }
+        },
+        "primary_owner": { "$ref": "#/definitions/authority_primary_owner" },
+        "authority_confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "weak", "none"]
+        },
+        "authority_status": {
+          "type": "string",
+          "enum": ["validated", "stale", "stale_candidate", "unverified"]
+        },
+        "control_flow": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_distractors": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/authority_forbidden_distractor" }
+        },
+        "collaborators": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/authority_collaborator" }
+        },
+        "validation_details": { "$ref": "#/definitions/authority_validation_details" },
+        "entry_trace": { "$ref": "#/definitions/authority_entry_trace" },
+        "compound": { "type": "boolean" }
+      }
+    },
+    "structural_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "callers_hop_1",
+        "callers_hop_2",
+        "callees_hop_1",
+        "callees_hop_2",
+        "entry_points",
+        "hop_2_pruned_count"
+      ],
+      "properties": {
+        "callers_hop_1": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "callers_hop_2": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "callees_hop_1": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "callees_hop_2": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hop_2_pruned_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "evidence_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provisional",
+        "rank",
+        "relative_path",
+        "retrieval_score",
+        "retrieval_breakdown",
+        "snippet"
+      ],
+      "properties": {
+        "provisional": { "const": false },
+        "rank": { "type": "integer", "minimum": 0 },
+        "relative_path": { "type": "string" },
+        "retrieval_score": { "type": "integer" },
+        "retrieval_breakdown": { "$ref": "#/definitions/retrieval_breakdown" },
+        "snippet": { "$ref": "#/definitions/snippet" }
+      }
+    },
+    "retrieval_breakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path_substrings",
+        "basename_substrings",
+        "content_substrings"
+      ],
+      "properties": {
+        "path_substrings": { "type": "integer" },
+        "basename_substrings": { "type": "integer" },
+        "content_substrings": { "type": "integer" }
+      }
+    },
+    "snippet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "start_line",
+        "end_line",
+        "start_byte_utf8",
+        "end_byte_utf8",
+        "anchor_line",
+        "matched_tokens",
+        "selection_reason",
+        "truncated_by_max_bytes"
+      ],
+      "properties": {
+        "text": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 0 },
+        "end_line": { "type": "integer", "minimum": 0 },
+        "start_byte_utf8": { "type": "integer", "minimum": 0 },
+        "end_byte_utf8": { "type": "integer", "minimum": 0 },
+        "anchor_line": { "type": "integer", "minimum": 0 },
+        "matched_tokens": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "selection_reason": {
+          "type": "string",
+          "enum": [
+            "query_token_substring_anchor",
+            "no_query_token_in_body_file_start",
+            "no_query_tokens_file_start",
+            "file_missing",
+            "file_unreadable",
+            "empty_file"
+          ]
+        },
+        "truncated_by_max_bytes": { "type": "boolean" }
+      }
+    }
+  }
+}

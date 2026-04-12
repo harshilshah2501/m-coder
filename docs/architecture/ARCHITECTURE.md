@@ -200,13 +200,13 @@ User Query: "Which class is inherited by all API classes?"
 | `rag/src/api/rag_api.py` | Main FastAPI application |
 | `rag/src/indexing/project_indexer.py` | Index Java AST data into Qdrant + Neo4j |
 | `rag/docker/docker-compose.yml` | Qdrant + Neo4j containers |
-| `rag/scripts/orchestrator_unified.sh` | Service orchestration script (manages all services) |
+| `runtime/scripts/governed_services.sh` | vLLM + Plan-Gate (m-coder assistant; config: `runtime/config/demo_stack.env`) |
 | `rag/health_monitor.sh` | GPU/RAM/service health monitoring |
 | `training/src/utils/api_server.py` | vLLM API wrapper |
 
 ## Service Management
 
-> **ℹ️ NOTE:** Use `rag/scripts/orchestrator_unified.sh` to manage all services. It handles startup order, health checks, and dependencies automatically.
+> **ℹ️ NOTE:** For the **m-coder** assistant stack, use `runtime/scripts/governed_services.sh` (see `docs/guides/ORCHESTRATOR_GUIDE.md`). The legacy RAG `orchestrator_unified.sh` has been removed.
 
 ### Starting and Stopping Services
 

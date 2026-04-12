@@ -153,7 +153,7 @@ POST http://localhost:7474/db/{databaseName}/tx
 
 ### Check All Services
 ```bash
-bash rag/scripts/orchestrator_unified.sh status
+bash runtime/scripts/governed_services.sh start
 ```
 
 ### Test Qdrant
@@ -192,7 +192,7 @@ docker logs neo4j-motadata
 
 ### If Services Stop
 ```bash
-bash rag/scripts/orchestrator_unified.sh restart
+bash runtime/scripts/governed_services.sh restart
 ```
 
 ### If Qdrant Becomes Unhealthy

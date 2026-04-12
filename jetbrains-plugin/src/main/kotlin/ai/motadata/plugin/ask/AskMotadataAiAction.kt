@@ -1,13 +1,20 @@
 package ai.motadata.plugin.ask
 
+import ai.motadata.plugin.assistant.HostContract
 import ai.motadata.plugin.bridge.*
+import ai.motadata.plugin.logging.DecisionLogger
+import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import git4idea.repo.GitRepositoryManager
+import java.awt.datatransfer.StringSelection
+import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 
 /**
  * Ask Motadata AI Action — Plan-only query through runtime governance.
@@ -29,39 +36,95 @@ class AskMotadataAiAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-
-        val question = Messages.showInputDialog(
-            project,
-            "Enter a question about this repository (PLAN ONLY, no execution):",
-            "Ask Motadata AI",
-            Messages.getQuestionIcon()
-        ) ?: return
-
-        if (question.isBlank()) {
+        if (!HostContract.enforceOrShow(project, "ask_explain_plan")) {
             return
         }
 
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
+        val editor = e.getData(CommonDataKeys.EDITOR)
+        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val selectionText = editor?.selectionModel?.selectedText
+        val anchorForWorkspace = virtualFile ?: editor?.virtualFile
+        val workspaceRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project, anchorForWorkspace)
+        val selectedFileRepoRelative: String? = if (virtualFile != null) {
+            ProjectWorkspacePaths.relativePathIfUnder(workspaceRoot, virtualFile.path) ?: virtualFile.name
+        } else {
+            null
+        }
+
+        val promptMessage = if (selectionText.isNullOrBlank()) {
+            "Enter a question about this repository (PLAN ONLY, no execution):"
+        } else {
+            "Explain/Debug selected code (PLAN ONLY). Optional: add a question or leave as-is:"
+        }
+        @Suppress("DialogTitleCapitalization")
+        val question = Messages.showInputDialog(
+            project,
+            promptMessage,
+            "Ask Motadata AI",
+            Messages.getQuestionIcon()
+        ) ?: return
+        val q = question.takeIf { it.isNotBlank() } ?: return
+
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
+
+        val useExplainDebug = !selectionText.isNullOrBlank() && !selectedFileRepoRelative.isNullOrBlank()
 
         val request = RuntimeRequest(
             actionType = RuntimeActionType.ASK_PLAN,
-            repoRoot = project.basePath ?: "",
+            repoRoot = workspaceRoot,
             revision = revision,
             branch = branch,
-            payload = question,
+            payload = q,
             ideContext = IdeContext(projectName = project.name),
             clientPolicy = ClientPolicy(
                 failClosedIfUnreachable = false,
                 mode = "shadow"
-            )
+            ),
+            selectedFile = selectedFileRepoRelative,
+            selection = selectionText,
+            taskType = if (useExplainDebug) "EXPLAIN_DEBUG" else null,
+            evidenceFirst = MotadataAskFlags.isEvidenceFirstAskEnabled()
         )
 
         val response = bridge.askPlan(request)
 
-        handleResponse(project, question, response)
+        logAskDecision(response, workspaceRoot, branch, revision, if (useExplainDebug) "explain_debug" else "ask_plan")
+        handleResponse(project, q, response)
+    }
+
+    private fun logAskDecision(
+        response: RuntimeResponse,
+        repoRoot: String,
+        branch: String,
+        revision: String,
+        mode: String,
+    ) {
+        val routingMode = response.metadata["routing_mode"] as? String ?: "(none)"
+        val pluginRoute = response.metadata[AskPluginRouting.METADATA_KEY] as? String ?: "(none)"
+        val traceId = response.metadata["trace_id"] as? String ?: "(none)"
+        val evidenceMeta = response.metadata["evidence_first_meta"] as? Map<*, *>
+        val askPath = evidenceMeta?.get("ask_path")?.toString() ?: "(none)"
+        val hasEvidenceBundle = response.metadata["evidence_bundle"] != null
+        val planSummary = response.metadata["plan_summary"] as? Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        val notes = planSummary?.get("notes") as? List<*>
+        val notesPresent = !(notes.isNullOrEmpty())
+        @Suppress("UNCHECKED_CAST")
+        val decision = response.metadata["plugin_ask_routing_decision"] as? Map<*, *>
+        val fallbackReason = decision?.get("reason")?.toString() ?: "(none)"
+
+        val decisionStr =
+            "mode=$mode outcome=${response.outcome.name} path=$askPath routing_mode=$routingMode plugin_route=$pluginRoute trace_id=$traceId evidence_bundle=$hasEvidenceBundle notes_present=$notesPresent fallback_reason=$fallbackReason"
+
+        DecisionLogger.log(
+            action = "ask",
+            decision = decisionStr,
+            repoRoot = repoRoot,
+            branch = branch,
+            revision = revision,
+        )
     }
 
     private fun handleResponse(project: Project, question: String, response: RuntimeResponse) {
@@ -91,69 +154,36 @@ class AskMotadataAiAction : AnAction() {
     }
 
     private fun showPlanOnlyResult(project: Project, question: String, response: RuntimeResponse) {
-        val sb = StringBuilder()
-        sb.appendLine("═══════════════════════════════════════════")
-        sb.appendLine("  PLAN ONLY — No execution performed")
-        sb.appendLine("═══════════════════════════════════════════")
-        sb.appendLine()
+        val fullBody = buildAskResultDialogMessage(question, response)
+        val summary = buildAskResultSummaryMessage(question, response)
+        val title =
+            if (isExplainDebugAskUi(response)) "Ask Motadata AI — Explain/Debug" else "Ask Motadata AI — PLAN ONLY"
 
-        sb.appendLine("Query: $question")
-        sb.appendLine()
-
-        sb.appendLine("Governance Outcome: ${response.outcome.toHumanReadable()}")
-        sb.appendLine()
-
-        val contextBundle = response.metadata["context_bundle"] as? Map<*, *>
-        if (contextBundle != null) {
-            val revision = contextBundle["revision"]
-            sb.appendLine("Context bundle @ ${revision ?: "unknown-revision"}")
-
-            val files = contextBundle["files"] as? List<*>
-            if (files.isNullOrEmpty()) {
-                sb.appendLine("(no files selected)")
-            } else {
-                sb.appendLine("Files:")
-                files.forEach { f ->
-                    val fileMap = f as? Map<*, *>
-                    val path = fileMap?.get("path")
-                    val reason = fileMap?.get("selection_reason")
-                    sb.appendLine("  - $path (reason: $reason)")
-                }
-            }
-            sb.appendLine()
-
-            val selectors = contextBundle["selectors_used"] as? List<*>
-            if (!selectors.isNullOrEmpty()) {
-                sb.appendLine("Selectors used: ${selectors.joinToString(", ")}")
-                sb.appendLine()
-            }
+        val group = NotificationGroupManager.getInstance().getNotificationGroup("Motadata AI")
+        if (group == null) {
+            Messages.showInfoMessage(project, fullBody, title)
+            return
         }
 
-        val planSummary = response.metadata["plan_summary"] as? Map<*, *>
-        if (planSummary != null) {
-            sb.appendLine("Plan:")
-            val steps = planSummary["steps"] as? List<*>
-            if (steps.isNullOrEmpty()) {
-                sb.appendLine("  (no steps returned)")
-            } else {
-                steps.forEachIndexed { idx, step ->
-                    sb.appendLine("  ${idx + 1}. $step")
-                }
-            }
+        val pluginRoute = response.metadata[AskPluginRouting.METADATA_KEY] as? String
+        val notifyType = when (pluginRoute) {
+            AskPluginRouting.V0_AFTER_V1_HTTP_FALLBACK,
+            AskPluginRouting.CONTEXT_EXPORT_THEN_V0,
+            -> NotificationType.WARNING
+            else -> NotificationType.INFORMATION
         }
-
-        sb.appendLine()
-        sb.appendLine("───────────────────────────────────────────")
-        sb.appendLine("This is a PLAN ONLY response.")
-        sb.appendLine("No code was executed. No sandbox was invoked.")
-        sb.appendLine("To execute actions, use 'Submit to Runtime'.")
-        sb.appendLine("───────────────────────────────────────────")
-
-        Messages.showInfoMessage(
-            project,
-            sb.toString(),
-            "Ask Motadata AI — PLAN ONLY"
+        val notification = group.createNotification(title, summary, notifyType)
+        notification.addAction(
+            NotificationAction.createSimple("View full response") {
+                Messages.showInfoMessage(project, fullBody, title)
+            }
         )
+        notification.addAction(
+            NotificationAction.createSimple("Copy full response") {
+                CopyPasteManager.getInstance().setContents(StringSelection(fullBody))
+            }
+        )
+        notification.notify(project)
     }
 
     private fun notify(project: Project, title: String, content: String, type: NotificationType) {

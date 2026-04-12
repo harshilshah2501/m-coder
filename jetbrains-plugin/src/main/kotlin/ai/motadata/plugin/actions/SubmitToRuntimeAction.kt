@@ -1,5 +1,7 @@
 package ai.motadata.plugin.actions
 
+import ai.motadata.plugin.assistant.HostContract
+import ai.motadata.plugin.bridge.MotadataRuntimeConfig
 import ai.motadata.plugin.bridge.*
 import ai.motadata.plugin.logging.DecisionLogger
 import com.intellij.notification.NotificationGroupManager
@@ -8,7 +10,8 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import git4idea.repo.GitRepositoryManager
+import ai.motadata.plugin.util.GitInfoUtil
+import ai.motadata.plugin.util.ProjectWorkspacePaths
 
 /**
  * Submit to Runtime — Explicit code-intent action through governed runtime path.
@@ -16,7 +19,7 @@ import git4idea.repo.GitRepositoryManager
  * M3.4 Architecture:
  * - Demonstrates plugin → runtime → Plan-Gate → sandbox (if allowed) path
  * - Routes through RuntimeBridge exclusively
- * - Surfaces all distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED)
+ * - Surfaces all distinct outcomes (REFUSED, DEFERRED, BOUNDED_ALLOW, BLOCKED, EXECUTED, EXECUTED_FAILED)
  * - Does NOT execute locally
  * - Does NOT fallback if runtime unavailable
  *
@@ -29,6 +32,9 @@ class SubmitToRuntimeAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
+        if (!HostContract.enforceOrShow(project, "execute")) {
+            return
+        }
 
         if (!bridge.isRuntimeAvailable()) {
             showRuntimeUnavailableDialog(project)
@@ -64,7 +70,7 @@ class SubmitToRuntimeAction : AnAction() {
                 appendLine("Runtime service is not available.")
                 appendLine()
                 appendLine("Cannot submit action for governed execution:")
-                appendLine("  - Runtime must be running at http://127.0.0.1:8089")
+                appendLine("  - Runtime must be running at ${MotadataRuntimeConfig.planGateBaseUrl()}")
                 appendLine("  - No local fallback is permitted")
                 appendLine("  - Action was NOT executed")
                 appendLine()
@@ -73,7 +79,7 @@ class SubmitToRuntimeAction : AnAction() {
             "Runtime Unavailable — Action Not Executed"
         )
 
-        val repoRoot = project.basePath ?: ""
+        val repoRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
         DecisionLogger.log(
             action = "execute",
             decision = "RUNTIME_UNAVAILABLE [NO_FALLBACK]",
@@ -84,11 +90,10 @@ class SubmitToRuntimeAction : AnAction() {
     }
 
     private fun executeGovernedRequest(project: Project, command: String) {
-        val repoManager = GitRepositoryManager.getInstance(project)
-        val repo = repoManager.repositories.firstOrNull()
-        val branch = repo?.currentBranchName ?: "unknown"
-        val revision = repo?.currentRevision ?: "unknown-revision"
-        val repoRoot = project.basePath ?: ""
+        val gitInfo = GitInfoUtil.getGitInfo(project)
+        val branch = gitInfo.branch
+        val revision = gitInfo.revision
+        val repoRoot = ProjectWorkspacePaths.layer5WorkspaceRoot(project)
 
         val request = RuntimeRequest(
             actionType = RuntimeActionType.EXECUTE,
@@ -110,15 +115,8 @@ class SubmitToRuntimeAction : AnAction() {
     }
 
     private fun logDecision(response: RuntimeResponse, repoRoot: String, branch: String, revision: String) {
-        val outcomeStr = buildString {
-            append(response.outcome.name)
-            if (response.wasExecuted) {
-                append(" [EXECUTED]")
-            } else {
-                append(" [NOT_EXECUTED]")
-            }
-            response.ledgerRowId?.let { append(" ledger=$it") }
-        }
+        val outcomeStr =
+            "mode=execute route=/v0/execute outcome=${response.outcome.name} executed=${response.wasExecuted} ledger=${response.ledgerRowId ?: "(none)"} plan_hash=${response.planHash ?: "(none)"}"
 
         DecisionLogger.log(
             action = "execute",
@@ -135,6 +133,12 @@ class SubmitToRuntimeAction : AnAction() {
                 "Execution Complete",
                 buildExecutedMessage(command, response),
                 Messages.getInformationIcon()
+            )
+
+            RuntimeOutcome.EXECUTED_FAILED -> Triple(
+                "Execution Failed",
+                buildExecutedFailedMessage(command, response),
+                Messages.getWarningIcon()
             )
 
             RuntimeOutcome.REFUSED -> Triple(
@@ -192,6 +196,28 @@ class SubmitToRuntimeAction : AnAction() {
             response.planHash?.let { appendLine("Plan Hash: ${it.take(16)}...") }
             appendLine()
             appendLine("The action was executed through the governed sandbox.")
+        }
+    }
+
+    private fun buildExecutedFailedMessage(command: String, response: RuntimeResponse): String {
+        return buildString {
+            appendLine("═══════════════════════════════════════════")
+            appendLine("  EXECUTED — Run failed (not a policy block)")
+            appendLine("═══════════════════════════════════════════")
+            appendLine()
+            appendLine("Command: $command")
+            appendLine()
+            appendLine("Outcome: ${response.outcome.toHumanReadable()}")
+            appendLine()
+            appendLine(
+                "The sandbox ran this command; it did not succeed (e.g. non-zero exit). " +
+                    "This is distinct from execution blocked before run."
+            )
+            appendLine()
+            response.reason?.let { appendLine("Reason: $it") }
+            response.ui?.message?.let { appendLine("Details: $it") }
+            response.ledgerRowId?.let { appendLine("Ledger Row: $it") }
+            response.planHash?.let { appendLine("Plan Hash: ${it.take(16)}...") }
         }
     }
 

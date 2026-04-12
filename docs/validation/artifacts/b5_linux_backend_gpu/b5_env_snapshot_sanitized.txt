@@ -1,0 +1,2 @@
+# Sanitized env snapshot (relevant vars only)
+PLAN_GATE_URL=http://127.0.0.1:18189
