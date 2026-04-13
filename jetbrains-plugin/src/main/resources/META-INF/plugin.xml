@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>ai.motadata.runtime-plugin</id>
     <name>Motadata Runtime Governance (MVP)</name>
-    <version>0.2.6</version>
+    <version>0.2.7</version>
     <vendor email="dev@motadata.ai">Motadata</vendor>
 
     <description>
@@ -9,7 +9,7 @@
 
         Routes all governed IDE actions through the runtime Plan-Gate:
         - VCS commit interception (shadow/enforcing modes)
-        - Ask Motadata AI (PLAN ONLY, no execution)
+        - Ask / Explain / Plan (PLAN ONLY, no execution)
         - Submit to Runtime (governed execution request)
 
         Surfaces distinct governance outcomes:
@@ -33,27 +33,20 @@
     </extensions>
 
     <actions>
-        <action id="ai.motadata.plugin.actions.MotadataAssistantAction"
-                class="ai.motadata.plugin.assistant.MotadataAssistantAction"
-                text="Motadata Assistant"
-                description="Primary assistant shell with explicit Ask/Explain/Plan vs Execute modes.">
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        <group id="ai.motadata.plugin.actions.MotadataGroup"
+               text="Motadata"
+               popup="true">
+            <action id="ai.motadata.plugin.actions.AskMotadataAiAction"
+                    class="ai.motadata.plugin.ask.AskMotadataAiAction"
+                    text="Ask / Explain / Plan…"
+                    description="PLAN ONLY — governed Ask through the runtime Plan-Gate (no execution)."/>
+            <action id="ai.motadata.plugin.actions.SubmitToRuntimeAction"
+                    class="ai.motadata.plugin.actions.SubmitToRuntimeAction"
+                    text="Submit to Runtime…"
+                    description="Submit an execution intent through the governed runtime (Plan-Gate → sandbox if allowed)."/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-        </action>
-        <action id="ai.motadata.plugin.actions.AskMotadataAiAction"
-                class="ai.motadata.plugin.ask.AskMotadataAiAction"
-                text="Ask Motadata AI"
-                description="Compatibility shortcut to assistant Ask/Explain/Plan mode.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-        </action>
-        <action id="ai.motadata.plugin.actions.SubmitToRuntimeAction"
-                class="ai.motadata.plugin.actions.SubmitToRuntimeAction"
-                text="Submit to Runtime"
-                description="Compatibility shortcut to assistant Execute mode.">
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-        </action>
+        </group>
     </actions>
 </idea-plugin>
 

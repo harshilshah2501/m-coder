@@ -72,7 +72,7 @@ object HostContract {
         if (report.ok) return true
 
         val body = buildString {
-            appendLine("Motadata Assistant blocked for mode: $modeLabel")
+            appendLine("Motadata blocked for mode: $modeLabel")
             appendLine()
             appendLine("Host contract failed:")
             report.findings.forEach { appendLine("- $it") }

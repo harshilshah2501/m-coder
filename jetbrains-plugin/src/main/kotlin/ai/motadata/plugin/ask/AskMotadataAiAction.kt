@@ -60,7 +60,7 @@ class AskMotadataAiAction : AnAction() {
         val question = Messages.showInputDialog(
             project,
             promptMessage,
-            "Ask Motadata AI",
+            "Ask / Explain / Plan",
             Messages.getQuestionIcon()
         ) ?: return
         val q = question.takeIf { it.isNotBlank() } ?: return
@@ -132,7 +132,7 @@ class AskMotadataAiAction : AnAction() {
             RuntimeOutcome.RUNTIME_UNAVAILABLE -> {
                 notify(
                     project,
-                    "Ask Motadata AI — Runtime Unavailable",
+                    "Motadata — Ask / Plan (runtime unavailable)",
                     "Runtime service could not be reached.\n${response.error ?: "No error details."}",
                     NotificationType.WARNING
                 )
@@ -141,7 +141,7 @@ class AskMotadataAiAction : AnAction() {
             RuntimeOutcome.UNKNOWN -> {
                 notify(
                     project,
-                    "Ask Motadata AI — Unknown Response",
+                    "Motadata — Ask / Plan (unexpected response)",
                     "Runtime returned an unexpected response.\n${response.error ?: "No error details."}",
                     NotificationType.WARNING
                 )
@@ -157,7 +157,7 @@ class AskMotadataAiAction : AnAction() {
         val fullBody = buildAskResultDialogMessage(question, response)
         val summary = buildAskResultSummaryMessage(question, response)
         val title =
-            if (isExplainDebugAskUi(response)) "Ask Motadata AI — Explain/Debug" else "Ask Motadata AI — PLAN ONLY"
+            if (isExplainDebugAskUi(response)) "Motadata — Explain/Debug" else "Motadata — PLAN ONLY"
 
         val group = NotificationGroupManager.getInstance().getNotificationGroup("Motadata AI")
         if (group == null) {
