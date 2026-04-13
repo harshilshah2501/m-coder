@@ -9,6 +9,7 @@
 #   ./scripts/motadata_integration_preflight.sh              # setup + verify (needs MOTADATA_ROOT)
 #   ./scripts/motadata_integration_preflight.sh --verify-only  # no setup; probe existing services
 #   ./scripts/motadata_integration_preflight.sh --quick-only   # fast probes only; no setup, no deep check
+#   ./scripts/motadata_integration_preflight.sh --fresh        # stop managed tunnel+Context Layer first, then full setup (use after git pull)
 #
 # Logs: runtime/.run/motadata_preflight_<UTC>.log (tee to stdout)
 #
@@ -22,6 +23,7 @@
 #   ENABLE_SSH_TUNNEL, TUNNEL_TARGET, TUNNEL_USER, TUNNEL_HOST, ...
 #   ALLOW_COMMIT_MISMATCH
 #   PREFLIGHT_NO_SETUP=1    Same as --verify-only (skip wsl_plugin_mvp_stack.sh up)
+#   PREFLIGHT_FRESH_STACK=1 Same as --fresh: run wsl_plugin_mvp_stack.sh restart (down then up) instead of up
 #   PREFLIGHT_CONTINUE_ON_QUICK_FAIL  Set to 1 to run deep check even if quick probes fail
 #   VERIFY_ASK_E2E, WORKSPACE_ROOT, PREFLIGHT_ASK_QUERY
 #   PREFLIGHT_BUILD_ARTIFACTS=1  Run scripts/motadata_packaging.sh build-all before wsl up (wheel + plugin zip)
@@ -30,18 +32,21 @@ set -euo pipefail
 
 VERIFY_ONLY=0
 QUICK_ONLY=0
+FRESH_STACK=0
 for arg in "$@"; do
   case "$arg" in
     --verify-only|--no-setup) VERIFY_ONLY=1 ;;
     --quick-only) QUICK_ONLY=1 ;;
+    --fresh) FRESH_STACK=1 ;;
     *)
       echo "Unknown option: $arg" >&2
-      echo "Usage: $0 [--verify-only|--no-setup] [--quick-only]" >&2
+      echo "Usage: $0 [--verify-only|--no-setup] [--quick-only] [--fresh]" >&2
       exit 1
       ;;
   esac
 done
 [[ "${PREFLIGHT_NO_SETUP:-0}" == "1" ]] && VERIFY_ONLY=1
+[[ "${PREFLIGHT_FRESH_STACK:-0}" == "1" ]] && FRESH_STACK=1
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${M_CODER_REPO_ROOT:-$SCRIPT_DIR/..}" && pwd)"
@@ -192,8 +197,16 @@ print_banner() {
     echo "  Mode: --quick-only (no setup, no deep check)"
   elif [[ "$VERIFY_ONLY" == "1" ]]; then
     echo "  Mode: --verify-only (no setup)"
+  elif [[ "$FRESH_STACK" == "1" ]]; then
+    echo "  Mode: --fresh (wsl_plugin_mvp_stack.sh restart = down then up, then checklist + deep validation)"
   else
     echo "  Mode: default (wsl_plugin_mvp_stack.sh up, then checklist + deep validation)"
+  fi
+  if [[ "$FRESH_STACK" == "1" && "$VERIFY_ONLY" == "1" ]]; then
+    echo "  Note: --fresh is ignored with --verify-only (no managed stack restart)."
+  fi
+  if [[ "$FRESH_STACK" == "1" && "$QUICK_ONLY" == "1" ]]; then
+    echo "  Note: --fresh is ignored with --quick-only (no managed stack restart)."
   fi
   echo ""
 }
@@ -280,12 +293,19 @@ run_setup_if_enabled() {
     bash "$REPO_ROOT/scripts/motadata_packaging.sh" build-all
     echo ""
   fi
+  local stack_cmd="up"
+  if [[ "$FRESH_STACK" == "1" ]]; then
+    stack_cmd="restart"
+    echo "  Fresh stack: stopping managed SSH tunnel + Context Layer, then starting clean"
+    echo "  (avoids 'already running' after git pull — old PIDs would keep stale code.)"
+    echo ""
+  fi
   echo "───────────────────────────────────────────────────────────────────"
   echo " 0) Setup — managed stack (tunnel if enabled + Context Layer + built-in checks)"
   echo "───────────────────────────────────────────────────────────────────"
-  echo "  Running: scripts/wsl_plugin_mvp_stack.sh up"
+  echo "  Running: scripts/wsl_plugin_mvp_stack.sh $stack_cmd"
   echo ""
-  bash "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" up
+  bash "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" "$stack_cmd"
   echo ""
 }
 

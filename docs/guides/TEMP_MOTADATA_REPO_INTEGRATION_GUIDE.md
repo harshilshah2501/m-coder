@@ -25,7 +25,7 @@ These run from your **m-coder** clone (`M_CODER_ROOT`) unless noted.
 | **Integration preflight** | `scripts/motadata_integration_preflight.sh` | **Default mode:** optional artifact build (`PREFLIGHT_BUILD_ARTIFACTS=1`), then `wsl_plugin_mvp_stack.sh up`, checklist, `check`, optional Ask E2E. |
 | **Managed WSL/workspace stack** | `scripts/wsl_plugin_mvp_stack.sh` | **Invoked by preflight** (default) **or** run **on its own** — optional SSH tunnel, Context Layer (**in-repo** or **wheel** mode), health, commit alignment, endpoint probes. |
 | **Packaging & versions** | `scripts/motadata_packaging.sh` | Syncs versions from `scripts/motadata_versions.env` into `pyproject.toml` / `build.gradle.kts` / `plugin.xml`, builds **wheel** and **plugin zip**, optional `pip install` / unzip into IDE plugins dir. |
-| **Preflight-only modes** | Same script | `--verify-only` skips `up` (probes only). `--quick-only` skips `up` and deep `check`. |
+| **Preflight-only modes** | Same script | `--verify-only` skips `up` (probes only). `--quick-only` skips `up` and deep `check`. **`--fresh`** (or `PREFLIGHT_FRESH_STACK=1`) runs **`wsl_plugin_mvp_stack.sh restart`** instead of `up` — stops managed tunnel + Context Layer first (use after **`git pull`** so you do not keep old PIDs and stale code). |
 
 **Still manual:** starting the **GPU** (`governed_services`). Everything else on this list can be scripted from the repo; **IDE restart** after plugin install is usually required.
 
@@ -145,7 +145,8 @@ See **Automatic steps** and **Logs** above. On the **workspace host**, after the
 
 | Mode | What it does |
 |------|----------------|
-| **Default** | **`wsl_plugin_mvp_stack.sh up`** → checklist → **`wsl_plugin_mvp_stack.sh check`** → optional Ask E2E. **Requires** `MOTADATA_ROOT` or `MOTADATA_REPO_ROOT`. |
+| **Default** | **`wsl_plugin_mvp_stack.sh up`** → checklist → **`wsl_plugin_mvp_stack.sh check`** → optional Ask E2E. **Requires** `MOTADATA_ROOT` or `MOTADATA_REPO_ROOT`. **`up` reuses** a running managed tunnel/Context Layer if PIDs in `runtime/.run/*.pid` are still alive (fast, but **not** fresh code after `git pull`). |
+| **`--fresh`** (or **`PREFLIGHT_FRESH_STACK=1`**) | Same as default, but runs **`wsl_plugin_mvp_stack.sh restart`** (`down` then `up`) so tunnel and Context Layer **restart** and pick up the **current** repo commit. **Recommended after `git pull`**. |
 | **`--verify-only`** (or **`PREFLIGHT_NO_SETUP=1`**) | **No** local `up` — probes only. Use when tunnel + services already run. |
 | **`--quick-only`** | Fast probes only; **no** `up`, **no** deep `check`. |
 
@@ -165,6 +166,15 @@ export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"
 
 ./scripts/motadata_integration_preflight.sh
 ```
+
+**After `git pull` in m-coder:** run preflight with a **fresh** managed stack so the Context Layer and SSH tunnel are not left running from before the update:
+
+```bash
+./scripts/motadata_integration_preflight.sh --fresh
+# equivalent: PREFLIGHT_FRESH_STACK=1 ./scripts/motadata_integration_preflight.sh
+```
+
+Or stop and restart the stack yourself: `./scripts/wsl_plugin_mvp_stack.sh restart` then `./scripts/motadata_integration_preflight.sh --verify-only` if you only need checks.
 
 **Tunnel target must be a real `user@host`** (for example `harshil@45.195.82.10`). If you run `export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"` **before** `GPU_USER` / `GPU_HOST` are set, the value becomes the literal `@` — **export `GPU_USER` and `GPU_HOST` first**, or set `TUNNEL_TARGET` explicitly. The scripts also **rebuild** the tunnel target from `GPU_USER`+`GPU_HOST` when the current target is empty or invalid (e.g. `@`). On the **GPU**, start **`governed_services`** first so Plan-Gate (and vLLM) exist behind the tunnel.
 
@@ -428,7 +438,7 @@ For **screenshots, operator checklists**, and parity with backend truth (includi
 
 ### Final summary (quick pick)
 
-- **Setup end-to-end:** read **sections 1–9** of this file, run **`./scripts/motadata_integration_preflight.sh`**, use **`docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md`** for plugin URLs and demo modes.
+- **Setup end-to-end:** read **sections 1–9** of this file, run **`./scripts/motadata_integration_preflight.sh`** (use **`--fresh`** after **`git pull`** so tunnel + Context Layer restart), use **`docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md`** for plugin URLs and demo modes.
 - **Verify services only (curl):** **§3, §5, §6, §8** here; optional **`VERIFY_ASK_E2E=1`** for `verify_ask_path.sh`.
 - **Verify plugin ↔ backend scenarios (automated matrix):** **`PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md`** + **`verify_plugin_phase1_proof_matrix.sh`** + artifacts under **`docs/validation/artifacts/plugin_phase1_truth_proof/`**.
 - **Verify IDE UI manually:** **`PLUGIN_UI_TRUTH_CERTIFICATION.md`** + **`JETBRAINS_PLUGIN_UI_FINAL_DEMO_RUNBOOK.md`** + **`plugin_ui_truth_cert.py`**.

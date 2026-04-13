@@ -565,7 +565,7 @@ Commands:
   check   Run health + /version + commit match + compatibility checks
   status  Show managed PIDs and health snapshot
   down    Stop managed Context Layer and tunnel
-  restart Clean managed down then full up with checks
+  restart Clean managed down then full up with checks (prefer this after git pull so Context Layer reloads new code; "up" skips if PIDs still alive)
 
 Important env:
   M_CODER_REPO_ROOT          Optional explicit repo root for Context Layer startup/checks
