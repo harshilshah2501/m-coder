@@ -157,13 +157,16 @@ export MOTADATA_REPO_ROOT="/home/harshil/Projects/Motadata"
 export CONTEXT_URL="http://127.0.0.1:8091"
 export PLAN_GATE_URL="http://127.0.0.1:8089"
 export ENABLE_SSH_TUNNEL=1
+export GPU_USER="harshil"
+export GPU_HOST="45.195.82.10"
 export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"
 # Optional: TUNNEL_SSH_KEY=~/.ssh/id_ed25519
+# (If TUNNEL_TARGET was already '@', scripts rebuild it from GPU_USER+GPU_HOST when both are set.)
 
 ./scripts/motadata_integration_preflight.sh
 ```
 
-**Tunnel target must be a real `user@host`** (for example `harshil@45.195.82.10`). If `TUNNEL_TARGET` is `@`, or `GPU_USER` / `GPU_HOST` is empty, the SSH command is invalid, nothing listens on `127.0.0.1:8089`, and Plan-Gate checks fail. On the **GPU**, start **`governed_services`** first so Plan-Gate (and vLLM) exist behind the tunnel.
+**Tunnel target must be a real `user@host`** (for example `harshil@45.195.82.10`). If you run `export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"` **before** `GPU_USER` / `GPU_HOST` are set, the value becomes the literal `@` — **export `GPU_USER` and `GPU_HOST` first**, or set `TUNNEL_TARGET` explicitly. The scripts also **rebuild** the tunnel target from `GPU_USER`+`GPU_HOST` when the current target is empty or invalid (e.g. `@`). On the **GPU**, start **`governed_services`** first so Plan-Gate (and vLLM) exist behind the tunnel.
 
 **Only verify** (no `up` on this host):
 

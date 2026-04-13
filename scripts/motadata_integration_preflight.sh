@@ -61,10 +61,25 @@ MOTADATA_ROOT="${MOTADATA_ROOT:-${MOTADATA_REPO_ROOT:-}}"
 export MOTADATA_ROOT
 
 ENABLE_SSH_TUNNEL="${ENABLE_SSH_TUNNEL:-0}"
+GPU_USER="${GPU_USER:-}"
+GPU_HOST="${GPU_HOST:-}"
 TUNNEL_USER="${TUNNEL_USER:-}"
 TUNNEL_HOST="${TUNNEL_HOST:-}"
 TUNNEL_TARGET="${TUNNEL_TARGET:-}"
 TUNNEL_SSH_KEY="${TUNNEL_SSH_KEY:-}"
+# TUNNEL_TARGET often set as ${GPU_USER}@${GPU_HOST}; if those were empty, value is literally "@"
+if [[ "$ENABLE_SSH_TUNNEL" == "1" ]]; then
+  _tt_u="${TUNNEL_TARGET%%@*}"
+  _tt_h="${TUNNEL_TARGET#*@}"
+  if [[ -z "$TUNNEL_TARGET" || "$TUNNEL_TARGET" == "@" || -z "$_tt_u" || -z "$_tt_h" ]]; then
+    if [[ -n "$GPU_USER" && -n "$GPU_HOST" ]]; then
+      TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"
+    else
+      TUNNEL_TARGET=""
+    fi
+  fi
+  export TUNNEL_TARGET
+fi
 LOCAL_PLAN_GATE_PORT="${LOCAL_PLAN_GATE_PORT:-}"
 REMOTE_PLAN_GATE_HOST="${REMOTE_PLAN_GATE_HOST:-127.0.0.1}"
 REMOTE_PLAN_GATE_PORT="${REMOTE_PLAN_GATE_PORT:-8089}"
@@ -147,11 +162,15 @@ preflight_require_valid_tunnel_if_enabled() {
   [[ "$ENABLE_SSH_TUNNEL" == "1" ]] || return 0
   local t
   if ! t="$(tunnel_target_resolved)"; then
-    echo "[FAIL] ENABLE_SSH_TUNNEL=1 but TUNNEL_TARGET or TUNNEL_USER+TUNNEL_HOST is not set." >&2
+    echo "[FAIL] ENABLE_SSH_TUNNEL=1 but no valid tunnel target." >&2
+    echo "       Set TUNNEL_TARGET=user@host, or TUNNEL_USER + TUNNEL_HOST, or export GPU_USER and GPU_HOST (used as user@host)." >&2
+    echo "       Current: TUNNEL_TARGET='${TUNNEL_TARGET:-}' GPU_USER='${GPU_USER:-}' GPU_HOST='${GPU_HOST:-}'" >&2
     exit 1
   fi
   if ! tunnel_target_is_valid "$t"; then
-    echo "[FAIL] Invalid SSH tunnel target '$t'. Use TUNNEL_TARGET=user@host (e.g. harshil@45.195.82.10), not '@' or empty parts." >&2
+    echo "[FAIL] Invalid SSH tunnel target '$t'." >&2
+    echo "       If you used TUNNEL_TARGET=\"\${GPU_USER}@\${GPU_HOST}\", both must be exported first or you get '@'." >&2
+    echo "       Current: TUNNEL_TARGET='${TUNNEL_TARGET:-}' GPU_USER='${GPU_USER:-}' GPU_HOST='${GPU_HOST:-}'" >&2
     exit 1
   fi
 }
@@ -205,6 +224,7 @@ print_config_section() {
   echo ""
   echo "  SSH tunnel (optional — forwards Plan-Gate + optionally vLLM to localhost)"
   echo "    ENABLE_SSH_TUNNEL=$ENABLE_SSH_TUNNEL"
+  echo "    GPU_USER=${GPU_USER:-<unset>}  GPU_HOST=${GPU_HOST:-<unset>}  (fallback for tunnel target)"
   echo "    TUNNEL_TARGET / user@host: $(build_tunnel_target_display)"
   echo "    TUNNEL_SSH_KEY=${TUNNEL_SSH_KEY:-<unset>}"
   echo "    LOCAL_PLAN_GATE_PORT=$LOCAL_PLAN_GATE_PORT  (→ ${REMOTE_PLAN_GATE_HOST}:${REMOTE_PLAN_GATE_PORT})"

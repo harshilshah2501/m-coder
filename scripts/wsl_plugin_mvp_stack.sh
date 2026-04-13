@@ -50,10 +50,25 @@ PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
 MOTADATA_ROOT="${MOTADATA_ROOT:-}"
 
 ENABLE_SSH_TUNNEL="${ENABLE_SSH_TUNNEL:-0}"
+GPU_USER="${GPU_USER:-}"
+GPU_HOST="${GPU_HOST:-}"
 TUNNEL_USER="${TUNNEL_USER:-}"
 TUNNEL_HOST="${TUNNEL_HOST:-}"
 TUNNEL_TARGET="${TUNNEL_TARGET:-}"
 TUNNEL_SSH_KEY="${TUNNEL_SSH_KEY:-}"
+# If TUNNEL_TARGET was set to "${GPU_USER}@${GPU_HOST}" when those were empty, it becomes "@"
+if [[ "$ENABLE_SSH_TUNNEL" == "1" ]]; then
+  _tt_u="${TUNNEL_TARGET%%@*}"
+  _tt_h="${TUNNEL_TARGET#*@}"
+  if [[ -z "$TUNNEL_TARGET" || "$TUNNEL_TARGET" == "@" || -z "$_tt_u" || -z "$_tt_h" ]]; then
+    if [[ -n "$GPU_USER" && -n "$GPU_HOST" ]]; then
+      export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"
+    else
+      export TUNNEL_TARGET=""
+    fi
+  fi
+  export TUNNEL_TARGET
+fi
 LOCAL_PLAN_GATE_PORT="${LOCAL_PLAN_GATE_PORT:-}"
 REMOTE_PLAN_GATE_HOST="${REMOTE_PLAN_GATE_HOST:-127.0.0.1}"
 REMOTE_PLAN_GATE_PORT="${REMOTE_PLAN_GATE_PORT:-8089}"
@@ -250,12 +265,14 @@ validate_tunnel_target_string() {
 
 build_tunnel_target() {
   local target
-  if [[ -n "$TUNNEL_TARGET" ]]; then
+  if [[ -n "$TUNNEL_TARGET" && "$TUNNEL_TARGET" != "@" ]]; then
     target="$TUNNEL_TARGET"
   elif [[ -n "$TUNNEL_USER" && -n "$TUNNEL_HOST" ]]; then
     target="$TUNNEL_USER@$TUNNEL_HOST"
+  elif [[ -n "$GPU_USER" && -n "$GPU_HOST" ]]; then
+    target="$GPU_USER@$GPU_HOST"
   else
-    fail "Set TUNNEL_TARGET or both TUNNEL_USER and TUNNEL_HOST when ENABLE_SSH_TUNNEL=1"
+    fail "Set TUNNEL_TARGET or TUNNEL_USER+TUNNEL_HOST or GPU_USER+GPU_HOST when ENABLE_SSH_TUNNEL=1 (avoid TUNNEL_TARGET=@ from empty \${GPU_USER}@\${GPU_HOST})"
   fi
   validate_tunnel_target_string "$target"
   echo "$target"
