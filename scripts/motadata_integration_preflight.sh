@@ -24,6 +24,7 @@
 #   PREFLIGHT_NO_SETUP=1    Same as --verify-only (skip wsl_plugin_mvp_stack.sh up)
 #   PREFLIGHT_CONTINUE_ON_QUICK_FAIL  Set to 1 to run deep check even if quick probes fail
 #   VERIFY_ASK_E2E, WORKSPACE_ROOT, PREFLIGHT_ASK_QUERY
+#   PREFLIGHT_BUILD_ARTIFACTS=1  Run scripts/motadata_packaging.sh build-all before wsl up (wheel + plugin zip)
 #
 set -euo pipefail
 
@@ -211,6 +212,10 @@ print_config_section() {
   echo "    PID file (tunnel): $TUNNEL_PID_FILE"
   echo "    Tunnel log:        $TUNNEL_LOG"
   echo ""
+  echo "  Context Layer launch (wsl_plugin_mvp_stack.sh)"
+  echo "    CONTEXT_LAYER_LAUNCH_MODE=${CONTEXT_LAYER_LAUNCH_MODE:-inrepo}   (inrepo | wheel)"
+  echo "    MOTADATA_CONTEXT_LAYER_VENV=${MOTADATA_CONTEXT_LAYER_VENV:-<unset>}"
+  echo ""
   echo "  Managed processes (when using wsl_plugin_mvp_stack.sh up)"
   echo "    Context PID file:  $CONTEXT_PID_FILE"
   echo "    Context log:       $CONTEXT_LOG"
@@ -248,6 +253,13 @@ run_setup_if_enabled() {
     exit 1
   fi
   export MOTADATA_ROOT
+  if [[ "${PREFLIGHT_BUILD_ARTIFACTS:-0}" == "1" || "${MOTADATA_BUILD_ARTIFACTS:-0}" == "1" ]]; then
+    echo "───────────────────────────────────────────────────────────────────"
+    echo " 0a) Build artifacts (sync versions, wheel, JetBrains plugin zip)"
+    echo "───────────────────────────────────────────────────────────────────"
+    bash "$REPO_ROOT/scripts/motadata_packaging.sh" build-all
+    echo ""
+  fi
   echo "───────────────────────────────────────────────────────────────────"
   echo " 0) Setup — managed stack (tunnel if enabled + Context Layer + built-in checks)"
   echo "───────────────────────────────────────────────────────────────────"

@@ -17,6 +17,8 @@
 #   MOTADATA_ROOT=/home/you/Projects/Motadata
 #   CONTEXT_URL=http://127.0.0.1:8091
 #   PLAN_GATE_URL=http://127.0.0.1:8089
+#   CONTEXT_LAYER_LAUNCH_MODE=inrepo | wheel
+#   MOTADATA_CONTEXT_LAYER_VENV=/path/to/venv   (required if mode=wheel; pip install wheel there)
 #
 # Tunnel env (for remote GPU Plan-Gate):
 #   ENABLE_SSH_TUNNEL=1
@@ -63,6 +65,11 @@ ALLOW_COMMIT_MISMATCH="${ALLOW_COMMIT_MISMATCH:-0}"
 REQUIRE_CONTEXT_GIT_COMMIT="${REQUIRE_CONTEXT_GIT_COMMIT:-0}"
 AUTO_ALIGN_CONTEXT_COMMIT="${AUTO_ALIGN_CONTEXT_COMMIT:-1}"
 CONTEXT_PORT_RECLAIM="${CONTEXT_PORT_RECLAIM:-1}"
+
+# Context Layer process: inrepo = python -m runtime.context_layer_service.app with PYTHONPATH=m-coder
+# wheel = motadata-context-layer console from a venv (pip install wheel); set MOTADATA_CONTEXT_LAYER_VENV
+CONTEXT_LAYER_LAUNCH_MODE="${CONTEXT_LAYER_LAUNCH_MODE:-inrepo}"
+MOTADATA_CONTEXT_LAYER_VENV="${MOTADATA_CONTEXT_LAYER_VENV:-}"
 
 info() { echo "[INFO] $*"; }
 ok() { echo "[OK]   $*"; }
@@ -179,24 +186,39 @@ start_context_layer() {
   fi
   rm -f "$CONTEXT_PID_FILE"
 
-  info "Starting Context Layer on WSL"
+  info "Starting Context Layer on WSL (mode=$CONTEXT_LAYER_LAUNCH_MODE)"
   local launched_commit
   launched_commit="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || true)"
   {
     echo "launched_git_commit=$launched_commit"
     echo "motadata_root=$MOTADATA_ROOT"
     echo "context_url=$CONTEXT_URL"
+    echo "context_layer_launch_mode=$CONTEXT_LAYER_LAUNCH_MODE"
     echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   } > "$CONTEXT_META_FILE"
-  (
-    cd "$REPO_ROOT"
-    export PYTHONPATH="$REPO_ROOT"
-    export MOTADATA_ROOT
-    export M_CODER_REPO_ROOT="$REPO_ROOT"
-    export M_CODER_GIT_COMMIT="$launched_commit"
-    export MOTADATA_CONTEXT_DISABLE_CODE_INDEX="${MOTADATA_CONTEXT_DISABLE_CODE_INDEX:-1}"
-    python3 -m runtime.context_layer_service.app >>"$CONTEXT_LOG" 2>&1
-  ) &
+  if [[ "$CONTEXT_LAYER_LAUNCH_MODE" == "wheel" ]]; then
+    local cl_bin="${MOTADATA_CONTEXT_LAYER_VENV:-}/bin/motadata-context-layer"
+    if [[ ! -x "$cl_bin" ]]; then
+      fail "CONTEXT_LAYER_LAUNCH_MODE=wheel but motadata-context-layer not found at $cl_bin — run: ./scripts/motadata_packaging.sh install-wheel <venv> and set MOTADATA_CONTEXT_LAYER_VENV"
+    fi
+    (
+      export MOTADATA_ROOT
+      export M_CODER_REPO_ROOT="$REPO_ROOT"
+      export M_CODER_GIT_COMMIT="$launched_commit"
+      export MOTADATA_CONTEXT_DISABLE_CODE_INDEX="${MOTADATA_CONTEXT_DISABLE_CODE_INDEX:-1}"
+      "$cl_bin" >>"$CONTEXT_LOG" 2>&1
+    ) &
+  else
+    (
+      cd "$REPO_ROOT"
+      export PYTHONPATH="$REPO_ROOT"
+      export MOTADATA_ROOT
+      export M_CODER_REPO_ROOT="$REPO_ROOT"
+      export M_CODER_GIT_COMMIT="$launched_commit"
+      export MOTADATA_CONTEXT_DISABLE_CODE_INDEX="${MOTADATA_CONTEXT_DISABLE_CODE_INDEX:-1}"
+      python3 -m runtime.context_layer_service.app >>"$CONTEXT_LOG" 2>&1
+    ) &
+  fi
   echo "$!" > "$CONTEXT_PID_FILE"
   ok "Context Layer PID: $(cat "$CONTEXT_PID_FILE") (log: $CONTEXT_LOG)"
 }
@@ -541,6 +563,8 @@ Important env:
   AUTO_ALIGN_CONTEXT_COMMIT  1(default) to auto-restart Context Layer on commit drift
   CONTEXT_PORT_RECLAIM       1(default) allows reclaiming port 8091 listener via fuser during alignment
   ALLOW_COMMIT_MISMATCH      1 to warn instead of fail on local-vs-service commit mismatch
+  CONTEXT_LAYER_LAUNCH_MODE  inrepo (default) or wheel — wheel uses MOTADATA_CONTEXT_LAYER_VENV/bin/motadata-context-layer
+  MOTADATA_CONTEXT_LAYER_VENV Absolute path to venv with motadata-context-layer installed (wheel mode)
 EOF
 }
 
