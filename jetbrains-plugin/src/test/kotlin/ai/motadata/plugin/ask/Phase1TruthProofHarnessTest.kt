@@ -231,7 +231,7 @@ class Phase1TruthProofHarnessTest {
                 "plugin_route" to pluginRoute,
             ),
             "plugin_visible_truth" to mapOf(
-                "summary_contains_routing_mode" to summary.contains("routing_mode:"),
+                "summary_contains_routing_mode" to (summary.contains("routing_mode:") || summary.contains("mode=")),
                 "summary_contains_ask_path" to summary.contains("ask_path:"),
                 "summary_contains_trace" to summary.contains("trace"),
                 "summary_contains_evidence_presence" to summary.contains("evidence_bundle_present:"),

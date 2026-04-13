@@ -4,6 +4,16 @@ import ai.motadata.plugin.bridge.AskPluginRouting
 import ai.motadata.plugin.bridge.RuntimeResponse
 
 private const val ASK_SUMMARY_SNIPPET_MAX = 360
+private const val COMPACT_EVIDENCE_MAX_FILES = 6
+private const val COMPACT_EXPLAIN_FIELD_MAX = 1200
+
+/** When false (default), Ask dialogs show a short operator-friendly view. Full audit blocks are opt-in. */
+internal fun askFullDiagnostics(): Boolean {
+    val env = System.getenv("MOTADATA_ASK_FULL_DIAGNOSTICS")?.trim()?.lowercase()
+    if (env == "1" || env == "true" || env == "yes") return true
+    val prop = System.getProperty("motadata.ask.full_diagnostics") ?: return false
+    return prop.equals("true", ignoreCase = true)
+}
 
 /** UI mode from backend [routing_mode] only — never from payload shape or [explain_debug] presence. */
 internal fun isExplainDebugAskUi(response: RuntimeResponse): Boolean =
@@ -11,12 +21,18 @@ internal fun isExplainDebugAskUi(response: RuntimeResponse): Boolean =
 
 /**
  * Short notification-friendly summary (outcome, key calibration, main answer preview).
- * Full diagnostics remain in [buildAskResultDialogMessage].
+ * Full text is in [buildAskResultDialogMessage].
  */
-internal fun buildAskResultSummaryMessage(question: String, response: RuntimeResponse): String {
+internal fun buildAskResultSummaryMessage(
+    question: String,
+    response: RuntimeResponse,
+    fullDiagnostics: Boolean = askFullDiagnostics(),
+): String {
     val sb = StringBuilder()
     sb.appendLine("Outcome: ${response.outcome.toHumanReadable()}")
-    sb.appendLine("request_id: ${response.requestId ?: "(none)"}")
+    if (fullDiagnostics) {
+        sb.appendLine("request_id: ${response.requestId ?: "(none)"}")
+    }
     val qShort = question.trim().let { if (it.length > 100) it.take(100) + "…" else it }
     if (qShort.isNotEmpty()) {
         sb.appendLine("Query: $qShort")
@@ -87,15 +103,192 @@ internal fun buildAskResultSummaryMessage(question: String, response: RuntimeRes
     }
 
     sb.appendLine()
-    sb.appendLine("— PLAN ONLY — Use View full response or Copy full response for complete diagnostics.")
+    if (fullDiagnostics) {
+        sb.appendLine("— PLAN ONLY — Use View full response or Copy full response for complete diagnostics.")
+    } else {
+        sb.appendLine("— PLAN ONLY — Open full response for the complete plan and optional technical details.")
+    }
     return sb.toString()
 }
 
 /**
- * Builds the Ask result dialog text. Separated for tests and to keep backend calibration visible
- * without duplication between plan-only and explain/debug paths.
+ * Builds the Ask result dialog text.
+ * @param fullDiagnostics if true, show routing IDs, calibration tables, provenance dumps (support / audit).
+ * Default is false — query, outcome, short grounding line, capped file list, plan, footer.
  */
-internal fun buildAskResultDialogMessage(question: String, response: RuntimeResponse): String {
+internal fun buildAskResultDialogMessage(
+    question: String,
+    response: RuntimeResponse,
+    fullDiagnostics: Boolean = askFullDiagnostics(),
+): String {
+    return if (fullDiagnostics) {
+        buildAskResultDialogMessageFull(question, response)
+    } else {
+        buildAskResultDialogMessageCompact(question, response)
+    }
+}
+
+private fun buildAskResultDialogMessageCompact(question: String, response: RuntimeResponse): String {
+    val sb = StringBuilder()
+    val explainDebug = response.metadata["explain_debug"] as? Map<*, *>
+
+    if (isExplainDebugAskUi(response)) {
+        sb.appendLine("═══════════════════════════════════════════")
+        sb.appendLine("  Explain/Debug — PLAN ONLY")
+        sb.appendLine("═══════════════════════════════════════════")
+        sb.appendLine()
+        appendBackendTruthOneLine(sb, response)
+        val err = explainDebug?.get("error") as? String
+        if (err != null) {
+            sb.appendLine("Reasoning unavailable: $err")
+            sb.appendLine()
+            sb.appendLine("Ensure vLLM is running and MOTADATA_EXPLAIN_VLLM_URL is set if required.")
+        } else if (explainDebug == null) {
+            sb.appendLine("(routing_mode is explain_debug but explain_debug payload is absent.)")
+            sb.appendLine()
+        } else {
+            (explainDebug["summary"] as? String)?.takeIf { it.isNotBlank() }?.let {
+                sb.appendLine("Summary")
+                sb.appendLine(truncateForCompact(it, COMPACT_EXPLAIN_FIELD_MAX))
+                sb.appendLine()
+            }
+            (explainDebug["logic_flow"] as? String)?.takeIf { it.isNotBlank() }?.let {
+                sb.appendLine("Logic flow")
+                sb.appendLine(truncateForCompact(it, COMPACT_EXPLAIN_FIELD_MAX))
+                sb.appendLine()
+            }
+            (explainDebug["likely_bug_risk"] as? String)?.takeIf { it.isNotBlank() }?.let {
+                sb.appendLine("Likely bug/risk")
+                sb.appendLine(truncateForCompact(it, 800))
+                sb.appendLine()
+            }
+            @Suppress("UNCHECKED_CAST")
+            (explainDebug["evidence"] as? List<*>)?.filterIsInstance<String>()?.takeIf { it.isNotEmpty() }?.let { evidence ->
+                sb.appendLine("Evidence")
+                evidence.take(12).forEach { sb.appendLine("  • $it") }
+                sb.appendLine()
+            }
+            (explainDebug["confidence_limits"] as? String)?.takeIf { it.isNotBlank() }?.let {
+                sb.appendLine("Confidence / limitations")
+                sb.appendLine(truncateForCompact(it, 600))
+                sb.appendLine()
+            }
+        }
+    } else {
+        sb.appendLine("═══════════════════════════════════════════")
+        sb.appendLine("  PLAN ONLY — No execution performed")
+        sb.appendLine("═══════════════════════════════════════════")
+        sb.appendLine()
+        sb.appendLine("Query: $question")
+        sb.appendLine()
+        sb.appendLine("Governance Outcome: ${response.outcome.toHumanReadable()}")
+        sb.appendLine()
+
+        response.ui?.title?.takeIf { it.isNotBlank() }?.let { sb.appendLine(it) }
+        response.ui?.message?.takeIf { it.isNotBlank() }?.let { sb.appendLine(it); sb.appendLine() }
+
+        appendBackendTruthOneLine(sb, response)
+
+        val evidenceBundle = response.metadata["evidence_bundle"] as? Map<*, *>
+        if (evidenceBundle != null) {
+            appendEvidenceBundleCompact(sb, evidenceBundle)
+        }
+
+        val contextBundle = response.metadata["context_bundle"] as? Map<*, *>
+        val evidenceMeta = response.metadata["evidence_first_meta"] as? Map<*, *>
+        val v1EvidenceAsk = (evidenceMeta?.get("ask_path") as? String) == "v1_evidence"
+        if (contextBundle != null && evidenceBundle == null && !v1EvidenceAsk) {
+            val revision = contextBundle["revision"]
+            sb.appendLine("Context @ ${revision ?: "?"}")
+            val files = contextBundle["files"] as? List<*>
+            if (files.isNullOrEmpty()) {
+                sb.appendLine("(no files in context bundle)")
+            } else {
+                files.take(8).forEach { f ->
+                    val fileMap = f as? Map<*, *>
+                    sb.appendLine("  - ${fileMap?.get("path")}")
+                }
+            }
+            sb.appendLine()
+        }
+
+        val planSummary = response.metadata["plan_summary"] as? Map<*, *>
+        if (planSummary != null) {
+            sb.appendLine("Plan:")
+            val steps = planSummary["steps"] as? List<*>
+            if (steps.isNullOrEmpty()) {
+                sb.appendLine("  (no steps returned)")
+            } else {
+                steps.forEachIndexed { idx, step ->
+                    sb.appendLine("  ${idx + 1}. $step")
+                }
+            }
+            @Suppress("UNCHECKED_CAST")
+            val notes = planSummary["notes"] as? List<*>
+            if (!notes.isNullOrEmpty()) {
+                sb.appendLine()
+                sb.appendLine("Plan notes:")
+                notes.forEach { n ->
+                    val line = n?.toString()?.trim()
+                    if (!line.isNullOrEmpty()) {
+                        sb.appendLine("  - $line")
+                    }
+                }
+            }
+        }
+    }
+
+    sb.appendLine()
+    sb.appendLine("───────────────────────────────────────────")
+    sb.appendLine("This is a PLAN ONLY response. No code was executed.")
+    sb.appendLine("To run governed actions, use Submit to Runtime.")
+    sb.appendLine()
+    sb.appendLine("Full routing/evidence metrics: MOTADATA_ASK_FULL_DIAGNOSTICS=1 or -Dmotadata.ask.full_diagnostics=true")
+    sb.appendLine("───────────────────────────────────────────")
+
+    return sb.toString()
+}
+
+private fun truncateForCompact(s: String, max: Int): String {
+    val t = s.trim()
+    return if (t.length <= max) t else t.take(max).trimEnd() + "…"
+}
+
+private fun appendBackendTruthOneLine(sb: StringBuilder, response: RuntimeResponse) {
+    val bm = response.metadata["backend_metadata"] as? Map<*, *> ?: return
+    val eq = (bm["evidence_quality"] as? String)?.trim()
+    val intent = (bm["intent_type"] as? String)?.trim()
+    val parts = mutableListOf<String>()
+    if (!eq.isNullOrEmpty()) parts.add("Evidence quality: $eq")
+    if (!intent.isNullOrEmpty()) parts.add("Intent: $intent")
+    if (parts.isEmpty()) return
+    sb.appendLine(parts.joinToString(" · "))
+    if (eq == "WEAK") {
+        sb.appendLine("Note: grounding is weak — the plan may be incomplete.")
+    }
+    sb.appendLine()
+}
+
+private fun appendEvidenceBundleCompact(sb: StringBuilder, evidenceBundle: Map<*, *>) {
+    @Suppress("UNCHECKED_CAST")
+    val entries = evidenceBundle["entries"] as? List<*>
+    if (entries.isNullOrEmpty()) {
+        sb.appendLine("Sources: (no entries in evidence bundle)")
+        sb.appendLine()
+        return
+    }
+    val total = entries.size
+    val show = minOf(total, COMPACT_EVIDENCE_MAX_FILES)
+    sb.appendLine("Related files (showing $show of $total, paths only):")
+    entries.take(COMPACT_EVIDENCE_MAX_FILES).forEachIndexed { i, raw ->
+        val ent = raw as? Map<*, *> ?: return@forEachIndexed
+        val path = ent["relative_path"] ?: ent["path"] ?: "?"
+        sb.appendLine("  ${i + 1}. $path")
+    }
+    sb.appendLine()
+}
+
+private fun buildAskResultDialogMessageFull(question: String, response: RuntimeResponse): String {
     val sb = StringBuilder()
     sb.appendLine("request_id: ${response.requestId ?: "(none)"}")
     sb.appendLine()

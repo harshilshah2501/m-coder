@@ -4,6 +4,7 @@ import ai.motadata.plugin.bridge.AskPluginRouting
 import ai.motadata.plugin.bridge.RuntimeOutcome
 import ai.motadata.plugin.bridge.RuntimeResponse
 import ai.motadata.plugin.bridge.RuntimeUi
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -60,13 +61,15 @@ class AskResultDialogMessageTest {
                 ),
             )
         )
-        val full = buildAskResultDialogMessage("q?", response)
-        val summary = buildAskResultSummaryMessage("q?", response)
+        val full = buildAskResultDialogMessage("q?", response, fullDiagnostics = true)
+        val summary = buildAskResultSummaryMessage("q?", response, fullDiagnostics = false)
+        val summaryFull = buildAskResultSummaryMessage("q?", response, fullDiagnostics = true)
         assertTrue(!summary.contains("Response provenance (backend)"), summary)
         assertTrue(!summary.contains("Dominance metrics (backend):"), summary)
+        assertTrue(!summary.contains("request_id:"), summary)
         assertTrue(summary.contains("Query: q?"), summary)
         assertTrue(summary.contains("quality=WEAK"), summary)
-        assertTrue(summary.contains("request_id: r1"), summary)
+        assertTrue(summaryFull.contains("request_id: r1"), summaryFull)
 
         val msg = full
         assertTrue(msg.startsWith("request_id: r1"), msg)
@@ -102,7 +105,7 @@ class AskResultDialogMessageTest {
                 ),
             )
         )
-        val msg = buildAskResultDialogMessage("q?", response)
+        val msg = buildAskResultDialogMessage("q?", response, fullDiagnostics = true)
         assertTrue(msg.startsWith("request_id: r2"), msg)
         assertTrue(msg.contains("Evidence quality: STRONG"), msg)
         assertTrue(msg.contains("intent_type: EXPLAIN_DEBUG"), msg)
@@ -142,7 +145,7 @@ class AskResultDialogMessageTest {
                 ),
             ),
         )
-        val msg = buildAskResultDialogMessage("q?", response)
+        val msg = buildAskResultDialogMessage("q?", response, fullDiagnostics = true)
         val iCal = msg.indexOf("Grounding calibration (backend)")
         val iProv = msg.indexOf("Response provenance (backend)")
         val iExplainHeader = msg.indexOf("Explain/Debug — PLAN ONLY")
@@ -181,7 +184,7 @@ class AskResultDialogMessageTest {
                 ),
             )
         )
-        val msg = buildAskResultDialogMessage("q", response)
+        val msg = buildAskResultDialogMessage("q", response, fullDiagnostics = true)
         assertTrue(msg.contains("evidence_bundle: present in response"), msg)
         assertTrue(msg.contains("ask_path: v1_evidence"), msg)
         assertTrue(msg.indexOf("Grounding calibration") < msg.indexOf("Response provenance"), msg)
@@ -203,7 +206,7 @@ class AskResultDialogMessageTest {
                 "context_bundle" to mapOf("revision" to "r", "files" to emptyList<Any>(), "selectors_used" to emptyList<Any>()),
             )
         )
-        val msg = buildAskResultDialogMessage("q", response)
+        val msg = buildAskResultDialogMessage("q", response, fullDiagnostics = true)
         assertTrue(msg.contains("used_layer5: true"), msg)
         assertTrue(msg.contains("workspace_input_path: /tmp/ws"), msg)
     }
@@ -247,8 +250,40 @@ class AskResultDialogMessageTest {
                 ),
             ),
         )
-        val msg = buildAskResultDialogMessage("q", response)
+        val msg = buildAskResultDialogMessage("q", response, fullDiagnostics = true)
         assertTrue(msg.contains("(backend returned context_bundle.files: empty)"), msg)
         assertTrue(!msg.contains("(no files selected)"), msg)
+    }
+
+    @Test
+    fun `compact default omits audit headers and caps evidence to paths`() {
+        val response = RuntimeResponse(
+            outcome = RuntimeOutcome.BOUNDED_ALLOW,
+            requestId = "rid-compact",
+            ui = RuntimeUi(title = "T", message = "M", severity = "info"),
+            metadata = planTruthMeta(requestId = "rid-compact") + mapOf(
+                "backend_metadata" to mapOf(
+                    "evidence_quality" to "WEAK",
+                    "intent_type" to "CODE_INTENT",
+                ),
+                "evidence_bundle" to mapOf(
+                    "schema_hint" to "layer5.evidence_bundle.v1",
+                    "entries" to listOf(
+                        mapOf("relative_path" to "a/Foo.java", "retrieval_score" to 1.0),
+                        mapOf("relative_path" to "b/Bar.java", "retrieval_score" to 2.0),
+                    ),
+                ),
+                "plan_summary" to mapOf("steps" to listOf("step one")),
+            ),
+        )
+        val msg = buildAskResultDialogMessage("q?", response, fullDiagnostics = false)
+        assertFalse(msg.contains("request_id:"), msg)
+        assertFalse(msg.contains("Routing (correlation)"), msg)
+        assertFalse(msg.contains("Grounding calibration (backend)"), msg)
+        assertFalse(msg.contains("Response provenance (backend)"), msg)
+        assertTrue(msg.contains("Evidence quality: WEAK"), msg)
+        assertTrue(msg.contains("Related files (showing 2 of 2, paths only):"), msg)
+        assertTrue(msg.contains("1. a/Foo.java"), msg)
+        assertTrue(msg.contains("MOTADATA_ASK_FULL_DIAGNOSTICS=1"), msg)
     }
 }

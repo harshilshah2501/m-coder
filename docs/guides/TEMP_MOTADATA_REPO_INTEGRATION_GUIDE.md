@@ -373,3 +373,62 @@ ssh "$GPU_USER@$GPU_HOST" "cd '$M_CODER_ROOT' && ./runtime/scripts/governed_serv
 ```
 
 **Workspace:** stop a manually run `motadata-context-layer` with Ctrl+C, or use `./scripts/wsl_plugin_mvp_stack.sh down` for processes started by that script.
+
+---
+
+## 10) Documentation map — setup vs testing scenarios
+
+Use this section as a **single index**: where to go for **bringing the stack up** versus **proving Ask / Plan / execute behavior** (API checks, frozen plugin scenarios, or manual IDE certification).
+
+### Setup (install, configure, run services)
+
+| Topic | Document or script |
+|--------|-------------------|
+| **This guide** (GPU + workspace + env template + curl smoke) | `docs/guides/TEMP_MOTADATA_REPO_INTEGRATION_GUIDE.md` (sections 1–9) |
+| **Integration preflight** (checklist, GREEN/RED, optional Ask HTTP E2E) | `scripts/motadata_integration_preflight.sh` |
+| **WSL/workspace stack** (Context Layer, tunnel, `up` / `check` / `down`) | `scripts/wsl_plugin_mvp_stack.sh` |
+| **Versions, wheel, JetBrains zip** | `scripts/motadata_packaging.sh`, `scripts/motadata_versions.env` |
+| **Governed GPU services** (Plan-Gate + vLLM) | `runtime/scripts/governed_services.sh`, `runtime/config/demo_stack.env` |
+| **Repo layout and where things live** | `docs/audit/REPO_LAYOUT_INVENTORY.md` |
+| **JetBrains plugin demo topology and wiring** (tunnel, URLs, evidence-first flags) | `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md` |
+
+### Testing — API and stack (no IDE UI matrix)
+
+These verify **HTTP health**, **Context Layer export**, and **`/v1/ask`** contracts using `curl` / scripts. They do **not** replace plugin UI scenario proof.
+
+| Topic | Document or script |
+|--------|-------------------|
+| **Manual flows in this guide** | Sections 3, 5, 6, 8 (`curl` / `jq` expectations) |
+| **Optional preflight Ask E2E** | `VERIFY_ASK_E2E=1` → `runtime/scripts/verify_ask_path.sh` (export + `/v1/ask`) |
+| **Coverage map (pytest ↔ docs)** | `docs/audit/TEST_COVERAGE_MATRIX.md` |
+
+### Testing — plugin scenarios (frozen S1–S8)
+
+The **numbered scenario matrix** for **Ask (plan-only paths)** and **Submit to Runtime** outcomes is **Phase-1 truth proof**: backend JSON and plugin-visible text captures, with a **frozen** `exact_match` contract.
+
+| Topic | Document or path |
+|--------|------------------|
+| **Closure and what is proven** | `docs/validation/PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md` |
+| **Frozen matrix** | `docs/validation/artifacts/plugin_phase1_truth_proof/proof_matrix.json`, `proof_matrix.md` |
+| **Per-scenario artifacts** | `docs/validation/artifacts/plugin_phase1_truth_proof/scenario_S*/` |
+| **Offline verifier (no Gradle IDE sandbox)** | `scripts/verify_plugin_phase1_proof_matrix.sh` |
+| **Gradle contract test** | `jetbrains-plugin/.../Phase1TruthProofHarnessTest.kt` (`phase1ProofMatrixFrozenContract`; `live` tag regenerates artifacts) |
+
+**Scope note:** S1–S5 focus on **`routing_mode: plan_only`** Ask flows (v1, v0, fallback, weak, no-match). S6–S8 cover **execute** outcomes (blocked, refused, executed_failed). **Explain/Debug** (`explain_debug`) is **not** a separate row in this frozen matrix; see **UI certification** below.
+
+### Testing — manual JetBrains UI certification
+
+For **screenshots, operator checklists**, and parity with backend truth (including **explain/debug** as a scenario *class*):
+
+| Topic | Document or script |
+|--------|-------------------|
+| **Certification process and S1–S8 operator proof** | `docs/validation/PLUGIN_UI_TRUTH_CERTIFICATION.md` |
+| **Artifact generator** | `scripts/plugin_ui_truth_cert.py`, `scripts/plugin_ui_truth_aggregate.py` |
+| **Final demo runbook** (topology, pass/fail bar) | `docs/guides/JETBRAINS_PLUGIN_UI_FINAL_DEMO_RUNBOOK.md` |
+
+### Final summary (quick pick)
+
+- **Setup end-to-end:** read **sections 1–9** of this file, run **`./scripts/motadata_integration_preflight.sh`**, use **`docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md`** for plugin URLs and demo modes.
+- **Verify services only (curl):** **§3, §5, §6, §8** here; optional **`VERIFY_ASK_E2E=1`** for `verify_ask_path.sh`.
+- **Verify plugin ↔ backend scenarios (automated matrix):** **`PLUGIN_PHASE1_TRUTH_PROOF_CLOSURE.md`** + **`verify_plugin_phase1_proof_matrix.sh`** + artifacts under **`docs/validation/artifacts/plugin_phase1_truth_proof/`**.
+- **Verify IDE UI manually:** **`PLUGIN_UI_TRUTH_CERTIFICATION.md`** + **`JETBRAINS_PLUGIN_UI_FINAL_DEMO_RUNBOOK.md`** + **`plugin_ui_truth_cert.py`**.
