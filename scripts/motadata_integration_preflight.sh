@@ -108,16 +108,51 @@ is_pid_alive() {
   [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
 }
 
-build_tunnel_target_display() {
-  if [[ -n "$TUNNEL_TARGET" ]]; then
+# Same rules as wsl_plugin_mvp_stack.sh validate_tunnel_target_string (display-only).
+tunnel_target_resolved() {
+  if [[ -n "${TUNNEL_TARGET:-}" ]]; then
     echo "$TUNNEL_TARGET"
-    return
+    return 0
   fi
-  if [[ -n "$TUNNEL_USER" && -n "$TUNNEL_HOST" ]]; then
+  if [[ -n "${TUNNEL_USER:-}" && -n "${TUNNEL_HOST:-}" ]]; then
     echo "${TUNNEL_USER}@${TUNNEL_HOST}"
+    return 0
+  fi
+  return 1
+}
+
+tunnel_target_is_valid() {
+  local t="$1"
+  [[ -n "$t" && "$t" != "@" && "$t" == *"@"* ]] || return 1
+  local user="${t%%@*}"
+  local host="${t#*@}"
+  [[ -n "$user" && -n "$host" ]]
+}
+
+build_tunnel_target_display() {
+  local t
+  if ! t="$(tunnel_target_resolved 2>/dev/null)"; then
+    echo "<not set>"
     return
   fi
-  echo "<not set>"
+  if ! tunnel_target_is_valid "$t"; then
+    echo "<invalid — got '$t'; set TUNNEL_TARGET=user@host or TUNNEL_USER + TUNNEL_HOST>"
+    return
+  fi
+  echo "$t"
+}
+
+preflight_require_valid_tunnel_if_enabled() {
+  [[ "$ENABLE_SSH_TUNNEL" == "1" ]] || return 0
+  local t
+  if ! t="$(tunnel_target_resolved)"; then
+    echo "[FAIL] ENABLE_SSH_TUNNEL=1 but TUNNEL_TARGET or TUNNEL_USER+TUNNEL_HOST is not set." >&2
+    exit 1
+  fi
+  if ! tunnel_target_is_valid "$t"; then
+    echo "[FAIL] Invalid SSH tunnel target '$t'. Use TUNNEL_TARGET=user@host (e.g. harshil@45.195.82.10), not '@' or empty parts." >&2
+    exit 1
+  fi
 }
 
 QUICK_FAILED=0
@@ -246,12 +281,24 @@ checklist_ssh_tunnel() {
     return 0
   fi
 
+  local t=""
+  if t="$(tunnel_target_resolved 2>/dev/null)"; then
+    :
+  else
+    t=""
+  fi
+  if ! tunnel_target_is_valid "$t"; then
+    row_fail "SSH tunnel target invalid or missing (got '${t:-empty}'). Set TUNNEL_TARGET=user@host or TUNNEL_USER + TUNNEL_HOST — not '@' or empty."
+    echo ""
+    return
+  fi
+
   local tpid
   tpid="$(read_pid "$TUNNEL_PID_FILE" || true)"
   if [[ -n "$tpid" ]] && is_pid_alive "$tpid"; then
-    row_pass "SSH tunnel process alive (PID $tpid, managed by this repo’s launcher). Log: $TUNNEL_LOG"
+    row_pass "SSH tunnel process alive (PID $tpid → $t). Log: $TUNNEL_LOG"
   else
-    row_fail "SSH tunnel expected (ENABLE_SSH_TUNNEL=1) but no live PID in $TUNNEL_PID_FILE (start with: ./scripts/wsl_plugin_mvp_stack.sh up)"
+    row_fail "SSH tunnel expected (ENABLE_SSH_TUNNEL=1) but no live PID in $TUNNEL_PID_FILE (run ./scripts/wsl_plugin_mvp_stack.sh up or fix tunnel; see $TUNNEL_LOG)"
   fi
   echo ""
 }
@@ -393,6 +440,7 @@ print_summary_green() {
 
 main() {
   print_banner
+  preflight_require_valid_tunnel_if_enabled
   print_config_section
   run_setup_if_enabled
   checklist_tools

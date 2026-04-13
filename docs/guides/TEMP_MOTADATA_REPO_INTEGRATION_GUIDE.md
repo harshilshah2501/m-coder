@@ -66,6 +66,8 @@ export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"
 ./scripts/motadata_integration_preflight.sh
 ```
 
+**Tunnel target must be a real `user@host`** (for example `harshil@45.195.82.10`). If `TUNNEL_TARGET` is `@`, or `GPU_USER` / `GPU_HOST` is empty, the SSH command is invalid, nothing listens on `127.0.0.1:8089`, and Plan-Gate checks fail. On the **GPU**, start **`governed_services`** first so Plan-Gate (and vLLM) exist behind the tunnel.
+
 **Only verify** (no `up` on this host):
 
 ```bash

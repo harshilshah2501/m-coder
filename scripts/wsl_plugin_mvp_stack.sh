@@ -210,16 +210,33 @@ restart_context_layer_aligned() {
   wait_http_ok "Context Layer" "$CONTEXT_URL/healthz" 90
 }
 
+# Reject empty, "@", "user@", "@host", and other malformed values (a common mistake is TUNNEL_TARGET=@).
+validate_tunnel_target_string() {
+  local t="$1"
+  if [[ -z "$t" || "$t" == "@" ]]; then
+    fail "Invalid SSH tunnel target (empty or '@'). Set TUNNEL_TARGET=user@host or both TUNNEL_USER and TUNNEL_HOST to non-empty values."
+  fi
+  if [[ "$t" != *"@"* ]]; then
+    fail "Invalid SSH tunnel target '$t' (expected user@host)."
+  fi
+  local user="${t%%@*}"
+  local host="${t#*@}"
+  if [[ -z "$user" || -z "$host" ]]; then
+    fail "Invalid SSH tunnel target '$t' (user and host must both be non-empty)."
+  fi
+}
+
 build_tunnel_target() {
+  local target
   if [[ -n "$TUNNEL_TARGET" ]]; then
-    echo "$TUNNEL_TARGET"
-    return
+    target="$TUNNEL_TARGET"
+  elif [[ -n "$TUNNEL_USER" && -n "$TUNNEL_HOST" ]]; then
+    target="$TUNNEL_USER@$TUNNEL_HOST"
+  else
+    fail "Set TUNNEL_TARGET or both TUNNEL_USER and TUNNEL_HOST when ENABLE_SSH_TUNNEL=1"
   fi
-  if [[ -n "$TUNNEL_USER" && -n "$TUNNEL_HOST" ]]; then
-    echo "$TUNNEL_USER@$TUNNEL_HOST"
-    return
-  fi
-  fail "Set TUNNEL_TARGET or both TUNNEL_USER and TUNNEL_HOST when ENABLE_SSH_TUNNEL=1"
+  validate_tunnel_target_string "$target"
+  echo "$target"
 }
 
 start_tunnel_if_enabled() {
@@ -517,7 +534,7 @@ Important env:
   CONTEXT_URL                Default: http://127.0.0.1:8091
   PLAN_GATE_URL              Default: http://127.0.0.1:8089
   ENABLE_SSH_TUNNEL          1 to create SSH local forwards, else 0
-  TUNNEL_TARGET              user@host (or set TUNNEL_USER + TUNNEL_HOST)
+  TUNNEL_TARGET              user@host (must be non-empty on both sides; not \"@\")
   TUNNEL_SSH_KEY             Optional identity file
   LOCAL_PLAN_GATE_PORT       Default: port from PLAN_GATE_URL (8089)
   LOCAL_VLLM_PORT            Default: 8000 (forward vLLM with Plan-Gate); set 0 to disable vLLM forward
