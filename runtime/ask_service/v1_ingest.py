@@ -17,6 +17,7 @@ from runtime.layer5.evidence.schema_validate import (
     validate_evidence_bundle_dict,
 )
 from runtime.layer5.evidence.usefulness_metrics import bundle_usefulness_metrics
+from runtime.layer5.retrieval.intent import GENERIC_INTENT
 from runtime.layer5.retrieval.quality_gate import (
     NO_MATCH,
     WEAK,
@@ -234,6 +235,24 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         else "plan_only"
     )
 
+    ui_message = (
+        "Context was built only from evidence_bundle.v1 (no repository reads on this path). "
+        "Plan-only steps generated; no execution performed."
+    )
+    if (
+        explain_debug_result is None
+        and routing_mode == "plan_only"
+        and (
+            quality.intent_type == GENERIC_INTENT
+            or "QUERY_TOO_GENERIC" in quality.quality_reasons
+        )
+    ):
+        ui_message += (
+            " This path does not produce a full architectural write-up—only investigation steps and file pointers. "
+            "For a precise how-it-works answer, use Motadata → Explain/Debug with source selected, "
+            "or ask again with a concrete class or symbol (e.g. AlertCorrelationEngine)."
+        )
+
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
@@ -243,10 +262,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         evidence_bundle=evidence_bundle,
         evidence_first_meta=ingestion_meta,
         ui_title="Evidence-driven Plan (PLAN ONLY)",
-        ui_message=(
-            "Context was built only from evidence_bundle.v1 (no repository reads on this path). "
-            "Plan-only steps generated; no execution performed."
-        ),
+        ui_message=ui_message,
         ui_severity="info",
         repo_aware_notes=weak_notes or None,
         metadata=metadata,

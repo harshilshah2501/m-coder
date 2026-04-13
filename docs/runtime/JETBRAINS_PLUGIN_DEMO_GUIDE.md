@@ -272,6 +272,12 @@ Shows: question → `/v0/ask` → context bundle + plan summary; no execution, n
 
 **Success criteria:** Dialog shows PLAN ONLY, context files with reasons, and a bounded plan; nothing is executed.
 
+### Plan-only vs a precise “how it works” answer
+
+**Repo-Aware Ask (plan-only)** is intentionally bounded: the runtime uses a **deterministic planner** that emits short **read/inspect steps** (e.g. open ranked files, search, trace flow)—not a full design write-up. Broad questions such as “How does alert correlation work in this repo?” are often **generic intent** with **WEAK** grounding, so you get ranked paths and steps, not a single authoritative narrative.
+
+For **detailed implementation explanation** (summary, logic flow, limitations), use **§7 Explain/Debug** with **source selected** in the editor (vLLM-backed), and/or **ask again with a concrete class, method, or path** so retrieval can anchor (e.g. `AlertCorrelationEngine`).
+
 ---
 
 ## 7. Demo 3 — Explain/Debug selected code

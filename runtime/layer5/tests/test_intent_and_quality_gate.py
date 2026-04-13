@@ -97,6 +97,17 @@ def test_quality_gate_generic_with_code_paths_stays_weak_not_strong():
     assert q.blocked is False
 
 
+def test_operator_hints_query_too_generic_includes_explain_debug_guidance():
+    q = assess_evidence_quality(
+        "how does something work in this repo",
+        ["src/main/java/com/mindarray/aiops/Foo.java"],
+    )
+    assert "QUERY_TOO_GENERIC" in q.quality_reasons
+    hints = operator_hints_for_assessment(q)
+    assert any("Explain/Debug" in h for h in hints)
+    assert any("PLAN_ONLY" in h for h in hints)
+
+
 def test_quality_gate_nonexistent_symbol_is_no_match():
     q = assess_evidence_quality("Where is FooBarMissingSymbol() implemented?", [])
     assert q.evidence_quality == NO_MATCH

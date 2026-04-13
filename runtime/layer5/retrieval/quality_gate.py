@@ -197,10 +197,16 @@ def operator_hints_for_assessment(assessment: QualityAssessment) -> Tuple[str, .
         hints.append(
             "No core AIOps file in the top-3 ranks; inspect entries below or add domain tokens to the query."
         )
-    if "QUERY_TOO_GENERIC" in reasons and assessment.evidence_quality == STRONG:
+    if "QUERY_TOO_GENERIC" in reasons:
         hints.append(
-            "Generic-intent classification: STRONG does not imply pinpoint engineering grounding."
+            "Generic-intent: PLAN_ONLY returns bounded investigation steps (open/search/trace) and ranked files, "
+            "not a full how-it-works narrative. For step-by-step implementation detail, use Motadata → Explain/Debug "
+            "with relevant Java selected, or ask again naming a concrete class, method, or path."
         )
+        if assessment.evidence_quality == STRONG:
+            hints.append(
+                "STRONG quality here does not imply pinpoint engineering grounding for an open-ended question."
+            )
     if "NOISE_DOMINATED" in reasons or "DIVERSITY_VIOLATION" in reasons:
         hints.append(
             "Retrieval window is noisy or repetitive; consider narrowing subsystem or file-class scope."

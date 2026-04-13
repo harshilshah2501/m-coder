@@ -18,7 +18,7 @@ import urllib.error
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from runtime.context.contracts import ContextBundle
+from runtime.context.contracts import ContextBundle, ContextItem
 
 
 LOG = logging.getLogger(__name__)
@@ -78,6 +78,43 @@ class ExplainDebugResult:
         return out
 
 
+def _norm_rel_path(path: str) -> str:
+    return path.replace("\\", "/").strip()
+
+
+def _selection_is_minimal(selection: str) -> bool:
+    """True when the IDE sent a tiny fragment (one call, identifier, single line)."""
+    s = selection.strip()
+    if not s:
+        return True
+    if len(s) < 100:
+        return True
+    if s.count("\n") < 2 and len(s) < 500:
+        return True
+    return False
+
+
+def _prioritize_bundle_items_for_selection(bundle: ContextBundle, selected_file: str) -> List[ContextItem]:
+    """
+    Put the file matching ``selected_file`` first so the model sees full source before distractors.
+    """
+    sel = _norm_rel_path(selected_file).lower()
+    base = sel.split("/")[-1] if "/" in sel else sel
+    items = list(bundle.items[:10])
+    if not sel:
+        return items
+
+    primary: List = []
+    rest: List = []
+    for it in items:
+        p = _norm_rel_path(it.path).lower()
+        if p == sel or p.endswith("/" + base) or (base and p.endswith(base)):
+            primary.append(it)
+        else:
+            rest.append(it)
+    return primary + rest if primary else items
+
+
 def _build_prompt(
     query: str,
     selected_file: str,
@@ -85,20 +122,38 @@ def _build_prompt(
     bundle: ContextBundle,
 ) -> str:
     """Build a prompt for explain/debug from context bundle and selection."""
+    minimal = _selection_is_minimal(selection)
     lines = [
-        "You are analyzing a code selection from a repository. Provide a structured analysis.",
+        "You are analyzing code from a repository. Provide a structured analysis.",
+        "The highlighted selection may be a short fragment (e.g. one method call or identifier). "
+        "That is normal — use the full file contents under “Repository context” to resolve symbols and explain behavior.",
         "",
         "## Selected file",
         selected_file,
         "",
-        "## Selected code",
+        "## Selected code (editor highlight; may be a fragment)",
         "```",
         selection.strip() or "(no selection text)",
         "```",
-        "",
-        "## Repository context (relevant files)",
     ]
-    for item in bundle.items[:10]:
+    if minimal:
+        lines.extend(
+            [
+                "",
+                "### Instructions for minimal / one-line selections",
+                "- Do **not** answer that the code is “incomplete” or refuse to analyze — the full files below contain the implementation.",
+                "- Locate the symbol or call site in the repository context (especially the selected file’s path).",
+                "- Explain what the referenced API or expression does using those file bodies (methods, fields, callees).",
+                "- In `evidence`, cite concrete paths and symbol names you used (e.g. `path/to/File.java:methodName`).",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "## Repository context (relevant files; use these to interpret the selection)",
+        ]
+    )
+    for item in _prioritize_bundle_items_for_selection(bundle, selected_file):
         lines.append(f"### {item.path}")
         lines.append("```")
         lines.append(item.content[:8000] + ("..." if len(item.content) > 8000 else ""))

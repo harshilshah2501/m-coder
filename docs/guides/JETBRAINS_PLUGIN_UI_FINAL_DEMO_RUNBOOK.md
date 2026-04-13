@@ -24,6 +24,24 @@ A demo is accepted only if plugin-visible behavior matches backend truth for all
 - Execute outcome truthfulness (executed, blocked, refused, executed_failed)
 - Explicit fallback visibility
 
+## <u>1a) Modes: what “PLAN ONLY” means (and what it is *not*)</u>
+
+This stack overloads everyday words. Use this map so expectations match the product.
+
+| Term | What it actually means here |
+|------|-----------------------------|
+| **PLAN ONLY** | A **governance posture**, not a separate product “Ask vs Plan” mode. It means: Plan-Gate returns a **read-only** answer (plan steps, evidence, and/or `explain_debug` text). It **does not** run shell commands, edit files, or execute your repo. **Every** normal Ask flow from the plugin is **PLAN ONLY** until you use **Submit to Runtime** (governed execute), which is a different path. |
+| **Ask** | The **plugin action** (menu: *Ask / Explain / Plan…*): you type a question (or add one with code selected). It is **not** the opposite of “Plan”; it is **how you send** the question. |
+| **`routing_mode: plan_only`** | Backend label: default **investigation-style** answer (ranked files + short plan steps from the deterministic planner). **Not** a full architectural essay for broad questions. |
+| **`routing_mode: explain_debug`** | Backend label: **Explain/Debug** path — with code selected and vLLM up, you get structured **summary / logic flow / …** (still **PLAN ONLY** in the sense of *no execution*). |
+| **Debug / Explain** | Same **Ask** action, but with **editor selection** and the right task so the server runs **Explain/Debug** reasoning (vLLM). This is where **full “how it works” narrative** belongs today. |
+| **Intent (`CODE_INTENT`, `GENERIC_INTENT`, …)** | **Metadata** from the quality gate describing the query shape — **not** a separate IDE mode you pick like a tab. |
+| **Agent / Stage 3 loop** | **Not** the same as the JetBrains **Ask** flow in this demo. Governed agent loops exist elsewhere in the runtime; they are **not** exposed here as “Agent mode” in the plugin the way Ask is. |
+
+**If you want a full explanation (not just file pointers):** use **Explain/Debug** with **relevant source selected** (and vLLM reachable), **or** narrow the question to a **concrete class or method** so retrieval and planning anchor. Broad “how does X work in this repo?” stays **`plan_only`** + bounded steps by design.
+
+**If you want execution (commands, governed actions):** that is **Submit to Runtime** / execute, **not** the Ask dialog’s PLAN ONLY answer.
+
 ## <u>2) Host Topology and Ownership</u>
 
 **Goal:** enforce clear ownership boundaries across GPU host, WSL client, and Windows IDE.
