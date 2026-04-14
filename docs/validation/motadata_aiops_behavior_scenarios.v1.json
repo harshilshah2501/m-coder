@@ -1,0 +1,79 @@
+{
+  "schema_version": "motadata_aiops_behavior_scenarios.v1",
+  "description": "Deterministic expectations for Motadata AIOps behavior verification. Paths and queries align with docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md.",
+  "defaults": {
+    "top_k": 8
+  },
+  "scenarios": [
+    {
+      "id": "ask_broad_correlation",
+      "capability": "ask",
+      "description": "Broad repo question: plan-only answer with v1 evidence path",
+      "query": "How does alert correlation and enrichment work?",
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "execution": false,
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1
+      }
+    },
+    {
+      "id": "ask_symbol_anchored",
+      "capability": "ask",
+      "description": "Anchored question: expect correlation engine in plan or evidence",
+      "query": "Where is alert correlation implemented? Reference AvailabilityCorrelationEngine or AlertCorrelationEngine.",
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1,
+        "text_contains_any": [
+          "AvailabilityCorrelationEngine",
+          "AlertCorrelationEngine",
+          "correlation"
+        ]
+      }
+    },
+    {
+      "id": "debug_explain_selection",
+      "capability": "debug",
+      "description": "EXPLAIN_DEBUG with explicit file + selection",
+      "query": "How does alert correlation and enrichment work?",
+      "debug_query": "Debug why incident enrichment might be skipped for some events",
+      "selected_file": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+      "selection": "Trace enrichment and correlation paths; list likely failure points.",
+      "expect": {
+        "routing_mode": "explain_debug",
+        "explain_debug_has_keys": ["summary"]
+      }
+    },
+    {
+      "id": "plan_pr_merge_shadow",
+      "capability": "plan",
+      "description": "Governed PR merge decision (shadow)",
+      "expect": {
+        "schema_version": "decision_response.v0.1",
+        "decision_present": true
+      }
+    },
+    {
+      "id": "code_echo_probe",
+      "capability": "code",
+      "description": "Governed execute: safe echo (non-destructive)",
+      "command": "echo motadata-execute-probe",
+      "expect": {
+        "schema_version": "execute_response.v0.1",
+        "outcome": "EXECUTED",
+        "executed": true
+      }
+    },
+    {
+      "id": "agent_no_route",
+      "capability": "agent",
+      "description": "No public /v0/agent; assist present on ask",
+      "expect": {
+        "agent_route_404": true,
+        "assist_layer_on_ask": true
+      }
+    }
+  ]
+}

@@ -9,6 +9,13 @@ Validates these capabilities through live endpoints:
   - code    (/v0/execute contract)
   - agent   (no dedicated /v0/agent route; assist metadata on ask)
 
+Stdout modes:
+  - concise: short pass/fail + clipped answers
+  - dev: full plan steps, context_bundle files, evidence snippet previews
+  - json: full report JSON
+
+Optional --scenarios FILE runs JSON scenarios with expected fields (see docs/validation/).
+
 Exits non-zero on any failed check.
 """
 
@@ -57,6 +64,33 @@ def _clip(text: str, n: int = 220) -> str:
     return text[: n - 3] + "..."
 
 
+def _evidence_snippet_previews(entries: list[dict[str, Any]], max_entries: int = 8, max_chars: int = 600) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for e in entries[:max_entries]:
+        sp = e.get("snippet") if isinstance(e.get("snippet"), dict) else {}
+        txt = sp.get("text") if isinstance(sp, dict) else None
+        if not isinstance(txt, str):
+            txt = ""
+        out.append(
+            {
+                "relative_path": e.get("relative_path"),
+                "preview": _clip(txt.replace("\n", " "), max_chars),
+            }
+        )
+    return out
+
+
+def _context_bundle_files(ask_resp: dict[str, Any]) -> list[dict[str, Any]]:
+    cb = ask_resp.get("context_bundle") if isinstance(ask_resp.get("context_bundle"), dict) else {}
+    files = cb.get("files") if isinstance(cb.get("files"), list) else []
+    rows: list[dict[str, Any]] = []
+    for f in files:
+        if not isinstance(f, dict):
+            continue
+        rows.append({"path": f.get("path"), "selection_reason": f.get("selection_reason")})
+    return rows
+
+
 def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
     checks = run.get("checks") or {}
     query = checks.get("query") or {}
@@ -68,18 +102,23 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
         "pass": run.get("all_pass", False),
         "query": {
             "pass": query.get("pass", False),
+            "request_id": query.get("request_id"),
+            "trace_id": query.get("trace_id"),
             "ask_path": query.get("ask_path"),
             "evidence_quality": query.get("evidence_quality"),
             "quality_reasons": query.get("quality_reasons") or [],
             "answer_steps": query.get("answer_steps") or [],
             "notes": query.get("answer_notes") or [],
             "top_paths": export.get("top_paths") or [],
+            "context_bundle_files": query.get("context_bundle_files") or [],
+            "evidence_snippet_previews": query.get("evidence_snippet_previews") or [],
         },
         "debug": {
             "pass": debug.get("pass", False),
             "routing_mode": debug.get("routing_mode"),
             "summary": debug.get("summary"),
             "likely_bug_risk": debug.get("likely_bug_risk"),
+            "logic_flow": debug.get("logic_flow"),
             "error": debug.get("error"),
         },
         "plan": {
@@ -129,6 +168,115 @@ def _print_concise(final: dict[str, Any]) -> None:
         c = s.get("code") or {}
         print(f"  plan_decision: {p.get('decision')}")
         print(f"  code: outcome={c.get('outcome')} posture={c.get('posture')} executed={c.get('executed')}")
+        print("")
+
+
+def _print_dev(final: dict[str, Any]) -> None:
+    print("")
+    print("=== Motadata Developer View (full query answer + evidence) ===")
+    print(f"workspace: {final.get('workspace_root')}")
+    print(f"repeat: {final.get('repeat')}  stable: {final.get('stable')}  all_pass: {final.get('all_pass')}")
+    print("")
+    for idx, run in enumerate(final.get("runs") or [], start=1):
+        s = run.get("summary") or {}
+        q = s.get("query") or {}
+        print(f"{'=' * 60}")
+        print(f"[run {idx}] smoke pass={s.get('pass')}")
+        print(f"request_id: {q.get('request_id')}")
+        print(f"trace_id: {q.get('trace_id')}")
+        print("")
+        print("--- Ask response (where the product answers your query) ---")
+        print(f"governance_posture: PLAN_ONLY (implicit) | ask_path: {q.get('ask_path')}")
+        print(f"evidence_quality: {q.get('evidence_quality')}  reasons: {q.get('quality_reasons')}")
+        print("")
+        print("plan_summary.steps (full — this is the grounded answer text):")
+        for i, step in enumerate(q.get("answer_steps") or [], start=1):
+            print(f"  {i}. {step}")
+        if q.get("notes"):
+            print("plan_summary.notes:")
+            for n in q.get("notes") or []:
+                print(f"  - {n}")
+        print("")
+        print("context_bundle.files (what the planner attached as context):")
+        for row in q.get("context_bundle_files") or []:
+            print(f"  - {row.get('path')}")
+            print(f"    reason: {row.get('selection_reason')}")
+        print("")
+        print("Evidence bundle snippets (retrieval previews):")
+        for row in q.get("evidence_snippet_previews") or []:
+            print(f"  - {row.get('relative_path')}")
+            print(f"    {row.get('preview')}")
+        print("")
+        d = s.get("debug") or {}
+        print("--- EXPLAIN_DEBUG (separate call; not the same as the ask query above) ---")
+        print(f"routing_mode: {d.get('routing_mode')}")
+        if d.get("summary"):
+            print(f"summary:\n{d.get('summary')}")
+        if d.get("logic_flow"):
+            print(f"logic_flow:\n{d.get('logic_flow')}")
+        if d.get("likely_bug_risk"):
+            print(f"likely_bug_risk:\n{d.get('likely_bug_risk')}")
+        if d.get("error"):
+            print(f"error: {d.get('error')}")
+        print("")
+        p = s.get("plan") or {}
+        c = s.get("code") or {}
+        a = s.get("agent") or {}
+        print("--- /v0/plan (policy) ---")
+        print(f"decision: {p.get('decision')}")
+        print("")
+        print("--- /v0/execute (governed code path) ---")
+        print(f"outcome: {c.get('outcome')}  executed: {c.get('executed')}  posture: {c.get('posture')}")
+        print("")
+        print("--- agent semantics ---")
+        print(f"assist_layer on ask: {a.get('assist_layer_present_in_ask')}  /v0/agent 404: {a.get('agent_route_404')}")
+        print("")
+
+
+def _print_scenario_results(suite: dict[str, Any], *, dev: bool = False) -> None:
+    print("")
+    print("=== Scenario suite (expected vs actual) ===")
+    print(f"file: {suite.get('file')}")
+    print(f"all_pass: {suite.get('all_pass')}")
+    print("")
+    for r in suite.get("results") or []:
+        st = "PASS" if r.get("pass") else "FAIL"
+        print(f"[{st}] {r.get('id')} ({r.get('capability')})")
+        if r.get("description"):
+            print(f"  description: {r.get('description')}")
+        if r.get("errors"):
+            for e in r.get("errors") or []:
+                print(f"  error: {e}")
+        if r.get("expect"):
+            clip = 2000 if dev else 500
+            exp_s = json.dumps(r.get("expect"), sort_keys=True)
+            print(f"  expect: {exp_s[:clip]}{'...' if len(exp_s) > clip else ''}")
+        if r.get("actual_summary"):
+            print(f"  actual: {r.get('actual_summary')}")
+        if dev and r.get("dev_snapshot"):
+            ds = r.get("dev_snapshot") or {}
+            cap = r.get("capability")
+            if cap == "ask":
+                print("  --- dev: plan_summary.steps ---")
+                for i, step in enumerate(ds.get("answer_steps") or [], start=1):
+                    print(f"    {i}. {step}")
+                print("  --- dev: context_bundle.files ---")
+                for row in ds.get("context_bundle_files") or []:
+                    print(f"    - {row.get('path')}")
+                print("  --- dev: evidence previews ---")
+                for row in ds.get("evidence_snippet_previews") or []:
+                    print(f"    - {row.get('relative_path')}")
+                    print(f"      {row.get('preview')}")
+            elif cap == "debug":
+                print("  --- dev: EXPLAIN_DEBUG ---")
+                if ds.get("summary"):
+                    print(f"    summary:\n{ds.get('summary')}")
+                if ds.get("logic_flow"):
+                    print(f"    logic_flow:\n{ds.get('logic_flow')}")
+                if ds.get("likely_bug_risk"):
+                    print(f"    likely_bug_risk:\n{ds.get('likely_bug_risk')}")
+                if ds.get("error"):
+                    print(f"    error: {ds.get('error')}")
         print("")
 
 
@@ -182,25 +330,32 @@ def run_once(
         ask_v1_req["expected_workspace_identity_hash"] = ws_hash
 
     code, ask_query_resp = _post(f"{plan_gate_url}/v1/ask", ask_v1_req)
-    query_meta = ask_query_resp.get("metadata") or {}
+    query_meta = ask_query_resp.get("metadata") if isinstance(ask_query_resp.get("metadata"), dict) else {}
+    plan_steps = ((ask_query_resp.get("plan_summary") or {}).get("steps") or []) if isinstance(ask_query_resp.get("plan_summary"), dict) else []
+    cb_files = _context_bundle_files(ask_query_resp)
+    snip_previews = _evidence_snippet_previews([e for e in entries if isinstance(e, dict)])
     checks["query"] = {
         "pass": (
             code == 200
             and (ask_query_resp.get("evidence_first_meta") or {}).get("ask_path") == "v1_evidence"
             and ask_query_resp.get("governance_posture") == "PLAN_ONLY"
             and ask_query_resp.get("execution") is False
-            and len(((ask_query_resp.get("plan_summary") or {}).get("steps") or [])) > 0
+            and len(plan_steps) > 0
         ),
         "http": code,
+        "request_id": ask_query_resp.get("request_id"),
+        "trace_id": ask_query_resp.get("trace_id") or query_meta.get("trace_id"),
         "ask_path": (ask_query_resp.get("evidence_first_meta") or {}).get("ask_path"),
         "governance_posture": ask_query_resp.get("governance_posture"),
         "execution": ask_query_resp.get("execution"),
         "evidence_quality": query_meta.get("evidence_quality"),
         "quality_reasons": query_meta.get("quality_reasons"),
-        "steps_count": len(((ask_query_resp.get("plan_summary") or {}).get("steps") or [])),
+        "steps_count": len(plan_steps),
         "assist_layer_present": "assist_layer" in ask_query_resp,
-        "answer_steps": ((ask_query_resp.get("plan_summary") or {}).get("steps") or []),
+        "answer_steps": plan_steps,
         "answer_notes": ((ask_query_resp.get("plan_summary") or {}).get("notes") or []),
+        "context_bundle_files": cb_files,
+        "evidence_snippet_previews": snip_previews,
     }
 
     first_path = entries[0].get("relative_path") if entries else "runtime/plan_gate_service/app.py"
@@ -215,7 +370,7 @@ def run_once(
         }
     )
     code, ask_debug_resp = _post(f"{plan_gate_url}/v1/ask", debug_req)
-    explain_debug = ask_debug_resp.get("explain_debug") or {}
+    explain_debug = ask_debug_resp.get("explain_debug") if isinstance(ask_debug_resp.get("explain_debug"), dict) else {}
     checks["debug"] = {
         "pass": (
             code == 200
@@ -230,6 +385,7 @@ def run_once(
         "has_error": bool(explain_debug.get("error")) if isinstance(explain_debug, dict) else False,
         "summary": explain_debug.get("summary") if isinstance(explain_debug, dict) else None,
         "likely_bug_risk": explain_debug.get("likely_bug_risk") if isinstance(explain_debug, dict) else None,
+        "logic_flow": explain_debug.get("logic_flow") if isinstance(explain_debug, dict) else None,
         "error": explain_debug.get("error") if isinstance(explain_debug, dict) else None,
     }
 
@@ -332,25 +488,364 @@ def _stable_signature(run: dict[str, Any]) -> str:
     return json.dumps(payload, sort_keys=True)
 
 
+def _haystack_for_text_match(
+    plan_steps: list[str],
+    top_paths: list[str | None],
+    snippets: list[dict[str, Any]],
+) -> str:
+    parts: list[str] = []
+    parts.extend(str(s) for s in plan_steps)
+    parts.extend(str(p) for p in top_paths if p)
+    for sn in snippets:
+        parts.append(str(sn.get("preview") or ""))
+        parts.append(str(sn.get("relative_path") or ""))
+    return "\n".join(parts).lower()
+
+
+def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: str) -> list[str]:
+    errs: list[str] = []
+    if "governance_posture" in expect and actual.get("governance_posture") != expect["governance_posture"]:
+        errs.append(f"governance_posture want {expect['governance_posture']} got {actual.get('governance_posture')}")
+    if "execution" in expect and actual.get("execution") != expect["execution"]:
+        errs.append(f"execution want {expect['execution']} got {actual.get('execution')}")
+    if "ask_path" in expect and actual.get("ask_path") != expect["ask_path"]:
+        errs.append(f"ask_path want {expect['ask_path']} got {actual.get('ask_path')}")
+    if "min_plan_steps" in expect:
+        n = len(actual.get("plan_steps") or [])
+        if n < int(expect["min_plan_steps"]):
+            errs.append(f"min_plan_steps want >= {expect['min_plan_steps']} got {n}")
+    subs = expect.get("text_contains_any")
+    if isinstance(subs, list) and subs:
+        if not any(str(s).lower() in haystack for s in subs if s):
+            errs.append(f"text_contains_any: none of {subs} found in plan paths/snippets")
+    return errs
+
+
+def _run_scenario_row(
+    scenario: dict[str, Any],
+    workspace_root: str,
+    context_url: str,
+    plan_gate_url: str,
+    top_k: int,
+) -> dict[str, Any]:
+    sid = str(scenario.get("id") or "unknown")
+    cap = str(scenario.get("capability") or "")
+    desc = scenario.get("description")
+    expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
+    errors: list[str] = []
+
+    if cap == "ask":
+        q = str(scenario.get("query") or "")
+        code, evidence = _post(
+            f"{context_url}/v1/export_evidence",
+            {"workspace_root": workspace_root, "query": q, "top_k": top_k},
+            timeout=300,
+        )
+        entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
+        if code != 200 or not entries:
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": [f"export_evidence failed http={code} entries={len(entries)}"],
+                "expect": expect,
+                "actual_summary": None,
+            }
+        req: dict[str, Any] = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": str(uuid.uuid4()),
+            "timestamp_utc": _utc_now(),
+            "query": q,
+            "evidence_bundle": evidence,
+        }
+        if evidence.get("workspace_identity_hash"):
+            req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
+        code, resp = _post(f"{plan_gate_url}/v1/ask", req)
+        meta = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
+        plan_steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+        top_paths = [e.get("relative_path") for e in entries[:8] if isinstance(e, dict)]
+        snips = _evidence_snippet_previews([e for e in entries if isinstance(e, dict)])
+        haystack = _haystack_for_text_match([str(s) for s in plan_steps], top_paths, snips)
+        actual = {
+            "governance_posture": resp.get("governance_posture"),
+            "execution": resp.get("execution"),
+            "ask_path": (resp.get("evidence_first_meta") or {}).get("ask_path"),
+            "plan_steps": plan_steps,
+            "evidence_quality": meta.get("evidence_quality"),
+        }
+        errors.extend(_check_expect_ask(actual, expect, haystack))
+        if "evidence_quality_any_of" in expect:
+            allowed = expect["evidence_quality_any_of"]
+            if isinstance(allowed, list) and actual.get("evidence_quality") not in allowed:
+                errors.append(f"evidence_quality want one of {allowed} got {actual.get('evidence_quality')}")
+        dev_snapshot = {
+            "request_id": resp.get("request_id"),
+            "trace_id": resp.get("trace_id") or (meta.get("trace_id") if isinstance(meta, dict) else None),
+            "answer_steps": plan_steps,
+            "context_bundle_files": _context_bundle_files(resp),
+            "evidence_snippet_previews": snips,
+        }
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {
+                "http": code,
+                "evidence_quality": actual.get("evidence_quality"),
+                "ask_path": actual.get("ask_path"),
+                "plan_steps_count": len(plan_steps),
+            },
+            "dev_snapshot": dev_snapshot,
+        }
+
+    if cap == "debug":
+        base_q = str(scenario.get("query") or "How does alert correlation and enrichment work?")
+        dq = str(scenario.get("debug_query") or "")
+        sel = str(scenario.get("selected_file") or "")
+        sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
+        code, evidence = _post(
+            f"{context_url}/v1/export_evidence",
+            {"workspace_root": workspace_root, "query": base_q, "top_k": top_k},
+            timeout=300,
+        )
+        entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
+        if code != 200 or not entries:
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": ["export_evidence failed for debug scenario"],
+                "expect": expect,
+                "actual_summary": None,
+            }
+        req = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": str(uuid.uuid4()),
+            "timestamp_utc": _utc_now(),
+            "query": dq,
+            "evidence_bundle": evidence,
+            "task_type": "EXPLAIN_DEBUG",
+            "selected_file": sel or (entries[0].get("relative_path") if entries else ""),
+            "client_context": {"selection": sel_text},
+        }
+        if evidence.get("workspace_identity_hash"):
+            req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
+        code, resp = _post(f"{plan_gate_url}/v1/ask", req)
+        ed = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+        if expect.get("routing_mode") and resp.get("routing_mode") != expect["routing_mode"]:
+            errors.append(f"routing_mode want {expect['routing_mode']} got {resp.get('routing_mode')}")
+        keys_req = expect.get("explain_debug_has_keys")
+        if isinstance(keys_req, list):
+            for k in keys_req:
+                if k not in ed:
+                    errors.append(f"explain_debug missing key {k}")
+        ok_body = code == 200 and ("summary" in ed or "error" in ed)
+        dev_snapshot = {
+            "routing_mode": resp.get("routing_mode"),
+            "summary": ed.get("summary"),
+            "likely_bug_risk": ed.get("likely_bug_risk"),
+            "logic_flow": ed.get("logic_flow"),
+            "error": ed.get("error"),
+        }
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and ok_body,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {"http": code, "routing_mode": resp.get("routing_mode"), "has_summary": bool(ed.get("summary"))},
+            "dev_snapshot": dev_snapshot,
+        }
+
+    if cap == "plan":
+        plan_req: dict[str, Any] = {
+            "schema_version": "plan_request.v0.1",
+            "request_id": str(uuid.uuid4()),
+            "timestamp_utc": _utc_now(),
+            "mode": "shadow",
+            "ide_event": {
+                "schema_version": "ide_event.v0.1",
+                "event_id": f"evt-scenario-{sid}",
+                "timestamp_utc": _utc_now(),
+                "ide_context": {
+                    "product": "cli",
+                    "ide": "none",
+                    "project": "Motadata",
+                    "repo_root": workspace_root,
+                    "branch": "main",
+                    "user": "operator",
+                },
+                "action": {"action_type": "PR_MERGE", "target": "main"},
+                "evidence_refs": [{"type": "note", "ref": sid}],
+            },
+            "requested_capabilities": ["plan_and_decide"],
+            "client_policy": {"fail_closed_if_gate_unreachable": True},
+        }
+        code, plan_resp = _post(f"{plan_gate_url}/v0/plan", plan_req)
+        if expect.get("schema_version") and plan_resp.get("schema_version") != expect["schema_version"]:
+            errors.append(f"schema_version want {expect['schema_version']} got {plan_resp.get('schema_version')}")
+        if expect.get("decision_present") and not plan_resp.get("decision"):
+            errors.append("decision missing")
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {"http": code, "decision": plan_resp.get("decision"), "schema_version": plan_resp.get("schema_version")},
+        }
+
+    if cap == "code":
+        cmd = str(scenario.get("command") or "echo motadata-execute-probe")
+        execute_req = {
+            "schema_version": "execute_request.v0.1",
+            "request_id": str(uuid.uuid4()),
+            "repo_root": workspace_root,
+            "command": cmd,
+        }
+        code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)
+        if expect.get("schema_version") and execute_resp.get("schema_version") != expect["schema_version"]:
+            errors.append(f"schema_version want {expect['schema_version']} got {execute_resp.get('schema_version')}")
+        if "outcome" in expect and execute_resp.get("outcome") != expect["outcome"]:
+            errors.append(f"outcome want {expect['outcome']} got {execute_resp.get('outcome')}")
+        if "executed" in expect and execute_resp.get("executed") != expect["executed"]:
+            errors.append(f"executed want {expect['executed']} got {execute_resp.get('executed')}")
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {
+                "http": code,
+                "outcome": execute_resp.get("outcome"),
+                "executed": execute_resp.get("executed"),
+                "posture": execute_resp.get("posture"),
+            },
+        }
+
+    if cap == "agent":
+        code_a, evidence = _post(
+            f"{context_url}/v1/export_evidence",
+            {
+                "workspace_root": workspace_root,
+                "query": str(scenario.get("query") or "How does alert correlation and enrichment work?"),
+                "top_k": top_k,
+            },
+            timeout=300,
+        )
+        entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
+        assist = False
+        if code_a == 200 and entries:
+            req = {
+                "schema_version": "ask_request.v1.0",
+                "request_id": str(uuid.uuid4()),
+                "timestamp_utc": _utc_now(),
+                "query": str(scenario.get("query") or "smoke"),
+                "evidence_bundle": evidence,
+            }
+            if evidence.get("workspace_identity_hash"):
+                req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
+            _, resp = _post(f"{plan_gate_url}/v1/ask", req)
+            assist = "assist_layer" in resp
+        no_route = False
+        try:
+            _post(f"{plan_gate_url}/v0/agent", {"request_id": "agent-probe"}, timeout=20)
+        except urllib.error.HTTPError as exc:
+            no_route = exc.code == 404
+        if expect.get("agent_route_404") and not no_route:
+            errors.append("expected /v0/agent 404")
+        if expect.get("assist_layer_on_ask") and not assist:
+            errors.append("expected assist_layer on ask response")
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {"agent_route_404": no_route, "assist_layer": assist},
+        }
+
+    return {
+        "id": sid,
+        "capability": cap,
+        "description": desc,
+        "pass": False,
+        "errors": [f"unknown capability: {cap}"],
+        "expect": expect,
+        "actual_summary": None,
+    }
+
+
+def run_scenario_suite(
+    scenarios_path: Path,
+    workspace_root: str,
+    context_url: str,
+    plan_gate_url: str,
+    top_k: int,
+) -> dict[str, Any]:
+    data = json.loads(scenarios_path.read_text(encoding="utf-8"))
+    if data.get("schema_version") != "motadata_aiops_behavior_scenarios.v1":
+        return {
+            "file": str(scenarios_path),
+            "all_pass": False,
+            "error": "unsupported schema_version",
+            "results": [],
+        }
+    defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
+    tk = int(defaults.get("top_k", top_k))
+    results: list[dict[str, Any]] = []
+    for sc in data.get("scenarios") or []:
+        if not isinstance(sc, dict):
+            continue
+        results.append(_run_scenario_row(sc, workspace_root, context_url, plan_gate_url, tk))
+    all_pass = all(r.get("pass") for r in results) if results else False
+    return {"file": str(scenarios_path), "all_pass": all_pass, "results": results}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Verify Motadata AIOps behaviors end-to-end.")
     parser.add_argument("--workspace-root", required=True, help="Absolute path to Motadata workspace")
     parser.add_argument("--context-url", default="http://127.0.0.1:8091")
     parser.add_argument("--plan-gate-url", default="http://127.0.0.1:8089")
     parser.add_argument("--vllm-url", default="http://127.0.0.1:8000")
-    parser.add_argument("--query", default="How does alert correlation and incident enrichment work in this repo?")
+    parser.add_argument(
+        "--query",
+        default="How does alert correlation and enrichment work?",
+        help="Ask query for smoke run (align with production verification guide)",
+    )
     parser.add_argument(
         "--debug-query",
-        default="Debug likely causes of missed incident enrichment in this repository",
+        default="Debug why incident enrichment might be skipped",
+        help="EXPLAIN_DEBUG query for smoke run",
     )
     parser.add_argument("--top-k", type=int, default=8)
-    parser.add_argument("--repeat", type=int, default=1, help="Number of repeated runs for stability check")
+    parser.add_argument("--repeat", type=int, default=1, help="Number of repeated smoke runs for stability check")
     parser.add_argument(
         "--print",
         dest="print_mode",
-        choices=["concise", "json"],
+        choices=["concise", "dev", "json"],
         default="concise",
-        help="stdout format: concise summary (default) or full json",
+        help="stdout: concise | dev (full answer + evidence) | json",
+    )
+    parser.add_argument(
+        "--scenarios",
+        default="",
+        help="Path to motadata_aiops_behavior_scenarios.v1.json (optional)",
+    )
+    parser.add_argument(
+        "--scenarios-only",
+        action="store_true",
+        help="Run only the scenario suite (skip smoke pipeline)",
     )
     parser.add_argument(
         "--out",
@@ -359,37 +854,100 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    out_runs: list[dict[str, Any]] = []
-    for _ in range(max(1, args.repeat)):
-        out_runs.append(
-            run_once(
-                workspace_root=args.workspace_root,
-                context_url=args.context_url.rstrip("/"),
-                plan_gate_url=args.plan_gate_url.rstrip("/"),
-                vllm_url=args.vllm_url.rstrip("/"),
-                query=args.query,
-                debug_query=args.debug_query,
-                top_k=args.top_k,
-            )
-        )
+    if args.scenarios_only and not str(args.scenarios).strip():
+        print("ERROR: --scenarios-only requires --scenarios PATH", file=sys.stderr)
+        return 2
 
-    stable = len({_stable_signature(r) for r in out_runs}) == 1
-    final = {
+    context_url = args.context_url.rstrip("/")
+    plan_gate_url = args.plan_gate_url.rstrip("/")
+    vllm_url = args.vllm_url.rstrip("/")
+
+    smoke_runs: list[dict[str, Any]] = []
+    stable = True
+    smoke_all = True
+    if not args.scenarios_only:
+        for _ in range(max(1, args.repeat)):
+            smoke_runs.append(
+                run_once(
+                    workspace_root=args.workspace_root,
+                    context_url=context_url,
+                    plan_gate_url=plan_gate_url,
+                    vllm_url=vllm_url,
+                    query=args.query,
+                    debug_query=args.debug_query,
+                    top_k=args.top_k,
+                )
+            )
+        stable = len({_stable_signature(r) for r in smoke_runs}) == 1
+        smoke_all = all(r.get("all_pass") for r in smoke_runs) and stable
+
+    scenario_suite: dict[str, Any] | None = None
+    if args.scenarios.strip():
+        sp = Path(args.scenarios)
+        if not sp.is_file():
+            print(f"ERROR: scenarios file not found: {sp}", file=sys.stderr)
+            return 2
+        scenario_suite = run_scenario_suite(sp, args.workspace_root, context_url, plan_gate_url, args.top_k)
+
+    smoke_payload: dict[str, Any] | None = None
+    if not args.scenarios_only:
+        smoke_payload = {
+            "repeat": max(1, args.repeat),
+            "stable": stable,
+            "runs": [
+                {"checks": r["checks"], "all_pass": r["all_pass"], "summary": _build_run_summary(r)} for r in smoke_runs
+            ],
+            "all_pass": smoke_all,
+        }
+
+    if args.scenarios_only:
+        all_pass = bool(scenario_suite and scenario_suite.get("all_pass"))
+    else:
+        all_pass = smoke_all
+        if scenario_suite is not None:
+            all_pass = all_pass and bool(scenario_suite.get("all_pass"))
+
+    final: dict[str, Any] = {
         "timestamp_utc": _utc_now(),
         "workspace_root": args.workspace_root,
-        "repeat": max(1, args.repeat),
-        "stable": stable,
-        "runs": [{"checks": r["checks"], "all_pass": r["all_pass"], "summary": _build_run_summary(r)} for r in out_runs],
-        "all_pass": all(r.get("all_pass") for r in out_runs) and stable,
+        "all_pass": all_pass,
+        "smoke": smoke_payload,
+        "scenario_suite": scenario_suite,
     }
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(final, indent=2), encoding="utf-8")
+
     if args.print_mode == "json":
         print(json.dumps(final, indent=2))
-    else:
-        _print_concise(final)
+    elif args.print_mode == "dev" and smoke_payload:
+        dev_final = {
+            "workspace_root": args.workspace_root,
+            "repeat": smoke_payload["repeat"],
+            "stable": smoke_payload["stable"],
+            "all_pass": smoke_payload["all_pass"],
+            "runs": smoke_payload["runs"],
+        }
+        _print_dev(dev_final)
+    elif args.print_mode == "dev" and args.scenarios_only and scenario_suite:
+        print("")
+        print("=== Developer view: scenarios only (no smoke pipeline) ===")
+        print(f"workspace: {args.workspace_root}")
+        print(f"all_pass: {final.get('all_pass')}")
+    elif not args.scenarios_only:
+        dev_final = {
+            "workspace_root": args.workspace_root,
+            "repeat": smoke_payload["repeat"] if smoke_payload else 1,
+            "stable": smoke_payload["stable"] if smoke_payload else True,
+            "all_pass": smoke_payload["all_pass"] if smoke_payload else True,
+            "runs": smoke_payload["runs"] if smoke_payload else [],
+        }
+        _print_concise(dev_final)
+
+    if scenario_suite:
+        _print_scenario_results(scenario_suite, dev=args.print_mode == "dev")
+
     print(f"\nSaved: {out_path}")
     return 0 if final["all_pass"] else 1
 
