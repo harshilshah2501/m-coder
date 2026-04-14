@@ -9,7 +9,7 @@
 
 **Reading order for operators:** [runbook](MOTADATA_DEMO_SETUP_RUNBOOK.md) first, then [scenarios](MOTADATA_DEMO_SCENARIOS.md); read this architecture doc for behavior and contracts.
 
-**Aligned branch (typical):** `feature/l5-context-layer-v1-ask-packaging` (2026-03).
+**Typical integration branch (2026-04):** e.g. `stage-2.5-assist-layer-v1` or the branch you are validating (see [MOTADATA_DEMO_SETUP_RUNBOOK.md](MOTADATA_DEMO_SETUP_RUNBOOK.md)). Older name `feature/l5-context-layer-v1-ask-packaging` may appear in historical notes.
 
 ---
 

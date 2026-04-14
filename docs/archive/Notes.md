@@ -1,3 +1,7 @@
+> **Non-canonical.** Informal notes / essay — **not** part of the documentation spine. For system truth use [MASTER_SYSTEM_SPEC.md](../MASTER_SYSTEM_SPEC.md), [LIVE_ROADMAP_TRACKER.md](../LIVE_ROADMAP_TRACKER.md), and root [README.md](../../README.md).
+
+---
+
 My take: **You are directionally right, but incomplete in one crucial way.**
 
 You correctly identify the core problem:

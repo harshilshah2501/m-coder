@@ -16,6 +16,7 @@ Recommended subdirectories:
 - `archive/training/` – archived training artifacts, logs, and reports.
 - `archive/okr/` – OKR and progress tracking material.
 - `archive/sessions/` – session summaries, progress logs, and one-off notes.
+- `archive/workspace_intelligence/` – archived Layer‑5 grounded-retrieval spike (A1); production code is `runtime/layer5/`.
 
 ### Invariants
 

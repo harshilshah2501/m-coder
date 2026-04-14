@@ -1,6 +1,9 @@
 """
 Runtime Observation — M4.1 Observability Closure + M4.2 Drift Baseline + M4.3 Collapse Tracking + M4.4 Ledger Reconciliation + M4.5 GREG Escalation + M4.6 Runtime Metrics.
 
+**Not** the Stage 3 loop ledger: that lives in `runtime.obs` (`Stage3Ledger`,
+`LedgerEvent`). This package is traces, reconciliation, metrics, and GREG.
+
 This package provides:
 
 M4.1 Observability Closure:

@@ -59,7 +59,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
 | ml/training/sft/stage7/tools/conf_drift_pipeline.py | repo root | Absolute path | Poor | lines.append("cd /home/harshil/Harshil-PoCs/m-coder") |
 | ml/training/artifacts/store.py | artifact store | Absolute default | Poor | root = "/home/harshil/Harshil-PoCs/m-coder_artifacts" |
 | runtime/rag (tests, scripts, api, retrieval) | RAG-Datastore, workspace, logs | Absolute or getenv | Mixed | WORKSPACE_ROOT = "/home/.../Motadata/motadata"; some use os.getenv("WORKSPACE_ROOT", default) |
-| docs/status/TRAINING_MONITOR.md, docs/guides/ORCHESTRATOR_GUIDE.md, docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md | training/checkpoints, models, datasets | Absolute paths in examples | Weak | Instruct users to use /home/.../training/checkpoints/v16_1/, .../models/..., .../datasets/ |
+| docs/archive/status/TRAINING_MONITOR.md, docs/guides/ORCHESTRATOR_GUIDE.md, docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md | training/checkpoints, models, datasets | Absolute paths in examples | Weak | Instruct users to use /home/.../training/checkpoints/v16_1/, .../models/..., .../datasets/ |
 | scripts/generate_v12_dataset.py, audit_legacy_datasets.py, analyze_*.py | RAG-Datastore/evaluation/finetuning | Absolute path | Poor | GOLD_FILE, OUTPUT_FILE = "/home/.../RAG-Datastore/evaluation/finetuning/..." |
 
 ---
@@ -198,7 +198,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
 
 - **Name:** Docs/runbook path cleanup  
 - **Purpose:** Replace absolute path examples and instructions with env-based contract and generic guidance.  
-- **Scope:** docs/status/TRAINING_MONITOR.md, docs/guides/ORCHESTRATOR_GUIDE.md, docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md, and any other doc that contains `/home/...` or machine-specific paths for datasets, models, or evaluation.  
+- **Scope:** docs/archive/status/TRAINING_MONITOR.md, docs/guides/ORCHESTRATOR_GUIDE.md, docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md, and any other doc that contains `/home/...` or machine-specific paths for datasets, models, or evaluation.  
 - **Exclusions:** No code changes.  
 - **Preconditions:** Code path contract (Batch 1–3) agreed and documented.  
 - **Success criteria:** No misleading absolute paths; docs describe MOTADATA_DATA_ROOT (or chosen env) and default behavior.

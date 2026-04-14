@@ -12,6 +12,11 @@ Plan-Gate is now internally decomposed into explicit first-class subcomponents:
 - JudgeGate → PlanGateDecision
 
 External PlanGateService contract is unchanged.
+
+Naming (do not confuse with HTTP / CLI):
+- **This package** is the M3.3 **pre-sandbox** gate (`PlanGateService`).
+- **`runtime/plan_gate_service/`** — HTTP PlanRequest v0.1 surface; **`runtime/plan_gate_stub/`** — protocol/CLI stub.
+- Canonical map: `runtime/README.md` (section *Execution gate*).
 """
 
 from runtime.plangate.authority_validator import AuthorityValidator

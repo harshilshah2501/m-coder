@@ -223,6 +223,6 @@ result = await agent.run({
 ## References
 
 - Full specification: `AGENT_FRAMEWORK_SPEC.md`
-- Architecture notes: `Notes.md`
+- Architecture notes: `docs/archive/Notes.md` (informal)
 - LangGraph docs: https://langchain-ai.github.io/langgraph/
 

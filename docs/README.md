@@ -2,6 +2,8 @@
 
 Comprehensive documentation for the Motadata AI system including model training, RAG implementation, and evaluation.
 
+**Entry discipline:** This file is a **supporting index**, not the canonical repo entry. Prefer root [README.md](../README.md) → [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md); live status stays in [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md).
+
 ## Documentation Authority Model (Canonical vs Supporting)
 
 To avoid multiple competing sources of truth, use this authority model:
@@ -9,6 +11,9 @@ To avoid multiple competing sources of truth, use this authority model:
 - Canonical system truth: [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
 - Canonical live status and closures: [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)
 - Canonical production closure declaration: [mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)
+- Supporting closure narrative (not competing sign-off): [production_closure_handbook_corrected_canonical_version.md](production_closure_handbook_corrected_canonical_version.md)
+
+**Tooling / process meta (not product behavior):** [archive/tooling/CODERABBIT_AUDIT_COVERAGE_MATRIX.md](archive/tooling/CODERABBIT_AUDIT_COVERAGE_MATRIX.md) — optional audit matrix for CodeRabbit-style reviews.
 
 ### Golden Path (Operator + Demo)
 
@@ -26,7 +31,7 @@ Use only these in sequence for setup and usage:
 
 ### Historical / Supporting Docs
 
-- [demo/INTEGRANTED_EXECUTION_GUIDE.md](demo/INTEGRANTED_EXECUTION_GUIDE.md) is retained as historical consolidated context and should not override the golden path docs above.
+Obsolete or non-canonical material: **[archive/README.md](archive/README.md)** (indexed list).
 
 **Canonical reading path:** root [README.md](../README.md) → [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md). **Master system guide (long-form, Layer-3/Layer-4 demos):** [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md).
 
@@ -41,89 +46,19 @@ Use only these in sequence for setup and usage:
 **Parallel ML Stream Status (separate from closure baseline):**
 - V16.1 model training and dataset iteration documents remain available under `docs/training/`, `docs/evaluation/`, and `docs/datasets/`.
 
-## Directory Structure
+## Repository layout (this codebase)
 
-```
-~/Harshil-PoCs/
-├── venv/                        # Virtual Environments
-│   ├── training/                # Training/Finetuning venv
-│   ├── vllm/                    # vLLM Inference venv
-│   └── rag/                     # RAG API venv
-│
-├── models/                      # Finetuned Models
-│   ├── v15/                     # V15 Model (previous)
-│   └── v16/                     # V16 Model (current)
-│
-├── training/                    # Training & Finetuning
-│   ├── src/                     # Training source code
-│   │   ├── finetuning/          # Finetuning scripts
-│   │   ├── dataset_creation/    # Dataset generation
-│   │   ├── evaluation/          # Evaluation scripts
-│   │   └── utils/               # Utility functions
-│   ├── data/                    # Training data
-│   │   ├── raw/                 # Raw datasets
-│   │   └── processed/           # Processed datasets
-│   ├── checkpoints/             # Training checkpoints
-│   └── artifacts/               # Training outputs
-│       ├── logs/                # Training logs
-│       └── results/             # Training results
-│
-├── rag/                         # RAG System
-│   ├── src/                     # RAG source code
-│   │   ├── api/                 # RAG API implementation
-│   │   ├── indexing/            # Vector/Graph indexing
-│   │   ├── retrieval/           # Retrieval logic
-│   │   └── utils/               # Utility functions
-│   ├── config/                  # Configuration files
-│   ├── docker/                  # Docker setup
-│   ├── data/                    # RAG data
-│   ├── logs/                    # Service logs
-│   ├── tests/                   # RAG tests
-│   └── scripts/                 # Orchestration scripts
-│
-├── evaluation/                  # Evaluation & Benchmarking
-│   ├── src/                     # Evaluation scripts
-│   ├── results/                 # Benchmark results
-│   ├── reports/                 # Evaluation reports
-│   └── diffs/                   # Diff analysis
-│
-├── datasets/                    # Training Datasets
-│   ├── raw/                     # Raw source data
-│   ├── generation/              # Generated datasets
-│   ├── v16_1_splits/            # V16.1 training splits (current)
-│   ├── v16_1_surgical.jsonl     # V16.1 final dataset (3,912 examples)
-│   └── v15_enhanced_splits/     # V16 training data (archived)
-│
-├── docs/                        # Documentation (this directory)
-│   ├── README.md                # Documentation index (this file)
-│   ├── architecture/            # System architecture
-│   ├── guides/                  # How-to guides
-│   ├── reference/               # Canonical technical references
-│   ├── status/                  # Status, incidents, and session summaries
-│   ├── api/                     # API documentation
-│   ├── troubleshooting/         # Troubleshooting guides
-│   ├── iterations/              # Iteration notes
-│   ├── benchmark/               # Benchmark reports
-│   ├── training/                # Training documentation
-│   └── archive/                 # Historical documentation
-│
-├── scripts/                     # Utility Scripts
-│   ├── setup/                   # Setup scripts
-│   ├── maintenance/             # Maintenance scripts
-│   └── analysis/                # Analysis scripts
-│
-├── logs/                        # System Logs
-│   ├── training/                # Training logs
-│   ├── rag/                     # RAG service logs
-│   └── evaluation/              # Evaluation logs
-│
-├── agents/                      # Agent Framework (Future)
-│   ├── src/                     # Agent implementations
-│   ├── config/                  # Agent configurations
-│   └── tests/                   # Agent tests
-│
-└── README.md                    # Project overview
-```
+**Do not treat a generic `~/…` or top-level `rag/` sketch as the source of truth.** This **m-coder** repository uses:
+
+- **Inventory + map:** [audit/REPO_LAYOUT_INVENTORY.md](audit/REPO_LAYOUT_INVENTORY.md)
+- **Runtime audit:** [audit/RUNTIME_DIRECTORY_AUDIT.md](audit/RUNTIME_DIRECTORY_AUDIT.md)
+- **Root entry:** [README.md](../README.md)
+
+**Observation surfaces** (easy to confuse): Layer-4 doc index [OBSERVATION/README.md](OBSERVATION/README.md); CLI packages under repo-root `observation/`; trace library under `runtime/observation/`; Stage 3 mini-ledger under `runtime/obs/`.
+
+ML streams (`ml/`, `training/`, local venvs) are **environment-specific** — see inventory and [training/](training/).
+
+**Obsolete / superseded docs:** [archive/README.md](archive/README.md) — notes, old status journals, [TEMP Motadata integration guide](archive/guides/TEMP_MOTADATA_REPO_INTEGRATION_GUIDE.md), CodeRabbit matrices, historical [integrated demo guide](archive/demo/INTEGRANTED_EXECUTION_GUIDE.md). Prefer the **golden path** runbooks for current procedure.
 
 ## Report and verification document placement
 
@@ -137,15 +72,17 @@ Use only these in sequence for setup and usage:
 
 ## Documentation by Component
 
-### Full Test Command
+### Tests (pytest)
 
-Canonical command to run all tests (runtime, ide, shadow, lineage, observation):
+Primary runtime integration suite (repo root):
 
 ```bash
-cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
+cd /path/to/m-coder && python3 -m pytest runtime/tests/ -q
 ```
 
-**Expected total test count:** 186 (as of this commit)
+Marker registration: [`pytest.ini`](../pytest.ini). Approximate collection count varies; check with `python3 -m pytest runtime/tests/ --collect-only -q` (on the order of **~1000** tests as of 2026-04).
+
+Some subtrees under `ml/` or `scripts/` may not collect cleanly without extra deps — prefer **`runtime/tests/`** for a green default.
 
 ### 🏛️ Core Architecture Docs
 
@@ -160,10 +97,7 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 - **[benchmark/](benchmark/)** - Benchmark methodology and results
 
 ### 🤖 Model Documentation
-- **[models/](models/)** - Model-specific documentation
-  - Model summaries and specifications
-  - Architecture details
-- **[training/](training/)** - Training guides and checklists
+- **[training/](training/)** — Training guides and checklists
   - Training procedures
   - Finetuning checklists
   - Training examples
@@ -175,9 +109,8 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
   - Audit reports
 
 ### 🔌 RAG System
-- **[runtime/rag/](../runtime/rag/)** - RAG system documentation
-  - Implementation details
-  - System iterations and analysis
+- **[runtime/rag/](../runtime/rag/)** — **Implementation** (API, indexing, retrieval code in this repo)
+- **[rag/](rag/)** — Narrative / iteration notes (`ENHANCED_RAG_IMPLEMENTATION.md`, etc.); not a second code tree
 
 ### 🏗️ Architecture & Design
 - **[architecture/](architecture/)** - System architecture and design
@@ -194,10 +127,7 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
   - Integration guides
 
 ### 🔧 API Documentation
-- **[api/](api/)** - API documentation for all services
-  - RAG API
-  - vLLM API
-  - Agent API (future)
+- **[api/README.md](api/README.md)** — Index of HTTP surfaces and schemas (no single OpenAPI bundle)
 
 ### 🐛 Troubleshooting
 - **[troubleshooting/](troubleshooting/)** - Debugging guides and FAQs
@@ -209,8 +139,8 @@ cd /path/to/m-coder && python3 -m unittest discover -s . -p 'test_*.py' -q
 - **[agents/](agents/)** - Agent framework documentation (future)
 
 ### 📚 Historical Documentation
-- **[iterations/](iterations/)** - Per-iteration notes and progress
-- **[archive/](archive/)** - Historical and deprecated documentation
+- **[iterations/](iterations/)** — Per-iteration notes and progress
+- **Ad-hoc historical docs** — may live under `docs/reports/`, `docs/validation/artifacts/`, or **[docs/archive/](archive/README.md)** (obsolete / superseded material)
 
 ### 📌 Core 4-Layer Architecture (Golden Exemplars) + Product Extensions
 - **[MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)** - Canonical entry point; Doctrine Immutability; links to GOVERNANCE, COMPILATION, RUNTIME, OBSERVATION, CONTRACTS
@@ -283,29 +213,25 @@ curl -X POST http://localhost:8081/search/semantic \
 | Neo4j HTTP | 7474 | Graph database UI |
 | Neo4j Bolt | 7687 | Graph database driver |
 
-## System Stats
+## System Stats (example snapshot)
 
-| Component | Details |
+**Environment-specific** — one deployment sample, **not** an invariant spec. Your vectors, graph size, and GPU will differ.
+
+| Component | Details (illustrative) |
 |-----------|---------|
-| Qdrant | 4,306 vectors (768 dim) |
-| Neo4j | 10,262 nodes, 337K edges |
-| GPU | H100 (90% VRAM, 32K context) |
+| Qdrant | e.g. thousands of vectors (768 dim) |
+| Neo4j | e.g. node/edge counts from a given index run |
+| GPU | e.g. datacenter-class GPU; utilization varies |
 
 ## Service Management (governed stack)
 
 Use **`runtime/scripts/governed_services.sh`** (`start` | `stop` | `restart` | `status`). Logs: **`runtime/.run/`** (`vllm.log`, `plan_gate.log`). Optional systemd: **`docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md`**.
 
 ### View Component Logs
-```bash
-# vLLM logs
-tail -f rag/logs/vllm.log
 
-# RAG API logs
-tail -f rag/logs/rag_api.log
+**Governed stack (this repo):** logs under **`runtime/.run/`** (e.g. `vllm.log`, `plan_gate.log`) — see [guides/ORCHESTRATOR_GUIDE.md](guides/ORCHESTRATOR_GUIDE.md).
 
-# Health monitor logs
-tail -f rag/logs/monitor.log
-```
+If your deployment writes service logs next to a separate `rag/` checkout or custom paths, use those paths; they are **not** fixed in-tree.
 
 ### Documentation
 - **[guides/ORCHESTRATOR_GUIDE.md](guides/ORCHESTRATOR_GUIDE.md)** — Governed stack (`governed_services.sh`)
@@ -326,7 +252,7 @@ tail -f rag/logs/monitor.log
 | Governed launcher | `runtime/scripts/governed_services.sh` | vLLM + Plan-Gate |
 | vLLM | `venv/vllm/bin/python -m vllm.entrypoints.openai.api_server` | 8000 |
 | API Wrapper | `training/src/utils/api_server.py` | 8080 |
-| RAG API | `rag/src/api/rag_api.py` | 8081 |
+| RAG API | `runtime/rag/src/api/rag_api.py` | 8081 |
 | Qdrant | Docker container | 6333 |
 | Neo4j | Docker container | 7474 |
 
@@ -355,6 +281,6 @@ tail -f rag/logs/monitor.log
 
 ## Documentation
 
-- **[README.md](README.md)** - This documentation index
-- **[architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)** - System architecture
-- **[evaluation/README.md](evaluation/README.md)** - Evaluation guide
+- **[README.md](README.md)** — This documentation index
+- **[architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)** — System architecture
+- **[evaluation/](evaluation/)** — Evaluation reports and analysis (no separate `README.md` index)

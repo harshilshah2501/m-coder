@@ -394,7 +394,7 @@ Use this section as a **single index**: where to go for **bringing the stack up*
 
 | Topic | Document or script |
 |--------|-------------------|
-| **This guide** (GPU + workspace + env template + curl smoke) | `docs/guides/TEMP_MOTADATA_REPO_INTEGRATION_GUIDE.md` (sections 1–9) |
+| **This guide** (GPU + workspace + env template + curl smoke) | `docs/archive/guides/TEMP_MOTADATA_REPO_INTEGRATION_GUIDE.md` (sections 1–9) |
 | **Integration preflight** (checklist, GREEN/RED, optional Ask HTTP E2E) | `scripts/motadata_integration_preflight.sh` |
 | **WSL/workspace stack** (Context Layer, tunnel, `up` / `check` / `down`) | `scripts/wsl_plugin_mvp_stack.sh` |
 | **Versions, wheel, JetBrains zip** | `scripts/motadata_packaging.sh`, `scripts/motadata_versions.env` |

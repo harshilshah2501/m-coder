@@ -145,6 +145,3 @@ runtime/layer5/audit/l58_slice_check/
 
 # Dataset payloads (data-plane)
 ml/training/datasets/**/golden_exemplars*_*.jsonl
-
-# Dataset payloads (data-plane)
-ml/training/datasets/**/golden_exemplars*_*.jsonl

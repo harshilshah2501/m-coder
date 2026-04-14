@@ -8,7 +8,7 @@ Human-readable record for **audit / closure**.
 
 ### Burn-in validation status (source-of-truth)
 
-**WSL:** Validated (**Ubuntu 24.04** userland, **Python 3.12.3**). Operator session `root@DESKTOP-MBPAQK1` / `~/Harshil-PoCs/m-coder`; transcript source **`docs/Notes.md`**.
+**WSL:** Validated (**Ubuntu 24.04** userland, **Python 3.12.3**). Operator session `root@DESKTOP-MBPAQK1` / `~/Harshil-PoCs/m-coder`; transcript source **`docs/archive/Notes.md`**.
 
 **Artifacts:**
 
@@ -40,7 +40,7 @@ Human-readable record for **audit / closure**.
 | Field | Value |
 |--------|--------|
 | **OS** | **Ubuntu 24.04** (WSL userland on Windows) |
-| **Source** | Transcript in **`docs/Notes.md`** (shell prompt `root@DESKTOP-MBPAQK1`, path `~/Harshil-PoCs/m-coder`) |
+| **Source** | Transcript in **`docs/archive/Notes.md`** (shell prompt `root@DESKTOP-MBPAQK1`, path `~/Harshil-PoCs/m-coder`) |
 | **Python** | 3.12.3 — interpreter `/root/.venvs/motadata-context-layer/bin/python3` (venv **motadata-context-layer**) |
 | **pytest** | 9.0.2, pluggy 1.6.0 |
 | **Repo root** | `/root/Harshil-PoCs/m-coder` |
@@ -89,7 +89,7 @@ failed: 0
 
 Duration: ~0.07 s — see `stage3_pytest_output.txt` (2026-04-08 capture at `d4a2807`).
 
-### WSL (`docs/Notes.md` capture)
+### WSL (`docs/archive/Notes.md` capture)
 
 ```
 total_tests: 22
@@ -166,7 +166,7 @@ Based on passing tests in `runtime/tests/test_stage3_loop.py` (verified on **nat
 | **2. Fail-closed guarantee** | **Met** | Dedicated tests for validation/gate/transition failures; no silent success on policy violation. |
 | **3. Execution truth integrity** | **Met** | Tests assert `execution_result.status` vs actual normalized outcomes. |
 | **4. Trace reconstructability** | **Met** | `sample_ledger_trace.json` shows `iteration_linkage`, refs, `terminal_decision_summary`, `execution_truth_summary`, and full event list. |
-| **5. WSL parity** | **Met** | **22 passed** on WSL (`stage3_pytest_output_wsl.txt`) — same module, operator session documented in **`docs/Notes.md`**. |
+| **5. WSL parity** | **Met** | **22 passed** on WSL (`stage3_pytest_output_wsl.txt`) — same module, operator session documented in **`docs/archive/Notes.md`**. |
 
 If any criterion becomes **fuzzy** (e.g. non-deterministic hashes without documented inputs, or missing ledger fields), burn-in is **not** complete for that scope.
 
@@ -178,7 +178,7 @@ If any criterion becomes **fuzzy** (e.g. non-deterministic hashes without docume
 |------|-------------|
 | `docs/validation/STAGE3_BURN_IN_REPORT.md` | This report |
 | `docs/validation/artifacts/stage3_pytest_output.txt` | Full pytest stdout — **native Linux** dev host |
-| `docs/validation/artifacts/stage3_pytest_output_wsl.txt` | Full pytest stdout — **WSL** (`docs/Notes.md` capture) |
+| `docs/validation/artifacts/stage3_pytest_output_wsl.txt` | Full pytest stdout — **WSL** (`docs/archive/Notes.md` capture) |
 | `docs/validation/artifacts/stage3_pytest_subset_wsl.txt` | WSL nine-scenario `-k` subset (10 passed) |
 | `docs/validation/artifacts/sample_ledger_trace.json` | One **EXECUTE** success run: `Stage3LoopController` + test doubles (offline; not WSL-specific) |
 | `docs/validation/artifacts/stage3_live_smoke_output.txt` | **Live** governed path: `/healthz`, `/version`, then `runtime/scripts/verify_ask_path.sh` (export → `/v1/ask`) — **PASS** |
@@ -215,4 +215,4 @@ If any criterion becomes **fuzzy** (e.g. non-deterministic hashes without docume
 
 ---
 
-*WSL pytest results are transcribed from **`docs/Notes.md`** (offline burn-in). WSL+tunnel `verify_ask_path` transcript is committed in **`stage3_b7_wsl_tunnel_verify_ask_path.txt`**. Native live smoke from automated capture. No manual fabrication of pass/fail lines.*
+*WSL pytest results are transcribed from **`docs/archive/Notes.md`** (offline burn-in). WSL+tunnel `verify_ask_path` transcript is committed in **`stage3_b7_wsl_tunnel_verify_ask_path.txt`**. Native live smoke from automated capture. No manual fabrication of pass/fail lines.*

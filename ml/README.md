@@ -21,3 +21,5 @@ The goal of the `ml/` namespace is to clearly separate **learning workflows** fr
 
 See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-layer structure.
 
+**Layout note:** Renaming root folders to `L2-ml/` etc. is documented as **high churn**; see [LAYER_ROOT_DIRECTORY_FEASIBILITY.md](../docs/architecture/LAYER_ROOT_DIRECTORY_FEASIBILITY.md) (same concern applies to `governance/`, `runtime/`, `observation/`).
+

@@ -19,10 +19,7 @@ This directory contains **active operational reports** for the current system st
 - Long-term historical archives of every session or report.
 - Legacy documents that no longer describe the current operational state.
 
-Older operational documents should be moved to the **archive**:
-
-- `archive/docs/` for historical documentation.
-- `archive/sessions/` (or other archive subfolders) for long-term session history.
+Older operational documents should be moved to **[docs/archive/](../archive/README.md)** (see subfolders `status/`, `guides/`, etc.).
 
 In other words, `docs/status/` is a **living operational journal**, not permanent storage.
 

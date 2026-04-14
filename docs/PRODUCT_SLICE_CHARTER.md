@@ -145,7 +145,7 @@ Explicitly **out of product** for this slice unless the charter is revised:
 |--------|-----------|
 | **RAG FastAPI stack** (`runtime/rag/`) | Parallel; not wired to JetBrains bridge (audit). |
 | **Orchestrator / unrelated HTTP** in `runtime/rag/` | Same. |
-| **`workspace_intelligence/spikes/`** | Research; packaged Layer-5 lives under `runtime/layer5/`. |
+| **`archive/workspace_intelligence/spikes/`** | Archived research; packaged Layer-5 lives under `runtime/layer5/`. |
 | **`ml/`** training pipelines | ML product line; not required for governed IDE slice. |
 | **`observation/`** drift tooling | Separate concern. |
 | **Dead code** | e.g. `AskClient.kt` unused — remove or wire; do not carry indefinitely. |

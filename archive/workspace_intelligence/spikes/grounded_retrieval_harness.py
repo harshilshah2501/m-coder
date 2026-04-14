@@ -15,7 +15,7 @@ LAYER-5 NOTE:
     production L5.2/L5.3 implementations.
 
 Usage:
-    python -m workspace_intelligence.spikes.grounded_retrieval_harness [workspace_root]
+    PYTHONPATH=archive python -m workspace_intelligence.spikes.grounded_retrieval_harness [workspace_root]
     
 If workspace_root is not provided, uses the repository root.
 """

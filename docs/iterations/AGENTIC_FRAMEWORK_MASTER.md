@@ -492,7 +492,7 @@ result = await agent.run({
 ## 📚 Additional Resources
 
 - **Usage Guide**: `rag/src/orchestrator/README.md`
-- **Design Notes**: `Notes.md`
+- **Design Notes**: `docs/archive/Notes.md` (informal; non-canonical)
 - **Backup/Recovery**: `BACKUP_RECOVERY_CHECKLIST.md`
 - **Deployment Status**: `DEPLOYMENT_COMPLETE.md`
 
@@ -504,7 +504,7 @@ result = await agent.run({
 📚 DOCUMENTATION
 ├─ AGENTIC_FRAMEWORK_MASTER.md (this file)
 ├─ rag/src/orchestrator/README.md (usage guide)
-├─ Notes.md (design decisions)
+├─ docs/archive/Notes.md (design decisions; informal)
 ├─ BACKUP_RECOVERY_CHECKLIST.md
 └─ DEPLOYMENT_COMPLETE.md
 

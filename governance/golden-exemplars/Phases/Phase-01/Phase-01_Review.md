@@ -163,7 +163,7 @@ No exemplar requires reviewer discretion.
 
 The following documents are **explicitly non-canonical** and do not define behavior:
 
-* Notes.md
+* docs/archive/Notes.md
 * Duplicate README variants
 * Intermediate drafts
 * Exploratory commentary

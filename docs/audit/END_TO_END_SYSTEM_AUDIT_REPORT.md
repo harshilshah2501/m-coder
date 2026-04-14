@@ -22,7 +22,7 @@ The m-coder repo implements a **governed runtime stack** centered on a **stdlib 
 
 **GPU / vLLM** is operationalized by `runtime/scripts/governed_services.sh` (vLLM on configurable port, default **8000**; Plan-Gate **8089**). Plan-Gate **main** runs `_vllm_healthcheck()` if `MOTADATA_EXPLAIN_VLLM_URL` is set (`runtime/plan_gate_service/app.py`). **Explain/Debug** uses `MOTADATA_EXPLAIN_VLLM_URL` + `MOTADATA_EXPLAIN_MODEL` (`runtime/ask_service/reasoner.py`).
 
-**Brutal honesty:** Multiple **parallel “architectures”** exist in repo (RAG FastAPI, ML training APIs, `workspace_intelligence/spikes/`, legacy docs). The **live vertical slice** for JetBrains + Plan-Gate + Ask + Context Layer is **narrow and identifiable** in the paths above; other trees are **supporting, experimental, or legacy** unless explicitly wired into `RuntimeBridge` / Plan-Gate.
+**Brutal honesty:** Multiple **parallel “architectures”** exist in repo (RAG FastAPI, ML training APIs, archived `archive/workspace_intelligence/spikes/`, legacy docs). The **live vertical slice** for JetBrains + Plan-Gate + Ask + Context Layer is **narrow and identifiable** in the paths above; other trees are **supporting, experimental, or legacy** unless explicitly wired into `RuntimeBridge` / Plan-Gate.
 
 ---
 
@@ -53,7 +53,7 @@ The m-coder repo implements a **governed runtime stack** centered on a **stdlib 
 | `docs/` | Architecture, runbooks, demos, audits | **Active** (mixed freshness) |
 | `docs/audit/` | Historical audits + path governance | **Archive-heavy**; many phase reports |
 | `ml/` | Training, evaluation, datasets | **Active** for ML pipeline; not required for JetBrains slice |
-| `workspace_intelligence/` | Spikes (`spikes/grounded_retrieval.py`, harness) | **Research / spike** — not the packaged Layer-5 path |
+| `archive/workspace_intelligence/` | Spikes (`spikes/grounded_retrieval.py`, harness) | **Archived research / spike** — not the packaged Layer-5 path |
 | `observation/` | Drift / observation tooling | **Separate** concern |
 | `tests/` | Repo-level tests (if present) | Verify per CI |
 | `.venv/` | Local Python env | **Local** (not canonical) |
@@ -62,7 +62,7 @@ The m-coder repo implements a **governed runtime stack** centered on a **stdlib 
 
 - **`runtime/rag/`** — FastAPI RAG API (`runtime/rag/src/api/rag_api.py` has `/health`, `/search/semantic`). **Not** the same as Plan-Gate or Context Layer HTTP. **Parallel stack.**
 - **`runtime/plangate/`** (`PlanGateService`) — Used by **execute** path (`runtime/execute_service/handlers.py` imports). **Different** from `runtime/plan_gate_service/app.py` HTTP server (naming overlap).
-- **`workspace_intelligence/spikes/`** vs **`runtime/layer5/`** — Spike retrieval vs **packaged** Layer-5 implementation.
+- **`archive/workspace_intelligence/spikes/`** vs **`runtime/layer5/`** — Archived spike retrieval vs **packaged** Layer-5 implementation.
 
 ### Key entry files
 

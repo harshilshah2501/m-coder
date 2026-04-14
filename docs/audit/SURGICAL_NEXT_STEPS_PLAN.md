@@ -49,7 +49,7 @@ Per audit §1, §2, §16:
 |------|-------------------|
 | `runtime/rag/` FastAPI RAG API | Parallel stack; **not** wired to plugin (audit §3, §8, §17) |
 | `runtime/rag/src/run_orchestrator.py` and related | Not part of JetBrains bridge |
-| `workspace_intelligence/spikes/` | Research spike; packaged L5 is `runtime/layer5/` (audit §3) |
+| `archive/workspace_intelligence/spikes/` | Archived spike; packaged L5 is `runtime/layer5/` (audit §3) |
 | `ml/` | ML pipeline; not required for JetBrains slice (audit §3) |
 | `observation/` | Separate drift/observation concern (audit §3) |
 | `docs/audit/PHASE_*`, `BATCH_*`, etc. | Historical; not operational runbooks (audit §11) |

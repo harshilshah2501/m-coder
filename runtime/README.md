@@ -49,3 +49,30 @@ See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-l
 
 - **Path:** `runtime/plan_gate_service/`
 - **Purpose:** Local HTTP daemon exposing POST /v0/plan for PlanRequest v0.1 → DecisionResponse v0.1. Reuses stub decision logic; emits artifacts to spool. See [runtime/plan_gate_service/README.md](plan_gate_service/README.md).
+
+## Execution gate (do not confuse)
+
+| Path | Role |
+|------|------|
+| **`runtime/plangate/`** | **M3.3 mandatory pre-sandbox gate** — `PlanGateService.evaluate()` used by orchestrator and execute_service. |
+| **`runtime/plan_gate_service/`** | **HTTP** surface for PlanRequest v0.1 (CI, spool); **not** a substitute for `plangate` on sandbox path. |
+| **`runtime/plan_gate_stub/`** | Protocol / CLI **stub**; shares `stub_decide` with plan_gate_service. |
+
+Two **loop** implementations: `runtime/orchestrator/loop_controller.py` (transition matrix) vs `runtime/loop/loop_controller.py` (Stage 3) — different lifecycles.
+
+## Package map (primary)
+
+| Directory | Purpose |
+|-----------|---------|
+| `plangate/`, `integrity/`, `orchestrator/`, `execute_service/`, `sandbox/`, `state/` | Governed execution chain |
+| `ask_service/`, `layer5/`, `context_layer_service/`, `context/` | Ask, evidence, workspace context |
+| `assist_layer/` | Advisory augmentation (Stage 2.5) |
+| `observation/` | Traces, reconciliation, metrics |
+| `obs/` | Stage 3 loop ledger only (minimal; see `observation/` for full stack) |
+| `rag/` | Retrieval / indexing API (workspace-local) |
+| `schemas/` | JSON schemas (contracts) |
+| `tests/` | Pytest tree for this namespace |
+
+Compatibility / tooling: `ci_gate/`, `plan_gate_service/`, `plan_gate_stub/`, `shadow/`, `emulator/`, `replay/`.
+
+See [docs/audit/RUNTIME_DIRECTORY_AUDIT.md](../docs/audit/RUNTIME_DIRECTORY_AUDIT.md) and [docs/audit/RUNTIME_REORG_CANDIDATES.md](../docs/audit/RUNTIME_REORG_CANDIDATES.md) for layout audit and optional reshuffle notes.

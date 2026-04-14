@@ -261,3 +261,20 @@ This phase did **not**:
 
 ### 6. Final status
 **PHASE 1 DOCS AUDIT READY**
+
+---
+
+## 7. Follow-up (2026-04-14) — docs corpus alignment
+
+Surgical updates (no mass moves) to reduce drift called out in §2–§4:
+
+- **`docs/README.md`** — Replaced generic `~/…` tree with pointers to [REPO_LAYOUT_INVENTORY.md](REPO_LAYOUT_INVENTORY.md), pytest-based test instructions, `docs/api/README.md` index, corrected RAG paths (`runtime/rag/`), non-invariant “system stats,” and governed-stack log locations.
+- **`docs/api/README.md`** — New index for split API/schema surfaces.
+- **`docs/OBSERVATION/README.md`** and **`observation/README.md`** — Short table linking `docs/OBSERVATION/`, repo-root `observation/`, `runtime/observation/`, `runtime/obs/`.
+- **`docs/archive/Notes.md`** — Non-canonical essay (moved from `docs/Notes.md`).
+- **`docs/production_closure_handbook_corrected_canonical_version.md`** — Explicit deferral to `mvp_declaration/` for formal sign-off.
+- **`docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md`** — Branch naming note aligned with current runbooks.
+
+**Still deferred:** Full merge of dual observation indexes into one URL (case-sensitive paths); optional future canonical paragraph in `LAYER4_OBSERVATION_SPEC.md`.
+
+**Archive (2026-04-14):** Non-canonical and obsolete docs moved under **`docs/archive/`** (see [archive/README.md](../archive/README.md)): `Notes.md`, historical demo guide, TEMP Motadata integration guide, CodeRabbit matrices, and prior `docs/status/` journal files.

@@ -1,4 +1,4 @@
-# Captured from operator WSL session (docs/Notes.md). Host: root@DESKTOP-MBPAQK1, repo: /root/Harshil-PoCs/m-coder
+# Captured from operator WSL session (docs/archive/Notes.md). Host: root@DESKTOP-MBPAQK1, repo: /root/Harshil-PoCs/m-coder
 
 (motadata-context-layer) root@DESKTOP-MBPAQK1:~/Harshil-PoCs/m-coder# export M_CODER_ROOT=/root/Harshil-PoCs/m-coder
 cd "$M_CODER_ROOT"

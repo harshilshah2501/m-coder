@@ -31,8 +31,8 @@ Proves that workspace-local retrieval in WSL can return relevant grounded files/
 #### Usage
 
 ```bash
-# Run the spike harness
-python3 -m workspace_intelligence.spikes.grounded_retrieval_harness [workspace_root]
+# From repo root (package now lives under archive/)
+PYTHONPATH=archive python3 -m workspace_intelligence.spikes.grounded_retrieval_harness [workspace_root]
 
 # Programmatic usage
 from workspace_intelligence.spikes.grounded_retrieval import (

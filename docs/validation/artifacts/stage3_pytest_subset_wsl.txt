@@ -1,4 +1,4 @@
-# Same WSL session — nine-scenario subset (-k ...) from docs/Notes.md
+# Same WSL session — nine-scenario subset (-k ...) from docs/archive/Notes.md
 
 (motadata-context-layer) root@DESKTOP-MBPAQK1:~/Harshil-PoCs/m-coder# python3 -m pytest runtime/tests/test_stage3_loop.py -v --tb=short \
   -k "terminal_correctness_success_no_tool_not_run or fake_evidence_refs_rejected or tool_denied_path_is_blocked or plan_gate_refusal or inloop_plan_gate_recheck_exception_fail_closed or timeout_normalization_and_failed_truth or terminal_tool_failure_after_tool_result_ready_regression or insufficiency_after_tool_result or tool_success_execution_truth_executed or ledger_trace_linkage_contains_refs"

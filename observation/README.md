@@ -1,5 +1,7 @@
 # Observation Layer — Layer-4
 
+**Doc index:** [docs/OBSERVATION/README.md](../docs/OBSERVATION/README.md) (Layer-4 overview). **Runtime trace library (different package):** [runtime/observation/](../runtime/observation/) — Python services; **Stage 3 mini-ledger:** [runtime/obs/](../runtime/obs/).
+
 ## Purpose
 
 Observation detects drift, tracks collapse vectors, reconciles ledgers, and produces GREG audit evidence.

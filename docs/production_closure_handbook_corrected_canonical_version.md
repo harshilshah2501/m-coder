@@ -2,6 +2,8 @@
 
 Handy print reference for final closure workstreams, gates, sequence, and done-means-done criteria.
 
+**Formal production closure sign-off** is **[mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)** and the live tracker ([LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)). This handbook is a **supporting** narrative, not a competing authority.
+
 ---
 
 ## Scope
