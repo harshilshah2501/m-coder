@@ -17,6 +17,8 @@ backup_v16_2_to_hf.py
 
 # Runtime governed-services run dir (pids, logs, effective config)
 runtime/.run/
+# Local Motadata behavior verification JSON (if written to repo root)
+/motadata_behavior_validation*.json
 runtime/config/demo_stack.env
 runtime/config/host_local.env
 

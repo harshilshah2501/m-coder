@@ -51,6 +51,87 @@ def _safe_body_preview(body: Any) -> str:
     return s[:300]
 
 
+def _clip(text: str, n: int = 220) -> str:
+    if len(text) <= n:
+        return text
+    return text[: n - 3] + "..."
+
+
+def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
+    checks = run.get("checks") or {}
+    query = checks.get("query") or {}
+    debug = checks.get("debug") or {}
+    plan = checks.get("plan") or {}
+    code = checks.get("code") or {}
+    export = checks.get("export_evidence") or {}
+    return {
+        "pass": run.get("all_pass", False),
+        "query": {
+            "pass": query.get("pass", False),
+            "ask_path": query.get("ask_path"),
+            "evidence_quality": query.get("evidence_quality"),
+            "quality_reasons": query.get("quality_reasons") or [],
+            "answer_steps": query.get("answer_steps") or [],
+            "notes": query.get("answer_notes") or [],
+            "top_paths": export.get("top_paths") or [],
+        },
+        "debug": {
+            "pass": debug.get("pass", False),
+            "routing_mode": debug.get("routing_mode"),
+            "summary": debug.get("summary"),
+            "likely_bug_risk": debug.get("likely_bug_risk"),
+            "error": debug.get("error"),
+        },
+        "plan": {
+            "pass": plan.get("pass", False),
+            "decision": plan.get("decision"),
+        },
+        "code": {
+            "pass": code.get("pass", False),
+            "outcome": code.get("outcome"),
+            "posture": code.get("posture"),
+            "executed": code.get("executed"),
+        },
+        "agent": checks.get("agent") or {},
+    }
+
+
+def _print_concise(final: dict[str, Any]) -> None:
+    print("")
+    print("=== Motadata Behavior Verification Summary ===")
+    print(f"workspace: {final.get('workspace_root')}")
+    print(f"repeat: {final.get('repeat')}  stable: {final.get('stable')}  all_pass: {final.get('all_pass')}")
+    print("")
+    for idx, run in enumerate(final.get("runs") or [], start=1):
+        s = run.get("summary") or {}
+        print(f"[run {idx}] pass={s.get('pass')}")
+        q = s.get("query") or {}
+        print(
+            f"  query: pass={q.get('pass')} ask_path={q.get('ask_path')} evidence_quality={q.get('evidence_quality')}"
+        )
+        if q.get("quality_reasons"):
+            print(f"  query_quality_reasons: {q.get('quality_reasons')}")
+        for i, step in enumerate((q.get("answer_steps") or [])[:3], start=1):
+            print(f"  query_answer_{i}: {_clip(str(step), 180)}")
+        if q.get("notes"):
+            print(f"  query_notes: {q.get('notes')}")
+        if q.get("top_paths"):
+            print(f"  top_paths: {q.get('top_paths')[:3]}")
+        d = s.get("debug") or {}
+        print(f"  debug: pass={d.get('pass')} routing_mode={d.get('routing_mode')}")
+        if d.get("summary"):
+            print(f"  debug_summary: {_clip(str(d.get('summary')), 180)}")
+        if d.get("likely_bug_risk"):
+            print(f"  debug_risk: {_clip(str(d.get('likely_bug_risk')), 180)}")
+        if d.get("error"):
+            print(f"  debug_error: {_clip(str(d.get('error')), 180)}")
+        p = s.get("plan") or {}
+        c = s.get("code") or {}
+        print(f"  plan_decision: {p.get('decision')}")
+        print(f"  code: outcome={c.get('outcome')} posture={c.get('posture')} executed={c.get('executed')}")
+        print("")
+
+
 def run_once(
     workspace_root: str,
     context_url: str,
@@ -118,6 +199,8 @@ def run_once(
         "quality_reasons": query_meta.get("quality_reasons"),
         "steps_count": len(((ask_query_resp.get("plan_summary") or {}).get("steps") or [])),
         "assist_layer_present": "assist_layer" in ask_query_resp,
+        "answer_steps": ((ask_query_resp.get("plan_summary") or {}).get("steps") or []),
+        "answer_notes": ((ask_query_resp.get("plan_summary") or {}).get("notes") or []),
     }
 
     first_path = entries[0].get("relative_path") if entries else "runtime/plan_gate_service/app.py"
@@ -145,6 +228,9 @@ def run_once(
         "explain_debug_keys": sorted(list(explain_debug.keys())) if isinstance(explain_debug, dict) else [],
         "has_summary": bool(explain_debug.get("summary")) if isinstance(explain_debug, dict) else False,
         "has_error": bool(explain_debug.get("error")) if isinstance(explain_debug, dict) else False,
+        "summary": explain_debug.get("summary") if isinstance(explain_debug, dict) else None,
+        "likely_bug_risk": explain_debug.get("likely_bug_risk") if isinstance(explain_debug, dict) else None,
+        "error": explain_debug.get("error") if isinstance(explain_debug, dict) else None,
     }
 
     plan_req: dict[str, Any] = {
@@ -260,6 +346,13 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, default=8)
     parser.add_argument("--repeat", type=int, default=1, help="Number of repeated runs for stability check")
     parser.add_argument(
+        "--print",
+        dest="print_mode",
+        choices=["concise", "json"],
+        default="concise",
+        help="stdout format: concise summary (default) or full json",
+    )
+    parser.add_argument(
         "--out",
         default="runtime/.run/motadata_behavior_validation.json",
         help="Output JSON report path",
@@ -286,14 +379,17 @@ def main() -> int:
         "workspace_root": args.workspace_root,
         "repeat": max(1, args.repeat),
         "stable": stable,
-        "runs": out_runs,
+        "runs": [{"checks": r["checks"], "all_pass": r["all_pass"], "summary": _build_run_summary(r)} for r in out_runs],
         "all_pass": all(r.get("all_pass") for r in out_runs) and stable,
     }
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(final, indent=2), encoding="utf-8")
-    print(json.dumps(final, indent=2))
+    if args.print_mode == "json":
+        print(json.dumps(final, indent=2))
+    else:
+        _print_concise(final)
     print(f"\nSaved: {out_path}")
     return 0 if final["all_pass"] else 1
 

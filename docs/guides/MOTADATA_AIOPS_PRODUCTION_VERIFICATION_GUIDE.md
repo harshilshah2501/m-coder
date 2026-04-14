@@ -172,6 +172,16 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --repeat 2
 ```
 
+Default stdout is **concise and answer-focused** (query answer steps, debug summary, decisions, outcomes).
+Use full JSON output on stdout only when needed:
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "/home/you/Projects/Motadata" \
+  --repeat 2 \
+  --print json
+```
+
 Output report:
 
 - `runtime/.run/motadata_behavior_validation.json`
@@ -194,6 +204,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --debug-query "Debug why incident enrichment might be skipped" \
   --top-k 8 \
   --repeat 3 \
+  --print concise \
   --out runtime/.run/motadata_behavior_validation.motadata.json
 ```
 
