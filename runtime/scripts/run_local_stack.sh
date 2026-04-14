@@ -6,9 +6,11 @@
 # Usage:
 #   cp runtime/config/host_local.env.example runtime/config/host_local.env  # edit paths
 #   source runtime/config/host_local.env   # optional
+#   ./runtime/scripts/run_local_stack.sh start-plan-gate   # HTTP Plan-Gate (no vLLM)
 #   ./runtime/scripts/run_local_stack.sh start-context
 #   ./runtime/scripts/run_local_stack.sh health
 #   ./runtime/scripts/run_local_stack.sh stop-context
+#   ./runtime/scripts/run_local_stack.sh stop-plan-gate
 #
 set -euo pipefail
 
@@ -38,6 +40,13 @@ _load_optional_env() {
     saved="$(tr -d '[:space:]' <"$RUN_DIR/context_layer.port" 2>/dev/null || true)"
     if [[ -n "$saved" ]]; then
       CONTEXT_LAYER_PORT="$saved"
+    fi
+  fi
+  if [[ -f "$RUN_DIR/plan_gate_cli.port" ]]; then
+    local pg_saved
+    pg_saved="$(tr -d '[:space:]' <"$RUN_DIR/plan_gate_cli.port" 2>/dev/null || true)"
+    if [[ -n "$pg_saved" ]]; then
+      PLAN_GATE_PORT="$pg_saved"
     fi
   fi
   export CONTEXT_LAYER_HOST CONTEXT_LAYER_PORT
@@ -91,6 +100,59 @@ cmd_stop_context() {
   info "Context Layer stopped"
 }
 
+cmd_start_plan_gate() {
+  _load_optional_env
+  mkdir -p "$RUN_DIR"
+  local pid_file="$RUN_DIR/plan_gate_cli.pid"
+  local log_file="$RUN_DIR/plan_gate_cli.log"
+  if curl -sf "http://127.0.0.1:${PLAN_GATE_PORT}/healthz" >/dev/null 2>&1; then
+    info "Plan-Gate already healthy on port $PLAN_GATE_PORT (skip start)"
+    return 0
+  fi
+  if [[ -f "$pid_file" ]]; then
+    local old
+    old="$(cat "$pid_file" 2>/dev/null || true)"
+    if [[ -n "$old" ]] && kill -0 "$old" 2>/dev/null; then
+      if curl -sf "http://127.0.0.1:${PLAN_GATE_PORT}/healthz" >/dev/null 2>&1; then
+        info "Plan-Gate already running (PID $old, port $PLAN_GATE_PORT)"
+        return 0
+      fi
+    fi
+    rm -f "$pid_file"
+  fi
+  cd "$REPO_ROOT"
+  export PLAN_GATE_PORT
+  export M_CODER_REPO_ROOT="$REPO_ROOT"
+  echo "$PLAN_GATE_PORT" >"$RUN_DIR/plan_gate_cli.port"
+  nohup python3 -m runtime.plan_gate_service.app >>"$log_file" 2>&1 &
+  echo $! >"$pid_file"
+  info "Plan-Gate starting (PID $(cat "$pid_file")), log: $log_file"
+  local i
+  for i in $(seq 1 30); do
+    if curl -sf "http://127.0.0.1:${PLAN_GATE_PORT}/healthz" >/dev/null 2>&1; then
+      info "Plan-Gate /healthz OK (after ${i}s)"
+      return 0
+    fi
+    sleep 0.2
+  done
+  fail "Plan-Gate did not become healthy; see $log_file"
+}
+
+cmd_stop_plan_gate() {
+  _load_optional_env
+  local pid_file="$RUN_DIR/plan_gate_cli.pid"
+  [[ -f "$pid_file" ]] || { info "No Plan-Gate cli pid file; nothing to stop"; return 0; }
+  local pid
+  pid="$(cat "$pid_file" 2>/dev/null || true)"
+  if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+    kill -TERM "$pid" 2>/dev/null || true
+    sleep 1
+    kill -KILL "$pid" 2>/dev/null || true
+  fi
+  rm -f "$pid_file" "$RUN_DIR/plan_gate_cli.port"
+  info "Plan-Gate (cli) stopped"
+}
+
 cmd_health() {
   _load_optional_env
   echo ""
@@ -127,18 +189,25 @@ cmd_print_env() {
 
 usage() {
   cat <<EOF
-Usage: $0 {start-context|stop-context|health|print-env}
+Usage: $0 {start-plan-gate|stop-plan-gate|start-context|stop-context|health|print-env}
 
+  start-plan-gate Start Plan-Gate HTTP only (python3 -m runtime.plan_gate_service.app), no vLLM
+  stop-plan-gate  Stop Plan-Gate started by this script (plan_gate_cli.pid)
   start-context   Start Context Layer (python3 -m runtime.context_layer_service), pid in runtime/.run/
   stop-context    Stop Context Layer using pid file
   health          curl healthz for Context Layer + Plan-Gate (and vLLM if VLLM_PORT set)
   print-env       Print export lines for shell (defaults + optional $HOST_LOCAL)
+
+CLI E2E (export evidence → /v1/ask): start-plan-gate + start-context, then:
+  QUERY='...' WORKSPACE_ROOT=/abs/path/to/workspace bash runtime/scripts/cli_e2e_verify.sh
 
 Optional: HOST_LOCAL_ENV=/path/to/host_local.env (default: $CONFIG_DIR/host_local.env)
 EOF
 }
 
 case "${1:-}" in
+  start-plan-gate) cmd_start_plan_gate ;;
+  stop-plan-gate) cmd_stop_plan_gate ;;
   start-context) cmd_start_context ;;
   stop-context) cmd_stop_context ;;
   health) cmd_health ;;

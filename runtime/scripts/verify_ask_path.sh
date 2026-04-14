@@ -97,10 +97,11 @@ python3 - "$EVIDENCE_JSON" "$ASK_REQ_JSON" "$QUERY" <<'PY'
 import datetime, json, sys, uuid
 ev_path, out_path, query = sys.argv[1], sys.argv[2], sys.argv[3]
 ev = json.load(open(ev_path, "r", encoding="utf-8"))
+_ts = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
 req = {
     "schema_version": "ask_request.v1.0",
     "request_id": str(uuid.uuid4()),
-    "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
+    "timestamp_utc": _ts,
     "query": query,
     "evidence_bundle": ev,
 }
