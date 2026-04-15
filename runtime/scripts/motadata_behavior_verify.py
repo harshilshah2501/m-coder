@@ -167,6 +167,32 @@ def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict
     }
 
 
+def _stage_a_summary_from_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
+    """
+    Compact Stage A v2 snapshot from `fusion_diagnostics.stage_a_meta` on evidence_bundle.
+    """
+    fd = evidence.get("fusion_diagnostics") if isinstance(evidence.get("fusion_diagnostics"), dict) else {}
+    sa = fd.get("stage_a_meta") if isinstance(fd.get("stage_a_meta"), dict) else None
+    if not sa:
+        return {}
+    cands = sa.get("candidates") if isinstance(sa.get("candidates"), list) else []
+    lane_counts: dict[str, int] = {}
+    for c in cands:
+        if not isinstance(c, dict):
+            continue
+        lane = str(c.get("lane") or "")
+        lane_counts[lane] = lane_counts.get(lane, 0) + 1
+    pool_paths = [str(c.get("path") or "") for c in cands if isinstance(c, dict)]
+    return {
+        "pool_size": sa.get("pool_size"),
+        "quotas": sa.get("quotas"),
+        "task_type": sa.get("task_type"),
+        "debug": sa.get("debug"),
+        "lane_counts": lane_counts,
+        "pool_paths": pool_paths,
+    }
+
+
 def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
     checks = run.get("checks") or {}
     query = checks.get("query") or {}
@@ -189,6 +215,7 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
             "context_bundle_files": query.get("context_bundle_files") or [],
             "evidence_snippet_previews": query.get("evidence_snippet_previews") or [],
             "retrieval_metrics": query.get("retrieval_metrics") or {},
+            "stage_a": query.get("stage_a") or export.get("stage_a") or {},
         },
         "debug": {
             "pass": debug.get("pass", False),
@@ -381,6 +408,18 @@ def _print_scenario_results(suite: dict[str, Any], *, dev: bool = False) -> None
                 print("  --- dev: context_bundle.files ---")
                 for row in ds.get("context_bundle_files") or []:
                     print(f"    - {row.get('path')}")
+                sa = ds.get("stage_a") if isinstance(ds.get("stage_a"), dict) else {}
+                if sa:
+                    print("  --- dev: Stage A (fusion_diagnostics.stage_a_meta) ---")
+                    lc = sa.get("lane_counts") or {}
+                    print(f"    lane_counts: {lc}")
+                    pp = sa.get("pool_paths") or []
+                    if isinstance(pp, list) and pp:
+                        print("    pool_paths (Stage A pre-fusion pool, ordered):")
+                        for p in pp[:24]:
+                            print(f"      - {p}")
+                        if len(pp) > 24:
+                            print(f"      ... ({len(pp)} total)")
                 print("  --- dev: evidence previews ---")
                 for row in ds.get("evidence_snippet_previews") or []:
                     print(f"    - {row.get('relative_path')}")
@@ -435,6 +474,7 @@ def run_once(
         "top_paths": [e.get("relative_path") for e in entries[:5]],
         "workspace_identity_hash_present": bool(evidence.get("workspace_identity_hash")),
         "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
+        "stage_a": _stage_a_summary_from_evidence(evidence),
     }
 
     ask_v1_req: dict[str, Any] = {
@@ -476,6 +516,7 @@ def run_once(
         "context_bundle_files": cb_files,
         "evidence_snippet_previews": snip_previews,
         "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
+        "stage_a": _stage_a_summary_from_evidence(evidence),
     }
 
     first_path = entries[0].get("relative_path") if entries else "runtime/plan_gate_service/app.py"
@@ -1103,6 +1144,7 @@ def _run_scenario_row(
             allowed = expect["evidence_quality_any_of"]
             if isinstance(allowed, list) and actual.get("evidence_quality") not in allowed:
                 errors.append(f"evidence_quality want one of {allowed} got {actual.get('evidence_quality')}")
+        sa = _stage_a_summary_from_evidence(evidence)
         dev_snapshot = {
             "request_id": resp.get("request_id"),
             "trace_id": resp.get("trace_id") or (meta.get("trace_id") if isinstance(meta, dict) else None),
@@ -1110,6 +1152,7 @@ def _run_scenario_row(
             "context_bundle_files": _context_bundle_files(resp),
             "evidence_snippet_previews": snips,
             "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
+            "stage_a": sa,
         }
         return {
             "id": sid,
@@ -1124,6 +1167,7 @@ def _run_scenario_row(
                 "ask_path": actual.get("ask_path"),
                 "plan_steps_count": len(plan_steps),
                 "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
+                "stage_a": sa,
             },
             "dev_snapshot": dev_snapshot,
         }

@@ -176,6 +176,8 @@ def try_build_layer5_evidence(
         effective_intent=effective,
     )
     fd = dict(evb.fusion_diagnostics or {})
+    if r.stage_a_meta is not None:
+        fd["stage_a_meta"] = r.stage_a_meta
     fd["effective_intent"] = {
         "primary_mode": effective.primary_mode,
         "task_type": effective.task_type_raw,

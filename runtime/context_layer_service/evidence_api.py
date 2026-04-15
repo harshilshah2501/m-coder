@@ -156,8 +156,6 @@ def export_evidence_bundle_dict(
             except (OSError, FileNotFoundError, NotADirectoryError) as e:
                 raise RuntimeError(f"index build failed: {e}") from e
 
-    r = retrieve_lexical(idx, q, top_k, LexicalRetrievalConfig())
-
     authority_resolution = None
     structural_context = None
     try:
@@ -199,10 +197,26 @@ def export_evidence_bundle_dict(
         authority_resolution = None
         structural_context = None
 
+    # Authority before lexical (Stage A owner injection); matches ask evidence_bridge ordering.
+    r = retrieve_lexical(
+        idx,
+        q,
+        top_k,
+        LexicalRetrievalConfig(),
+        task_type="general",
+        selected_file=None,
+        authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
+    )
+
+    fusion_diag: Optional[Dict[str, Any]] = None
+    if getattr(r, "stage_a_meta", None) is not None:
+        fusion_diag = {"stage_a_meta": r.stage_a_meta}
+
     evb = build_evidence_bundle(
         r,
         idx,
         authority_resolution=authority_resolution,
         structural_context=structural_context,
+        fusion_diagnostics=fusion_diag,
     )
     return evb.to_dict()
