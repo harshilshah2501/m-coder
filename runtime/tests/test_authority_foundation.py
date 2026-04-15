@@ -96,9 +96,9 @@ class TestRegistryLoader:
         
         assert concept is not None
         assert concept.name == "incident_deduplication"
-        assert concept.primary_owner.file.endswith("IncidentDeduplicationProcessor.java")
-        assert concept.primary_owner.class_name == "IncidentDeduplicationProcessor"
-        assert concept.primary_owner.method == "processDeduplication"
+        assert concept.primary_owner.file.endswith("DependencyQueryProcessor.java")
+        assert concept.primary_owner.class_name == "DependencyQueryProcessor"
+        assert concept.primary_owner.method == "process"
         assert concept.primary_owner.confidence == "high"
         assert len(concept.aliases) > 0
         assert "dedup" in concept.aliases
@@ -111,7 +111,7 @@ class TestRegistryLoader:
         concept = registry.get_concept("incident_deduplication")
         
         assert concept is not None
-        assert concept.verification.verification_source == "code_trace"
+        assert concept.verification.verification_source == "human"
         assert concept.verification.staleness_threshold_days == 90
         assert isinstance(concept.verification.last_verified_at, datetime)
 

@@ -150,8 +150,8 @@ def test_fusion_authority_owner_promoted_into_top3():
     """v2.1.2: Stage B must not drop authority primary_owner below top-3 when present in fused list."""
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)
-    owner = "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
-    _touch(root / owner, "public class AlertCorrelationEngine { void correlation() {} }\n")
+    owner = "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+    _touch(root / owner, "public class AvailabilityCorrelationEngine { void correlation() {} }\n")
     for i in range(12):
         _touch(
             root / f"src/main/java/com/mindarray/notification/NotificationHeavy{i}.java",

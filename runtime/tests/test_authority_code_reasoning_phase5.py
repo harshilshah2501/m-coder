@@ -64,8 +64,8 @@ def test_extract_target_owner_only():
     ar = _base_ar()
     t = extract_target(ar)
     assert t
-    assert "IncidentDeduplicationProcessor" in t["class"]
-    assert t["file"].endswith("IncidentDeduplicationProcessor.java")
+    assert "DependencyQueryProcessor" in t["class"]
+    assert t["file"].endswith("DependencyQueryProcessor.java")
 
 
 def test_debug_scenario_validated_strong_action():
@@ -82,7 +82,7 @@ def test_debug_scenario_validated_strong_action():
     assert cr and cr["action_level"] == "strong"
     blob = " ".join(steps).lower()
     assert "bounded reasoning" in blob
-    assert "incidentdeduplicationprocessor" in blob.replace("_", "") or "IncidentDeduplicationProcessor" in " ".join(steps)
+    assert "dependencyqueryprocessor" in blob.replace("_", "") or "DependencyQueryProcessor" in " ".join(steps)
 
 
 def test_fix_scenario_stale_candidate_cautious():
@@ -116,7 +116,7 @@ def test_weak_authority_stale_no_fake_fix():
 def test_distractor_does_not_change_target():
     ar = _base_ar()
     ar["authority_status"] = "validated"
-    distractor = "motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java"
+    distractor = "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
     owner = ar["primary_owner"]["file"]
     cr = generate_change_reasoning(
         _bundle([distractor, owner]),

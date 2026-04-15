@@ -90,7 +90,7 @@ def test_match_concepts_finds_alert_correlation_by_class_name():
         / "product_authority_registry.yaml"
     )
     registry = load_registry(reg_path)
-    q = "Explain AlertCorrelationEngine behavior in production"
+    q = "Explain AvailabilityCorrelationEngine behavior in production"
     hits = match_concepts_for_query(q, registry)
     assert hits, "expected registry match via primary_owner class name"
     assert hits[0][0].name == "alert_correlation"
@@ -103,17 +103,14 @@ def test_motadata_prefix_drift_owner_in_top3_and_stage_a_injection():
     """
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)
-    owner_rel = (
-        "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
-    )
+    owner_rel = "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
     _touch(
         root / owner_rel,
-        "public class AlertCorrelationEngine { void run() {} }\n",
+        "public class AvailabilityCorrelationEngine { void run() {} }\n",
     )
     for i in range(18):
         _touch(
-            root
-            / f"src/main/java/com/mindarray/aiops/correlation/Noise{i}.java",
+            root / f"src/main/java/com/mindarray/aiops/Noise{i}.java",
             f"class Noise{i} {{ void correlation() {{}} }}\n",
         )
     _touch(
@@ -132,7 +129,7 @@ def test_motadata_prefix_drift_owner_in_top3_and_stage_a_injection():
     ar = build_authority_resolution(q, registry, None)
     assert ar is not None
     po = ar["primary_owner"]
-    assert po["file"].endswith("AlertCorrelationEngine.java")
+    assert po["file"].endswith("AvailabilityCorrelationEngine.java")
 
     lex_task = resolve_lexical_task_type("general", q, ar)
     assert lex_task == "CODE"

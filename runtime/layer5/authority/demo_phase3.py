@@ -29,14 +29,14 @@ REGISTRY_PATH = Path(__file__).parent / "product_authority_registry.yaml"
 def create_mock_hits() -> List[Tuple[str, float]]:
     """Create mock lexical retrieval hits for demonstration."""
     return [
-        # High lexical score but is a distractor
-        ("motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java", 85.0),
+        # High lexical score but is a distractor (registry forbidden)
+        ("src/main/java/com/mindarray/aiops/AIOpsConstants.java", 85.0),
         # Medium score, is the true owner
-        ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 70.0),
-        # High score, generic eventbus handler (entry point)
-        ("motadata/src/main/java/com/mindarray/handlers/AlertEventHandler.java", 80.0),
+        ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 70.0),
+        # High score, collaborator
+        ("src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java", 80.0),
         # Medium score, collaborator
-        ("motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationManager.java", 65.0),
+        ("src/main/java/com/mindarray/aiops/DependencyManager.java", 65.0),
         # Low score, utility file
         ("motadata/src/main/java/com/mindarray/util/MotadataConfigUtil.java", 50.0),
         # Medium score, unrelated
@@ -123,9 +123,9 @@ def main():
     
     print(f"\n   Concept: alert_correlation")
     print(f"   Authority status: {context.authority_status}")
-    print(f"   Owner file: AlertCorrelationEngine.java")
+    print(f"   Owner file: AvailabilityCorrelationEngine.java")
     
-    owner_hit = next((h for h in ranked if "AlertCorrelationEngine" in h.file_path), None)
+    owner_hit = next((h for h in ranked if "AvailabilityCorrelationEngine" in h.file_path), None)
     if owner_hit:
         print(f"\n   Owner ranking:")
         print(f"     Original score: {owner_hit.original_score:.1f}")
@@ -149,8 +149,8 @@ def main():
     
     # Create hits for this case
     escalation_hits = [
-        ("motadata/src/main/java/com/mindarray/aiops/alerting/AlertEscalationHandler.java", 75.0),
-        ("motadata/src/main/java/com/mindarray/aiops/alerting/AlertNotificationService.java", 70.0),
+        ("src/main/java/com/mindarray/aiops/DependencyManager.java", 75.0),
+        ("src/main/java/com/mindarray/aiops/AIOpsConstants.java", 70.0),
         ("motadata/src/main/java/com/mindarray/nms/MetricPoller.java", 60.0),
     ]
     
@@ -158,7 +158,7 @@ def main():
     
     print_ranking("Stale/Stale_Candidate Ranking:", ranked_escalation, show_diagnostics=True)
     
-    owner_esc = next((h for h in ranked_escalation if "AlertEscalationHandler" in h.file_path), None)
+    owner_esc = next((h for h in ranked_escalation if "DependencyManager" in h.file_path), None)
     if owner_esc:
         print(f"   Note: Owner boost is partial (+{owner_esc.diagnostics.owner_boost:.1f})")
         print(f"   because authority status is '{context_escalation.authority_status}'")
@@ -174,22 +174,22 @@ def main():
     
     print(f"\n   Query: \"{query}\"")
     print(f"   Concept matched: incident_deduplication")
-    print(f"   Distractor: ServiceNowIntegration.java")
+    print(f"   Distractor: AvailabilityCorrelationEngine.java (wrong domain)")
     
     dedup_hits = [
         # Distractor with high lexical score
-        ("motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java", 90.0),
-        # True owner with lower lexical score  
-        ("motadata/src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java", 65.0),
-        # Event handler (also a distractor for this concept)
-        ("motadata/src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java", 80.0),
+        ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 90.0),
+        # True owner with lower lexical score
+        ("src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java", 65.0),
+        # Package metadata (also a distractor for this concept)
+        ("src/main/java/com/mindarray/aiops/package-info.java", 80.0),
     ]
     
     ranked_dedup = ranker.rank_hits(dedup_hits, context_dedup)
     
     print_ranking("Distractor Demotion Ranking:", ranked_dedup, show_diagnostics=True)
     
-    distractor = next((h for h in ranked_dedup if "ServiceNowIntegration" in h.file_path), None)
+    distractor = next((h for h in ranked_dedup if "AvailabilityCorrelationEngine" in h.file_path), None)
     if distractor:
         print(f"   Distractor result:")
         print(f"     Original score: {distractor.original_score:.1f}")
@@ -206,14 +206,14 @@ def main():
     context = ranker.build_context(query)
     
     print(f"\n   Query: \"{query}\"")
-    print(f"   Entry point: AlertEventHandler.handle()")
-    print(f"   Invokes: correlationEngine.correlateDuplicateIncidents")
+    print(f"   Entry: AvailabilityCorrelationEngine (registry primary)")
+    print(f"   Related: DependencyQueryProcessor in collaborator set")
     
     entry_hits = [
-        # Entry point that invokes owner
-        ("motadata/src/main/java/com/mindarray/handlers/AlertEventHandler.java", 85.0),
-        # True owner  
-        ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 70.0),
+        # Collaborator / high lexical
+        ("src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java", 85.0),
+        # True owner
+        ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 70.0),
         # Random file
         ("motadata/src/main/java/com/mindarray/nms/MetricPoller.java", 60.0),
     ]
@@ -222,8 +222,8 @@ def main():
     
     print_ranking("Entry-Point Supportive Boost:", ranked_entry, show_diagnostics=True)
     
-    entry_point = next((h for h in ranked_entry if "AlertEventHandler" in h.file_path), None)
-    owner = next((h for h in ranked_entry if "AlertCorrelationEngine" in h.file_path), None)
+    entry_point = next((h for h in ranked_entry if "DependencyQueryProcessor" in h.file_path), None)
+    owner = next((h for h in ranked_entry if "AvailabilityCorrelationEngine" in h.file_path), None)
     
     if entry_point and owner:
         print(f"   Key observation:")

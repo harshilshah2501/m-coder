@@ -59,8 +59,8 @@ def main() -> None:
     q1 = "incident deduplication"
     ar1 = build_authority_resolution(q1, registry, adapter)
     paths1 = [
-        "motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java",
-        "motadata/src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java",
+        "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
     ]
     steps1, meta1 = synthesize_authority_plan_steps(q1, _bundle(paths1), ar1)
     print("=== A: Anchored owner (distractor ranked above owner in lexical top-k) ===")
@@ -88,8 +88,8 @@ def main() -> None:
     q4 = "incident deduplication and alert correlation"
     ar4 = build_authority_resolution(q4, registry, adapter)
     paths4 = [
-        "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
-        "motadata/src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java",
+        "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
     ]
     steps4, meta4 = synthesize_authority_plan_steps(q4, _bundle(paths4), ar4)
     print("\n=== D: Compound query ===")

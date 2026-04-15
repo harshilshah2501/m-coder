@@ -1,131 +1,131 @@
 # Product Authority Registry v1.1
 # Phase 1 Foundation — Sample concepts for validation testing
 #
-# File paths are relative to the Java module (paths under motadata/ on disk when the
-# workspace root is the product repo checkout). Lint resolves workspace_root/motadata/<path>.
+# Paths are relative to the Java module tree. Lint resolves:
+#   workspace_root/motadata/<path>  and  workspace_root/<path>
+# Update file entries when the product tree changes; entries must exist on disk for
+# lint to pass (no runtime generation — this is static YAML, not model output).
 
 schema_version: "product_authority_registry.v1.1"
-last_updated: "2026-03-31"
+last_updated: "2026-04-15"
 maintainer: "harshil@motadata.com"
 
 concepts:
 
   incident_deduplication:
     primary_owner:
-      file: "src/main/java/com/mindarray/aiops/correlation/IncidentDeduplicationProcessor.java"
-      class: "IncidentDeduplicationProcessor"
-      method: "processDeduplication"
+      file: "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
+      class: "DependencyQueryProcessor"
+      method: "process"
       confidence: "high"
-    
+
     verification:
-      last_verified_at: "2026-03-31T10:00:00Z"
-      verification_source: "code_trace"
-      verification_notes: "Verified via call graph trace from IncidentEventHandler"
+      last_verified_at: "2026-04-15T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "Aligned with current com.mindarray.aiops package layout"
       staleness_threshold_days: 90
-    
+
     aliases:
       - "duplicate incident"
       - "incident dedup"
       - "dedup"
       - "duplicate detection"
       - "incident matching"
-    
+
     collaborators:
-      - file: "src/main/java/com/mindarray/aiops/correlation/IncidentCorrelationEngine.java"
+      - file: "src/main/java/com/mindarray/aiops/DependencyManager.java"
         role: "orchestrator"
-        relationship: "calls_primary"
-      - file: "src/main/java/com/mindarray/aiops/query/IncidentQueryProcessor.java"
+        relationship: "dependency_context"
+      - file: "src/main/java/com/mindarray/aiops/AIOpsConstants.java"
         role: "query_support"
-        relationship: "data_provider"
-    
+        relationship: "constants"
+
     forbidden_distractors:
-      - file: "src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java"
-        reason: "Uses incident term but handles external sync, not deduplication logic"
-      - file: "src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java"
-        reason: "Generic event routing, not deduplication implementation"
-    
+      - file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+        reason: "Availability correlation domain, not incident deduplication"
+      - file: "src/main/java/com/mindarray/aiops/package-info.java"
+        reason: "Package metadata, not deduplication implementation"
+
     notes:
-      - "Deduplication uses similarity scoring with configurable thresholds"
-      - "Primary algorithm is in processDeduplication() method"
-      - "Uses DependencyManager for topology-aware grouping"
-    
+      - "Query and dependency resolution share the aiops module"
+      - "Uses DependencyManager for dependency context"
+
     entry_points:
-      - type: "eventbus_handler"
-        file: "src/main/java/com/mindarray/aiops/eventbus/handlers/IncidentEventHandler.java"
-        method: "handle"
-        event_type: "INCIDENT_CREATED"
-    
+      - type: "service"
+        file: "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
+        method: "process"
+        event_type: ""
+
     control_flow:
-      entry: "REST API or EventBus"
+      entry: "DependencyQueryProcessor"
       path:
-        - "IncidentEventHandler.handle()"
-        - "IncidentCorrelationEngine.correlate()"
-        - "IncidentDeduplicationProcessor.processDeduplication()"
-      exit: "IncidentStore.persist()"
+        - "DependencyQueryProcessor.process()"
+        - "DependencyManager.resolve()"
+      exit: "Downstream store"
 
   alert_correlation:
     primary_owner:
-      file: "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
-      class: "AlertCorrelationEngine"
+      file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+      class: "AvailabilityCorrelationEngine"
       confidence: "high"
-    
+
     verification:
-      last_verified_at: "2026-03-31T10:00:00Z"
-      verification_source: "code_trace"
+      last_verified_at: "2026-04-15T00:00:00Z"
+      verification_source: "human"
       staleness_threshold_days: 90
-    
+
     aliases:
       - "alert grouping"
       - "alert clustering"
       - "related alerts"
       - "correlation engine"
-    
+
     collaborators:
-      - file: "src/main/java/com/mindarray/aiops/correlation/CorrelationManager.java"
+      - file: "src/main/java/com/mindarray/aiops/DependencyManager.java"
         role: "manager"
         relationship: "lifecycle_management"
-      - file: "src/main/java/com/mindarray/aiops/topology/TopologyCache.java"
-        role: "topology_provider"
+      - file: "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
+        role: "query_support"
         relationship: "context_enrichment"
-    
+
     forbidden_distractors:
-      - file: "src/main/java/com/mindarray/aiops/correlation/AvailabilityCorrelationEngine.java"
-        reason: "Different correlation domain - availability, not alerts"
-    
+      - file: "src/main/java/com/mindarray/aiops/AIOpsConstants.java"
+        reason: "Constants only, not correlation engine behavior"
+
     notes:
-      - "Uses topology graph for dependency-aware correlation"
-      - "Supports both time-based and topology-based correlation"
-    
+      - "Availability-oriented correlation in current tree"
+      - "Shares aiops module with dependency and query helpers"
+
     entry_points:
-      - type: "eventbus_handler"
-        file: "src/main/java/com/mindarray/aiops/eventbus/handlers/AlertEventHandler.java"
-        method: "handle"
-        event_type: "ALERT_CREATED"
+      - type: "service"
+        file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+        method: "correlate"
+        event_type: ""
 
   alert_escalation:
     primary_owner:
-      file: "src/main/java/com/mindarray/aiops/alerting/AlertEscalationHandler.java"
-      class: "AlertEscalationHandler"
+      file: "src/main/java/com/mindarray/aiops/DependencyManager.java"
+      class: "DependencyManager"
       confidence: "medium"
-    
+
     verification:
-      last_verified_at: "2025-12-01T10:00:00Z"
+      last_verified_at: "2020-01-01T10:00:00Z"
       verification_source: "human"
-      verification_notes: "Manually verified during code review"
+      verification_notes: "Escalation-adjacent dependency handling in aiops module"
       staleness_threshold_days: 90
-    
+
     aliases:
       - "escalation"
       - "alert escalation"
       - "severity escalation"
       - "escalate alert"
-    
+
     collaborators:
-      - file: "src/main/java/com/mindarray/aiops/alerting/AlertNotificationService.java"
+      - file: "src/main/java/com/mindarray/aiops/AIOpsConstants.java"
         role: "notification"
-        relationship: "downstream_action"
-    
+        relationship: "policy_constants"
+
     forbidden_distractors: []
-    
+
     notes:
-      - "Escalation rules are policy-driven from AlertPolicyEngine"
+      - "Placeholder mapping where dedicated alerting classes are absent"

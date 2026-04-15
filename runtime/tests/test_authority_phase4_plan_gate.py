@@ -57,7 +57,7 @@ def test_anchored_synthesis_names_owner_and_control_flow():
     ar = build_authority_resolution("incident deduplication", registry, None)
     assert ar is not None
     po = ar["primary_owner"]
-    assert "IncidentDeduplicationProcessor" in po["class"]
+    assert "DependencyQueryProcessor" in po["class"]
     steps, meta = synthesize_authority_plan_steps(
         "incident deduplication",
         _ctx([po["file"]]),
@@ -66,7 +66,7 @@ def test_anchored_synthesis_names_owner_and_control_flow():
     blob = " ".join(steps).lower()
     assert po["class"].lower() in blob
     assert po["file"].lower() in blob
-    assert "control flow" in blob or "incidenteventhandler" in blob or "entry" in blob
+    assert "control flow" in blob or "dependencyqueryprocessor" in blob or "entry" in blob
     assert meta.get("anchor_mode") in ("anchored", "weak_or_stale")
 
 
@@ -88,7 +88,7 @@ def test_distractor_high_rank_not_peer_owner():
     registry = load_registry(REG)
     ar = build_authority_resolution("incident deduplication", registry, None)
     assert ar
-    distractor = "motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java"
+    distractor = "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
     owner = ar["primary_owner"]["file"]
     paths = [distractor, owner]
     steps, meta = synthesize_authority_plan_steps("incident deduplication", _ctx(paths), ar)

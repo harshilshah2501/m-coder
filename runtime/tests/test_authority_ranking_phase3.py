@@ -119,7 +119,7 @@ def create_validated_index(registry: AuthorityRegistry) -> MockCodeIndex:
 def create_entry_point_index() -> MockCodeIndex:
     """Create an index with entry points."""
     handler_file = "motadata/src/main/java/com/mindarray/handlers/AlertEventHandler.java"
-    owner_file = "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+    owner_file = "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
     
     ep = EntryPointRecord(
         entry_type=EntryPointType.EVENT_HANDLER,
@@ -133,7 +133,7 @@ def create_entry_point_index() -> MockCodeIndex:
         existing_files={handler_file, owner_file},
         existing_classes={
             handler_file: {"AlertEventHandler"},
-            owner_file: {"AlertCorrelationEngine"},
+            owner_file: {"AvailabilityCorrelationEngine"},
         },
         entry_points={handler_file: [ep]},
     )
@@ -176,7 +176,7 @@ class TestAuthorityRanker:
         assert context.matched_concept is not None
         assert context.matched_concept.name == "alert_correlation"
         assert context.owner_file is not None
-        assert "AlertCorrelationEngine" in context.owner_file
+        assert "AvailabilityCorrelationEngine" in context.owner_file
 
     def test_build_context_collects_collaborators(self):
         """build_context collects collaborator files."""
@@ -213,14 +213,14 @@ class TestValidatedAuthorityBoost:
         assert context.authority_status == "validated"
         
         hits = [
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
             ("motadata/src/main/java/com/mindarray/other/OtherFile.java", 80.0),
         ]
         
         ranked = ranker.rank_hits(hits, context)
         
         # Owner should rank first due to boost
-        assert ranked[0].file_path.endswith("AlertCorrelationEngine.java")
+        assert ranked[0].file_path.endswith("AvailabilityCorrelationEngine.java")
         assert ranked[0].diagnostics.owner_boost == 100.0
         assert ranked[0].final_score == 150.0
 
@@ -243,13 +243,13 @@ class TestStaleCandidatePartialBoost:
         assert context.authority_status == "unverified"
         
         hits = [
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
             ("motadata/src/main/java/com/mindarray/other/OtherFile.java", 80.0),
         ]
         
         ranked = ranker.rank_hits(hits, context)
         
-        owner = next(h for h in ranked if "AlertCorrelationEngine" in h.file_path)
+        owner = next(h for h in ranked if "AvailabilityCorrelationEngine" in h.file_path)
         # Should get unverified boost, not validated
         assert owner.diagnostics.owner_boost == 30.0
 
@@ -270,7 +270,7 @@ class TestStaleNoBoost:
         assert context.authority_status == "stale"
         
         hits = [
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
         ]
         
         ranked = ranker.rank_hits(hits, context)
@@ -288,21 +288,22 @@ class TestDistractorDemotion:
         config = RankingConfig(
             distractor_penalty=-80.0,
             owner_boost_validated=100.0,
+            same_package_boost=0.0,
         )
         ranker = AuthorityRanker(registry, index, config)
         
         context = ranker.build_context("incident deduplication")
         
         hits = [
-            # Distractor with high lexical score
-            ("motadata/src/main/java/com/mindarray/aiops/integration/ServiceNowIntegration.java", 90.0),
+            # Distractor with high lexical score (registry forbidden for incident_deduplication)
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 90.0),
             # Regular file
             ("motadata/src/main/java/com/mindarray/other/Other.java", 50.0),
         ]
         
         ranked = ranker.rank_hits(hits, context)
         
-        distractor = next(h for h in ranked if "ServiceNowIntegration" in h.file_path)
+        distractor = next(h for h in ranked if "AvailabilityCorrelationEngine" in h.file_path)
         assert distractor.diagnostics.distractor_penalty == -80.0
         assert distractor.final_score == 10.0  # 90 - 80
 
@@ -350,13 +351,13 @@ class TestEntryPointSupportiveBoost:
             # Entry point with high lexical score
             ("motadata/src/main/java/com/mindarray/handlers/AlertEventHandler.java", 85.0),
             # Owner with lower lexical score
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 70.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 70.0),
         ]
         
         ranked = ranker.rank_hits(hits, context)
         
         # Owner should still rank first
-        assert ranked[0].file_path.endswith("AlertCorrelationEngine.java")
+        assert ranked[0].file_path.endswith("AvailabilityCorrelationEngine.java")
         assert ranked[0].rank == 1
         
         # Entry point should rank second
@@ -407,7 +408,7 @@ class TestFeatureFlag:
         
         hits = [
             ("motadata/src/main/java/com/mindarray/other/FileA.java", 100.0),
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
             ("motadata/src/main/java/com/mindarray/other/FileB.java", 75.0),
         ]
         
@@ -415,7 +416,7 @@ class TestFeatureFlag:
         
         # Original order preserved (by original score)
         assert ranked[0].file_path.endswith("FileA.java")
-        assert ranked[1].file_path.endswith("AlertCorrelationEngine.java")
+        assert ranked[1].file_path.endswith("AvailabilityCorrelationEngine.java")
         assert ranked[2].file_path.endswith("FileB.java")
         
         # Scores unchanged
@@ -437,13 +438,13 @@ class TestFeatureFlag:
         
         hits = [
             ("motadata/src/main/java/com/mindarray/other/FileA.java", 100.0),
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
         ]
         
         ranked = ranker.rank_hits(hits, context)
         
         # Owner should now rank first due to boost
-        assert ranked[0].file_path.endswith("AlertCorrelationEngine.java")
+        assert ranked[0].file_path.endswith("AvailabilityCorrelationEngine.java")
 
 
 class TestGenericTokenOvermatch:
@@ -482,7 +483,7 @@ class TestDeterminism:
         
         hits = [
             ("motadata/src/main/java/com/mindarray/FileA.java", 60.0),
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
             ("motadata/src/main/java/com/mindarray/FileB.java", 70.0),
         ]
         
@@ -542,14 +543,14 @@ class TestConvenienceFunctions:
         index = create_validated_index(registry)
         
         hits = [
-            ("motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java", 50.0),
+            ("src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java", 50.0),
             ("motadata/src/main/java/com/mindarray/other/Other.java", 80.0),
         ]
         
         ranked = rerank_hits(hits, "alert correlation", registry, index)
         
         # Owner should rank first
-        assert ranked[0].file_path.endswith("AlertCorrelationEngine.java")
+        assert ranked[0].file_path.endswith("AvailabilityCorrelationEngine.java")
 
 
 class TestCollaboratorBoost:
