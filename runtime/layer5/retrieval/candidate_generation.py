@@ -17,7 +17,10 @@ from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_file_subsystem,
     infer_query_subsystems,
+    is_code_bearing_path,
+    is_non_code_asset_path,
     looks_like_symbol_token,
+    query_explicit_non_code_asset_intent,
 )
 
 
@@ -56,6 +59,44 @@ def _query_explicit_infra(tokens: Tuple[str, ...]) -> bool:
         }
     )
     return bool(set(tokens) & infra)
+
+
+def _task_prefers_code_candidates(task_type: str) -> bool:
+    tt = (task_type or "").strip().upper()
+    return tt in {"ASK", "EXPLAIN_DEBUG", "PLAN", "CODE"}
+
+
+def _candidate_eligible_for_task(
+    rel: str,
+    *,
+    task_type: str,
+    allow_non_code_assets: bool,
+) -> bool:
+    if not _task_prefers_code_candidates(task_type):
+        return True
+    if is_non_code_asset_path(rel):
+        return allow_non_code_assets
+    if is_code_bearing_path(rel):
+        return True
+    fc = classify_file(rel).file_class
+    return fc in {"core_aiops_code", "supporting_prod_code", "config"}
+
+
+def _filter_candidates_for_task(
+    candidates: List[StageCandidate],
+    *,
+    task_type: str,
+    allow_non_code_assets: bool,
+) -> List[StageCandidate]:
+    out: List[StageCandidate] = []
+    for c in candidates:
+        if _candidate_eligible_for_task(
+            c.path,
+            task_type=task_type,
+            allow_non_code_assets=allow_non_code_assets,
+        ):
+            out.append(c)
+    return out
 
 
 def _primary_owner_file(authority_resolution: Optional[Mapping[str, Any]]) -> Optional[str]:
@@ -181,14 +222,24 @@ def _collect_local_seeds(
     active_file: Optional[str],
     *,
     neighbor_cap: int,
+    tokens: Tuple[str, ...],
+    task_type: str,
 ) -> List[StageCandidate]:
     path_set = {e.relative_path for e in index.files}
+    allow_non_code_assets = query_explicit_non_code_asset_intent(tokens)
+    allow_generic_infra = _query_explicit_infra(tokens)
     out: List[StageCandidate] = []
     seen: Set[str] = set()
 
     def add(p: str, reason: str, injected: bool = False) -> None:
         resolved = _path_in_index(_norm_rel(p), path_set)
         if not resolved or resolved in seen:
+            return
+        if not _candidate_eligible_for_task(
+            resolved,
+            task_type=task_type,
+            allow_non_code_assets=allow_non_code_assets,
+        ):
             return
         seen.add(resolved)
         out.append(
@@ -211,7 +262,21 @@ def _collect_local_seeds(
     if not sel and active_file:
         sel = _path_in_index(_norm_rel(active_file), path_set)
     if sel:
+        sel_subsystem = infer_file_subsystem(sel)
         for nb in _same_package_neighbors(sel, index, cap=neighbor_cap):
+            if not is_code_bearing_path(nb):
+                continue
+            if not _candidate_eligible_for_task(
+                nb,
+                task_type=task_type,
+                allow_non_code_assets=allow_non_code_assets,
+            ):
+                continue
+            if _is_generic_infra_path(nb) and not allow_generic_infra:
+                continue
+            nb_subsystem = infer_file_subsystem(nb)
+            if sel_subsystem != "unknown" and nb_subsystem not in {sel_subsystem, "unknown"}:
+                continue
             if nb not in seen:
                 seen.add(nb)
                 out.append(
@@ -248,25 +313,43 @@ def _collect_lexical_residual(
     return out
 
 
-def _initial_quotas(task_type: str, *, has_owner: bool) -> Dict[str, int]:
+def _initial_quotas(task_type: str, *, has_owner: bool, anchored_owner_like: bool) -> Dict[str, int]:
     tt = (task_type or "").strip()
     if tt == "EXPLAIN_DEBUG":
         # Totals 20 with or without owner row (owner replaces one symbol slot).
-        q = {
-            "owner_injected": 1 if has_owner else 0,
-            "symbol_seed": 3 if has_owner else 4,
-            "package_seed": 3,
-            "local_seed": 10,
-            "lexical_residual": 3,
-        }
+        if anchored_owner_like:
+            q = {
+                "owner_injected": 1 if has_owner else 0,
+                "symbol_seed": 4 if has_owner else 5,
+                "package_seed": 3,
+                "local_seed": 10,
+                "lexical_residual": 2,
+            }
+        else:
+            q = {
+                "owner_injected": 1 if has_owner else 0,
+                "symbol_seed": 3 if has_owner else 4,
+                "package_seed": 3,
+                "local_seed": 10,
+                "lexical_residual": 3,
+            }
     else:
-        q = {
-            "owner_injected": 1 if has_owner else 0,
-            "symbol_seed": 4 if has_owner else 5,
-            "package_seed": 5,
-            "local_seed": 5,
-            "lexical_residual": 5,
-        }
+        if anchored_owner_like:
+            q = {
+                "owner_injected": 1 if has_owner else 0,
+                "symbol_seed": 5 if has_owner else 6,
+                "package_seed": 5,
+                "local_seed": 5,
+                "lexical_residual": 4,
+            }
+        else:
+            q = {
+                "owner_injected": 1 if has_owner else 0,
+                "symbol_seed": 4 if has_owner else 5,
+                "package_seed": 5,
+                "local_seed": 5,
+                "lexical_residual": 5,
+            }
     return q
 
 
@@ -443,12 +526,18 @@ def generate_candidates(
     """
     path_set = {e.relative_path for e in index.files}
     debug = (task_type or "").strip() == "EXPLAIN_DEBUG"
+    intent = classify_intent(query)
+    allow_non_code_assets = query_explicit_non_code_asset_intent(tokens)
 
     owner_path = _primary_owner_file(authority_resolution)
     owner_cands: List[StageCandidate] = []
     if owner_path:
         resolved = _path_in_index(_norm_rel(owner_path), path_set)
-        if resolved:
+        if resolved and _candidate_eligible_for_task(
+            resolved,
+            task_type=task_type,
+            allow_non_code_assets=allow_non_code_assets,
+        ):
             owner_cands.append(
                 StageCandidate(
                     lane="owner_injected",
@@ -459,17 +548,28 @@ def generate_candidates(
                 )
             )
 
-    quotas = _initial_quotas(task_type, has_owner=bool(owner_cands))
+    anchored_owner_like = bool(owner_cands) or bool(intent.symbol_tokens)
+    quotas = _initial_quotas(task_type, has_owner=bool(owner_cands), anchored_owner_like=anchored_owner_like)
 
     sym_limit = quotas["symbol_seed"] + 5
-    sym = _collect_symbol_seeds(index, query, tokens, limit=sym_limit)
-    pkg = _collect_package_seeds(index, tokens, limit=quotas["package_seed"] + 8)
+    sym = _filter_candidates_for_task(
+        _collect_symbol_seeds(index, query, tokens, limit=sym_limit),
+        task_type=task_type,
+        allow_non_code_assets=allow_non_code_assets,
+    )
+    pkg = _filter_candidates_for_task(
+        _collect_package_seeds(index, tokens, limit=quotas["package_seed"] + 8),
+        task_type=task_type,
+        allow_non_code_assets=allow_non_code_assets,
+    )
     neighbor_cap = 24 if debug else 12
     loc = _collect_local_seeds(
         index,
         selected_file,
         active_file or selected_file,
         neighbor_cap=neighbor_cap,
+        tokens=tokens,
+        task_type=task_type,
     )
 
     excluded: Set[str] = set()
@@ -478,7 +578,11 @@ def generate_candidates(
             excluded.add(c.path)
 
     lex_budget = quotas["lexical_residual"] + pool_size
-    lex = _collect_lexical_residual(full_lexical_sorted, excluded, limit=lex_budget)
+    lex = _filter_candidates_for_task(
+        _collect_lexical_residual(full_lexical_sorted, excluded, limit=lex_budget),
+        task_type=task_type,
+        allow_non_code_assets=allow_non_code_assets,
+    )
 
     lanes = {
         "owner_injected": owner_cands,
@@ -516,6 +620,8 @@ def generate_candidates(
                 selected_file,
                 active_file or selected_file,
                 neighbor_cap=48,
+                tokens=tokens,
+                task_type=task_type,
             )
             already = {c.path for c in merged}
             for ex in extras:
@@ -559,6 +665,12 @@ def generate_candidates(
             if len(deduped) >= pool_size:
                 break
             if h.relative_path in excl:
+                continue
+            if not _candidate_eligible_for_task(
+                h.relative_path,
+                task_type=task_type,
+                allow_non_code_assets=allow_non_code_assets,
+            ):
                 continue
             deduped.append(
                 StageCandidate(

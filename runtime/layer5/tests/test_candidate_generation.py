@@ -146,3 +146,83 @@ def test_generate_candidates_deterministic():
     )
     assert [c.path for c in a] == [c.path for c in b]
     tmp.cleanup()
+
+
+def test_stage_a_excludes_non_code_assets_for_code_query():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    corr = root / "src/main/java/com/mindarray/aiops/correlation"
+    _touch(corr / "APIServer.java", "public class APIServer { void route() {} }\n")
+    _touch(corr / "CorrelationEngine.java", "public class CorrelationEngine { void run() {} }\n")
+    _touch(corr / "availability.png", "png")
+    _touch(corr / "icon.svg", "<svg></svg>")
+    for i in range(24):
+        _touch(corr / f"Worker{i}.java", f"class Worker{i} {{ void correlation() {{}} }}\n")
+    idx = _idx_for(root)
+    r = retrieve_lexical(
+        idx,
+        "APIServer correlation debugging",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="ASK",
+    )
+    assert r.stage_a_meta is not None
+    pool_paths = [str(c.get("path") or "") for c in r.stage_a_meta.get("candidates", [])]
+    assert all(not p.lower().endswith((".png", ".svg")) for p in pool_paths)
+    assert all(not h.relative_path.lower().endswith((".png", ".svg")) for h in r.hits[:8])
+    tmp.cleanup()
+
+
+def test_owner_path_promoted_into_top3_for_symbol_anchored_query():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    base = root / "src/main/java/com/mindarray/aiops/correlation"
+    owner = "src/main/java/com/mindarray/aiops/correlation/OwnershipDelegate.java"
+    _touch(root / owner, "public class OwnershipDelegate { void noop() {} }\n")
+    for i in range(12):
+        _touch(
+            base / f"FooBarServiceHeavy{i}.java",
+            "public class FooBarServiceHeavy { void x() {} }\n"
+            + ("foobarservice timeout incident " * 50),
+        )
+    idx = _idx_for(root)
+    r = retrieve_lexical(
+        idx,
+        "FooBarService timeout incident",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="ASK",
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    top3 = [h.relative_path for h in r.hits[:3]]
+    assert owner in top3
+    tmp.cleanup()
+
+
+def test_local_neighbor_seeding_prefers_code_neighbors():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    pkg = root / "src/main/java/com/mindarray/aiops/correlation"
+    selected = "src/main/java/com/mindarray/aiops/correlation/Picked.java"
+    _touch(root / selected, "public class Picked { void fail() {} }\n")
+    _touch(pkg / "NeighborCode.java", "public class NeighborCode { void fail() {} }\n")
+    _touch(pkg / "availability.png", "png")
+    _touch(pkg / "notes.txt", "debug notes")
+    idx = _idx_for(root)
+    r = retrieve_lexical(
+        idx,
+        "debug Picked failure",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="EXPLAIN_DEBUG",
+        selected_file=selected,
+    )
+    assert r.stage_a_meta is not None
+    local_paths = [
+        str(c.get("path") or "")
+        for c in r.stage_a_meta.get("candidates", [])
+        if str(c.get("lane") or "") == "local_seed"
+    ]
+    assert "src/main/java/com/mindarray/aiops/correlation/NeighborCode.java" in local_paths
+    assert all(not p.lower().endswith((".png", ".txt")) for p in local_paths)
+    tmp.cleanup()

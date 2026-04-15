@@ -46,6 +46,83 @@ _CONFIG_EXTENSIONS: FrozenSet[str] = frozenset(
     {".yaml", ".yml", ".json", ".toml", ".ini", ".cfg", ".conf", ".properties"}
 )
 
+_CODE_BEARING_EXTENSIONS: FrozenSet[str] = frozenset(
+    {
+        ".java",
+        ".kt",
+        ".scala",
+        ".groovy",
+        ".py",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".c",
+        ".cc",
+        ".cpp",
+        ".h",
+        ".hpp",
+        ".cs",
+        ".go",
+        ".rs",
+        ".swift",
+        ".sql",
+        ".sh",
+        ".bash",
+    }
+)
+
+_NON_CODE_ASSET_EXTENSIONS: FrozenSet[str] = frozenset(
+    {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp",
+        ".bmp",
+        ".ico",
+        ".svg",
+        ".pdf",
+        ".zip",
+        ".tar",
+        ".gz",
+        ".7z",
+        ".mp3",
+        ".mp4",
+        ".mov",
+        ".avi",
+        ".woff",
+        ".woff2",
+        ".ttf",
+        ".eot",
+        ".otf",
+    }
+)
+
+_NON_CODE_ASSET_QUERY_TOKENS: FrozenSet[str] = frozenset(
+    {
+        "image",
+        "images",
+        "icon",
+        "icons",
+        "asset",
+        "assets",
+        "logo",
+        "logos",
+        "screenshot",
+        "screenshots",
+        "png",
+        "jpg",
+        "jpeg",
+        "svg",
+        "gif",
+        "webp",
+        "pdf",
+        "font",
+        "fonts",
+    }
+)
+
 _SUBSYSTEM_KEYWORDS = {
     "alerting": frozenset({"alert", "alerts", "dedup", "dedupe", "notification"}),
     "correlation": frozenset({"correlation", "correlate", "incident", "rca"}),
@@ -250,4 +327,26 @@ def looks_like_symbol_token(token: str) -> bool:
 
 def is_noise_class(file_class: str) -> bool:
     return file_class in {"tests", "logs", "vendor_static", "generated_metrics_data"}
+
+
+def is_code_bearing_path(relative_path: str) -> bool:
+    ext = Path(relative_path).suffix.lower()
+    return ext in _CODE_BEARING_EXTENSIONS
+
+
+def is_non_code_asset_path(relative_path: str) -> bool:
+    ext = Path(relative_path).suffix.lower()
+    if ext in _NON_CODE_ASSET_EXTENSIONS:
+        return True
+    rel = relative_path.lower()
+    parts = tuple(part for part in Path(rel).parts if part)
+    if any(part in {"assets", "images", "img", "static", "public"} for part in parts):
+        return ext not in _CODE_BEARING_EXTENSIONS
+    return False
+
+
+def query_explicit_non_code_asset_intent(tokens: Tuple[str, ...]) -> bool:
+    if not tokens:
+        return False
+    return bool(set(tokens).intersection(_NON_CODE_ASSET_QUERY_TOKENS))
 

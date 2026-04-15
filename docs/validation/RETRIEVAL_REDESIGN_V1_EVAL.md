@@ -41,6 +41,21 @@ Captured from `python3 runtime/scripts/motadata_behavior_verify.py --workspace-r
 
 **Verdict vs v1 on this eval set:** numeric ratios and path lists match the prior v1 capture; **no measured retrieval delta** for v1.1. Instrumentation is clearer (canonical metric keys); behavior outcome unchanged.
 
+### Stage A v2 — A/B (`--export-stage-a`, WSL, 2026-04-15)
+
+**Purpose:** Prove that turning Stage A **off** vs **on** changes retrieval inputs (not only client env — use HTTP `enable_stage_a_v2` via `motadata_behavior_verify.py --export-stage-a off|on`; context layer must include that handler, e.g. commit `70d0d6d`).
+
+**Artifacts:** `runtime/.run/motadata_behavior_validation.stage_a_off.json` vs `stage_a_on.json`; diff: `python3 runtime/scripts/diff_motadata_behavior_validation.py …`.
+
+**Observed (off → on):**
+
+- **`stage_a`:** empty snapshot vs filled `lane_counts` + 20 `pool_paths` (telemetry path works).
+- **`ask_broad_correlation` context bundle:** same 8 paths except **last slot** — `PolicyCacheServiceImpl` → `MicrosoftTeamsNotification`.
+- **`ask_symbol_anchored` context bundle:** same 8 paths except **one slot** — `APIServer` → `availability.png`.
+- **`ask_symbol_anchored` retrieval_metrics:** `generic_infra_ratio` **0.125 → 0.0**; `anchor_hit_rate_at_k` **1.0 → 0.875**.
+
+**Takeaway:** A/B is valid (bundle and metrics move); movement is **small** (mostly one-path swaps in top-8), not a full broad-ask rescue — consistent with Stage A scope.
+
 ---
 
 ## How to use

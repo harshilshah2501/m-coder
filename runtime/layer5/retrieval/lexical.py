@@ -671,6 +671,45 @@ def _apply_top_k_symbol_owner_correction(
     return tops
 
 
+def _apply_top_k_owner_injection_correction(
+    tops: List[RetrievalHit],
+    full_sorted_hits: List[RetrievalHit],
+    top_k: int,
+    *,
+    owner_path: str,
+    symbol_tokens: Tuple[str, ...],
+) -> List[RetrievalHit]:
+    """
+    Stage A v2.1 narrow correction: for anchored owner/class asks, ensure the authority
+    owner has a path into top-3 when it exists in the ranked pool.
+    """
+    if top_k <= 0 or not tops or not owner_path:
+        return tops
+    if len(tops) < 3:
+        return tops
+    if not symbol_tokens:
+        return tops
+    owner_n = owner_path.lower().strip()
+    if not owner_n:
+        return tops
+    if any(h.relative_path.lower() == owner_n for h in tops[:3]):
+        return tops
+    owner_hit: RetrievalHit | None = None
+    for h in full_sorted_hits:
+        if h.relative_path.lower() == owner_n:
+            owner_hit = h
+            break
+    if owner_hit is None:
+        return tops
+    in_tops_idx = next((i for i, h in enumerate(tops) if h.relative_path.lower() == owner_n), None)
+    replace_i = min(range(3), key=lambda i: (tops[i].score, tops[i].relative_path))
+    if in_tops_idx is not None:
+        tops[replace_i], tops[in_tops_idx] = tops[in_tops_idx], tops[replace_i]
+    else:
+        tops[replace_i] = owner_hit
+    return tops
+
+
 def _score_entry(
     entry: FileIndexEntry,
     tokens: Tuple[str, ...],
@@ -967,6 +1006,11 @@ def retrieve_lexical(
     tokens = normalize_query(query, min_token_len=cfg.min_token_len)
     intent = classify_intent(query)
     intent_type = intent.intent_type
+    owner_path = ""
+    if isinstance(authority_resolution, Mapping):
+        po = authority_resolution.get("primary_owner")
+        if isinstance(po, Mapping):
+            owner_path = str(po.get("file") or "")
 
     if top_k <= 0:
         return RetrievalResult(
@@ -1031,6 +1075,13 @@ def retrieve_lexical(
             corrected = _apply_top_k_symbol_owner_correction(corrected, top_k, intent.symbol_tokens)
         else:
             corrected = _apply_top_k_symbol_owner_correction(working, top_k, intent.symbol_tokens)
+        corrected = _apply_top_k_owner_injection_correction(
+            corrected,
+            working,
+            top_k,
+            owner_path=owner_path,
+            symbol_tokens=intent.symbol_tokens,
+        )
         if cfg.enable_engineering_intent_top_k_composition and intent_type in (
             CODE_INTENT,
             DEBUG_INTENT,
