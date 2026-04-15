@@ -124,6 +124,17 @@ Stack control:
 ./scripts/wsl_plugin_mvp_stack.sh down
 ```
 
+**Authority registry vs workspace (recommended before scenario runs):**  
+Layer-5 authority resolves concepts from `[runtime/layer5/authority/product_authority_registry.yaml](../../runtime/layer5/authority/product_authority_registry.yaml)`, but retrieval can only inject files that exist in the **indexed** workspace. Run this check against your real Motadata tree so stale or sample paths are caught before `export_evidence` / `motadata_behavior_verify`:
+
+```bash
+export PYTHONPATH="$M_CODER_ROOT"
+python3 runtime/scripts/lint_authority_registry_paths.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}"
+```
+
+Exit code `0` means every `primary_owner`, `collaborator`, `forbidden_distractor`, and `entry_point` file path exists as a regular file under `workspace-root`. Non-zero lists missing paths (fix the YAML or your checkout).
+
 ---
 
 ## 5) API behavior map (capability to endpoint)
