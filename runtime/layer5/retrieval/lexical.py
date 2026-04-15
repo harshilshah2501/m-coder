@@ -41,7 +41,11 @@ from runtime.layer5.retrieval.policy import (
     query_ingestion_focus,
     query_topology_focus,
 )
-from runtime.layer5.retrieval.path_resolve import paths_match_workspace, resolve_path_in_set
+from runtime.layer5.retrieval.path_resolve import (
+    paths_match_workspace,
+    resolve_owner_path_in_index,
+    resolve_path_in_set,
+)
 from runtime.layer5.retrieval.query import normalize_query
 from runtime.layer5.retrieval.rank_nudge import deterministic_rank_nudge
 
@@ -678,6 +682,7 @@ def _apply_top_k_owner_injection_correction(
     top_k: int,
     *,
     owner_path: str,
+    owner_class: str = "",
 ) -> List[RetrievalHit]:
     """
     v2.1.2: When ``authority_resolution.primary_owner.file`` is set, ensure that path
@@ -695,18 +700,24 @@ def _apply_top_k_owner_injection_correction(
     path_set = {h.relative_path for h in full_sorted_hits}
     owner_resolved = resolve_path_in_set(owner_path, path_set)
     if not owner_resolved:
+        owner_resolved = resolve_owner_path_in_index(
+            owner_path,
+            path_set,
+            owner_class=owner_class.strip() or None,
+        )
+    if not owner_resolved:
         return tops
-    if any(paths_match_workspace(owner_path, h.relative_path) for h in tops[:3]):
+    if any(h.relative_path == owner_resolved for h in tops[:3]):
         return tops
     owner_hit: RetrievalHit | None = None
     for h in full_sorted_hits:
-        if paths_match_workspace(owner_path, h.relative_path):
+        if h.relative_path == owner_resolved:
             owner_hit = h
             break
     if owner_hit is None:
         return tops
     in_tops_idx = next(
-        (i for i, h in enumerate(tops) if paths_match_workspace(owner_path, h.relative_path)),
+        (i for i, h in enumerate(tops) if h.relative_path == owner_resolved),
         None,
     )
     replace_i = min(range(3), key=lambda i: (tops[i].score, tops[i].relative_path))
@@ -1082,11 +1093,17 @@ def retrieve_lexical(
             corrected = _apply_top_k_symbol_owner_correction(corrected, top_k, intent.symbol_tokens)
         else:
             corrected = _apply_top_k_symbol_owner_correction(working, top_k, intent.symbol_tokens)
+        owner_class = ""
+        if isinstance(authority_resolution, Mapping):
+            po = authority_resolution.get("primary_owner")
+            if isinstance(po, Mapping):
+                owner_class = str(po.get("class") or "")
         corrected = _apply_top_k_owner_injection_correction(
             corrected,
             working,
             top_k,
             owner_path=owner_path,
+            owner_class=owner_class,
         )
         if cfg.enable_engineering_intent_top_k_composition and intent_type in (
             CODE_INTENT,

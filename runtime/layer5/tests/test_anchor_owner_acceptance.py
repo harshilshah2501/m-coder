@@ -16,7 +16,7 @@ from runtime.layer5.authority.registry_loader import load_registry
 from runtime.layer5.index import build_file_index
 from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
 from runtime.layer5.retrieval.effective_intent import resolve_lexical_task_type
-from runtime.layer5.retrieval.path_resolve import paths_match_workspace
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace, resolve_owner_path_in_index
 from runtime.layer5.workspace.identity import WorkspaceIdentity
 
 
@@ -34,6 +34,20 @@ def _idx_for(root: Path):
         is_git_repo=False,
     )
     return build_file_index(ident)
+
+
+def test_resolve_owner_path_falls_back_when_registry_path_stale():
+    """Registry YAML path may not match index layout; basename + class disambiguate."""
+    path_set = {
+        "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+    }
+    stale = "motadata/legacy/removed/AlertCorrelationEngine.java"
+    r = resolve_owner_path_in_index(
+        stale,
+        path_set,
+        owner_class="AlertCorrelationEngine",
+    )
+    assert r == "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
 
 
 def test_match_concepts_finds_alert_correlation_by_class_name():

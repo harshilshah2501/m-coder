@@ -24,7 +24,7 @@ from runtime.layer5.retrieval.effective_intent import (
     EffectiveIntent,
 )
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
-from runtime.layer5.retrieval.path_resolve import paths_match_workspace
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace, resolve_owner_path_in_index
 from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_query_subsystems,
@@ -439,6 +439,11 @@ def fuse_and_filter(
     hits_list = list(retrieval.hits)
     owner_path = _owner_from_resolution(authority_resolution)
     if index is not None and owner_path:
+        ps = {e.relative_path for e in index.files}
+        oc = _owner_class_from_resolution(authority_resolution)
+        resolved_owner = resolve_owner_path_in_index(owner_path, ps, owner_class=oc)
+        if resolved_owner:
+            owner_path = resolved_owner
         hits_list = _ensure_owner_present(hits_list, owner_path, index)
 
     by_path = {h.relative_path: h for h in hits_list}
@@ -579,6 +584,16 @@ def _owner_from_resolution(authority_resolution: Optional[Dict[str, Any]]) -> Op
         return None
     f = str(po.get("file") or "").strip()
     return f or None
+
+
+def _owner_class_from_resolution(authority_resolution: Optional[Dict[str, Any]]) -> Optional[str]:
+    if not authority_resolution:
+        return None
+    po = authority_resolution.get("primary_owner")
+    if not isinstance(po, dict):
+        return None
+    c = str(po.get("class") or "").strip()
+    return c or None
 
 
 def fusion_authority_note() -> str:

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from runtime.layer5.index.models import FileIndexEntry, WorkspaceFileIndex
 from runtime.layer5.retrieval.intent import classify_intent
-from runtime.layer5.retrieval.path_resolve import resolve_path_in_set
+from runtime.layer5.retrieval.path_resolve import resolve_owner_path_in_index, resolve_path_in_set
 from runtime.layer5.retrieval.models import RetrievalHit
 from runtime.layer5.retrieval.policy import (
     classify_file,
@@ -118,6 +118,28 @@ def _primary_owner_file(authority_resolution: Optional[Mapping[str, Any]]) -> Op
 
 def _path_in_index(norm: str, path_set: Set[str]) -> Optional[str]:
     return resolve_path_in_set(norm, path_set)
+
+
+def _owner_class_from_authority(authority_resolution: Optional[Mapping[str, Any]]) -> Optional[str]:
+    if not authority_resolution:
+        return None
+    po = authority_resolution.get("primary_owner")
+    if not isinstance(po, Mapping):
+        return None
+    c = str(po.get("class") or "").strip()
+    return c or None
+
+
+def _resolve_owner_primary_path(
+    owner_path: str,
+    path_set: Set[str],
+    authority_resolution: Optional[Mapping[str, Any]],
+) -> Optional[str]:
+    return resolve_owner_path_in_index(
+        _norm_rel(owner_path),
+        path_set,
+        owner_class=_owner_class_from_authority(authority_resolution),
+    )
 
 
 @dataclass(frozen=True)
@@ -539,7 +561,7 @@ def generate_candidates(
     anchored_owner_like = bool(intent.symbol_tokens) or bool(owner_path)
     owner_cands: List[StageCandidate] = []
     if owner_path:
-        resolved = _path_in_index(_norm_rel(owner_path), path_set)
+        resolved = _resolve_owner_primary_path(owner_path, path_set, authority_resolution)
         if resolved and _candidate_eligible_for_task(
             resolved,
             anchored_owner_like=anchored_owner_like,
@@ -698,7 +720,7 @@ def generate_candidates(
 
     resolved_owner_path: Optional[str] = None
     if owner_path:
-        resolved_owner_path = _path_in_index(_norm_rel(owner_path), path_set)
+        resolved_owner_path = _resolve_owner_primary_path(owner_path, path_set, authority_resolution)
     owner_in_pool = bool(resolved_owner_path) and any(c.path == resolved_owner_path for c in deduped)
     authority_owner_trace: Dict[str, Any] = {
         "primary_owner_file": owner_path or "",
