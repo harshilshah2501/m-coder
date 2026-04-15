@@ -1,14 +1,14 @@
-# 4-Layer Core Architecture — Directory Philosophy
+# 4-Layer Core Architecture + Layer-5 Product Extension — Directory Philosophy
 
 **Doc status:** canonical-current.
 
-**Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
+**Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md) — **sole canonical** architecture gateway; this document details **directory mapping** and boundaries (secondary to the spec + [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) for status).
 
 ## Purpose & Scope
 
-This document provides **structural clarity** for the m-coder 4-layer core architecture. It defines the four layers, directory mapping, allowed/forbidden boundaries, and axis separation between constitutional phases and pipeline stages. Product extension tracks (Layer-5 workspace intelligence and Stage 2.5 assist advisory layer) are governed by the live tracker and product-slice docs, and do not redefine the 4-layer constitutional core. **No doctrine change.** Constitutional semantics (REF, CONF, DES, MIX, CODE, REACH), dominance rules, exemplar counts, and policy gates remain defined in canonical sources only.
+This document provides **structural clarity** for the m-coder **four-layer constitutional core** and the **Layer-5 product extension** (workspace intelligence). It defines directory mapping, allowed/forbidden boundaries, and axis separation between constitutional phases and pipeline stages. **Layer-5** (indexing, evidence bundles, Context Layer, optional Assist advisory) is a **product surface** documented here and in [PRODUCT_SLICE.md](PRODUCT_SLICE.md); it **does not** add a fifth constitutional governance layer or redefine REF/CONF/DES/MIX/CODE/REACH. Product extension tracks are also governed by the live tracker. **No doctrine change.** Constitutional semantics, dominance rules, exemplar counts, and policy gates remain defined in canonical sources only.
 
-## 4 Layers Overview
+## Four-layer constitutional core (overview)
 
 | Layer | Name | Role |
 |-------|------|------|
@@ -17,14 +17,23 @@ This document provides **structural clarity** for the m-coder 4-layer core archi
 | 3 | Runtime | Enforcement; Phase-05 CODE realization |
 | 4 | Observation | Drift detection; collapse vectors; GREG triggers |
 
+## Layer-5 — workspace intelligence (product extension)
+
+| Layer | Name | Role |
+|-------|------|------|
+| 5 | Workspace intelligence | Workspace-local indexing and retrieval; deterministic evidence assembly; **`layer5.evidence_bundle.v1`** into Plan-Gate; Context Layer HTTP; Stage 2.5 **Assist** (advisory-only, no runtime doctrine authority) |
+
+Layer-5 implements **Motadata-shaped** workspace understanding **before** governed Ask/Execute; **Plan-Gate (Layer-3)** remains authoritative for governance posture, routing, and execution honesty. See [MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md) for deployment split (GPU / WSL / plugin).
+
 ## Directory Mapping
 
 | Layer | Directory | Role |
 |-------|-----------|------|
 | 1 | `governance/` | Constitution, phases 01–06, GREG ratification, golden exemplar doctrine |
 | 2 | `ml/` | Compilation bases, variants, mutation harness, dataset compiler, freeze artifacts, SFT |
-| 3 | `runtime/` | Enforcement stack; Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface; Phase-05 CODE semantics |
+| 3 | `runtime/` (core enforcement) | Enforcement stack; Runtime Governor, Task State Store, Deterministic Agent Loop, Repository Context Engine, Execution Sandbox, Model Worker Interface; Phase-05 CODE semantics |
 | 4 | `observation/` | Drift probes; collapse vector tracking; ledger reconciliation; GREG audit evidence |
+| 5 | `runtime/context_layer_service/`, `runtime/layer5/`, `packaging/motadata-context-layer/`, `runtime/assist_layer/` | Context Layer service, evidence bundle contract, installable wheel, Assist advisory code paths |
 
 ## Allowed vs Forbidden per Layer
 
@@ -61,13 +70,23 @@ This document provides **structural clarity** for the m-coder 4-layer core archi
 - **Model as bounded worker:** Through the Model Worker Interface the model provides structured proposals only (plans, diffs, explanations) over runtime-owned context from the Repository Context Engine; it never owns control flow, state transitions, or execution.
 - **Execution Sandbox for side effects:** All external actions (tests, tools, commands) run inside an Execution Sandbox owned by the runtime; irreversible effects are guarded by authority and boundary checks and are always ledgered for Layer-4 observation.
 
-**Governed execution boundary:** User-triggered or agent-triggered governed execution **must** flow through SandboxExecutor (Plan-Gate → sandbox → ledger). Subprocess or command execution in `runtime/rag/` (e.g. compiler tools, API helpers) is **out-of-band tooling** only. It must not be used for governed execution and must not be treated as part of the Plan-Gate / SandboxExecutor path.
+**Governed execution boundary:** User-triggered or agent-triggered governed execution **must** flow through SandboxExecutor (Plan-Gate → sandbox → ledger). Subprocess or command execution in `archive/legacy_runtime_rag/` (e.g. compiler tools, API helpers) is **out-of-band tooling** only. It must not be used for governed execution and must not be treated as part of the Plan-Gate / SandboxExecutor path.
 
 ### Layer-4: observation/
 
 **Allowed:** Drift probes, collapse vector tracking, ledger reconciliation, coverage analytics, GREG audit evidence.
 
 **Forbidden:** Authoring doctrine; relaxing boundaries; redefining phase semantics. Observation can **only** trigger GREG; it cannot author exemplars or change judgment.
+
+### Layer-5: workspace intelligence (product extension)
+
+**Not** a fifth constitutional layer alongside L1–L4. Layer-5 is **product and packaging** for workspace truth: export_evidence, bundle schemas, retrieval, and optional Assist overlays. It **must not** redefine doctrine, bypass Plan-Gate checks, or treat Assist as binding governance.
+
+**Allowed:** Deterministic evidence bundles; Context Layer HTTP API; indexing/ranking contracts aligned with [PRODUCT_SLICE.md](PRODUCT_SLICE.md); Assist as **advisory** augmentation only.
+
+**Forbidden:** Silent downgrade of governance fields; implying Assist or retrieval **replaces** Layer-3 authority; using `archive/legacy_runtime_rag/` as the primary governed product path (see Layer-3 runtime notes).
+
+**See:** [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) (Layer-5 milestones), [PRODUCT_SLICE.md](PRODUCT_SLICE.md), [REPO_REALITY_MAP.md](REPO_REALITY_MAP.md).
 
 ## Axis Separation
 

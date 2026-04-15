@@ -13,7 +13,7 @@ Inspect dependency manifests, container image references, plugin build files, an
 
 ## Surfaces Inspected
 
-- **Python:** `runtime/rag/requirements.txt`, `ml/training/requirements.txt`, `ml/training/pipeline/stage6/pyproject.toml`
+- **Python:** `archive/legacy_runtime_rag/requirements.txt`, `ml/training/requirements.txt`, `ml/training/pipeline/stage6/pyproject.toml`
 - **Plugin:** `jetbrains-plugin/build.gradle.kts` (dependencies block, repositories)
 - **Container:** `runtime/sandbox/container_sandbox_driver.py` (image and runtime references)
 - **Artifacts:** `ml/training/artifacts/artifact_store.yaml` (backend, env-based secrets)
@@ -27,7 +27,7 @@ Inspect dependency manifests, container image references, plugin build files, an
 
 | File | Pinning | Notes |
 |------|---------|--------|
-| `runtime/rag/requirements.txt` | Minimum versions only (`>=`) | fastapi>=0.104.0, torch>=2.0.0, etc. No exact pins; installs can drift across runs. |
+| `archive/legacy_runtime_rag/requirements.txt` | Minimum versions only (`>=`) | fastapi>=0.104.0, torch>=2.0.0, etc. No exact pins; installs can drift across runs. |
 | `ml/training/requirements.txt` | Minimum versions only (`>=`) | transformers>=4.35.0, torch>=2.0.0, etc. Same as above. |
 | `ml/training/pipeline/stage6/pyproject.toml` | No version deps in `dependencies = []` | Optional `yaml = ["pyyaml"]`; build-system setuptools>=61. Minimal surface. |
 

@@ -1,0 +1,130 @@
+{
+  "schema_version": "motadata_developer_utility_scenarios.v1",
+  "purpose": "Evaluate developer usefulness of Ask/Debug/Plan on Motadata-shaped tasks. This is not a transport/contract-only suite.",
+  "notes": [
+    "This suite is utility-focused, not closure-authority by itself.",
+    "Broad exploratory questions may legitimately return WEAK evidence.",
+    "Anchored questions should usually achieve stronger grounding and tighter file relevance.",
+    "Do not use this suite to over-claim Stage3LoopController end-to-end product utility.",
+    "Assertions marked heuristic in verifier output are approximate; tune scenarios when the model or retrieval shifts."
+  ],
+  "defaults": {
+    "top_k": 8
+  },
+  "scenarios": [
+    {
+      "id": "ask_owner_alert_correlation_anchored",
+      "capability": "ask",
+      "description": "Anchored ask: identify the primary owner for alert correlation logic.",
+      "inputs": {
+        "task_type": "QUERY",
+        "query": "Which class is the primary implementation owner for alert correlation logic?",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "ask_path": "v1_evidence",
+        "execution": false,
+        "governance_posture": "PLAN_ONLY",
+        "min_plan_steps": 3,
+        "min_evidence_quality": "STRONG",
+        "required_text_contains_any": [
+          "AlertCorrelationEngine",
+          "alert correlation"
+        ],
+        "required_paths_any": [
+          "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+        ],
+        "forbidden_paths_any": [
+          "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+        ],
+        "must_distinguish_owner_vs_supporting": true,
+        "max_distractor_paths": 2
+      }
+    },
+    {
+      "id": "ask_broad_correlation_exploratory",
+      "capability": "ask",
+      "description": "Broad ask: system may be weak, but must be honest and non-overclaiming.",
+      "inputs": {
+        "task_type": "QUERY",
+        "query": "How does alert correlation and enrichment work?",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "ask_path": "v1_evidence",
+        "execution": false,
+        "governance_posture": "PLAN_ONLY",
+        "min_plan_steps": 2,
+        "allowed_evidence_quality_any": [
+          "WEAK",
+          "STRONG",
+          "MODERATE"
+        ],
+        "must_include_honesty_if_weak": true,
+        "required_text_contains_any": [
+          "provisional",
+          "verify against the current codebase",
+          "Evidence quality is WEAK",
+          "WEAK"
+        ],
+        "must_not_overclaim_if_weak": true
+      }
+    },
+    {
+      "id": "debug_enrichment_skip_anchored",
+      "capability": "debug",
+      "description": "Anchored debug: investigate why enrichment might be skipped using explicit file or symbol context.",
+      "inputs": {
+        "task_type": "EXPLAIN_DEBUG",
+        "query": "Why might incident enrichment be skipped in alert correlation flow?",
+        "workspace_root": "/home/harshil/Projects/Motadata",
+        "active_file": "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java",
+        "selection_text": "Investigate likely skip conditions for enrichment and correlation flow."
+      },
+      "utility_expect": {
+        "routing_mode": "explain_debug",
+        "required_explain_keys": [
+          "summary",
+          "logic_flow",
+          "likely_bug_risk"
+        ],
+        "must_reference_selected_file_or_symbol": true,
+        "required_text_contains_any": [
+          "AlertCorrelationEngine",
+          "correlation",
+          "enrichment",
+          "skip"
+        ],
+        "must_not_admit_missing_context_without_next_step": true,
+        "must_suggest_concrete_failure_points": true
+      }
+    },
+    {
+      "id": "plan_bounded_logging_change",
+      "capability": "plan",
+      "description": "Bounded engineering plan: add non-invasive logging around correlation skip cases.",
+      "inputs": {
+        "intent": "Prepare a bounded plan to add debug logging around alert correlation skip cases without changing behavior.",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "schema_version": "decision_response.v0.1",
+        "decision_present": true,
+        "allowed_decisions_any": [
+          "REFUSAL",
+          "CONDITIONAL_BLOCK",
+          "APPROVE",
+          "BOUNDING"
+        ],
+        "must_identify_candidate_files": true,
+        "required_text_contains_any": [
+          "logging",
+          "correlation",
+          "risk",
+          "validation"
+        ],
+        "must_include_risk_or_guardrail": true
+      }
+    }
+  ]
+}

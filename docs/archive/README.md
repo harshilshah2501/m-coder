@@ -11,3 +11,4 @@ Material moved here is **obsolete, superseded, or non-canonical** — kept for h
 | [guides/](guides/) | Temporary integration guides (superseded by golden path when promoted) |
 | [tooling/](tooling/) | Process / review matrices (e.g. CodeRabbit coverage) |
 | [status/](status/) | Old session summaries, progress snapshots, one-off fix notes |
+| [legacy_runtime_rag/](../../archive/legacy_runtime_rag/) | **Retired** parallel FastAPI RAG stack (moved from `archive/legacy_runtime_rag/`, 2026-04-14); not canonical for Plan-Gate CLI slice |

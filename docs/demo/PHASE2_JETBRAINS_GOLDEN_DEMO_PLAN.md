@@ -20,7 +20,7 @@
 **Code references:**
 - Ask handler: [runtime/ask_service/handlers.py](runtime/ask_service/handlers.py) — currently uses PlanOnlyPlanner only.
 - Context bundle: [runtime/context/engine.py](runtime/context/engine.py), [runtime/context/contracts.py](runtime/context/contracts.py) — already provide file contents and provenance.
-- vLLM usage in repo: [runtime/rag/src/orchestrator/agents/request_analyzer.py](runtime/rag/src/orchestrator/agents/request_analyzer.py) — async httpx; we add a sync caller in ask_service to keep no new layers in plan_gate.
+- vLLM usage in repo: [archive/legacy_runtime_rag/src/orchestrator/agents/request_analyzer.py](archive/legacy_runtime_rag/src/orchestrator/agents/request_analyzer.py) — async httpx; we add a sync caller in ask_service to keep no new layers in plan_gate.
 
 ---
 

@@ -2,7 +2,18 @@
 
 **Doc status:** canonical-current.
 
-Single entry point for the m-coder 4-layer core specification, with explicit product extension tracks (Layer-5 workspace intelligence and Stage 2.5 assist). Canonical specs live in the linked documents below; this document provides navigation and the Doctrine Immutability Clause.
+**This document is the sole canonical entry point** for m-coder system architecture: links below are authoritative for doctrine, layer specs, and contracts. Layer-5 is **not** a fifth constitutional doctrine layer; it extends the product without redefining REF/CONF/DES/MIX/CODE/REACH. Canonical specs live in the linked documents below; this document provides navigation and the Doctrine Immutability Clause.
+
+### Hierarchy of truth (documentation authority)
+
+| Authority | Document | Scope |
+|-----------|----------|--------|
+| **Primary — doctrine & architecture gateway** | **This file** (`MASTER_SYSTEM_SPEC.md`) | Final navigation to constitutional specs, component roles, immutability clause; **overrides narrative guides** for “what is binding.” |
+| **Primary — live status** | [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) | Milestone completion, branch truth (e.g. M3.12+ on integration lines vs `main`), artifact-backed closures. |
+| **Secondary — directory boundaries** | [ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md) | Allowed/forbidden per layer; L1–L5 directory mapping. |
+| **Supporting — validation scope** | [PRODUCT_SLICE.md](PRODUCT_SLICE.md) | What this proof pass treats as **IN** vs **DEFERRED_INTEGRATION** (e.g. CLI-first vs IDE as blocking gate). |
+
+**Supporting narrative (non-doctrinal):** [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md) — long-form walkthrough, demos, Appendix material; **does not** override this spec, the tracker, or `governance/CONSTITUTIONAL_MANIFEST_v1.0.md` for gates or doctrine.
 
 ---
 
@@ -21,16 +32,18 @@ Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CON
 
 ## Table of Contents
 
-1. [Layer Overview](#layer-overview)
-2. [Runtime-Governed Agent Architecture (Layer-3)](#runtime-governed-agent-architecture-layer-3)
-3. [Canonical Specifications](#canonical-specifications)
-4. [Supporting Documents](#supporting-documents)
-5. [Quick Links](#quick-links)
+1. [Hierarchy of truth (documentation authority)](#hierarchy-of-truth-documentation-authority)
+2. [Layer Overview](#layer-overview)
+3. [Runtime-Governed Agent Architecture (Layer-3)](#runtime-governed-agent-architecture-layer-3)
+4. [Canonical Specifications](#canonical-specifications)
+5. [Supporting Documents](#supporting-documents)
+6. [Quick Links](#quick-links)
 
 ---
 
 ## Layer Overview
 
+### Four-layer constitutional core
 
 | Layer | Name           | Role                                             |
 | ----- | -------------- | ------------------------------------------------ |
@@ -39,6 +52,13 @@ Doctrine lives in [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CON
 | 3     | Runtime        | Enforcement; Phase-05 CODE realization           |
 | 4     | Observation    | Drift detection; collapse vectors; GREG triggers |
 
+### Layer-5 (product extension — workspace intelligence)
+
+| Layer | Name                         | Role                                                                 |
+| ----- | ---------------------------- | -------------------------------------------------------------------- |
+| 5     | Workspace intelligence (L5) | Indexing, retrieval, **`layer5.evidence_bundle.v1`**, Context Layer HTTP toward Plan-Gate; Assist (Stage 2.5) **advisory-only** |
+
+Milestone status and evidence: [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) (Layer-5 section). Scope for validation: [PRODUCT_SLICE.md](PRODUCT_SLICE.md).
 
 **Axis separation:** Constitutional phases (REF, CONF, DES, MIX, CODE, REACH) are **orthogonal** to pipeline stages (Stage-1 through Stage-8). Stage-6 (mutation harness) ≠ Constitutional Phase-6 (REACH). See [PHASE_ALIGNMENT_TABLE_V0_1.md](PHASE_ALIGNMENT_TABLE_V0_1.md).
 
@@ -70,7 +90,8 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 | Document                                                                                                | Layer | Description                                                   |
 | ------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------- |
 | [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md)             | L1    | Phase definitions, dominance hierarchy, structural invariants |
-| [ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)                                                      | All   | 4-layer directory mapping, axis separation, allowed/forbidden |
+| [ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)                                                      | All   | 4-layer core + Layer-5 mapping, axis separation, allowed/forbidden |
+| [PRODUCT_SLICE.md](PRODUCT_SLICE.md)                                                                    | L5    | Product slice boundaries; Context Layer + evidence path in scope   |
 | [PHASE_ALIGNMENT_TABLE_V0_1.md](PHASE_ALIGNMENT_TABLE_V0_1.md)                                          | All   | Phase↔stage alignment (non-bijection)                         |
 | [governance/README.md](../governance/README.md)                                                        | L1    | Layer-1 index                                                 |
 | [COMPILATION/README.md](COMPILATION/README.md)                                                          | L2    | Layer-2 index; DAG, lineage, Stage-6, freeze                  |
@@ -97,7 +118,7 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 | Document                                                     | Purpose                                                    |
 | ------------------------------------------------------------ | ---------------------------------------------------------- |
 | [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md) | Master system guide — judgment, compilation, runtime, observation; Layer-3/Layer-4 demos (Appendix H) |
-| [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)           | Single live progress dashboard; milestone status and evidence |
+| [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)           | Single live progress dashboard; milestone status and evidence (includes Layer-5) |
 | [architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md) | LoRA adapter, checkpoint, merged model, and runtime package governance; DVC/HF/Ollama policy |
 | [GLOSSARY.md](GLOSSARY.md)                                   | CIM term definitions and schema references                 |
 | [NON_NEGOTIABLE_INVARIANTS.md](NON_NEGOTIABLE_INVARIANTS.md) | Fail-closed semantics, gate-down→block, append-only ledger |

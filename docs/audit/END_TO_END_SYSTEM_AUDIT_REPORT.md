@@ -60,7 +60,7 @@ The m-coder repo implements a **governed runtime stack** centered on a **stdlib 
 
 ### Duplicate / overlapping areas
 
-- **`runtime/rag/`** — FastAPI RAG API (`runtime/rag/src/api/rag_api.py` has `/health`, `/search/semantic`). **Not** the same as Plan-Gate or Context Layer HTTP. **Parallel stack.**
+- **`archive/legacy_runtime_rag/`** — FastAPI RAG API (`archive/legacy_runtime_rag/src/api/rag_api.py` has `/health`, `/search/semantic`). **Not** the same as Plan-Gate or Context Layer HTTP. **Parallel stack.**
 - **`runtime/plangate/`** (`PlanGateService`) — Used by **execute** path (`runtime/execute_service/handlers.py` imports). **Different** from `runtime/plan_gate_service/app.py` HTTP server (naming overlap).
 - **`archive/workspace_intelligence/spikes/`** vs **`runtime/layer5/`** — Archived spike retrieval vs **packaged** Layer-5 implementation.
 
@@ -298,7 +298,7 @@ The m-coder repo implements a **governed runtime stack** centered on a **stdlib 
 | POST | `/v1/chat/completions` | vLLM OpenAI | GPU | `reasoner.explain_debug` | **Active** |
 | GET | `/health` | RAG FastAPI | separate deployment | Unknown in this slice | **Parallel / not wired to plugin** |
 
-**Hidden / legacy:** RAG `/search/semantic`, orchestrator `/generate` (`runtime/rag/src/run_orchestrator.py`) — **not** part of JetBrains bridge.
+**Hidden / legacy:** RAG `/search/semantic`, orchestrator `/generate` (`archive/legacy_runtime_rag/src/run_orchestrator.py`) — **not** part of JetBrains bridge.
 
 ---
 

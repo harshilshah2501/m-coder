@@ -30,7 +30,7 @@ Orchestrator (LoopController / execute_service)
 - **SandboxDriver:** Abstraction (BaseSandboxDriver). Implementations: LocalProcessSandboxDriver (default), ContainerSandboxDriver. Driver only runs or validates; it does not emit ledger rows or build GovernedExecutionResult.
 - **Backend:** Concrete execution environment—subprocess (local) or container (podman/docker). No governance or ledger logic in the backend.
 
-No execution path may skip Orchestrator → Plan-Gate → SandboxExecutor → Driver → Backend. Subprocess or command execution in `runtime/rag/` or other out-of-band tooling is not part of this chain.
+No execution path may skip Orchestrator → Plan-Gate → SandboxExecutor → Driver → Backend. Subprocess or command execution in `archive/legacy_runtime_rag/` or other out-of-band tooling is not part of this chain.
 
 ---
 
@@ -44,7 +44,7 @@ Governed execution and execution-related orchestration are **only** allowed from
 | `runtime/execute_service/` | Plugin-facing `/v0/execute`; request handling, Plan-Gate call, sandbox invocation |
 | `runtime/shadow/` | Shadow runner, harness, baseline scenarios (validation only; does not run user commands through sandbox) |
 
-Any subprocess or command execution **outside** these locations must be documented as **non-governed tooling** and must not be used for governed execution. (Example: `runtime/rag/` subprocess use is out-of-band tooling; see §6.)
+Any subprocess or command execution **outside** these locations must be documented as **non-governed tooling** and must not be used for governed execution. (Example: `archive/legacy_runtime_rag/` subprocess use is out-of-band tooling; see §6.)
 
 ---
 
@@ -93,7 +93,7 @@ Shadow mode validates governance behavior without executing user commands throug
 ## 7. Governed execution vs non-governed tooling
 
 - **Governed execution:** User- or agent-triggered execution that must change state or run commands in the repo. Must flow through Plugin/API → Plan-Gate → SandboxExecutor → Driver → Backend. All such execution is ledgered and policy-bound.
-- **Non-governed tooling:** Subprocess or helper execution in `runtime/rag/` (e.g. compiler invocations, RAG index tools) or elsewhere that is not part of the Plan-Gate / SandboxExecutor path. Out-of-band only. Must not be used to fulfill governed execution requests; must not be treated as part of the canonical execution chain. CI must not invoke governed execution for user-supplied commands (see docs/reference/CI_EXECUTION_MODEL.md).
+- **Non-governed tooling:** Subprocess or helper execution in `archive/legacy_runtime_rag/` (e.g. compiler invocations, RAG index tools) or elsewhere that is not part of the Plan-Gate / SandboxExecutor path. Out-of-band only. Must not be used to fulfill governed execution requests; must not be treated as part of the canonical execution chain. CI must not invoke governed execution for user-supplied commands (see docs/reference/CI_EXECUTION_MODEL.md).
 
 ---
 

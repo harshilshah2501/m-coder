@@ -77,7 +77,7 @@ Rows are **runtime packages** (in-slice first). **Test files** lists primary `ru
 | **`runtime/emulator/`** | partial | `test_emulator_invariants.py` | Shadow/emulator | — | — | weak | Experimental |
 | **`runtime/replay/`** | partial | `test_execution_replay_service.py` | Replay | — | — | partial | — |
 | `runtime/intake/` | — | **removed** 2026-04-14 (orphan `__pycache__` only; no sources) | — | — | — | — | — |
-| **`runtime/rag/`** | partial | Collateral via L5 / context tests | B1 closed | B1 refs in tracker | — | partial | Not full hot-path isolation in one file |
+| **`archive/legacy_runtime_rag/`** | partial | Collateral via L5 / context tests | B1 closed | B1 refs in tracker | — | partial | Not full hot-path isolation in one file |
 
 ---
 

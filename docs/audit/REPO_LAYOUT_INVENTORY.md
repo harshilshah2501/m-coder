@@ -62,7 +62,7 @@
 |------|--------|------|--------------|------------------|------|----------------------|---------------------|---------------|
 | `runtime/layer5/` | ~243 | huge | canonical | yes | L5 evidence, ranking, harness | yes (L5.8 etc.) | `docs/validation/artifacts/` L5 | localhost_assumed |
 | `runtime/tests/` | ~131 | huge | canonical | yes | Primary pytest tree | partial | `runtime/tests/` | n/a |
-| `runtime/rag/` | ~57 | medium | partial | partial | RAG/orchestrator; not whole IDE path | B1 closed | B1 refs in tracker | wsl_workspace |
+| `archive/legacy_runtime_rag/` | ~57 | medium | partial | partial | RAG/orchestrator; not whole IDE path | B1 closed | B1 refs in tracker | wsl_workspace |
 | `runtime/plan_gate_stub/` | ~40 | medium | compatibility | no | Protocol/CLI emulator; **not** M3.3 gate | yes | stub tests | n/a |
 | `runtime/observation/` | ~38 | medium | canonical | yes | Runtime observation helpers | B4 closed | trace docs | localhost_assumed |
 | `runtime/schemas/` | ~27 | small | canonical | yes | JSON contracts | partial | schema validation tests | n/a |

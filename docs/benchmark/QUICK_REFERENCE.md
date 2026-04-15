@@ -11,10 +11,10 @@ bash runtime/scripts/governed_services.sh restart
 bash runtime/scripts/governed_services.sh status
 
 # View logs (repo layout)
-tail -f runtime/rag/logs/vllm.log
-tail -f runtime/rag/logs/rag_api.log
-tail -f runtime/rag/logs/api_wrapper.log
-tail -f runtime/rag/logs/monitor.log
+tail -f archive/legacy_runtime_rag/logs/vllm.log
+tail -f archive/legacy_runtime_rag/logs/rag_api.log
+tail -f archive/legacy_runtime_rag/logs/api_wrapper.log
+tail -f archive/legacy_runtime_rag/logs/monitor.log
 ```
 
 ### API Endpoints

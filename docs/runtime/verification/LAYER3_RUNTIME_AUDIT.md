@@ -39,7 +39,7 @@ Audit runtime execution chain (Orchestrator → Executor → Driver → Backend)
 
 ### Invariant 1 — No runtime bypass
 
-- **subprocess:** Found in `runtime/sandbox/container_sandbox_driver.py`, `runtime/sandbox/sandbox_runner.py` (governed execution path); in `runtime/rag/` (tests, compiler_tool, rag_api, performance_monitor) and in `runtime/plan_gate_stub/tests`, `runtime/plan_gate_service/tests`, `runtime/ci_gate/tests` (CLI/service tests). Governed user command execution flows only through sandbox drivers; RAG and tests use subprocess for tooling/CLI, not for Plan-Gate–governed execution.
+- **subprocess:** Found in `runtime/sandbox/container_sandbox_driver.py`, `runtime/sandbox/sandbox_runner.py` (governed execution path); in `archive/legacy_runtime_rag/` (tests, compiler_tool, rag_api, performance_monitor) and in `runtime/plan_gate_stub/tests`, `runtime/plan_gate_service/tests`, `runtime/ci_gate/tests` (CLI/service tests). Governed user command execution flows only through sandbox drivers; RAG and tests use subprocess for tooling/CLI, not for Plan-Gate–governed execution.
 - **os.system:** Not found in runtime/. **Verdict:** Invariant holds; execution only in sandbox driver (and test/utility code outside governed path).
 
 ### Invariant 2 — Fail-closed behavior
@@ -70,7 +70,7 @@ Searched for: `subprocess`, `os.system`, `eval(`, `exec(`, `pickle.load`, `yaml.
 | subprocess | runtime/tests/test_container_sandbox_driver.py | Expected | Mocking driver subprocess. |
 | subprocess | runtime/plan_gate_stub/tests, plan_gate_service/tests, ci_gate/tests | Expected | CLI/service tests. |
 | subprocess | runtime/execute_service/handlers.py | Expected | Comment only ("suitable for subprocess"); no direct call. |
-| .eval() | runtime/rag/src/api/rag_api.py (embed_model.eval()) | Expected | PyTorch eval mode, not Python eval(). |
+| .eval() | archive/legacy_runtime_rag/src/api/rag_api.py (embed_model.eval()) | Expected | PyTorch eval mode, not Python eval(). |
 | except Exception: pass | runtime/orchestrator/transition_executor.py:349 | Expected | Post-hooks; documented as "should not fail the transition". |
 | except Exception (decode fallback) | runtime/sandbox/sandbox_runner.py:220,225 | Expected | Decode errors for stdout/stderr; not execution errors. |
 
@@ -78,8 +78,8 @@ Searched for: `subprocess`, `os.system`, `eval(`, `exec(`, `pickle.load`, `yaml.
 
 | Pattern | Location | Classification | Notes |
 |--------|----------|----------------|--------|
-| subprocess | runtime/rag/src/utils/compiler_tool.py | Needs review | Runs compiler; not part of Plan-Gate sandbox. Ensure not used for user-supplied command execution. |
-| subprocess | runtime/rag/src/api/rag_api.py (execute_tool, check_syntax) | Needs review | RAG API tool execution; verify this is not the same as governed execute path or is clearly out-of-band. |
+| subprocess | archive/legacy_runtime_rag/src/utils/compiler_tool.py | Needs review | Runs compiler; not part of Plan-Gate sandbox. Ensure not used for user-supplied command execution. |
+| subprocess | archive/legacy_runtime_rag/src/api/rag_api.py (execute_tool, check_syntax) | Needs review | RAG API tool execution; verify this is not the same as governed execute path or is clearly out-of-band. |
 
 ### Risk classification
 
@@ -91,7 +91,7 @@ Searched for: `subprocess`, `os.system`, `eval(`, `exec(`, `pickle.load`, `yaml.
 
 ## 6. Risks
 
-- **RAG subprocess usage:** runtime/rag uses subprocess for compiler and API tools. These are outside the Plan-Gate/sandbox execution chain; ensure they are never used to execute user-supplied commands in a governed context without going through SandboxExecutor.
+- **RAG subprocess usage:** `archive/legacy_runtime_rag/` uses subprocess for compiler and API tools. These are outside the Plan-Gate/sandbox execution chain; ensure they are never used to execute user-supplied commands in a governed context without going through SandboxExecutor.
 - **Post-hook exception pass:** transition_executor.py line 349; acceptable per design but any critical post-hook logic would not fail the transition.
 
 ---

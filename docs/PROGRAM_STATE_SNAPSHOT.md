@@ -1,91 +1,63 @@
-# PROGRAM STATE SNAPSHOT — m-coder
+# PROGRAM_STATE_SNAPSHOT — portable continuity
 
-Last Updated: 2026-04-02
-
-**Canonical roadmap detail:** `docs/LIVE_ROADMAP_TRACKER.md` (this snapshot stays short; tracker owns milestone IDs and evidence pointers).
-
----
-
-## ✅ WHAT IS LOCKED (DO NOT REOPEN)
-
-- Stage 2 — Retrieval + Trust + Action Alignment → COMPLETE / LOCKED
-- PR-6 retrieval baseline → LOCKED
-- Deterministic retrieval → LOCKED
-- Evidence bundle contract (`layer5.evidence_bundle.v1`) → LOCKED
-- Layer-1 Governance → LOCKED
-- Layer-2 Compilation → COMPLETE / LOCKED
-- Layer-3 Runtime Core (M3.0–M3.11) → COMPLETE
-- Architecture boundaries → LOCKED
-- **L5.8 — grounded Ask validation harness + closure gate** → COMPLETE (tracker **B2**, **§6.19a**)
-- **Action 4 / 5 / 11** (plugin truthfulness, L5-OBS-1 HTTP, L5.9 path hardening) → CLOSED — tracker **§6.17–§6.19** (residual non-closure checklist items stay under tracker **§B3** / ops only)
+**Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE`  
+**Last updated:** 2026-04-14  
+**Detail & evidence IDs:** `docs/LIVE_ROADMAP_TRACKER.md` (this file stays short)
 
 ---
 
-## ⚙️ CURRENT ACTIVE WORK
+## Locked / completed (do not reopen without explicit charter change)
 
-Stage 3 — Controlled Runtime Loop (Hybrid Model)
-
-**Implementation status:** In-repo (**schemas, validators, state machine, loop controller, executor, ledger, tests** — see tracker **§6.20**). **Current phase:** **burn-in / validation / product integration**, not greenfield implementation (tracker **§B7**).
-
-Goal:
-
-- Runtime-owned reasoning loop (bounded, schema-driven)
-
-Not allowed:
-
-- agent autonomy
-- LLM-controlled loops
-
-Invariant:
-
-- All model outputs are untrusted until runtime validation passes
+- Stage 2 retrieval + trust alignment → **LOCKED**
+- PR-6 retrieval baseline → **LOCKED**
+- `layer5.evidence_bundle.v1` contract → **LOCKED**
+- Layer-1 Governance → **LOCKED**
+- Layer-2 Compilation → **COMPLETE / LOCKED**
+- Layer-3 runtime core M3.0–M3.11 → **COMPLETE** (per tracker)
+- L5.8 grounded Ask harness + closure gate → **COMPLETE** (B2)
+- B1 retrieval generalization program → **CLOSED** (tracker; residual warnings non-blocking)
+- B3 plugin truthfulness MVP bar → **CLOSED**; Phase-1 truth proof → **LOCKED**
+- B4 observability / trace reconstruction → **CLOSED**
+- B5 host readiness (WSL + native Linux placements) → **CLOSED**
+- B6 compatibility path hardening (L5.9) → **CLOSED**
+- B7 Stage 3 burn-in / acceptance → **CLOSED** (pytest + smokes; IDE E2E to Stage3 loop = follow-on)
+- Action 14 final acceptance → **PASS**
 
 ---
 
-## 🔧 CURRENT TASKS (IN PROGRESS)
+## Current active work (high level)
 
-- **§B1 / L5-RET** — retrieval generalization and expanded validation depth (Stage 2 reliability program; harness closure remains **locked**)
-- **Stage 3 loop** — burn-in, WSL/GPU governed-slice checks, integration acceptance — `docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md`
-- **L5-OBS-1** — HTTP path **closed**; any follow-through = operational logging / CI collection only (not a reopened Action 5)
-- **Plugin** — Action **4** **closed**; remaining gaps = tracker **§B3** / **§1.3** gates, not a reopened truthfulness project
-
----
-
-## ⏭️ NEXT TASKS (ORDERED)
-
-1. Stage 3 loop **burn-in completion** and **governed vertical slice** acceptance (pytest + operator runbook)
-2. **Direct product wiring** of `Stage3LoopController` where planned (separate milestone — not implied by burn-in alone)
-3. **§B1** expanded goldens / drift thresholds toward **Action 14** / deployment trust
-4. Host-profile and release sign-off per tracker
+- **Post-closure convergence:** controlled expansion from closed baseline; no reopened MVP gates without tracker amendment
+- **Retrieval:** baseline preservation + regression protection under L5-RET framing (not PR-6 reopen)
+- **Operational follow-through:** log packaging, CI hygiene, runbook maintenance (non-blocking)
 
 ---
 
-## 🚫 EXPLICITLY DEFERRED (DO NOT TOUCH)
+## Immediate next work (ordered)
 
-- embeddings / semantic retrieval
+1. Use **CLI/HTTP proof** (`docs/CLI_VALIDATION_MATRIX.md`) for regressions; **do not** require JetBrains UI for routine validation unless milestone says so  
+2. **Product wiring** of `Stage3LoopController` where planned — **separate** from burn-in closure (tracker)  
+3. Residual UX/docs items under §B3 checklist as **secondary** (not MVP gate reopen)
+
+---
+
+## Explicitly deferred (do not treat as open gates)
+
+- Embeddings / semantic retrieval as authority gate
 - Neo4j / graph DB
-- LangGraph / orchestration frameworks
+- LangGraph / external orchestration frameworks
 - LLM reranking
-- uncontrolled agent loops
+- Uncontrolled agent loops
+- **JetBrains UI** as the **default** proof surface for this program line (CLI-first until reopened)
 
 ---
 
-## 🧠 ARCHITECTURE TRUTH
+## Architecture truth (one paragraph)
 
-- WSL → source of code truth
-- Context Layer → workspace-local
-- GPU → Plan-Gate + vLLM
-- Runtime → control + state + governance
-- Plugin → thin client
+Workspace-side **Context Layer** (WSL or Linux) exports **versioned evidence**; **Plan-Gate + vLLM** run on **GPU**; **runtime** owns validation, execution honesty, and bounded loops; **IDE/plugin** is a thin client — **validation for this phase is HTTP/CLI-first.**
 
 ---
 
-## 🎯 DEFINITION OF SUCCESS (CURRENT PHASE)
+## Session rule
 
-System must be:
-
-- deterministic
-- truthful
-- grounded in evidence
-- capable of bounded reasoning (not autonomous agents)
-- **Stage 3 loop:** burn-in and integration evidence **without** claiming full product-path acceptance until wiring milestone is met (tracker **§B7**)
+If a session goal is “what is true / what is closed,” read **`docs/LIVE_ROADMAP_TRACKER.md`** first, then **`docs/SYSTEM_TRUTH.md`**. Do not re-derive closure from narrative handbooks alone.

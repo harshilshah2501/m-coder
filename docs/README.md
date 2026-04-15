@@ -108,9 +108,10 @@ Some subtrees under `ml/` or `scripts/` may not collect cleanly without extra de
   - Dataset analysis and recommendations
   - Audit reports
 
-### 🔌 RAG System
-- **[runtime/rag/](../runtime/rag/)** — **Implementation** (API, indexing, retrieval code in this repo)
-- **[rag/](rag/)** — Narrative / iteration notes (`ENHANCED_RAG_IMPLEMENTATION.md`, etc.); not a second code tree
+### 🔌 Legacy RAG stack (archived — non-canonical)
+- **Former `archive/legacy_runtime_rag/` implementation** → **[`archive/legacy_runtime_rag/`](../archive/legacy_runtime_rag/README.md)** (retired 2026-04-14). Not part of the Plan-Gate + Context Layer + Layer-5 slice; see `docs/SYSTEM_TRUTH.md`.
+- **Stub pointer:** [`archive/legacy_runtime_rag/README.md`](../archive/legacy_runtime_rag/README.md) (redirect only).
+- **[rag/](rag/)** — Narrative / iteration notes (`ENHANCED_RAG_IMPLEMENTATION.md`, etc.); not the code tree above
 
 ### 🏗️ Architecture & Design
 - **[architecture/](architecture/)** - System architecture and design
@@ -186,20 +187,14 @@ From repo root with **`runtime/config/demo_stack.env`** configured (**`VLLM_BASE
 
 See **`docs/guides/ORCHESTRATOR_GUIDE.md`**. Optional systemd: **`docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md`** (no unit file is shipped in-repo).
 
-### Test Endpoints
+### Test Endpoints (legacy RAG API — archived stack only)
+
+The **8081** FastAPI service lived under **`archive/legacy_runtime_rag/`** and is **not** the governed product path. For current validation use **`docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`** (Context Layer + Plan-Gate).
+
 ```bash
-# Health check
-curl http://localhost:8081/health
-
-# Chat with RAG context
-curl -X POST http://localhost:8081/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model": "motadata-coder", "messages": [{"role": "user", "content": "Which class is inherited by all API classes?"}]}'
-
-# Semantic search
-curl -X POST http://localhost:8081/search/semantic \
-  -H "Content-Type: application/json" \
-  -d '{"query": "email notification", "top_k": 5}'
+# Only if you explicitly run the archived RAG server from archive/legacy_runtime_rag/
+# curl http://localhost:8081/health
+# curl -X POST http://localhost:8081/v1/chat/completions ...
 ```
 
 ## Service Ports
@@ -208,7 +203,7 @@ curl -X POST http://localhost:8081/search/semantic \
 |---------|------|-------------|
 | vLLM Base | 8000 | LLM inference server |
 | vLLM Wrapper | 8080 | Anti-repetition wrapper |
-| RAG API | 8081 | Main API (OpenAI-compatible) |
+| Legacy RAG API (archived) | 8081 | Was `archive/legacy_runtime_rag/`; not canonical slice |
 | Qdrant | 6333 | Vector database |
 | Neo4j HTTP | 7474 | Graph database UI |
 | Neo4j Bolt | 7687 | Graph database driver |
@@ -237,12 +232,7 @@ If your deployment writes service logs next to a separate `rag/` checkout or cus
 - **[guides/ORCHESTRATOR_GUIDE.md](guides/ORCHESTRATOR_GUIDE.md)** — Governed stack (`governed_services.sh`)
 - **[guides/ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** — Optional systemd
 
-**Startup Sequence (automatic with health checks):**
-1. Docker containers (Qdrant + Neo4j) - waits for HTTP health (60s timeout)
-2. vLLM server (port 8000) - waits up to 180s for model load
-3. vLLM wrapper (port 8080) - waits for health (30s timeout)
-4. RAG API (port 8081) - waits for health (60s timeout)
-5. Health monitor
+**Startup Sequence (historical / optional legacy stack):** Some deployments chained Qdrant, Neo4j, wrapper, and a **8081** RAG API; that RAG implementation is now **`archive/legacy_runtime_rag/`** and is **not** started by `governed_services.sh`. For the canonical slice, use Context Layer + Plan-Gate + vLLM per `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
 
 **Startup Time:** ~90-120 seconds (mostly vLLM model loading)
 
@@ -252,7 +242,7 @@ If your deployment writes service logs next to a separate `rag/` checkout or cus
 | Governed launcher | `runtime/scripts/governed_services.sh` | vLLM + Plan-Gate |
 | vLLM | `venv/vllm/bin/python -m vllm.entrypoints.openai.api_server` | 8000 |
 | API Wrapper | `training/src/utils/api_server.py` | 8080 |
-| RAG API | `runtime/rag/src/api/rag_api.py` | 8081 |
+| Legacy RAG API (archived) | `archive/legacy_runtime_rag/src/api/rag_api.py` | 8081 (if revived) |
 | Qdrant | Docker container | 6333 |
 | Neo4j | Docker container | 7474 |
 
@@ -272,7 +262,7 @@ If your deployment writes service logs next to a separate `rag/` checkout or cus
 - 4-bit quantization during training caused catastrophic weight corruption during merge to 16-bit
 - Symptoms: 0% pass rate, 80% repetition loops, gibberish output ("{baselte")
 - Solution: Full precision training (bfloat16 throughout)
-- H100 GPU has 80GB memory, full precision only uses 17GB (21% utilization)
+- High-memory training GPU (e.g. 80GB class): full precision only uses ~17GB (21% utilization) in typical runs
 - **Lesson: Never mix quantization levels between training and deployment**
 
 **Documentation:**

@@ -1,6 +1,6 @@
 # Motadata AI Coding Assistant — Architecture & Behavior
 
-**Purpose:** Conceptual architecture, components, information flows, and contracts. **No** step-by-step deployment here — use the split docs below.
+**Purpose:** Conceptual architecture, components, information flows, and contracts. **No** step-by-step deployment here — use the split docs below. This doc is the primary **Layer-5–aware** deployment view (Context Layer, evidence-first Ask, GPU/WSL split); the **four-layer constitutional core** plus L5 directory rules are in [`ARCHITECTURE_4_LAYER.md`](ARCHITECTURE_4_LAYER.md).
 
 | Document | Use for |
 |----------|---------|

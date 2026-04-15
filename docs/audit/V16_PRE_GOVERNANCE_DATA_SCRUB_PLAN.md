@@ -52,7 +52,7 @@ No files were deleted, moved, or edited in this phase.
 | Docs: evaluation/training/datasets | docs/evaluation/, docs/training/, docs/datasets/ | Markdown + JSON | ~316 KB total | Tracked | V16/V15 eval and dataset docs | V16_*.md, v16_inference_results.json |
 | Archive (docs, okr, reorg) | archive/ | Mixed (md, json, txt, code) | ~14 MB | Tracked | Pre-governance, reorg, OKR | docs/debug (large JSON), okr, reorg, planning |
 | Archive debug JSON | archive/docs/debug/ | RAG/summary JSON | ~9 MB (2 files ~9 MB + ~2.3 MB) | Tracked | Dec 2025 RAG exports | RAG-Datastore_*_, RAG_System_*_.json |
-| V16 code references | ml/training/src/, runtime/rag/ | Python paths, model names | N/A | Tracked | V16 scripts, RAG API | Hardcoded /home/.../datasets/v16_*, models/v16_* |
+| V16 code references | ml/training/src/, archive/legacy_runtime_rag/ | Python paths, model names | N/A | Tracked | V16 scripts, RAG API | Hardcoded /home/.../datasets/v16_*, models/v16_* |
 
 ---
 
@@ -111,7 +111,7 @@ Items that should be **preserved but removed from the normal repo surface** (e.g
 - **docs/evaluation/, docs/training/, docs/datasets/** — V16/V15 evaluation and dataset documentation; audit and methodology value; do not scrub.
 - **ml/training/sft/stage7/** — Active conf-drift and Stage-7 artifacts; referenced by pipeline; leave in place.
 - **Canonical docs and governance** — README, MASTER_SYSTEM_SPEC, governance/, docs/LAYER*; not in scope for data scrub.
-- **V16 model paths and code** — Scripts under ml/training/src and runtime/rag that reference V16; do not change in a data-scrub batch; refactor only in a dedicated path-cleanup batch if needed.
+- **V16 model paths and code** — Scripts under ml/training/src and `archive/legacy_runtime_rag/` that reference V16; do not change in a data-scrub batch; refactor only in a dedicated path-cleanup batch if needed.
 
 ---
 

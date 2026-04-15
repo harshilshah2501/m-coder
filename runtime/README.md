@@ -1,8 +1,8 @@
 ## Runtime Namespace
 
-This directory contains **runtime and deployment** components:
+This directory contains **runtime and deployment** components. The **four-layer model** places core enforcement here (Layer-3). **Layer-5 workspace intelligence** also lives under this tree: `context_layer_service/`, `layer5/`, `assist_layer/` — see [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) and [docs/PRODUCT_SLICE.md](../docs/PRODUCT_SLICE.md).
 
-- `runtime/rag/` – RAG API, orchestrator, indexing, and retrieval code.
+- `runtime/rag/` – **stub only**; legacy FastAPI RAG stack → [`archive/legacy_runtime_rag/`](../archive/legacy_runtime_rag/README.md). Canonical workspace retrieval: `layer5/`, `context_layer_service/`.
 - `runtime/.config/` – runtime configuration (e.g., service settings, environment templates).
 
 The goal of the `runtime/` namespace is to isolate **live system behavior** from:
@@ -58,7 +58,14 @@ See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md) for full 4-l
 | **`runtime/plan_gate_service/`** | **HTTP** surface for PlanRequest v0.1 (CI, spool); **not** a substitute for `plangate` on sandbox path. |
 | **`runtime/plan_gate_stub/`** | Protocol / CLI **stub**; shares `stub_decide` with plan_gate_service. |
 
-Two **loop** implementations: `runtime/orchestrator/loop_controller.py` (transition matrix) vs `runtime/loop/loop_controller.py` (Stage 3) — different lifecycles.
+**Agent loop controllers (do not conflate):** There are two implementations with **different lifecycles** and **different call sites**:
+
+| Path | Role |
+|------|------|
+| **`runtime/loop/loop_controller.py`** | **Stage 3** controlled runtime loop — **primary product slice** path; burn-in **B7** closed; see `docs/validation/STAGE3_BURN_IN_REPORT.md` and `pytest runtime/tests/test_stage3_loop.py`. |
+| **`runtime/orchestrator/loop_controller.py`** | **Transition-matrix** orchestrator loop — distinct lifecycle; used in the governed execution chain, **not** interchangeable with the Stage 3 module. |
+
+Treat **`runtime/loop/`** as the canonical **Stage 3** loop surface for new work and audits unless a spec explicitly points to `orchestrator/`. Consolidation or further isolation is tracked operationally in `docs/LIVE_ROADMAP_TRACKER.md` / `docs/audit/RUNTIME_REORG_CANDIDATES.md`; do not merge behavior without reading both trees.
 
 ## Package map (primary)
 
@@ -69,7 +76,7 @@ Two **loop** implementations: `runtime/orchestrator/loop_controller.py` (transit
 | `assist_layer/` | Advisory augmentation (Stage 2.5) |
 | `observation/` | Traces, reconciliation, metrics |
 | `obs/` | Stage 3 loop ledger only (minimal; see `observation/` for full stack) |
-| `rag/` | Retrieval / indexing API (workspace-local) |
+| `rag/` | Stub → **`archive/legacy_runtime_rag/`** (retired parallel RAG API); not Plan-Gate slice |
 | `schemas/` | JSON schemas (contracts) |
 | `tests/` | Pytest tree for this namespace |
 

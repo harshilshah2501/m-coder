@@ -143,8 +143,8 @@ Explicitly **out of product** for this slice unless the charter is revised:
 
 | System | Rationale |
 |--------|-----------|
-| **RAG FastAPI stack** (`runtime/rag/`) | Parallel; not wired to JetBrains bridge (audit). |
-| **Orchestrator / unrelated HTTP** in `runtime/rag/` | Same. |
+| **RAG FastAPI stack** (`archive/legacy_runtime_rag/`) | Parallel; not wired to JetBrains bridge (audit). |
+| **Orchestrator / unrelated HTTP** in `archive/legacy_runtime_rag/` | Same. |
 | **`archive/workspace_intelligence/spikes/`** | Archived research; packaged Layer-5 lives under `runtime/layer5/`. |
 | **`ml/`** training pipelines | ML product line; not required for governed IDE slice. |
 | **`observation/`** drift tooling | Separate concern. |

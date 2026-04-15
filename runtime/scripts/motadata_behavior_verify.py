@@ -14,7 +14,9 @@ Stdout modes:
   - dev: full plan steps, context_bundle files, evidence snippet previews
   - json: full report JSON
 
-Optional --scenarios FILE runs JSON scenarios with expected fields (see docs/validation/).
+Optional --scenarios FILE runs contract JSON scenarios (see docs/validation/).
+
+Optional --utility-scenarios FILE runs developer-utility scenarios (motadata_developer_utility_scenarios.v1).
 
 Exits non-zero on any failed check.
 """
@@ -230,6 +232,29 @@ def _print_dev(final: dict[str, Any]) -> None:
         print("")
         print("--- agent semantics ---")
         print(f"assist_layer on ask: {a.get('assist_layer_present_in_ask')}  /v0/agent 404: {a.get('agent_route_404')}")
+        print("")
+
+
+def _print_utility_scenario_results(suite: dict[str, Any], *, dev: bool = False) -> None:
+    print("")
+    print("=== Developer utility suite (usefulness / heuristic) ===")
+    print(f"file: {suite.get('file')}")
+    if suite.get("utility_note"):
+        print(f"note: {suite.get('utility_note')}")
+    print(f"all_pass: {suite.get('all_pass')}")
+    print("")
+    for r in suite.get("results") or []:
+        st = "PASS" if r.get("pass") else "FAIL"
+        print(f"[{st}] {r.get('id')} ({r.get('capability')})")
+        if r.get("description"):
+            print(f"  description: {r.get('description')}")
+        if r.get("errors"):
+            for e in r.get("errors") or []:
+                print(f"  utility_error: {e}")
+        if dev and r.get("developer_snapshot"):
+            ds = r.get("developer_snapshot") or {}
+            clip = json.dumps(ds, indent=2, default=str)
+            print(f"  developer_snapshot: {clip[:3500]}{'...' if len(clip) > 3500 else ''}")
         print("")
 
 
@@ -500,6 +525,404 @@ def _haystack_for_text_match(
         parts.append(str(sn.get("preview") or ""))
         parts.append(str(sn.get("relative_path") or ""))
     return "\n".join(parts).lower()
+
+
+_QUALITY_RANK: dict[str, int] = {
+    "STRONG": 3,
+    "MODERATE": 2,
+    "WEAK": 1,
+}
+
+
+def _rank_evidence_quality(q: str | None) -> int:
+    if not q or not isinstance(q, str):
+        return 0
+    return _QUALITY_RANK.get(q.strip().upper(), 0)
+
+
+def _haystack_plan_notes(resp: dict[str, Any]) -> str:
+    ps = resp.get("plan_summary") if isinstance(resp.get("plan_summary"), dict) else {}
+    notes = ps.get("notes") if isinstance(ps.get("notes"), list) else []
+    return " ".join(str(n) for n in notes)
+
+
+def _check_utility_expect_ask(
+    utility_expect: dict[str, Any],
+    resp: dict[str, Any],
+    entries: list[dict[str, Any]],
+    meta: dict[str, Any],
+    haystack: str,
+    top_paths: list[str | None],
+) -> list[str]:
+    errs: list[str] = []
+    ue = utility_expect
+    actual_eq = meta.get("evidence_quality")
+    if ue.get("governance_posture") and resp.get("governance_posture") != ue["governance_posture"]:
+        errs.append(f"governance_posture want {ue['governance_posture']} got {resp.get('governance_posture')}")
+    if ue.get("execution") is not None and resp.get("execution") != ue["execution"]:
+        errs.append(f"execution want {ue['execution']} got {resp.get('execution')}")
+    if ue.get("ask_path") and (resp.get("evidence_first_meta") or {}).get("ask_path") != ue["ask_path"]:
+        errs.append(f"ask_path want {ue['ask_path']} got {(resp.get('evidence_first_meta') or {}).get('ask_path')}")
+    plan_steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+    if ue.get("min_plan_steps"):
+        if len(plan_steps) < int(ue["min_plan_steps"]):
+            errs.append(f"min_plan_steps want >= {ue['min_plan_steps']} got {len(plan_steps)}")
+    if ue.get("min_evidence_quality"):
+        min_r = _rank_evidence_quality(str(ue["min_evidence_quality"]))
+        ar = _rank_evidence_quality(str(actual_eq) if actual_eq else "")
+        if ar < min_r:
+            errs.append(f"min_evidence_quality want rank>={ue['min_evidence_quality']} got {actual_eq}")
+    allowed_q = ue.get("allowed_evidence_quality_any")
+    if isinstance(allowed_q, list) and actual_eq is not None:
+        if str(actual_eq) not in [str(x) for x in allowed_q]:
+            errs.append(f"evidence_quality want one of {allowed_q} got {actual_eq}")
+    paths_norm = [str(p) for p in top_paths if p]
+    req_any = ue.get("required_paths_any")
+    if isinstance(req_any, list) and req_any:
+        if not any(
+            any(sub in p for p in paths_norm)
+            for sub in req_any
+            if sub
+        ):
+            errs.append(f"required_paths_any: none of {req_any} matched paths {paths_norm[:8]}")
+    req_all = ue.get("required_paths_all")
+    if isinstance(req_all, list) and req_all:
+        for sub in req_all:
+            if not any(sub in p for p in paths_norm):
+                errs.append(f"required_paths_all: missing {sub}")
+    forb = ue.get("forbidden_paths_any")
+    max_dis = ue.get("max_distractor_paths")
+    if isinstance(forb, list) and forb:
+        distractor_count = sum(1 for p in paths_norm for bad in forb if bad and bad in p)
+        if max_dis is not None:
+            if distractor_count > int(max_dis):
+                errs.append(f"max_distractor_paths: got {distractor_count} forbidden-path matches, max {max_dis}")
+        else:
+            for p in paths_norm:
+                for bad in forb:
+                    if bad and bad in p:
+                        errs.append(f"forbidden_paths_any: forbidden path present in evidence: {bad}")
+    subs_any = ue.get("required_text_contains_any")
+    if isinstance(subs_any, list) and subs_any:
+        if not any(str(s).lower() in haystack for s in subs_any if s):
+            errs.append(f"required_text_contains_any: none of {subs_any} found in plan/snippets/paths")
+    subs_all = ue.get("required_text_contains_all")
+    if isinstance(subs_all, list) and subs_all:
+        for s in subs_all:
+            if s and str(s).lower() not in haystack:
+                errs.append(f"required_text_contains_all: missing {s!r}")
+    if ue.get("must_distinguish_owner_vs_supporting"):
+        uniq = len({p for p in paths_norm[:6] if p})
+        if uniq < 2:
+            errs.append("must_distinguish_owner_vs_supporting: need >=2 distinct paths in top evidence (heuristic)")
+        owner_markers = ("owner", "primary", "implements", "main")
+        if not any(m in haystack for m in owner_markers):
+            errs.append("must_distinguish_owner_vs_supporting: expected owner/primary language in answer (heuristic)")
+    notes_h = (_haystack_plan_notes(resp) + " " + haystack).lower()
+    if ue.get("must_include_honesty_if_weak") and str(actual_eq) == "WEAK":
+        honesty = ue.get("required_text_contains_any")
+        if isinstance(honesty, list) and honesty:
+            if not any(str(s).lower() in notes_h for s in honesty if s):
+                errs.append(
+                    "must_include_honesty_if_weak: WEAK but no honesty cue matched (notes/plan/snippets; heuristic)"
+                )
+        qr = meta.get("quality_reasons") if isinstance(meta.get("quality_reasons"), list) else []
+        if not qr and not any(x in notes_h for x in ("weak", "provisional", "generic", "verify")):
+            errs.append("must_include_honesty_if_weak: WEAK without quality_reasons or clear caveat (heuristic)")
+    if ue.get("must_not_overclaim_if_weak") and str(actual_eq) == "WEAK":
+        if not meta.get("quality_reasons") and "insufficient" not in notes_h and "provisional" not in notes_h:
+            errs.append("must_not_overclaim_if_weak: WEAK but little/no explicit limitation signal (heuristic)")
+    return errs
+
+
+def _check_utility_expect_debug(
+    utility_expect: dict[str, Any],
+    resp: dict[str, Any],
+    ed: dict[str, Any],
+    selected_file: str,
+) -> list[str]:
+    errs: list[str] = []
+    ue = utility_expect
+    if ue.get("routing_mode") and resp.get("routing_mode") != ue["routing_mode"]:
+        errs.append(f"routing_mode want {ue['routing_mode']} got {resp.get('routing_mode')}")
+    keys_req = ue.get("required_explain_keys")
+    if isinstance(keys_req, list):
+        for k in keys_req:
+            if k not in ed:
+                errs.append(f"required_explain_key missing: {k}")
+    explain_h = " ".join(
+        str(ed.get(k) or "") for k in ("summary", "logic_flow", "likely_bug_risk", "evidence", "error")
+    ).lower()
+    if ue.get("must_reference_selected_file_or_symbol") and selected_file:
+        base = selected_file.split("/")[-1].replace(".java", "")
+        if base.lower() not in explain_h and selected_file.lower() not in explain_h:
+            errs.append("must_reference_selected_file_or_symbol: selected file/symbol not clearly referenced (heuristic)")
+    subs = ue.get("required_text_contains_any")
+    if isinstance(subs, list) and subs:
+        if not any(str(s).lower() in explain_h for s in subs if s):
+            errs.append(f"required_text_contains_any: none of {subs} in explain_debug text")
+    if ue.get("must_not_admit_missing_context_without_next_step"):
+        summary = str(ed.get("summary") or "").lower()
+        if any(x in summary for x in ("not present", "not in the provided", "not in context", "missing from")):
+            if not any(x in summary for x in ("add", "provide", "open", "retrieve", "next", "suggest", "need")):
+                errs.append(
+                    "must_not_admit_missing_context_without_next_step: missing context admitted without next step (heuristic)"
+                )
+    if ue.get("must_suggest_concrete_failure_points"):
+        concrete = any(
+            x in explain_h for x in ("if ", "when ", "condition", "branch", "return", "skip", "null", "exception")
+        )
+        if not concrete:
+            errs.append("must_suggest_concrete_failure_points: no concrete control-flow cues in explain_debug (heuristic)")
+    return errs
+
+
+def _check_utility_expect_plan(utility_expect: dict[str, Any], plan_resp: dict[str, Any]) -> list[str]:
+    errs: list[str] = []
+    ue = utility_expect
+    blob = json.dumps(plan_resp, default=str).lower()
+    dec = plan_resp.get("decision")
+    allowed = ue.get("allowed_decisions_any")
+    if isinstance(allowed, list) and allowed and dec not in allowed:
+        errs.append(f"allowed_decisions_any: want one of {allowed} got {dec}")
+    if ue.get("must_identify_candidate_files"):
+        if ".java" not in blob and ".kt" not in blob and "/" not in blob:
+            errs.append("must_identify_candidate_files: no file-like path in plan response (heuristic)")
+    if ue.get("must_include_risk_or_guardrail"):
+        if not any(x in blob for x in ("risk", "guard", "validat", "test", "rollback", "block")):
+            errs.append("must_include_risk_or_guardrail: no risk/guardrail/test cue in plan response (heuristic)")
+    subs = ue.get("required_text_contains_any")
+    if isinstance(subs, list) and subs:
+        if not any(str(s).lower() in blob for s in subs if s):
+            errs.append(f"required_text_contains_any: none of {subs} in plan response JSON (heuristic)")
+    return errs
+
+
+def _run_utility_scenario_row(
+    scenario: dict[str, Any],
+    workspace_root: str,
+    context_url: str,
+    plan_gate_url: str,
+    top_k: int,
+) -> dict[str, Any]:
+    sid = str(scenario.get("id") or "unknown")
+    cap = str(scenario.get("capability") or "")
+    desc = scenario.get("description")
+    inputs = scenario.get("inputs") if isinstance(scenario.get("inputs"), dict) else {}
+    utility_expect = scenario.get("utility_expect") if isinstance(scenario.get("utility_expect"), dict) else {}
+    ws = str(inputs.get("workspace_root") or workspace_root)
+    errors: list[str] = []
+
+    if cap == "ask":
+        q = str(inputs.get("query") or "")
+        code, evidence = _post(
+            f"{context_url}/v1/export_evidence",
+            {"workspace_root": ws, "query": q, "top_k": top_k},
+            timeout=300,
+        )
+        entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
+        if code != 200 or not entries:
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "utility_track": True,
+                "errors": [f"export_evidence failed http={code} entries={len(entries)}"],
+                "utility_expect": utility_expect,
+                "actual_summary": None,
+                "developer_snapshot": None,
+            }
+        req: dict[str, Any] = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": str(uuid.uuid4()),
+            "timestamp_utc": _utc_now(),
+            "query": q,
+            "evidence_bundle": evidence,
+        }
+        if inputs.get("task_type"):
+            req["task_type"] = inputs["task_type"]
+        if evidence.get("workspace_identity_hash"):
+            req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
+        code, resp = _post(f"{plan_gate_url}/v1/ask", req)
+        meta = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
+        plan_steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+        top_paths = [e.get("relative_path") for e in entries[:8] if isinstance(e, dict)]
+        snips = _evidence_snippet_previews([e for e in entries if isinstance(e, dict)])
+        haystack = _haystack_for_text_match([str(s) for s in plan_steps], top_paths, snips)
+        haystack = (haystack + " " + _haystack_plan_notes(resp)).lower()
+        errors.extend(_check_utility_expect_ask(utility_expect, resp, entries, meta, haystack, top_paths))
+        dev_snapshot = {
+            "request_id": resp.get("request_id"),
+            "evidence_quality": meta.get("evidence_quality"),
+            "quality_reasons": meta.get("quality_reasons"),
+            "answer_steps": plan_steps,
+            "context_bundle_files": _context_bundle_files(resp),
+            "evidence_snippet_previews": snips,
+        }
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "utility_track": True,
+            "errors": errors,
+            "utility_expect": utility_expect,
+            "actual_summary": {
+                "http": code,
+                "evidence_quality": meta.get("evidence_quality"),
+                "plan_steps_count": len(plan_steps),
+            },
+            "developer_snapshot": dev_snapshot,
+        }
+
+    if cap == "debug":
+        q = str(inputs.get("query") or "")
+        sel = str(inputs.get("active_file") or "")
+        sel_text = str(inputs.get("selection_text") or "Investigate likely failure points and trace flow.")
+        code, evidence = _post(
+            f"{context_url}/v1/export_evidence",
+            {"workspace_root": ws, "query": q, "top_k": top_k},
+            timeout=300,
+        )
+        entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
+        if code != 200 or not entries:
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "utility_track": True,
+                "errors": ["export_evidence failed for utility debug scenario"],
+                "utility_expect": utility_expect,
+                "actual_summary": None,
+                "developer_snapshot": None,
+            }
+        req = {
+            "schema_version": "ask_request.v1.0",
+            "request_id": str(uuid.uuid4()),
+            "timestamp_utc": _utc_now(),
+            "query": q,
+            "evidence_bundle": evidence,
+            "task_type": "EXPLAIN_DEBUG",
+            "selected_file": sel or (entries[0].get("relative_path") if entries else ""),
+            "client_context": {"selection": sel_text},
+        }
+        if evidence.get("workspace_identity_hash"):
+            req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
+        code, resp = _post(f"{plan_gate_url}/v1/ask", req)
+        ed = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+        errors.extend(_check_utility_expect_debug(utility_expect, resp, ed, sel))
+        ok_body = code == 200 and ("summary" in ed or "error" in ed)
+        dev_snapshot = {
+            "routing_mode": resp.get("routing_mode"),
+            "summary": ed.get("summary"),
+            "likely_bug_risk": ed.get("likely_bug_risk"),
+            "logic_flow": ed.get("logic_flow"),
+            "error": ed.get("error"),
+        }
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and ok_body,
+            "utility_track": True,
+            "errors": errors,
+            "utility_expect": utility_expect,
+            "actual_summary": {"http": code, "routing_mode": resp.get("routing_mode")},
+            "developer_snapshot": dev_snapshot,
+        }
+
+    if cap == "plan":
+        intent = str(inputs.get("intent") or sid)
+        plan_req: dict[str, Any] = {
+            "schema_version": "plan_request.v0.1",
+            "request_id": str(uuid.uuid4()),
+            "timestamp_utc": _utc_now(),
+            "mode": "shadow",
+            "ide_event": {
+                "schema_version": "ide_event.v0.1",
+                "event_id": f"evt-utility-{sid}",
+                "timestamp_utc": _utc_now(),
+                "ide_context": {
+                    "product": "cli",
+                    "ide": "none",
+                    "project": "Motadata",
+                    "repo_root": ws,
+                    "branch": "main",
+                    "user": "operator",
+                },
+                "action": {"action_type": "PR_MERGE", "target": "main"},
+                "evidence_refs": [{"type": "note", "ref": intent[:2000]}],
+            },
+            "requested_capabilities": ["plan_and_decide"],
+            "client_policy": {"fail_closed_if_gate_unreachable": True},
+        }
+        if utility_expect.get("schema_version"):
+            pass
+        code, plan_resp = _post(f"{plan_gate_url}/v0/plan", plan_req)
+        if utility_expect.get("schema_version") and plan_resp.get("schema_version") != utility_expect["schema_version"]:
+            errors.append(
+                f"schema_version want {utility_expect['schema_version']} got {plan_resp.get('schema_version')}"
+            )
+        if utility_expect.get("decision_present") and not plan_resp.get("decision"):
+            errors.append("decision missing")
+        errors.extend(_check_utility_expect_plan(utility_expect, plan_resp))
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "utility_track": True,
+            "errors": errors,
+            "utility_expect": utility_expect,
+            "actual_summary": {"http": code, "decision": plan_resp.get("decision")},
+            "developer_snapshot": {"plan_response_excerpt": _clip(json.dumps(plan_resp, default=str), 4000)},
+        }
+
+    return {
+        "id": sid,
+        "capability": cap,
+        "description": desc,
+        "pass": False,
+        "utility_track": True,
+        "errors": [f"unknown utility capability: {cap}"],
+        "utility_expect": utility_expect,
+        "actual_summary": None,
+        "developer_snapshot": None,
+    }
+
+
+def run_utility_scenario_suite(
+    scenarios_path: Path,
+    workspace_root: str,
+    context_url: str,
+    plan_gate_url: str,
+    top_k: int,
+) -> dict[str, Any]:
+    data = json.loads(scenarios_path.read_text(encoding="utf-8"))
+    if data.get("schema_version") != "motadata_developer_utility_scenarios.v1":
+        return {
+            "file": str(scenarios_path),
+            "all_pass": False,
+            "error": "unsupported schema_version (expected motadata_developer_utility_scenarios.v1)",
+            "results": [],
+            "utility_note": "Developer utility assertions use heuristics; failures are signals, not formal closure gates.",
+        }
+    defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
+    tk = int(defaults.get("top_k", top_k))
+    results: list[dict[str, Any]] = []
+    for sc in data.get("scenarios") or []:
+        if not isinstance(sc, dict):
+            continue
+        results.append(_run_utility_scenario_row(sc, workspace_root, context_url, plan_gate_url, tk))
+    all_pass = all(r.get("pass") for r in results) if results else False
+    return {
+        "file": str(scenarios_path),
+        "all_pass": all_pass,
+        "results": results,
+        "utility_note": "Developer utility assertions are heuristic/approximate where noted; not a substitute for human review.",
+    }
 
 
 def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: str) -> list[str]:
@@ -845,7 +1268,12 @@ def main() -> int:
     parser.add_argument(
         "--scenarios-only",
         action="store_true",
-        help="Run only the scenario suite (skip smoke pipeline)",
+        help="Run only scenario suite(s) (skip smoke pipeline); requires --scenarios and/or --utility-scenarios",
+    )
+    parser.add_argument(
+        "--utility-scenarios",
+        default="",
+        help="Path to motadata_developer_utility_scenarios.v1.json (developer usefulness / heuristic track)",
     )
     parser.add_argument(
         "--out",
@@ -854,8 +1282,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if args.scenarios_only and not str(args.scenarios).strip():
-        print("ERROR: --scenarios-only requires --scenarios PATH", file=sys.stderr)
+    if args.scenarios_only and not str(args.scenarios).strip() and not str(args.utility_scenarios).strip():
+        print(
+            "ERROR: --scenarios-only requires --scenarios PATH and/or --utility-scenarios PATH",
+            file=sys.stderr,
+        )
         return 2
 
     context_url = args.context_url.rstrip("/")
@@ -889,6 +1320,16 @@ def main() -> int:
             return 2
         scenario_suite = run_scenario_suite(sp, args.workspace_root, context_url, plan_gate_url, args.top_k)
 
+    developer_utility_suite: dict[str, Any] | None = None
+    if args.utility_scenarios.strip():
+        up = Path(args.utility_scenarios)
+        if not up.is_file():
+            print(f"ERROR: utility scenarios file not found: {up}", file=sys.stderr)
+            return 2
+        developer_utility_suite = run_utility_scenario_suite(
+            up, args.workspace_root, context_url, plan_gate_url, args.top_k
+        )
+
     smoke_payload: dict[str, Any] | None = None
     if not args.scenarios_only:
         smoke_payload = {
@@ -901,11 +1342,18 @@ def main() -> int:
         }
 
     if args.scenarios_only:
-        all_pass = bool(scenario_suite and scenario_suite.get("all_pass"))
+        parts: list[bool] = []
+        if scenario_suite is not None:
+            parts.append(bool(scenario_suite.get("all_pass")))
+        if developer_utility_suite is not None:
+            parts.append(bool(developer_utility_suite.get("all_pass")))
+        all_pass = bool(parts) and all(parts)
     else:
         all_pass = smoke_all
         if scenario_suite is not None:
             all_pass = all_pass and bool(scenario_suite.get("all_pass"))
+        if developer_utility_suite is not None:
+            all_pass = all_pass and bool(developer_utility_suite.get("all_pass"))
 
     final: dict[str, Any] = {
         "timestamp_utc": _utc_now(),
@@ -913,6 +1361,7 @@ def main() -> int:
         "all_pass": all_pass,
         "smoke": smoke_payload,
         "scenario_suite": scenario_suite,
+        "developer_utility_suite": developer_utility_suite,
     }
 
     out_path = Path(args.out)
@@ -930,7 +1379,7 @@ def main() -> int:
             "runs": smoke_payload["runs"],
         }
         _print_dev(dev_final)
-    elif args.print_mode == "dev" and args.scenarios_only and scenario_suite:
+    elif args.print_mode == "dev" and args.scenarios_only and (scenario_suite or developer_utility_suite):
         print("")
         print("=== Developer view: scenarios only (no smoke pipeline) ===")
         print(f"workspace: {args.workspace_root}")
@@ -947,6 +1396,9 @@ def main() -> int:
 
     if scenario_suite:
         _print_scenario_results(scenario_suite, dev=args.print_mode == "dev")
+
+    if developer_utility_suite:
+        _print_utility_scenario_results(developer_utility_suite, dev=args.print_mode == "dev")
 
     print(f"\nSaved: {out_path}")
     return 0 if final["all_pass"] else 1

@@ -1,5 +1,7 @@
 ## ML Namespace
 
+This directory is **Layer-2 (ML compilation)** in the four-layer constitutional core. **Layer-5** (workspace intelligence / evidence bundles) lives under `runtime/layer5/` and related paths — not here. See [docs/ARCHITECTURE_4_LAYER.md](../docs/ARCHITECTURE_4_LAYER.md).
+
 This directory contains all **model lifecycle** code and assets:
 
 - `ml/datasets/` – dataset specifications, generation scripts, and versioned dataset artifacts.

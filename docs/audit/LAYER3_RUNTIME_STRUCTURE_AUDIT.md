@@ -69,7 +69,7 @@ Structured inventory of major Layer-3 files/clusters. Classification and placeme
 | runtime/shadow_runner/ | run_demo | demo/operator surface | canonical (demo) | good | Demo only |
 | runtime/schemas/ | plan, ledger_row, examples | schema/contract asset | canonical | good | Protected in AGENT_EXECUTION_RULES |
 | runtime/observation/ | M4.1–M4.6 trace, baseline, collapse, reconciliation, GREG, metrics | Layer-4 implementation colocated in runtime | Layer-4 | good (placement); questionable (docs) | Consumed by runtime/tests and runtime code; __all__ exports; report_runtime_summary is CLI |
-| runtime/rag/ | RAG API, orchestrator, indexing, retrieval | canonical runtime implementation | canonical | good | Large subtree |
+| archive/legacy_runtime_rag/ | RAG API, orchestrator, indexing, retrieval | canonical runtime implementation | canonical | good | Large subtree |
 | runtime/ci_gate/ | CLI client for plan-gate; fails build on REFUSAL/CONDITIONAL_BLOCK | canonical runtime implementation | canonical | good | |
 | runtime/integrity/ | canonical_intent, plangate_bridge, command_normalizer | internal runtime implementation | canonical | good | |
 | runtime/emulator/ | ledger, boundary, authority | internal runtime implementation or test support | non-canonical | good | Emulator for testing |
@@ -252,7 +252,7 @@ Each finding uses: Finding; Why it is a problem; Severity; Recommended action; A
 | runtime/policies/ | clarify later | Relationship to plangate (legacy vs alternate API) |
 | runtime/README.md | clarify later | Add missing subpackages or pointer to docs |
 | docs/runtime/README.md | keep | Add one line on runtime/observation/ if desired |
-| runtime/emulator/, runtime/replay/, runtime/integrity/, runtime/rag/, runtime/ci_gate/ | keep | Supporting components |
+| runtime/emulator/, runtime/replay/, runtime/integrity/, archive/legacy_runtime_rag/, runtime/ci_gate/ | keep | Supporting components |
 
 ---
 

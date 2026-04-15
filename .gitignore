@@ -114,6 +114,10 @@ git_diff.txt
 OKR/
 jetbrains-plugin/motadata-jetbrains-plugin/
 
+# NotebookLM / local engineer corpus bundles (not versioned)
+notebooklm_engineer_bundle/
+notebooklm_m-coder_engineer_corpus.zip
+
 # Local packaging virtualenvs
 packaging/motadata-context-layer/.venv-build/
 packaging/motadata-context-layer/.venv-build-packaging/

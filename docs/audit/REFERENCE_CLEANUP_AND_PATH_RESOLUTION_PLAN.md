@@ -58,7 +58,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
 | ml/training/src/dataset_creation/convert_diff_to_search_replace.py | processed (v14→v15) | CLI args, default filenames | Weak | default='v14_multifile_final.jsonl', 'v15_search_replace.jsonl'; CWD-relative |
 | ml/training/sft/stage7/tools/conf_drift_pipeline.py | repo root | Absolute path | Poor | lines.append("cd /home/harshil/Harshil-PoCs/m-coder") |
 | ml/training/artifacts/store.py | artifact store | Absolute default | Poor | root = "/home/harshil/Harshil-PoCs/m-coder_artifacts" |
-| runtime/rag (tests, scripts, api, retrieval) | RAG-Datastore, workspace, logs | Absolute or getenv | Mixed | WORKSPACE_ROOT = "/home/.../Motadata/motadata"; some use os.getenv("WORKSPACE_ROOT", default) |
+| archive/legacy_runtime_rag (tests, scripts, api, retrieval) | RAG-Datastore, workspace, logs | Absolute or getenv | Mixed | WORKSPACE_ROOT = "/home/.../Motadata/motadata"; some use os.getenv("WORKSPACE_ROOT", default) |
 | docs/archive/status/TRAINING_MONITOR.md, docs/guides/ORCHESTRATOR_GUIDE.md, docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md | training/checkpoints, models, datasets | Absolute paths in examples | Weak | Instruct users to use /home/.../training/checkpoints/v16_1/, .../models/..., .../datasets/ |
 | scripts/generate_v12_dataset.py, audit_legacy_datasets.py, analyze_*.py | RAG-Datastore/evaluation/finetuning | Absolute path | Poor | GOLD_FILE, OUTPUT_FILE = "/home/.../RAG-Datastore/evaluation/finetuning/..." |
 
@@ -75,7 +75,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
 | **Evaluation scripts (evaluate_v16_*.py, comprehensive_evaluation.py, kpi2/kpi3, test_cpt_model, phase_c_completion_probe)** | RESULTS_DIR, OUTPUT_DIR, DIFFS_DIR, LORA_ADAPTER, MERGED_MODEL_PATH, DATASET_DIR all absolute or BASE_DIR-relative | **Blocking** | Same data root; results and reports under root / "evaluation/results" (or manifest when exported); model paths from root or MODEL_PATH env | Must work after evaluation results are exported |
 | **Processed data (v14/v15)** | train_v14_multifile, train_v15_search_replace use bare filenames; other code uses Path("evaluation/finetuning/v14_multifile_final.jsonl"); actual files in ml/training/data/processed/ | **Blocking** | Unify path shape: single canonical location (e.g. data_root / "training/data/processed" or manifest); convert all refs to use data root + key or manifest lookup | Path shape inconsistency (evaluation/finetuning vs data/processed) |
 | **conf_drift_pipeline.py, artifacts/store.py** | Hardcoded repo root and artifact store root | **Medium** | Repo root from env (e.g. MCODER_REPO_ROOT) or discovery; artifact store from env or config | Affects Stage-7 and artifact tooling only |
-| **runtime/rag** | WORKSPACE_ROOT, LOG_DIR, benchmark paths | **Medium** | Already partial getenv; standardize on env default; document for runbooks | Less directly tied to ml/datasets export |
+| **archive/legacy_runtime_rag** | WORKSPACE_ROOT, LOG_DIR, benchmark paths | **Medium** | Already partial getenv; standardize on env default; document for runbooks | Less directly tied to ml/datasets export |
 | **Docs/runbooks** | Examples and instructions use /home/... paths | **Medium** | After code uses env, update docs to "set MOTADATA_DATA_ROOT (or run from repo with default)"; remove or generalize absolutes | Stale docs would mislead after export |
 
 ---
@@ -92,7 +92,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
    evaluate_v16_2_enriched.py, evaluate_v16_2_motadata_bench.py (RESULTS_DIR); comprehensive_evaluation.py, improved_evaluation_v2/v3, evaluate_v16_1_*, deep_quality_evaluation (RESULTS_DIR, DIFFS_DIR); kpi2_truncation_test.py, kpi3_coverage_test.py, comprehensive_model_evaluation.py (OUTPUT_DIR); generate_dpo_pairs_enhanced.py, generate_dpo_pairs_final.py (EVAL_RESULTS_FILE); phase_c_completion_probe.py (output_dir).
 
 4. **Which areas already use acceptable path resolution?**  
-   test_cpt_model.py uses default `"./evaluation/results/phase_c"` (repo-relative, weak). runtime/rag uses os.getenv("WORKSPACE_ROOT", default) in some places. No dataset or evaluation-result paths currently use a durable env-based contract.
+   test_cpt_model.py uses default `"./evaluation/results/phase_c"` (repo-relative, weak). `archive/legacy_runtime_rag/` uses os.getenv("WORKSPACE_ROOT", default) in some places. No dataset or evaluation-result paths currently use a durable env-based contract.
 
 5. **What should the future path contract be for large exported data?**  
    A single env-based data root (e.g. MOTADATA_DATA_ROOT) for datasets/, evaluation/, training/; relative keys under that root; optional manifest mapping keys to retrieval URL or local path override when data is exported.
@@ -216,7 +216,7 @@ Scope: (1) inventory and classify references to data paths that may leave active
 
 - **What must be fixed first:** **Reference Cleanup Batch 1** — introduce the data root contract and convert finetuning and data/dataset_creation paths (ml/datasets and related) so that no script assumes a hardcoded `/home/.../datasets` or `/home/.../training` or `/home/.../models`. This unblocks planning and execution of Archive/Export Batch 2 (datasets) once validation passes.
 
-- **What is safe to leave for later:** (1) Manifest/pointer resolution for **exported** data can be added in a batch after data root is in place (or in parallel with Batch 2 if export is imminent). (2) Docs/runbook path cleanup can follow code cleanup. (3) runtime/rag and scripts under scripts/ that reference RAG-Datastore or legacy paths are lower priority for dataset/export blocking but should eventually use env or config.
+- **What is safe to leave for later:** (1) Manifest/pointer resolution for **exported** data can be added in a batch after data root is in place (or in parallel with Batch 2 if export is imminent). (2) Docs/runbook path cleanup can follow code cleanup. (3) `archive/legacy_runtime_rag/` and scripts under scripts/ that reference RAG-Datastore or legacy paths are lower priority for dataset/export blocking but should eventually use env or config.
 
 - **When archive/export Batch 2 becomes safe:** After Reference Cleanup Batches 1 and 2 are complete and validation passes (no blocking absolute dataset paths; smoke run with data root default and override succeeds). Optionally, add manifest support so that after export, scripts can resolve dataset keys from a manifest (URL or local path). Batch 3 (evaluation results) becomes safe after Reference Cleanup Batch 3 and the same validation.
 

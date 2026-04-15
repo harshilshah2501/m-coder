@@ -268,7 +268,7 @@ This phase did **not**:
 
 Surgical updates (no mass moves) to reduce drift called out in §2–§4:
 
-- **`docs/README.md`** — Replaced generic `~/…` tree with pointers to [REPO_LAYOUT_INVENTORY.md](REPO_LAYOUT_INVENTORY.md), pytest-based test instructions, `docs/api/README.md` index, corrected RAG paths (`runtime/rag/`), non-invariant “system stats,” and governed-stack log locations.
+- **`docs/README.md`** — Replaced generic `~/…` tree with pointers to [REPO_LAYOUT_INVENTORY.md](REPO_LAYOUT_INVENTORY.md), pytest-based test instructions, `docs/api/README.md` index, corrected RAG paths (`archive/legacy_runtime_rag/`), non-invariant “system stats,” and governed-stack log locations.
 - **`docs/api/README.md`** — New index for split API/schema surfaces.
 - **`docs/OBSERVATION/README.md`** and **`observation/README.md`** — Short table linking `docs/OBSERVATION/`, repo-root `observation/`, `runtime/observation/`, `runtime/obs/`.
 - **`docs/archive/Notes.md`** — Non-canonical essay (moved from `docs/Notes.md`).

@@ -1,4 +1,6 @@
-# Motadata AI Services - H100 Deployment
+# m-coder — Motadata AI Coding Assistant
+
+This repository holds the **Motadata AI Coding Assistant** (governed runtime, ML compilation, validation) alongside **operator-oriented** material (for example optional host backup tooling and systemd service notes further below). **Program closure and per-layer status** are maintained in [`docs/LIVE_ROADMAP_TRACKER.md`](docs/LIVE_ROADMAP_TRACKER.md); if anything in this file disagrees with the tracker, **trust the tracker**.
 
 ## Status
 
@@ -15,7 +17,7 @@ This repository contains a **production-grade validated vertical slice** of the 
 
 ### What is not yet included
 
-- Stage 2.5 proactive intelligence
+- **Stage 2.5 proactive / influence-enabled** Assist in production (Assist Layer v1 is **implemented** and **advisory-only**; see `docs/LIVE_ROADMAP_TRACKER.md` §1 and §1.5)
 - Background sync
 - Active-file UX improvements
 
@@ -29,28 +31,33 @@ This repository contains a **production-grade validated vertical slice** of the 
 
 Production-ready AI services deployment with version-agnostic model naming and systemd service management.
 
-## Current System Status (4-Layer Architecture)
+## Current System Status (4-layer core + Layer-5 product extension)
+
+The **four constitutional layers** (L1–L4) are the doctrine and enforcement core. **Layer-5** is **workspace intelligence** (Context Layer, evidence bundles, retrieval, optional Assist advisory) — a **product extension** that feeds Plan-Gate; it does not replace Layer-3 authority. See `docs/ARCHITECTURE_4_LAYER.md` and `docs/PRODUCT_SLICE.md`.
 
 - **Layer-1 — Governance (Constitution)**: **LOCKED**  
   - Constitutional manifest, phase doctrine (REF, CONF, DES, MIX, CODE, REACH), dominance rules, and golden exemplar governance are ratified and immutable without GREG. See `docs/MASTER_SYSTEM_SPEC.md` and `governance/CONSTITUTIONAL_MANIFEST_v1.0.md`.
 - **Layer-2 — ML Compilation (Stages 1–8)**: **COMPLETE / LOCKED**  
   - Base→variants→Stage-6 mutation→freeze→SFT pipeline is closed. Stage-6C agent-loop mutation harness PASS, deterministic dataset freeze, SFT training and post-SFT revalidation PASS. See `docs/LIVE_ROADMAP_TRACKER.md` (§4.2.1, §4.2.2, §6.1), `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`, and `ml/training/FREEZE_CERTIFICATE_v1.json`.
-- **Layer-3 — Runtime Enforcement / Execution**: **IN PROGRESS**  
-  - Runtime emulator (M3.E0) and deterministic state machine contracts (M3.T0) are implemented; broader Runtime Governor / Repository Context Engine / Execution Sandbox / IDE integration are under active development. See `docs/LAYER3_RUNTIME_SPEC.md`, `docs/runtime/RUNTIME_STATE_TRANSITIONS.md`, and `docs/LIVE_ROADMAP_TRACKER.md` (§4.3).
-- **Layer-4 — Observation / Drift Detection**: **PARTIAL**  
-  - Governance-level drift suite and mutation taxonomy exist; production drift baselines, live collapse tracking, and GREG automation are pending. See `docs/ROADMAP_L2_L3_L4.md` and `observation/README.md`.
+- **Layer-3 — Runtime Enforcement / Execution**: **COMPLETE (M3.0–M3.11 on `main`)** + follow-on milestones  
+  - Core runtime milestones **M3.0–M3.11** are **complete on `main`**; narrow repo-aware and integration work (**M3.12+**) may land on integration branches. **Governed execute** (`POST /v0/execute`) is validated for the closed MVP slice; Stage 3 controlled-loop burn-in is closed (**B7**). Canonical numbering is **M3.0–M3.18** in the tracker (do not use legacy labels such as M3.E0 in place of the M3.x table). See `docs/LAYER3_RUNTIME_SPEC.md`, `docs/runtime/RUNTIME_STATE_TRANSITIONS.md`, and `docs/LIVE_ROADMAP_TRACKER.md` (§1, §4.3, §6.20).
+- **Layer-4 — Observation / Drift Detection**: **Milestone closure COMPLETE (M4.1–M4.6 on `main`)**  
+  - **M4.1–M4.6** merged on `main` (see tracker §1 and merge report referenced there). Ongoing observation product work, if any, is tracked in `docs/LIVE_ROADMAP_TRACKER.md` and `observation/README.md`; do not infer “Layer-4 partial” from older summaries without checking the tracker.
+- **Layer-5 — Workspace intelligence (product extension)**: **Wave-level milestones CLOSED** per tracker (evidence bundle, Context Layer packaging, grounded-Ask harness class closures — see `docs/LIVE_ROADMAP_TRACKER.md` §1 and Layer-5 rows).  
+  - Primary paths: `runtime/context_layer_service/`, `runtime/layer5/`, `packaging/motadata-context-layer/`, `runtime/assist_layer/` (Assist is **advisory-only**). Not a substitute for Plan-Gate / Layer-3 governance.
 
 ### Roadmaps & Governance Navigation
 
-- **Canonical spec entry point**: `docs/MASTER_SYSTEM_SPEC.md`
-- **4-layer architecture & axes**: `docs/ARCHITECTURE_4_LAYER.md`
+- **Sole canonical architecture entry (doctrine + spec navigation):** `docs/MASTER_SYSTEM_SPEC.md` (includes **Hierarchy of truth**; overrides narrative-only guides for binding behavior)
+- **4-layer core + Layer-5 mapping & axes**: `docs/ARCHITECTURE_4_LAYER.md`
+- **Layer-5 / product slice (scope, validation stance)**: `docs/PRODUCT_SLICE.md`
 - **Layer-2 ML Compilation spec**: `docs/LAYER2_COMPILATION_SPEC.md`
 - **Layer-3 Runtime spec**: `docs/LAYER3_RUNTIME_SPEC.md`
 - **Execution roadmaps**:
   - Live execution tracker: `docs/LIVE_ROADMAP_TRACKER.md` (single source of truth for Layer statuses and evidence)
   - Structural roadmap: `docs/ROADMAP_L2_L3_L4.md`
   - End-to-end execution view: `docs/SYSTEM_EXECUTION_ROADMAP.md`
-- **Master system guide**: `MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md` (master document for judgment, compilation, runtime, and observation including Layer-3/Layer-4 demos; canonical spec entry remains `docs/MASTER_SYSTEM_SPEC.md`)
+- **Master System Guide v1.7** (`MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md`): long-form narrative, demos, Appendix H — **supporting**; **canonical spec entry and gates:** `docs/MASTER_SYSTEM_SPEC.md` + `docs/LIVE_ROADMAP_TRACKER.md`
 
 ## 🚀 Quick Start
 
@@ -69,15 +76,16 @@ sudo systemctl status motadata-orchestrator
 journalctl -u motadata-orchestrator -f
 ```
 
-For more details, see [ORCHESTRATOR_SERVICE_GUIDE.md](ORCHESTRATOR_SERVICE_GUIDE.md)
+For more details, see [docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md](docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md)
 
 ---
 
-## 4-Layer Architecture
+## Architecture overview (4-layer core + Layer-5)
 
-The m-coder repository follows a 4-layer structure (Governance, ML Compilation, Runtime, Observation):
+The **constitutional** structure is four layers (Governance, ML Compilation, Runtime, Observation). **Layer-5** adds **workspace intelligence** (indexing, `layer5.evidence_bundle.v1`, Context Layer) and optional **Assist** — see **[docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md)** and **[docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md)**.
 
-- **[docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation
+- **[docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md)** — Directory philosophy, L1–L5 boundaries, axis separation
+- **[docs/PRODUCT_SLICE.md](docs/PRODUCT_SLICE.md)** — What is in scope for the current product slice (includes Layer-5 HTTP path)
 - **[docs/ROADMAP_L2_L3_L4.md](docs/ROADMAP_L2_L3_L4.md)** — L2/L3/L4 milestone roadmap, snapshot, sequencing
 - **[docs/architecture/Golden_Exemplars_Architecture_Map.md](docs/architecture/Golden_Exemplars_Architecture_Map.md)** — Golden Exemplars system map
 - **[observation/README.md](observation/README.md)** — Layer-4 (Observation) boundaries
@@ -101,15 +109,15 @@ make dvc-pull-dataset FREEZE_ID=<freeze_id>
 
 ---
 
-# H100 Backup System
+## Host backup (optional tooling)
 
-Automated backup system for H100 server data using Unison sync.
+Automated backup of a remote GPU host using Unison sync (legacy operator scripts; paths and script names may still contain older `h100` prefixes on disk).
 
 ## 📋 Quick Start
 
 ```bash
 # Run backup manually
-./backup-h100.sh
+./backup-gpu-host.sh
 
 # View what will be backed up
 ./verify-backup-contents.sh
@@ -121,7 +129,7 @@ ls -lt logs/ | head -5
 ## 📊 Backup Summary
 
 - **Source:** `harshil@152.228.213.249:/home/harshil/Harshil-PoCs`
-- **Destination:** `/root/H100Backups`
+- **Destination (example):** `/root/gpu-host-backups`
 - **Backup Size:** ~49 GB (optimized from 75 GB)
 - **Space Saved:** ~25 GB by excluding virtual environments
 - **Sync Type:** One-way (Remote → Local)
@@ -167,7 +175,7 @@ ls -lt logs/ | head -5
 ```bash
 crontab -e
 # Add this line for backups every 6 hours:
-0 */6 * * * /root/H100Backups/backup-h100.sh
+0 */6 * * * /root/gpu-host-backups/backup-gpu-host.sh
 ```
 
 ### Option 2: Systemd (Recommended for advanced users)
@@ -175,14 +183,14 @@ crontab -e
 ```bash
 sudo cp systemd/*.service systemd/*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now h100-backup.timer
+sudo systemctl enable --now gpu-host-backup.timer
 ```
 
 See [systemd/README.md](systemd/README.md) for details.
 
 ## 🔧 Configuration
 
-**Unison Profile:** `~/.unison/h100-backup.prf`
+**Unison Profile (example):** `~/.unison/gpu-host-backup.prf`
 
 Key settings:
 - One-way sync (remote always wins)
@@ -195,7 +203,7 @@ Key settings:
 Backup logs are stored in `logs/` directory:
 - Timestamped log for each backup run
 - Automatically cleaned up after 30 days
-- Unison detailed log: `~/.unison/h100-backup.log`
+- Unison detailed log (example): `~/.unison/gpu-host-backup.log`
 
 ## ⚠️ Important Notes
 
@@ -230,19 +238,19 @@ See [BACKUP_SETUP_GUIDE.md](BACKUP_SETUP_GUIDE.md) for more troubleshooting.
 ## 📦 Files in This Directory
 
 ```
-H100Backups/
+gpu-host-backups/
 ├── README.md                      # This file
 ├── QUICK_REFERENCE.md             # Quick command reference
 ├── BACKUP_SETUP_GUIDE.md          # Complete setup guide
 ├── BACKUP_CONTENTS.md             # Detailed backup contents
-├── backup-h100.sh                 # Main backup script
+├── backup-gpu-host.sh             # Main backup script (rename if your tree differs)
 ├── verify-backup-contents.sh      # Verification script
 ├── logs/                          # Backup logs (auto-cleaned)
 ├── systemd/                       # Systemd service files
-│   ├── h100-backup.service
-│   ├── h100-backup.timer
+│   ├── gpu-host-backup.service
+│   ├── gpu-host-backup.timer
 │   └── README.md
-└── [synced data from H100]        # Your backed up files
+└── [synced data from remote host] # Your backed up files
 ```
 
 ## 🎯 Next Steps
@@ -251,7 +259,7 @@ H100Backups/
 2. ✅ Backup script created
 3. ✅ Documentation complete
 4. ⏳ **TODO:** Set up periodic backups (cron or systemd)
-5. ⏳ **TODO:** Run first backup: `./backup-h100.sh`
+5. ⏳ **TODO:** Run first backup: `./backup-gpu-host.sh`
 
 ## 💡 Tips
 
@@ -265,124 +273,3 @@ H100Backups/
 
 **Need Help?** See [BACKUP_SETUP_GUIDE.md](BACKUP_SETUP_GUIDE.md) or [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
 
-Excellent! Iter10 is fully deployed and ready for evaluation.
-
-Summary of what we accomplished:
-
-✅ Proper Setup - Created clean Iter10-Training directory with all necessary files
-✅ Training - Completed 2 epochs with proper chat template formatting
-Training loss: 0.2231
-Eval loss: 0.4008
-✅ Merge - Successfully merged LoRA adapters with base Iter6 model
-✅ Tokenizer Fix - Corrected regex pattern issue
-✅ Deployment - vLLM now running with motadata-coder-iter10
-✅ Verification - Model loads correctly, all systems operational
-Ready for benchmark evaluation to see if we improved beyond the 20% baseline.
-
-SOLUTION OPTIONS
-================================================================================
-
-OPTION 1: Retrain with Evaluation-Format Data
-- Extract the 10 Motadata-Bench tasks
-- Use their ACTUAL prompts (with all the examples)
-- Train model to handle complex prompts
-- Problem: Only 10 examples (too small)
-
-OPTION 2: Augment Training Data with Evaluation Format
-- Take existing 1,148 examples
-- Reformat them to match evaluation prompts
-- Add format instructions + examples to each
-- Combine with original simple format
-- Total: ~2,300 examples (1,148 simple + 1,148 complex)
-
-OPTION 3: Fix Evaluation Prompts (Simplify)
-- Strip out the massive examples/instructions
-- Use simple format matching training data
-- Problem: May reduce model's ability to follow instructions
-
-OPTION 4: Hybrid Approach (RECOMMENDED)
-- Keep Iter6 as base (proven 20% baseline)
-- Create NEW training set:
-  * 1,148 original examples (simple format)
-  * 1,148 reformatted (evaluation format)
-  * 10 Motadata-Bench tasks (exact evaluation format)
-- Total: ~2,300 examples
-- Train Iter11 on combined dataset
------------------------------------------------------
-The Real Problem
-The evaluation flow should be:
-
-Setup script creates baseline files in /workspace/
-RAG should retrieve these baseline files and inject them into the prompt
-Model generates diffs based on the baseline code
-But currently:
-
-Setup script creates baseline files in /workspace/
-RAG searches the indexed Motadata codebase (not /workspace/)
-RAG retrieves irrelevant production code
-Model generates placeholder diffs
-The Genuine Fix
-We need to make the RAG API retrieve baseline files from the evaluation workspace instead of searching the indexed codebase. Here's my proposal:
-
-Add Tasks
-5
-Created
-Analyze results and decide on training data
-If Iter11 works with proper RAG, we may not need to retrain. Otherwise, create RAG-augmented training data for Iter12
-Re-evaluate Iter11 with proper RAG
-Run Motadata-Bench evaluation with fixed RAG to see if model generates real diffs
-Test RAG with evaluation workspace
-Verify that RAG retrieves baseline files from /workspace/ instead of indexed codebase
-Update evaluation client to pass workspace_root
-Modify evaluation/rag_client.py to pass workspace_root parameter so RAG knows where to find baseline files
-Implement workspace-aware RAG for evaluation
-Modify RAG API to retrieve baseline files from evaluation workspace when workspace_root is provided, instead of searching indexed codebase
-Perfect! Now let me present the complete analysis and implementation plan:
-
-Summary: Root Cause and Genuine Fix
-The Real Problem (Complete Picture)
-Evaluation Flow (Current - BROKEN):
-
-Setup script creates minimal baseline files in /workspace/src/main/java/...
-Evaluation sends prompt to RAG API (port 8081)
-RAG API searches indexed Motadata production codebase
-RAG retrieves irrelevant production code (not baseline files)
-Model receives task description + irrelevant context
-Model generates placeholder diffs with fake code
-What Should Happen:
-
-Setup script creates baseline files in /workspace/
-Evaluation sends prompt + workspace_root="/workspace" to RAG API
-RAG API reads baseline files from /workspace/
-RAG injects baseline file content into prompt
-Model receives task description + actual baseline code
-Model generates real diffs modifying the baseline code
-The Genuine Fix (Minimal, Surgical)
-Option 1: Workspace-Aware RAG (RECOMMENDED)
-
-Modify RAG API to read files directly from workspace_root when provided
-Update evaluation client to pass workspace_root="/workspace"
-No retraining needed - test with Iter11 first
-Option 2: Embed Baseline Files in Prompts
-
-Modify task executor to read baseline files and embed in prompts
-Simpler but bypasses RAG (doesn't test RAG capabilities)
-No retraining needed
-Option 3: Retrain with RAG-Augmented Data (If Options 1/2 fail)
-
-Create training data with baseline files embedded
-Train Iter12 model
-More expensive, only if needed
-Recommendation
-Start with Option 1 (workspace-aware RAG):
-
-It's the most elegant solution
-Tests the RAG system properly
-No retraining needed
-If Iter11 works with proper RAG, we're done!
-If not, we can try Option 2 or 3
-Implementation time: 30-60 minutes
-Testing time: 5 minutes
-Total: ~1 hour to know if we need to retrain
-
-Would you like me to proceed with Option 1: Workspace-Aware RAG?

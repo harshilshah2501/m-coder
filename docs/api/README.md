@@ -4,7 +4,7 @@ There is **no** single OpenAPI bundle under `docs/api/`. Contracts and entrypoin
 
 | Surface | Where |
 |---------|--------|
-| **RAG HTTP API** (implementation) | [`runtime/rag/src/api/rag_api.py`](../../runtime/rag/src/api/rag_api.py); deployment and curl examples in [docs/README.md](../README.md) (Quick Start) |
+| **Legacy RAG HTTP API** (archived; non-canonical) | [`archive/legacy_runtime_rag/src/api/rag_api.py`](../../archive/legacy_runtime_rag/src/api/rag_api.py); stub: [`archive/legacy_runtime_rag/README.md`](../../archive/legacy_runtime_rag/README.md) |
 | **Plan-Gate HTTP** (PlanRequest v0.1) | [`runtime/plan_gate_service/README.md`](../../runtime/plan_gate_service/README.md) |
 | **M3.3 execution gate** (pre-sandbox, in-process) | [`runtime/plangate/`](../../runtime/plangate/) — not the same as `plan_gate_service/`; see [runtime/README.md](../../runtime/README.md) |
 | **IDE / plugin JSON contracts** | [`runtime/ide/schemas/`](../../runtime/ide/schemas/); spec [JETBRAINS_PLUGIN_FLOW_V0_1.md](../JETBRAINS_PLUGIN_FLOW_V0_1.md) |
