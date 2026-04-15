@@ -139,3 +139,45 @@ def test_merge_effective_intent_debug_task():
 def test_merge_effective_intent_general_code_query():
     e = merge_effective_intent("general", "Where is FooBar implemented")
     assert e.primary_mode in ("ASK", "CODE", "DEBUG", "PLAN")
+
+
+def test_fusion_hard_caps_drop_surplus_generic_paths():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    _touch(
+        root / "src/main/java/com/mindarray/aiops/correlation/Owner.java",
+        "public class Owner { void correlation() {} }\n",
+    )
+    # Generic/support-style paths
+    _touch(root / "src/main/java/com/mindarray/api/APIServer.java", "class APIServer {}\n")
+    _touch(root / "src/main/java/com/mindarray/db/ConfigDBServiceImpl.java", "class ConfigDBServiceImpl {}\n")
+    _touch(root / "src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java", "class PolicyCacheServiceImpl {}\n")
+    _touch(root / "src/main/java/com/mindarray/notification/Notification.java", "class Notification {}\n")
+    _touch(root / "src/main/java/com/mindarray/manager/MotadataAppManager.java", "class MotadataAppManager {}\n")
+
+    idx = _idx_for(root)
+    q = "correlation"
+    r = retrieve_lexical(idx, q, 8, LexicalRetrievalConfig())
+    reg = load_registry(Path(__file__).resolve().parents[1] / "authority" / "product_authority_registry.yaml")
+    eff = merge_effective_intent("general", q)
+    fused, diag, _roles = fuse_and_filter(
+        r,
+        effective_intent=eff,
+        registry=reg,
+        code_index_adapter=None,
+        selected_file=None,
+        fusion_config=FusionConfig(max_generic_infra_paths=2, max_distractor_paths=1),
+        index=idx,
+        authority_resolution=None,
+    )
+
+    kept_paths = [h.relative_path for h in fused.hits]
+    generic_like = sum(
+        1
+        for p in kept_paths
+        if any(t in p.lower() for t in ("/api/", "/db/", "/cache/", "/notification/", "/manager/"))
+    )
+    assert generic_like <= 2
+    assert "hard_caps" in diag
+    assert isinstance((diag.get("hard_caps") or {}).get("dropped"), int)
+    tmp.cleanup()

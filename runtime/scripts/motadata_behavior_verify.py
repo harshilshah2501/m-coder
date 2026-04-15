@@ -93,6 +93,70 @@ def _context_bundle_files(ask_resp: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def _is_generic_infra_path(path: str) -> bool:
+    p = str(path or "").lower()
+    if not p:
+        return False
+    tokens = (
+        "/api/",
+        "/db/",
+        "/notification/",
+        "/cache/",
+        "/integration/",
+        "/manager/",
+        "config",
+        "constants",
+        "util",
+        "helper",
+    )
+    return any(t in p for t in tokens)
+
+
+def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict[str, Any]:
+    entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
+    rows = [e for e in entries if isinstance(e, dict)][: max(1, top_k)]
+    n = len(rows)
+    if n == 0:
+        return {
+            "top_k_size": 0,
+            "distractor_count_top_k": 0,
+            "generic_infra_count_top_k": 0,
+            "generic_infra_ratio_top_k": 0.0,
+            "owner_in_top1": False,
+            "owner_in_top3": False,
+            "anchor_hit_rate_top_k": 0.0,
+        }
+
+    paths = [str(r.get("relative_path") or "") for r in rows]
+    roles = [str(r.get("retrieval_role") or "") for r in rows]
+    snippets = [r.get("snippet") if isinstance(r.get("snippet"), dict) else {} for r in rows]
+    reasons = [str(s.get("selection_reason") or "") for s in snippets]
+
+    distractor = sum(1 for role in roles if role == "DISTRACTOR_RISK")
+    generic = sum(1 for p in paths if _is_generic_infra_path(p))
+    anchor_hits = sum(1 for r in reasons if r == "query_token_substring_anchor")
+
+    owner_file = ""
+    ar = evidence.get("authority_resolution")
+    if isinstance(ar, dict):
+        po = ar.get("primary_owner") if isinstance(ar.get("primary_owner"), dict) else {}
+        owner_file = str(po.get("file") or "")
+    owner_n = owner_file.lower()
+
+    owner_in_top1 = bool(owner_n and paths and paths[0].lower() == owner_n)
+    owner_in_top3 = bool(owner_n and any(p.lower() == owner_n for p in paths[:3]))
+
+    return {
+        "top_k_size": n,
+        "distractor_count_top_k": distractor,
+        "generic_infra_count_top_k": generic,
+        "generic_infra_ratio_top_k": round(generic / n, 4),
+        "owner_in_top1": owner_in_top1,
+        "owner_in_top3": owner_in_top3,
+        "anchor_hit_rate_top_k": round(anchor_hits / n, 4),
+    }
+
+
 def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
     checks = run.get("checks") or {}
     query = checks.get("query") or {}
@@ -114,6 +178,7 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
             "top_paths": export.get("top_paths") or [],
             "context_bundle_files": query.get("context_bundle_files") or [],
             "evidence_snippet_previews": query.get("evidence_snippet_previews") or [],
+            "retrieval_metrics": query.get("retrieval_metrics") or {},
         },
         "debug": {
             "pass": debug.get("pass", False),
@@ -158,6 +223,15 @@ def _print_concise(final: dict[str, Any]) -> None:
             print(f"  query_notes: {q.get('notes')}")
         if q.get("top_paths"):
             print(f"  top_paths: {q.get('top_paths')[:3]}")
+        rm = q.get("retrieval_metrics") if isinstance(q.get("retrieval_metrics"), dict) else {}
+        if rm:
+            print(
+                "  retrieval_metrics: "
+                f"distractor_count@k={rm.get('distractor_count_top_k')} "
+                f"generic_infra_ratio={rm.get('generic_infra_ratio_top_k')} "
+                f"owner@1={rm.get('owner_in_top1')} owner@3={rm.get('owner_in_top3')} "
+                f"anchor_hit_rate={rm.get('anchor_hit_rate_top_k')}"
+            )
         d = s.get("debug") or {}
         print(f"  debug: pass={d.get('pass')} routing_mode={d.get('routing_mode')}")
         if d.get("summary"):
@@ -190,6 +264,15 @@ def _print_dev(final: dict[str, Any]) -> None:
         print("--- Ask response (where the product answers your query) ---")
         print(f"governance_posture: PLAN_ONLY (implicit) | ask_path: {q.get('ask_path')}")
         print(f"evidence_quality: {q.get('evidence_quality')}  reasons: {q.get('quality_reasons')}")
+        rm = q.get("retrieval_metrics") if isinstance(q.get("retrieval_metrics"), dict) else {}
+        if rm:
+            print(
+                "retrieval_metrics: "
+                f"distractor_count@k={rm.get('distractor_count_top_k')} "
+                f"generic_infra_ratio={rm.get('generic_infra_ratio_top_k')} "
+                f"owner@1={rm.get('owner_in_top1')} owner@3={rm.get('owner_in_top3')} "
+                f"anchor_hit_rate={rm.get('anchor_hit_rate_top_k')}"
+            )
         print("")
         print("plan_summary.steps (full — this is the grounded answer text):")
         for i, step in enumerate(q.get("answer_steps") or [], start=1):
@@ -341,6 +424,7 @@ def run_once(
         "entries_count": len(entries),
         "top_paths": [e.get("relative_path") for e in entries[:5]],
         "workspace_identity_hash_present": bool(evidence.get("workspace_identity_hash")),
+        "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
     }
 
     ask_v1_req: dict[str, Any] = {
@@ -381,6 +465,7 @@ def run_once(
         "answer_notes": ((ask_query_resp.get("plan_summary") or {}).get("notes") or []),
         "context_bundle_files": cb_files,
         "evidence_snippet_previews": snip_previews,
+        "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
     }
 
     first_path = entries[0].get("relative_path") if entries else "runtime/plan_gate_service/app.py"
@@ -497,6 +582,10 @@ def _stable_signature(run: dict[str, Any]) -> str:
         "query_governance_posture": (checks.get("query") or {}).get("governance_posture"),
         "query_execution": (checks.get("query") or {}).get("execution"),
         "query_evidence_quality": (checks.get("query") or {}).get("evidence_quality"),
+        "query_distractor_count_top_k": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("distractor_count_top_k"),
+        "query_generic_infra_ratio_top_k": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("generic_infra_ratio_top_k"),
+        "query_owner_in_top1": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("owner_in_top1"),
+        "query_owner_in_top3": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("owner_in_top3"),
         "debug_pass": (checks.get("debug") or {}).get("pass"),
         "debug_routing_mode": (checks.get("debug") or {}).get("routing_mode"),
         "debug_has_summary": (checks.get("debug") or {}).get("has_summary"),
@@ -759,6 +848,7 @@ def _run_utility_scenario_row(
             "answer_steps": plan_steps,
             "context_bundle_files": _context_bundle_files(resp),
             "evidence_snippet_previews": snips,
+            "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
         }
         return {
             "id": sid,
@@ -772,6 +862,7 @@ def _run_utility_scenario_row(
                 "http": code,
                 "evidence_quality": meta.get("evidence_quality"),
                 "plan_steps_count": len(plan_steps),
+                "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
             },
             "developer_snapshot": dev_snapshot,
         }
@@ -1008,6 +1099,7 @@ def _run_scenario_row(
             "answer_steps": plan_steps,
             "context_bundle_files": _context_bundle_files(resp),
             "evidence_snippet_previews": snips,
+            "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
         }
         return {
             "id": sid,
@@ -1021,6 +1113,7 @@ def _run_scenario_row(
                 "evidence_quality": actual.get("evidence_quality"),
                 "ask_path": actual.get("ask_path"),
                 "plan_steps_count": len(plan_steps),
+                "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
             },
             "dev_snapshot": dev_snapshot,
         }

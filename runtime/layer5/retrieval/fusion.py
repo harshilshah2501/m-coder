@@ -9,7 +9,7 @@ Output ``RetrievalResult`` replaces lexical ordering/scores; evidence builder mu
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, TYPE_CHECKING
 
@@ -148,6 +148,9 @@ def _is_generic_infra_path(path: str) -> bool:
     pol = classify_file(path)
     if pol.file_class == "config":
         return True
+    pl = path.lower()
+    if any(tok in pl for tok in ("/api/", "/db/", "/notification/", "/cache/", "/integration/", "/manager/")):
+        return True
     base = path.rsplit("/", 1)[-1].lower()
     return bool(is_support_style_java_basename(base))
 
@@ -203,6 +206,61 @@ def _apply_infra_and_distractor_caps(
         out.append((h, sc, diag))
     out.sort(key=lambda x: x[1], reverse=True)
     return out
+
+
+def _apply_hard_path_caps(
+    ordered: List[Tuple[RetrievalHit, float, Dict[str, Any]]],
+    cfg: FusionConfig,
+    *,
+    top_k: int,
+    owner_path: Optional[str],
+    selected_file: Optional[str],
+) -> Tuple[List[Tuple[RetrievalHit, float, Dict[str, Any]]], Dict[str, Any]]:
+    """
+    Hard filter after scoring/sorting.
+
+    Unlike soft penalties, this can remove paths entirely so the final
+    context set is bounded by max_generic_infra_paths / max_distractor_paths.
+    """
+    if not ordered:
+        return ordered, {"kept": 0, "dropped": 0}
+
+    owner_n = _norm_rel(owner_path).lower() if owner_path else ""
+    selected_n = _norm_rel(selected_file).lower() if selected_file else ""
+    kept: List[Tuple[RetrievalHit, float, Dict[str, Any]]] = []
+    dropped: List[Dict[str, Any]] = []
+    generic_count = 0
+    distractor_count = 0
+
+    for h, sc, diag in ordered:
+        rel_n = _norm_rel(h.relative_path).lower()
+        protected = bool(rel_n and (rel_n == owner_n or rel_n == selected_n))
+        pol = classify_file(h.relative_path)
+        is_gen = _is_generic_infra_path(h.relative_path)
+        is_dist = is_noise_class(pol.file_class)
+
+        if is_gen and generic_count >= cfg.max_generic_infra_paths and not protected:
+            dropped.append({"path": h.relative_path, "reason": "hard_cap_generic_infra"})
+            continue
+        if is_dist and distractor_count >= cfg.max_distractor_paths and not protected:
+            dropped.append({"path": h.relative_path, "reason": "hard_cap_distractor"})
+            continue
+
+        kept.append((h, sc, diag))
+        if is_gen:
+            generic_count += 1
+        if is_dist:
+            distractor_count += 1
+        if len(kept) >= max(1, top_k):
+            break
+
+    return kept, {
+        "kept": len(kept),
+        "dropped": len(dropped),
+        "dropped_paths": dropped,
+        "generic_infra_kept": generic_count,
+        "distractor_kept": distractor_count,
+    }
 
 
 def fuse_and_filter(
@@ -305,6 +363,13 @@ def fuse_and_filter(
 
     fused_rows.sort(key=lambda x: x[1], reverse=True)
     fused_rows = _apply_infra_and_distractor_caps(fused_rows, cfg)
+    fused_rows, hard_cap_diag = _apply_hard_path_caps(
+        fused_rows,
+        cfg,
+        top_k=retrieval.top_k,
+        owner_path=owner_path,
+        selected_file=selected_file,
+    )
 
     new_hits: List[RetrievalHit] = []
     per_path_diags: List[Dict[str, Any]] = []
@@ -334,6 +399,7 @@ def fuse_and_filter(
         "max_distractor_paths": cfg.max_distractor_paths,
         "max_generic_infra_paths": cfg.max_generic_infra_paths,
     }
+    diag_root["hard_caps"] = hard_cap_diag
 
     out = RetrievalResult(
         query_raw=retrieval.query_raw,
