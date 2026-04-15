@@ -53,8 +53,9 @@ class FusionConfig:
     domain_prior_cap: float = 55.0
     active_file_boost_debug: float = 42.0
     active_file_boost_other: float = 14.0
-    max_distractor_paths: int = 3
-    max_generic_infra_paths: int = 4
+    max_distractor_paths: int = 1
+    max_generic_infra_paths: int = 2
+    min_paths_after_caps: int = 3
     weak_lexical_ratio: float = 0.12
     weak_match_penalty: float = 18.0
     total_positive_delta_cap: float = 220.0
@@ -228,6 +229,7 @@ def _apply_hard_path_caps(
     owner_n = _norm_rel(owner_path).lower() if owner_path else ""
     selected_n = _norm_rel(selected_file).lower() if selected_file else ""
     kept: List[Tuple[RetrievalHit, float, Dict[str, Any]]] = []
+    dropped_rows: List[Tuple[RetrievalHit, float, Dict[str, Any], str]] = []
     dropped: List[Dict[str, Any]] = []
     generic_count = 0
     distractor_count = 0
@@ -240,10 +242,14 @@ def _apply_hard_path_caps(
         is_dist = is_noise_class(pol.file_class)
 
         if is_gen and generic_count >= cfg.max_generic_infra_paths and not protected:
-            dropped.append({"path": h.relative_path, "reason": "hard_cap_generic_infra"})
+            reason = "hard_cap_generic_infra"
+            dropped.append({"path": h.relative_path, "reason": reason})
+            dropped_rows.append((h, sc, diag, reason))
             continue
         if is_dist and distractor_count >= cfg.max_distractor_paths and not protected:
-            dropped.append({"path": h.relative_path, "reason": "hard_cap_distractor"})
+            reason = "hard_cap_distractor"
+            dropped.append({"path": h.relative_path, "reason": reason})
+            dropped_rows.append((h, sc, diag, reason))
             continue
 
         kept.append((h, sc, diag))
@@ -254,13 +260,95 @@ def _apply_hard_path_caps(
         if len(kept) >= max(1, top_k):
             break
 
+    # Avoid over-thinning anchored retrieval: re-add best dropped rows deterministically
+    # until we satisfy the minimum context floor.
+    min_keep = max(1, min(top_k, cfg.min_paths_after_caps))
+    restored: List[Dict[str, Any]] = []
+    if len(kept) < min_keep and dropped_rows:
+        for h, sc, diag, reason in dropped_rows:
+            if len(kept) >= min_keep:
+                break
+            kept.append((h, sc, dict(diag)))
+            restored.append({"path": h.relative_path, "from_reason": reason})
+
     return kept, {
         "kept": len(kept),
         "dropped": len(dropped),
         "dropped_paths": dropped,
+        "restored_for_min_paths": restored,
         "generic_infra_kept": generic_count,
         "distractor_kept": distractor_count,
+        "min_paths_after_caps": min_keep,
     }
+
+
+def hard_filter_only(
+    retrieval: RetrievalResult,
+    *,
+    fusion_config: Optional[FusionConfig] = None,
+    owner_path: Optional[str] = None,
+    selected_file: Optional[str] = None,
+    collaborator_paths: Optional[Set[str]] = None,
+) -> Tuple[RetrievalResult, Dict[str, Any], Dict[str, RoleAssignment]]:
+    """
+    Apply deterministic hard caps without authority/domain fusion.
+
+    Used as a fallback when authority registry is unavailable so retrieval still
+    gets measurable post-selection filtering behavior.
+    """
+    cfg = fusion_config or FusionConfig()
+    rows: List[Tuple[RetrievalHit, float, Dict[str, Any]]] = []
+    for h in retrieval.hits:
+        rows.append(
+            (
+                h,
+                float(h.score),
+                {
+                    "path": h.relative_path,
+                    "lexical_score": float(h.score),
+                    "fused_score": float(h.score),
+                    "fallback": "hard_filter_only",
+                },
+            )
+        )
+    rows, hard_cap_diag = _apply_hard_path_caps(
+        rows,
+        cfg,
+        top_k=retrieval.top_k,
+        owner_path=owner_path,
+        selected_file=selected_file,
+    )
+    new_hits: List[RetrievalHit] = []
+    for h, _, _ in rows:
+        new_hits.append(h)
+    out = RetrievalResult(
+        query_raw=retrieval.query_raw,
+        query_tokens=retrieval.query_tokens,
+        top_k=retrieval.top_k,
+        hits=tuple(new_hits),
+        index_schema_version=retrieval.index_schema_version,
+        workspace_identity_hash=retrieval.workspace_identity_hash,
+        workspace_snapshot_hash=retrieval.workspace_snapshot_hash,
+        workspace_snapshot_source=retrieval.workspace_snapshot_source,
+        workspace_is_dirty=retrieval.workspace_is_dirty,
+        workspace_commit_sha=retrieval.workspace_commit_sha,
+    )
+    roles = assign_roles(
+        tuple(h.relative_path for h in new_hits),
+        owner_path=owner_path,
+        collaborator_paths=collaborator_paths or set(),
+    )
+    diag = {
+        "skipped_authority_fusion": True,
+        "reason": "registry_unavailable",
+        "fusion_config": {
+            "max_distractor_paths": cfg.max_distractor_paths,
+            "max_generic_infra_paths": cfg.max_generic_infra_paths,
+            "min_paths_after_caps": cfg.min_paths_after_caps,
+        },
+        "hard_caps": hard_cap_diag,
+    }
+    return out, diag, roles
 
 
 def fuse_and_filter(

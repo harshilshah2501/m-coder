@@ -10,7 +10,7 @@ from runtime.layer5.evidence import build_evidence_bundle
 from runtime.layer5.index import build_file_index
 from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
 from runtime.layer5.retrieval.effective_intent import merge_effective_intent
-from runtime.layer5.retrieval.fusion import FusionConfig, fuse_and_filter
+from runtime.layer5.retrieval.fusion import FusionConfig, fuse_and_filter, hard_filter_only
 from runtime.layer5.retrieval.roles import DISTRACTOR_RISK, PRIMARY_OWNER_CANDIDATE, SUPPORTING_CONTEXT
 from runtime.layer5.workspace.identity import WorkspaceIdentity
 
@@ -180,4 +180,40 @@ def test_fusion_hard_caps_drop_surplus_generic_paths():
     assert generic_like <= 2
     assert "hard_caps" in diag
     assert isinstance((diag.get("hard_caps") or {}).get("dropped"), int)
+    tmp.cleanup()
+
+
+def test_hard_filter_only_applies_caps_without_registry():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    _touch(
+        root / "src/main/java/com/mindarray/aiops/correlation/Owner.java",
+        "public class Owner { void correlation() {} }\n",
+    )
+    _touch(root / "src/main/java/com/mindarray/api/APIServer.java", "class APIServer {}\n")
+    _touch(root / "src/main/java/com/mindarray/db/ConfigDBServiceImpl.java", "class ConfigDBServiceImpl {}\n")
+    _touch(root / "src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java", "class PolicyCacheServiceImpl {}\n")
+    _touch(root / "src/main/java/com/mindarray/notification/Notification.java", "class Notification {}\n")
+    _touch(root / "src/main/java/com/mindarray/manager/MotadataAppManager.java", "class MotadataAppManager {}\n")
+
+    idx = _idx_for(root)
+    q = "correlation"
+    r = retrieve_lexical(idx, q, 8, LexicalRetrievalConfig())
+    filtered, diag, roles = hard_filter_only(
+        r,
+        fusion_config=FusionConfig(max_generic_infra_paths=2, max_distractor_paths=1, min_paths_after_caps=3),
+        owner_path=None,
+        selected_file=None,
+        collaborator_paths=set(),
+    )
+    kept_paths = [h.relative_path for h in filtered.hits]
+    generic_like = sum(
+        1
+        for p in kept_paths
+        if any(t in p.lower() for t in ("/api/", "/db/", "/cache/", "/notification/", "/manager/"))
+    )
+    assert generic_like <= 2
+    assert diag.get("skipped_authority_fusion") is True
+    assert "hard_caps" in diag
+    assert roles
     tmp.cleanup()

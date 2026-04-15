@@ -119,11 +119,16 @@ def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict
     if n == 0:
         return {
             "top_k_size": 0,
+            "distractor_count_at_k": 0,
+            "generic_infra_count_at_k": 0,
+            "generic_infra_ratio": 0.0,
+            "owner_in_top1": False,
+            "owner_in_top3": False,
+            "anchor_hit_rate_at_k": 0.0,
+            # Backward-compatible aliases:
             "distractor_count_top_k": 0,
             "generic_infra_count_top_k": 0,
             "generic_infra_ratio_top_k": 0.0,
-            "owner_in_top1": False,
-            "owner_in_top3": False,
             "anchor_hit_rate_top_k": 0.0,
         }
 
@@ -148,11 +153,16 @@ def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict
 
     return {
         "top_k_size": n,
+        "distractor_count_at_k": distractor,
+        "generic_infra_count_at_k": generic,
+        "generic_infra_ratio": round(generic / n, 4),
+        "owner_in_top1": owner_in_top1,
+        "owner_in_top3": owner_in_top3,
+        "anchor_hit_rate_at_k": round(anchor_hits / n, 4),
+        # Backward-compatible aliases:
         "distractor_count_top_k": distractor,
         "generic_infra_count_top_k": generic,
         "generic_infra_ratio_top_k": round(generic / n, 4),
-        "owner_in_top1": owner_in_top1,
-        "owner_in_top3": owner_in_top3,
         "anchor_hit_rate_top_k": round(anchor_hits / n, 4),
     }
 
@@ -227,10 +237,10 @@ def _print_concise(final: dict[str, Any]) -> None:
         if rm:
             print(
                 "  retrieval_metrics: "
-                f"distractor_count@k={rm.get('distractor_count_top_k')} "
-                f"generic_infra_ratio={rm.get('generic_infra_ratio_top_k')} "
+                f"distractor_count@k={rm.get('distractor_count_at_k')} "
+                f"generic_infra_ratio={rm.get('generic_infra_ratio')} "
                 f"owner@1={rm.get('owner_in_top1')} owner@3={rm.get('owner_in_top3')} "
-                f"anchor_hit_rate={rm.get('anchor_hit_rate_top_k')}"
+                f"anchor_hit_rate={rm.get('anchor_hit_rate_at_k')}"
             )
         d = s.get("debug") or {}
         print(f"  debug: pass={d.get('pass')} routing_mode={d.get('routing_mode')}")
@@ -268,10 +278,10 @@ def _print_dev(final: dict[str, Any]) -> None:
         if rm:
             print(
                 "retrieval_metrics: "
-                f"distractor_count@k={rm.get('distractor_count_top_k')} "
-                f"generic_infra_ratio={rm.get('generic_infra_ratio_top_k')} "
+                f"distractor_count@k={rm.get('distractor_count_at_k')} "
+                f"generic_infra_ratio={rm.get('generic_infra_ratio')} "
                 f"owner@1={rm.get('owner_in_top1')} owner@3={rm.get('owner_in_top3')} "
-                f"anchor_hit_rate={rm.get('anchor_hit_rate_top_k')}"
+                f"anchor_hit_rate={rm.get('anchor_hit_rate_at_k')}"
             )
         print("")
         print("plan_summary.steps (full — this is the grounded answer text):")
@@ -582,8 +592,8 @@ def _stable_signature(run: dict[str, Any]) -> str:
         "query_governance_posture": (checks.get("query") or {}).get("governance_posture"),
         "query_execution": (checks.get("query") or {}).get("execution"),
         "query_evidence_quality": (checks.get("query") or {}).get("evidence_quality"),
-        "query_distractor_count_top_k": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("distractor_count_top_k"),
-        "query_generic_infra_ratio_top_k": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("generic_infra_ratio_top_k"),
+        "query_distractor_count_at_k": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("distractor_count_at_k"),
+        "query_generic_infra_ratio": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("generic_infra_ratio"),
         "query_owner_in_top1": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("owner_in_top1"),
         "query_owner_in_top3": ((checks.get("query") or {}).get("retrieval_metrics") or {}).get("owner_in_top3"),
         "debug_pass": (checks.get("debug") or {}).get("pass"),

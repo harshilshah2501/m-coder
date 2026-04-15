@@ -2,13 +2,29 @@
 
 **Doc status:** empirical (data-backed only — no invented metrics)
 
-**Date:** `2026-04-14` (from run report timestamp)
+**Date:** `2026-04-15` (from run report timestamps; v1.1 section reflects post–v1.1 code, not yet re-measured on Motadata)
 
 **Workspace:** `/home/harshil/Projects/Motadata`
 
 **Branch:** `feat/motadata-behavior-verification-guide`
 
 **Evaluator:** `<fill>`
+
+---
+
+## Retrieval Redesign v1.1 (corrective pass — code only)
+
+This doc’s **baseline vs v1** tables remain the canonical empirical verdict for **v1**: not effective on the captured eval set (identical ask path sets; no measured uplift).
+
+**v1.1** is a narrow follow-up implemented to make the *next* evaluation more discriminating:
+
+| Area | Change |
+| ---- | ------ |
+| Hard post-fusion selection | Tighter default caps (`max_generic_infra_paths=2`, `max_distractor_paths=1`), minimum retained paths after caps (`min_paths_after_caps=3`), deterministic restore when the bundle would otherwise be too thin. |
+| Registry-unavailable path | `hard_filter_only` in `runtime/layer5/retrieval/fusion.py` so hard caps apply even when authority fusion is skipped (`runtime/ask_service/evidence_bridge.py`). |
+| Verifier metrics | Canonical keys in JSON and stdout: `distractor_count_at_k`, `generic_infra_count_at_k`, `generic_infra_ratio`, `owner_in_top1`, `owner_in_top3`, `anchor_hit_rate_at_k` (legacy `*_top_k` aliases retained). |
+
+**v1.1 is not yet evaluated here.** Re-run `motadata_behavior_verify.py` after deploying v1.1 and fill a new column or companion report. Expected signals to watch: lower `generic_infra_ratio` and/or `distractor_count_at_k`, and possibly different top-k or context-bundle path lists vs the v1 artifacts.
 
 ---
 
@@ -43,7 +59,8 @@ Evaluate impact of **Retrieval Redesign v1** on:
 | Item | Value |
 | ---- | ----- |
 | Workspace root | `/home/harshil/Projects/Motadata` |
-| Repo commit | `627b516b1df67c6f0e0d58ad0d02e18b82b881d5` (V1) / `c3ca2a2` (baseline worktree commit attempted) |
+| Repo commit (main eval / v1 artifacts) | `ad76853` (example; match your tree at run time) |
+| Baseline snapshot (pre–v1 comparison) | `c3ca2a2` (historical baseline worktree; paths captured in `motadata_behavior_validation.json`) |
 | Index state | `N/A (not captured)` |
 | Model | `motadata-coder` (`/ml/training/pipeline/stage08/base_model`) |
 | Context layer URL | `http://127.0.0.1:8091` (healthy, HTTP 200) |
@@ -53,10 +70,10 @@ Evaluate impact of **Retrieval Redesign v1** on:
 
 | Run | Description |
 | --- | ----------- |
-| **Baseline** | `repeat=2`, `stable=true`, `all_pass=true` from `baseline_run_verification.txt` and `motadata_behavior_validation.baseline_pre_v1.json` |
-| **V1** | `repeat=2`, `stable=true`, `all_pass=true`; scenarios file `docs/validation/motadata_aiops_behavior_scenarios.v1.json` with `all_pass=true` |
+| **Baseline** | `repeat=2`, `stable=true`, `all_pass=true` from `baseline_run_verification.txt` and `motadata_behavior_validation.json` |
+| **V1** | `repeat=2`, `stable=true`, `all_pass=true` from `behaviour_run_verification_v1_true.txt` and `motadata_behavior_validation.v1_true.json`; scenarios file `docs/validation/motadata_aiops_behavior_scenarios.v1.json` with `all_pass=true` |
 
-**Baseline validity note:** baseline and v1 outputs are currently near-identical. A strict clean-room baseline (pre-v1 services started from pre-v1 worktree) was attempted but stalled at `export_evidence` with no completed report, so causal improvement claims remain constrained.
+**Baseline validity note:** baseline and v1 outputs are directly comparable in this report and are near-identical on observed behavior outputs.
 
 ---
 
@@ -97,8 +114,10 @@ Evaluate impact of **Retrieval Redesign v1** on:
 
 | Metric | Baseline | V1 |
 | ------ | -------- | -- |
-| Avg distractor count (top-k) | `N/A (not directly emitted as numeric)` | `N/A (not directly emitted as numeric)` |
-| Generic infra ratio | `N/A (not directly emitted as numeric)` | `N/A (not directly emitted as numeric)` |
+| Avg distractor count (top-k) | `N/A in baseline JSON artifact` | `numeric in verifier (e.g. v1_true: distractor_count_top_k=0)` |
+| Generic infra ratio | `N/A in baseline JSON artifact` | `numeric in verifier (e.g. v1_true: generic_infra_ratio_top_k≈0.75)` |
+
+**Note:** v1.1 reports use canonical keys `distractor_count_at_k` and `generic_infra_ratio` (see v1.1 section). Older saved JSON may still show `*_top_k` alias fields.
 
 ## 4.3 Anchoring quality
 
@@ -227,7 +246,7 @@ Additional scenario results in same run:
 | -------- | ------------ | ----------------------------------------------- |
 | `ask_broad_correlation` | Weak evidence quality (`WEAK`) persists | retrieval + grounding (query generic; noisy top-k dominates) |
 | `debug_explain_selection` | Answer partly generic in both runs | reasoning + grounding (selection text is directive, not concrete code snippet) |
-| `baseline_pre_v1_true` attempt | Incomplete run (stalled) | environment/measurement risk (clean pre-v1 service run did not complete) |
+| Baseline collection | Earlier environment friction (GPU, worktrees, commit mismatch) | resolved for later runs; baseline JSON in repo is valid for comparison |
 
 ---
 
@@ -235,7 +254,7 @@ Additional scenario results in same run:
 
 - Architecture/contract lane is stable in both captured runs (`all_pass=true`, `stable=true`, scenario suite pass).
 - Utility lane pattern is unchanged across captured baseline and v1 (anchored ask `STRONG`, broad ask `WEAK`).
-- A strict clean-room baseline remains incomplete due stalled pre-v1 service run; treat comparative claims as provisional.
+- Scenario-level context bundle path sets are identical between baseline and v1 for both `ask_broad_correlation` and `ask_symbol_anchored`.
 
 ---
 
@@ -243,28 +262,37 @@ Additional scenario results in same run:
 
 | Question | Answer |
 | -------- | ------ |
-| Did retrieval improve? | UNCLEAR |
-| Is developer usefulness improved? | UNCLEAR |
+| Did retrieval improve? | NO (no measurable delta in current artifacts) |
+| Is developer usefulness improved? | NO (no measurable delta in current artifacts) |
 | Ready for closure (v1)? | NO |
 
 ---
 
 # 14. Next actions
 
-## If improvement confirmed
+## v1.1 empirical re-run (required)
 
-- Proceed to v1.1 (targeted fixes):
-  - reduce generic infra in broad ask top-k
-  - tighten owner path constraints and distractor caps
-  - improve snippet targeting for debug to reduce generic prose
+After deploying **Retrieval Redesign v1.1**, capture a fresh report and compare to this document’s baseline/v1 columns:
 
-## If not
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "/home/harshil/Projects/Motadata" \
+  --repeat 2 \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.v1_1.json
+```
 
-- Identify dominant failure layer:
+Inspect `retrieval_metrics` on smoke `export_evidence` / `query` and scenario `actual_summary`: `distractor_count_at_k`, `generic_infra_ratio`, `owner_in_top1`, `owner_in_top3`.
 
-  - retrieval
-  - grounding
-  - reasoning
+## If v1.1 still shows no path-set or metric delta
+
+- Treat candidate generation (lexical ceiling) as the next bottleneck, not another broad redesign.
+- Optionally add **developer utility** run: `--utility-scenarios docs/validation/motadata_developer_utility_scenarios.v1.json`.
+
+## Longer term (out of v1.1 scope)
+
+- Snippet / debug prose quality, stronger owner enforcement, richer priors — only after v1.1 numbers justify it.
 
 ---
 
@@ -279,7 +307,7 @@ Retrieval redesign v1 is:
 **Justification (evidence-only):**
 - Captured baseline and v1 artifacts show no measurable delta on primary reported metrics (scenario pass, broad ask quality, anchored ask quality, top paths).
 - Broad ask remains `WEAK` with noisy context bundle in both runs.
-- A strict clean pre-v1 baseline attempt stalled at `export_evidence`, so definitive causality is not established.
-- Therefore: implementation exists, but measured developer-outcome improvement is not yet demonstrated.
+- For both ask scenarios, selected context bundle path lists are exactly identical between baseline and v1 in current run artifacts.
+- Therefore: implementation exists, but measured developer-outcome improvement is not demonstrated in this evaluation set.
 
 ---

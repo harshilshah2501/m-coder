@@ -59,7 +59,12 @@ def try_build_layer5_evidence(
     from runtime.layer5.index import build_file_index
     from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
     from runtime.layer5.retrieval.effective_intent import merge_effective_intent
-    from runtime.layer5.retrieval.fusion import FusionConfig, fuse_and_filter, fusion_authority_note
+    from runtime.layer5.retrieval.fusion import (
+        FusionConfig,
+        fuse_and_filter,
+        fusion_authority_note,
+        hard_filter_only,
+    )
     from runtime.layer5.retrieval.quality_gate import assess_evidence_quality
     from runtime.layer5.workspace.resolver import ResolverConfig, WorkspaceResolver
 
@@ -124,7 +129,20 @@ def try_build_layer5_evidence(
         r = fused
         roles_map = {p: ra.role for p, ra in role_objs.items()}
     else:
-        fusion_diag = {"skipped": True, "reason": "registry_unavailable"}
+        owner_file = None
+        if isinstance(authority_resolution, dict):
+            po = authority_resolution.get("primary_owner")
+            if isinstance(po, dict):
+                owner_file = str(po.get("file") or "").strip() or None
+        filtered, fusion_diag, role_objs = hard_filter_only(
+            r,
+            fusion_config=FusionConfig(),
+            owner_path=owner_file,
+            selected_file=selected_file,
+            collaborator_paths=set(),
+        )
+        r = filtered
+        roles_map = {p: ra.role for p, ra in role_objs.items()}
 
     evb = build_evidence_bundle(
         r,
