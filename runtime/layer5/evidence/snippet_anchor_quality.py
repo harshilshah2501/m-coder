@@ -101,6 +101,9 @@ def _code_shape_bonus(line_lower: str) -> int:
         b += 35
     if any(k in line_lower for k in ("public void", "private void", "protected void", "void ", "return ")):
         b += 28
+    # Control-flow / error paths (prefer over import-only or comments)
+    if any(k in line_lower for k in (" if ", "if(", "else", "switch", "case ", "catch ", "throw ", "for(", "while(")):
+        b += 22
     if "@" in line_lower and any(x in line_lower for x in ("override", "inject", "notnull")):
         b += 15
     if "(" in line_lower and ")" in line_lower and any(k in line_lower for k in ("(", ")", "{", ";")):

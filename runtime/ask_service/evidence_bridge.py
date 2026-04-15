@@ -1,13 +1,13 @@
 """
-Ask-side bridge: build layer5.evidence_bundle.v1 using existing L5 modules (no L5 edits).
+Ask-side bridge: build layer5.evidence_bundle.v1 using existing L5 modules.
 
-Used when the client sets ask_request.evidence_first=true. Workspace path must exist
-on this host (WSL) or ASK_DEFAULT_REPO_ROOT must point at a valid tree.
+Pipeline: retrieve_lexical → fuse_and_filter (Stage B) → build_evidence_bundle → quality gate.
 """
 
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from pathlib import Path
 
 from typing import Any, Dict, List, Optional, Tuple
@@ -37,7 +37,7 @@ def resolve_workspace_input_path(repo_root: str) -> Optional[str]:
     if default:
         p = Path(default).resolve()
         if p.exists() and p.is_dir():
-            return str(p)
+            return str(default)
     return None
 
 
@@ -47,13 +47,20 @@ def try_build_layer5_evidence(
     request_id: str,
     revision_for_bundle: str,
     top_k: int = 8,
+    *,
+    task_type: str = "general",
+    selected_file: Optional[str] = None,
 ) -> Optional[Tuple[Dict[str, Any], ContextBundle]]:
     """
-    Resolve workspace, index, retrieve, evidence bundle. Returns (evidence to_dict, ContextBundle) or None.
+    Resolve workspace, index, retrieve, fusion (Stage B), evidence bundle. Returns (evidence to_dict, ContextBundle) or None.
     """
     from runtime.layer5.evidence import build_evidence_bundle
+    from runtime.layer5.evidence.models import EvidenceBundle
     from runtime.layer5.index import build_file_index
     from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
+    from runtime.layer5.retrieval.effective_intent import merge_effective_intent
+    from runtime.layer5.retrieval.fusion import FusionConfig, fuse_and_filter, fusion_authority_note
+    from runtime.layer5.retrieval.quality_gate import assess_evidence_quality
     from runtime.layer5.workspace.resolver import ResolverConfig, WorkspaceResolver
 
     resolver = WorkspaceResolver(ResolverConfig())
@@ -66,10 +73,14 @@ def try_build_layer5_evidence(
     except (OSError, FileNotFoundError, NotADirectoryError) as e:
         LOG.info("[ASK evidence_first] index build failed: %s", e)
         return None
+
     r = retrieve_lexical(idx, query, top_k, LexicalRetrievalConfig())
+    effective = merge_effective_intent(task_type, query)
 
     authority_resolution = None
     structural_context = None
+    adapter = None
+    registry = None
     try:
         from runtime.layer5.authority.authority_evidence import (
             build_authority_resolution,
@@ -82,7 +93,6 @@ def try_build_layer5_evidence(
 
         reg_path = Path(__file__).resolve().parents[1] / "layer5" / "authority" / "product_authority_registry.yaml"
         registry = load_registry(reg_path)
-        adapter = None
         try:
             adapter = create_adapter(code_index=build_index(Path(workspace_input_path)))
         except Exception:
@@ -95,30 +105,81 @@ def try_build_layer5_evidence(
     except Exception:
         authority_resolution = None
         structural_context = None
+        registry = None
+        adapter = None
+
+    fusion_diag: Dict[str, Any] = {}
+    roles_map: Dict[str, str] = {}
+    if registry is not None:
+        fused, fusion_diag, role_objs = fuse_and_filter(
+            r,
+            effective_intent=effective,
+            registry=registry,
+            code_index_adapter=adapter,
+            selected_file=selected_file,
+            fusion_config=FusionConfig(),
+            index=idx,
+            authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
+        )
+        r = fused
+        roles_map = {p: ra.role for p, ra in role_objs.items()}
+    else:
+        fusion_diag = {"skipped": True, "reason": "registry_unavailable"}
 
     evb = build_evidence_bundle(
         r,
         idx,
         authority_resolution=authority_resolution,
         structural_context=structural_context,
+        role_by_path=roles_map if roles_map else None,
+        authority_note=fusion_authority_note() if registry is not None else None,
+        fusion_diagnostics=fusion_diag if fusion_diag else None,
     )
+
+    paths = [e.relative_path for e in evb.entries]
+    grounding = [
+        (e.relative_path, e.snippet_selection_reason, e.retrieval_role or "")
+        for e in evb.entries
+    ]
+    qa = assess_evidence_quality(
+        query,
+        paths,
+        grounding_entries=grounding,
+        effective_intent=effective,
+    )
+    fd = dict(evb.fusion_diagnostics or {})
+    fd["effective_intent"] = {
+        "primary_mode": effective.primary_mode,
+        "task_type": effective.task_type_raw,
+        "conflicts": list(effective.conflicts),
+    }
+    fd["quality_reasons"] = list(qa.quality_reasons)
+    evb_final = replace(
+        evb,
+        evidence_quality=qa.evidence_quality,
+        fusion_diagnostics=fd,
+    )
+
     rev = (revision_for_bundle or "").strip() or "unknown-revision"
-    ctx = context_bundle_from_evidence(evb, task_id=request_id or "ask-task", revision=rev)
-    return evb.to_dict(), ctx
+    ctx = context_bundle_from_evidence(evb_final, task_id=request_id or "ask-task", revision=rev)
+    return evb_final.to_dict(), ctx
 
 
-def context_bundle_from_evidence(evb, task_id: str, revision: str) -> ContextBundle:
+def context_bundle_from_evidence(evb: EvidenceBundle, task_id: str, revision: str) -> ContextBundle:
     """Map EvidenceBundle entries to ContextBundle (snippet text as item content)."""
     rev = revision or "unknown-revision"
     items: List[ContextItem] = []
     for ent in evb.entries:
         text = ent.snippet_text or ""
+        sr = ent.snippet_selection_reason
+        if ent.retrieval_role:
+            sr = f"{sr}; role={ent.retrieval_role}"
         items.append(
             ContextItem(
                 path=ent.relative_path,
                 content=text,
                 byte_size=len(text.encode("utf-8")),
-                selection_reason=ent.snippet_selection_reason,
+                selection_reason=sr,
             )
         )
     lim = ContextBundleLimits(max_files=len(items), max_bytes=sum(i.byte_size for i in items), truncated=False)

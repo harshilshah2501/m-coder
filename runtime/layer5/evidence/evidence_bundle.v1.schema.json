@@ -34,7 +34,11 @@
     "workspace_commit_sha": { "type": "string" },
     "canonical_root": { "type": "string" },
     "a5_authority_note": {
-      "const": "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets."
+      "type": "string",
+      "enum": [
+        "Candidate order and retrieval_score come from A5 lexical retrieval only; A6 must not rescore or reorder based on snippets.",
+        "Candidate order and retrieval_score come from Stage B fusion (lexical + authority + domain priors + constraints); A6 does not reorder by snippet."
+      ]
     },
     "entries": {
       "type": "array",
@@ -49,6 +53,22 @@
     },
     "structural_context": {
       "$ref": "#/definitions/structural_context"
+    },
+    "fusion_diagnostics": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "evidence_quality": {
+      "type": "string",
+      "enum": ["STRONG", "WEAK", "INSUFFICIENT", "NO_MATCH"]
+    },
+    "supporting_evidence": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "distractor_paths": {
+      "type": "array",
+      "items": { "type": "string" }
     }
   },
   "definitions": {
@@ -237,6 +257,14 @@
         "relative_path": { "type": "string" },
         "retrieval_score": { "type": "integer" },
         "retrieval_breakdown": { "$ref": "#/definitions/retrieval_breakdown" },
+        "retrieval_role": {
+          "type": "string",
+          "enum": [
+            "PRIMARY_OWNER_CANDIDATE",
+            "SUPPORTING_CONTEXT",
+            "DISTRACTOR_RISK"
+          ]
+        },
         "snippet": { "$ref": "#/definitions/snippet" }
       }
     },
@@ -251,7 +279,12 @@
       "properties": {
         "path_substrings": { "type": "integer" },
         "basename_substrings": { "type": "integer" },
-        "content_substrings": { "type": "integer" }
+        "content_substrings": { "type": "integer" },
+        "fusion_lexical_base": { "type": "integer" },
+        "fusion_total": { "type": "integer" },
+        "fusion_domain_prior": { "type": "integer" },
+        "fusion_active_file": { "type": "integer" },
+        "fusion_weak_penalty": { "type": "integer" }
       }
     },
     "snippet": {

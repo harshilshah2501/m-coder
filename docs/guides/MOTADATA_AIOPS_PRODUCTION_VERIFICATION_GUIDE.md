@@ -169,6 +169,39 @@ Expected:
 | Code        | `/v0/execute`                      | `schema_version=execute_response.v0.1`, non-empty `outcome`, explicit `executed` boolean                  |
 | Agent       | probe `/v0/agent`, inspect Ask     | `/v0/agent` returns `404` (expected), Ask includes `assist_layer` metadata                                |
 
+### 6.3 Manual testing with your own queries
+
+The JSON scenario suite (section 7) pins **fixed** prompts and expectations for regression. For **interactive** checks with **your** wording, use either the verifier smoke run (fast, one command) or raw HTTP (full control).
+
+**Option A — Verifier smoke run (custom Ask + Debug text only)**  
+One pass still exercises **all five** capabilities in order (health, export, ask, explain-debug, plan, execute, agent probe). You only override the **Ask** and **EXPLAIN_DEBUG** strings:
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --query "YOUR_REPO_QUESTION_HERE" \
+  --debug-query "YOUR_DEBUG_QUESTION_HERE" \
+  --top-k 8 \
+  --print dev
+```
+
+- **Query (Ask):** governed by `--query`. Inspect `plan_summary.steps`, `metadata`, and `context_bundle` in the dev output or `--print json`.
+- **Debug:** governed by `--debug-query`. The script sets `task_type=EXPLAIN_DEBUG` and picks **`selected_file` from the top retrieved evidence path** (same as the default smoke behavior). If you need a **specific** Java/Path file for debugging, use Option B for the debug call.
+- **Plan / Code:** this command still uses the verifier’s **built-in** shadow plan event and **safe** `echo` execute probe (not customizable via flags). To exercise **your** policy event or **your** command, use Option B for those two calls only.
+- **Agent:** there is no separate “agent query”; confirm `assist_layer` on the Ask response above and `404` on `GET/POST` `/v0/agent` (the script does both).
+
+**Option B — Raw HTTP (per capability, full payloads)**  
+Use when you need a custom **plan** `ide_event`, **execute** `command`, or **debug** `selected_file` / `client_context.selection`. Set `CONTEXT_URL`, `PLAN_GATE_URL`, and `MOTADATA_REPO_ROOT` as in section 4.
+
+| Capability | What you control | Minimal flow |
+| ---------- | ---------------- | ------------ |
+| **Ask** | Your natural-language `query` | `POST ${CONTEXT_URL}/v1/export_evidence` with `workspace_root`, `query`, `top_k` → build `ask_request.v1.0` with that `evidence_bundle` → `POST ${PLAN_GATE_URL}/v1/ask`. |
+| **Debug** | `query`, `selected_file`, `selection` text | Same export as Ask (often same base question) → `POST /v1/ask` with `task_type=EXPLAIN_DEBUG`, `selected_file`, `client_context.selection`, plus `evidence_bundle` / hash fields as in Plan-Gate docs. |
+| **Plan** | `ide_event`, `mode`, policy knobs | `POST ${PLAN_GATE_URL}/v0/plan` with `plan_request.v0.1` body (see `[runtime/plan_gate_service/README.md](../../runtime/plan_gate_service/README.md)`). |
+| **Code** | `command`, `repo_root` | `POST ${PLAN_GATE_URL}/v0/execute` with `execute_request.v0.1` (use a **non-destructive** command in production-like environments). |
+| **Agent** | N/A | `POST ${PLAN_GATE_URL}/v0/agent` → expect **404**; any successful `POST /v1/ask` should still include `assist_layer`-related fields as in your product contract. |
+
+**Combining approaches:** run Option A for a quick end-to-end sanity check with your Ask/Debug wording, then Option B only for the endpoints where you need custom plan/execute/debug shapes.
 
 ---
 

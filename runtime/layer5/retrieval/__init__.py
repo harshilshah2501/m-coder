@@ -32,6 +32,8 @@ from runtime.layer5.retrieval.policy import (
     query_topology_focus,
 )
 from runtime.layer5.retrieval.query import normalize_query
+from runtime.layer5.retrieval.fusion import FusionConfig, fuse_and_filter, fusion_authority_note
+from runtime.layer5.retrieval.effective_intent import EffectiveIntent, merge_effective_intent
 
 __all__ = [
     "LexicalRetrievalConfig",
@@ -55,4 +57,9 @@ __all__ = [
     "query_topology_focus",
     "normalize_query",
     "retrieve_lexical",
+    "FusionConfig",
+    "fuse_and_filter",
+    "fusion_authority_note",
+    "EffectiveIntent",
+    "merge_effective_intent",
 ]

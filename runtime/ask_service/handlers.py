@@ -161,6 +161,8 @@ def handle_ask_request(ask_request: dict) -> dict:
                 query,
                 request_id or "ask-task",
                 revision or "unknown-revision",
+                task_type=str(task_type or "general"),
+                selected_file=str(selected_file).strip() if selected_file else None,
             )
             if pair:
                 evidence_bundle_dict, bundle = pair
@@ -198,7 +200,29 @@ def handle_ask_request(ask_request: dict) -> dict:
                 routing_mode="plan_only",
             )
 
-    quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+    grounding_evidence = None
+    if evidence_bundle_dict and isinstance(evidence_bundle_dict.get("entries"), list):
+        grounding_evidence = []
+        for ent in evidence_bundle_dict["entries"]:
+            if not isinstance(ent, dict):
+                continue
+            rel = str(ent.get("relative_path") or "")
+            sn = ent.get("snippet") if isinstance(ent.get("snippet"), dict) else {}
+            sr = str(sn.get("selection_reason") or "")
+            role = str(ent.get("retrieval_role") or "")
+            grounding_evidence.append((rel, sr, role))
+    if grounding_evidence:
+        from runtime.layer5.retrieval.effective_intent import merge_effective_intent
+
+        eff = merge_effective_intent(str(task_type or "general"), query)
+        quality = assess_evidence_quality(
+            query,
+            [item.path for item in bundle.items],
+            grounding_entries=grounding_evidence,
+            effective_intent=eff,
+        )
+    else:
+        quality = assess_evidence_quality(query, [item.path for item in bundle.items])
     ar_src = evidence_bundle_dict.get("authority_resolution") if evidence_bundle_dict else None
     authority_resolution = ar_src if isinstance(ar_src, dict) else None
     metadata = {
@@ -212,6 +236,13 @@ def handle_ask_request(ask_request: dict) -> dict:
         metadata["authority_resolution_present"] = True
         metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
         metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
+    fd = evidence_bundle_dict.get("fusion_diagnostics") if evidence_bundle_dict else None
+    if isinstance(fd, dict):
+        ei = fd.get("effective_intent")
+        if isinstance(ei, dict) and ei.get("primary_mode"):
+            metadata["retrieval_primary_mode"] = ei["primary_mode"]
+        if fd.get("per_path") is not None:
+            metadata["fusion_per_path_count"] = len(fd["per_path"]) if isinstance(fd["per_path"], list) else 0
     if quality.blocked:
         block_message = (
             "No context files matched relevant code evidence for this ask."

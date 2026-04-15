@@ -150,6 +150,19 @@ class AuthorityRanker:
 
         return ctx
 
+    def compute_path_score(
+        self,
+        file_path: str,
+        base_score: float,
+        context: RankingContext,
+    ) -> RankingDiagnostics:
+        """
+        Public wrapper for per-path authority-aware scoring (Stage B fusion).
+
+        Applies the same rules as ``rank_hits`` without sorting.
+        """
+        return self._compute_score(file_path, base_score, context)
+
     def _extract_package(self, file_path: str) -> str:
         """Extract Java package from file path."""
         # motadata/src/main/java/com/mindarray/aiops/correlation/X.java

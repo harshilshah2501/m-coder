@@ -5,7 +5,7 @@ Deterministic evidence quality gate over retrieved/context file paths.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 from runtime.layer5.retrieval.config import (
     QUALITY_GATE_THRESHOLDS_V1,
@@ -19,6 +19,10 @@ from runtime.layer5.retrieval.intent import (
     classify_intent,
 )
 from runtime.layer5.retrieval.policy import classify_file, is_noise_class
+from runtime.layer5.retrieval.roles import DISTRACTOR_RISK, PRIMARY_OWNER_CANDIDATE
+
+if TYPE_CHECKING:
+    from runtime.layer5.retrieval.effective_intent import EffectiveIntent
 
 STRONG = "STRONG"
 WEAK = "WEAK"
@@ -71,8 +75,67 @@ def _has_strong_symbol_match(path: str, symbol_tokens: Tuple[str, ...]) -> bool:
     return len(set(matched)) >= 2
 
 
-def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessment:
-    intent = classify_intent(query)
+def _refine_with_grounding(
+    base: QualityAssessment,
+    paths: List[str],
+    grounding_entries: List[Tuple[str, str, str]],
+) -> QualityAssessment:
+    """
+    grounding_entries: (relative_path, snippet_selection_reason, retrieval_role)
+    """
+    n = len(paths)
+    if n == 0 or not grounding_entries:
+        return base
+    by_path = {p: (sr, role) for p, sr, role in grounding_entries}
+    distractors = sum(1 for p in paths if by_path.get(p, ("", ""))[1] == DISTRACTOR_RISK)
+    primary_owner_hits = sum(1 for p in paths if by_path.get(p, ("", ""))[1] == PRIMARY_OWNER_CANDIDATE)
+    weak_snippets = sum(
+        1
+        for p in paths
+        if p in by_path and by_path[p][0] != "query_token_substring_anchor"
+    )
+    dr = distractors / n
+    wr = weak_snippets / n
+    reasons = list(base.quality_reasons)
+    quality = base.evidence_quality
+    if dr >= 0.45:
+        reasons.append("HIGH_DISTRACTOR_RATIO")
+        if quality == STRONG:
+            quality = WEAK
+    if wr >= 0.55 and quality == STRONG:
+        reasons.append("WEAK_SNIPPET_GROUNDING")
+        quality = WEAK
+    if primary_owner_hits >= 1 and dr < 0.35 and weak_snippets <= max(1, n // 3):
+        if quality == WEAK and "LOW_CORE_RATIO" not in reasons and "NO_SYMBOL_MATCH" not in reasons:
+            reasons.append("OWNER_ANCHOR_RECOVERY")
+            quality = STRONG
+    dom = dict(base.dominance_metrics)
+    dom["distractor_ratio"] = round(dr, 4)
+    dom["weak_snippet_ratio"] = round(wr, 4)
+    dom["primary_owner_hits"] = float(primary_owner_hits)
+    blocked = quality in {INSUFFICIENT, NO_MATCH}
+    return QualityAssessment(
+        intent_type=base.intent_type,
+        evidence_quality=quality,
+        quality_reasons=tuple(sorted(set(reasons))),
+        dominance_metrics=dom,
+        blocked=blocked,
+        policy_version=base.policy_version,
+    )
+
+
+def assess_evidence_quality(
+    query: str,
+    file_paths: List[str],
+    *,
+    grounding_entries: Optional[List[Tuple[str, str, str]]] = None,
+    effective_intent: Optional["EffectiveIntent"] = None,
+) -> QualityAssessment:
+    intent = (
+        effective_intent.query_intent
+        if effective_intent is not None
+        else classify_intent(query)
+    )
     paths = list(file_paths)
     n = len(paths)
     if n == 0:
@@ -163,7 +226,7 @@ def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessm
         quality = STRONG
 
     blocked = quality in {INSUFFICIENT, NO_MATCH}
-    return QualityAssessment(
+    base = QualityAssessment(
         intent_type=intent.intent_type,
         evidence_quality=quality,
         quality_reasons=tuple(sorted(set(reasons))),
@@ -178,6 +241,10 @@ def assess_evidence_quality(query: str, file_paths: List[str]) -> QualityAssessm
         blocked=blocked,
         policy_version=QUALITY_GATE_VERSION,
     )
+    if grounding_entries:
+        ge = [(p, sr, r) for p, sr, r in grounding_entries if p in file_paths]
+        return _refine_with_grounding(base, paths, ge)
+    return base
 
 
 def operator_hints_for_assessment(assessment: QualityAssessment) -> Tuple[str, ...]:

@@ -1,0 +1,24 @@
+# Domain priors: query_terms → path patterns → bounded boost (RETRIEVAL_REDESIGN_SPEC_V1 §5.3).
+# Merged at runtime; anti-double-count with lexical subsystem inference in fusion.py.
+version: 1
+priors:
+  - id: correlation
+    query_terms: [correlation, correlate, rca, duplicate, dedup]
+    subsystem_tags: [correlation]
+    path_substrings: [correlation, topology, incident]
+    max_boost: 55.0
+  - id: alerting
+    query_terms: [alert, alerts, notification, incident, policy, suppression]
+    subsystem_tags: [alerting]
+    path_substrings: [alert, policy, notification, incident]
+    max_boost: 50.0
+  - id: probe
+    query_terms: [probe, object_down, availability, polling]
+    subsystem_tags: []
+    path_substrings: [probe, availability, collector, metric]
+    max_boost: 45.0
+  - id: topology
+    query_terms: [topology, graph, node, edge, anomaly]
+    subsystem_tags: [topology]
+    path_substrings: [topology, graph, anomaly]
+    max_boost: 48.0

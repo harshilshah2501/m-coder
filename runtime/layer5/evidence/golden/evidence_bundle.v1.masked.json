@@ -35,5 +35,7 @@
   ],
   "schema_hint": "layer5.evidence_bundle.v1",
   "top_k": 1,
-  "workspace_identity_hash": ""
+  "workspace_identity_hash": "",
+  "workspace_is_dirty": false,
+  "workspace_snapshot_source": "path_only"
 }

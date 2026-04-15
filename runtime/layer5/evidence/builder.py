@@ -1,11 +1,10 @@
 """
 Build evidence bundles (v1) from A5 retrieval output.
 
-**Authority rule:** A5 ``RetrievalResult.hits`` order and per-hit ``score`` /
-``breakdown`` are authoritative. A6 does not reinterpret ranking, rescore
-candidates, or apply snippet-based heuristics to reorder or filter hits.
-Snippet extraction only **grounds** each candidate in file text with a bounded,
-deterministic span.
+**Authority rule:** ``RetrievalResult.hits`` order and per-hit ``score`` /
+``breakdown`` are authoritative (lexical-only or post-Stage-B fusion). A6 does
+not reorder or rescore based on snippet content. Snippet extraction only
+**grounds** each candidate in file text with a bounded, deterministic span.
 
 **Identity policy:** See ``identity_policy.py``. Default strict mode raises
 ``IdentityMismatchError`` when retrieval and index workspace hashes differ.
@@ -14,10 +13,11 @@ deterministic span.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 from runtime.layer5.index.models import WorkspaceFileIndex
 from runtime.layer5.retrieval.models import RetrievalResult
+from runtime.layer5.retrieval.roles import DISTRACTOR_RISK, SUPPORTING_CONTEXT
 
 from runtime.layer5.evidence.config import SnippetConfig
 from runtime.layer5.evidence.identity_policy import IdentityMismatchError
@@ -44,6 +44,10 @@ def build_evidence_bundle(
     authority_resolution: Optional[Dict[str, Any]] = None,
     structural_context: Optional[Dict[str, Any]] = None,
     owner_evidence: Optional[Tuple[Dict[str, Any], ...]] = None,
+    role_by_path: Optional[Mapping[str, str]] = None,
+    authority_note: Optional[str] = None,
+    fusion_diagnostics: Optional[Dict[str, Any]] = None,
+    evidence_quality: Optional[str] = None,
 ) -> EvidenceBundle:
     """
     Produce an ``EvidenceBundle`` (v1) for one A5 result and its source index.
@@ -64,6 +68,7 @@ def build_evidence_bundle(
 
     cfg = snippet_config or SnippetConfig()
     root = Path(index.canonical_root)
+    roles = dict(role_by_path) if role_by_path else {}
     entries: Tuple[EvidenceEntry, ...] = tuple(
         EvidenceEntry.from_hit(
             rank=rank,
@@ -76,9 +81,15 @@ def build_evidence_bundle(
                 query_tokens=retrieval.query_tokens,
                 config=cfg,
             ),
+            retrieval_role=roles.get(hit.relative_path, ""),
         )
         for rank, hit in enumerate(retrieval.hits)
     )
+
+    supporting_paths = tuple(
+        p for p, r in roles.items() if r == SUPPORTING_CONTEXT
+    )
+    distractor_paths = tuple(p for p, r in roles.items() if r == DISTRACTOR_RISK)
 
     oe: Tuple[Dict[str, Any], ...]
     if owner_evidence is not None:
@@ -94,6 +105,8 @@ def build_evidence_bundle(
     else:
         oe = ()
 
+    note = authority_note if authority_note is not None else A5_AUTHORITY_NOTE
+
     return EvidenceBundle(
         provisional=False,
         schema_hint=SCHEMA_HINT,
@@ -104,12 +117,16 @@ def build_evidence_bundle(
         workspace_identity_hash=retrieval.workspace_identity_hash,
         canonical_root=str(root),
         entries=entries,
-        a5_authority_note=A5_AUTHORITY_NOTE,
+        a5_authority_note=note,
         authority_resolution=authority_resolution,
         owner_evidence=oe,
         structural_context=structural_context,
-        workspace_snapshot_hash=retrieval.workspace_snapshot_hash,
-        workspace_snapshot_source=retrieval.workspace_snapshot_source,
-        workspace_is_dirty=retrieval.workspace_is_dirty,
-        workspace_commit_sha=retrieval.workspace_commit_sha,
+        fusion_diagnostics=fusion_diagnostics,
+        evidence_quality=evidence_quality,
+        supporting_evidence_paths=supporting_paths,
+        distractor_paths=distractor_paths,
+        workspace_snapshot_hash=getattr(retrieval, "workspace_snapshot_hash", "") or "",
+        workspace_snapshot_source=getattr(retrieval, "workspace_snapshot_source", "path_only") or "path_only",
+        workspace_is_dirty=bool(getattr(retrieval, "workspace_is_dirty", False)),
+        workspace_commit_sha=getattr(retrieval, "workspace_commit_sha", "") or "",
     )

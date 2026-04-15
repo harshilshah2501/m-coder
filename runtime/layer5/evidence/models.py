@@ -26,6 +26,8 @@ class EvidenceEntry:
     relative_path: str
     retrieval_score: int
     retrieval_breakdown: Dict[str, int]
+    retrieval_role: str
+    """PRIMARY_OWNER_CANDIDATE | SUPPORTING_CONTEXT | DISTRACTOR_RISK | \"\" when unknown."""
     snippet_text: str
     start_line: int
     end_line: int
@@ -45,6 +47,7 @@ class EvidenceEntry:
         retrieval_score: int,
         retrieval_breakdown: Dict[str, int],
         span: SnippetSpan,
+        retrieval_role: str = "",
     ) -> "EvidenceEntry":
         return cls(
             provisional=False,
@@ -52,6 +55,7 @@ class EvidenceEntry:
             relative_path=relative_path,
             retrieval_score=retrieval_score,
             retrieval_breakdown=dict(retrieval_breakdown),
+            retrieval_role=retrieval_role or "",
             snippet_text=span.text,
             start_line=span.start_line,
             end_line=span.end_line,
@@ -64,7 +68,7 @@ class EvidenceEntry:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d = {
             "provisional": self.provisional,
             "rank": self.rank,
             "relative_path": self.relative_path,
@@ -82,6 +86,9 @@ class EvidenceEntry:
                 "truncated_by_max_bytes": self.truncated_by_max_bytes,
             },
         }
+        if self.retrieval_role:
+            d["retrieval_role"] = self.retrieval_role
+        return d
 
 
 @dataclass(frozen=True)
@@ -101,6 +108,10 @@ class EvidenceBundle:
     authority_resolution: Optional[Dict[str, Any]] = None
     owner_evidence: Tuple[Dict[str, Any], ...] = ()
     structural_context: Optional[Dict[str, Any]] = None
+    fusion_diagnostics: Optional[Dict[str, Any]] = None
+    evidence_quality: Optional[str] = None
+    supporting_evidence_paths: Tuple[str, ...] = ()
+    distractor_paths: Tuple[str, ...] = ()
     workspace_snapshot_hash: str = ""
     workspace_snapshot_source: str = "path_only"
     workspace_is_dirty: bool = False
@@ -132,6 +143,14 @@ class EvidenceBundle:
             d["owner_evidence"] = list(self.owner_evidence)
         if self.structural_context is not None:
             d["structural_context"] = self.structural_context
+        if self.fusion_diagnostics is not None:
+            d["fusion_diagnostics"] = self.fusion_diagnostics
+        if self.evidence_quality is not None:
+            d["evidence_quality"] = self.evidence_quality
+        if self.supporting_evidence_paths:
+            d["supporting_evidence"] = list(self.supporting_evidence_paths)
+        if self.distractor_paths:
+            d["distractor_paths"] = list(self.distractor_paths)
         return d
 
     def to_json(self, *, sort_keys: bool = True) -> str:
