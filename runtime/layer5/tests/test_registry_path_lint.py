@@ -82,4 +82,63 @@ def test_lint_fails_when_primary_missing(tmp_path: Path):
     issues = lint_registry_against_workspace(registry, tmp_path)
     assert len(issues) == 1
     assert issues[0].role == "primary_owner"
-    assert issues[0].detail == "missing"
+    assert issues[0].detail.startswith("missing")
+
+
+def test_lint_accepts_motadata_prefixed_paths_when_workspace_is_module_root(tmp_path: Path):
+    """Registry uses ``motadata/src/...``; files live at ``workspace/src/...`` (no nested folder)."""
+    reg = _write_registry(
+        tmp_path,
+        textwrap.dedent(
+            """
+            schema_version: "product_authority_registry.v1.1"
+            last_updated: "2026-01-01"
+            maintainer: "test"
+            concepts:
+              demo:
+                primary_owner:
+                  file: "motadata/src/Ok.java"
+                  class: "Ok"
+                verification:
+                  last_verified_at: "2026-01-01T00:00:00Z"
+                  verification_source: "human"
+                  staleness_threshold_days: 90
+            """
+        ),
+    )
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "Ok.java").write_text("class Ok {}\n", encoding="utf-8")
+
+    registry = load_registry(reg)
+    issues = lint_registry_against_workspace(registry, tmp_path)
+    assert issues == []
+
+
+def test_lint_accepts_nested_motadata_tree_when_workspace_is_monorepo_root(tmp_path: Path):
+    """Paths as written: ``workspace/motadata/src/...``."""
+    reg = _write_registry(
+        tmp_path,
+        textwrap.dedent(
+            """
+            schema_version: "product_authority_registry.v1.1"
+            last_updated: "2026-01-01"
+            maintainer: "test"
+            concepts:
+              demo:
+                primary_owner:
+                  file: "motadata/src/Ok.java"
+                  class: "Ok"
+                verification:
+                  last_verified_at: "2026-01-01T00:00:00Z"
+                  verification_source: "human"
+                  staleness_threshold_days: 90
+            """
+        ),
+    )
+    mot = tmp_path / "motadata" / "src"
+    mot.mkdir(parents=True)
+    (mot / "Ok.java").write_text("class Ok {}\n", encoding="utf-8")
+
+    registry = load_registry(reg)
+    issues = lint_registry_against_workspace(registry, tmp_path)
+    assert issues == []

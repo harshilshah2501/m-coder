@@ -29,6 +29,38 @@ def _norm_rel(p: str) -> str:
     return p.replace("\\", "/").strip()
 
 
+def _resolve_path_candidates(root: Path, rel: str) -> List[Path]:
+    """
+    Return ordered unique absolute paths to validate for a registry-relative path.
+
+    Supports two common layouts:
+
+    - **Nested module:** ``workspace_root/motadata/src/...`` (paths in YAML start with ``motadata/``).
+    - **Flat module root:** ``workspace_root/src/...`` when ``--workspace-root`` is already the
+      inner ``motadata`` checkout — YAML may still use the ``motadata/`` prefix for portability.
+    """
+    rel = _norm_rel(rel)
+    raw: List[Path] = [root / rel]
+    if rel.startswith("motadata/"):
+        rest = rel[len("motadata/") :].lstrip("/")
+        if rest:
+            raw.append(root / rest)
+    else:
+        raw.append(root / "motadata" / rel)
+    out: List[Path] = []
+    seen: set[str] = set()
+    for p in raw:
+        try:
+            rp = p.resolve()
+        except OSError:
+            continue
+        key = str(rp)
+        if key not in seen:
+            seen.add(key)
+            out.append(rp)
+    return out
+
+
 def collect_registry_file_refs(registry: AuthorityRegistry) -> List[Tuple[str, str, str]]:
     """
     Returns ``(concept_id, role, relative_file)`` for every file referenced in the registry.
@@ -62,7 +94,8 @@ def lint_registry_against_workspace(
     """
     Check that every referenced file exists under ``workspace_root`` as a regular file.
 
-    Paths in YAML are joined as ``workspace_root / relative_path`` (POSIX-style segments).
+    Paths in YAML are resolved with :func:`_resolve_path_candidates` so both a nested
+    ``motadata/`` tree and a flat module root match the same registry entries.
     """
     root = workspace_root.resolve()
     issues: List[RegistryPathIssue] = []
@@ -78,33 +111,54 @@ def lint_registry_against_workspace(
                 )
             )
             continue
-        candidate = (root / rel).resolve()
+        candidates = _resolve_path_candidates(root, rel)
+        primary = candidates[0]
+
+        matched: Path | None = None
+        for candidate in candidates:
+            try:
+                candidate.relative_to(root)
+            except ValueError:
+                continue
+            if candidate.is_file():
+                matched = candidate
+                break
+        if matched is not None:
+            continue
+
         try:
-            candidate.relative_to(root)
+            primary.relative_to(root)
         except ValueError:
             issues.append(
                 RegistryPathIssue(
                     concept_id=concept_id,
                     role=role,
                     file=rel,
-                    expected_abs=str(candidate),
+                    expected_abs=str(primary),
                     detail="path_escapes_workspace_root",
                 )
             )
             continue
-        if not candidate.is_file():
-            detail = "missing"
-            if candidate.exists() and not candidate.is_file():
-                detail = "not_a_file"
-            issues.append(
-                RegistryPathIssue(
-                    concept_id=concept_id,
-                    role=role,
-                    file=rel,
-                    expected_abs=str(candidate),
-                    detail=detail,
-                )
+
+        detail = "missing"
+        if primary.exists() and not primary.is_file():
+            detail = "not_a_file"
+        elif any(c.exists() and not c.is_file() for c in candidates):
+            detail = "not_a_file"
+        else:
+            extras = [c for c in candidates[1:] if c != primary]
+            if extras:
+                detail = f"missing (also tried: {', '.join(str(x) for x in extras)})"
+
+        issues.append(
+            RegistryPathIssue(
+                concept_id=concept_id,
+                role=role,
+                file=rel,
+                expected_abs=str(primary),
+                detail=detail,
             )
+        )
     return issues
 
 
