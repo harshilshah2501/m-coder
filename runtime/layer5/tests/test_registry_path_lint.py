@@ -114,6 +114,36 @@ def test_lint_accepts_motadata_prefixed_paths_when_workspace_is_module_root(tmp_
     assert issues == []
 
 
+def test_lint_prefers_motadata_submodule_when_registry_paths_are_src_prefixed(tmp_path: Path):
+    """``src/main/java/...`` in YAML resolves under ``workspace/motadata/`` first (product repo layout)."""
+    reg = _write_registry(
+        tmp_path,
+        textwrap.dedent(
+            """
+            schema_version: "product_authority_registry.v1.1"
+            last_updated: "2026-01-01"
+            maintainer: "test"
+            concepts:
+              demo:
+                primary_owner:
+                  file: "src/main/java/Ok.java"
+                  class: "Ok"
+                verification:
+                  last_verified_at: "2026-01-01T00:00:00Z"
+                  verification_source: "human"
+                  staleness_threshold_days: 90
+            """
+        ),
+    )
+    target = tmp_path / "motadata" / "src" / "main" / "java" / "Ok.java"
+    target.parent.mkdir(parents=True)
+    target.write_text("class Ok {}\n", encoding="utf-8")
+
+    registry = load_registry(reg)
+    issues = lint_registry_against_workspace(registry, tmp_path)
+    assert issues == []
+
+
 def test_lint_accepts_nested_motadata_tree_when_workspace_is_monorepo_root(tmp_path: Path):
     """Paths as written: ``workspace/motadata/src/...``."""
     reg = _write_registry(

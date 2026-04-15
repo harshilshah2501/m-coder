@@ -29,24 +29,38 @@ def _norm_rel(p: str) -> str:
     return p.replace("\\", "/").strip()
 
 
+def _inner_rel(rel: str) -> str:
+    """Path inside the ``motadata`` module: strip at most one leading ``motadata/`` segment."""
+    r = _norm_rel(rel)
+    if r.startswith("motadata/"):
+        return r[len("motadata/") :].lstrip("/")
+    return r
+
+
 def _resolve_path_candidates(root: Path, rel: str) -> List[Path]:
     """
     Return ordered unique absolute paths to validate for a registry-relative path.
 
-    Supports two common layouts:
+    Typical clone layout when ``--workspace-root`` is the product repo folder named
+    ``Motadata``::
 
-    - **Nested module:** ``workspace_root/motadata/src/...`` (paths in YAML start with ``motadata/``).
-    - **Flat module root:** ``workspace_root/src/...`` when ``--workspace-root`` is already the
-      inner ``motadata`` checkout — YAML may still use the ``motadata/`` prefix for portability.
+        <workspace_root>/motadata/src/main/java/...
+
+    So we **first** try ``workspace_root / motadata / <inner>``, where ``inner`` is the
+    registry path with an optional leading ``motadata/`` removed (Java paths are then
+    ``.../src/main/java/...``).
+
+    Then we try the path as written in YAML, then a flat ``workspace_root/src/...`` when
+    the registry used a ``motadata/`` prefix (inner checkout without an extra folder).
     """
     rel = _norm_rel(rel)
-    raw: List[Path] = [root / rel]
-    if rel.startswith("motadata/"):
-        rest = rel[len("motadata/") :].lstrip("/")
-        if rest:
-            raw.append(root / rest)
-    else:
-        raw.append(root / "motadata" / rel)
+    inner = _inner_rel(rel)
+    raw: List[Path] = []
+    if inner:
+        raw.append(root / "motadata" / inner)
+    raw.append(root / rel)
+    if rel.startswith("motadata/") and inner:
+        raw.append(root / inner)
     out: List[Path] = []
     seen: set[str] = set()
     for p in raw:
