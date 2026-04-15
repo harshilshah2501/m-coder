@@ -33,6 +33,7 @@ def export_evidence_bundle_dict(
     authority_adapter: Optional[Any] = None,
     index_cache: Optional[Any] = None,
     index_cache_metrics: Optional[Dict[str, Any]] = None,
+    enable_stage_a_v2: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Build ``layer5.evidence_bundle.v1`` as a plain dict.
@@ -44,6 +45,9 @@ def export_evidence_bundle_dict(
     the same workspace snapshot key (service latency only). Ignored when
     ``file_index`` is set. When ``index_cache_metrics`` is provided, it is updated
     with ``index_cache_hit``, ``file_index_build_ms``, and ``code_index_build_ms``.
+
+    Optional ``enable_stage_a_v2`` overrides ``LexicalRetrievalConfig`` Stage A (HTTP
+    ``/v1/export_evidence`` body). When ``None``, uses env/default from config.
 
     Raises:
         ValueError: empty workspace/query or invalid top_k.
@@ -198,11 +202,15 @@ def export_evidence_bundle_dict(
         structural_context = None
 
     # Authority before lexical (Stage A owner injection); matches ask evidence_bridge ordering.
+    if enable_stage_a_v2 is None:
+        lex_cfg = LexicalRetrievalConfig()
+    else:
+        lex_cfg = LexicalRetrievalConfig(enable_stage_a_v2=enable_stage_a_v2)
     r = retrieve_lexical(
         idx,
         q,
         top_k,
-        LexicalRetrievalConfig(),
+        lex_cfg,
         task_type="general",
         selected_file=None,
         authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,

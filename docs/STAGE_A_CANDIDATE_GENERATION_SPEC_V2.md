@@ -43,7 +43,8 @@ Judge Stage A using existing verifier fields: `owner_in_top1`, `owner_in_top3`, 
 
 ## 9. Toggle without code changes (A/B exports)
 
-- **`MOTADATA_L5_ENABLE_STAGE_A_V2`** — `1` / unset = Stage A on (default); `0` / `false` / `off` = Stage A off. Drives `LexicalRetrievalConfig.enable_stage_a_v2` when callers use `LexicalRetrievalConfig()` without overriding the field.
+- **`MOTADATA_L5_ENABLE_STAGE_A_V2`** — read in the **context layer process** only. Setting it on the shell that runs `motadata_behavior_verify.py` does **not** change `/v1/export_evidence` unless that same env is set for the **server** (e.g. systemd, stack script) or you restart the stack with it.
+- **HTTP (preferred for A/B):** POST `/v1/export_evidence` with optional boolean **`enable_stage_a_v2`**. **`motadata_behavior_verify.py --export-stage-a off|on|default`** sends this field so two `--out` runs from the same client differ without restarting the service.
 
 ## 10. Observable surface (exports + verifier)
 

@@ -31,7 +31,7 @@ import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 
 def _utc_now() -> str:
@@ -191,6 +191,30 @@ def _stage_a_summary_from_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         "lane_counts": lane_counts,
         "pool_paths": pool_paths,
     }
+
+
+def _export_stage_a_from_arg(choice: str) -> Optional[bool]:
+    """CLI --export-stage-a: default = server/env; on/off = force Stage A for export_evidence only."""
+    if choice == "default":
+        return None
+    return choice == "on"
+
+
+def _export_evidence_payload(
+    workspace_root: str,
+    query: str,
+    top_k: int,
+    *,
+    enable_stage_a_v2: Optional[bool] = None,
+) -> dict[str, Any]:
+    p: dict[str, Any] = {
+        "workspace_root": workspace_root,
+        "query": query,
+        "top_k": top_k,
+    }
+    if enable_stage_a_v2 is not None:
+        p["enable_stage_a_v2"] = enable_stage_a_v2
+    return p
 
 
 def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
@@ -445,6 +469,8 @@ def run_once(
     query: str,
     debug_query: str,
     top_k: int,
+    *,
+    export_stage_a: Optional[bool] = None,
 ) -> dict[str, Any]:
     checks: dict[str, Any] = {}
 
@@ -462,7 +488,7 @@ def run_once(
 
     code, evidence = _post(
         f"{context_url}/v1/export_evidence",
-        {"workspace_root": workspace_root, "query": query, "top_k": top_k},
+        _export_evidence_payload(workspace_root, query, top_k, enable_stage_a_v2=export_stage_a),
         timeout=300,
     )
     entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -844,6 +870,8 @@ def _run_utility_scenario_row(
     context_url: str,
     plan_gate_url: str,
     top_k: int,
+    *,
+    export_stage_a: Optional[bool] = None,
 ) -> dict[str, Any]:
     sid = str(scenario.get("id") or "unknown")
     cap = str(scenario.get("capability") or "")
@@ -857,7 +885,7 @@ def _run_utility_scenario_row(
         q = str(inputs.get("query") or "")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            {"workspace_root": ws, "query": q, "top_k": top_k},
+            _export_evidence_payload(ws, q, top_k, enable_stage_a_v2=export_stage_a),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -924,7 +952,7 @@ def _run_utility_scenario_row(
         sel_text = str(inputs.get("selection_text") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            {"workspace_root": ws, "query": q, "top_k": top_k},
+            _export_evidence_payload(ws, q, top_k, enable_stage_a_v2=export_stage_a),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1041,6 +1069,8 @@ def run_utility_scenario_suite(
     context_url: str,
     plan_gate_url: str,
     top_k: int,
+    *,
+    export_stage_a: Optional[bool] = None,
 ) -> dict[str, Any]:
     data = json.loads(scenarios_path.read_text(encoding="utf-8"))
     if data.get("schema_version") != "motadata_developer_utility_scenarios.v1":
@@ -1057,7 +1087,16 @@ def run_utility_scenario_suite(
     for sc in data.get("scenarios") or []:
         if not isinstance(sc, dict):
             continue
-        results.append(_run_utility_scenario_row(sc, workspace_root, context_url, plan_gate_url, tk))
+        results.append(
+            _run_utility_scenario_row(
+                sc,
+                workspace_root,
+                context_url,
+                plan_gate_url,
+                tk,
+                export_stage_a=export_stage_a,
+            )
+        )
     all_pass = all(r.get("pass") for r in results) if results else False
     return {
         "file": str(scenarios_path),
@@ -1092,6 +1131,8 @@ def _run_scenario_row(
     context_url: str,
     plan_gate_url: str,
     top_k: int,
+    *,
+    export_stage_a: Optional[bool] = None,
 ) -> dict[str, Any]:
     sid = str(scenario.get("id") or "unknown")
     cap = str(scenario.get("capability") or "")
@@ -1103,7 +1144,7 @@ def _run_scenario_row(
         q = str(scenario.get("query") or "")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            {"workspace_root": workspace_root, "query": q, "top_k": top_k},
+            _export_evidence_payload(workspace_root, q, top_k, enable_stage_a_v2=export_stage_a),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1179,7 +1220,7 @@ def _run_scenario_row(
         sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            {"workspace_root": workspace_root, "query": base_q, "top_k": top_k},
+            _export_evidence_payload(workspace_root, base_q, top_k, enable_stage_a_v2=export_stage_a),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1303,13 +1344,10 @@ def _run_scenario_row(
         }
 
     if cap == "agent":
+        aq = str(scenario.get("query") or "How does alert correlation and enrichment work?")
         code_a, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            {
-                "workspace_root": workspace_root,
-                "query": str(scenario.get("query") or "How does alert correlation and enrichment work?"),
-                "top_k": top_k,
-            },
+            _export_evidence_payload(workspace_root, aq, top_k, enable_stage_a_v2=export_stage_a),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1362,6 +1400,8 @@ def run_scenario_suite(
     context_url: str,
     plan_gate_url: str,
     top_k: int,
+    *,
+    export_stage_a: Optional[bool] = None,
 ) -> dict[str, Any]:
     data = json.loads(scenarios_path.read_text(encoding="utf-8"))
     if data.get("schema_version") != "motadata_aiops_behavior_scenarios.v1":
@@ -1377,7 +1417,16 @@ def run_scenario_suite(
     for sc in data.get("scenarios") or []:
         if not isinstance(sc, dict):
             continue
-        results.append(_run_scenario_row(sc, workspace_root, context_url, plan_gate_url, tk))
+        results.append(
+            _run_scenario_row(
+                sc,
+                workspace_root,
+                context_url,
+                plan_gate_url,
+                tk,
+                export_stage_a=export_stage_a,
+            )
+        )
     all_pass = all(r.get("pass") for r in results) if results else False
     return {"file": str(scenarios_path), "all_pass": all_pass, "results": results}
 
@@ -1427,7 +1476,14 @@ def main() -> int:
         default="runtime/.run/motadata_behavior_validation.json",
         help="Output JSON report path",
     )
+    parser.add_argument(
+        "--export-stage-a",
+        choices=["default", "on", "off"],
+        default="default",
+        help="POST /v1/export_evidence: set enable_stage_a_v2 true/false; default = omit (server uses env/LexicalRetrievalConfig)",
+    )
     args = parser.parse_args()
+    export_stage_a = _export_stage_a_from_arg(args.export_stage_a)
 
     if args.scenarios_only and not str(args.scenarios).strip() and not str(args.utility_scenarios).strip():
         print(
@@ -1454,6 +1510,7 @@ def main() -> int:
                     query=args.query,
                     debug_query=args.debug_query,
                     top_k=args.top_k,
+                    export_stage_a=export_stage_a,
                 )
             )
         stable = len({_stable_signature(r) for r in smoke_runs}) == 1
@@ -1465,7 +1522,14 @@ def main() -> int:
         if not sp.is_file():
             print(f"ERROR: scenarios file not found: {sp}", file=sys.stderr)
             return 2
-        scenario_suite = run_scenario_suite(sp, args.workspace_root, context_url, plan_gate_url, args.top_k)
+        scenario_suite = run_scenario_suite(
+            sp,
+            args.workspace_root,
+            context_url,
+            plan_gate_url,
+            args.top_k,
+            export_stage_a=export_stage_a,
+        )
 
     developer_utility_suite: dict[str, Any] | None = None
     if args.utility_scenarios.strip():
@@ -1474,7 +1538,12 @@ def main() -> int:
             print(f"ERROR: utility scenarios file not found: {up}", file=sys.stderr)
             return 2
         developer_utility_suite = run_utility_scenario_suite(
-            up, args.workspace_root, context_url, plan_gate_url, args.top_k
+            up,
+            args.workspace_root,
+            context_url,
+            plan_gate_url,
+            args.top_k,
+            export_stage_a=export_stage_a,
         )
 
     smoke_payload: dict[str, Any] | None = None

@@ -336,13 +336,19 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
             return
 
         index_metrics: dict = {}
+        esa = data.get("enable_stage_a_v2")
+        export_kw: dict = {
+            "index_cache": _get_workspace_index_cache(),
+            "index_cache_metrics": index_metrics,
+        }
+        if isinstance(esa, bool):
+            export_kw["enable_stage_a_v2"] = esa
         try:
             bundle = export_evidence_bundle_dict(
                 workspace,
                 query,
                 top_k=top_k,
-                index_cache=_get_workspace_index_cache(),
-                index_cache_metrics=index_metrics,
+                **export_kw,
             )
         except ValueError as e:
             self._send_json(
