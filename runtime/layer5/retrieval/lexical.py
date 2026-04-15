@@ -11,7 +11,7 @@ import math
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from runtime.layer5.index.models import FileIndexEntry, WorkspaceFileIndex
 from runtime.layer5.index.symbol_inventory import (
@@ -941,6 +941,11 @@ def retrieve_lexical(
     query: str,
     top_k: int,
     config: Optional[LexicalRetrievalConfig] = None,
+    *,
+    task_type: str = "general",
+    selected_file: Optional[str] = None,
+    active_file: Optional[str] = None,
+    authority_resolution: Optional[Dict[str, Any]] = None,
 ) -> RetrievalResult:
     """
     Return top-k files from ``index`` for ``query`` using MVP lexical rules.
@@ -950,6 +955,10 @@ def retrieve_lexical(
         query: Raw user query string.
         top_k: Maximum hits (non-negative).
         config: Optional lexical config.
+        task_type: Ask task type (e.g. ``EXPLAIN_DEBUG``) for Stage A candidate lanes.
+        selected_file: Optional IDE-selected file path for local/debug seeding.
+        active_file: Optional active editor file (defaults to selected when omitted upstream).
+        authority_resolution: Optional authority payload for owner injection in Stage A.
 
     Returns:
         ``RetrievalResult`` with deterministic ``hits`` ordering.
@@ -971,9 +980,35 @@ def retrieve_lexical(
             workspace_snapshot_source=index.workspace_snapshot_source,
             workspace_is_dirty=index.workspace_is_dirty,
             workspace_commit_sha=index.workspace_commit_sha,
+            stage_a_meta=None,
         )
 
     scored = global_lexical_sorted_hits(index, query, cfg)
+
+    stage_a_meta: Optional[Dict[str, Any]] = None
+    if cfg.enable_stage_a_v2 and tokens:
+        from runtime.layer5.retrieval.candidate_generation import generate_candidates
+
+        stage_candidates, stage_a_meta = generate_candidates(
+            index=index,
+            query=query,
+            tokens=tokens,
+            task_type=task_type,
+            selected_file=selected_file,
+            active_file=active_file,
+            authority_resolution=authority_resolution,
+            full_lexical_sorted=scored,
+            pool_size=max(1, int(cfg.stage_a_pool_size)),
+        )
+        pool_paths = [c.path for c in stage_candidates]
+        by_path = {h.relative_path: h for h in scored}
+        pool_hits = [by_path[p] for p in pool_paths if p in by_path]
+        sub_sorted = sorted(pool_hits, key=lambda h: (-h.score, h.relative_path))
+        pool_set = {h.relative_path for h in pool_hits}
+        rest = [h for h in scored if h.relative_path not in pool_set]
+        working: List[RetrievalHit] = sub_sorted + rest
+    else:
+        working = scored
 
     if not tokens:
         # Deterministic fallback: index.files is already sorted by relative_path
@@ -992,10 +1027,10 @@ def retrieve_lexical(
         )
     else:
         if cfg.enable_top_k_core_correction:
-            corrected = _apply_top_k_core_correction(scored, top_k)
+            corrected = _apply_top_k_core_correction(working, top_k)
             corrected = _apply_top_k_symbol_owner_correction(corrected, top_k, intent.symbol_tokens)
         else:
-            corrected = _apply_top_k_symbol_owner_correction(scored, top_k, intent.symbol_tokens)
+            corrected = _apply_top_k_symbol_owner_correction(working, top_k, intent.symbol_tokens)
         if cfg.enable_engineering_intent_top_k_composition and intent_type in (
             CODE_INTENT,
             DEBUG_INTENT,
@@ -1023,4 +1058,5 @@ def retrieve_lexical(
         workspace_snapshot_source=index.workspace_snapshot_source,
         workspace_is_dirty=index.workspace_is_dirty,
         workspace_commit_sha=index.workspace_commit_sha,
+        stage_a_meta=stage_a_meta,
     )

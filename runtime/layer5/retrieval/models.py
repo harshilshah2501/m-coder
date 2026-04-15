@@ -5,7 +5,7 @@ Retrieval result shapes for A6 (no snippets — file-level hits only).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -43,3 +43,5 @@ class RetrievalResult:
     """
     Callers must not assume the index matches current disk (A4 full rebuild / staleness).
     """
+    stage_a_meta: Optional[Dict[str, Any]] = None
+    """Optional Stage A candidate-generation diagnostics (lanes, quotas, pool paths)."""

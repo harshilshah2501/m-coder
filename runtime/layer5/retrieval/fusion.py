@@ -332,6 +332,7 @@ def hard_filter_only(
         workspace_snapshot_source=retrieval.workspace_snapshot_source,
         workspace_is_dirty=retrieval.workspace_is_dirty,
         workspace_commit_sha=retrieval.workspace_commit_sha,
+        stage_a_meta=retrieval.stage_a_meta,
     )
     roles = assign_roles(
         tuple(h.relative_path for h in new_hits),
@@ -500,6 +501,7 @@ def fuse_and_filter(
         workspace_snapshot_source=retrieval.workspace_snapshot_source,
         workspace_is_dirty=retrieval.workspace_is_dirty,
         workspace_commit_sha=retrieval.workspace_commit_sha,
+        stage_a_meta=retrieval.stage_a_meta,
     )
 
     collab: Set[str] = set()

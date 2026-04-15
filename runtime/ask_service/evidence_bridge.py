@@ -79,7 +79,6 @@ def try_build_layer5_evidence(
         LOG.info("[ASK evidence_first] index build failed: %s", e)
         return None
 
-    r = retrieve_lexical(idx, query, top_k, LexicalRetrievalConfig())
     effective = merge_effective_intent(task_type, query)
 
     authority_resolution = None
@@ -112,6 +111,17 @@ def try_build_layer5_evidence(
         structural_context = None
         registry = None
         adapter = None
+
+    r = retrieve_lexical(
+        idx,
+        query,
+        top_k,
+        LexicalRetrievalConfig(),
+        task_type=task_type,
+        selected_file=selected_file,
+        active_file=selected_file,
+        authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
+    )
 
     fusion_diag: Dict[str, Any] = {}
     roles_map: Dict[str, str] = {}

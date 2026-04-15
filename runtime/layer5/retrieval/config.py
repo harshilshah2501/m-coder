@@ -313,3 +313,10 @@ class LexicalRetrievalConfig:
     in the full ranked list (quality gate ``min_core_ratio_code_intent`` is 0.30 → 4/12).
     Capped by ``top_k``.
     """
+    enable_stage_a_v2: bool = True
+    """
+    When True, Stage A builds a multi-source quota candidate pool (see ``candidate_generation``)
+    before top-k lexical corrections; improves owner/local/debug seeding without embeddings.
+    """
+    stage_a_pool_size: int = 20
+    """Target pre-fusion candidate pool size when ``enable_stage_a_v2`` is True."""
