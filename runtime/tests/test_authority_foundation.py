@@ -98,7 +98,7 @@ class TestRegistryLoader:
         assert concept.name == "incident_deduplication"
         assert concept.primary_owner.file.endswith("DependencyQueryProcessor.java")
         assert concept.primary_owner.class_name == "DependencyQueryProcessor"
-        assert concept.primary_owner.method == "process"
+        assert concept.primary_owner.method == "start"
         assert concept.primary_owner.confidence == "high"
         assert len(concept.aliases) > 0
         assert "dedup" in concept.aliases

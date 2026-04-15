@@ -3,6 +3,10 @@
 #
 # Paths are relative to the Java module tree. Lint resolves:
 #   workspace_root/motadata/<path>  and  workspace_root/<path>
+# Re-confirmed against a sample Motadata checkout: Java sources for this package live under
+#   <workspace_root>/motadata/src/main/java/com/mindarray/aiops/
+# (five files: AIOpsConstants, AvailabilityCorrelationEngine, DependencyManager,
+# DependencyQueryProcessor, package-info).
 # Update file entries when the product tree changes; entries must exist on disk for
 # lint to pass (no runtime generation — this is static YAML, not model output).
 
@@ -16,7 +20,8 @@ concepts:
     primary_owner:
       file: "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
       class: "DependencyQueryProcessor"
-      method: "process"
+      # Vert.x AbstractVerticle lifecycle (actual entry)
+      method: "start"
       confidence: "high"
 
     verification:
@@ -53,20 +58,21 @@ concepts:
     entry_points:
       - type: "service"
         file: "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
-        method: "process"
+        method: "start"
         event_type: ""
 
     control_flow:
       entry: "DependencyQueryProcessor"
       path:
-        - "DependencyQueryProcessor.process()"
-        - "DependencyManager.resolve()"
+        - "DependencyQueryProcessor.start()"
+        - "DependencyManager (dependency graph)"
       exit: "Downstream store"
 
   alert_correlation:
     primary_owner:
       file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
       class: "AvailabilityCorrelationEngine"
+      method: "start"
       confidence: "high"
 
     verification:
@@ -99,13 +105,14 @@ concepts:
     entry_points:
       - type: "service"
         file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
-        method: "correlate"
+        method: "start"
         event_type: ""
 
   alert_escalation:
     primary_owner:
       file: "src/main/java/com/mindarray/aiops/DependencyManager.java"
       class: "DependencyManager"
+      method: "start"
       confidence: "medium"
 
     verification:
