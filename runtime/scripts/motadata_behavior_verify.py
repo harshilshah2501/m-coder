@@ -146,6 +146,12 @@ def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict
     if isinstance(ar, dict):
         po = ar.get("primary_owner") if isinstance(ar.get("primary_owner"), dict) else {}
         owner_file = str(po.get("file") or "")
+    fd0 = evidence.get("fusion_diagnostics") if isinstance(evidence.get("fusion_diagnostics"), dict) else {}
+    sa0 = fd0.get("stage_a_meta") if isinstance(fd0.get("stage_a_meta"), dict) else {}
+    tr0 = sa0.get("authority_owner_trace") if isinstance(sa0.get("authority_owner_trace"), dict) else {}
+    rp0 = str(tr0.get("resolved_path") or "").strip()
+    if rp0:
+        owner_file = rp0
 
     from runtime.layer5.retrieval.path_resolve import paths_match_workspace
 

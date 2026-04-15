@@ -36,6 +36,39 @@ def _idx_for(root: Path):
     return build_file_index(ident)
 
 
+def test_stage_a_injects_collaborator_when_primary_file_missing_from_index():
+    """Registry primary may be absent on disk; collaborators are used for owner lane."""
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    collab = "motadata/src/main/java/com/mindarray/aiops/correlation/CorrelationManager.java"
+    _touch(root / collab, "class CorrelationManager {}\n")
+    _touch(root / "motadata/src/main/java/com/mindarray/api/X.java", "class X {}\n")
+    idx = _idx_for(root)
+    ar = {
+        "primary_owner": {
+            "file": "motadata/src/main/java/com/mindarray/aiops/correlation/MissingAlertEngine.java",
+            "class": "MissingAlertEngine",
+        },
+        "collaborators": [
+            {"file": collab, "role": "manager", "relationship": "lifecycle_management"},
+        ],
+    }
+    r = retrieve_lexical(
+        idx,
+        "alert correlation",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="CODE",
+        authority_resolution=ar,
+    )
+    assert r.stage_a_meta is not None
+    assert r.stage_a_meta.get("lanes_sizes", {}).get("owner_injected", 0) >= 1
+    trace = r.stage_a_meta.get("authority_owner_trace") or {}
+    assert trace.get("resolution_source") == "collaborator"
+    assert trace.get("resolved_path") == collab
+    tmp.cleanup()
+
+
 def test_resolve_owner_path_falls_back_when_registry_path_stale():
     """Registry YAML path may not match index layout; basename + class disambiguate."""
     path_set = {

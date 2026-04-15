@@ -1062,6 +1062,12 @@ def retrieve_lexical(
             full_lexical_sorted=scored,
             pool_size=max(1, int(cfg.stage_a_pool_size)),
         )
+        if isinstance(stage_a_meta, dict):
+            tr = stage_a_meta.get("authority_owner_trace") or {}
+            if isinstance(tr, dict):
+                rp = str(tr.get("resolved_path") or "").strip()
+                if rp:
+                    owner_path = rp
         pool_paths = [c.path for c in stage_candidates]
         by_path = {h.relative_path: h for h in scored}
         pool_hits = [by_path[p] for p in pool_paths if p in by_path]

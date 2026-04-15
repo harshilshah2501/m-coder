@@ -142,6 +142,58 @@ def _resolve_owner_primary_path(
     )
 
 
+def _resolve_best_authority_file_path(
+    authority_resolution: Optional[Mapping[str, Any]],
+    path_set: Set[str],
+) -> Tuple[Optional[str], Dict[str, Any]]:
+    """
+    Resolve a concrete index path for authority-driven owner injection.
+
+    Order: ``primary_owner.file`` (with basename drift), then ``collaborators[*].file``,
+    then ``entry_trace.entry_point.file`` when the primary Java file is missing from the
+    workspace (stale registry) but related modules still exist.
+    """
+    trace: Dict[str, Any] = {}
+    if not authority_resolution:
+        return None, trace
+    primary = _primary_owner_file(authority_resolution)
+    if primary:
+        r = _resolve_owner_primary_path(primary, path_set, authority_resolution)
+        if r:
+            trace["resolution_source"] = "primary_owner"
+            trace["resolved_path"] = r
+            return r, trace
+        trace["primary_unresolved"] = primary
+    collabs = authority_resolution.get("collaborators")
+    if isinstance(collabs, list):
+        for i, c in enumerate(collabs):
+            if not isinstance(c, dict):
+                continue
+            cf = str(c.get("file") or "").strip()
+            if not cf:
+                continue
+            r = resolve_owner_path_in_index(cf, path_set, owner_class=None)
+            if r:
+                trace["resolution_source"] = "collaborator"
+                trace["resolved_path"] = r
+                trace["collaborator_index"] = i
+                trace["collaborator_registry_path"] = cf
+                return r, trace
+    et = authority_resolution.get("entry_trace")
+    if isinstance(et, dict):
+        ep = et.get("entry_point")
+        if isinstance(ep, dict):
+            ef = str(ep.get("file") or "").strip()
+            if ef:
+                r = resolve_owner_path_in_index(ef, path_set, owner_class=None)
+                if r:
+                    trace["resolution_source"] = "entry_point"
+                    trace["resolved_path"] = r
+                    trace["entry_point_registry_path"] = ef
+                    return r, trace
+    return None, trace
+
+
 @dataclass(frozen=True)
 class StageCandidate:
     lane: str
@@ -560,23 +612,34 @@ def generate_candidates(
     owner_path = _primary_owner_file(authority_resolution)
     anchored_owner_like = bool(intent.symbol_tokens) or bool(owner_path)
     owner_cands: List[StageCandidate] = []
-    if owner_path:
-        resolved = _resolve_owner_primary_path(owner_path, path_set, authority_resolution)
-        if resolved and _candidate_eligible_for_task(
-            resolved,
-            anchored_owner_like=anchored_owner_like,
-            task_type=task_type,
-            allow_non_code_assets=allow_non_code_assets,
-        ):
-            owner_cands.append(
-                StageCandidate(
-                    lane="owner_injected",
-                    path=resolved,
-                    reason="authority_primary_owner",
-                    subsystem_tag=infer_file_subsystem(resolved),
-                    injected=True,
-                )
+    resolved_injection_path, owner_trace_extra = _resolve_best_authority_file_path(
+        authority_resolution,
+        path_set,
+    )
+    if resolved_injection_path and _candidate_eligible_for_task(
+        resolved_injection_path,
+        anchored_owner_like=anchored_owner_like,
+        task_type=task_type,
+        allow_non_code_assets=allow_non_code_assets,
+    ):
+        inj_reason = (
+            "authority_collaborator_owner"
+            if owner_trace_extra.get("resolution_source") == "collaborator"
+            else (
+                "authority_entry_point_owner"
+                if owner_trace_extra.get("resolution_source") == "entry_point"
+                else "authority_primary_owner"
             )
+        )
+        owner_cands.append(
+            StageCandidate(
+                lane="owner_injected",
+                path=resolved_injection_path,
+                reason=inj_reason,
+                subsystem_tag=infer_file_subsystem(resolved_injection_path),
+                injected=True,
+            )
+        )
 
     anchored_owner_like = bool(owner_cands) or bool(intent.symbol_tokens)
     quotas = _initial_quotas(task_type, has_owner=bool(owner_cands), anchored_owner_like=anchored_owner_like)
@@ -718,19 +781,19 @@ def generate_candidates(
             )
             excl.add(h.relative_path)
 
-    resolved_owner_path: Optional[str] = None
-    if owner_path:
-        resolved_owner_path = _resolve_owner_primary_path(owner_path, path_set, authority_resolution)
-    owner_in_pool = bool(resolved_owner_path) and any(c.path == resolved_owner_path for c in deduped)
+    owner_in_pool = bool(resolved_injection_path) and any(
+        c.path == resolved_injection_path for c in deduped
+    )
     authority_owner_trace: Dict[str, Any] = {
         "primary_owner_file": owner_path or "",
-        "resolved_in_index": bool(resolved_owner_path),
+        "resolved_in_index": bool(resolved_injection_path),
         "in_stage_a_pool": owner_in_pool,
     }
-    if owner_path and not resolved_owner_path:
-        authority_owner_trace["note"] = "primary_owner_file_not_found_in_workspace_index"
-    elif resolved_owner_path and not owner_in_pool:
-        authority_owner_trace["note"] = "primary_owner_resolved_but_not_in_final_stage_a_pool"
+    authority_owner_trace.update(owner_trace_extra)
+    if owner_path and not resolved_injection_path:
+        authority_owner_trace["note"] = "primary_collaborators_entry_points_not_found_in_workspace_index"
+    elif resolved_injection_path and not owner_in_pool:
+        authority_owner_trace["note"] = "authority_file_resolved_but_not_in_final_stage_a_pool"
 
     diag: Dict[str, Any] = {
         "pool_size": pool_size,
