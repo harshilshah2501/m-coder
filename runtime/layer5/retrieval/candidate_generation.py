@@ -61,30 +61,35 @@ def _query_explicit_infra(tokens: Tuple[str, ...]) -> bool:
     return bool(set(tokens) & infra)
 
 
-def _task_prefers_code_candidates(task_type: str) -> bool:
+def _task_prefers_code_candidates(
+    task_type: str,
+    *,
+    anchored_owner_like: bool,
+) -> bool:
     tt = (task_type or "").strip().upper()
+    if tt == "GENERAL":
+        return anchored_owner_like
     return tt in {"ASK", "EXPLAIN_DEBUG", "PLAN", "CODE"}
 
 
 def _candidate_eligible_for_task(
     rel: str,
     *,
+    anchored_owner_like: bool,
     task_type: str,
     allow_non_code_assets: bool,
 ) -> bool:
-    if not _task_prefers_code_candidates(task_type):
+    if not _task_prefers_code_candidates(task_type, anchored_owner_like=anchored_owner_like):
         return True
     if is_non_code_asset_path(rel):
         return allow_non_code_assets
-    if is_code_bearing_path(rel):
-        return True
-    fc = classify_file(rel).file_class
-    return fc in {"core_aiops_code", "supporting_prod_code", "config"}
+    return is_code_bearing_path(rel)
 
 
 def _filter_candidates_for_task(
     candidates: List[StageCandidate],
     *,
+    anchored_owner_like: bool,
     task_type: str,
     allow_non_code_assets: bool,
 ) -> List[StageCandidate]:
@@ -92,6 +97,7 @@ def _filter_candidates_for_task(
     for c in candidates:
         if _candidate_eligible_for_task(
             c.path,
+            anchored_owner_like=anchored_owner_like,
             task_type=task_type,
             allow_non_code_assets=allow_non_code_assets,
         ):
@@ -222,6 +228,7 @@ def _collect_local_seeds(
     active_file: Optional[str],
     *,
     neighbor_cap: int,
+    anchored_owner_like: bool,
     tokens: Tuple[str, ...],
     task_type: str,
 ) -> List[StageCandidate]:
@@ -237,6 +244,7 @@ def _collect_local_seeds(
             return
         if not _candidate_eligible_for_task(
             resolved,
+            anchored_owner_like=anchored_owner_like,
             task_type=task_type,
             allow_non_code_assets=allow_non_code_assets,
         ):
@@ -268,6 +276,7 @@ def _collect_local_seeds(
                 continue
             if not _candidate_eligible_for_task(
                 nb,
+                anchored_owner_like=anchored_owner_like,
                 task_type=task_type,
                 allow_non_code_assets=allow_non_code_assets,
             ):
@@ -530,11 +539,13 @@ def generate_candidates(
     allow_non_code_assets = query_explicit_non_code_asset_intent(tokens)
 
     owner_path = _primary_owner_file(authority_resolution)
+    anchored_owner_like = bool(intent.symbol_tokens) or bool(owner_path)
     owner_cands: List[StageCandidate] = []
     if owner_path:
         resolved = _path_in_index(_norm_rel(owner_path), path_set)
         if resolved and _candidate_eligible_for_task(
             resolved,
+            anchored_owner_like=anchored_owner_like,
             task_type=task_type,
             allow_non_code_assets=allow_non_code_assets,
         ):
@@ -554,11 +565,13 @@ def generate_candidates(
     sym_limit = quotas["symbol_seed"] + 5
     sym = _filter_candidates_for_task(
         _collect_symbol_seeds(index, query, tokens, limit=sym_limit),
+        anchored_owner_like=anchored_owner_like,
         task_type=task_type,
         allow_non_code_assets=allow_non_code_assets,
     )
     pkg = _filter_candidates_for_task(
         _collect_package_seeds(index, tokens, limit=quotas["package_seed"] + 8),
+        anchored_owner_like=anchored_owner_like,
         task_type=task_type,
         allow_non_code_assets=allow_non_code_assets,
     )
@@ -568,6 +581,7 @@ def generate_candidates(
         selected_file,
         active_file or selected_file,
         neighbor_cap=neighbor_cap,
+        anchored_owner_like=anchored_owner_like,
         tokens=tokens,
         task_type=task_type,
     )
@@ -580,6 +594,7 @@ def generate_candidates(
     lex_budget = quotas["lexical_residual"] + pool_size
     lex = _filter_candidates_for_task(
         _collect_lexical_residual(full_lexical_sorted, excluded, limit=lex_budget),
+        anchored_owner_like=anchored_owner_like,
         task_type=task_type,
         allow_non_code_assets=allow_non_code_assets,
     )
@@ -620,6 +635,7 @@ def generate_candidates(
                 selected_file,
                 active_file or selected_file,
                 neighbor_cap=48,
+                anchored_owner_like=anchored_owner_like,
                 tokens=tokens,
                 task_type=task_type,
             )
@@ -668,6 +684,7 @@ def generate_candidates(
                 continue
             if not _candidate_eligible_for_task(
                 h.relative_path,
+                anchored_owner_like=anchored_owner_like,
                 task_type=task_type,
                 allow_non_code_assets=allow_non_code_assets,
             ):

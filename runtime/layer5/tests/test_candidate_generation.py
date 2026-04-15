@@ -173,6 +173,31 @@ def test_stage_a_excludes_non_code_assets_for_code_query():
     tmp.cleanup()
 
 
+def test_stage_a_general_anchored_query_excludes_assets():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    corr = root / "src/main/java/com/mindarray/aiops/correlation"
+    _touch(corr / "AvailabilityCorrelationEngine.java", "public class AvailabilityCorrelationEngine {}\n")
+    _touch(corr / "DependencyQueryProcessor.java", "public class DependencyQueryProcessor {}\n")
+    _touch(root / "db-files/icons/availability.png", "png")
+    for i in range(24):
+        _touch(corr / f"Extra{i}.java", f"class Extra{i} {{}}\n")
+    idx = _idx_for(root)
+    # task_type defaults to "general" in retrieve_lexical; symbol-anchored query should
+    # still activate code-pref Stage A filtering.
+    r = retrieve_lexical(
+        idx,
+        "AvailabilityCorrelationEngine dependency query processor",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+    )
+    assert r.stage_a_meta is not None
+    pool_paths = [str(c.get("path") or "") for c in r.stage_a_meta.get("candidates", [])]
+    assert all(not p.lower().endswith(".png") for p in pool_paths)
+    assert all(not h.relative_path.lower().endswith(".png") for h in r.hits[:8])
+    tmp.cleanup()
+
+
 def test_owner_path_promoted_into_top3_for_symbol_anchored_query():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)
