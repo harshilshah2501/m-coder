@@ -41,7 +41,11 @@ Stage A only: multi-source, quota-based candidate generation before fusion.
 
 Judge Stage A using existing verifier fields: `owner_in_top1`, `owner_in_top3`, `generic_infra_ratio`, path-set diffs, debug selected-file rank.
 
-## 9. Observable surface (exports + verifier)
+## 9. Toggle without code changes (A/B exports)
+
+- **`MOTADATA_L5_ENABLE_STAGE_A_V2`** — `1` / unset = Stage A on (default); `0` / `false` / `off` = Stage A off. Drives `LexicalRetrievalConfig.enable_stage_a_v2` when callers use `LexicalRetrievalConfig()` without overriding the field.
+
+## 10. Observable surface (exports + verifier)
 
 - **`/v1/export_evidence`** includes `fusion_diagnostics.stage_a_meta` on the evidence bundle when Stage A v2 runs (context layer `evidence_api` mirrors ask `evidence_bridge`: authority resolved **before** retrieval).
 - **`motadata_behavior_verify.py`** (`--print dev`) prints **Stage A** lane counts and `pool_paths` under each **ask** scenario; `actual_summary.stage_a` is stored in `runtime/.run/motadata_behavior_validation.json`.

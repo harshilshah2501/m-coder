@@ -4,7 +4,8 @@ Retrieval configuration (weights and safety limits).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, FrozenSet, Mapping, Optional, Tuple
 
@@ -14,6 +15,19 @@ from typing import Final, FrozenSet, Mapping, Optional, Tuple
 # Closure metrics: top-1=10/10, top-3=10/10, mean_rank=1.00, mean_noise=0.00
 # Any modification requires PR-6 audit re-validation.
 PR6_CLOSED_BASELINE: Final[str] = "retrieval_policy.v5"
+
+def _env_stage_a_v2_default() -> bool:
+    """
+    Default for ``LexicalRetrievalConfig.enable_stage_a_v2`` when not passed explicitly.
+
+    Set ``MOTADATA_L5_ENABLE_STAGE_A_V2=0`` (or ``false``/``off``) to disable Stage A for
+    A/B exports without code changes.
+    """
+    v = os.environ.get("MOTADATA_L5_ENABLE_STAGE_A_V2", "1").strip().lower()
+    if v in ("0", "false", "no", "off"):
+        return False
+    return True
+
 
 RETRIEVAL_POLICY_VERSION: Final[str] = PR6_CLOSED_BASELINE
 """
@@ -313,10 +327,11 @@ class LexicalRetrievalConfig:
     in the full ranked list (quality gate ``min_core_ratio_code_intent`` is 0.30 → 4/12).
     Capped by ``top_k``.
     """
-    enable_stage_a_v2: bool = True
+    enable_stage_a_v2: bool = field(default_factory=_env_stage_a_v2_default)
     """
     When True, Stage A builds a multi-source quota candidate pool (see ``candidate_generation``)
     before top-k lexical corrections; improves owner/local/debug seeding without embeddings.
+    Default follows env ``MOTADATA_L5_ENABLE_STAGE_A_V2`` (``1`` = on, ``0`` = off).
     """
     stage_a_pool_size: int = 20
     """Target pre-fusion candidate pool size when ``enable_stage_a_v2`` is True."""
