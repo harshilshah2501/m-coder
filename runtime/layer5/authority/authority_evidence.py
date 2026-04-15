@@ -7,11 +7,43 @@ Read-only: uses existing registry, validation, and ranking context — no retrie
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from runtime.layer5.authority.code_index_adapter import CodeIndexProtocol
 from runtime.layer5.authority.ranking import AuthorityRanker, RankingContext
 from runtime.layer5.authority.registry_loader import AuthorityRegistry, Concept
+
+
+def _match_concepts_by_owner_identifiers(
+    raw: str,
+    registry: AuthorityRegistry,
+) -> List[Tuple[Concept, str, float]]:
+    """
+    When token overlap fails (e.g. natural-language asks), match if the query names
+    a registry primary owner class or Java basename (Motadata-style anchored asks).
+    """
+    ql = raw.lower()
+    out: List[Tuple[Concept, str, float]] = []
+    seen: set[str] = set()
+    for _name, concept in registry.concepts.items():
+        cls = (concept.primary_owner.class_name or "").strip()
+        score = 0.0
+        mtype = ""
+        if len(cls) >= 6 and cls.lower() in ql:
+            score = 0.92
+            mtype = "owner_class_in_query"
+        else:
+            stem = Path(concept.primary_owner.file).stem.lower()
+            if len(stem) >= 8 and stem in ql:
+                score = 0.88
+                mtype = "owner_file_stem_in_query"
+        if score <= 0 or concept.name in seen:
+            continue
+        seen.add(concept.name)
+        out.append((concept, mtype, score))
+    out.sort(key=lambda x: (-x[2], x[0].name))
+    return out
 from runtime.layer5.authority.validation import ValidationResult, validate_concept
 
 
@@ -47,6 +79,8 @@ def match_concepts_for_query(
         m = registry.match_concept(raw)
         if m:
             out.append(m)
+    if not out:
+        out.extend(_match_concepts_by_owner_identifiers(raw, registry))
     return out
 
 

@@ -141,6 +141,50 @@ def test_merge_effective_intent_general_code_query():
     assert e.primary_mode in ("ASK", "CODE", "DEBUG", "PLAN")
 
 
+def test_merge_effective_intent_explicit_code_task():
+    e = merge_effective_intent("CODE", "generic question text")
+    assert e.primary_mode == "CODE"
+
+
+def test_fusion_authority_owner_promoted_into_top3():
+    """v2.1.2: Stage B must not drop authority primary_owner below top-3 when present in fused list."""
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    owner = "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+    _touch(root / owner, "public class AlertCorrelationEngine { void correlation() {} }\n")
+    for i in range(12):
+        _touch(
+            root / f"src/main/java/com/mindarray/notification/NotificationHeavy{i}.java",
+            "notification " * 50 + "correlation correlation\n",
+        )
+    idx = _idx_for(root)
+    q = "correlation"
+    r = retrieve_lexical(
+        idx,
+        q,
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    reg = load_registry(Path(__file__).resolve().parents[1] / "authority" / "product_authority_registry.yaml")
+    eff = merge_effective_intent("general", q)
+    fused, diag, _roles = fuse_and_filter(
+        r,
+        effective_intent=eff,
+        registry=reg,
+        code_index_adapter=None,
+        selected_file=None,
+        fusion_config=FusionConfig(),
+        index=idx,
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    top3 = [h.relative_path for h in fused.hits[:3]]
+    assert owner in top3
+    if diag.get("authority_owner_top3_promotion", {}).get("applied"):
+        assert diag["authority_owner_top3_promotion"].get("swap_into_slot") in (0, 1, 2)
+    tmp.cleanup()
+
+
 def test_fusion_hard_caps_drop_surplus_generic_paths():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)

@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import AbstractSet, Dict, List, Optional, Tuple
 
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace, workspace_path_key
 from runtime.layer5.retrieval.policy import FilePolicy, classify_file, is_noise_class
 
 PRIMARY_OWNER_CANDIDATE = "PRIMARY_OWNER_CANDIDATE"
@@ -41,7 +42,7 @@ def assign_roles(
     """
     collab_set = {_norm(f) for f in (collaborator_paths or ())}
 
-    owner_n = _norm(owner_path) if owner_path else ""
+    owner_key = workspace_path_key(owner_path) if owner_path else ""
 
     roles: Dict[str, RoleAssignment] = {}
     primary_assigned = False
@@ -51,7 +52,7 @@ def assign_roles(
         pn = _norm(path)
         reasons: List[str] = []
 
-        if owner_n and pn == owner_n:
+        if owner_path and paths_match_workspace(owner_path, path):
             role = PRIMARY_OWNER_CANDIDATE
             reasons.append("authority_owner_path")
             primary_assigned = True
@@ -59,7 +60,7 @@ def assign_roles(
             role = PRIMARY_OWNER_CANDIDATE
             reasons.append("top_rank_core_aiops")
             primary_assigned = True
-        elif owner_n and owner_n in pn and policy.file_class == "core_aiops_code":
+        elif owner_key and owner_key in pn and policy.file_class == "core_aiops_code":
             role = PRIMARY_OWNER_CANDIDATE
             reasons.append("path_contains_owner_segment")
             primary_assigned = True

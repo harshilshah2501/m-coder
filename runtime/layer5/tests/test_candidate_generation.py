@@ -224,6 +224,33 @@ def test_owner_path_promoted_into_top3_for_symbol_anchored_query():
     tmp.cleanup()
 
 
+def test_authority_owner_top3_when_query_has_no_symbol_tokens():
+    """v2.1.2: lexical owner swap must not require intent.symbol_tokens (generic ask text)."""
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    owner = "src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java"
+    _touch(root / owner, "public class AlertCorrelationEngine { void correlation() {} }\n")
+    for i in range(14):
+        _touch(
+            root / f"src/main/java/com/mindarray/notification/NotificationHeavy{i}.java",
+            "notification " * 50 + "correlation correlation\n",
+        )
+    idx = _idx_for(root)
+    r = retrieve_lexical(
+        idx,
+        "correlation",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    assert owner in [h.relative_path for h in r.hits[:3]]
+    assert r.stage_a_meta is not None
+    trace = r.stage_a_meta.get("authority_owner_trace") or {}
+    assert trace.get("resolved_in_index") is True
+    assert trace.get("in_stage_a_pool") is True
+    tmp.cleanup()
+
+
 def test_local_neighbor_seeding_prefers_code_neighbors():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)

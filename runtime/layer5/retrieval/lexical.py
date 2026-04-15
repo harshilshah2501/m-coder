@@ -41,6 +41,7 @@ from runtime.layer5.retrieval.policy import (
     query_ingestion_focus,
     query_topology_focus,
 )
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace, resolve_path_in_set
 from runtime.layer5.retrieval.query import normalize_query
 from runtime.layer5.retrieval.rank_nudge import deterministic_rank_nudge
 
@@ -677,31 +678,37 @@ def _apply_top_k_owner_injection_correction(
     top_k: int,
     *,
     owner_path: str,
-    symbol_tokens: Tuple[str, ...],
 ) -> List[RetrievalHit]:
     """
-    Stage A v2.1 narrow correction: for anchored owner/class asks, ensure the authority
-    owner has a path into top-3 when it exists in the ranked pool.
+    v2.1.2: When ``authority_resolution.primary_owner.file`` is set, ensure that path
+    appears in lexical top-3 if it exists in the global ranked pool (swap weakest top-3 slot).
+
+    Does not require ``intent.symbol_tokens`` — real ask often has authority owner while
+    query text is generic.
     """
     if top_k <= 0 or not tops or not owner_path:
         return tops
     if len(tops) < 3:
         return tops
-    if not symbol_tokens:
+    if not owner_path.strip():
         return tops
-    owner_n = owner_path.lower().strip()
-    if not owner_n:
+    path_set = {h.relative_path for h in full_sorted_hits}
+    owner_resolved = resolve_path_in_set(owner_path, path_set)
+    if not owner_resolved:
         return tops
-    if any(h.relative_path.lower() == owner_n for h in tops[:3]):
+    if any(paths_match_workspace(owner_path, h.relative_path) for h in tops[:3]):
         return tops
     owner_hit: RetrievalHit | None = None
     for h in full_sorted_hits:
-        if h.relative_path.lower() == owner_n:
+        if paths_match_workspace(owner_path, h.relative_path):
             owner_hit = h
             break
     if owner_hit is None:
         return tops
-    in_tops_idx = next((i for i, h in enumerate(tops) if h.relative_path.lower() == owner_n), None)
+    in_tops_idx = next(
+        (i for i, h in enumerate(tops) if paths_match_workspace(owner_path, h.relative_path)),
+        None,
+    )
     replace_i = min(range(3), key=lambda i: (tops[i].score, tops[i].relative_path))
     if in_tops_idx is not None:
         tops[replace_i], tops[in_tops_idx] = tops[in_tops_idx], tops[replace_i]
@@ -1080,7 +1087,6 @@ def retrieve_lexical(
             working,
             top_k,
             owner_path=owner_path,
-            symbol_tokens=intent.symbol_tokens,
         )
         if cfg.enable_engineering_intent_top_k_composition and intent_type in (
             CODE_INTENT,

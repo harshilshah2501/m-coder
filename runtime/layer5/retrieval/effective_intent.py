@@ -7,7 +7,7 @@ Locked behavior per RETRIEVAL_REDESIGN_SPEC_V1 §5.4.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Final, Tuple
+from typing import Any, Mapping, Optional, Tuple
 
 from runtime.layer5.retrieval.intent import (
     CODE_INTENT,
@@ -39,6 +39,34 @@ class EffectiveIntent:
     """
 
 
+def resolve_lexical_task_type(
+    task_type: str,
+    query: str,
+    authority_resolution: Optional[Mapping[str, Any]],
+) -> str:
+    """
+    Map client ``task_type`` + signals to the task string consumed by Stage A / lexical.
+
+    Upgrades plain ``general`` to ``CODE`` when authority supplies a primary owner file
+    or the query is clearly code-oriented, so owner-aware candidate lanes stay tight.
+    """
+    raw = (task_type or "").strip() or "general"
+    if raw.upper() not in ("GENERAL", ""):
+        return raw
+    po = None
+    if isinstance(authority_resolution, Mapping):
+        po = authority_resolution.get("primary_owner")
+    file_ok = False
+    if isinstance(po, Mapping):
+        file_ok = bool(str(po.get("file") or "").strip())
+    if file_ok:
+        return "CODE"
+    qi = classify_intent(query or "")
+    if qi.intent_type == CODE_INTENT:
+        return "CODE"
+    return "general"
+
+
 def merge_effective_intent(task_type: str, query: str) -> EffectiveIntent:
     """
     task_type is primary when present; query intent provides secondary bias.
@@ -53,6 +81,10 @@ def merge_effective_intent(task_type: str, query: str) -> EffectiveIntent:
         primary = MODE_DEBUG
         if qi.intent_type == CODE_INTENT:
             conflicts.append("task_type_EXPLAIN_DEBUG_vs_query_CODE_INTENT")
+    elif tt.upper() == "CODE":
+        primary = MODE_CODE
+        if qi.intent_type == DEBUG_INTENT:
+            conflicts.append("task_type_CODE_vs_query_DEBUG_INTENT")
     elif tt == "general":
         if qi.intent_type == DEBUG_INTENT:
             primary = MODE_DEBUG

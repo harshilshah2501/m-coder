@@ -6,6 +6,7 @@ Does not change retrieval or evidence semantics — delegates to existing L5 mod
 
 from __future__ import annotations
 
+import logging
 import time
 import os
 from pathlib import Path
@@ -63,6 +64,7 @@ def export_evidence_bundle_dict(
     from runtime.layer5.evidence import build_evidence_bundle
     from runtime.layer5.index import build_file_index
     from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
+    from runtime.layer5.retrieval.effective_intent import resolve_lexical_task_type
     from runtime.layer5.workspace.resolver import ResolverConfig, WorkspaceResolver
 
     authority_code_index: Optional["CodeIndex"] = None
@@ -197,7 +199,10 @@ def export_evidence_bundle_dict(
             mm = match_concepts_for_query(q, registry)
             if mm:
                 structural_context = build_structural_context_stub(mm[0][0], adapter)
-    except Exception:
+    except Exception as e:
+        logging.getLogger(__name__).warning(
+            "authority resolution or structural context failed: %s", e, exc_info=True
+        )
         authority_resolution = None
         structural_context = None
 
@@ -206,12 +211,17 @@ def export_evidence_bundle_dict(
         lex_cfg = LexicalRetrievalConfig()
     else:
         lex_cfg = LexicalRetrievalConfig(enable_stage_a_v2=enable_stage_a_v2)
+    lex_task = resolve_lexical_task_type(
+        "general",
+        q,
+        authority_resolution if isinstance(authority_resolution, dict) else None,
+    )
     r = retrieve_lexical(
         idx,
         q,
         top_k,
         lex_cfg,
-        task_type="general",
+        task_type=lex_task,
         selected_file=None,
         authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
     )

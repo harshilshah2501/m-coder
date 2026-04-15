@@ -24,6 +24,7 @@ from runtime.layer5.retrieval.effective_intent import (
     EffectiveIntent,
 )
 from runtime.layer5.retrieval.models import RetrievalHit, RetrievalResult
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace
 from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_query_subsystems,
@@ -156,6 +157,50 @@ def _is_generic_infra_path(path: str) -> bool:
     return bool(is_support_style_java_basename(base))
 
 
+def _promote_authority_owner_to_top3_fused(
+    ordered: List[Tuple[RetrievalHit, float, Dict[str, Any]]],
+    owner_path: Optional[str],
+    *,
+    top_k: int,
+) -> Tuple[List[Tuple[RetrievalHit, float, Dict[str, Any]]], Dict[str, Any]]:
+    """
+    v2.1.2: If authority primary owner exists in the fused ordering but ranks below top-3,
+    swap it into the weakest-scoring slot among the first three rows (deterministic).
+
+    Keeps owner visible through Stage B hard caps when fusion reranking would drop it.
+    """
+    trace: Dict[str, Any] = {
+        "applied": False,
+        "primary_owner_file": owner_path or "",
+    }
+    if not owner_path or top_k < 3 or len(ordered) < 3:
+        return ordered, trace
+    if not str(owner_path).strip():
+        return ordered, trace
+    idx_owner: Optional[int] = None
+    for i, (h, _sc, _diag) in enumerate(ordered):
+        if paths_match_workspace(h.relative_path, owner_path):
+            idx_owner = i
+            break
+    if idx_owner is None:
+        trace["note"] = "owner_path_not_in_fused_candidate_list"
+        return ordered, trace
+    trace["rank_before"] = idx_owner
+    if idx_owner < 3:
+        trace["note"] = "already_in_top3"
+        return ordered, trace
+    rows = list(ordered)
+    replace_i = min(
+        range(3),
+        key=lambda i: (rows[i][1], rows[i][0].relative_path),
+    )
+    rows[replace_i], rows[idx_owner] = rows[idx_owner], rows[replace_i]
+    trace["applied"] = True
+    trace["swap_into_slot"] = replace_i
+    trace["note"] = "swapped_weakest_top3_for_authority_owner"
+    return rows, trace
+
+
 def _ensure_owner_present(
     hits: List[RetrievalHit],
     owner_rel: str,
@@ -163,12 +208,11 @@ def _ensure_owner_present(
 ) -> List[RetrievalHit]:
     if not owner_rel:
         return hits
-    on = _norm_rel(owner_rel)
-    have = {_norm_rel(h.relative_path).lower() for h in hits}
-    if on.lower() in have:
-        return hits
+    for h in hits:
+        if paths_match_workspace(h.relative_path, owner_rel):
+            return hits
     for e in index.files:
-        if _norm_rel(e.relative_path).lower() == on.lower():
+        if paths_match_workspace(e.relative_path, owner_rel):
             synthetic = RetrievalHit(
                 relative_path=e.relative_path,
                 score=1,
@@ -226,7 +270,6 @@ def _apply_hard_path_caps(
     if not ordered:
         return ordered, {"kept": 0, "dropped": 0}
 
-    owner_n = _norm_rel(owner_path).lower() if owner_path else ""
     selected_n = _norm_rel(selected_file).lower() if selected_file else ""
     kept: List[Tuple[RetrievalHit, float, Dict[str, Any]]] = []
     dropped_rows: List[Tuple[RetrievalHit, float, Dict[str, Any], str]] = []
@@ -236,7 +279,10 @@ def _apply_hard_path_caps(
 
     for h, sc, diag in ordered:
         rel_n = _norm_rel(h.relative_path).lower()
-        protected = bool(rel_n and (rel_n == owner_n or rel_n == selected_n))
+        protected = bool(
+            (owner_path and paths_match_workspace(h.relative_path, owner_path))
+            or (selected_n and rel_n == selected_n)
+        )
         pol = classify_file(h.relative_path)
         is_gen = _is_generic_infra_path(h.relative_path)
         is_dist = is_noise_class(pol.file_class)
@@ -452,6 +498,13 @@ def fuse_and_filter(
 
     fused_rows.sort(key=lambda x: x[1], reverse=True)
     fused_rows = _apply_infra_and_distractor_caps(fused_rows, cfg)
+    fused_rows, owner_top3_trace = _promote_authority_owner_to_top3_fused(
+        fused_rows,
+        owner_path,
+        top_k=retrieval.top_k,
+    )
+    if owner_top3_trace.get("applied"):
+        diag_root["authority_owner_top3_promotion"] = owner_top3_trace
     fused_rows, hard_cap_diag = _apply_hard_path_caps(
         fused_rows,
         cfg,

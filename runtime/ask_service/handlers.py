@@ -211,10 +211,15 @@ def handle_ask_request(ask_request: dict) -> dict:
             sr = str(sn.get("selection_reason") or "")
             role = str(ent.get("retrieval_role") or "")
             grounding_evidence.append((rel, sr, role))
+    ar_src = evidence_bundle_dict.get("authority_resolution") if evidence_bundle_dict else None
+    authority_resolution = ar_src if isinstance(ar_src, dict) else None
     if grounding_evidence:
-        from runtime.layer5.retrieval.effective_intent import merge_effective_intent
+        from runtime.layer5.retrieval.effective_intent import merge_effective_intent, resolve_lexical_task_type
 
-        eff = merge_effective_intent(str(task_type or "general"), query)
+        eff = merge_effective_intent(
+            resolve_lexical_task_type(str(task_type or "general"), query, authority_resolution),
+            query,
+        )
         quality = assess_evidence_quality(
             query,
             [item.path for item in bundle.items],
@@ -223,8 +228,6 @@ def handle_ask_request(ask_request: dict) -> dict:
         )
     else:
         quality = assess_evidence_quality(query, [item.path for item in bundle.items])
-    ar_src = evidence_bundle_dict.get("authority_resolution") if evidence_bundle_dict else None
-    authority_resolution = ar_src if isinstance(ar_src, dict) else None
     metadata = {
         "intent_type": quality.intent_type,
         "evidence_quality": quality.evidence_quality,

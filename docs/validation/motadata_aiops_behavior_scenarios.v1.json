@@ -34,6 +34,21 @@
       }
     },
     {
+      "id": "ask_anchor_owner_gate",
+      "capability": "ask",
+      "description": "Pinned anchored owner query (registry class + product terms): authority primary owner must resolve, Stage A must inject owner lane, owner file must appear in export evidence top-3. Record evidence.workspace_identity_hash with your m-coder git SHA when filing regressions.",
+      "query": "Explain AlertCorrelationEngine behavior for alert correlation in the product.",
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "execution": false,
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1,
+        "require_authority_primary_owner": true,
+        "require_owner_in_top3": true,
+        "require_stage_a_owner_injected_min": 1
+      }
+    },
+    {
       "id": "debug_explain_selection",
       "capability": "debug",
       "description": "EXPLAIN_DEBUG with explicit file + selection",

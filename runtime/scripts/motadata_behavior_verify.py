@@ -146,10 +146,13 @@ def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict
     if isinstance(ar, dict):
         po = ar.get("primary_owner") if isinstance(ar.get("primary_owner"), dict) else {}
         owner_file = str(po.get("file") or "")
-    owner_n = owner_file.lower()
 
-    owner_in_top1 = bool(owner_n and paths and paths[0].lower() == owner_n)
-    owner_in_top3 = bool(owner_n and any(p.lower() == owner_n for p in paths[:3]))
+    from runtime.layer5.retrieval.path_resolve import paths_match_workspace
+
+    owner_in_top1 = bool(owner_file and paths and paths_match_workspace(owner_file, paths[0]))
+    owner_in_top3 = bool(
+        owner_file and any(paths_match_workspace(owner_file, p) for p in paths[:3])
+    )
 
     return {
         "top_k_size": n,
@@ -183,7 +186,7 @@ def _stage_a_summary_from_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         lane = str(c.get("lane") or "")
         lane_counts[lane] = lane_counts.get(lane, 0) + 1
     pool_paths = [str(c.get("path") or "") for c in cands if isinstance(c, dict)]
-    return {
+    out = {
         "pool_size": sa.get("pool_size"),
         "quotas": sa.get("quotas"),
         "task_type": sa.get("task_type"),
@@ -191,6 +194,9 @@ def _stage_a_summary_from_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         "lane_counts": lane_counts,
         "pool_paths": pool_paths,
     }
+    if isinstance(sa.get("authority_owner_trace"), dict):
+        out["authority_owner_trace"] = sa.get("authority_owner_trace")
+    return out
 
 
 def _export_stage_a_from_arg(choice: str) -> Optional[bool]:
@@ -1125,6 +1131,64 @@ def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: 
     return errs
 
 
+def _owner_file_from_evidence(evidence: dict[str, Any]) -> str:
+    ar = evidence.get("authority_resolution")
+    if not isinstance(ar, dict):
+        return ""
+    po = ar.get("primary_owner")
+    if not isinstance(po, dict):
+        return ""
+    return str(po.get("file") or "").strip()
+
+
+def _owner_injected_lane_count(evidence: dict[str, Any]) -> int:
+    """Count Stage A ``owner_injected`` lane rows from ``lanes_sizes`` or candidate list."""
+    fd = evidence.get("fusion_diagnostics") if isinstance(evidence.get("fusion_diagnostics"), dict) else {}
+    sa = fd.get("stage_a_meta") if isinstance(fd.get("stage_a_meta"), dict) else {}
+    ls = sa.get("lanes_sizes")
+    if isinstance(ls, dict) and "owner_injected" in ls:
+        return int(ls["owner_injected"])
+    return int(_stage_a_summary_from_evidence(evidence).get("lane_counts", {}).get("owner_injected", 0))
+
+
+def _check_expect_ask_retrieval_gates(
+    evidence: dict[str, Any],
+    expect: dict[str, Any],
+    top_k: int,
+) -> list[str]:
+    """
+    Optional anchored-owner gates on ``export_evidence`` payload (Layer-5 retrieval).
+
+    Keys (all optional):
+    - ``require_authority_primary_owner`` (bool): ``authority_resolution.primary_owner.file`` is non-empty.
+    - ``require_owner_in_top3`` (bool): primary owner path appears in top-3 evidence entries.
+    - ``require_stage_a_owner_injected_min`` (int): Stage A lane quota for owner_injected.
+    """
+    errs: list[str] = []
+    if expect.get("require_authority_primary_owner"):
+        if not _owner_file_from_evidence(evidence):
+            errs.append(
+                "require_authority_primary_owner: missing authority_resolution.primary_owner.file "
+                "(registry did not resolve or authority pipeline failed)"
+            )
+    rm = _compute_retrieval_metrics(evidence, top_k=top_k)
+    if expect.get("require_owner_in_top3"):
+        if not rm.get("owner_in_top3"):
+            errs.append(
+                "require_owner_in_top3: primary owner not in evidence entries top-3 "
+                f"(owner_file={_owner_file_from_evidence(evidence)!r})"
+            )
+    if "require_stage_a_owner_injected_min" in expect:
+        need = int(expect["require_stage_a_owner_injected_min"])
+        got = _owner_injected_lane_count(evidence)
+        if got < need:
+            errs.append(
+                f"require_stage_a_owner_injected_min: want >= {need} got owner_injected_lane_count={got} "
+                "(ensure export Stage A is enabled; default on unless MOTADATA_L5_ENABLE_STAGE_A_V2=0 or --export-stage-a off)"
+            )
+    return errs
+
+
 def _run_scenario_row(
     scenario: dict[str, Any],
     workspace_root: str,
@@ -1181,18 +1245,25 @@ def _run_scenario_row(
             "evidence_quality": meta.get("evidence_quality"),
         }
         errors.extend(_check_expect_ask(actual, expect, haystack))
+        errors.extend(_check_expect_ask_retrieval_gates(evidence, expect, top_k))
         if "evidence_quality_any_of" in expect:
             allowed = expect["evidence_quality_any_of"]
             if isinstance(allowed, list) and actual.get("evidence_quality") not in allowed:
                 errors.append(f"evidence_quality want one of {allowed} got {actual.get('evidence_quality')}")
         sa = _stage_a_summary_from_evidence(evidence)
+        rm = _compute_retrieval_metrics(evidence, top_k=top_k)
         dev_snapshot = {
             "request_id": resp.get("request_id"),
             "trace_id": resp.get("trace_id") or (meta.get("trace_id") if isinstance(meta, dict) else None),
             "answer_steps": plan_steps,
             "context_bundle_files": _context_bundle_files(resp),
             "evidence_snippet_previews": snips,
-            "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
+            "retrieval_metrics": rm,
+            "retrieval_gates": {
+                "owner_file": _owner_file_from_evidence(evidence),
+                "workspace_identity_hash": evidence.get("workspace_identity_hash"),
+                "owner_injected_lane_count": _owner_injected_lane_count(evidence),
+            },
             "stage_a": sa,
         }
         return {
@@ -1207,7 +1278,12 @@ def _run_scenario_row(
                 "evidence_quality": actual.get("evidence_quality"),
                 "ask_path": actual.get("ask_path"),
                 "plan_steps_count": len(plan_steps),
-                "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
+                "retrieval_metrics": rm,
+                "retrieval_gates": {
+                    "owner_file": _owner_file_from_evidence(evidence),
+                    "workspace_identity_hash": evidence.get("workspace_identity_hash"),
+                    "owner_injected_lane_count": _owner_injected_lane_count(evidence),
+                },
                 "stage_a": sa,
             },
             "dev_snapshot": dev_snapshot,

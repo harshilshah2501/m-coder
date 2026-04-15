@@ -272,13 +272,17 @@ Expected fields per scenario capability (see `expect` in each JSON row; the veri
 
 | Capability | What is exercised | Typical `expect` keys | Pass means |
 | ---------- | ------------------- | ---------------------- | ---------- |
-| `ask` | `export_evidence` + `POST /v1/ask` | `governance_posture`, `execution`, `ask_path`, `min_plan_steps`, optional `text_contains_any` | HTTP 200, no expect errors, export returned entries |
+| `ask` | `export_evidence` + `POST /v1/ask` | `governance_posture`, `execution`, `ask_path`, `min_plan_steps`, optional `text_contains_any`; optional **anchored-owner gate**: `require_authority_primary_owner`, `require_owner_in_top3`, `require_stage_a_owner_injected_min` | HTTP 200, no expect errors, export returned entries |
 | `debug` | `POST /v1/ask` with `task_type=EXPLAIN_DEBUG` | `routing_mode`, `explain_debug_has_keys` | HTTP 200, `explain_debug` has `summary` or `error` as required |
 | `plan` | `POST /v0/plan` | `schema_version`, `decision_present` | HTTP 200, decision contract satisfied |
 | `code` | `POST /v0/execute` | `schema_version`, `outcome`, `executed` | HTTP 200, execute contract satisfied |
 | `agent` | Probe `/v0/agent` + `assist_layer` on ask | `agent_route_404`, `assist_layer_on_ask` | No public agent route; assist metadata on ask |
 
 The saved JSON report includes `scenario_suite.results[]` with `actual_summary`, `errors`, and `dev_snapshot` (for **ask** and **debug** rows: full steps, bundle files, snippets, or explain-debug text).
+
+**Anchored owner gate scenario (`ask_anchor_owner_gate`):** The suite includes a pinned Ask row that asserts Layer-5 behavior on the **real** Motadata tree: `authority_resolution.primary_owner.file` is present, Stage A allocates the `owner_injected` lane, and the owner file appears in the **top-3** `export_evidence` entries. For each run, capture `actual_summary.retrieval_gates.workspace_identity_hash` (and the context-layer build SHA) next to your m-coder revision when you compare reports or file regressions—same rule as Stage A A/B below.
+
+**Stage A OFF vs ON (A/B):** When diffing two `--out` reports (`--export-stage-a off` vs `on`), compare runs built from the **same** m-coder / context-layer **git SHA** and the same `--workspace-root`. If OFF and ON come from different revisions, you are mixing Stage A toggles with unrelated code changes—use matching artifact labels (e.g. both `*.v2_1_2.json`) only when the stack matches.
 
 Useful variants:
 

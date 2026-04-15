@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from runtime.layer5.index.models import FileIndexEntry, WorkspaceFileIndex
 from runtime.layer5.retrieval.intent import classify_intent
+from runtime.layer5.retrieval.path_resolve import resolve_path_in_set
 from runtime.layer5.retrieval.models import RetrievalHit
 from runtime.layer5.retrieval.policy import (
     classify_file,
@@ -116,11 +117,7 @@ def _primary_owner_file(authority_resolution: Optional[Mapping[str, Any]]) -> Op
 
 
 def _path_in_index(norm: str, path_set: Set[str]) -> Optional[str]:
-    n = norm.lower()
-    for p in path_set:
-        if p.lower() == n:
-            return p
-    return None
+    return resolve_path_in_set(norm, path_set)
 
 
 @dataclass(frozen=True)
@@ -699,6 +696,20 @@ def generate_candidates(
             )
             excl.add(h.relative_path)
 
+    resolved_owner_path: Optional[str] = None
+    if owner_path:
+        resolved_owner_path = _path_in_index(_norm_rel(owner_path), path_set)
+    owner_in_pool = bool(resolved_owner_path) and any(c.path == resolved_owner_path for c in deduped)
+    authority_owner_trace: Dict[str, Any] = {
+        "primary_owner_file": owner_path or "",
+        "resolved_in_index": bool(resolved_owner_path),
+        "in_stage_a_pool": owner_in_pool,
+    }
+    if owner_path and not resolved_owner_path:
+        authority_owner_trace["note"] = "primary_owner_file_not_found_in_workspace_index"
+    elif resolved_owner_path and not owner_in_pool:
+        authority_owner_trace["note"] = "primary_owner_resolved_but_not_in_final_stage_a_pool"
+
     diag: Dict[str, Any] = {
         "pool_size": pool_size,
         "quotas": quotas,
@@ -706,5 +717,6 @@ def generate_candidates(
         "debug": debug,
         "lanes_sizes": {k: len(v) for k, v in lanes.items()},
         "candidates": [c.to_diag() for c in deduped],
+        "authority_owner_trace": authority_owner_trace,
     }
     return deduped, diag

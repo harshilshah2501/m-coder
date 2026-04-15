@@ -58,7 +58,7 @@ def try_build_layer5_evidence(
     from runtime.layer5.evidence.models import EvidenceBundle
     from runtime.layer5.index import build_file_index
     from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
-    from runtime.layer5.retrieval.effective_intent import merge_effective_intent
+    from runtime.layer5.retrieval.effective_intent import merge_effective_intent, resolve_lexical_task_type
     from runtime.layer5.retrieval.fusion import (
         FusionConfig,
         fuse_and_filter,
@@ -78,8 +78,6 @@ def try_build_layer5_evidence(
     except (OSError, FileNotFoundError, NotADirectoryError) as e:
         LOG.info("[ASK evidence_first] index build failed: %s", e)
         return None
-
-    effective = merge_effective_intent(task_type, query)
 
     authority_resolution = None
     structural_context = None
@@ -112,12 +110,19 @@ def try_build_layer5_evidence(
         registry = None
         adapter = None
 
+    lexical_task = resolve_lexical_task_type(
+        task_type,
+        query,
+        authority_resolution if isinstance(authority_resolution, dict) else None,
+    )
+    effective = merge_effective_intent(lexical_task, query)
+
     r = retrieve_lexical(
         idx,
         query,
         top_k,
         LexicalRetrievalConfig(),
-        task_type=task_type,
+        task_type=lexical_task,
         selected_file=selected_file,
         active_file=selected_file,
         authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
@@ -181,6 +186,7 @@ def try_build_layer5_evidence(
     fd["effective_intent"] = {
         "primary_mode": effective.primary_mode,
         "task_type": effective.task_type_raw,
+        "lexical_task_type": lexical_task,
         "conflicts": list(effective.conflicts),
     }
     fd["quality_reasons"] = list(qa.quality_reasons)

@@ -1,0 +1,19 @@
+---
+description: Commit and push Motadata/WSL-related changes so the same revision is available on WSL
+alwaysApply: true
+---
+
+# Motadata repo + WSL stack testing
+
+When changes are meant to be validated against the **Motadata** workspace using the **WSL** stack (`wsl_plugin_mvp_stack`, Context Layer, `motadata_behavior_verify`, or similar flows described in `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`):
+
+1. **Commit** the changes on the machine where the agent applied them (clear message, scoped to the work).
+2. **Push** to the remote branch you use on WSL.
+
+**Agent scope:** Do **only** commit and push. Do **not** run `git pull` (or any fetch/merge/rebase) as part of this workflow—that stays on the user’s side when they sync WSL.
+
+**Why push:** Unpushed commits are not on the remote; WSL cannot pick up the agent’s work until it exists on the branch you pull from.
+
+If the agent cannot push (no credentials, blocked network, or user preference), say so explicitly and give the exact `git commit` / `git push` commands to run locally—do not imply the code is already on the remote.
+
+If the user is only iterating locally and has not asked for WSL verification, **do not** add extra commits or pushes solely to satisfy this rule.
