@@ -19,6 +19,7 @@ from runtime.layer5.retrieval.policy import (
     infer_file_subsystem,
     infer_query_subsystems,
     is_code_bearing_path,
+    is_noise_class,
     is_non_code_asset_path,
     looks_like_symbol_token,
     query_explicit_non_code_asset_intent,
@@ -82,6 +83,11 @@ def _candidate_eligible_for_task(
 ) -> bool:
     if not _task_prefers_code_candidates(task_type, anchored_owner_like=anchored_owner_like):
         return True
+    file_policy = classify_file(rel)
+    if is_noise_class(file_policy.file_class):
+        # Keep explicit asset-intent queries working (e.g., logo/icon lookups),
+        # but suppress noisy generated/vendor/test files during code-oriented asks.
+        return allow_non_code_assets and is_non_code_asset_path(rel)
     if is_non_code_asset_path(rel):
         return allow_non_code_assets
     return is_code_bearing_path(rel)

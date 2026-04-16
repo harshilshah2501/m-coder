@@ -198,6 +198,33 @@ def test_stage_a_general_anchored_query_excludes_assets():
     tmp.cleanup()
 
 
+def test_stage_a_ask_excludes_noise_classes_including_db_files_and_metrics():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    app = root / "src/main/java/com/mindarray/api"
+    _touch(app / "APIServer.java", "public class APIServer { void route() {} }\n")
+    _touch(app / "RequestRouter.java", "public class RequestRouter { void route() {} }\n")
+    _touch(root / "db-files/report-templates/js/highcharts.js", "function chart() {}\n")
+    _touch(root / "test-plugin-metrics/cisco_ucs_chassis_poll.json", '{"k":"v"}\n')
+    for i in range(24):
+        _touch(app / f"Worker{i}.java", f"class Worker{i} {{ void route() {{}} }}\n")
+    idx = _idx_for(root)
+    r = retrieve_lexical(
+        idx,
+        "Where is API request routing handled?",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="ASK",
+    )
+    assert r.stage_a_meta is not None
+    pool_paths = [str(c.get("path") or "") for c in r.stage_a_meta.get("candidates", [])]
+    assert all("/db-files/" not in p.lower() for p in pool_paths)
+    assert all("/test-plugin-metrics/" not in p.lower() for p in pool_paths)
+    assert all("/db-files/" not in h.relative_path.lower() for h in r.hits[:8])
+    assert all("/test-plugin-metrics/" not in h.relative_path.lower() for h in r.hits[:8])
+    tmp.cleanup()
+
+
 def test_owner_path_promoted_into_top3_for_symbol_anchored_query():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)
