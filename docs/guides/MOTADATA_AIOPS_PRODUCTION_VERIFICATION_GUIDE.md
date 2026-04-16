@@ -124,6 +124,53 @@ Stack control:
 ./scripts/wsl_plugin_mvp_stack.sh down
 ```
 
+### 4.1 WSL quick-run sequence (current proven flow)
+
+Use this exact sequence after pulling latest branch changes:
+
+```bash
+cd "$M_CODER_ROOT"
+export PYTHONPATH="$M_CODER_ROOT"
+export MOTADATA_REPO_ROOT="/home/harshil/Projects/Motadata"
+```
+
+1) Registry/workspace alignment lint:
+
+```bash
+python3 runtime/scripts/lint_authority_registry_paths.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}"
+```
+
+2) Authority code index refresh (smart auto mode):
+
+```bash
+python3 runtime/scripts/build_authority_code_index.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --out "runtime/.cache/authority_code_index.motadata.json"
+```
+
+- `refresh-mode=auto` is the default.
+- The script chooses full vs incremental refresh automatically and shows a dynamic progress bar.
+
+3) Full scenarios verification + canonical artifact overwrite:
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.json
+```
+
+4) Optional baseline freeze copy for regression comparisons:
+
+```bash
+cp runtime/.run/motadata_behavior_validation.json \
+  runtime/.run/motadata_behavior_validation.BASELINE.<label>.json
+```
+
 **Authority registry vs workspace (recommended before scenario runs):**  
 Layer-5 authority resolves concepts from `[runtime/layer5/authority/product_authority_registry.yaml](../../runtime/layer5/authority/product_authority_registry.yaml)`, but retrieval can only inject files that exist in the **indexed** workspace. Run this check against your real Motadata tree so stale or sample paths are caught before `export_evidence` / `motadata_behavior_verify`:
 
@@ -230,6 +277,14 @@ Use when you need a custom **plan** `ide_event`, **execute** `command`, or **deb
 ## 7) Automated repeatable verification
 
 Canonical command:
+
+```bash
+python3 runtime/scripts/build_authority_code_index.py \
+  --workspace-root "/home/harshil/Projects/Motadata" \
+  --out "runtime/.cache/authority_code_index.motadata.json"
+```
+
+Then run verification:
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \

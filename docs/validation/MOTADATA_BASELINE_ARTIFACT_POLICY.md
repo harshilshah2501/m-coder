@@ -42,6 +42,16 @@ If any invariant differs, treat the comparison as informational only, not regres
 
 ## 3) Canonical generation command
 
+Refresh authority index first (smart auto full/incremental):
+
+```bash
+PYTHONPATH=. python3 runtime/scripts/build_authority_code_index.py \
+  --workspace-root "/home/harshil/Projects/Motadata" \
+  --out "runtime/.cache/authority_code_index.motadata.json"
+```
+
+Then run behavior verification:
+
 ```bash
 PYTHONPATH=. python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "/home/harshil/Projects/Motadata" \

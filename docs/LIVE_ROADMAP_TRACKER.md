@@ -10,7 +10,7 @@
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Current active milestone focus**: **Single-lane follow-through from locked retrieval baseline** — retrieval baseline freeze is complete; debug usefulness is the only active engineering lane.
+- **Current active milestone focus**: **Post-debug closure stabilization from locked retrieval baseline** — retrieval baseline freeze is complete, Debug Usefulness v1.1 is closed, and WSL verification is green with smart index refresh workflow.
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -856,21 +856,22 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Freeze retrieval truth and run one active lane only.**
-  Retrieval baseline is now recorded as achieved; active implementation lane is debug usefulness refinement.
+- **Current objective**: **Keep the locked baseline reproducible and move to the next quality lane without regressions.**
+  Retrieval baseline is achieved, Debug Usefulness v1.1 is closed, and scenario suite is green on WSL.
 - **Active tasks**:
-  - **Retrieval baseline lock (done / maintain):** anchored authority-gated baseline achieved (`ask_anchor_owner_top1` strict pass + scenario suite stable), broad ask improved (`ask_broad_correlation` generic-infra ratio reduced).
-  - **Primary active lane (only):** **Debug usefulness v1** (selected-file-grounded `EXPLAIN_DEBUG` quality).
-  - **Non-active follow-ons:** authority wording refinement and further broad-ask tuning (queued, not concurrent).
+  - **Baseline lock (done / maintain):** anchored authority-gated baseline achieved (`ask_anchor_owner_top1` strict pass + scenario suite stable), broad ask improved (`ask_broad_correlation` generic-infra ratio reduced).
+  - **Debug usefulness v1.1 (done):** selected-file-grounded `EXPLAIN_DEBUG` guardrails + insufficiency checks landed and passing.
+  - **Operational reproducibility (done):** authority index builder now supports smart auto full/incremental refresh with dynamic progress and is integrated into WSL run flow.
+  - **Next active lane:** broad-ask quality refinement and authority lifecycle wording/label alignment (without destabilizing strict anchored gates).
 - **Next execution order**:
   1. Keep retrieval baseline regression-proof via scenario runs and saved report artifacts.
-  2. Implement Debug usefulness v1 acceptance criteria in verifier/tests and runtime output behavior.
-  3. Re-run full scenario suite and capture updated closure note artifacts.
+  2. Improve broad ask quality while preserving owner-top1/owner-top3 anchored behavior.
+  3. Refine authority status wording/lifecycle labels to better reflect validated posture.
 - **Current blockers**:
-  - No blocker on retrieval correctness baseline.
-  - Main open product pain is debug answer specificity/grounding quality.
+  - No blocker on baseline reproducibility or strict anchored retrieval gates.
+  - Main open product pain is broad exploratory ask quality relative to anchored queries.
 - **Immediate next action**:
-  - Start **Action: Close Debug Usefulness v1 (selected-file-grounded EXPLAIN_DEBUG)** with explicit acceptance checks.
+  - Execute broad-ask refinement experiments under current policy gates and compare against frozen baseline artifacts.
 
 ### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
 
