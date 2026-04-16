@@ -257,6 +257,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 Output report (always written):
 
 - `runtime/.run/motadata_behavior_validation.json` (override with `--out`)
+- Baseline/candidate naming + diff policy: `docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md`
 
 Pass criteria:
 
