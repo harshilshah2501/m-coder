@@ -5,6 +5,7 @@ from __future__ import annotations
 from runtime.ask_service.reasoner import (
     ExplainDebugResult,
     _build_prompt,
+    _extract_method_clues,
     _ensure_selected_grounding,
 )
 from runtime.context.contracts import (
@@ -98,3 +99,19 @@ def test_ensure_selected_grounding_returns_insufficient_when_selected_missing():
     assert out.error is None
     assert "insufficiently grounded" in out.summary.lower()
     assert any("missing_in_context" in e for e in out.evidence)
+
+
+def test_extract_method_clues_ignores_constructor_calls_and_prefers_declarations():
+    text = """
+public class AvailabilityCorrelationEngine {
+    public void processAlerts() {
+        JsonArray probes = new JsonArray();
+        if (probes != null) {
+            return;
+        }
+    }
+}
+"""
+    clues = _extract_method_clues(text, cap=5)
+    assert "processAlerts" in clues
+    assert "JsonArray" not in clues

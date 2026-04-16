@@ -38,6 +38,7 @@ from runtime.layer5.authority.entry_points import (
     is_entry_point_file,
 )
 from runtime.layer5.authority.code_index_adapter import (
+    HybridIndexAdapter,
     StructuredIndexAdapter,
     create_adapter,
 )
@@ -487,6 +488,25 @@ class TestStructuredIndexAdapter:
         adapter = create_adapter(code_index=index)
         
         assert isinstance(adapter, StructuredIndexAdapter)
+
+    def test_create_adapter_with_workspace_root_enables_hybrid_fallback(self, tmp_path: Path):
+        """create_adapter uses hybrid adapter when workspace_root is provided."""
+        rel = "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+        f = tmp_path / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(
+            "public class AvailabilityCorrelationEngine { public void start() {} }",
+            encoding="utf-8",
+        )
+
+        # Structured index intentionally misses file/class metadata.
+        index = CodeIndex()
+        adapter = create_adapter(code_index=index, workspace_root=tmp_path)
+
+        assert isinstance(adapter, HybridIndexAdapter)
+        assert adapter.file_exists(rel)
+        assert adapter.class_exists(rel, "AvailabilityCorrelationEngine")
+        assert adapter.method_exists(rel, "AvailabilityCorrelationEngine", "start")
 
 
 class TestIntegration:

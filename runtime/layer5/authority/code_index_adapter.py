@@ -278,6 +278,54 @@ class FilesystemAdapter:
         return out
 
 
+class HybridIndexAdapter:
+    """
+    Primary adapter plus filesystem fallback for structural checks.
+
+    This avoids false stale downgrades when structured symbol extraction misses
+    classes/methods that are present on disk.
+    """
+
+    def __init__(self, primary: CodeIndexProtocol, fallback: CodeIndexProtocol) -> None:
+        self._primary = primary
+        self._fallback = fallback
+
+    def file_exists(self, relative_path: str) -> bool:
+        return self._primary.file_exists(relative_path) or self._fallback.file_exists(relative_path)
+
+    def class_exists(self, relative_path: str, class_name: str) -> bool:
+        if self._primary.class_exists(relative_path, class_name):
+            return True
+        if self._fallback.file_exists(relative_path):
+            return self._fallback.class_exists(relative_path, class_name)
+        return False
+
+    def method_exists(self, relative_path: str, class_name: str, method_name: str) -> bool:
+        if self._primary.method_exists(relative_path, class_name, method_name):
+            return True
+        if self._fallback.file_exists(relative_path):
+            return self._fallback.method_exists(relative_path, class_name, method_name)
+        return False
+
+    def is_referenced(self, relative_path: str) -> Optional[bool]:
+        primary = self._primary.is_referenced(relative_path)
+        if primary is not None:
+            return primary
+        return self._fallback.is_referenced(relative_path)
+
+    def get_entry_points_for_file(self, relative_path: str) -> List:
+        return self._primary.get_entry_points_for_file(relative_path)
+
+    def get_direct_callers(self, class_name: str, method_name: str) -> List:
+        return self._primary.get_direct_callers(class_name, method_name)
+
+    def get_direct_callees(self, class_name: str, method_name: str) -> List:
+        return self._primary.get_direct_callees(class_name, method_name)
+
+    def list_paths(self) -> Set[str]:
+        return set(self._primary.list_paths()) | set(self._fallback.list_paths())
+
+
 def create_adapter(
     code_index: Optional["CodeIndex"] = None,
     l5_index: Optional["WorkspaceFileIndex"] = None,
@@ -303,10 +351,16 @@ def create_adapter(
         ValueError: If no index or workspace_root provided.
     """
     if code_index is not None:
-        return StructuredIndexAdapter(code_index)
+        primary = StructuredIndexAdapter(code_index)
+        if workspace_root is not None:
+            return HybridIndexAdapter(primary, FilesystemAdapter(workspace_root))
+        return primary
 
     if l5_index is not None:
-        return L5IndexAdapter(l5_index)
+        primary = L5IndexAdapter(l5_index)
+        if workspace_root is not None:
+            return HybridIndexAdapter(primary, FilesystemAdapter(workspace_root))
+        return primary
 
     if workspace_root is not None:
         return FilesystemAdapter(workspace_root)

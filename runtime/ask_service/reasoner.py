@@ -187,19 +187,31 @@ def _selected_item(bundle: ContextBundle, selected_file: str) -> ContextItem | N
 def _extract_method_clues(text: str, cap: int = 3) -> List[str]:
     out: List[str] = []
     seen = set()
+    blocked = {"if", "for", "while", "switch", "catch", "new", "return"}
     for m in re.finditer(r"^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", text, flags=re.MULTILINE):
         name = m.group(1)
-        if name not in seen:
+        if name not in seen and name not in blocked:
             seen.add(name)
             out.append(name)
             if len(out) >= cap:
                 return out
-    for m in re.finditer(
-        r"\b(?:public|private|protected)?\s*(?:static\s+)?(?:[A-Za-z_][A-Za-z0-9_<>\[\]]*\s+)+([A-Za-z_][A-Za-z0-9_]*)\s*\(",
-        text,
-    ):
+
+    # Java/Kotlin-style method declarations (anchored to declaration-like lines).
+    for line in text.splitlines():
+        s = line.strip()
+        if not s or s.startswith("//") or s.startswith("*") or s.startswith("/*"):
+            continue
+        m = re.match(
+            r"^(?:public|private|protected)?\s*"
+            r"(?:static\s+)?(?:final\s+)?(?:synchronized\s+)?"
+            r"(?:[A-Za-z_][A-Za-z0-9_<>\[\], ?]*\s+)?"
+            r"([A-Za-z_][A-Za-z0-9_]*)\s*\([^;]*\)\s*(?:\{|throws\b)",
+            s,
+        )
+        if not m:
+            continue
         name = m.group(1)
-        if name not in seen:
+        if name not in seen and name not in blocked:
             seen.add(name)
             out.append(name)
             if len(out) >= cap:
@@ -211,6 +223,33 @@ def _has_control_flow_cues(text: str) -> bool:
     tl = text.lower()
     cues = (" if ", " else ", " return", " catch", " throw", " null", " exception", " branch")
     return any(c in f" {tl} " for c in cues)
+
+
+def _extract_branch_clues(text: str, cap: int = 2) -> List[str]:
+    out: List[str] = []
+    for line in text.splitlines():
+        s = line.strip()
+        if not s or s.startswith("//") or s.startswith("*"):
+            continue
+        sl = s.lower()
+        if sl.startswith("if ") or sl.startswith("if("):
+            out.append("if-condition branch")
+        elif sl.startswith("else if") or sl.startswith("else"):
+            out.append("else/else-if branch")
+        elif sl.startswith("switch(") or sl.startswith("switch "):
+            out.append("switch branch")
+        elif sl.startswith("catch(") or sl.startswith("catch "):
+            out.append("catch/exception branch")
+        elif "return " in sl:
+            out.append("early-return path")
+        if len(out) >= cap:
+            break
+    # Deduplicate while preserving order.
+    uniq: List[str] = []
+    for x in out:
+        if x not in uniq:
+            uniq.append(x)
+    return uniq
 
 
 def _ensure_selected_grounding(
@@ -249,6 +288,7 @@ def _ensure_selected_grounding(
 
     methods = _extract_method_clues(item.content or "")
     has_flow = _has_control_flow_cues(item.content or "")
+    branches = _extract_branch_clues(item.content or "")
     minimal_sel = _selection_is_minimal(selection)
 
     summary = parsed.summary or ""
@@ -278,6 +318,10 @@ def _ensure_selected_grounding(
         logic_flow = (logic_flow + " " if logic_flow else "") + (
             "Relevant methods in selected file: " + ", ".join(methods) + "."
         )
+    if branches and not ("branch" in joined or "return" in joined):
+        logic_flow = (logic_flow + " " if logic_flow else "") + (
+            "Observed control-flow clues: " + ", ".join(branches) + "."
+        )
     if not has_flow:
         likely = (likely + " " if likely else "") + (
             "Control-flow cues are limited in the selected snippet; verify surrounding guards and return conditions."
@@ -286,6 +330,26 @@ def _ensure_selected_grounding(
         likely = (likely + " " if likely else "") + (
             "Likely risk centers on conditional branches and early-return paths in the selected-file flow."
         )
+
+    # Reduce generic/hedged phrasing when we actually have grounded clues.
+    if methods or branches:
+        generic_phrases = (
+            "not directly visible",
+            "not shown",
+            "not enough information",
+            "limited context",
+            "could imply",
+        )
+        if any(g in summary.lower() for g in generic_phrases):
+            details = []
+            if methods:
+                details.append(f"methods={', '.join(methods)}")
+            if branches:
+                details.append(f"flow={', '.join(branches)}")
+            summary = (
+                f"Grounded analysis for `{sel_base}` from `{sel_norm}`: "
+                + ", ".join(details)
+            )
 
     if not confidence:
         confidence = (

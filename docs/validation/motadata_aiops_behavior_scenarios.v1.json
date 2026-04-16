@@ -91,6 +91,26 @@
       }
     },
     {
+      "id": "debug_explain_missing_selected_file",
+      "capability": "debug",
+      "description": "EXPLAIN_DEBUG reports truthful insufficiency when selected file is absent",
+      "query": "Why might enrichment be skipped?",
+      "debug_query": "Explain failure points for a file that is not in retrieved context",
+      "selected_file": "motadata/src/main/java/com/mindarray/aiops/doesnotexist/MissingEngine.java",
+      "selection": "Trace branch and enrichment behavior.",
+      "expect": {
+        "routing_mode": "explain_debug",
+        "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
+        "must_have_confidence_limits": true,
+        "require_insufficient_grounding": true,
+        "require_missing_in_context_marker": true,
+        "required_text_contains_any": [
+          "insufficient",
+          "missing_in_context"
+        ]
+      }
+    },
+    {
       "id": "plan_pr_merge_shadow",
       "capability": "plan",
       "description": "Governed PR merge decision (shadow)",

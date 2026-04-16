@@ -96,7 +96,10 @@ def try_build_layer5_evidence(
         reg_path = Path(__file__).resolve().parents[1] / "layer5" / "authority" / "product_authority_registry.yaml"
         registry = load_registry(reg_path)
         try:
-            adapter = create_adapter(code_index=build_index(Path(workspace_input_path)))
+            adapter = create_adapter(
+                code_index=build_index(Path(workspace_input_path)),
+                workspace_root=Path(workspace_input_path),
+            )
         except Exception:
             adapter = None
         if adapter is None:

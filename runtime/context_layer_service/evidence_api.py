@@ -192,7 +192,10 @@ def export_evidence_bundle_dict(
             if authority_code_index_attempted:
                 if authority_code_index is not None:
                     try:
-                        adapter = create_adapter(code_index=authority_code_index)
+                        adapter = create_adapter(
+                            code_index=authority_code_index,
+                            workspace_root=Path(w),
+                        )
                     except Exception:
                         adapter = None
                 else:
@@ -200,7 +203,10 @@ def export_evidence_bundle_dict(
             else:
                 if code_index_enabled:
                     try:
-                        adapter = create_adapter(code_index=build_index(Path(w)))
+                        adapter = create_adapter(
+                            code_index=build_index(Path(w)),
+                            workspace_root=Path(w),
+                        )
                     except Exception:
                         adapter = None
                 else:

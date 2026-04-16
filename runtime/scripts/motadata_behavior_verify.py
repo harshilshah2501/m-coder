@@ -1250,6 +1250,25 @@ def _check_expect_debug_explain(
     if expect.get("must_have_confidence_limits"):
         if not str(explain_debug.get("confidence_limits") or "").strip():
             errs.append("must_have_confidence_limits: explain_debug.confidence_limits missing")
+    if expect.get("require_insufficient_grounding"):
+        grounded = any(
+            marker in hay
+            for marker in (
+                "insufficiently grounded",
+                "insufficient grounding",
+                "missing in context",
+                "missing_in_context",
+            )
+        ) or any("missing_in_context:" in e.lower() for e in ev_list)
+        if not grounded:
+            errs.append(
+                "require_insufficient_grounding: explain_debug did not report truthful insufficiency"
+            )
+    if expect.get("require_missing_in_context_marker"):
+        if not any("missing_in_context:" in e.lower() for e in ev_list):
+            errs.append(
+                "require_missing_in_context_marker: explain_debug.evidence missing missing_in_context marker"
+            )
     return errs
 
 
