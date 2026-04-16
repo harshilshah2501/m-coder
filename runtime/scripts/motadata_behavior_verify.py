@@ -1169,7 +1169,7 @@ def _check_expect_ask_retrieval_gates(
     - ``require_authority_primary_owner`` (bool): ``authority_resolution.primary_owner.file`` is non-empty.
     - ``require_owner_in_top3`` (bool): primary owner path appears in top-3 evidence entries.
     - ``require_stage_a_owner_injected_min`` (int): Stage A lane quota for owner_injected.
-    - ``require_authority_status`` (str): authority_resolution.status must equal this value.
+    - ``require_authority_status`` (str): authority resolution status must equal this value.
     """
     errs: list[str] = []
     if expect.get("require_authority_primary_owner"):
@@ -1195,7 +1195,13 @@ def _check_expect_ask_retrieval_gates(
             )
     if "require_authority_status" in expect:
         ar = evidence.get("authority_resolution")
-        got_status = ar.get("status") if isinstance(ar, dict) else None
+        got_status = None
+        if isinstance(ar, dict):
+            # Canonical field in layer5.evidence_bundle.v1.
+            got_status = ar.get("authority_status")
+            # Backward-compatible fallback for older/debug payloads.
+            if got_status is None:
+                got_status = ar.get("status")
         want_status = str(expect["require_authority_status"])
         if str(got_status or "").lower() != want_status.lower():
             errs.append(
