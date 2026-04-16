@@ -69,6 +69,42 @@
       }
     },
     {
+      "id": "ask_api_request_routing_owner",
+      "capability": "ask",
+      "description": "API request routing should anchor to APIServer ownership.",
+      "query": "Where is API request routing handled in Motadata?",
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "execution": false,
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1,
+        "require_authority_primary_owner": true,
+        "text_contains_any": [
+          "APIServer",
+          "api",
+          "routing"
+        ]
+      }
+    },
+    {
+      "id": "ask_servicenow_sync_owner",
+      "capability": "ask",
+      "description": "ServiceNow sync query should anchor to integration owner.",
+      "query": "Where is ServiceNow incident synchronization implemented?",
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "execution": false,
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1,
+        "require_authority_primary_owner": true,
+        "text_contains_any": [
+          "ServiceNowIntegration",
+          "integration",
+          "sync"
+        ]
+      }
+    },
+    {
       "id": "debug_explain_selection",
       "capability": "debug",
       "description": "EXPLAIN_DEBUG with explicit file + selection",

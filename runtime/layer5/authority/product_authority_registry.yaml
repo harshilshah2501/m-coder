@@ -3,15 +3,15 @@
 #
 # Paths are relative to the Java module tree. Lint resolves:
 #   workspace_root/motadata/<path>  and  workspace_root/<path>
-# Re-confirmed against a sample Motadata checkout: Java sources for this package live under
-#   <workspace_root>/motadata/src/main/java/com/mindarray/aiops/
-# (five files: AIOpsConstants, AvailabilityCorrelationEngine, DependencyManager,
-# DependencyQueryProcessor, package-info).
+# Re-confirmed against a sample Motadata checkout:
+#   <workspace_root>/motadata/src/main/java/com/mindarray/
+# Registry now covers aiops core plus selected high-value operational subsystems
+# (api, notification, discovery, eventbus, integration) as an incremental contract set.
 # Update file entries when the product tree changes; entries must exist on disk for
 # lint to pass (no runtime generation — this is static YAML, not model output).
 
 schema_version: "product_authority_registry.v1.1"
-last_updated: "2026-04-15"
+last_updated: "2026-04-16"
 maintainer: "harshil@motadata.com"
 
 concepts:
@@ -136,3 +136,203 @@ concepts:
 
     notes:
       - "Placeholder mapping where dedicated alerting classes are absent"
+
+  api_request_routing:
+    primary_owner:
+      file: "src/main/java/com/mindarray/api/APIServer.java"
+      class: "APIServer"
+      method: "start"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-16T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "APIServer is the service entry for API route handling"
+      staleness_threshold_days: 90
+
+    aliases:
+      - "api server"
+      - "request routing"
+      - "api request handling"
+      - "rest request flow"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"
+        role: "event_bridge"
+        relationship: "ui_action_dispatch"
+      - file: "src/main/java/com/mindarray/notification/NotificationEngine.java"
+        role: "notification_bridge"
+        relationship: "outbound_alert_paths"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/aiops/DependencyManager.java"
+        reason: "Dependency graph orchestration, not API route ownership"
+
+    notes:
+      - "API ingress ownership is anchored to APIServer lifecycle"
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/api/APIServer.java"
+        method: "start"
+        event_type: ""
+
+  notification_dispatch:
+    primary_owner:
+      file: "src/main/java/com/mindarray/notification/NotificationEngine.java"
+      class: "NotificationEngine"
+      method: "start"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-16T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "NotificationEngine owns notification fanout lifecycle"
+      staleness_threshold_days: 90
+
+    aliases:
+      - "notification engine"
+      - "alert notification"
+      - "dispatch notification"
+      - "email slack sms notification"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/notification/Notification.java"
+        role: "channel_base"
+        relationship: "notification_abstraction"
+      - file: "src/main/java/com/mindarray/api/APIServer.java"
+        role: "upstream_source"
+        relationship: "api_triggered_notifications"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+        reason: "Correlation analysis, not outbound notification dispatch"
+
+    notes:
+      - "Channel-specific delivery implementations hang off NotificationEngine"
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/notification/NotificationEngine.java"
+        method: "start"
+        event_type: ""
+
+  servicenow_sync:
+    primary_owner:
+      file: "src/main/java/com/mindarray/integration/ServiceNowIntegration.java"
+      class: "ServiceNowIntegration"
+      method: "start"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-16T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "ServiceNowIntegration handles external ServiceNow synchronization"
+      staleness_threshold_days: 90
+
+    aliases:
+      - "servicenow integration"
+      - "ticket sync"
+      - "incident sync"
+      - "snow integration"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"
+        role: "event_source"
+        relationship: "manual_and_policy_actions"
+      - file: "src/main/java/com/mindarray/nms/ObjectManager.java"
+        role: "context_provider"
+        relationship: "object_identity_enrichment"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/notification/NotificationEngine.java"
+        reason: "Notification fanout, not external ITSM synchronization"
+
+    notes:
+      - "ServiceNow sync should anchor to integration package owner"
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/integration/ServiceNowIntegration.java"
+        method: "start"
+        event_type: ""
+
+  topology_discovery:
+    primary_owner:
+      file: "src/main/java/com/mindarray/nms/DiscoveryEngine.java"
+      class: "DiscoveryEngine"
+      method: "start"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-16T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "DiscoveryEngine is the topology and discovery lifecycle owner"
+      staleness_threshold_days: 90
+
+    aliases:
+      - "discovery engine"
+      - "topology discovery"
+      - "object discovery"
+      - "device discovery"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/nms/ObjectManager.java"
+        role: "object_lifecycle"
+        relationship: "discovered_object_management"
+      - file: "src/main/java/com/mindarray/aiops/DependencyManager.java"
+        role: "dependency_bridge"
+        relationship: "topology_dependency_alignment"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java"
+        reason: "Query processor for dependencies, not discovery owner"
+
+    notes:
+      - "Discovery and object orchestration live under nms package ownership"
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/nms/DiscoveryEngine.java"
+        method: "start"
+        event_type: ""
+
+  ui_action_processing:
+    primary_owner:
+      file: "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"
+      class: "UIActionEventHandler"
+      method: "start"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-16T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "UIActionEventHandler owns eventbus UI action handling lifecycle"
+      staleness_threshold_days: 90
+
+    aliases:
+      - "ui action handler"
+      - "eventbus ui action"
+      - "ui action event"
+      - "policy ui action"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/api/APIServer.java"
+        role: "api_surface"
+        relationship: "ui_to_api_bridge"
+      - file: "src/main/java/com/mindarray/notification/NotificationEngine.java"
+        role: "downstream_notifier"
+        relationship: "action_result_notifications"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/nms/DiscoveryEngine.java"
+        reason: "Discovery workflow, not UI eventbus action owner"
+
+    notes:
+      - "Eventbus UI actions should anchor to handler lifecycle entry point"
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"
+        method: "start"
+        event_type: ""
