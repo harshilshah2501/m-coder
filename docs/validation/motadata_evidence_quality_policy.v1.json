@@ -34,6 +34,18 @@
     "ask_broad_correlation": {
       "enforce": true,
       "max_generic_infra_ratio_top_k": 0.9
+    },
+    "ask_api_request_routing_owner": {
+      "enforce": true,
+      "max_distractor_count_top_k": 1,
+      "max_generic_infra_ratio_top_k": 0.5,
+      "require_owner_in_top3": true
+    },
+    "ask_servicenow_sync_owner": {
+      "enforce": true,
+      "max_distractor_count_top_k": 1,
+      "max_generic_infra_ratio_top_k": 0.5,
+      "require_owner_in_top3": true
     }
   }
 }
