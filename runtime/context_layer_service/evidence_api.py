@@ -64,7 +64,17 @@ def export_evidence_bundle_dict(
     from runtime.layer5.evidence import build_evidence_bundle
     from runtime.layer5.index import build_file_index
     from runtime.layer5.retrieval import LexicalRetrievalConfig, retrieve_lexical
-    from runtime.layer5.retrieval.effective_intent import resolve_lexical_task_type
+    from runtime.layer5.retrieval.effective_intent import (
+        merge_effective_intent,
+        resolve_lexical_task_type,
+    )
+    from runtime.layer5.retrieval.fusion import (
+        FusionConfig,
+        fuse_and_filter,
+        fusion_authority_note,
+        hard_filter_only,
+    )
+    from runtime.layer5.retrieval.quality_gate import assess_evidence_quality
     from runtime.layer5.workspace.resolver import ResolverConfig, WorkspaceResolver
 
     authority_code_index: Optional["CodeIndex"] = None
@@ -164,6 +174,8 @@ def export_evidence_bundle_dict(
 
     authority_resolution = None
     structural_context = None
+    registry = None
+    adapter = authority_adapter
     try:
         from runtime.layer5.authority.authority_evidence import (
             build_authority_resolution,
@@ -176,7 +188,6 @@ def export_evidence_bundle_dict(
 
         reg_path = Path(__file__).resolve().parents[1] / "layer5" / "authority" / "product_authority_registry.yaml"
         registry = load_registry(reg_path)
-        adapter = authority_adapter
         if adapter is None:
             if authority_code_index_attempted:
                 if authority_code_index is not None:
@@ -233,15 +244,63 @@ def export_evidence_bundle_dict(
         authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
     )
 
-    fusion_diag: Optional[Dict[str, Any]] = None
+    effective = merge_effective_intent(lex_task, q)
+    fusion_diag: Dict[str, Any] = {}
+    roles_map: Dict[str, str] = {}
+    if registry is not None:
+        fused, fusion_diag_inner, role_objs = fuse_and_filter(
+            r,
+            effective_intent=effective,
+            registry=registry,
+            code_index_adapter=adapter,
+            selected_file=None,
+            fusion_config=FusionConfig(),
+            index=idx,
+            authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
+        )
+        r = fused
+        fusion_diag = dict(fusion_diag_inner or {})
+        roles_map = {p: ra.role for p, ra in role_objs.items()}
+    else:
+        owner_file = None
+        if isinstance(authority_resolution, dict):
+            po = authority_resolution.get("primary_owner")
+            if isinstance(po, dict):
+                owner_file = str(po.get("file") or "").strip() or None
+        filtered, fusion_diag_inner, role_objs = hard_filter_only(
+            r,
+            fusion_config=FusionConfig(),
+            owner_path=owner_file,
+            selected_file=None,
+            collaborator_paths=set(),
+        )
+        r = filtered
+        fusion_diag = dict(fusion_diag_inner or {})
+        roles_map = {p: ra.role for p, ra in role_objs.items()}
+
     if getattr(r, "stage_a_meta", None) is not None:
-        fusion_diag = {"stage_a_meta": r.stage_a_meta}
+        fusion_diag["stage_a_meta"] = r.stage_a_meta
+    fusion_diag["effective_intent"] = {
+        "primary_mode": effective.primary_mode,
+        "task_type": effective.task_type_raw,
+        "lexical_task_type": lex_task,
+        "conflicts": list(effective.conflicts),
+    }
+    qa = assess_evidence_quality(
+        q,
+        [h.relative_path for h in r.hits],
+        effective_intent=effective,
+    )
+    fusion_diag["quality_reasons"] = list(qa.quality_reasons)
 
     evb = build_evidence_bundle(
         r,
         idx,
         authority_resolution=authority_resolution,
         structural_context=structural_context,
-        fusion_diagnostics=fusion_diag,
+        role_by_path=roles_map if roles_map else None,
+        authority_note=fusion_authority_note() if registry is not None else None,
+        fusion_diagnostics=fusion_diag if fusion_diag else None,
+        evidence_quality=qa.evidence_quality,
     )
     return evb.to_dict()

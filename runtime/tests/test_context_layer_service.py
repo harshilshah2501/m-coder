@@ -300,6 +300,49 @@ def test_export_authority_status_validated_with_l5_fallback_when_code_index_disa
     assert vd.get("method_exists") is True
 
 
+def test_export_evidence_applies_fusion_caps_for_broad_correlation(tmp_path):
+    root = tmp_path
+    aiops = root / "src" / "main" / "java" / "com" / "mindarray" / "aiops"
+    aiops.mkdir(parents=True)
+    (aiops / "AvailabilityCorrelationEngine.java").write_text(
+        "public class AvailabilityCorrelationEngine { void correlate() {} }\n",
+        encoding="utf-8",
+    )
+    (aiops / "DependencyManager.java").write_text(
+        "public class DependencyManager { void correlate() {} }\n",
+        encoding="utf-8",
+    )
+    (aiops / "DependencyQueryProcessor.java").write_text(
+        "public class DependencyQueryProcessor { void correlate() {} }\n",
+        encoding="utf-8",
+    )
+
+    # Add many generic infra-like Java paths that should be capped by Stage-B.
+    for rel in (
+        "src/main/java/com/mindarray/api/APIServer.java",
+        "src/main/java/com/mindarray/db/ConfigDBServiceImpl.java",
+        "src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java",
+        "src/main/java/com/mindarray/notification/Notification.java",
+        "src/main/java/com/mindarray/manager/MotadataAppManager.java",
+        "src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+    ):
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("public class X { void correlation() {} }\n", encoding="utf-8")
+
+    d = export_evidence_bundle_dict(str(root), "How does alert correlation and enrichment work?", top_k=8)
+    entries = d.get("entries") if isinstance(d.get("entries"), list) else []
+    paths = [str(e.get("relative_path") or "").lower() for e in entries[:8] if isinstance(e, dict)]
+    generic_like = sum(
+        1
+        for p in paths
+        if any(t in p for t in ("/api/", "/db/", "/cache/", "/notification/", "/manager/", "/integration/"))
+    )
+    assert generic_like <= 2
+    assert isinstance(d.get("fusion_diagnostics"), dict)
+    assert isinstance((d.get("fusion_diagnostics") or {}).get("hard_caps"), dict)
+
+
 def test_export_no_cache_path_unchanged_behavior(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "foo.py").write_text("def hello():\n    pass\n", encoding="utf-8")

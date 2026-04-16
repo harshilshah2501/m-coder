@@ -334,7 +334,9 @@ class AuthorityRanker:
         if hasattr(self.code_index, "_index"):
             # StructuredIndexAdapter
             idx = getattr(self.code_index, "_index")
-            file_rec = idx.get_file(file_path)
+            get_file = getattr(idx, "get_file", None)
+            if callable(get_file):
+                file_rec = get_file(file_path)
 
         if not file_rec:
             return total_boost
