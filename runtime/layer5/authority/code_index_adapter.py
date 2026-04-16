@@ -58,6 +58,10 @@ class CodeIndexProtocol(Protocol):
         """Get methods called by a method. Returns empty list if not available."""
         ...
 
+    def list_paths(self) -> Set[str]:
+        """Return known relative paths in the index (for prefix-tolerant resolution)."""
+        ...
+
 
 class StructuredIndexAdapter:
     """
@@ -103,6 +107,9 @@ class StructuredIndexAdapter:
     ) -> List["CallEdge"]:
         """Get methods called by a method (1-hop forward)."""
         return self._index.get_callees(class_name, method_name)
+
+    def list_paths(self) -> Set[str]:
+        return set(self._index.files.keys())
 
 
 class L5IndexAdapter:
@@ -193,6 +200,9 @@ class L5IndexAdapter:
         """Not available in L5 adapter."""
         return []
 
+    def list_paths(self) -> Set[str]:
+        return set(self._file_set)
+
 
 class FilesystemAdapter:
     """
@@ -254,6 +264,18 @@ class FilesystemAdapter:
     def get_direct_callees(self, class_name: str, method_name: str) -> List:
         """Not available in filesystem adapter."""
         return []
+
+    def list_paths(self) -> Set[str]:
+        out: Set[str] = set()
+        if not self._root.exists():
+            return out
+        for p in self._root.rglob("*"):
+            if p.is_file():
+                try:
+                    out.add(str(p.relative_to(self._root)).replace("\\", "/"))
+                except ValueError:
+                    continue
+        return out
 
 
 def create_adapter(

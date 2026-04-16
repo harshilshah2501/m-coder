@@ -72,6 +72,9 @@ class MockCodeIndex:
             return None
         return relative_path in self._referenced
 
+    def list_paths(self) -> set:
+        return set(self._files)
+
 
 SAMPLE_REGISTRY_PATH = Path(__file__).parent.parent / "layer5" / "authority" / "product_authority_registry.yaml"
 
@@ -464,6 +467,33 @@ class TestStructuralValidation:
         assert data["status"] == "validated"
         assert data["checks"]["file_exists"] is True
         assert data["all_critical_passed"] is True
+
+    def test_validation_resolves_motadata_prefix_drift(self):
+        """Validation accepts src/... owner when index stores motadata/src/... path."""
+        index = MockCodeIndex(
+            existing_files={"motadata/src/Test.java"},
+            existing_classes={"motadata/src/Test.java": {"TestClass"}},
+            existing_methods={("motadata/src/Test.java", "TestClass"): {"testMethod"}},
+        )
+
+        owner = PrimaryOwner(
+            file="src/Test.java",
+            class_name="TestClass",
+            method="testMethod",
+            confidence="high",
+        )
+        verification = Verification(
+            last_verified_at=datetime.now() - timedelta(days=10),
+            verification_source="test",
+            staleness_threshold_days=90,
+        )
+
+        result = validate_authority(owner, verification, index)
+
+        assert result.status == AuthorityState.VALIDATED
+        assert result.checks.file_exists is True
+        assert result.checks.class_exists is True
+        assert result.checks.method_exists is True
 
     def test_validate_concept(self):
         """validate_concept convenience wrapper works."""

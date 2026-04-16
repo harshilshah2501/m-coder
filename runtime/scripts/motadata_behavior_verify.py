@@ -1169,6 +1169,7 @@ def _check_expect_ask_retrieval_gates(
     - ``require_authority_primary_owner`` (bool): ``authority_resolution.primary_owner.file`` is non-empty.
     - ``require_owner_in_top3`` (bool): primary owner path appears in top-3 evidence entries.
     - ``require_stage_a_owner_injected_min`` (int): Stage A lane quota for owner_injected.
+    - ``require_authority_status`` (str): authority_resolution.status must equal this value.
     """
     errs: list[str] = []
     if expect.get("require_authority_primary_owner"):
@@ -1191,6 +1192,14 @@ def _check_expect_ask_retrieval_gates(
             errs.append(
                 f"require_stage_a_owner_injected_min: want >= {need} got owner_injected_lane_count={got} "
                 "(ensure export Stage A is enabled; default on unless MOTADATA_L5_ENABLE_STAGE_A_V2=0 or --export-stage-a off)"
+            )
+    if "require_authority_status" in expect:
+        ar = evidence.get("authority_resolution")
+        got_status = ar.get("status") if isinstance(ar, dict) else None
+        want_status = str(expect["require_authority_status"])
+        if str(got_status or "").lower() != want_status.lower():
+            errs.append(
+                f"require_authority_status: want {want_status} got {got_status!r}"
             )
     return errs
 

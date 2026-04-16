@@ -23,6 +23,42 @@ from runtime.layer5.authority.freshness import (
 from runtime.layer5.authority.registry_loader import Concept, PrimaryOwner, Verification
 
 
+def _workspace_path_key(path: str) -> str:
+    """Normalize path and tolerate optional motadata/ prefix drift."""
+    norm = str(path or "").replace("\\", "/").strip().lower()
+    if norm.startswith("motadata/"):
+        return norm[len("motadata/") :]
+    return norm
+
+
+def _resolve_validation_path(
+    owner_file: str,
+    owner_class: str,
+    code_index: CodeIndexProtocol,
+) -> str:
+    """
+    Resolve registry owner path against index keys with motadata-prefix tolerance.
+
+    Falls back to the original owner file when path enumeration is unavailable.
+    """
+    path_set: set[str] = set()
+    try:
+        lp = getattr(code_index, "list_paths", None)
+        if callable(lp):
+            path_set = {str(p) for p in (lp() or set()) if p}
+    except Exception:
+        path_set = set()
+    if not path_set:
+        return owner_file
+    want = _workspace_path_key(owner_file)
+    if not want:
+        return owner_file
+    for candidate in path_set:
+        if _workspace_path_key(candidate) == want:
+            return candidate
+    return owner_file
+
+
 @dataclass(frozen=True)
 class ValidationChecks:
     """Individual validation check results."""
@@ -87,21 +123,25 @@ def validate_authority(
     Returns:
         ValidationResult with status and check details.
     """
-    file_exists = code_index.file_exists(primary_owner.file)
+    effective_file = _resolve_validation_path(
+        primary_owner.file, primary_owner.class_name, code_index
+    )
+
+    file_exists = code_index.file_exists(effective_file)
 
     class_exists = False
     if file_exists:
         class_exists = code_index.class_exists(
-            primary_owner.file, primary_owner.class_name
+            effective_file, primary_owner.class_name
         )
 
     method_exists: Optional[bool] = None
     if primary_owner.method and file_exists and class_exists:
         method_exists = code_index.method_exists(
-            primary_owner.file, primary_owner.class_name, primary_owner.method
+            effective_file, primary_owner.class_name, primary_owner.method
         )
 
-    is_ref = code_index.is_referenced(primary_owner.file) if file_exists else None
+    is_ref = code_index.is_referenced(effective_file) if file_exists else None
 
     stale = is_stale(
         verification.last_verified_at,
