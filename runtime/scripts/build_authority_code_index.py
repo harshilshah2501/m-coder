@@ -71,6 +71,75 @@ def _resolve_out_path(workspace_root: Path, out: str | None) -> Path:
     return (Path("runtime/.cache") / f"authority_code_index.{key}.json").resolve()
 
 
+class ProgressBar:
+    """Lightweight terminal progress bar with elapsed time."""
+
+    def __init__(self, total: int, *, width: int = 28, enabled: bool = True, label: str = "progress") -> None:
+        self.total = max(1, int(total))
+        self.width = max(10, int(width))
+        self.enabled = bool(enabled)
+        self.label = label
+        self.start = _now()
+        self._last_render = 0.0
+
+    def update(self, current: int, *, extra: str = "") -> None:
+        if not self.enabled:
+            return
+        now = _now()
+        # Throttle repaint to keep logs readable.
+        if current < self.total and (now - self._last_render) < 0.08:
+            return
+        self._last_render = now
+        cur = max(0, min(current, self.total))
+        ratio = cur / self.total
+        filled = int(self.width * ratio)
+        bar = "#" * filled + "-" * (self.width - filled)
+        elapsed = now - self.start
+        eta = (elapsed / ratio - elapsed) if ratio > 0 else 0.0
+        line = (
+            f"\r{self.label}: [{bar}] {cur}/{self.total} ({ratio * 100:5.1f}%) "
+            f"elapsed={elapsed:6.1f}s eta={eta:6.1f}s"
+        )
+        if extra:
+            line += f" | {extra}"
+        print(line, end="", flush=True)
+
+    def finish(self, *, extra: str = "") -> None:
+        if not self.enabled:
+            return
+        self.update(self.total, extra=extra)
+        print("", flush=True)
+
+
+def _can_incremental(
+    *,
+    out_path: Path,
+    workspace_root: Path,
+    source_dirs: List[str],
+    include_tests: bool,
+    max_files: int,
+) -> Tuple[bool, str]:
+    meta_path = _meta_path_for_index(out_path)
+    if not out_path.exists() or not meta_path.exists():
+        return (False, "cache artifacts missing")
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    except Exception:
+        return (False, "meta unreadable")
+    if not isinstance(meta, dict):
+        return (False, "meta malformed")
+
+    if str(meta.get("workspace_root", "")) != str(workspace_root):
+        return (False, "workspace_root changed")
+    if list(meta.get("source_dirs", [])) != list(source_dirs):
+        return (False, "source_dirs changed")
+    if bool(meta.get("include_tests", False)) != bool(include_tests):
+        return (False, "include_tests changed")
+    if int(meta.get("max_files", 0)) != int(max_files):
+        return (False, "max_files changed")
+    return (True, "cache + meta compatible")
+
+
 def _file_sig(path: Path) -> Dict[str, int]:
     st = path.stat()
     return {"mtime_ns": int(st.st_mtime_ns), "size": int(st.st_size)}
@@ -218,6 +287,7 @@ def build_index_with_progress(
     skipped = 0
 
     print("[3/4] Extracting file/class/method/call graph data")
+    bar = ProgressBar(total, enabled=True, label="extract")
     for i, java_file in enumerate(files, start=1):
         rel = str(java_file.relative_to(workspace_root)).replace("\\", "/")
         rec = builder._process_file(java_file, rel)  # reuse existing extraction logic
@@ -234,13 +304,9 @@ def build_index_with_progress(
             except (OSError, PermissionError):
                 pass
 
-        if i == total or (progress_every > 0 and i % progress_every == 0):
-            pct = (i / total) * 100.0
-            elapsed = _now() - t0
-            print(
-                f"      progress: {i}/{total} ({pct:.1f}%) | kept={kept} skipped={skipped} | elapsed={elapsed:.1f}s"
-            )
+        bar.update(i, extra=f"kept={kept} skipped={skipped}")
 
+    bar.finish(extra=f"kept={kept} skipped={skipped}")
     print("[4/4] Building derived indices")
     index.build_indices()
     print(f"      done in {(_now() - t0):.2f}s | stats={json.dumps(index.stats, sort_keys=True)}")
@@ -319,10 +385,12 @@ def refresh_index_incremental(
     kept = 0
     skipped = 0
     total = len(touched)
+    bar = ProgressBar(max(1, total), enabled=True, label="refresh")
     for i, rel in enumerate(touched, start=1):
         p = by_rel.get(rel)
         if p is None:
             skipped += 1
+            bar.update(i, extra=f"refreshed={kept} skipped={skipped}")
             continue
         rec = builder._process_file(p, rel)
         if rec is None:
@@ -337,10 +405,10 @@ def refresh_index_incremental(
                     idx.call_edges.extend(builder.extractor.extract_call_edges(content, rel, cls.name))
             except (OSError, PermissionError):
                 pass
-        if total and (i == total or (progress_every > 0 and i % progress_every == 0)):
-            pct = (i / total) * 100.0
-            print(f"      progress: {i}/{total} ({pct:.1f}%) | refreshed={kept} skipped={skipped}")
+        bar.update(i, extra=f"refreshed={kept} skipped={skipped}")
 
+    if total:
+        bar.finish(extra=f"refreshed={kept} skipped={skipped}")
     print("[5/5] Rebuilding derived indices")
     idx.build_indices()
     _write_meta(
@@ -370,7 +438,7 @@ def main() -> int:
         "--progress-every",
         type=int,
         default=100,
-        help="Print progress every N files (0 disables interval logs)",
+        help="Deprecated: retained for backward compatibility (ignored; dynamic progress bar is always used)",
     )
     ap.add_argument(
         "--out",
@@ -379,9 +447,9 @@ def main() -> int:
     )
     ap.add_argument(
         "--refresh-mode",
-        choices=("full", "incremental"),
-        default="incremental",
-        help="Build mode: full (from scratch) or incremental (patch cache if present)",
+        choices=("auto", "full", "incremental"),
+        default="auto",
+        help="Build mode: auto (smart full/incremental), full, or incremental",
     )
     args = ap.parse_args()
 
@@ -395,7 +463,19 @@ def main() -> int:
 
     max_files = max(1, int(args.max_files))
     progress_every = max(0, int(args.progress_every))
-    if args.refresh_mode == "incremental":
+    mode = str(args.refresh_mode or "auto")
+    if mode == "auto":
+        ok, reason = _can_incremental(
+            out_path=out_path,
+            workspace_root=workspace_root,
+            source_dirs=source_dirs,
+            include_tests=bool(args.include_tests),
+            max_files=max_files,
+        )
+        mode = "incremental" if ok else "full"
+        print(f"[mode] auto -> {mode} ({reason})")
+
+    if mode == "incremental":
         index = refresh_index_incremental(
             workspace_root=workspace_root,
             source_dirs=source_dirs,
