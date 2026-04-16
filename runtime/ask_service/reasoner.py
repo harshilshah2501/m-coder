@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 import urllib.request
 import urllib.error
@@ -165,9 +166,142 @@ def _build_prompt(
     lines.append(
         "Respond with a single JSON object (no markdown fences) with these exact keys: "
         '"summary" (string), "logic_flow" (string), "likely_bug_risk" (string), '
-        '"evidence" (array of strings, file/method references), "confidence_limits" (string).'
+        '"evidence" (array of strings, file/method references), "confidence_limits" (string). '
+        "Always cite the selected file path in evidence when present, and prefer concrete method/branch clues over generic caveats."
     )
     return "\n".join(lines)
+
+
+def _selected_item(bundle: ContextBundle, selected_file: str) -> ContextItem | None:
+    sel = _norm_rel_path(selected_file).lower()
+    if not sel:
+        return None
+    base = sel.split("/")[-1]
+    for item in bundle.items:
+        p = _norm_rel_path(item.path).lower()
+        if p == sel or p.endswith("/" + base):
+            return item
+    return None
+
+
+def _extract_method_clues(text: str, cap: int = 3) -> List[str]:
+    out: List[str] = []
+    seen = set()
+    for m in re.finditer(r"^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", text, flags=re.MULTILINE):
+        name = m.group(1)
+        if name not in seen:
+            seen.add(name)
+            out.append(name)
+            if len(out) >= cap:
+                return out
+    for m in re.finditer(
+        r"\b(?:public|private|protected)?\s*(?:static\s+)?(?:[A-Za-z_][A-Za-z0-9_<>\[\]]*\s+)+([A-Za-z_][A-Za-z0-9_]*)\s*\(",
+        text,
+    ):
+        name = m.group(1)
+        if name not in seen:
+            seen.add(name)
+            out.append(name)
+            if len(out) >= cap:
+                break
+    return out
+
+
+def _has_control_flow_cues(text: str) -> bool:
+    tl = text.lower()
+    cues = (" if ", " else ", " return", " catch", " throw", " null", " exception", " branch")
+    return any(c in f" {tl} " for c in cues)
+
+
+def _ensure_selected_grounding(
+    parsed: ExplainDebugResult,
+    *,
+    selected_file: str,
+    selection: str,
+    bundle: ContextBundle,
+) -> ExplainDebugResult:
+    if parsed.error:
+        return parsed
+
+    item = _selected_item(bundle, selected_file)
+    sel_norm = _norm_rel_path(selected_file)
+    sel_base = sel_norm.split("/")[-1] if sel_norm else ""
+    sel_symbol = sel_base.replace(".java", "").replace(".py", "")
+
+    # Truthful insufficiency when selected file is not even present in context.
+    if item is None:
+        return ExplainDebugResult(
+            summary=(
+                f"Selected file `{selected_file}` is not present in the retrieved context, "
+                "so this debug analysis is insufficiently grounded."
+            ),
+            logic_flow=(
+                "Cannot trace concrete method/branch behavior for the selected target without that file body."
+            ),
+            likely_bug_risk=(
+                "Any root-cause claim would be speculative until selected-file code is included in context."
+            ),
+            evidence=[f"missing_in_context:{selected_file}"],
+            confidence_limits=(
+                "Insufficient grounding: include the selected file in evidence and retry EXPLAIN_DEBUG."
+            ),
+        )
+
+    methods = _extract_method_clues(item.content or "")
+    has_flow = _has_control_flow_cues(item.content or "")
+    minimal_sel = _selection_is_minimal(selection)
+
+    summary = parsed.summary or ""
+    logic_flow = parsed.logic_flow or ""
+    likely = parsed.likely_bug_risk or ""
+    evidence = list(parsed.evidence or [])
+    confidence = parsed.confidence_limits or ""
+
+    # Enforce selected-file dominance in explicit evidence.
+    sel_ref = sel_norm
+    if methods:
+        sel_ref = f"{sel_norm}:{methods[0]}"
+    if not any(sel_norm.lower() in str(e).lower() or sel_symbol.lower() in str(e).lower() for e in evidence):
+        evidence.insert(0, sel_ref)
+    elif evidence and not (sel_norm.lower() in str(evidence[0]).lower() or sel_symbol.lower() in str(evidence[0]).lower()):
+        evidence.insert(0, sel_ref)
+
+    # Ensure response explicitly mentions the selected file/symbol.
+    joined = f"{summary} {logic_flow} {likely}".lower()
+    if sel_symbol and sel_symbol.lower() not in joined and sel_base.lower() not in joined:
+        summary = (summary + " " if summary else "") + (
+            f"Grounded on `{sel_base}` from `{sel_norm}`."
+        )
+
+    # Push concrete clues to avoid generic-only language.
+    if methods and not any(m.lower() in joined for m in methods):
+        logic_flow = (logic_flow + " " if logic_flow else "") + (
+            "Relevant methods in selected file: " + ", ".join(methods) + "."
+        )
+    if not has_flow:
+        likely = (likely + " " if likely else "") + (
+            "Control-flow cues are limited in the selected snippet; verify surrounding guards and return conditions."
+        )
+    elif not any(x in joined for x in ("if ", "when ", "branch", "condition", "return")):
+        likely = (likely + " " if likely else "") + (
+            "Likely risk centers on conditional branches and early-return paths in the selected-file flow."
+        )
+
+    if not confidence:
+        confidence = (
+            "Bounded to provided evidence bundle; validate against full caller/callee chain before code changes."
+        )
+    if minimal_sel:
+        confidence += " Selected highlight is minimal; conclusions rely on broader selected-file context."
+
+    return ExplainDebugResult(
+        summary=summary.strip(),
+        logic_flow=logic_flow.strip(),
+        likely_bug_risk=likely.strip(),
+        evidence=[str(e).strip() for e in evidence if str(e).strip()],
+        confidence_limits=confidence.strip(),
+        error=None,
+    )
 
 
 def _parse_structured_response(text: str) -> ExplainDebugResult:
@@ -260,6 +394,15 @@ def explain_debug(
         return ExplainDebugResult(error="Reasoning service returned no choices")
     content = choices[0].get("message", {}).get("content") or ""
     parsed = _parse_structured_response(content)
+    if parsed.error:
+        _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
+        return parsed
+    parsed = _ensure_selected_grounding(
+        parsed,
+        selected_file=selected_file,
+        selection=selection,
+        bundle=bundle,
+    )
     if parsed.error:
         _explain_debug_request_log(rid, base_url, model_name, "error", t0, trace_id=tid)
     else:

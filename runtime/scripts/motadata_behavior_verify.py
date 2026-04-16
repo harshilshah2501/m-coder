@@ -1210,6 +1210,49 @@ def _check_expect_ask_retrieval_gates(
     return errs
 
 
+def _check_expect_debug_explain(
+    expect: dict[str, Any],
+    explain_debug: dict[str, Any],
+    selected_file: str,
+) -> list[str]:
+    errs: list[str] = []
+    hay = " ".join(
+        str(explain_debug.get(k) or "")
+        for k in ("summary", "logic_flow", "likely_bug_risk", "confidence_limits", "error")
+    ).lower()
+    ev = explain_debug.get("evidence")
+    ev_list = [str(x) for x in ev] if isinstance(ev, list) else []
+    ev_h = " ".join(ev_list).lower()
+    base = str(selected_file or "").split("/")[-1]
+    symbol = base.replace(".java", "").replace(".py", "")
+
+    if expect.get("must_reference_selected_file_or_symbol"):
+        if symbol and symbol.lower() not in hay and symbol.lower() not in ev_h and base.lower() not in hay:
+            errs.append(
+                "must_reference_selected_file_or_symbol: selected file/symbol not found in explain_debug"
+            )
+    if expect.get("require_selected_file_in_evidence"):
+        if not ev_list:
+            errs.append("require_selected_file_in_evidence: explain_debug.evidence missing/empty")
+        elif not any(base.lower() in e.lower() or symbol.lower() in e.lower() for e in ev_list):
+            errs.append(
+                "require_selected_file_in_evidence: selected file/symbol missing from explain_debug.evidence"
+            )
+    if expect.get("must_suggest_concrete_failure_points"):
+        if not any(x in hay for x in ("if ", "when ", "branch", "condition", "return", "null", "exception", "method")):
+            errs.append(
+                "must_suggest_concrete_failure_points: no concrete control-flow/method cues in explain_debug"
+            )
+    subs = expect.get("required_text_contains_any")
+    if isinstance(subs, list) and subs:
+        if not any(str(s).lower() in hay or str(s).lower() in ev_h for s in subs if s):
+            errs.append(f"required_text_contains_any: none of {subs} found in explain_debug")
+    if expect.get("must_have_confidence_limits"):
+        if not str(explain_debug.get("confidence_limits") or "").strip():
+            errs.append("must_have_confidence_limits: explain_debug.confidence_limits missing")
+    return errs
+
+
 def _load_quality_policy(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
@@ -1451,6 +1494,7 @@ def _run_scenario_row(
             for k in keys_req:
                 if k not in ed:
                     errors.append(f"explain_debug missing key {k}")
+        errors.extend(_check_expect_debug_explain(expect, ed, req.get("selected_file", "")))
         ok_body = code == 200 and ("summary" in ed or "error" in ed)
         dev_snapshot = {
             "routing_mode": resp.get("routing_mode"),

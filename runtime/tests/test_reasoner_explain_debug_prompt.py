@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from runtime.ask_service.reasoner import _build_prompt
+from runtime.ask_service.reasoner import (
+    ExplainDebugResult,
+    _build_prompt,
+    _ensure_selected_grounding,
+)
 from runtime.context.contracts import (
     ContextBundle,
     ContextBundleLimits,
@@ -61,3 +65,36 @@ def test_build_prompt_long_selection_omits_minimal_block():
     long_sel = "\n".join([f"line {i} // padding" for i in range(30)])
     p = _build_prompt("q", "motadata/src/AgentCacheManager.java", long_sel, b)
     assert "Instructions for minimal" not in p
+
+
+def test_ensure_selected_grounding_adds_selected_file_evidence_first():
+    b = _bundle_two_files()
+    parsed = ExplainDebugResult(
+        summary="Potential issue.",
+        logic_flow="Flow described.",
+        likely_bug_risk="Might skip work.",
+        evidence=["motadata/other/Other.java:foo"],
+    )
+    out = _ensure_selected_grounding(
+        parsed,
+        selected_file="motadata/src/AgentCacheManager.java",
+        selection="getAgentCacheFileChunks()",
+        bundle=b,
+    )
+    assert out.error is None
+    assert out.evidence
+    assert "AgentCacheManager.java".lower() in out.evidence[0].lower()
+
+
+def test_ensure_selected_grounding_returns_insufficient_when_selected_missing():
+    b = _bundle_two_files()
+    parsed = ExplainDebugResult(summary="ok")
+    out = _ensure_selected_grounding(
+        parsed,
+        selected_file="motadata/src/MissingFile.java",
+        selection="foo()",
+        bundle=b,
+    )
+    assert out.error is None
+    assert "insufficiently grounded" in out.summary.lower()
+    assert any("missing_in_context" in e for e in out.evidence)

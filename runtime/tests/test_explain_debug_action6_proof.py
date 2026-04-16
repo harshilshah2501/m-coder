@@ -156,7 +156,9 @@ def test_v0_explain_debug_success_returns_explain_debug(mock_urlopen: MagicMock,
 
     ed = response["explain_debug"]
     assert "error" not in ed
-    assert ed.get("summary") == "ok"
+    assert "summary" in ed and isinstance(ed.get("summary"), str)
+    assert "main.py" in json.dumps(ed).lower() or "main" in json.dumps(ed).lower()
+    assert isinstance(ed.get("evidence"), list) and len(ed.get("evidence")) >= 1
     assert response.get("evidence_first_meta") is None
 
 

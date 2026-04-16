@@ -78,7 +78,16 @@
       "selection": "Trace enrichment and correlation paths; list likely failure points.",
       "expect": {
         "routing_mode": "explain_debug",
-        "explain_debug_has_keys": ["summary"]
+        "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
+        "must_reference_selected_file_or_symbol": true,
+        "require_selected_file_in_evidence": true,
+        "must_suggest_concrete_failure_points": true,
+        "must_have_confidence_limits": true,
+        "required_text_contains_any": [
+          "AvailabilityCorrelationEngine",
+          "branch",
+          "method"
+        ]
       }
     },
     {
