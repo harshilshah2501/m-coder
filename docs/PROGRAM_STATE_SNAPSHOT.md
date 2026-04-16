@@ -1,7 +1,7 @@
 # PROGRAM_STATE_SNAPSHOT — portable continuity
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE`  
-**Last updated:** 2026-04-14  
+**Last updated:** 2026-04-16  
 **Detail & evidence IDs:** `docs/LIVE_ROADMAP_TRACKER.md` (this file stays short)
 
 ---
@@ -27,17 +27,21 @@
 
 ## Current active work (high level)
 
-- **Post-closure convergence:** controlled expansion from closed baseline; no reopened MVP gates without tracker amendment
-- **Retrieval:** baseline preservation + regression protection under L5-RET framing (not PR-6 reopen)
-- **Operational follow-through:** log packaging, CI hygiene, runbook maintenance (non-blocking)
+- **Lane discipline:** split workstreams and keep only one active engineering lane at a time.
+- **Retrieval baseline:** anchored authority-gated retrieval is locked as working baseline; broad ask retrieval improved but not final.
+- **Active engineering lane:** Debug usefulness refinement (`EXPLAIN_DEBUG` selected-file-grounded output quality).
 
 ---
 
 ## Immediate next work (ordered)
 
-1. Use **CLI/HTTP proof** (`docs/CLI_VALIDATION_MATRIX.md`) for regressions; **do not** require JetBrains UI for routine validation unless milestone says so  
-2. **Product wiring** of `Stage3LoopController` where planned — **separate** from burn-in closure (tracker)  
-3. Residual UX/docs items under §B3 checklist as **secondary** (not MVP gate reopen)
+1. Keep retrieval baseline frozen with the scenario verifier artifact (`runtime/.run/motadata_behavior_validation.json`) as regression truth.
+2. Execute **Debug usefulness v1** as the only active lane:
+   - selected file must dominate debug evidence,
+   - answer must cite concrete file/method/branch clues,
+   - generic fallback language reduced,
+   - truthful insufficiency when selected snippet grounding is weak.
+3. Keep authority wording refinement and additional broad-ask tightening as secondary follow-ons (not concurrent active lanes).
 
 ---
 

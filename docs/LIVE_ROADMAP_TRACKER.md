@@ -5,12 +5,12 @@
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Core + Layer-5 Product Extensions  
-- **Last updated**: 2026-04-10  
+- **Last updated**: 2026-04-16  
 - **Program state**: **Production-grade vertical slice achieved.** All production gates are closed with artifact-backed acceptance.
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Current active milestone focus**: **Post-acceptance convergence and declaration** — Action 14 is **PASS**; no production blocker remains open.
+- **Current active milestone focus**: **Single-lane follow-through from locked retrieval baseline** — retrieval baseline freeze is complete; debug usefulness is the only active engineering lane.
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -42,7 +42,7 @@
 - **Dual Ask path:** JetBrains may call `**POST /v0/ask`** unless **evidence-first** is ON (`motadata.ask.evidence_first` / `MOTADATA_PLUGIN_ASK_EVIDENCE_FIRST`). Backend validation scripts for `**POST /v1/ask`** are **not** the same default path as the IDE — this is a **known system condition**, not operator error.
 - **Evidence-first default:** **OFF** in plugin — alignment with `**layer5.evidence_bundle.v1`** + `/v1/ask` is **opt-in**.
 - **Observability closure:** B4 trace reconstruction is **CLOSED** with artifact-backed request correlation across Context Layer, Plan-Gate, and execution-path evidence.
-- **Retrieval:** PR-6 true-positive debug retrieval baseline is **COMPLETE / LOCKED** (deterministic, workspace-local). Active risk is **generalization + validation thresholds** under **§B1** / **§1.4 Track RET** (feeds **L5.8**-class metrics maturity; **L5.8 harness closure** itself is **COMPLETE** per **B2** — not contradictory).
+- **Retrieval:** anchored authority-gated retrieval baseline is now **WORKING / LOCKED** on current branch (`ask_anchor_owner_top1` strict gate pass; scenario suite pass). Broad ask retrieval is **improved** (reduced generic-infra dominance) but intentionally tracked as non-final tuning.
 - **Distributed topology (single architecture):** backend (Context Layer, retrieval) near the workspace (**WSL or native Linux**); **Plan-Gate + vLLM on GPU** — not separate product “profiles.” **§B5** host readiness across both placements is **CLOSED** (2026-04-09) — **`docs/validation/B5_HOST_READINESS.md`** §0. Plugin **Plan-Gate base URL defaults to** `127.0.0.1:8089` (**`motadata.plan_gate.url`** / **`MOTADATA_PLAN_GATE_URL`** override); remaining URL externalization backlog is operational, not a B5 blocker.
 - **IDE operator demo:** `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md` — Plan-Gate + plugin flows; **does not** exercise **`Stage3LoopController`** (see **§6.20**, **docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md**).
 
@@ -856,25 +856,21 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Controlled Runtime Loop — burn-in, validation, and integration** — loop **implementation** exists (**§6.20**); focus is **proving** it under WSL + GPU, trace reconstruction, and product wiring — **not** schema greenfield.  
-  Stage 2 is closed/locked for behavioral trust and is no longer an active feature track.
+- **Current objective**: **Freeze retrieval truth and run one active lane only.**
+  Retrieval baseline is now recorded as achieved; active implementation lane is debug usefulness refinement.
 - **Active tasks**:
-  - **§B1 / L5-RET — retrieval generalization + validation expansion (active):** golden suites, perturbations, drift thresholds — feeds Stage 2 program bar; **L5.8 harness** remains **closed** (**B2**).
-  - **Stage 3 runtime loop — §B7 CLOSED** (2026-04-09): artifacts under `docs/validation/` + `STAGE3_BURN_IN_REPORT.md` §9; follow-on **product** wiring per runbook §7 if needed.
-  - **L5-OBS-1 / §B4:** **Action #5 CLOSED** (**§6.19**); **§B4 trace reconstruction CLOSED** (2026-04-08 — Context Layer + Ask + `/v0/execute` ID spine proof). **Operational** follow-through only (vLLM process logs, CI collection) if needed — **not** a reopened observability program.
-  - **Plugin truthfulness:** **Action 4 CLOSED** (**§6.18**) — **residual §B3 checklist** items only (non-closed UX gaps), not a reopened Action 4.
-  - Continue deployment/validation flow from `**docs/MOTADATA_DEMO_SETUP_RUNBOOK.md`** (**GPU → WSL → Windows**) with WSL workspace as source-of-truth.
+  - **Retrieval baseline lock (done / maintain):** anchored authority-gated baseline achieved (`ask_anchor_owner_top1` strict pass + scenario suite stable), broad ask improved (`ask_broad_correlation` generic-infra ratio reduced).
+  - **Primary active lane (only):** **Debug usefulness v1** (selected-file-grounded `EXPLAIN_DEBUG` quality).
+  - **Non-active follow-ons:** authority wording refinement and further broad-ask tuning (queued, not concurrent).
 - **Next execution order**:
-  1. **Stage 3 loop** — §B7 **closed**; product integration only where planned (**§6.20**, runbook §7)
-  2. **§B1** retrieval validation / expanded goldens
-  3. Residual **§B3** plugin checklist (non-Action-4 scope)
-  4. Host readiness / **Action 14** acceptance / release sign-off
+  1. Keep retrieval baseline regression-proof via scenario runs and saved report artifacts.
+  2. Implement Debug usefulness v1 acceptance criteria in verifier/tests and runtime output behavior.
+  3. Re-run full scenario suite and capture updated closure note artifacts.
 - **Current blockers**:
-  - No contract blocker for Stage 2 **behavioral** trust closure.
-  - **§B7** — Stage 3 loop **burn-in / acceptance CLOSED** (artifact-backed); not missing implementation.
-  - Operational debt (plugin Gradle environment reproducibility, auxiliary test environment consistency).
+  - No blocker on retrieval correctness baseline.
+  - Main open product pain is debug answer specificity/grounding quality.
 - **Immediate next action**:
-  - Run Stage 3 burn-in matrix (pytest + WSL/GPU smoke per **STAGE3_BURN_IN_AND_E2E_DEMO**); wire product path to governed loop where planned — **no** duplicate “implement schemas” work (already landed).
+  - Start **Action: Close Debug Usefulness v1 (selected-file-grounded EXPLAIN_DEBUG)** with explicit acceptance checks.
 
 ### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
 

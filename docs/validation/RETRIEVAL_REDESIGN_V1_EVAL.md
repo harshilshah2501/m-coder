@@ -12,6 +12,26 @@
 
 ---
 
+## 2026-04-16 closure note (current branch truth)
+
+This section records the latest validated state and supersedes older "v1.1 no uplift" language for the current branch line.
+
+- **Anchored authority-gated retrieval: working baseline achieved**
+  - strict anchored lane passes (`ask_anchor_owner_top1`)
+  - `owner_in_top1=true`, `owner_in_top3=true`
+  - `require_authority_status=validated` passes
+- **Broad ask retrieval: improved, not final**
+  - `ask_broad_correlation` now shows reduced generic leakage (`generic_infra_ratio_top_k` improved from prior `0.75` to `0.5` on latest verified run)
+  - still `WEAK` by policy for broad/generic asks (expected at current thresholding)
+- **Scenario suite stability**
+  - full scenario suite `all_pass=true`
+  - artifact: `runtime/.run/motadata_behavior_validation.json`
+- **Next active lane**
+  - Debug usefulness refinement is the primary open engineering lane
+  - authority wording refinement remains secondary
+
+---
+
 ## Retrieval Redesign v1.1 (corrective pass)
 
 This doc’s **baseline vs v1** tables remain the canonical empirical verdict for **v1**: not effective on the captured eval set (identical ask path sets; no measured uplift).
