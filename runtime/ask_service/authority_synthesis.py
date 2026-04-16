@@ -45,6 +45,28 @@ def _stale_uncertainty(status: str, confidence: str) -> bool:
     return confidence in ("weak", "none")
 
 
+def _status_message(status: str, confidence: str) -> str:
+    """Human-readable lifecycle wording without changing runtime semantics."""
+    s = (status or "unverified").lower()
+    conf = (confidence or "none").lower()
+    if s == "validated":
+        return f"Authority status: validated. Confidence: {conf}."
+    if s == "stale_candidate":
+        return (
+            f"Authority status: stale_candidate. Confidence: {conf}. "
+            "Structural owner mapping exists, but freshness/secondary checks are not fully strong."
+        )
+    if s == "stale":
+        return (
+            f"Authority status: stale. Confidence: {conf}. "
+            "Owner mapping may still resolve, but verification metadata is out of date."
+        )
+    return (
+        f"Authority status: unverified. Confidence: {conf}. "
+        "Owner mapping was not validated strongly enough for high-trust actioning."
+    )
+
+
 def synthesize_authority_plan_steps(
     query: str,
     bundle: ContextBundle,
@@ -83,7 +105,7 @@ def synthesize_authority_plan_steps(
     if _stale_uncertainty(status, conf):
         meta["uncertainty"] = True
         steps.append(
-            f"Authority status is {status} (confidence: {conf}). "
+            _status_message(status, conf) + " "
             "Treat the following as provisional; verify against the current codebase."
         )
     else:
