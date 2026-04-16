@@ -227,6 +227,45 @@ def test_fusion_hard_caps_drop_surplus_generic_paths():
     tmp.cleanup()
 
 
+def test_fusion_broad_ask_uses_stricter_generic_cap():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    _touch(
+        root / "src/main/java/com/mindarray/aiops/correlation/Owner.java",
+        "public class Owner { void correlation() {} }\n",
+    )
+    # Generic/support-style paths
+    _touch(root / "src/main/java/com/mindarray/api/APIServer.java", "class APIServer {}\n")
+    _touch(root / "src/main/java/com/mindarray/db/ConfigDBServiceImpl.java", "class ConfigDBServiceImpl {}\n")
+    _touch(root / "src/main/java/com/mindarray/cache/PolicyCacheServiceImpl.java", "class PolicyCacheServiceImpl {}\n")
+    _touch(root / "src/main/java/com/mindarray/notification/Notification.java", "class Notification {}\n")
+    _touch(root / "src/main/java/com/mindarray/manager/MotadataAppManager.java", "class MotadataAppManager {}\n")
+
+    idx = _idx_for(root)
+    q = "How does correlation work across the repository?"
+    r = retrieve_lexical(idx, q, 8, LexicalRetrievalConfig())
+    reg = load_registry(Path(__file__).resolve().parents[1] / "authority" / "product_authority_registry.yaml")
+    eff = merge_effective_intent("general", q)
+    assert eff.primary_mode == "ASK"
+    fused, diag, _roles = fuse_and_filter(
+        r,
+        effective_intent=eff,
+        registry=reg,
+        code_index_adapter=None,
+        selected_file=None,
+        fusion_config=FusionConfig(max_generic_infra_paths=2, ask_broad_generic_infra_paths=1),
+        index=idx,
+        authority_resolution=None,
+    )
+
+    # Note: min_paths_after_caps may restore one dropped row for floor safety.
+    # Assert against hard-cap bookkeeping (pre-restore) for deterministic intent.
+    hard = diag.get("hard_caps") or {}
+    assert int(hard.get("generic_infra_kept", 99)) <= 1
+    assert (diag.get("ask_broad_caps_applied") or {}).get("max_generic_infra_paths") == 1
+    tmp.cleanup()
+
+
 def test_hard_filter_only_applies_caps_without_registry():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)

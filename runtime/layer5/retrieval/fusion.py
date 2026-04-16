@@ -9,7 +9,7 @@ Output ``RetrievalResult`` replaces lexical ordering/scores; evidence builder mu
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, TYPE_CHECKING
 
@@ -56,6 +56,7 @@ class FusionConfig:
     active_file_boost_other: float = 14.0
     max_distractor_paths: int = 1
     max_generic_infra_paths: int = 2
+    ask_broad_generic_infra_paths: int = 1
     min_paths_after_caps: int = 3
     weak_lexical_ratio: float = 0.12
     weak_match_penalty: float = 18.0
@@ -501,8 +502,20 @@ def fuse_and_filter(
             per["authority_diagnostics"] = d0.to_dict()
         fused_rows.append((orig, fused, per))
 
+    # Broad ASK mode should be stricter with generic/support passengers.
+    cap_cfg = cfg
+    if (
+        effective_intent.primary_mode == MODE_ASK
+        and not selected_file
+        and cfg.ask_broad_generic_infra_paths < cfg.max_generic_infra_paths
+    ):
+        cap_cfg = replace(cfg, max_generic_infra_paths=cfg.ask_broad_generic_infra_paths)
+        diag_root["ask_broad_caps_applied"] = {
+            "max_generic_infra_paths": cap_cfg.max_generic_infra_paths,
+        }
+
     fused_rows.sort(key=lambda x: x[1], reverse=True)
-    fused_rows = _apply_infra_and_distractor_caps(fused_rows, cfg)
+    fused_rows = _apply_infra_and_distractor_caps(fused_rows, cap_cfg)
     fused_rows, owner_top3_trace = _promote_authority_owner_to_top3_fused(
         fused_rows,
         owner_path,
@@ -512,7 +525,7 @@ def fuse_and_filter(
         diag_root["authority_owner_top3_promotion"] = owner_top3_trace
     fused_rows, hard_cap_diag = _apply_hard_path_caps(
         fused_rows,
-        cfg,
+        cap_cfg,
         top_k=retrieval.top_k,
         owner_path=owner_path,
         selected_file=selected_file,
@@ -543,8 +556,8 @@ def fuse_and_filter(
     diag_root["per_path"] = per_path_diags
     diag_root["fusion_config"] = {
         "domain_prior_cap": cfg.domain_prior_cap,
-        "max_distractor_paths": cfg.max_distractor_paths,
-        "max_generic_infra_paths": cfg.max_generic_infra_paths,
+        "max_distractor_paths": cap_cfg.max_distractor_paths,
+        "max_generic_infra_paths": cap_cfg.max_generic_infra_paths,
     }
     diag_root["hard_caps"] = hard_cap_diag
 
