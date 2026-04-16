@@ -29,19 +29,18 @@
 
 - **Lane discipline:** split workstreams and keep only one active engineering lane at a time.
 - **Retrieval baseline:** anchored authority-gated retrieval is locked as working baseline; broad ask retrieval improved but not final.
-- **Active engineering lane:** Debug usefulness refinement (`EXPLAIN_DEBUG` selected-file-grounded output quality).
+- **Latest closure:** Authority Expansion Hardening v1 is complete on WSL green stack (full scenario suite pass; no anchored/debug regressions).
+- **Active engineering lane:** authority-expansion quality tightening for weak scenarios while keeping strict anchored gates stable.
 
 ---
 
 ## Immediate next work (ordered)
 
-1. Keep retrieval baseline frozen with the scenario verifier artifact (`runtime/.run/motadata_behavior_validation.json`) as regression truth.
-2. Execute **Debug usefulness v1** as the only active lane:
-   - selected file must dominate debug evidence,
-   - answer must cite concrete file/method/branch clues,
-   - generic fallback language reduced,
-   - truthful insufficiency when selected snippet grounding is weak.
-3. Keep authority wording refinement and additional broad-ask tightening as secondary follow-ons (not concurrent active lanes).
+1. Keep retrieval baseline frozen with scenario artifacts (`runtime/.run/motadata_behavior_validation.*.json`) as regression truth.
+2. Maintain Authority Expansion Hardening v1 behavior:
+   - keep noise-class suppression for code-oriented Stage A (`db-files/*`, `test-plugin-metrics/*`),
+   - preserve owner injection (`owner_injected_lane_count >= 1`) on anchored and authority-expansion scenarios.
+3. Tighten weak authority-expansion quality (especially ServiceNow sync owner scenario) without regressing strict anchored gates or debug grounding guarantees.
 
 ---
 

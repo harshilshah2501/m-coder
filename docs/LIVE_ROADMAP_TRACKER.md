@@ -10,7 +10,7 @@
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Current active milestone focus**: **Post-debug closure stabilization from locked retrieval baseline** — retrieval baseline freeze is complete, Debug Usefulness v1.1 is closed, and WSL verification is green with smart index refresh workflow.
+- **Current active milestone focus**: **Authority Expansion Hardening v1 (closed) + baseline stabilization** — retrieval baseline freeze remains intact, Debug Usefulness v1.1 is closed, and WSL verification is green after Stage A noise suppression for code-oriented asks.
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -856,22 +856,23 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Keep the locked baseline reproducible and move to the next quality lane without regressions.**
-  Retrieval baseline is achieved, Debug Usefulness v1.1 is closed, and scenario suite is green on WSL.
+- **Current objective**: **Keep the locked baseline reproducible and harden authority expansion quality without regressions.**
+  Retrieval baseline is achieved, Debug Usefulness v1.1 is closed, Authority Expansion Hardening v1 is complete, and scenario suite is green on WSL.
 - **Active tasks**:
   - **Baseline lock (done / maintain):** anchored authority-gated baseline achieved (`ask_anchor_owner_top1` strict pass + scenario suite stable), broad ask improved (`ask_broad_correlation` generic-infra ratio reduced).
   - **Debug usefulness v1.1 (done):** selected-file-grounded `EXPLAIN_DEBUG` guardrails + insufficiency checks landed and passing.
   - **Operational reproducibility (done):** authority index builder now supports smart auto full/incremental refresh with dynamic progress and is integrated into WSL run flow.
-  - **Next active lane:** broad-ask quality refinement and authority lifecycle wording/label alignment (without destabilizing strict anchored gates).
+  - **Authority Expansion Hardening v1 (done):** Stage A now suppresses noise-class files (including `db-files/*` and `test-plugin-metrics/*`) for code-oriented tasks; WSL candidate diff confirms `ask_api_request_routing_owner` no longer includes `db-files/report-templates/js/highcharts.js` in context bundle and distractor count dropped (`1 -> 0`).
+  - **Next active lane:** tighten weak quality posture for `ask_servicenow_sync_owner` and continue broad-ask quality refinement without destabilizing strict anchored gates.
 - **Next execution order**:
   1. Keep retrieval baseline regression-proof via scenario runs and saved report artifacts.
-  2. Improve broad ask quality while preserving owner-top1/owner-top3 anchored behavior.
-  3. Refine authority status wording/lifecycle labels to better reflect validated posture.
+  2. Improve weak authority-expansion scenarios (`owner_top3` already enforced; pursue stronger owner prominence where safe).
+  3. Continue broad ask quality refinement while preserving owner-top1/owner-top3 anchored behavior.
 - **Current blockers**:
   - No blocker on baseline reproducibility or strict anchored retrieval gates.
-  - Main open product pain is broad exploratory ask quality relative to anchored queries.
+  - Main open product pain is weak/partial quality in broad exploratory and integration-owner asks relative to anchored queries.
 - **Immediate next action**:
-  - Execute broad-ask refinement experiments under current policy gates and compare against frozen baseline artifacts.
+  - Run the next focused authority-quality refinement cycle and compare candidate artifacts against `AUTHORITY_HARDENING_V1`.
 
 ### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
 

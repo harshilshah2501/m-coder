@@ -97,3 +97,23 @@ Current baseline proof after Debug Usefulness v1.1 and retrieval stabilization:
 - artifact: `runtime/.run/motadata_behavior_validation.json` (latest synchronized run)
 
 Use this as the reference point for next-lane work unless a new baseline is intentionally promoted.
+
+---
+
+## 6) Authority Hardening v1 validation note
+
+Authority Expansion Hardening v1 validated on WSL with:
+
+- baseline: `runtime/.run/motadata_behavior_validation.CANDIDATE.AUTHORITY_EXPANSION.motadata.json`
+- candidate: `runtime/.run/motadata_behavior_validation.CANDIDATE.AUTHORITY_HARDENING_V1.motadata.json`
+- suite status: `all_pass=true`
+
+Observed effect (expected):
+
+- `ask_api_request_routing_owner` no longer includes `motadata/db-files/report-templates/js/highcharts.js` in `context_bundle.files`.
+- `ask_api_request_routing_owner` distractor count reduced (`distractor_count_at_k: 1 -> 0`).
+- Stage A pool no longer seeds `db-files` noise rows for this code-oriented ask path.
+
+Interpretation guidance:
+
+- A small ratio shift (for example generic-infra ratio changes caused by top-k size differences) is acceptable when policy bounds still pass and distractor removal improves owner-grounded quality.
