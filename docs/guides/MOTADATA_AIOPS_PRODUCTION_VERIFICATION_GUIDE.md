@@ -135,6 +135,17 @@ python3 runtime/scripts/lint_authority_registry_paths.py \
 
 Exit code `0` means every `primary_owner`, `collaborator`, `forbidden_distractor`, and `entry_point` file path exists as a regular file under `workspace-root`. Non-zero lists missing paths (fix the YAML or your checkout).
 
+Optional non-destructive drift proposal (suggestions only; no edits):
+
+```bash
+export PYTHONPATH="$M_CODER_ROOT"
+python3 runtime/scripts/propose_authority_registry_drift.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --out runtime/.run/authority_registry_drift_proposal.json
+```
+
+The output report proposes candidate path updates for missing registry entries and class-name mismatch hints. Review manually before changing the registry.
+
 ---
 
 ## 5) API behavior map (capability to endpoint)
@@ -266,6 +277,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "/home/harshil/Projects/Motadata" \
   --repeat 2 \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
   --print dev
 ```
 
@@ -275,9 +287,15 @@ Scenarios only (skip the full smoke pipeline; faster when you only need capabili
 python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "/home/harshil/Projects/Motadata" \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
   --scenarios-only \
   --print dev
 ```
+
+Quality policy:
+
+- `docs/validation/motadata_evidence_quality_policy.v1.json` provides scenario-time retrieval gates (for example `require_owner_in_top3`, `min_anchor_hit_rate_top_k`, `max_generic_infra_ratio_top_k`, and Stage A owner lane minimum).
+- Disable policy checks with `--quality-policy ""`.
 
 Expected fields per scenario capability (see `expect` in each JSON row; the verifier compares these to live responses):
 

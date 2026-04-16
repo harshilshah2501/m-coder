@@ -1195,6 +1195,103 @@ def _check_expect_ask_retrieval_gates(
     return errs
 
 
+def _load_quality_policy(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("quality policy must be a JSON object")
+    if data.get("schema_version") != "motadata_evidence_quality_policy.v1":
+        raise ValueError(
+            "unsupported quality policy schema_version "
+            f"(expected motadata_evidence_quality_policy.v1, got {data.get('schema_version')!r})"
+        )
+    return data
+
+
+def _bool_gate_enabled(v: Any) -> bool:
+    return bool(v) is True
+
+
+def _scenario_quality_profile(
+    policy: dict[str, Any] | None,
+    scenario_id: str,
+    capability: str,
+) -> dict[str, Any]:
+    if not isinstance(policy, dict):
+        return {}
+    out: dict[str, Any] = {}
+    defaults = policy.get("defaults")
+    if isinstance(defaults, dict):
+        out.update(defaults)
+    by_cap = policy.get("by_capability")
+    if isinstance(by_cap, dict):
+        cap_cfg = by_cap.get(capability)
+        if isinstance(cap_cfg, dict):
+            out.update(cap_cfg)
+    by_id = policy.get("by_scenario_id")
+    if isinstance(by_id, dict):
+        sid_cfg = by_id.get(scenario_id)
+        if isinstance(sid_cfg, dict):
+            out.update(sid_cfg)
+    return out
+
+
+def _check_policy_ask_quality(
+    retrieval_metrics: dict[str, Any],
+    retrieval_gates: dict[str, Any],
+    quality_profile: dict[str, Any],
+) -> list[str]:
+    errs: list[str] = []
+    if not quality_profile or not _bool_gate_enabled(quality_profile.get("enforce")):
+        return errs
+
+    def _f(key: str, default: float = 0.0) -> float:
+        try:
+            return float(retrieval_metrics.get(key, default))
+        except Exception:
+            return default
+
+    def _i_gate(key: str, default: int = 0) -> int:
+        try:
+            return int(retrieval_gates.get(key, default))
+        except Exception:
+            return default
+
+    if "max_generic_infra_ratio_top_k" in quality_profile:
+        mx = float(quality_profile["max_generic_infra_ratio_top_k"])
+        got = _f("generic_infra_ratio_top_k", _f("generic_infra_ratio"))
+        if got > mx:
+            errs.append(f"policy.max_generic_infra_ratio_top_k: want <= {mx} got {got}")
+
+    if "max_distractor_count_top_k" in quality_profile:
+        mx = int(quality_profile["max_distractor_count_top_k"])
+        got = int(retrieval_metrics.get("distractor_count_top_k", retrieval_metrics.get("distractor_count_at_k", 0)) or 0)
+        if got > mx:
+            errs.append(f"policy.max_distractor_count_top_k: want <= {mx} got {got}")
+
+    if "min_anchor_hit_rate_top_k" in quality_profile:
+        mn = float(quality_profile["min_anchor_hit_rate_top_k"])
+        got = _f("anchor_hit_rate_top_k", _f("anchor_hit_rate_at_k"))
+        if got < mn:
+            errs.append(f"policy.min_anchor_hit_rate_top_k: want >= {mn} got {got}")
+
+    if _bool_gate_enabled(quality_profile.get("require_owner_in_top3")) and not bool(retrieval_metrics.get("owner_in_top3")):
+        errs.append("policy.require_owner_in_top3: owner_in_top3 is false")
+
+    if _bool_gate_enabled(quality_profile.get("require_owner_in_top1")) and not bool(retrieval_metrics.get("owner_in_top1")):
+        errs.append("policy.require_owner_in_top1: owner_in_top1 is false")
+
+    if "require_stage_a_owner_injected_min" in quality_profile:
+        need = int(quality_profile["require_stage_a_owner_injected_min"])
+        got = _i_gate("owner_injected_lane_count")
+        if got < need:
+            errs.append(
+                "policy.require_stage_a_owner_injected_min: "
+                f"want >= {need} got {got}"
+            )
+
+    return errs
+
+
 def _run_scenario_row(
     scenario: dict[str, Any],
     workspace_root: str,
@@ -1203,6 +1300,7 @@ def _run_scenario_row(
     top_k: int,
     *,
     export_stage_a: Optional[bool] = None,
+    quality_policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     sid = str(scenario.get("id") or "unknown")
     cap = str(scenario.get("capability") or "")
@@ -1258,6 +1356,13 @@ def _run_scenario_row(
                 errors.append(f"evidence_quality want one of {allowed} got {actual.get('evidence_quality')}")
         sa = _stage_a_summary_from_evidence(evidence)
         rm = _compute_retrieval_metrics(evidence, top_k=top_k)
+        rg = {
+            "owner_file": _owner_file_from_evidence(evidence),
+            "workspace_identity_hash": evidence.get("workspace_identity_hash"),
+            "owner_injected_lane_count": _owner_injected_lane_count(evidence),
+        }
+        qprof = _scenario_quality_profile(quality_policy, sid, cap)
+        errors.extend(_check_policy_ask_quality(rm, rg, qprof))
         dev_snapshot = {
             "request_id": resp.get("request_id"),
             "trace_id": resp.get("trace_id") or (meta.get("trace_id") if isinstance(meta, dict) else None),
@@ -1265,11 +1370,8 @@ def _run_scenario_row(
             "context_bundle_files": _context_bundle_files(resp),
             "evidence_snippet_previews": snips,
             "retrieval_metrics": rm,
-            "retrieval_gates": {
-                "owner_file": _owner_file_from_evidence(evidence),
-                "workspace_identity_hash": evidence.get("workspace_identity_hash"),
-                "owner_injected_lane_count": _owner_injected_lane_count(evidence),
-            },
+            "retrieval_gates": rg,
+            "quality_policy_profile": qprof,
             "stage_a": sa,
         }
         return {
@@ -1285,11 +1387,8 @@ def _run_scenario_row(
                 "ask_path": actual.get("ask_path"),
                 "plan_steps_count": len(plan_steps),
                 "retrieval_metrics": rm,
-                "retrieval_gates": {
-                    "owner_file": _owner_file_from_evidence(evidence),
-                    "workspace_identity_hash": evidence.get("workspace_identity_hash"),
-                    "owner_injected_lane_count": _owner_injected_lane_count(evidence),
-                },
+                "retrieval_gates": rg,
+                "quality_policy_profile": qprof,
                 "stage_a": sa,
             },
             "dev_snapshot": dev_snapshot,
@@ -1484,6 +1583,7 @@ def run_scenario_suite(
     top_k: int,
     *,
     export_stage_a: Optional[bool] = None,
+    quality_policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     data = json.loads(scenarios_path.read_text(encoding="utf-8"))
     if data.get("schema_version") != "motadata_aiops_behavior_scenarios.v1":
@@ -1507,6 +1607,7 @@ def run_scenario_suite(
                 plan_gate_url,
                 tk,
                 export_stage_a=export_stage_a,
+                quality_policy=quality_policy,
             )
         )
     all_pass = all(r.get("pass") for r in results) if results else False
@@ -1564,8 +1665,27 @@ def main() -> int:
         default="default",
         help="POST /v1/export_evidence: set enable_stage_a_v2 true/false; default = omit (server uses env/LexicalRetrievalConfig)",
     )
+    parser.add_argument(
+        "--quality-policy",
+        default="docs/validation/motadata_evidence_quality_policy.v1.json",
+        help=(
+            "Optional policy JSON for ask retrieval/evidence gates in scenario mode "
+            "(set empty string to disable)."
+        ),
+    )
     args = parser.parse_args()
     export_stage_a = _export_stage_a_from_arg(args.export_stage_a)
+    quality_policy: dict[str, Any] | None = None
+    if str(args.quality_policy).strip():
+        qp = Path(args.quality_policy)
+        if not qp.is_file():
+            print(f"ERROR: quality policy file not found: {qp}", file=sys.stderr)
+            return 2
+        try:
+            quality_policy = _load_quality_policy(qp)
+        except Exception as exc:
+            print(f"ERROR: invalid quality policy file {qp}: {exc}", file=sys.stderr)
+            return 2
 
     if args.scenarios_only and not str(args.scenarios).strip() and not str(args.utility_scenarios).strip():
         print(
@@ -1611,6 +1731,7 @@ def main() -> int:
             plan_gate_url,
             args.top_k,
             export_stage_a=export_stage_a,
+            quality_policy=quality_policy,
         )
 
     developer_utility_suite: dict[str, Any] | None = None
@@ -1660,6 +1781,7 @@ def main() -> int:
         "smoke": smoke_payload,
         "scenario_suite": scenario_suite,
         "developer_utility_suite": developer_utility_suite,
+        "quality_policy": str(args.quality_policy).strip() or None,
     }
 
     out_path = Path(args.out)

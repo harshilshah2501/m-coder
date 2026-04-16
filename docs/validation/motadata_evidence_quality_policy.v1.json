@@ -1,0 +1,32 @@
+{
+  "schema_version": "motadata_evidence_quality_policy.v1",
+  "description": "Scenario-time quality gates for retrieval/evidence diagnostics in motadata_behavior_verify.py.",
+  "defaults": {
+    "enforce": false
+  },
+  "by_capability": {
+    "ask": {
+      "enforce": true,
+      "max_distractor_count_top_k": 0,
+      "max_generic_infra_ratio_top_k": 0.85,
+      "min_anchor_hit_rate_top_k": 0.25
+    }
+  },
+  "by_scenario_id": {
+    "ask_anchor_owner_gate": {
+      "enforce": true,
+      "require_owner_in_top3": true,
+      "require_stage_a_owner_injected_min": 1
+    },
+    "ask_symbol_anchored": {
+      "enforce": true,
+      "require_owner_in_top3": true,
+      "min_anchor_hit_rate_top_k": 0.5,
+      "max_generic_infra_ratio_top_k": 0.6
+    },
+    "ask_broad_correlation": {
+      "enforce": true,
+      "max_generic_infra_ratio_top_k": 0.9
+    }
+  }
+}
