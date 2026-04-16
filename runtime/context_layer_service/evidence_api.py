@@ -194,6 +194,13 @@ def export_evidence_bundle_dict(
                         adapter = None
                 else:
                     adapter = None
+            # Fallback: when structured authority index is unavailable, still validate
+            # against the already-built L5 lexical index for file/class/method checks.
+            if adapter is None:
+                try:
+                    adapter = create_adapter(l5_index=idx, workspace_root=Path(w))
+                except Exception:
+                    adapter = None
         authority_resolution = build_authority_resolution(q, registry, adapter)
         if authority_resolution and adapter:
             mm = match_concepts_for_query(q, registry)

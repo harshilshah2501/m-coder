@@ -131,14 +131,19 @@ def test_planner_uses_authority_when_present():
     assert any("Primary implementation owner" in s for s in ps.steps)
 
 
-def test_alert_correlation_no_method_in_registry_emits_schema_valid_owner():
-    """YAML may omit primary_owner.method; evidence JSON must not use null for optional method."""
+def test_alert_correlation_owner_method_is_schema_valid_when_present():
+    """When YAML includes primary_owner.method, evidence JSON keeps it as a non-empty string."""
     registry = load_registry(REG)
     ar = build_authority_resolution("alert correlation", registry, None)
     assert ar is not None
-    assert "method" not in (ar["primary_owner"] or {})
+    po = ar.get("primary_owner") or {}
+    assert isinstance(po.get("method"), str)
+    assert bool(str(po.get("method")).strip())
     for mc in ar.get("matched_concepts") or []:
-        assert "method" not in (mc.get("primary_owner") or {})
+        mpo = mc.get("primary_owner") or {}
+        if "method" in mpo:
+            assert isinstance(mpo.get("method"), str)
+            assert bool(str(mpo.get("method")).strip())
     bundle = {
         "provisional": False,
         "schema_hint": "layer5.evidence_bundle.v1",

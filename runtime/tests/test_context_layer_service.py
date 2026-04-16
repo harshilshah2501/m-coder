@@ -270,6 +270,36 @@ def test_export_reproducible_for_fixed_snapshot(tmp_path):
     assert b1.get("entries") == b2.get("entries")
 
 
+def test_export_authority_status_validated_with_l5_fallback_when_code_index_disabled(tmp_path, monkeypatch):
+    # Build minimal owner path matching registry alert_correlation owner.
+    p = tmp_path / "src" / "main" / "java" / "com" / "mindarray" / "aiops"
+    p.mkdir(parents=True)
+    (p / "AvailabilityCorrelationEngine.java").write_text(
+        "public class AvailabilityCorrelationEngine { public void start() {} }\n",
+        encoding="utf-8",
+    )
+    # Collaborator files are optional for validation status, but keep package coherent.
+    (p / "DependencyManager.java").write_text(
+        "public class DependencyManager { public void start() {} }\n",
+        encoding="utf-8",
+    )
+    (p / "DependencyQueryProcessor.java").write_text(
+        "public class DependencyQueryProcessor { public void start() {} }\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("MOTADATA_CONTEXT_DISABLE_CODE_INDEX", "1")
+    d = export_evidence_bundle_dict(str(tmp_path), "alert correlation", top_k=4)
+    ar = d.get("authority_resolution")
+    assert isinstance(ar, dict)
+    assert ar.get("authority_status") == "validated"
+    vd = ar.get("validation_details")
+    assert isinstance(vd, dict)
+    assert vd.get("file_exists") is True
+    assert vd.get("class_exists") is True
+    assert vd.get("method_exists") is True
+
+
 def test_export_no_cache_path_unchanged_behavior(tmp_path):
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "foo.py").write_text("def hello():\n    pass\n", encoding="utf-8")

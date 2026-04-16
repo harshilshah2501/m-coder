@@ -99,6 +99,13 @@ def try_build_layer5_evidence(
             adapter = create_adapter(code_index=build_index(Path(workspace_input_path)))
         except Exception:
             adapter = None
+        if adapter is None:
+            # Fallback to the lexical index adapter so authority posture can still
+            # be validated when the structured code index is unavailable.
+            try:
+                adapter = create_adapter(l5_index=idx, workspace_root=Path(workspace_input_path))
+            except Exception:
+                adapter = None
         authority_resolution = build_authority_resolution(query, registry, adapter)
         if authority_resolution and adapter:
             mm = match_concepts_for_query(query, registry)
