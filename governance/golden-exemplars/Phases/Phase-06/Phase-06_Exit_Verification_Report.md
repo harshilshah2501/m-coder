@@ -1,5 +1,3 @@
----
-
 # Phase-06 Exit Verification Report
 
 ## A) Surface Verification Table
