@@ -109,6 +109,23 @@ def _refine_with_grounding(
         if quality == WEAK and "LOW_CORE_RATIO" not in reasons and "NO_SYMBOL_MATCH" not in reasons:
             reasons.append("OWNER_ANCHOR_RECOVERY")
             quality = STRONG
+    # Primary owners under integration/api (supporting_prod_code) are not aiops "core"; fused
+    # top-3 may have no com/mindarray/aiops file even when the registry owner is correctly top-3.
+    # Recover STRONG when authority primary is in the evidence top-3 and distractors are controlled.
+    owner_paths = {p for p, (_, role) in by_path.items() if role == PRIMARY_OWNER_CANDIDATE}
+    top3_paths = paths[: min(3, len(paths))]
+    owner_in_top3 = bool(owner_paths and any(p in owner_paths for p in top3_paths))
+    if (
+        quality == WEAK
+        and owner_in_top3
+        and primary_owner_hits >= 1
+        and "NO_CORE_IN_TOP3" in reasons
+        and "NO_SYMBOL_MATCH" not in reasons
+        and "NOISE_DOMINATED" not in reasons
+        and dr < 0.35
+    ):
+        reasons.append("OWNER_ANCHOR_RECOVERY")
+        quality = STRONG
     dom = dict(base.dominance_metrics)
     dom["distractor_ratio"] = round(dr, 4)
     dom["weak_snippet_ratio"] = round(wr, 4)

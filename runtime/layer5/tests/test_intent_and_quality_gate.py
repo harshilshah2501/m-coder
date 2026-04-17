@@ -7,6 +7,7 @@ from runtime.layer5.retrieval.intent import (
     PLAN_INTENT,
     classify_intent,
 )
+from runtime.layer5.retrieval.roles import PRIMARY_OWNER_CANDIDATE
 from runtime.layer5.retrieval.quality_gate import (
     INSUFFICIENT,
     NO_MATCH,
@@ -140,6 +141,39 @@ def test_quality_gate_noise_only_non_symbol_code_intent_is_insufficient():
     )
     assert q.evidence_quality == INSUFFICIENT
     assert q.blocked is True
+
+
+def test_quality_gate_owner_anchor_recovers_strong_when_no_core_in_top3_but_owner_third():
+    """Integration owners are not core_aiops; top-3 may lack aiops yet owner is correctly ranked."""
+    owner = "motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java"
+    paths = [
+        "motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+        "motadata/src/main/java/com/mindarray/visualization/VisualizationAvailabilityManager.java",
+        owner,
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+        "motadata/src/main/java/com/mindarray/aiops/package-info.java",
+        "motadata/src/main/java/com/mindarray/visualization/VisualizationEventManager.java",
+    ]
+    grounding = [
+        (paths[0], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+        (paths[1], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+        (owner, "query_token_substring_anchor", PRIMARY_OWNER_CANDIDATE),
+        (paths[3], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+        (paths[4], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+        (paths[5], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+        (paths[6], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+        (paths[7], "query_token_substring_anchor", "SUPPORTING_CONTEXT"),
+    ]
+    q = assess_evidence_quality(
+        "Where is ServiceNow incident synchronization implemented?",
+        paths,
+        grounding_entries=grounding,
+    )
+    assert q.evidence_quality == STRONG
+    assert "OWNER_ANCHOR_RECOVERY" in q.quality_reasons
+    assert "NO_CORE_IN_TOP3" in q.quality_reasons
 
 
 def test_operator_hints_surface_low_core_and_noise():
