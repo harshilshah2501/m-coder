@@ -140,6 +140,11 @@ def try_build_layer5_evidence(
 
     fusion_diag: Dict[str, Any] = {}
     roles_map: Dict[str, str] = {}
+    owner_file = None
+    if isinstance(authority_resolution, dict):
+        po = authority_resolution.get("primary_owner")
+        if isinstance(po, dict):
+            owner_file = str(po.get("file") or "").strip() or None
     if registry is not None:
         fused, fusion_diag, role_objs = fuse_and_filter(
             r,
@@ -154,11 +159,6 @@ def try_build_layer5_evidence(
         r = fused
         roles_map = {p: ra.role for p, ra in role_objs.items()}
     else:
-        owner_file = None
-        if isinstance(authority_resolution, dict):
-            po = authority_resolution.get("primary_owner")
-            if isinstance(po, dict):
-                owner_file = str(po.get("file") or "").strip() or None
         filtered, fusion_diag, role_objs = hard_filter_only(
             r,
             fusion_config=FusionConfig(),
@@ -189,6 +189,7 @@ def try_build_layer5_evidence(
         paths,
         grounding_entries=grounding,
         effective_intent=effective,
+        authority_primary_owner_file=owner_file,
     )
     fd = dict(evb.fusion_diagnostics or {})
     if r.stage_a_meta is not None:

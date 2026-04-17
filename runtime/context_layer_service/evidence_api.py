@@ -253,6 +253,11 @@ def export_evidence_bundle_dict(
     effective = merge_effective_intent(lex_task, q)
     fusion_diag: Dict[str, Any] = {}
     roles_map: Dict[str, str] = {}
+    owner_file = None
+    if isinstance(authority_resolution, dict):
+        po = authority_resolution.get("primary_owner")
+        if isinstance(po, dict):
+            owner_file = str(po.get("file") or "").strip() or None
     if registry is not None:
         fused, fusion_diag_inner, role_objs = fuse_and_filter(
             r,
@@ -268,11 +273,6 @@ def export_evidence_bundle_dict(
         fusion_diag = dict(fusion_diag_inner or {})
         roles_map = {p: ra.role for p, ra in role_objs.items()}
     else:
-        owner_file = None
-        if isinstance(authority_resolution, dict):
-            po = authority_resolution.get("primary_owner")
-            if isinstance(po, dict):
-                owner_file = str(po.get("file") or "").strip() or None
         filtered, fusion_diag_inner, role_objs = hard_filter_only(
             r,
             fusion_config=FusionConfig(),
@@ -296,6 +296,7 @@ def export_evidence_bundle_dict(
         q,
         [h.relative_path for h in r.hits],
         effective_intent=effective,
+        authority_primary_owner_file=owner_file,
     )
     fusion_diag["quality_reasons"] = list(qa.quality_reasons)
 

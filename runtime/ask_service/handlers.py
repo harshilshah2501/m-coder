@@ -213,6 +213,11 @@ def handle_ask_request(ask_request: dict) -> dict:
             grounding_evidence.append((rel, sr, role))
     ar_src = evidence_bundle_dict.get("authority_resolution") if evidence_bundle_dict else None
     authority_resolution = ar_src if isinstance(ar_src, dict) else None
+    auth_owner_file = None
+    if authority_resolution:
+        po = authority_resolution.get("primary_owner")
+        if isinstance(po, dict):
+            auth_owner_file = str(po.get("file") or "").strip() or None
     if grounding_evidence:
         from runtime.layer5.retrieval.effective_intent import merge_effective_intent, resolve_lexical_task_type
 
@@ -225,9 +230,14 @@ def handle_ask_request(ask_request: dict) -> dict:
             [item.path for item in bundle.items],
             grounding_entries=grounding_evidence,
             effective_intent=eff,
+            authority_primary_owner_file=auth_owner_file,
         )
     else:
-        quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+        quality = assess_evidence_quality(
+            query,
+            [item.path for item in bundle.items],
+            authority_primary_owner_file=auth_owner_file,
+        )
     metadata = {
         "intent_type": quality.intent_type,
         "evidence_quality": quality.evidence_quality,

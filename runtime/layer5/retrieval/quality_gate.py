@@ -18,6 +18,7 @@ from runtime.layer5.retrieval.intent import (
     PLAN_INTENT,
     classify_intent,
 )
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace
 from runtime.layer5.retrieval.policy import classify_file, is_noise_class
 from runtime.layer5.retrieval.roles import DISTRACTOR_RISK, PRIMARY_OWNER_CANDIDATE
 
@@ -75,10 +76,22 @@ def _has_strong_symbol_match(path: str, symbol_tokens: Tuple[str, ...]) -> bool:
     return len(set(matched)) >= 2
 
 
+def _grounding_row_for_path(
+    path: str, grounding_entries: List[Tuple[str, str, str]]
+) -> Tuple[str, str]:
+    """Match evidence row by path; tolerate motadata/ vs registry-relative drift."""
+    for gp, sr, role in grounding_entries:
+        if paths_match_workspace(gp, path):
+            return (sr, role)
+    return ("", "")
+
+
 def _refine_with_grounding(
     base: QualityAssessment,
     paths: List[str],
     grounding_entries: List[Tuple[str, str, str]],
+    *,
+    authority_primary_owner_file: Optional[str] = None,
 ) -> QualityAssessment:
     """
     grounding_entries: (relative_path, snippet_selection_reason, retrieval_role)
@@ -86,14 +99,21 @@ def _refine_with_grounding(
     n = len(paths)
     if n == 0 or not grounding_entries:
         return base
-    by_path = {p: (sr, role) for p, sr, role in grounding_entries}
-    distractors = sum(1 for p in paths if by_path.get(p, ("", ""))[1] == DISTRACTOR_RISK)
-    primary_owner_hits = sum(1 for p in paths if by_path.get(p, ("", ""))[1] == PRIMARY_OWNER_CANDIDATE)
-    weak_snippets = sum(
-        1
-        for p in paths
-        if p in by_path and by_path[p][0] != "query_token_substring_anchor"
+    distractors = sum(
+        1 for p in paths if _grounding_row_for_path(p, grounding_entries)[1] == DISTRACTOR_RISK
     )
+    primary_owner_hits = sum(
+        1 for p in paths if _grounding_row_for_path(p, grounding_entries)[1] == PRIMARY_OWNER_CANDIDATE
+    )
+    if authority_primary_owner_file and primary_owner_hits == 0:
+        primary_owner_hits = sum(
+            1 for p in paths if paths_match_workspace(p, authority_primary_owner_file)
+        )
+    weak_snippets = 0
+    for p in paths:
+        sr, _ = _grounding_row_for_path(p, grounding_entries)
+        if sr and sr != "query_token_substring_anchor":
+            weak_snippets += 1
     dr = distractors / n
     wr = weak_snippets / n
     reasons = list(base.quality_reasons)
@@ -112,9 +132,14 @@ def _refine_with_grounding(
     # Primary owners under integration/api (supporting_prod_code) are not aiops "core"; fused
     # top-3 may have no com/mindarray/aiops file even when the registry owner is correctly top-3.
     # Recover STRONG when authority primary is in the evidence top-3 and distractors are controlled.
-    owner_paths = {p for p, (_, role) in by_path.items() if role == PRIMARY_OWNER_CANDIDATE}
     top3_paths = paths[: min(3, len(paths))]
-    owner_in_top3 = bool(owner_paths and any(p in owner_paths for p in top3_paths))
+    owner_in_top3 = any(
+        _grounding_row_for_path(p, grounding_entries)[1] == PRIMARY_OWNER_CANDIDATE for p in top3_paths
+    )
+    if not owner_in_top3 and authority_primary_owner_file:
+        owner_in_top3 = any(
+            paths_match_workspace(p, authority_primary_owner_file) for p in top3_paths
+        )
     if (
         quality == WEAK
         and owner_in_top3
@@ -147,6 +172,7 @@ def assess_evidence_quality(
     *,
     grounding_entries: Optional[List[Tuple[str, str, str]]] = None,
     effective_intent: Optional["EffectiveIntent"] = None,
+    authority_primary_owner_file: Optional[str] = None,
 ) -> QualityAssessment:
     intent = (
         effective_intent.query_intent
@@ -259,8 +285,12 @@ def assess_evidence_quality(
         policy_version=QUALITY_GATE_VERSION,
     )
     if grounding_entries:
-        ge = [(p, sr, r) for p, sr, r in grounding_entries if p in file_paths]
-        return _refine_with_grounding(base, paths, ge)
+        return _refine_with_grounding(
+            base,
+            paths,
+            list(grounding_entries),
+            authority_primary_owner_file=authority_primary_owner_file,
+        )
     return base
 
 
