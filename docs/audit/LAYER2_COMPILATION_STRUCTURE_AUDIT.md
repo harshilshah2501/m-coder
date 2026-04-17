@@ -78,7 +78,7 @@ Structured inventory of major Layer-2 files/clusters. Classification and placeme
 | ml/training/results/ | Results output | generated artifact | non-canonical | good | Generated |
 | ml/training/models/ | Trained models (e.g. qwen_stage8_conf_patch1) | generated artifact / frozen output | non-canonical | good | Training outputs |
 | ml/training/evaluation/ | Pipeline-level evaluation | canonical stage asset | canonical | good | Under training/ vs ml/evaluation/ |
-| docs/COMPILATION/README.md | Layer-2 index | canonical pointer | canonical | good | Links to DAG, ROADMAP_L2_L3_L4, STAGE6_MUTATION_TAXONOMY |
+| docs/COMPILATION/README.md | Layer-2 index | canonical pointer | canonical | good | Links to DAG, archive/ROADMAP_L2_L3_L4 (historical), STAGE6_MUTATION_TAXONOMY |
 | docs/LAYER2_COMPILATION_SPEC.md | Full Layer-2 spec | canonical | canonical | good | Stages, Stage-6C, Stage-7, Stage-8, freeze manifest |
 | docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md | DAG, R-L1..R-L5, schema paths | canonical | canonical | good | ml/lineage/schemas/* |
 | docs/STAGE_LAYOUT_CANONICAL.md | Stage-7 split, stage08 discovery, stage7 forwarding | supporting | non-canonical | good | Explains compiler vs freeze vs sft/stage7 |

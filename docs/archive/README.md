@@ -6,6 +6,7 @@ Material moved here is **obsolete, superseded, or non-canonical** — kept for h
 
 | Path | Contents |
 |------|----------|
+| [ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md) | Archived L2–L4 entry/exit/failure tables + mermaid (superseded by `LIVE_ROADMAP_TRACKER.md` §4 + `SYSTEM_EXECUTION_ROADMAP.md`) |
 | [Notes.md](Notes.md) | Informal essay (non-canonical) |
 | [demo/](demo/) | Historical demo writeups (e.g. integrated execution guide) |
 | [guides/](guides/) | Temporary integration guides (superseded by golden path when promoted) |

@@ -1,18 +1,20 @@
 # Layer-2 / Layer-3 / Layer-4 Milestone Roadmap
 
-**Doc status:** canonical-current. Milestone entry/exit/failure conditions are canonical; live status is in [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md).
+> **Archived (2026-04-18).** Retained for **history and traceability** only. **Current** milestone tables, status, exit criteria, and evidence: [`LIVE_ROADMAP_TRACKER.md`](../LIVE_ROADMAP_TRACKER.md) §4.x. End-to-end execution view: [`SYSTEM_EXECUTION_ROADMAP.md`](../SYSTEM_EXECUTION_ROADMAP.md). Do not treat this file as operator truth.
+
+**Doc status:** archived (formerly canonical-current; redundant with the live tracker).
 
 ## Related Documents
 
-- [docs/ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md) — Directory philosophy, layer boundaries, axis separation
-- [docs/COMPILATION_DAG_AND_LINEAGE_V0_1.md](COMPILATION_DAG_AND_LINEAGE_V0_1.md) — Compilation DAG and lineage schemas (Layer-2 provenance)
-- [docs/architecture/Golden_Exemplars_Architecture_Map.md](architecture/Golden_Exemplars_Architecture_Map.md) — Golden Exemplars system map
+- [`ARCHITECTURE_4_LAYER.md`](../ARCHITECTURE_4_LAYER.md) — Directory philosophy, layer boundaries, axis separation
+- [`COMPILATION_DAG_AND_LINEAGE_V0_1.md`](../COMPILATION_DAG_AND_LINEAGE_V0_1.md) — Compilation DAG and lineage schemas (Layer-2 provenance)
+- [`architecture/Golden_Exemplars_Architecture_Map.md`](../architecture/Golden_Exemplars_Architecture_Map.md) — Golden Exemplars system map
 
 ---
 
 ## A. Overview
 
-**Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
+**Entry point:** [`MASTER_SYSTEM_SPEC.md`](../MASTER_SYSTEM_SPEC.md)
 
 This roadmap defines **entry**, **exit**, and **failure** conditions for milestones across Layers 2 (ML Compilation), 3 (Runtime), and 4 (Observation). It does **not** alter phase semantics, dominance rules, exemplar counts, or policy. Constitutional semantics (REF, CONF, DES, MIX, CODE, REACH) and the pipeline stage axis (base → variants → stability → Stage-6 mutation → freeze → SFT) remain as defined in canonical sources.
 
@@ -34,7 +36,7 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 
 ## C. Layer-3 Milestones (Runtime) — Canonical numbering
 
-**Source of truth:** [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3.1. This table uses the same canonical M3.0–M3.18 model.
+**Source of truth:** [`LIVE_ROADMAP_TRACKER.md`](../LIVE_ROADMAP_TRACKER.md) §4.3.1. This table uses the same canonical M3.0–M3.18 model.
 
 | Milestone | Entry | Exit | Failure |
 |-----------|-------|------|---------|

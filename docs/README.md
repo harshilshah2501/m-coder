@@ -87,7 +87,7 @@ Some subtrees under `ml/` or `scripts/` may not collect cleanly without extra de
 ### 🏛️ Core Architecture Docs
 
 - **[ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md)** — Directory philosophy, layer boundaries, axis separation
-- **[ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md)** — L2/L3/L4 milestone roadmap, snapshot, sequencing
+- **[archive/ROADMAP_L2_L3_L4.md](archive/ROADMAP_L2_L3_L4.md)** — archived L2/L3/L4 entry/exit tables (live: **[LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)**)
 
 ### 📊 Evaluation & Benchmarking
 - **[evaluation/](evaluation/)** - Model evaluation reports and analysis

@@ -22,7 +22,7 @@
 | [guides/E2E-flow.md](guides/E2E-flow.md) | Non-canonical banner; removed phase↔stage bijection table; replaced unique contract definitions with links to canonical specs |
 | [COMPILATION_DAG_AND_LINEAGE_V0_1.md](COMPILATION_DAG_AND_LINEAGE_V0_1.md) | Boundary hashing: explicit reference to boundary_hashing.v0.1.json |
 | [ARCHITECTURE_4_LAYER.md](ARCHITECTURE_4_LAYER.md) | Link to MASTER_SYSTEM_SPEC |
-| [ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md) | Link to MASTER_SYSTEM_SPEC |
+| [archive/ROADMAP_L2_L3_L4.md](archive/ROADMAP_L2_L3_L4.md) | Archived (2026-04-18); was `docs/ROADMAP_L2_L3_L4.md`; link to MASTER_SYSTEM_SPEC |
 | [guides/Dominance_Grammar.md](guides/Dominance_Grammar.md) | Non-canonical banner |
 | [guides/Pre-GREG.md](guides/Pre-GREG.md) | Non-canonical banner |
 | [guides/QnA.md](guides/QnA.md) | Non-canonical banner |

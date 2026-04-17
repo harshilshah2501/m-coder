@@ -51,7 +51,7 @@ This guide spans from constitutional judgment semantics and their encoding as go
 
 This separation preserves constitutional judgment in this document while allowing training mechanics to evolve independently in Phase‑08.
 
-For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For the canonical spec entry point, see [docs/MASTER_SYSTEM_SPEC.md](docs/MASTER_SYSTEM_SPEC.md). For directory structure and milestone roadmaps, see [docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md) and [docs/ROADMAP_L2_L3_L4.md](docs/ROADMAP_L2_L3_L4.md). For canonical stage→path and CLI mapping (Stage-6A/B/C, Stage-7 freeze, Stage-8), see [docs/STAGE_LAYOUT_CANONICAL.md](docs/STAGE_LAYOUT_CANONICAL.md). For where to store and promote LoRA adapters, checkpoints, and merged models (DVC, Hugging Face, Ollama), see [docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md).
+For how **governance**, **compilation**, **runtime**, and **observation** fit together, and how constitutional phases differ from pipeline phases, see **Appendix H: 4-Layer System Map (Two Phase Axes)**. For the canonical spec entry point, see [docs/MASTER_SYSTEM_SPEC.md](docs/MASTER_SYSTEM_SPEC.md). For directory structure and live milestones, see [docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md) and [docs/LIVE_ROADMAP_TRACKER.md](docs/LIVE_ROADMAP_TRACKER.md) (archived entry/exit tables: [docs/archive/ROADMAP_L2_L3_L4.md](docs/archive/ROADMAP_L2_L3_L4.md)). For canonical stage→path and CLI mapping (Stage-6A/B/C, Stage-7 freeze, Stage-8), see [docs/STAGE_LAYOUT_CANONICAL.md](docs/STAGE_LAYOUT_CANONICAL.md). For where to store and promote LoRA adapters, checkpoints, and merged models (DVC, Hugging Face, Ollama), see [docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](docs/architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md).
 
 ### Scope Clarification: Judgment Is Proprietary Capital (Not Commodity)
 
@@ -145,7 +145,7 @@ The Reviewer Pack must conform strictly to the semantics defined in this guide. 
 
 * **Appendix H** 4-Layer System Map *(Governance ↔ Compilation ↔ Runtime ↔ Observation; constitutional phases vs pipeline stages; **detailed Layer-3 and Layer-4 with demo instructions**)*
 * **docs/ARCHITECTURE_4_LAYER.md** — Directory philosophy, layer boundaries, axis separation
-* **docs/ROADMAP_L2_L3_L4.md** — L2/L3/L4 milestone roadmap, snapshot, sequencing
+* **docs/archive/ROADMAP_L2_L3_L4.md** — archived L2/L3/L4 entry/exit tables (live: **docs/LIVE_ROADMAP_TRACKER.md**)
 * **Stage‑6 / Stage‑6C** sections *(how hardening, reachability, and agent-loop mutation live in the compilation layer while preserving Layer‑1 semantics)*
 
 **🎯 PHASE-5 (Code Exemplars):**
@@ -1841,7 +1841,7 @@ We separate:
 
 They are orthogonal. Using **Stage** for the pipeline axis avoids confusion with constitutional **Phase** (REF, CONF, DES, MIX, CODE, REACH).
 
-For repository structure and milestone details, see **docs/ARCHITECTURE_4_LAYER.md** and **docs/ROADMAP_L2_L3_L4.md**.
+For repository structure and milestone details, see **docs/ARCHITECTURE_4_LAYER.md** and **docs/LIVE_ROADMAP_TRACKER.md** (archived entry/exit framing: **docs/archive/ROADMAP_L2_L3_L4.md**).
 
 ---
 

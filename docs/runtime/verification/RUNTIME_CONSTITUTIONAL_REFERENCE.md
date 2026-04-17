@@ -88,7 +88,7 @@ flowchart TB
 
 
 
-- **A. Canonical truth surfaces:** Tracker; roadmap docs (LIVE_ROADMAP_TRACKER, ROADMAP_L2_L3_L4, SYSTEM_EXECUTION_ROADMAP); completion/verification reports; tags; main.
+- **A. Canonical truth surfaces:** Tracker; execution roadmap (`SYSTEM_EXECUTION_ROADMAP`); archived structural tables (`docs/archive/ROADMAP_L2_L3_L4.md`); completion/verification reports; tags; main.
 - **B. Structure/naming surfaces:** `docs/` vs `docs/OBSERVATION`, `docs/COMPILATION`, `docs/CONTRACTS`; `runtime/` layout; `docs/runtime/milestones/`; `docs/runtime/verification/`; `docs/runtime/branch_execution_notes/`.
 - **C. Provenance surfaces:** Baseline tag and merge (`0283a2e`); governed-v1 tag and merge (`23395b6`); execution-isolation merge (`302fae2`); feature and integration branches listed above.
 - **D. Runtime integrity surfaces:** Orchestrator (`runtime/orchestrator/`, `loop_controller.py`); plan-gate (`runtime/plangate/`, `runtime/plan_gate_service/`); sandbox executor and drivers (`runtime/sandbox/`); container runtime (`container_sandbox_driver.py`); ledger (`runtime/ledger/`); shadow (`runtime/shadow/`, `runtime/shadow_runner/`); plugin bridge (`jetbrains-plugin/.../bridge/`).

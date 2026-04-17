@@ -101,7 +101,6 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 | [RUNTIME_PLAN_AND_LEDGER_V0_1.md](RUNTIME_PLAN_AND_LEDGER_V0_1.md)                                      | L3    | Plan/ledger spec, rules R1-R5, L1-L5                          |
 | [JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md)                                          | L3    | IDE contracts, R-IDE1..R-IDE3                                 |
 | [SHADOW_MODE_PROTOCOL_V0_1.md](SHADOW_MODE_PROTOCOL_V0_1.md)                                            | L3/L4 | Shadow rules S-1..S-6                                         |
-| [ROADMAP_L2_L3_L4.md](ROADMAP_L2_L3_L4.md)                                                              | L2–L4 | Milestone entry/exit/failure conditions                       |
 | [LAYER1_GOVERNANCE_SPEC.md](LAYER1_GOVERNANCE_SPEC.md)                                                  | L1    | Layer-1 comprehensive governance spec                         |
 | [LAYER2_COMPILATION_SPEC.md](LAYER2_COMPILATION_SPEC.md)                                                | L2    | Layer-2 comprehensive ML compilation spec                     |
 | [LAYER3_RUNTIME_SPEC.md](LAYER3_RUNTIME_SPEC.md)                                                        | L3    | Layer-3 comprehensive runtime enforcement spec                |
@@ -119,6 +118,7 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 | ------------------------------------------------------------ | ---------------------------------------------------------- |
 | [MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md](../MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md) | Master system guide — judgment, compilation, runtime, observation; Layer-3/Layer-4 demos (Appendix H) |
 | [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md)           | Single live progress dashboard; milestone status and evidence (includes Layer-5) |
+| [archive/ROADMAP_L2_L3_L4.md](archive/ROADMAP_L2_L3_L4.md) | Archived L2–L4 entry/exit/failure tables (historical); use **LIVE_ROADMAP_TRACKER.md** §4 for current milestones |
 | [architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md) | LoRA adapter, checkpoint, merged model, and runtime package governance; DVC/HF/Ollama policy |
 | [GLOSSARY.md](GLOSSARY.md)                                   | CIM term definitions and schema references                 |
 | [NON_NEGOTIABLE_INVARIANTS.md](NON_NEGOTIABLE_INVARIANTS.md) | Fail-closed semantics, gate-down→block, append-only ledger |

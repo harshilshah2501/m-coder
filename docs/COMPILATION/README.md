@@ -9,7 +9,7 @@ Base exemplars → variants → mutation → freeze → SFT pipeline. Constituti
 | Document | Description |
 |----------|-------------|
 | [COMPILATION_DAG_AND_LINEAGE_V0_1.md](../COMPILATION_DAG_AND_LINEAGE_V0_1.md) | DAG spec, lineage rules R-L1..R-L5, node types |
-| [ROADMAP_L2_L3_L4.md](../ROADMAP_L2_L3_L4.md) | Milestone entry/exit/failure conditions |
+| [archive/ROADMAP_L2_L3_L4.md](../archive/ROADMAP_L2_L3_L4.md) | Archived milestone entry/exit/failure tables — use [`LIVE_ROADMAP_TRACKER.md`](../LIVE_ROADMAP_TRACKER.md) §4 for current status |
 | [ml/training/pipeline/STAGE6_MUTATION_TAXONOMY.md](../../ml/training/pipeline/STAGE6_MUTATION_TAXONOMY.md) | Stage-6 mutation classes; doctrine-locked |
 | [ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md](../architecture/ARTIFACT_GOVERNANCE_LORA_CHECKPOINTS_AND_RUNTIME.md) | LoRA adapter, checkpoint, merged model, and runtime package governance (DVC/HF/Ollama) |
 

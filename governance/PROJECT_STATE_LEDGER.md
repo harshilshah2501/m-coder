@@ -45,7 +45,7 @@ Kernel-Controlled Re-Probe: Completed (Stage-6C cure; see `docs/LIVE_ROADMAP_TRA
 
 ### Open Items
 
-None. All Layer-2 Golden Exemplars compilation milestones (Stages 1–8) are **LOCKED** (Layer-2 rollup: `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1). For future work, see Layer-3/Layer-4 milestones in `docs/LIVE_ROADMAP_TRACKER.md` and `docs/ROADMAP_L2_L3_L4.md`.
+None. All Layer-2 Golden Exemplars compilation milestones (Stages 1–8) are **LOCKED** (Layer-2 rollup: `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1). For future work, see Layer-3/Layer-4 milestones in `docs/LIVE_ROADMAP_TRACKER.md` (historical entry/exit framing: `docs/archive/ROADMAP_L2_L3_L4.md`).
 
 ---
 

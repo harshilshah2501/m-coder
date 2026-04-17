@@ -55,8 +55,8 @@ The **four constitutional layers** (L1–L4) are the doctrine and enforcement co
 - **Layer-3 Runtime spec**: `docs/LAYER3_RUNTIME_SPEC.md`
 - **Execution roadmaps**:
   - Live execution tracker: `docs/LIVE_ROADMAP_TRACKER.md` (single source of truth for Layer statuses and evidence)
-  - Structural roadmap: `docs/ROADMAP_L2_L3_L4.md`
   - End-to-end execution view: `docs/SYSTEM_EXECUTION_ROADMAP.md`
+  - Archived (historical): `docs/archive/ROADMAP_L2_L3_L4.md` — entry/exit/failure tables; do not use for current status
 - **Master System Guide v1.7** (`MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md`): long-form narrative, demos, Appendix H — **supporting**; **canonical spec entry and gates:** `docs/MASTER_SYSTEM_SPEC.md` + `docs/LIVE_ROADMAP_TRACKER.md`
 
 ## 🚀 Quick Start
@@ -86,7 +86,7 @@ The **constitutional** structure is four layers (Governance, ML Compilation, Run
 
 - **[docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md)** — Directory philosophy, L1–L5 boundaries, axis separation
 - **[docs/PRODUCT_SLICE.md](docs/PRODUCT_SLICE.md)** — What is in scope for the current product slice (includes Layer-5 HTTP path)
-- **[docs/ROADMAP_L2_L3_L4.md](docs/ROADMAP_L2_L3_L4.md)** — L2/L3/L4 milestone roadmap, snapshot, sequencing
+- **[docs/archive/ROADMAP_L2_L3_L4.md](docs/archive/ROADMAP_L2_L3_L4.md)** — archived L2/L3/L4 entry/exit tables (use **`docs/LIVE_ROADMAP_TRACKER.md`** for live milestones)
 - **[docs/architecture/Golden_Exemplars_Architecture_Map.md](docs/architecture/Golden_Exemplars_Architecture_Map.md)** — Golden Exemplars system map
 - **[observation/README.md](observation/README.md)** — Layer-4 (Observation) boundaries
 
