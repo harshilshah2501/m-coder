@@ -1,7 +1,8 @@
 # Debug Depth Charter — Thinking With Code
 
 **Status:** active charter (post-closure follow-on)  
-**Tracker anchor:** `docs/LIVE_ROADMAP_TRACKER.md` §1.4 (`CHARTER-TBD` -> this document)  
+**Tracker anchor:** `docs/LIVE_ROADMAP_TRACKER.md` §1.4 (`DEBUG-DEPTH-CHARTER-V1`)  
+**Scenario pack (D1):** `docs/validation/debug_depth_scenarios.v1.json`  
 **Baseline guardrail:** preserve `docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 behavior invariants
 
 ---
@@ -68,7 +69,7 @@ Status markers: `NOT_STARTED`, `IN_PROGRESS`, `COMPLETE`, `VALIDATING`, `BLOCKED
 
 | ID | Task | Status | Exit criteria |
 |----|------|--------|---------------|
-| D1 | Define debug-depth scenario pack (easy/medium/hard) | NOT_STARTED | Versioned scenario file + expected rubric checked in |
+| D1 | Define debug-depth scenario pack (easy/medium/hard) | **COMPLETE** | `docs/validation/debug_depth_scenarios.v1.json` + per-scenario `expect_rubric` (numeric scoring = D2) |
 | D2 | Define scoring rubric (depth, grounding, actionability, honesty) | NOT_STARTED | Deterministic rubric schema + scorer utility |
 | D3 | Prompt contract refinement for explain_debug | NOT_STARTED | Prompt updates with tests for grounding and output structure |
 | D4 | Selection-aware reasoning upgrades (method/flow clues) | NOT_STARTED | Improved outputs on hard cases without weakening insufficiency rules |
@@ -92,6 +93,7 @@ Recommended order:
 
 ## 7. Evidence and reporting
 
+- Scenario pack: `docs/validation/debug_depth_scenarios.v1.json`
 - Test artifacts: `runtime/tests/test_reasoner_explain_debug_prompt.py`, `runtime/tests/test_reasoner_explain_debug_logging.py`, `runtime/tests/test_explain_debug_action6_proof.py` (+ new D1-D6 files).
 - Operational context: `docs/audit/DEBUG_PATH_VALIDATION_REPORT.md`, `docs/DEBUG_PATH_VALIDATION_RUNBOOK.md`.
 - Maintenance discipline: `docs/validation/POST_CLOSURE_MAINTENANCE.md`.
