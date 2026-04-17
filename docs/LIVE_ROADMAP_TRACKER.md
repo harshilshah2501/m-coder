@@ -23,7 +23,7 @@
 | **Ask v1 evidence quality parity** | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
 | **Behavior baseline promotion** | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
 | **Layer-1 / L2 / L4 milestone tables (declared rows)** | **LOCKED** or **COMPLETE** per §2.1; layer rollups per §2.1.1; details §4.1–§4.4 |
-| **M3.0–M3.11** | **COMPLETE on main** — §4.3.1 |
+| **M3.0–M3.12** | **COMPLETE on main** — §4.3.1 (M3.12 narrow manifest + `doc_selector`; §6.16.1) |
 | **M4.1–M4.6** | **COMPLETE on main** — §4.4 |
 | **L5.0–L5.6, L5.8 harness, L5.9** | Per §4.5 table (harness closure + Action 11) |
 | **Action 9 (WSL + audit pack MVP scope)** | **CLOSED** — §1 Action 9 table |
@@ -33,7 +33,6 @@
 | Area | Status | Where |
 |------|--------|--------|
 | **L5.7** Dirty buffer / live overlay | **NOT_STARTED** | §4.5 row L5.7 |
-| **M3.12** Documentation ingestion merge to `main` | **VALIDATING** (was on packaging branch; confirm vs `main`) | §4.3.1, §6.16 |
 | **M3.13–M3.16, M3.18** | Jira/PR pipelines, evaluation harness — **NOT_STARTED** | §4.3.1 |
 | **§1.4 tracks** | L5-OBS ops follow-through; L5-RET / §B1 expansion; **CHARTER-TBD** debug depth | §1.4 |
 | **IDE → Stage3LoopController E2E** | **Follow-on** (not burn-in closure) | §B7, §6.20, runbook §7 |
@@ -50,13 +49,13 @@
 - **Last updated**: 2026-04-18  
 - **Program state**: **Production-grade vertical slice achieved.** All production gates are closed with artifact-backed acceptance.
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
-- **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**; packaging branch may still exist for M3.12 promotion — verify git before relying on branch name alone.  
+- **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**. **M3.12** narrow doc-manifest slice is **on `main`** (see §6.16.1).  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
 - **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization. **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) and **optional charters** (§1.4: debug depth **CHARTER-TBD**, §B1/L5-RET with §5 guardrails).
 - **Overall status summary**:  
   - **Layer-1** — **LOCKED** (governance doctrine).  
   - **Layer-2** — **LOCKED** (ML compilation: Stage-6C cure, deterministic CONF, release verification PASS).  
-  - **Layer-3** — **COMPLETE** (M3.0–M3.11 on `main`). **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) is validated for truthful outcomes in the closed MVP slice.  
+  - **Layer-3** — **COMPLETE** (M3.0–M3.12 on `main`): core M3.0–M3.11 plus **M3.12** narrow manifest + **`doc_selector`** (§6.16.1). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) is validated for truthful outcomes in the closed MVP slice.  
   - **Layer-4** — **COMPLETE** (M4.1–M4.6 + Track-C on `main`; merged 2026-03-15; see `docs/reports/M4X_MAIN_MERGE_COMPLETION.md`).
   - **Layer-5** — **CLOSED** (MVP slice). Waves A1–A8 and packaging slice delivered — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen; plugin evidence-first + Plan-Gate **`POST /v1/ask`**; installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Product Authority + Code Understanding v1 — Phases 1–5 COMPLETE** (registry → index → ranking → Plan-Gate anchoring + eval → authority → action reasoning bridge). **L5.8 — harness + closure gate:** **COMPLETE** (see **B2**; **§4.5** milestone row). **B1/B3/B4/B5/B7:** **CLOSED**. **Action 14 final acceptance:** **PASS**. Production gates are closed; this tracker now records post-acceptance continuity.
 
@@ -412,7 +411,7 @@ Use **only** these patterns when stating **layer-level** status (§1 Header, §3
 | ----- | ---------------- | ------- |
 | **Layer-1** | **LOCKED** | Governance / doctrine ratified; changes require GREG. |
 | **Layer-2** | **LOCKED** | ML compilation (Stages 1–8) finished and frozen under release verification. |
-| **Layer-3** | **COMPLETE** (M3.0–M3.11 on `main`) | Core runtime milestones done; M3.12+ remain in §4.3.1. |
+| **Layer-3** | **COMPLETE** (M3.0–M3.12 on `main`) | Core runtime + M3.12 narrow doc ingestion; **M3.13+** remain in §4.3.1. |
 | **Layer-4** | **COMPLETE** (M4.1–M4.6 + Track-C on `main`) | Observation milestones and Track-C closure delivered. |
 | **Layer-5** | **CLOSED** (MVP slice) | MVP vertical slice accepted; follow-on work (e.g. L5.7, §B1) stays in §4.5 and §0. |
 
@@ -440,7 +439,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | ------ | -------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ~~**L1**~~ | ~~Governance (Constitution)~~              | ~~**LOCKED**~~                | ~~Constitutional manifest, phase doctrine, dominance rules locked.~~                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ~~**L2**~~ | ~~ML Compilation (Stages 1–8)~~            | ~~**LOCKED**~~     | ~~Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.~~                                                                                                                                                                                                                                                                                                                                                                             |
-| ~~**L3**~~ | ~~Runtime Enforcement / Execution~~        | ~~**COMPLETE** (M3.0–M3.11 on `main`)~~ | ~~M3.12–M3.18 follow-on. **Stage 3 controlled runtime loop** (burn-in) exists (**§6.20**); canonical **M3.x** table unchanged — loop work is tracked operationally, not as a new M3 ID.~~                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ~~**L3**~~ | ~~Runtime Enforcement / Execution~~        | ~~**COMPLETE** (M3.0–M3.12 on `main`)~~ | ~~**M3.13–M3.18** follow-on. **Stage 3 controlled runtime loop** (burn-in) exists (**§6.20**); canonical **M3.x** table unchanged — loop work is tracked operationally, not as a new M3 ID.~~                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ~~**L4**~~ | ~~Observation / Drift Detection~~          | ~~**COMPLETE** (M4.1–M4.6 + Track-C on `main`)~~    | ~~Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).~~                                                                                                                                                                                                                                                                                                                                        |
 | **L5** | Workspace Intelligence / Ask Grounding | **CLOSED (MVP slice)**            | Context Layer + **`POST /v1/ask`** on **`main`**; behavior baseline **§5** (`108aabb`). **L5.8 harness:** **COMPLETE** (**B2**). **§B7** / **§B5** **CLOSED**. **B1/B3/B4/B5/B7:** closed. **Action 14:** PASS. **Remaining:** L5.7, §B1/L5-RET follow-through — **§0**. |
 
@@ -513,7 +512,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Enforce constitutional judgment at runtime. REF and CONF are governed runtime phases; DES and CODE remain model-expressive but are orchestrated by the runtime. Layer-3 owns control flow, state transitions, authority and boundary enforcement, and completion criteria. The model proposes; the runtime decides.
 
-**Current status**: **M3.0–M3.11 COMPLETE on main.** M3.12–M3.18 are follow-on milestones.  
+**Current status**: **M3.0–M3.12 COMPLETE on main.** M3.13–M3.18 are follow-on milestones.  
 **Priority**: **CRITICAL**
 
 **Canonical Layer-3 numbering:** This document uses a single canonical model M3.0–M3.18. No alternate naming (e.g. M3.E0, M3X.*) is used in live roadmap tables.
@@ -535,7 +534,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | ~~M3.9~~  | ~~Shadow Mode Validation~~                     | ~~COMPLETE~~                     | ~~M3.0–M3.8~~          | ~~Shadow runner, no boundary crossed; plan and ledger per run. see §6.12.~~                                                                                                                                                                                                   |
 | ~~M3.10~~ | ~~Sandbox driver abstraction~~                 | ~~COMPLETE~~                     | ~~M3.4~~               | ~~Abstraction layer for sandbox execution drivers. see §6.13.~~                                                                                                                                                                                                               |
 | ~~M3.11~~ | ~~Container sandbox runtime~~                  | ~~COMPLETE~~                     | ~~M3.10~~              | ~~Container-based sandbox implementing driver abstraction. see §6.14.~~                                                                                                                                                                                                       |
-| M3.12 | Documentation ingestion                    | **VALIDATING** (integration) | M3.0–M3.9          | Narrow repo-aware manifest / `**doc_selector`** path merged on `**feature/l5-context-layer-v1-ask-packaging**` (see **§6.16**); prior report: `docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md`. **Merge to `main`** still pending when integration owners promote. |
+| ~~M3.12~~ | ~~Documentation ingestion~~                    | ~~**COMPLETE** (on `main`)~~ | ~~M3.0–M3.9~~          | ~~Narrow repo-aware manifest (`**ManifestBuilder**`, `**IngestionConfig**`), **`doc_selector`** (`**select_from_manifest**`), Ask handler integration in `**runtime/ask_service/handlers.py**` — see **`docs/runtime/M3_12_NARROW_CONTEXT_ENGINE_SPEC.md`**, verification **`§6.16.1`**, prior integration report `docs/reports/M3_12_INTEGRATION_VERIFICATION_REPORT.md`.~~ |
 | M3.13 | Jira ingestion                             | NOT_STARTED                  | M3.0–M3.9          | Pipeline to ingest Jira data.                                                                                                                                                                                                                                             |
 | M3.14 | PR ingestion                               | NOT_STARTED                  | M3.0–M3.9          | Pipeline to ingest PR data.                                                                                                                                                                                                                                               |
 | M3.15 | Jira cleaning pipeline                     | NOT_STARTED                  | M3.13              | Clean and normalize Jira data.                                                                                                                                                                                                                                            |
@@ -548,7 +547,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 > **Operational note (2026-04):** The **Stage 3 controlled runtime loop** (schema-driven task/proposal/tool contracts, deterministic state machine, loop controller, decision engine, executor integration, ledger linkage, fail-closed behavior; automated tests) is an **implementation surface** under `runtime/loop/`, `runtime/state/`, `runtime/tools/`, `runtime/adapters/`, `runtime/obs/`, and `runtime/tests/`. It does **not** introduce a new **M3.x** row; **M3.3** remains the historical Agent Loop Orchestrator milestone as previously completed. Status: **§6.20**, **§5**, **§1**.
 
-> Follow-on relationship note: M3.12–M3.16 remain valid downstream ingestion/enrichment milestones. They are not substitutes for workspace-local code grounding and are not the immediate blocker for grounded Ask validity.
+> Follow-on relationship note: **M3.13–M3.16** remain valid downstream ingestion/enrichment milestones (M3.12 doc-manifest slice is **COMPLETE on `main`**). They are not substitutes for workspace-local code grounding and are not the immediate blocker for grounded Ask validity.
 
 #### 4.3.2 Artifact-Driven Milestone Details
 
@@ -780,7 +779,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Layer exit criteria**:
 
-- **M3.0–M3.11** are **COMPLETE** on main; tag `layer3-runtime-governed-v1`. M3.12–M3.18 are follow-on milestones.
+- **M3.0–M3.12** are **COMPLETE** on main; tag `layer3-runtime-governed-v1`. **M3.13–M3.18** are follow-on milestones.
 - No fail-open paths: when enforcement infrastructure is unavailable, default posture is REF/REFUSAL.
 - Observation layer (L4) has sufficient ledger data to begin drift tracking.
 
@@ -1232,6 +1231,13 @@ This section records **evidence of completed milestones**. Entries should be **a
 - **Operator docs (in-repo):** `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md` (architecture); `docs/MOTADATA_DEMO_SETUP_RUNBOOK.md` (setup); `docs/MOTADATA_DEMO_SCENARIOS.md` (demo + success criteria).
 - **Local cleanup:** After push, safe to `**git branch -d`** the merged topic branches listed in **§5 Immediate next action** (local only unless coordinated for `origin`).
 
+#### 6.16.1 M3.12 on `main` — verification record (2026-04-18)
+
+- **Truth:** Narrow M3.12 slice is **merged on `main`**: `runtime/context/manifest_builder.py`, `runtime/context/doc_selector.py`, `runtime/context/manifest_models.py`, integration in `runtime/ask_service/handlers.py` (`ManifestBuilder`, `select_from_manifest`). Spec: `docs/runtime/M3_12_NARROW_CONTEXT_ENGINE_SPEC.md`.
+- **Automated (re-run on current `main` when auditing):**  
+  `python3 -m pytest runtime/tests/test_m312_manifest.py runtime/tests/test_m312_doc_selector.py runtime/tests/test_m312_demo_scenarios.py runtime/tests/test_ask_service.py -q`  
+  **Result at verification:** **29 passed** (Linux).
+
 ### 6.17 Action 11 — Compatibility Path Hardening (L5.9) — CLOSED (2026-03-31)
 
 - **Milestone**: **L5.9** compatibility path hardening delivered as **Action 11** — explicit routing, trace chain, non-silent fallback, explain/planner observability.
@@ -1384,7 +1390,7 @@ UI behavior is fully driven by backend `routing_mode`; plugin surfaces `trace_id
 
 - **Deeper context layer** — e.g. dirty-buffer overlay, richer symbol/call coverage.
 - **Broader authority coverage** — subsystem maps, versioned snapshots, more concepts.
-- **Jira / PR / doc ingestion expansion** — M3.12–M3.18 follow-ons, task evaluation harness.
+- **Jira / PR / doc ingestion expansion** — **M3.13–M3.18** follow-ons (M3.12 **COMPLETE on `main`** — §6.16.1), task evaluation harness.
 - **Stronger coding workflows (bounded)** — multi-file patch flows and iterative fix-validation loops under runtime-owned loop policy.
 - **Model benchmarking** — e.g. Qwen3 / Qwen3-Coder vs grounded reasoning baselines.
 - **Enterprise / operator maturity** — packaging, audit/export, operator workflows.

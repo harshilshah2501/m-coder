@@ -33,6 +33,6 @@ Use this table to orient in a large repo. **Product slice** column reflects `doc
 | `archive/` | Archive | Old spikes, notes | **ARCHIVE** | OUT | Low | Rare | `archive/README.md` index |
 | `motadata_behavior_validation*.json` | Artifact | Verifier output | **CANONICAL** (run record) | IN | High | `motadata_behavior_verify.py` | Often gitignored pattern; check `.run/` |
 
-**M3.12+ branch truth:** Per `docs/LIVE_ROADMAP_TRACKER.md` §1, **M3.0–M3.11** are **complete on `main`**. **M3.12** (and follow-on) may live on integration branches (e.g. L5 packaging line) until promoted — **do not** treat unmerged line items as the same baseline as `main` without checking the tracker and git.
+**M3.13+ branch truth:** Per `docs/LIVE_ROADMAP_TRACKER.md` §1 and §6.16.1, **M3.0–M3.12** are **complete on `main`** (M3.12 = narrow doc manifest + `doc_selector`). **M3.13+** may still land via integration branches — **do not** treat unmerged line items as the same baseline as `main` without checking the tracker and git.
 
 **UNKNOWN / NEEDS_CONFIRMATION:** exact on-`main` presence of every M3.12+ line item — use git + tracker §1 for branch truth.

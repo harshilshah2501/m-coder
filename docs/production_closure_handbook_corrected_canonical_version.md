@@ -44,7 +44,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 - Layer-2 Compilation → **LOCKED** (see `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1)
 
-- Layer-3 Runtime Core → **COMPLETE** (M3.0–M3.11 on `main`)
+- Layer-3 Runtime Core → **COMPLETE** (M3.0–M3.12 on `main`)
 
 - Layer-4 Observation → **COMPLETE** (M4.1–M4.6 + Track-C on `main`)
 
