@@ -47,7 +47,7 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 
 - **Do not default to M3.13 next.** **M3.13–M3.16 / M3.18** are follow-on ingestion and evaluation work; they stay in the **Remaining** bucket until there is a **clear product use case** and staffing. They are not the sharpest next move just because they follow M3.12 in the §4.3.1 table.
 - **Do not pick L5.7 only because it is “next” in the L5 table.** **L5.7** (dirty buffer / live overlay) matters when the dominant pain is **editor buffer vs on-disk index** (unsaved edits missing from Ask/Debug). If that is not the pain, L5.7 is not automatically the next engineering bet.
-- **Recommended primary focus:** open the **Debug depth / “thinking with code”** charter (**§1.4**, **CHARTER-TBD**) — prompts, selection, vLLM constraints, richer **`explain_debug`** — after keeping retrieval under **`MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** guardrails. This matches **high visible payoff** when baseline retrieval and authority-gated Ask are already in place but **debug reasoning depth** is still the gap.
+- **Recommended primary focus:** execute the **Debug depth / “thinking with code”** charter (**§1.4**, `docs/DEBUG_DEPTH_CHARTER.md`) — prompts, selection, vLLM constraints, richer **`explain_debug`** — after keeping retrieval under **`MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** guardrails. This matches **high visible payoff** when baseline retrieval and authority-gated Ask are already in place but **debug reasoning depth** is still the gap.
 - **If the only choice is L5.7 vs M3.13:** prefer **L5.7** for **current developer UX** on the existing workspace path; **M3.13** (Jira ingestion) **expands upstream surface area** and is noisier unless Jira-backed workflows are explicitly queued.
 
 ---
@@ -60,7 +60,7 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**. **M3.12** narrow doc-manifest slice is **on `main`** (see §6.16.1).  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization. **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) and **optional charters** (§1.4: debug depth **CHARTER-TBD**, §B1/L5-RET with §5 guardrails).
+- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization. **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) and **optional charters** (§1.4: debug depth charter `docs/DEBUG_DEPTH_CHARTER.md`, §B1/L5-RET with §5 guardrails).
 - **Overall status summary**:  
   - **Layer-1** — **LOCKED** (governance doctrine).  
   - **Layer-2** — **LOCKED** (ML compilation: Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -128,7 +128,7 @@ All production gates are now **closed** for the MVP vertical slice:
 | ------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Observability**        | **L5-OBS-1 (ops follow-through)**                           | Closure already achieved for MVP bar. Follow-through remains operational (log packaging, CI collection, runbook hygiene). |
 | **Retrieval validation** | **L5-RET-VALIDATION (post-closure expansion)** | Closure already achieved for MVP bar. Follow-through supports broader expansion confidence without reopening B1/B2 closure. **Guardrail:** any exploratory / broad-ask tuning must preserve **`MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** invariants (re-run `motadata_behavior_verify.py`; compare metrics; do not regress named baseline).                                                                                                      |
-| **Debug depth / “thinking with code”** | **CHARTER-TBD (separate initiative)** | Not “more retrieval” or fusion churn. Explicit scope required: prompts, selection, vLLM constraints, or richer **`explain_debug`** output. Track apart from lexical/Stage A work unless tracker merges lanes. |
+| **Debug depth / “thinking with code”** | **DEBUG-DEPTH-CHARTER-V1** | Separate initiative captured in `docs/DEBUG_DEPTH_CHARTER.md`. Not “more retrieval” or fusion churn. Scope: prompts, selection, vLLM constraints, and richer **`explain_debug`** output. Track apart from lexical/Stage A work unless tracker merges lanes. |
 | **§B1 expanded suites / exploratory asks** | **§B1 / L5-RET (existing)** | Only with **metrics + guardrails** against **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** — same scenario suite and policy file; document regressions with artifact diff + m-coder SHA. |
 
 **Which follow-on first?** §0 **Post-closure prioritization** — Debug depth charter (this row) is the default recommended focus vs ad-hoc M3.13+ or L5.7.
@@ -940,7 +940,7 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   - No blocker on baseline reproducibility or strict anchored retrieval gates.
   - Residual product tuning (broader exploratory asks) is **non-blocking** vs the promoted **§5** bar.
 - **Immediate next action:**
-  - **Ongoing:** **`docs/validation/POST_CLOSURE_MAINTENANCE.md`**. **Chartered follow-ons:** **§1.4** (debug depth **CHARTER-TBD**, §B1/L5-RET) — not ad-hoc fusion work.
+  - **Ongoing:** **`docs/validation/POST_CLOSURE_MAINTENANCE.md`**. **Chartered follow-ons:** **§1.4** (debug depth `docs/DEBUG_DEPTH_CHARTER.md`, §B1/L5-RET) — not ad-hoc fusion work.
 
 ### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
 
