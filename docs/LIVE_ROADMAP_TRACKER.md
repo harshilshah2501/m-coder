@@ -2,15 +2,57 @@
 
 **Doc status:** canonical-current. Live progress dashboard; status is artifact-driven.
 
+## 0. Reconciliation snapshot (2026-04-18)
+
+**Purpose:** Single place for ~~what is done~~ vs **what remains**. Sections below retain full history; use this table when prioritizing. **Ops checklist:** `docs/validation/POST_CLOSURE_MAINTENANCE.md`.
+
+### ~~Completed workstreams (canonical “done”)~~
+
+| Item | Notes |
+|------|--------|
+| ~~**MVP production closure**~~ | Action 14 **PASS**; gates closed — §1.2–§1.3 |
+| ~~**B1 Retrieval generalization (closure bar)**~~ | **CLOSED** — §B1 |
+| ~~**B2 L5.8 harness + closure gate**~~ | **COMPLETE** — §B2 |
+| ~~**B3 Plugin truthfulness (MVP bar)**~~ | Action 4 **CLOSED**; Phase-1 truth proof **LOCKED** — §B3 |
+| ~~**B4 Observability / trace reconstruction**~~ | **CLOSED** — §B4 |
+| ~~**B5 Host readiness**~~ | **CLOSED** — §B5 |
+| ~~**B6 L5.9 compatibility hardening**~~ | Action 11 **CLOSED** — §B6 |
+| ~~**B7 Stage 3 burn-in / acceptance**~~ | **CLOSED** — §B7 |
+| ~~**Debug Usefulness v1.1**~~ | EXPLAIN_DEBUG grounding — §5 |
+| ~~**Authority Expansion Hardening v1**~~ | Stage A noise suppression; API routing scenario — §5 |
+| ~~**Ask v1 evidence quality parity**~~ | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
+| ~~**Behavior baseline promotion**~~ | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
+| ~~**Layer-1 / L2 / L4 milestone tables (declared rows)**~~ | LOCKED or COMPLETE per §4.1–§4.4 |
+| ~~**M3.0–M3.11**~~ | **COMPLETE on main** — §4.3.1 |
+| ~~**M4.1–M4.6**~~ | **COMPLETE on main** — §4.4 |
+| ~~**L5.0–L5.6, L5.8 harness, L5.9**~~ | Per §4.5 table (harness closure + Action 11) |
+| ~~**Action 9 (WSL + audit pack MVP scope)**~~ | **CLOSED** — §1 Action 9 table |
+
+### **Remaining / follow-on (not done — evaluate before staffing)**
+
+| Area | Status | Where |
+|------|--------|--------|
+| **L5.7** Dirty buffer / live overlay | **NOT_STARTED** | §4.5 row L5.7 |
+| **M3.12** Documentation ingestion merge to `main` | **VALIDATING** (was on packaging branch; confirm vs `main`) | §4.3.1, §6.16 |
+| **M3.13–M3.16, M3.18** | Jira/PR pipelines, evaluation harness — **NOT_STARTED** | §4.3.1 |
+| **§1.4 tracks** | L5-OBS ops follow-through; L5-RET / §B1 expansion; **CHARTER-TBD** debug depth | §1.4 |
+| **IDE → Stage3LoopController E2E** | **Follow-on** (not burn-in closure) | §B7, §6.20, runbook §7 |
+| **§B3 residual** | e.g. `plan_summary.notes` on all surfaces | §B3 bullets |
+| **Assist influence** | **NOT ENABLED** (advisory-only by design) | §1.5 |
+| **Caveat F1 / F2** | Resolver layout; A3 latency vs spine | Backlog § under Layer-5 |
+| **“What is NOT included yet”** | Stage 2.5 influence, background sync, active-file UX | §1 “What is NOT included yet” |
+
+---
+
 ## 1. Header
 
 - **Project**: Motadata AI Coding Assistant — 4-Layer Governed Core + Layer-5 Product Extensions  
-- **Last updated**: 2026-04-16  
+- **Last updated**: 2026-04-18  
 - **Program state**: **Production-grade vertical slice achieved.** All production gates are closed with artifact-backed acceptance.
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
-- **Current integration branch (local consolidated line)**: `**feature/l5-context-layer-v1-ask-packaging`** — merges **M3.12** (manifest/doc_selector), `**integration/m3.12-context-demo`**, **M3.17** (task slice + C1 doc sign-off) into the L5 packaging line; push when ready to replace prior scattered branches.  
+- ~~**Current integration branch (historical):** `feature/l5-context-layer-v1-ask-packaging` — M3.12/M3.17 packaging line; merge status → confirm against `main`.~~ **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**; packaging branch may still exist for M3.12 promotion — verify git before relying on branch name alone.  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Current active milestone focus**: **Authority Expansion Hardening v1 (closed) + baseline stabilization** — retrieval baseline freeze remains intact, Debug Usefulness v1.1 is closed, and WSL verification is green after Stage A noise suppression for code-oriented asks.
+- ~~**Current active milestone focus**: Authority Expansion Hardening v1 + baseline stabilization~~ — **Done.** **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) and **optional charters** (§1.4: debug depth **CHARTER-TBD**, §B1/L5-RET with §5 guardrails).
 - **Overall status summary**:  
   - Layer-1 governance doctrine is **LOCKED**.  
   - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -387,7 +429,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | **L2** | ML Compilation (Stages 1–8)            | **COMPLETE / LOCKED**     | Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.                                                                                                                                                                                                                                                                                                                                                                             |
 | **L3** | Runtime Enforcement / Execution        | **COMPLETE** (M3.0–M3.11) + **Stage 3 loop impl. (burn-in)** | M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. **Stage 3 controlled runtime loop** code path exists (**§6.20**); canonical **M3.x** table unchanged — loop work is tracked operationally, not as a new M3 ID.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **L4** | Observation / Drift Detection          | **COMPLETE** (Track-C)    | M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).                                                                                                                                                                                                                                                                                                                                        |
-| **L5** | Workspace Intelligence / Ask Grounding | **CLOSED (MVP slice)**            | **L5.5/L5.6 + Context Layer wheel** on branch; contracts frozen. **L5.8 harness:** **COMPLETE** (**B2**). **§B7** burn-in: **CLOSED**. **§B5** host readiness: **CLOSED** (2026-04-09). **B1/B3/B4/B5/B7:** closed. **Action 14:** PASS. |
+| **L5** | Workspace Intelligence / Ask Grounding | **CLOSED (MVP slice)**            | Context Layer + **`POST /v1/ask`** on **`main`**; behavior baseline **§5** (`108aabb`). **L5.8 harness:** **COMPLETE** (**B2**). **§B7** / **§B5** **CLOSED**. **B1/B3/B4/B5/B7:** closed. **Action 14:** PASS. **Remaining:** L5.7, §B1/L5-RET follow-through — **§0**. |
 
 
 ---
@@ -768,7 +810,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 ### LAYER 5 — CONTEXT LAYER & ASK SYSTEM
 
-Status: INTEGRATION COMPLETE, QUALITY GATES PENDING
+~~Status: INTEGRATION COMPLETE, QUALITY GATES PENDING~~ — **Superseded 2026-04:** MVP **behavior verification + Ask v1 quality** closed on `main` with promoted baseline (**`MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5**). **Remaining Layer-5 work:** L5.7 (not started), §B1/L5-RET follow-through, optional charters — see **§0**.
 
 #### Completed
 - L5.1 → L5.6: Indexing, retrieval, evidence schema, Ask path integration
@@ -858,24 +900,25 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
 
 ## 5. Current Sprint / Current Focus
 
-- **Current objective**: **Keep the locked baseline reproducible and harden authority expansion quality without regressions.**
-  Retrieval baseline is achieved, Debug Usefulness v1.1 is closed, Authority Expansion Hardening v1 is complete, and scenario suite is green on WSL.
-- **Active tasks**:
-  - **Baseline lock (done / maintain):** anchored authority-gated baseline achieved (`ask_anchor_owner_top1` strict pass + scenario suite stable), broad ask improved (`ask_broad_correlation` generic-infra ratio reduced).
-  - **Debug usefulness v1.1 (done):** selected-file-grounded `EXPLAIN_DEBUG` guardrails + insufficiency checks landed and passing.
-  - **Operational reproducibility (done):** authority index builder now supports smart auto full/incremental refresh with dynamic progress and is integrated into WSL run flow.
-  - **Authority Expansion Hardening v1 (done):** Stage A now suppresses noise-class files (including `db-files/*` and `test-plugin-metrics/*`) for code-oriented tasks; WSL candidate diff confirms `ask_api_request_routing_owner` no longer includes `db-files/report-templates/js/highcharts.js` in context bundle and distractor count dropped (`1 -> 0`).
-  - **Ask v1 evidence quality parity (done; 2026-04-17):** Plan-Gate **`POST /v1/ask`** now supplies grounding + authority into **`assess_evidence_quality`** (m-coder `108aabb`); WSL verification green with **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`** and full scenario suite **`all_pass=true`**.
-  - **Promoted behavior baseline (done):** formal record under **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** — artifact `runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json`, commit `108aabb098017b8c551629c745d71f63acf7`.
-- **Next execution order**:
+- ~~**Current objective (2026-Q1 sprint — done):** **Keep the locked baseline reproducible and harden authority expansion quality without regressions.** Retrieval baseline is achieved, Debug Usefulness v1.1 is closed, Authority Expansion Hardening v1 is complete, and scenario suite is green on WSL.~~
+- **Current objective (post-closure):** **Operational lock** on **`motadata_behavior_verify.py`** + **§5** baseline discipline — see **`docs/validation/POST_CLOSURE_MAINTENANCE.md`** and **§0** above.
+- **~~Active tasks (sprint — all completed):~~**
+  - ~~**Baseline lock (done / maintain):** anchored authority-gated baseline achieved (`ask_anchor_owner_top1` strict pass + scenario suite stable), broad ask improved (`ask_broad_correlation` generic-infra ratio reduced).~~
+  - ~~**Debug usefulness v1.1 (done):** selected-file-grounded `EXPLAIN_DEBUG` guardrails + insufficiency checks landed and passing.~~
+  - ~~**Operational reproducibility (done):** authority index builder now supports smart auto full/incremental refresh with dynamic progress and is integrated into WSL run flow.~~
+  - ~~**Authority Expansion Hardening v1 (done):** Stage A now suppresses noise-class files (including `db-files/*` and `test-plugin-metrics/*`) for code-oriented tasks; WSL candidate diff confirms `ask_api_request_routing_owner` no longer includes `db-files/report-templates/js/highcharts.js` in context bundle and distractor count dropped (`1 -> 0`).~~
+  - ~~**Ask v1 evidence quality parity (done; 2026-04-17):** Plan-Gate **`POST /v1/ask`** now supplies grounding + authority into **`assess_evidence_quality`** (m-coder `108aabb`); WSL verification green with **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`** and full scenario suite **`all_pass=true`**.~~
+  - ~~**Promoted behavior baseline (done):** formal record under **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** — artifact `runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json`, commit `108aabb098017b8c551629c745d71f63acf7`.~~
+  - ~~**Closure narrative (done):** **`docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`** + team pointers on `main`.~~
+- **Next execution order (maintenance):**
   1. Keep retrieval baseline regression-proof via scenario runs; cite **§5** artifact + SHA for regression reports.
   2. Compare future candidates against the **§5** promotion (and optionally against `AUTHORITY_HARDENING_V1` when both artifacts are available locally).
-  3. Continue optional broad-ask / integration quality tuning only with explicit scope — preserve **§5** invariants.
-- **Current blockers**:
+  3. Optional tuning only with explicit scope — preserve **§5** invariants (**§1.4** guardrails).
+- **Current blockers:**
   - No blocker on baseline reproducibility or strict anchored retrieval gates.
   - Residual product tuning (broader exploratory asks) is **non-blocking** vs the promoted **§5** bar.
-- **Immediate next action**:
-  - **Closed for this lane:** ServiceNow **`/v1/ask`** quality + baseline promotion. **Follow-on:** optional **closure-09** summary + any new chartered retrieval work (see **§1.4 Track RET**).
+- **Immediate next action:**
+  - **Ongoing:** **`docs/validation/POST_CLOSURE_MAINTENANCE.md`**. **Chartered follow-ons:** **§1.4** (debug depth **CHARTER-TBD**, §B1/L5-RET) — not ad-hoc fusion work.
 
 ### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
 
