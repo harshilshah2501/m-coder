@@ -1,7 +1,7 @@
 # PROGRAM_STATE_SNAPSHOT — portable continuity
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE`  
-**Last updated:** 2026-04-17  
+**Last updated:** 2026-04-18  
 **Detail & evidence IDs:** `docs/LIVE_ROADMAP_TRACKER.md` (this file stays short)
 
 ---
@@ -29,18 +29,18 @@
 
 - **Lane discipline:** split workstreams and keep only one active engineering lane at a time.
 - **Retrieval baseline:** anchored authority-gated retrieval is locked as working baseline; formal behavior snapshot promoted (see below).
-- **Latest closure:** **Ask v1 evidence quality parity** (`108aabb`) on **`feat/motadata-behavior-verification-guide`** — **`POST /v1/ask`** passes grounding + authority into **`assess_evidence_quality`**; WSL scenario suite **`all_pass=true`** including **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`**. Promoted artifact + SHA: **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** (`SERVICENOW_QUALITY_V3`, `108aabb098017b8c551629c745d71f63acf7`). **Narrative:** **`docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`**.
-- **Active engineering lane:** maintain promoted baseline; further retrieval tuning only under explicit charter (avoid silent regression vs §5).
+- **Latest closure:** **Ask v1 evidence quality parity** (`108aabb`) merged to **`main`** — **`POST /v1/ask`** passes grounding + authority into **`assess_evidence_quality`**; promoted baseline in **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5**. **Narrative:** **`docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`**.
+- **Active engineering lane:** maintain promoted baseline; optional charters only with explicit scope (see tracker §1.4).
 
 ---
 
-## Immediate next work (ordered)
+## Immediate next work (this week)
 
-1. Treat **`runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json`** + m-coder **`108aabb`** as the **named regression pair** alongside **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** (regenerate `runtime/.run/motadata_behavior_validation.json` only as a local convenience, not as the sole citation).
-2. Maintain Authority Expansion Hardening v1 behavior:
-   - keep noise-class suppression for code-oriented Stage A (`db-files/*`, `test-plugin-metrics/*`),
-   - preserve owner injection (`owner_injected_lane_count >= 1`) on anchored and authority-expansion scenarios.
-3. Optional follow-on: broaden scenario coverage or latency SLO work under **§B1 / L5-RET** — **not** a reopen of the closed **`/v1/ask`** quality gate unless requirements change.
+**Single entry point:** **`docs/validation/POST_CLOSURE_MAINTENANCE.md`** — operational lock on **`motadata_behavior_verify.py`** (same workspace, scenarios, policy, Stage A); save **`CANDIDATE.*.json`** when tuning; cite **§5** + SHA for regressions; **closure todos 01–09 are done** — this file is the **post-closure / optional-charter** checklist, not open MVP gates; **no architecture churn** by default; next big moves → **explicit charter** (tracker **§1.4**: debug depth **CHARTER-TBD**, **§B1 / L5-RET** with §5 guardrails).
+
+**Regression pair (formal):** **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** + named artifact + m-coder SHA **`108aabb098017b8c551629c745d71f63acf7`** (local copy often under `runtime/.run/`).
+
+**Hardening invariants to preserve:** Authority Expansion Hardening v1 — noise-class suppression for code-oriented Stage A (`db-files/*`, `test-plugin-metrics/*`); **`owner_injected_lane_count >= 1`** on anchored / authority scenarios where applicable.
 
 ---
 

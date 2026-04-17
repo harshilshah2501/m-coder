@@ -41,6 +41,12 @@ This is a **read-only** record: what is locked, what is follow-on, and where evi
 
 ---
 
+## Ongoing operational maintenance (post-closure)
+
+After closure, use **`docs/validation/POST_CLOSURE_MAINTENANCE.md`** for the **living** checklist: operational lock on verifier runs, artifact discipline, no architecture churn by default, and pointers to **optional charters** (tracker §1.4). That replaces an “open closure todo list” — closure items **01–09** are **complete**.
+
+---
+
 ## Scope boundary
 
 This closure is **HTTP/CLI behavior verification** for Context Layer **`export_evidence`** + Plan-Gate **`/v1/ask`** + governed routes exercised by **`runtime/scripts/motadata_behavior_verify.py`**. It does **not** replace plugin Phase-1 truth proof, IDE E2E, or unrelated production gates unless those docs say so.

@@ -135,6 +135,7 @@ IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED
 ## 10. Related canonical navigation
 
 - `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` — Motadata CLI verification closure (baseline pointers; team handoff)
+- `docs/validation/POST_CLOSURE_MAINTENANCE.md` — ongoing operational lock + optional charters (not open closure todos)
 - `docs/PRODUCT_SLICE.md` — in/out of scope for *this* pass  
 - `docs/REPO_REALITY_MAP.md` — directory map  
 - `docs/CLI_VALIDATION_MATRIX.md` — proof commands  
