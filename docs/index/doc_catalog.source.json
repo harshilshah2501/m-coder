@@ -31,6 +31,13 @@
       "tags": ["demo", "setup", "validation", "capabilities"]
     },
     {
+      "id": "behavior-verify-output-guide",
+      "title": "Motadata Behavior Verifier Output Guide",
+      "path": "docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md",
+      "role": "reference",
+      "tags": ["demo", "verification", "motadata_behavior_validation"]
+    },
+    {
       "id": "production-verification-guide",
       "title": "Motadata AIOps Production Verification Guide",
       "path": "docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md",

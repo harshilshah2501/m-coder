@@ -77,15 +77,31 @@ Expected:
 - Context Layer `/healthz` returns status `ok`
 - Context Layer `/version` includes `layer5.evidence_bundle.v1`
 
-## 4) Capability scenario pack (single command, preferred)
+## 4) Capability scenario pack (two-step canonical flow)
 
-This is the canonical repeatable command for all capabilities:
+Run these in order: first refresh the authority code index for your Motadata workspace, then run the behavior verifier against the pinned scenario suite and quality policy.
+
+### 4.1 Authority code index (`build_authority_code_index.py`)
+
+**What it does:** Builds (or incrementally refreshes) the on-disk authority code index for `MOTADATA_REPO_ROOT`. Layer-5 authority resolution and `export_evidence` retrieval depend on paths and symbols that exist in the indexed workspace; this step keeps the index aligned with the tree you are about to verify.
+
+**When to run:** Before `motadata_behavior_verify.py` when the workspace has changed, or when scenario runs look stale or miss expected owner paths.
 
 ```bash
 python3 runtime/scripts/build_authority_code_index.py \
   --workspace-root "${MOTADATA_REPO_ROOT}" \
   --out "runtime/.cache/authority_code_index.motadata.json"
+```
 
+**Output:** `runtime/.cache/authority_code_index.motadata.json` (default `refresh-mode=auto` chooses full vs incremental as appropriate).
+
+### 4.2 Behavior verification (`motadata_behavior_verify.py`)
+
+**What it does:** Exercises the five capabilities end-to-end against live Context Layer and Plan-Gate URLs (`query`, `debug`, `plan`, `code`, `agent`) using the versioned scenario definitions and evidence-quality gates. Writes a full JSON report for regression and sign-off.
+
+**Pass expectation:** Process exits `0`, report has `all_pass: true`, and with `--repeat 2` the run should report stable repeatability when smoke paths are included per verifier rules.
+
+```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "${MOTADATA_REPO_ROOT}" \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
@@ -95,11 +111,15 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --out runtime/.run/motadata_behavior_validation.json
 ```
 
-Pass criteria:
+**Output:** `runtime/.run/motadata_behavior_validation.json` (override path with `--out` if needed).
 
-- command exits `0`
+**Pass criteria (summary):**
+
+- verifier exits `0`
 - `runtime/.run/motadata_behavior_validation.json` has `all_pass: true`
-- when `--repeat 2`, report indicates stable repeatability
+- when `--repeat 2`, repeatability is stable per the report (see `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` for full pass rules)
+
+**Reading the log and JSON:** With `--print dev`, the first printed `all_pass` line reflects **smoke only**; the JSON file’s top-level `all_pass` combines smoke **and** scenarios. See [`demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md`](demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md) (including [§3.5 — queries and commands from the scenario JSON](demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md#scenario-json-queries)).
 
 ## 5) Per-capability command probes (manual demo mode)
 
@@ -225,3 +245,4 @@ GPU side:
 ```bash
 ./runtime/scripts/governed_services.sh stop
 ```
+

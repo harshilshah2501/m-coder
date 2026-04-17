@@ -9,6 +9,7 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 - **Program snapshot:** [`PROGRAM_STATE_SNAPSHOT.md`](PROGRAM_STATE_SNAPSHOT.md)
 - **4-layer + product-slice map:** [`PRODUCT_SLICE.md`](PRODUCT_SLICE.md), [`ARCHITECTURE_4_LAYER.md`](ARCHITECTURE_4_LAYER.md)
 - **Definitive demo + capability testbook:** [`MOTADATA_DEMOBOOK.md`](MOTADATA_DEMOBOOK.md)
+- **Verifier output walkthrough (stdout + `motadata_behavior_validation.json`):** [`demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md`](demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md)
 
 ## Operator Navigation
 
