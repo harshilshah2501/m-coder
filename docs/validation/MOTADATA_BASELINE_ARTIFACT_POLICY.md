@@ -89,14 +89,26 @@ Required in regression reports:
 
 ## 5) Current frozen proof point
 
-Current baseline proof after Debug Usefulness v1.1 and retrieval stabilization:
+**Promoted baseline (2026-04-17)** — use this as the **formal** behavior-verification reference for regression comparison in the Plan-Gate `/v1/ask` + authority lane (supersedes relying only on the informal rolling `motadata_behavior_validation.json` pointer).
 
-- suite status: `all_pass=true`
-- strict anchored owner-top1: pass
-- broad ask: improved (reduced generic-infra ratio vs earlier baseline)
-- artifact: `runtime/.run/motadata_behavior_validation.json` (latest synchronized run)
+| Field | Value |
+|--------|--------|
+| **m-coder commit** | `108aabb098017b8c551629c745d71f63acf7` (short: `108aabb`) |
+| **Named artifact** | `runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json` |
+| **Scenarios** | `docs/validation/motadata_aiops_behavior_scenarios.v1.json` |
+| **Quality policy** | `docs/validation/motadata_evidence_quality_policy.v1.json` |
+| **Suite status** | `all_pass=true` (scenarios-only; verified on WSL against Motadata workspace) |
 
-Use this as the reference point for next-lane work unless a new baseline is intentionally promoted.
+**What this baseline locks in**
+
+- **Ask v1 quality parity:** Plan-Gate **`POST /v1/ask`** passes **`grounding_entries`**, **`effective_intent`**, and **`authority_primary_owner_file`** into **`assess_evidence_quality`**, matching the layer5 export path so refinement (including **`OWNER_ANCHOR_RECOVERY`**) applies to verifier-visible metadata.
+- **`ask_servicenow_sync_owner`:** `evidence_quality` **STRONG** (integration primary owner; previously **WEAK** on `/v1/ask` before `108aabb`).
+- **`ask_broad_correlation`:** `evidence_quality` **STRONG** under the same wiring.
+- **Authority Hardening v1 invariants** remain satisfied in this run (for example **`ask_api_request_routing_owner`**: no `db-files/.../highcharts.js` in export context bundle; **`distractor_count_at_k: 0`**). Historical capture: §6; optional byte diff vs `AUTHORITY_HARDENING_V1` candidate when both files are present locally.
+
+**Regression fingerprint (from artifact):** `actual_summary.retrieval_gates.workspace_identity_hash` → `b9d432fe5fe0f734e2ea6c8c4e5c2f0115502d34736c888c408b9f57a4595b86` (record with SHA when filing issues).
+
+**Rolling local pointer (optional):** `runtime/.run/motadata_behavior_validation.json` may still be overwritten by the latest ad-hoc run; **regression reports should cite the named V3 artifact path + commit above.**
 
 ---
 

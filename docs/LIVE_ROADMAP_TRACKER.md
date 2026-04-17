@@ -863,16 +863,17 @@ Problem: A3 harness latency is truthful but not yet tied to final Wave-2 index/r
   - **Debug usefulness v1.1 (done):** selected-file-grounded `EXPLAIN_DEBUG` guardrails + insufficiency checks landed and passing.
   - **Operational reproducibility (done):** authority index builder now supports smart auto full/incremental refresh with dynamic progress and is integrated into WSL run flow.
   - **Authority Expansion Hardening v1 (done):** Stage A now suppresses noise-class files (including `db-files/*` and `test-plugin-metrics/*`) for code-oriented tasks; WSL candidate diff confirms `ask_api_request_routing_owner` no longer includes `db-files/report-templates/js/highcharts.js` in context bundle and distractor count dropped (`1 -> 0`).
-  - **Next active lane:** tighten weak quality posture for `ask_servicenow_sync_owner` and continue broad-ask quality refinement without destabilizing strict anchored gates.
+  - **Ask v1 evidence quality parity (done; 2026-04-17):** Plan-Gate **`POST /v1/ask`** now supplies grounding + authority into **`assess_evidence_quality`** (m-coder `108aabb`); WSL verification green with **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`** and full scenario suite **`all_pass=true`**.
+  - **Promoted behavior baseline (done):** formal record under **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** — artifact `runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json`, commit `108aabb098017b8c551629c745d71f63acf7`.
 - **Next execution order**:
-  1. Keep retrieval baseline regression-proof via scenario runs and saved report artifacts.
-  2. Improve weak authority-expansion scenarios (`owner_top3` already enforced; pursue stronger owner prominence where safe).
-  3. Continue broad ask quality refinement while preserving owner-top1/owner-top3 anchored behavior.
+  1. Keep retrieval baseline regression-proof via scenario runs; cite **§5** artifact + SHA for regression reports.
+  2. Compare future candidates against the **§5** promotion (and optionally against `AUTHORITY_HARDENING_V1` when both artifacts are available locally).
+  3. Continue optional broad-ask / integration quality tuning only with explicit scope — preserve **§5** invariants.
 - **Current blockers**:
   - No blocker on baseline reproducibility or strict anchored retrieval gates.
-  - Main open product pain is weak/partial quality in broad exploratory and integration-owner asks relative to anchored queries.
+  - Residual product tuning (broader exploratory asks) is **non-blocking** vs the promoted **§5** bar.
 - **Immediate next action**:
-  - Run the next focused authority-quality refinement cycle and compare candidate artifacts against `AUTHORITY_HARDENING_V1`.
+  - **Closed for this lane:** ServiceNow **`/v1/ask`** quality + baseline promotion. **Follow-on:** optional **closure-09** summary + any new chartered retrieval work (see **§1.4 Track RET**).
 
 ### 5.1 Current Focus — Controlled Runtime Loop (Hybrid Model)
 

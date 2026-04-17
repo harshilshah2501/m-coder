@@ -1,7 +1,7 @@
 # PROGRAM_STATE_SNAPSHOT — portable continuity
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE`  
-**Last updated:** 2026-04-16  
+**Last updated:** 2026-04-17  
 **Detail & evidence IDs:** `docs/LIVE_ROADMAP_TRACKER.md` (this file stays short)
 
 ---
@@ -28,19 +28,19 @@
 ## Current active work (high level)
 
 - **Lane discipline:** split workstreams and keep only one active engineering lane at a time.
-- **Retrieval baseline:** anchored authority-gated retrieval is locked as working baseline; broad ask retrieval improved but not final.
-- **Latest closure:** Authority Expansion Hardening v1 is complete on WSL green stack (full scenario suite pass; no anchored/debug regressions).
-- **Active engineering lane:** authority-expansion quality tightening for weak scenarios while keeping strict anchored gates stable.
+- **Retrieval baseline:** anchored authority-gated retrieval is locked as working baseline; formal behavior snapshot promoted (see below).
+- **Latest closure:** **Ask v1 evidence quality parity** (`108aabb`) on **`feat/motadata-behavior-verification-guide`** — **`POST /v1/ask`** passes grounding + authority into **`assess_evidence_quality`**; WSL scenario suite **`all_pass=true`** including **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`**. Promoted artifact + SHA: **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** (`SERVICENOW_QUALITY_V3`, `108aabb098017b8c551629c745d71f63acf7`).
+- **Active engineering lane:** maintain promoted baseline; further retrieval tuning only under explicit charter (avoid silent regression vs §5).
 
 ---
 
 ## Immediate next work (ordered)
 
-1. Keep retrieval baseline frozen with scenario artifacts (`runtime/.run/motadata_behavior_validation.*.json`) as regression truth.
+1. Treat **`runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json`** + m-coder **`108aabb`** as the **named regression pair** alongside **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** (regenerate `runtime/.run/motadata_behavior_validation.json` only as a local convenience, not as the sole citation).
 2. Maintain Authority Expansion Hardening v1 behavior:
    - keep noise-class suppression for code-oriented Stage A (`db-files/*`, `test-plugin-metrics/*`),
    - preserve owner injection (`owner_injected_lane_count >= 1`) on anchored and authority-expansion scenarios.
-3. Tighten weak authority-expansion quality (especially ServiceNow sync owner scenario) without regressing strict anchored gates or debug grounding guarantees.
+3. Optional follow-on: broaden scenario coverage or latency SLO work under **§B1 / L5-RET** — **not** a reopen of the closed **`/v1/ask`** quality gate unless requirements change.
 
 ---
 
