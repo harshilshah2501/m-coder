@@ -163,6 +163,13 @@ def _build_prompt(
     lines.append("## User question")
     lines.append(query)
     lines.append("")
+    lines.append("## Explain/debug contract (must follow)")
+    lines.append("- Ground every claim in the selected snippet or repository context files shown above.")
+    lines.append("- Do not invent symbols, methods, files, or stack behavior not present in provided context.")
+    lines.append("- If selected-file grounding is weak or missing, explicitly say analysis is insufficiently grounded.")
+    lines.append("- Prefer concrete control-flow and method-level clues over generic advice.")
+    lines.append("- Keep confidence limits explicit; avoid definitive root-cause claims without evidence.")
+    lines.append("")
     lines.append(
         "Respond with a single JSON object (no markdown fences) with these exact keys: "
         '"summary" (string), "logic_flow" (string), "likely_bug_risk" (string), '
@@ -252,6 +259,60 @@ def _extract_branch_clues(text: str, cap: int = 2) -> List[str]:
     return uniq
 
 
+def _extract_selection_tokens(selection: str, cap: int = 5) -> List[str]:
+    out: List[str] = []
+    seen = set()
+    blocked = {
+        "if",
+        "for",
+        "while",
+        "return",
+        "def",
+        "class",
+        "self",
+        "this",
+        "null",
+        "true",
+        "false",
+        "new",
+    }
+    for tok in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", selection or ""):
+        t = tok.strip()
+        if len(t) < 3:
+            continue
+        tl = t.lower()
+        if tl in blocked:
+            continue
+        if tl in seen:
+            continue
+        seen.add(tl)
+        out.append(t)
+        if len(out) >= cap:
+            break
+    return out
+
+
+def _selection_linked_clues(text: str, tokens: List[str], cap: int = 2) -> List[str]:
+    if not text or not tokens:
+        return []
+    out: List[str] = []
+    lines = text.splitlines()
+    for tok in tokens:
+        pattern = re.compile(rf"\b{re.escape(tok)}\b", flags=re.IGNORECASE)
+        for line in lines:
+            s = line.strip()
+            if not s or s.startswith("//") or s.startswith("*") or s.startswith("#"):
+                continue
+            if pattern.search(s):
+                snippet = s[:140]
+                if snippet not in out:
+                    out.append(snippet)
+                break
+        if len(out) >= cap:
+            break
+    return out
+
+
 def _ensure_selected_grounding(
     parsed: ExplainDebugResult,
     *,
@@ -289,6 +350,8 @@ def _ensure_selected_grounding(
     methods = _extract_method_clues(item.content or "")
     has_flow = _has_control_flow_cues(item.content or "")
     branches = _extract_branch_clues(item.content or "")
+    sel_tokens = _extract_selection_tokens(selection)
+    token_clues = _selection_linked_clues(item.content or "", sel_tokens)
     minimal_sel = _selection_is_minimal(selection)
 
     summary = parsed.summary or ""
@@ -301,6 +364,8 @@ def _ensure_selected_grounding(
     sel_ref = sel_norm
     if methods:
         sel_ref = f"{sel_norm}:{methods[0]}"
+    elif sel_tokens:
+        sel_ref = f"{sel_norm}:{sel_tokens[0]}"
     if not any(sel_norm.lower() in str(e).lower() or sel_symbol.lower() in str(e).lower() for e in evidence):
         evidence.insert(0, sel_ref)
     elif evidence and not (sel_norm.lower() in str(evidence[0]).lower() or sel_symbol.lower() in str(evidence[0]).lower()):
@@ -317,6 +382,10 @@ def _ensure_selected_grounding(
     if methods and not any(m.lower() in joined for m in methods):
         logic_flow = (logic_flow + " " if logic_flow else "") + (
             "Relevant methods in selected file: " + ", ".join(methods) + "."
+        )
+    if token_clues and not any(c.lower() in joined for c in token_clues):
+        logic_flow = (logic_flow + " " if logic_flow else "") + (
+            "Selection-linked clues in selected file: " + "; ".join(token_clues) + "."
         )
     if branches and not ("branch" in joined or "return" in joined):
         logic_flow = (logic_flow + " " if logic_flow else "") + (

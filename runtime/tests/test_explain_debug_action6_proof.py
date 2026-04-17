@@ -312,6 +312,9 @@ def test_v1_explain_debug_parse_failure_returns_error_in_payload(mock_urlopen: M
 
     assert "error" in resp["explain_debug"]
     assert "JSON" in resp["explain_debug"]["error"] or "json" in resp["explain_debug"]["error"].lower()
+    assert resp["plan_summary"]["steps"]
+    assert "no template steps substituted" in resp["plan_summary"]["steps"][0].lower()
+    assert "unavailable" not in resp["plan_summary"]["steps"][0].lower()
 
 
 # --- Path disclosure contract (closure surface) ---

@@ -47,6 +47,16 @@ class AskV1ClientError(Exception):
         super().__init__(message)
 
 
+def _explain_debug_failure_step(error: str) -> str:
+    err = (error or "").strip()
+    if not err:
+        return "Explain/debug failed; no template steps substituted."
+    low = err.lower()
+    if "unavailable" in low or "timeout" in low or "http" in low:
+        return "Reasoning service unavailable; no template steps substituted."
+    return f"Explain/debug failed ({err}); no template steps substituted."
+
+
 def _load_schema(name: str) -> dict:
     with open(IDE_SCHEMAS / name, encoding="utf-8") as f:
         return json.load(f)
@@ -245,7 +255,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         )
         explain_debug_result = result
         if result.error:
-            plan_steps = ["Reasoning service unavailable; no template steps substituted."]
+            plan_steps = [_explain_debug_failure_step(result.error)]
         else:
             plan_steps = ["Explain/debug analysis completed; see structured output above."]
     else:

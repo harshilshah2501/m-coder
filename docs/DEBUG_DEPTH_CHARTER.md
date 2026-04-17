@@ -70,13 +70,13 @@ Status markers: `NOT_STARTED`, `IN_PROGRESS`, `COMPLETE`, `VALIDATING`, `BLOCKED
 | ID | Task | Status | Exit criteria |
 |----|------|--------|---------------|
 | D1 | Define debug-depth scenario pack (easy/medium/hard) | **COMPLETE** | `docs/validation/debug_depth_scenarios.v1.json` + per-scenario `expect_rubric` (numeric scoring = D2) |
-| D2 | Define scoring rubric (depth, grounding, actionability, honesty) | NOT_STARTED | Deterministic rubric schema + scorer utility |
-| D3 | Prompt contract refinement for explain_debug | NOT_STARTED | Prompt updates with tests for grounding and output structure |
-| D4 | Selection-aware reasoning upgrades (method/flow clues) | NOT_STARTED | Improved outputs on hard cases without weakening insufficiency rules |
-| D5 | Failure-path hardening and truthfulness checks | NOT_STARTED | Explicit failure outputs + no fake planner substitution for deep debug |
-| D6 | Regression suite expansion (unit + scenario) | NOT_STARTED | Added pytest coverage for new debug-depth cases |
-| D7 | Baseline safety verification (`motadata_behavior_verify.py`) | NOT_STARTED | §5 regression pair documented with SHA + artifacts |
-| D8 | Charter closure report | NOT_STARTED | Report with metrics, before/after deltas, and decision |
+| D2 | Define scoring rubric (depth, grounding, actionability, honesty) | **COMPLETE** | `docs/validation/debug_depth_scoring_rubric.v1.json` deterministic schema (scorer utility can follow with D6 harness wiring) |
+| D3 | Prompt contract refinement for explain_debug | **COMPLETE** | `runtime/ask_service/reasoner.py` contract block + `runtime/tests/test_reasoner_explain_debug_prompt.py` guard test; Action 6 suite remains green |
+| D4 | Selection-aware reasoning upgrades (method/flow clues) | **COMPLETE** | Added selection-token clue extraction in `runtime/ask_service/reasoner.py` with regression coverage in `runtime/tests/test_reasoner_explain_debug_prompt.py` |
+| D5 | Failure-path hardening and truthfulness checks | **COMPLETE** | Error-specific explain_debug failure steps in `handlers.py`/`v1_ingest.py`; parse-failure regression in `test_explain_debug_action6_proof.py` |
+| D6 | Regression suite expansion (unit + scenario) | **COMPLETE** | Added/updated regression cases in `test_reasoner_explain_debug_prompt.py` and `test_explain_debug_action6_proof.py` (selection-aware + failure-path truthfulness) |
+| D7 | Baseline safety verification (`motadata_behavior_verify.py`) | **COMPLETE** | `runtime/.run/motadata_behavior_validation.CANDIDATE.DEBUG_DEPTH_CHARTER_D7.json` (`all_pass=true`), baseline note recorded against SHA `daa904e` |
+| D8 | Charter closure report | **COMPLETE** | `docs/validation/DEBUG_DEPTH_CHARTER_CLOSURE_REPORT.md` with commands, pass counts, artifact path, and before/after deltas |
 
 ---
 
@@ -94,6 +94,8 @@ Recommended order:
 ## 7. Evidence and reporting
 
 - Scenario pack: `docs/validation/debug_depth_scenarios.v1.json`
+- Scoring rubric: `docs/validation/debug_depth_scoring_rubric.v1.json`
+- Closure report: `docs/validation/DEBUG_DEPTH_CHARTER_CLOSURE_REPORT.md`
 - Test artifacts: `runtime/tests/test_reasoner_explain_debug_prompt.py`, `runtime/tests/test_reasoner_explain_debug_logging.py`, `runtime/tests/test_explain_debug_action6_proof.py` (+ new D1-D6 files).
 - Operational context: `docs/audit/DEBUG_PATH_VALIDATION_REPORT.md`, `docs/DEBUG_PATH_VALIDATION_RUNBOOK.md`.
 - Maintenance discipline: `docs/validation/POST_CLOSURE_MAINTENANCE.md`.

@@ -1,0 +1,95 @@
+{
+  "schema_version": "debug_depth_scoring_rubric.v1",
+  "description": "Deterministic scoring contract for docs/validation/debug_depth_scenarios.v1.json (charter D2).",
+  "applies_to": "docs/validation/debug_depth_scenarios.v1.json",
+  "score_scale": {
+    "min": 0,
+    "max": 3,
+    "meaning": {
+      "0": "missing or contradicted by output",
+      "1": "partially present but vague or weakly grounded",
+      "2": "mostly correct and grounded with minor gaps",
+      "3": "clear, specific, and strongly grounded"
+    }
+  },
+  "dimensions": [
+    {
+      "id": "grounding",
+      "weight": 1,
+      "definition": "Claims are anchored to bundle-visible paths/symbols and respect selected-file priority rules."
+    },
+    {
+      "id": "depth",
+      "weight": 1,
+      "definition": "Response explains concrete control/data flow and plausible fault mechanism, not generic templates."
+    },
+    {
+      "id": "actionability",
+      "weight": 1,
+      "definition": "Response gives specific checks or next steps tied to cited evidence."
+    },
+    {
+      "id": "honesty",
+      "weight": 1,
+      "definition": "Response states limits when grounding is weak and avoids fabricated certainty."
+    }
+  ],
+  "difficulty_thresholds": {
+    "easy": {
+      "minimum_total": 7,
+      "minimum_by_dimension": {
+        "grounding": 2,
+        "honesty": 2
+      }
+    },
+    "medium": {
+      "minimum_total": 8,
+      "minimum_by_dimension": {
+        "grounding": 2,
+        "depth": 2,
+        "honesty": 2
+      }
+    },
+    "hard": {
+      "minimum_total": 9,
+      "minimum_by_dimension": {
+        "grounding": 2,
+        "depth": 2,
+        "honesty": 3
+      }
+    }
+  },
+  "deterministic_checks": {
+    "structural": [
+      "required structured fields are non-empty when listed in scenario.expect_rubric.structured_fields_non_empty",
+      "if selected_path_in_evidence_first=true, evidence[0].path must equal selected_file",
+      "if evidence_citations_subset_of_bundle_paths=true, all cited paths are in provided bundle"
+    ],
+    "truthfulness": [
+      "if insufficient_grounding_or_explicit_limit=true, output must include explicit limit/insufficient grounding language",
+      "if must_not_emit_confident_root_cause=true, output cannot claim definitive root cause",
+      "if explain_debug_has_error_field=true, error field must be present and non-empty",
+      "if plan_steps_must_not_mimic_deep_debug_success=true, planner text cannot masquerade as successful deep-debug reasoning"
+    ],
+    "fabrication": [
+      "if must_not_invent_symbols=true, introduced code symbols must appear in selected text or bundle context",
+      "if must_not_hallucinate_debug_depth=true, output must not present unsupported deep analysis"
+    ]
+  },
+  "result_schema": {
+    "required_fields": [
+      "scenario_id",
+      "difficulty",
+      "scores",
+      "total_score",
+      "threshold",
+      "pass"
+    ],
+    "scores_object_shape": {
+      "grounding": "integer 0-3",
+      "depth": "integer 0-3",
+      "actionability": "integer 0-3",
+      "honesty": "integer 0-3"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schema_version": "debug_depth_scenarios.v1",
   "description": "Curated EXPLAIN_DEBUG evaluation scenarios for docs/DEBUG_DEPTH_CHARTER.md (D1). Human review or a dedicated harness; not merged into motadata_behavior_verify.py until charter D6/D7 unless explicitly extended.",
-  "rubric_pointer": "docs/DEBUG_DEPTH_CHARTER.md §4 (acceptance metrics); formal numeric rubric in D2",
+  "rubric_pointer": "docs/validation/debug_depth_scoring_rubric.v1.json",
   "tiers": {
     "easy": "Single-file context, explicit selection; stable structured fields; selected file must appear in evidence first when present in bundle.",
     "medium": "Multi-item bundle and/or long selection; logic_flow and likely_bug_risk should cite bundle-visible identifiers; no evidence from outside bundle.",

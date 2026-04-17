@@ -68,6 +68,20 @@ def test_build_prompt_long_selection_omits_minimal_block():
     assert "Instructions for minimal" not in p
 
 
+def test_build_prompt_includes_explain_debug_contract_guards():
+    b = _bundle_two_files()
+    p = _build_prompt(
+        "How does this fail?",
+        "motadata/src/AgentCacheManager.java",
+        "getAgentCacheFileChunks()",
+        b,
+    )
+    assert "Explain/debug contract (must follow)" in p
+    assert "Do not invent symbols, methods, files" in p
+    assert "insufficiently grounded" in p
+    assert "avoid definitive root-cause claims without evidence" in p
+
+
 def test_ensure_selected_grounding_adds_selected_file_evidence_first():
     b = _bundle_two_files()
     parsed = ExplainDebugResult(
@@ -99,6 +113,40 @@ def test_ensure_selected_grounding_returns_insufficient_when_selected_missing():
     assert out.error is None
     assert "insufficiently grounded" in out.summary.lower()
     assert any("missing_in_context" in e for e in out.evidence)
+
+
+def test_ensure_selected_grounding_uses_selection_tokens_when_methods_absent():
+    b = ContextBundle(
+        task_id="t2",
+        revision="r2",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="app/handler.py",
+                content="cache_value = cache.get(key)\nreturn cache_value\n",
+                byte_size=64,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(summary="Potential cache issue.", evidence=[])
+    out = _ensure_selected_grounding(
+        parsed,
+        selected_file="app/handler.py",
+        selection="cache.get(key)",
+        bundle=b,
+    )
+    assert out.error is None
+    assert out.evidence
+    assert "app/handler.py:cache" in out.evidence[0]
+    assert "selection-linked clues" in (out.logic_flow or "").lower()
 
 
 def test_extract_method_clues_ignores_constructor_calls_and_prefers_declarations():
