@@ -1,0 +1,32 @@
+{
+  "navigation": [
+    {
+      "title": "Home",
+      "path": "docs/README"
+    },
+    {
+      "title": "Architecture",
+      "path": "docs/ARCHITECTURE_4_LAYER"
+    },
+    {
+      "title": "Guides",
+      "path": "docs/guides/ORCHESTRATOR_GUIDE"
+    },
+    {
+      "title": "Reference",
+      "path": "docs/reference/DIRECTORY_STRUCTURE_ANALYSIS"
+    },
+    {
+      "title": "Runtime",
+      "path": "docs/runtime/README"
+    },
+    {
+      "title": "Validation",
+      "path": "docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE"
+    },
+    {
+      "title": "Troubleshooting",
+      "path": "docs/troubleshooting/DEBUGGING_GUIDE"
+    }
+  ]
+}
