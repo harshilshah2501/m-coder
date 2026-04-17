@@ -10,6 +10,7 @@ import urllib.error
 import urllib.request
 from copy import deepcopy
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -18,6 +19,7 @@ from runtime.ask_service.v1_ingest import (
     handle_ask_v1_request,
     validate_ask_v1_request,
 )
+from runtime.ask_service.reasoner import ExplainDebugResult
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _GOLDEN_EVIDENCE = _REPO_ROOT / "runtime" / "layer5" / "evidence" / "golden" / "evidence_bundle.v1.masked.json"
@@ -47,6 +49,47 @@ def test_validate_ask_v1_request_rejects_wrong_schema_version():
     assert errs
 
 
+def test_validate_ask_v1_request_rejects_malformed_dirty_buffers():
+    data = _minimal_v1_ask(
+        _load_golden_evidence(),
+        client_context={"dirty_buffers": [{"path": "src/main.py"}]},  # missing required content
+    )
+    errs = validate_ask_v1_request(data)
+    assert errs
+
+
+def test_validate_ask_v1_request_accepts_valid_dirty_buffers():
+    data = _minimal_v1_ask(
+        _load_golden_evidence(),
+        client_context={
+            "dirty_buffers": [
+                {"path": "src/main.py", "content": "def main():\n    return 1\n"},
+            ]
+        },
+    )
+    errs = validate_ask_v1_request(data)
+    assert not errs
+
+
+def test_handle_ask_v1_dirty_buffer_noop_invalid_entries_are_noted():
+    ev = _load_golden_evidence()
+    req = _minimal_v1_ask(
+        ev,
+        request_id="req-v1-dirty-note",
+        client_context={
+            "dirty_buffers": [
+                {"path": "module/sample.py", "bad": "missing content"},
+            ]
+        },
+    )
+    resp = handle_ask_v1_request(req)
+    dbo = (resp.get("metadata") or {}).get("dirty_buffer_overlay") or {}
+    assert dbo.get("payload_present") is True
+    assert int(dbo.get("invalid_count") or 0) >= 1
+    notes = (resp.get("plan_summary") or {}).get("notes") or []
+    assert any("dirty buffer overlay payload contained invalid entries" in str(n).lower() for n in notes)
+
+
 def test_handle_ask_v1_happy_path_plan_only():
     ev = _load_golden_evidence()
     req = _minimal_v1_ask(ev, revision="client-sha-1")
@@ -69,6 +112,34 @@ def test_handle_ask_v1_happy_path_plan_only():
     assert cr.get("no_repo_filesystem") is True
     steps = resp["plan_summary"]["steps"]
     assert len(steps) >= 1
+
+
+def test_handle_ask_v1_dirty_buffer_overlay_reaches_reasoner_bundle():
+    ev = _load_golden_evidence()
+    first_path = str((ev.get("entries") or [])[0].get("relative_path") or "")
+    req = _minimal_v1_ask(
+        ev,
+        request_id="req-v1-overlay-1",
+        query="Explain highlighted code",
+        task_type="EXPLAIN_DEBUG",
+        selected_file=first_path,
+        client_context={
+            "selection": "return 99",
+            "dirty_buffers": [
+                {"path": first_path, "content": "def injected():\n    return 99  # V1_DIRTY_OVERLAY_TOKEN\n"}
+            ],
+        },
+    )
+    with patch("runtime.ask_service.v1_ingest.explain_debug") as mock_explain:
+        mock_explain.return_value = ExplainDebugResult(summary="ok")
+        resp = handle_ask_v1_request(req)
+
+    assert resp.get("routing_mode") == "explain_debug"
+    mock_explain.assert_called_once()
+    bundle = mock_explain.call_args.kwargs["bundle"]
+    item = next((x for x in bundle.items if x.path == first_path), None)
+    assert item is not None
+    assert "V1_DIRTY_OVERLAY_TOKEN" in item.content
 
 
 def test_handle_ask_v1_evidence_schema_invalid():

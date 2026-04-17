@@ -28,6 +28,7 @@ from runtime.context.manifest_builder import ManifestBuilder
 from runtime.context.manifest_models import IngestionConfig
 from runtime.layer5.retrieval.quality_gate import NO_MATCH, WEAK, assess_evidence_quality
 
+from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
 from .evidence_bridge import resolve_workspace_input_path, try_build_layer5_evidence
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
@@ -111,6 +112,7 @@ def handle_ask_request(ask_request: dict) -> dict:
     selected_file = ask_request.get("selected_file")
     client_context = ask_request.get("client_context") or {}
     selection = (client_context.get("selection") or "").strip() if isinstance(client_context, dict) else ""
+    dirty_buffers, dirty_buffer_parse = extract_dirty_buffers(client_context)
 
     evidence_first = bool(ask_request.get("evidence_first"))
 
@@ -210,6 +212,16 @@ def handle_ask_request(ask_request: dict) -> dict:
                 routing_mode="plan_only",
             )
 
+    bundle, overlay_meta = apply_dirty_buffer_overlay(bundle, dirty_buffers)
+    if dirty_buffer_parse.get("invalid_count", 0) > 0:
+        repo_aware_notes.append(
+            "Dirty buffer overlay payload contained invalid entries; ignored malformed items and kept deterministic fallback behavior."
+        )
+    if dirty_buffer_parse.get("payload_present") and not overlay_meta.get("used"):
+        repo_aware_notes.append(
+            "Dirty buffer overlay payload was provided but no matching bundle paths were overlaid."
+        )
+
     grounding_evidence = None
     if evidence_bundle_dict and isinstance(evidence_bundle_dict.get("entries"), list):
         grounding_evidence = []
@@ -254,6 +266,13 @@ def handle_ask_request(ask_request: dict) -> dict:
         "quality_reasons": list(quality.quality_reasons),
         "dominance_metrics": quality.dominance_metrics,
         "policy_version": quality.policy_version,
+        "dirty_buffer_overlay": {
+            **overlay_meta,
+            "payload_present": bool(dirty_buffer_parse.get("payload_present")),
+            "provided_count": int(dirty_buffer_parse.get("provided_count", 0)),
+            "invalid_count": int(dirty_buffer_parse.get("invalid_count", 0)),
+            "valid_count": int(dirty_buffer_parse.get("valid_count", 0)),
+        },
     }
     if authority_resolution:
         metadata["authority_resolution_present"] = True

@@ -36,7 +36,7 @@
 
 ## Immediate next work (this week)
 
-**Single entry point:** **`docs/validation/POST_CLOSURE_MAINTENANCE.md`** — operational lock on **`motadata_behavior_verify.py`** (same workspace, scenarios, policy, Stage A); save **`CANDIDATE.*.json`** when tuning; cite **§5** + SHA for regressions; **closure todos 01–09 are done** — this file is the **post-closure / optional-charter** checklist, not open MVP gates; **no architecture churn** by default; next big moves → **explicit charter** (tracker **§1.4**: debug depth **CHARTER-TBD**, **§B1 / L5-RET** with §5 guardrails).
+**Single entry point:** **`docs/validation/POST_CLOSURE_MAINTENANCE.md`** — operational lock on **`motadata_behavior_verify.py`** (same workspace, scenarios, policy, Stage A); save **`CANDIDATE.*.json`** when tuning; cite **§5** + SHA for regressions; **closure todos 01–09 are done** — this file is the **post-closure / optional-charter** checklist, not open MVP gates; **no architecture churn** by default; next big moves → **explicit charter** (tracker **§1.4**: debug depth `DEBUG-DEPTH-CHARTER-V1`, dirty buffer `L57-DIRTY-BUFFER-CHARTER-V1`, **§B1 / L5-RET** with §5 guardrails).
 
 **Regression pair (formal):** **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** + named artifact + m-coder SHA **`108aabb098017b8c551629c745d71f63acf7`** (local copy often under `runtime/.run/`).
 

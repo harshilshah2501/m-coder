@@ -42,7 +42,33 @@
     "client_context": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Optional IDE context e.g. selection text when task_type is EXPLAIN_DEBUG."
+      "description": "Optional IDE context. Supports selection text and optional dirty buffer overlay payload for L5.7.",
+      "properties": {
+        "selection": {
+          "type": "string",
+          "description": "Editor-highlighted text for EXPLAIN_DEBUG."
+        },
+        "dirty_buffers": {
+          "type": "array",
+          "description": "Unsaved editor buffers eligible for deterministic overlay during Ask/Debug context assembly.",
+          "items": {
+            "type": "object",
+            "required": ["path", "content"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Workspace-relative file path for the unsaved buffer."
+              },
+              "content": {
+                "type": "string",
+                "description": "Full current unsaved content for the file path."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
     },
     "task_type": {
       "type": "string",

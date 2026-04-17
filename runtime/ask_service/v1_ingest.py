@@ -26,6 +26,7 @@ from runtime.layer5.retrieval.quality_gate import (
     operator_hints_for_assessment,
 )
 
+from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
 from .planner import PlanOnlyPlanner
@@ -155,6 +156,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     revision = str(ask_request.get("revision") or "").strip() or "evidence_bundle.v1"
     task_id = request_id or "ask-v1-task"
     bundle = context_bundle_from_evidence_dict(evidence_bundle, task_id=task_id, revision=revision)
+    client_context = ask_request.get("client_context") or {}
+    dirty_buffers, dirty_buffer_parse = extract_dirty_buffers(client_context)
+    bundle, overlay_meta = apply_dirty_buffer_overlay(bundle, dirty_buffers)
 
     ar_dict = evidence_bundle.get("authority_resolution")
     authority_resolution = ar_dict if isinstance(ar_dict, dict) else None
@@ -194,6 +198,13 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         "policy_version": quality.policy_version,
         "operator_hints": list(operator_hints_for_assessment(quality)),
         "usefulness_metrics": bundle_usefulness_metrics(entries_list),
+        "dirty_buffer_overlay": {
+            **overlay_meta,
+            "payload_present": bool(dirty_buffer_parse.get("payload_present")),
+            "provided_count": int(dirty_buffer_parse.get("provided_count", 0)),
+            "invalid_count": int(dirty_buffer_parse.get("invalid_count", 0)),
+            "valid_count": int(dirty_buffer_parse.get("valid_count", 0)),
+        },
     }
     if authority_resolution:
         metadata["authority_resolution_present"] = True
@@ -201,7 +212,6 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
 
     selected_file = ask_request.get("selected_file")
-    client_context = ask_request.get("client_context") or {}
     selection = (
         (client_context.get("selection") or "").strip()
         if isinstance(client_context, dict)
@@ -243,6 +253,14 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
     weak_notes: List[str] = []
+    if dirty_buffer_parse.get("invalid_count", 0) > 0:
+        weak_notes.append(
+            "Dirty buffer overlay payload contained invalid entries; ignored malformed items and kept deterministic fallback behavior."
+        )
+    if dirty_buffer_parse.get("payload_present") and not overlay_meta.get("used"):
+        weak_notes.append(
+            "Dirty buffer overlay payload was provided but no matching bundle paths were overlaid."
+        )
 
     if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
         result = explain_debug(

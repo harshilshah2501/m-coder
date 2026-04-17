@@ -149,6 +149,39 @@ def test_ensure_selected_grounding_uses_selection_tokens_when_methods_absent():
     assert "selection-linked clues" in (out.logic_flow or "").lower()
 
 
+def test_ensure_selected_grounding_uses_current_bundle_content_for_method_clues():
+    b = ContextBundle(
+        task_id="t3",
+        revision="r3",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="src/main.py",
+                content="def overlay_hotfix():\n    return 99\n",
+                byte_size=48,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(summary="Potential issue.", evidence=[])
+    out = _ensure_selected_grounding(
+        parsed,
+        selected_file="src/main.py",
+        selection="overlay_hotfix()",
+        bundle=b,
+    )
+    assert out.error is None
+    assert out.evidence
+    assert "src/main.py:overlay_hotfix" in out.evidence[0]
+
+
 def test_extract_method_clues_ignores_constructor_calls_and_prefers_declarations():
     text = """
 public class AvailabilityCorrelationEngine {

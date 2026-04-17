@@ -46,7 +46,7 @@ Full stack setup: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
 ## 3. No architecture churn (default)
 
 - Do **not** add parallel retrieval stacks, new authority sources, or ambiguous Ask routes without **explicit charter** + §5 regression proof.
-- **Optional** next-phase work is tracked under **`docs/LIVE_ROADMAP_TRACKER.md` §1.4** (e.g. debug depth charter `docs/DEBUG_DEPTH_CHARTER.md`, **§B1 / L5-RET** with §5 guardrails).
+- **Optional** next-phase work is tracked under **`docs/LIVE_ROADMAP_TRACKER.md` §1.4** (e.g. debug depth charter `docs/DEBUG_DEPTH_CHARTER.md`, dirty-buffer charter `docs/L5_7_DIRTY_BUFFER_CHARTER.md`, **§B1 / L5-RET** with §5 guardrails).
 
 ---
 
@@ -55,6 +55,7 @@ Full stack setup: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
 | Topic | Pointer |
 |--------|---------|
 | Debug depth / richer **`explain_debug`** / vLLM | `docs/DEBUG_DEPTH_CHARTER.md` (tracker §1.4 row `DEBUG-DEPTH-CHARTER-V1`) |
+| Dirty buffer / live overlay | `docs/L5_7_DIRTY_BUFFER_CHARTER.md` (tracker §1.4 row `L57-DIRTY-BUFFER-CHARTER-V1`) |
 | Broader exploratory asks / L5-RET | Tracker **§1.4** — metrics + **§5** guardrails |
 | Baseline promotion / artifact naming | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` |
 
@@ -65,5 +66,6 @@ Full stack setup: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
 - `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` — what closed and evidence pointers  
 - `docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 — promoted baseline  
 - `docs/DEBUG_DEPTH_CHARTER.md` — active debug depth charter and live subtask checklist  
+- `docs/L5_7_DIRTY_BUFFER_CHARTER.md` — active L5.7 dirty-buffer charter and live subtask checklist  
 - `docs/PROGRAM_STATE_SNAPSHOT.md` — short program snapshot  
 - `docs/SYSTEM_TRUTH.md` — canonical contradictions / invariants  

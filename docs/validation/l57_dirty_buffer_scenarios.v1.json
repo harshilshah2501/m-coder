@@ -1,0 +1,69 @@
+{
+  "schema_version": "l57_dirty_buffer_scenarios.v1",
+  "description": "Curated L5.7 dirty-buffer overlay scenarios for docs/L5_7_DIRTY_BUFFER_CHARTER.md. For unit/scenario harness work during D1-D6.",
+  "charter_pointer": "docs/L5_7_DIRTY_BUFFER_CHARTER.md",
+  "scenarios": [
+    {
+      "id": "l57_01_selected_file_overlay_wins",
+      "difficulty": "core",
+      "capability": "ask_debug_overlay",
+      "description": "Selected file has unsaved editor text that differs from disk; effective evidence for selected path must reflect overlay text.",
+      "expect": {
+        "overlay_used": true,
+        "selected_path_effective_source": "dirty_buffer",
+        "must_not_use_disk_text_for_selected_path": true
+      }
+    },
+    {
+      "id": "l57_02_no_overlay_baseline_parity",
+      "difficulty": "core",
+      "capability": "ask_debug_overlay",
+      "description": "No dirty-buffer payload provided; behavior should match existing disk-only path.",
+      "expect": {
+        "overlay_used": false,
+        "baseline_parity": true
+      }
+    },
+    {
+      "id": "l57_03_malformed_overlay_fails_safe",
+      "difficulty": "core",
+      "capability": "ask_debug_overlay",
+      "description": "Malformed dirty-buffer entry is ignored safely; response metadata records fallback/no-op behavior.",
+      "expect": {
+        "overlay_used": false,
+        "explicit_overlay_note_present": true,
+        "must_not_throw_request_error": true
+      }
+    },
+    {
+      "id": "l57_04_non_selected_overlay_supporting_file",
+      "difficulty": "extended",
+      "capability": "ask_overlay",
+      "description": "Dirty content exists only for a supporting file; selected file still from disk, supporting evidence path from overlay.",
+      "expect": {
+        "overlay_used": true,
+        "overlay_affected_paths_count_min": 1,
+        "selected_path_effective_source": "disk"
+      }
+    },
+    {
+      "id": "l57_05_selected_path_not_in_bundle",
+      "difficulty": "extended",
+      "capability": "explain_debug_overlay",
+      "description": "Selected file has overlay payload but is absent from evidence bundle; explain_debug must remain truthful about grounding.",
+      "expect": {
+        "insufficient_grounding_or_explicit_limit": true,
+        "must_not_emit_confident_root_cause": true
+      }
+    },
+    {
+      "id": "l57_06_deterministic_repeat_signature",
+      "difficulty": "validation",
+      "capability": "ask_overlay",
+      "description": "Same dirty-buffer payload and workspace state produce stable evidence/output signature across repeated runs.",
+      "expect": {
+        "deterministic_repeat": true
+      }
+    }
+  ]
+}

@@ -9,10 +9,12 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
-from runtime.ask_service.handlers import handle_ask_request
+from runtime.ask_service.handlers import handle_ask_request, validate_ask_request
+from runtime.ask_service.reasoner import ExplainDebugResult
 
 # Repo root for subprocess cwd (so "runtime" package resolves)
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -92,6 +94,43 @@ def test_handle_ask_request_explain_debug_uses_reasoner_and_returns_structured(t
         assert "summary" in explain_debug or "logic_flow" in explain_debug
     assert "plan_summary" in response
     assert len(response["plan_summary"]["steps"]) >= 1
+
+
+def test_handle_ask_request_dirty_buffer_overlay_reaches_reasoner_bundle(tmp_path):
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "src").mkdir()
+    src_file = repo_root / "src" / "main.py"
+    src_file.write_text("def main():\n    return 42\n", encoding="utf-8")
+
+    ask_request = {
+        "schema_version": "ask_request.v0.1",
+        "request_id": "req-overlay-1",
+        "timestamp_utc": "2026-03-10T12:00:00Z",
+        "repo_root": str(repo_root),
+        "revision": "abc123",
+        "query": "Explain highlighted code in main.",
+        "task_type": "EXPLAIN_DEBUG",
+        "selected_file": "src/main.py",
+        "client_context": {
+            "selection": "return 99",
+            "dirty_buffers": [
+                {"path": "src/main.py", "content": "def main():\n    return 99  # DIRTY_OVERLAY_TOKEN\n"}
+            ],
+        },
+    }
+
+    with patch("runtime.ask_service.handlers.explain_debug") as mock_explain:
+        mock_explain.return_value = ExplainDebugResult(summary="ok")
+        response = handle_ask_request(ask_request)
+
+    assert response.get("routing_mode") == "explain_debug"
+    mock_explain.assert_called_once()
+    call_kwargs = mock_explain.call_args.kwargs
+    bundle = call_kwargs["bundle"]
+    item = next((x for x in bundle.items if x.path == "src/main.py"), None)
+    assert item is not None
+    assert "DIRTY_OVERLAY_TOKEN" in item.content
 
 
 def test_repo_root_fallback_when_request_path_invalid(tmp_path, monkeypatch):
@@ -274,6 +313,64 @@ def test_handle_ask_request_evidence_first_returns_layer5_bundle(tmp_path):
     assert meta.get("used_layer5") is True
     entries = eb.get("entries") or []
     assert len(entries) >= 1
+
+
+def test_validate_ask_request_rejects_malformed_dirty_buffers():
+    data = {
+        "schema_version": "ask_request.v0.1",
+        "request_id": "req-dirty-invalid",
+        "timestamp_utc": "2026-04-18T12:00:00Z",
+        "repo_root": "/tmp/repo",
+        "revision": "abc123",
+        "query": "hello",
+        "client_context": {
+            "dirty_buffers": [{"path": "src/main.py"}],  # missing required content
+        },
+    }
+    errs = validate_ask_request(data)
+    assert errs
+
+
+def test_validate_ask_request_accepts_valid_dirty_buffers():
+    data = {
+        "schema_version": "ask_request.v0.1",
+        "request_id": "req-dirty-valid",
+        "timestamp_utc": "2026-04-18T12:00:00Z",
+        "repo_root": "/tmp/repo",
+        "revision": "abc123",
+        "query": "hello",
+        "client_context": {
+            "dirty_buffers": [
+                {"path": "src/main.py", "content": "def main():\n    return 1\n"},
+            ],
+        },
+    }
+    errs = validate_ask_request(data)
+    assert not errs
+
+
+def test_handle_ask_request_dirty_buffer_malformed_entries_are_noted(tmp_path):
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "src").mkdir()
+    (repo_root / "src" / "main.py").write_text("def main():\n    return 42\n", encoding="utf-8")
+    ask_request = {
+        "schema_version": "ask_request.v0.1",
+        "request_id": "req-dirty-note-v0",
+        "timestamp_utc": "2026-04-18T12:00:00Z",
+        "repo_root": str(repo_root),
+        "revision": "abc123",
+        "query": "Explain main",
+        "client_context": {
+            "dirty_buffers": [{"path": "src/main.py", "bad": "missing content"}],
+        },
+    }
+    resp = handle_ask_request(ask_request)
+    dbo = (resp.get("metadata") or {}).get("dirty_buffer_overlay") or {}
+    assert dbo.get("payload_present") is True
+    assert int(dbo.get("invalid_count") or 0) >= 1
+    notes = (resp.get("plan_summary") or {}).get("notes") or []
+    assert any("dirty buffer overlay payload contained invalid entries" in str(n).lower() for n in notes)
 
 
 def test_ask_same_repo_same_query_same_bundle(tmp_path):
