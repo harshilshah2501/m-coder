@@ -1,7 +1,7 @@
 # PROGRAM_STATE_SNAPSHOT — portable continuity
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE`  
-**Last updated:** 2026-04-18  
+**Last updated:** 2026-04-17  
 **Detail & evidence IDs:** `docs/LIVE_ROADMAP_TRACKER.md` (this file stays short)
 
 ---
