@@ -22,7 +22,7 @@
 | **Authority Expansion Hardening v1** | Stage A noise suppression; API routing scenario — §5 |
 | **Ask v1 evidence quality parity** | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
 | **Behavior baseline promotion** | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
-| **Layer-1 / L2 / L4 milestone tables (declared rows)** | LOCKED or COMPLETE per §4.1–§4.4 |
+| **Layer-1 / L2 / L4 milestone tables (declared rows)** | **LOCKED** or **COMPLETE** per §2.1; layer rollups per §2.1.1; details §4.1–§4.4 |
 | **M3.0–M3.11** | **COMPLETE on main** — §4.3.1 |
 | **M4.1–M4.6** | **COMPLETE on main** — §4.4 |
 | **L5.0–L5.6, L5.8 harness, L5.9** | Per §4.5 table (harness closure + Action 11) |
@@ -54,11 +54,11 @@
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
 - **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization. **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) and **optional charters** (§1.4: debug depth **CHARTER-TBD**, §B1/L5-RET with §5 guardrails).
 - **Overall status summary**:  
-  - Layer-1 governance doctrine is **LOCKED**.  
-  - Layer-2 ML compilation is **COMPLETE / LOCKED** (Stage-6C cure, deterministic CONF, release verification PASS).  
-  - **Layer-3 M3.0–M3.11 are COMPLETE on main.** **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) is validated for truthful outcomes in the closed MVP slice.  
-  - **Layer-4 M4.1–M4.6 are COMPLETE on main** (merged 2026-03-15; see docs/reports/M4X_MAIN_MERGE_COMPLETION.md).
-  - **Layer-5 — Wave-1 (A1/A2/A3) COMPLETE**; **Wave-2 (A4/A5/A6) COMPLETE** — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen. **Wave-3 (A7/A8) COMPLETE** — plugin evidence-first + Plan-Gate `**POST /v1/ask`**. **Packaging slice COMPLETE** — installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Product Authority + Code Understanding v1 — Phases 1–5 COMPLETE** (registry → index → ranking → Plan-Gate anchoring + eval → authority → action reasoning bridge). **L5.8 — harness + closure gate:** **COMPLETE** (see **B2**; **§4.5** milestone row). **B1/B3/B4/B5/B7:** **CLOSED**. **Action 14 final acceptance:** **PASS**. Production gates are closed; this tracker now records post-acceptance continuity.
+  - **Layer-1** — **LOCKED** (governance doctrine).  
+  - **Layer-2** — **LOCKED** (ML compilation: Stage-6C cure, deterministic CONF, release verification PASS).  
+  - **Layer-3** — **COMPLETE** (M3.0–M3.11 on `main`). **M3.12** narrow repo-aware manifest slice **merged on L5 branch** (not necessarily on `main`). **M3.13–M3.18** follow-on. **Governed execute** (`POST /v0/execute`) is validated for truthful outcomes in the closed MVP slice.  
+  - **Layer-4** — **COMPLETE** (M4.1–M4.6 + Track-C on `main`; merged 2026-03-15; see `docs/reports/M4X_MAIN_MERGE_COMPLETION.md`).
+  - **Layer-5** — **CLOSED** (MVP slice). Waves A1–A8 and packaging slice delivered — deterministic index, lexical retrieval, evidence `layer5.evidence_bundle.v1` frozen; plugin evidence-first + Plan-Gate **`POST /v1/ask`**; installable `**packaging/motadata-context-layer`** wheel + `**runtime/context_layer_service**` HTTP API (**no m-coder checkout required on WSL**). **Product Authority + Code Understanding v1 — Phases 1–5 COMPLETE** (registry → index → ranking → Plan-Gate anchoring + eval → authority → action reasoning bridge). **L5.8 — harness + closure gate:** **COMPLETE** (see **B2**; **§4.5** milestone row). **B1/B3/B4/B5/B7:** **CLOSED**. **Action 14 final acceptance:** **PASS**. Production gates are closed; this tracker now records post-acceptance continuity.
 
 ### What is NOT included yet
 
@@ -192,7 +192,7 @@ All production gates are now **closed** for the MVP vertical slice:
 
 ### Retrieval
 - Deterministic lexical + symbol retrieval foundation is materially strengthened
-- **PR-6 true-positive debug retrieval baseline is COMPLETE / LOCKED** on real Motadata repo:
+- **PR-6** true-positive debug retrieval baseline is **LOCKED** on real Motadata repo:
   - Top-1 accuracy: **10/10**
   - Top-3 anchor hit: **10/10**
   - Mean first relevant rank: **1.00**
@@ -392,7 +392,7 @@ System is considered production-grade only if:
 
 ### 2.1 Status markers
 
-**Color coding** (in tables below): **green** = done (COMPLETE / LOCKED) · **orange** = active (IN_PROGRESS / VALIDATING) · **gray** = not started (NOT_STARTED) · **red** = blocked (BLOCKED). Renders in GitHub and most Markdown viewers.
+**Color coding** (in tables below): **green** = done (**LOCKED** or **COMPLETE** per §2.1) · **orange** = active (IN_PROGRESS / VALIDATING) · **gray** = not started (NOT_STARTED) · **red** = blocked (BLOCKED). Layer-level rollups use §2.1.1. Renders in GitHub and most Markdown viewers.
 
 
 | Status          | Meaning                                                              |
@@ -404,6 +404,19 @@ System is considered production-grade only if:
 | **COMPLETE**    | Implementation done; exit criteria met, but not doctrinally locked   |
 | **LOCKED**      | Completed and ratified; further changes require explicit governance  |
 
+### 2.1.1 Layer rollup status (canonical)
+
+Use **only** these patterns when stating **layer-level** status (§1 Header, §3 Executive snapshot, root `README.md`, `docs/PROGRAM_STATE_SNAPSHOT.md`). Do not use legacy synonyms for whole layers (e.g. “complete / locked” for Layer-2 — use **LOCKED**).
+
+| Layer | Canonical rollup | Meaning |
+| ----- | ---------------- | ------- |
+| **Layer-1** | **LOCKED** | Governance / doctrine ratified; changes require GREG. |
+| **Layer-2** | **LOCKED** | ML compilation (Stages 1–8) finished and frozen under release verification. |
+| **Layer-3** | **COMPLETE** (M3.0–M3.11 on `main`) | Core runtime milestones done; M3.12+ remain in §4.3.1. |
+| **Layer-4** | **COMPLETE** (M4.1–M4.6 + Track-C on `main`) | Observation milestones and Track-C closure delivered. |
+| **Layer-5** | **CLOSED** (MVP slice) | MVP vertical slice accepted; follow-on work (e.g. L5.7, §B1) stays in §4.5 and §0. |
+
+**§4.x milestone rows** still use **COMPLETE**, **LOCKED**, **NOT_STARTED**, etc. from the table above (including **LOCKED** per stage or milestone). **CLOSED** is reserved for **program tracks** (B1–B7), **Action 14**, and the **Layer-5 MVP slice** rollup.
 
 ### 2.2 Priority markers
 
@@ -426,9 +439,9 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 | Layer  | Scope                                  | Status                    | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------ | -------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ~~**L1**~~ | ~~Governance (Constitution)~~              | ~~**LOCKED**~~                | ~~Constitutional manifest, phase doctrine, dominance rules locked.~~                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ~~**L2**~~ | ~~ML Compilation (Stages 1–8)~~            | ~~**COMPLETE / LOCKED**~~     | ~~Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.~~                                                                                                                                                                                                                                                                                                                                                                             |
-| ~~**L3**~~ | ~~Runtime Enforcement / Execution~~        | ~~**COMPLETE** (M3.0–M3.11) + **Stage 3 loop impl. (burn-in)**~~ | ~~M3.0–M3.11 complete on main; M3.12–M3.18 follow-on. **Stage 3 controlled runtime loop** code path exists (**§6.20**); canonical **M3.x** table unchanged — loop work is tracked operationally, not as a new M3 ID.~~                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ~~**L4**~~ | ~~Observation / Drift Detection~~          | ~~**COMPLETE** (Track-C)~~    | ~~M4.1–M4.6 + Track-C (C1–C3) complete. Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).~~                                                                                                                                                                                                                                                                                                                                        |
+| ~~**L2**~~ | ~~ML Compilation (Stages 1–8)~~            | ~~**LOCKED**~~     | ~~Stage-6C cure validated; deterministic CONF rendering adopted; release verification PASS.~~                                                                                                                                                                                                                                                                                                                                                                             |
+| ~~**L3**~~ | ~~Runtime Enforcement / Execution~~        | ~~**COMPLETE** (M3.0–M3.11 on `main`)~~ | ~~M3.12–M3.18 follow-on. **Stage 3 controlled runtime loop** (burn-in) exists (**§6.20**); canonical **M3.x** table unchanged — loop work is tracked operationally, not as a new M3 ID.~~                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ~~**L4**~~ | ~~Observation / Drift Detection~~          | ~~**COMPLETE** (M4.1–M4.6 + Track-C on `main`)~~    | ~~Validated against real runtime ledger (.spool/ledger.db). C1–C3 demo-ready (2026-03-17).~~                                                                                                                                                                                                                                                                                                                                        |
 | **L5** | Workspace Intelligence / Ask Grounding | **CLOSED (MVP slice)**            | Context Layer + **`POST /v1/ask`** on **`main`**; behavior baseline **§5** (`108aabb`). **L5.8 harness:** **COMPLETE** (**B2**). **§B7** / **§B5** **CLOSED**. **B1/B3/B4/B5/B7:** closed. **Action 14:** PASS. **Remaining:** L5.7, §B1/L5-RET follow-through — **§0**. |
 
 
@@ -461,7 +474,7 @@ Status and priority should be used together, e.g. `IN_PROGRESS (CRITICAL)`.
 
 **Purpose**: Compile constitutional judgment into a mutation-stable, deterministic, training-grade dataset and SFT model **without altering semantics**. Covers Stage-1–Stage-8: base mapping → variants → mutation harness → freeze → SFT.
 
-**Current status**: **COMPLETE / LOCKED**
+**Current status**: **LOCKED** (see §2.1.1)
 
 #### 4.2.1 Stages and Status
 
@@ -983,7 +996,7 @@ This section records **evidence of completed milestones**. Entries should be **a
 
 ### 6.1 Layer-2 Closure
 
-- **Milestone**: Layer-2 ML Compilation complete and locked.  
+- **Milestone**: Layer-2 ML Compilation **LOCKED** (§2.1.1).  
 - **Evidence**:
   - Stage-6C agent-loop mutation harness PASS with deterministic CONF runtime rendering.  
   - `conf_drift_result`:

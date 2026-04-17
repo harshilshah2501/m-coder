@@ -46,7 +46,7 @@ Main HEAD (`03acb51`) is ahead of both tags (contains them in ancestry). Order: 
 ## 5. Canonical Milestone Status Decision
 
 - **Layer-1:** LOCKED (header and table agree).
-- **Layer-2:** COMPLETE / LOCKED (header and table agree).
+- **Layer-2:** LOCKED (header and executive snapshot agree; see tracker §2.1.1).
 - **Layer-3:** **M3.0–M3.11 COMPLETE on main** (header is authoritative). Table shows M3.0, M3.2 as VALIDATING — recorded for traceability; does not override header.
 - **Layer-4:** PARTIAL (header and table agree).
 - **Canonical milestone IDs:** M3.0–M3.18 only in live tables; no M3.E0 / M3X.* in live roadmap tables (per tracker §4.3.1).

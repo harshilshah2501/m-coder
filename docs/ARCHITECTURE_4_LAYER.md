@@ -17,6 +17,8 @@ This document provides **structural clarity** for the m-coder **four-layer const
 | 3 | Runtime | Enforcement; Phase-05 CODE realization |
 | 4 | Observation | Drift detection; collapse vectors; GREG triggers |
 
+**Layer-level status tokens** (how to phrase “done” for L1–L5 in headers and snapshots): canonical table in [`docs/LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 (**LOCKED** for L1–L2; **COMPLETE** (scoped) for L3–L4; **CLOSED** (MVP slice) for L5).
+
 ## Layer-5 — workspace intelligence (product extension)
 
 | Layer | Name | Role |

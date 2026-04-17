@@ -31,8 +31,8 @@ Execution Bias: PASS
 Collapse Hypothesis: PASS
 Hidden CONF Gravity: PASS
 Stage-6C Agent-Loop Mutation: PASS (deterministic CONF runtime rendering; `conf_to_des = 0`)
-Dataset Freeze (Stage-7): COMPLETE / LOCKED (`FREEZE_CERTIFICATE_v1.json`)
-SFT Training & Post-SFT Revalidation (Stage-8): COMPLETE / LOCKED (`LAYER2_RELEASE_VERIFICATION.json`)
+Dataset Freeze (Stage-7): **LOCKED** (`FREEZE_CERTIFICATE_v1.json`)
+SFT Training & Post-SFT Revalidation (Stage-8): **LOCKED** (`LAYER2_RELEASE_VERIFICATION.json`)
 
 ---
 
@@ -45,7 +45,7 @@ Kernel-Controlled Re-Probe: Completed (Stage-6C cure; see `docs/LIVE_ROADMAP_TRA
 
 ### Open Items
 
-None. All Layer-2 Golden Exemplars compilation milestones (Stages 1–8) are complete and locked. For future work, see Layer-3/Layer-4 milestones in `docs/LIVE_ROADMAP_TRACKER.md` and `docs/ROADMAP_L2_L3_L4.md`.
+None. All Layer-2 Golden Exemplars compilation milestones (Stages 1–8) are **LOCKED** (Layer-2 rollup: `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1). For future work, see Layer-3/Layer-4 milestones in `docs/LIVE_ROADMAP_TRACKER.md` and `docs/ROADMAP_L2_L3_L4.md`.
 
 ---
 

@@ -100,10 +100,10 @@ This roadmap defines **entry**, **exit**, and **failure** conditions for milesto
 
 | Layer | Status |
 |-------|--------|
-| **Governance** | Locked (Phases 01–05; Phase-06 hardening defined) |
-| **Compilation** | Complete / Locked (Stage-6C cure validated; dataset frozen; SFT training and post-SFT revalidation complete; see `docs/LIVE_ROADMAP_TRACKER.md`) |
-| **Runtime** | **M3.0–M3.9 complete on main** (tag `layer3-runtime-governed-v1`); M3.10–M3.18 follow-on. See `docs/LIVE_ROADMAP_TRACKER.md` §4.3. |
-| **Observation** | Partial (governance-level drift suite exists; production observation not yet wired) |
+| **Governance** | **LOCKED** (Phases 01–05; Phase-06 hardening defined) |
+| **Compilation** | **LOCKED** (Stage-6C cure validated; dataset frozen; SFT + revalidation; see `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1) |
+| **Runtime** | **COMPLETE** (M3.0–M3.11 on `main`); M3.12+ follow-on. See `docs/LIVE_ROADMAP_TRACKER.md` §4.3. |
+| **Observation** | **COMPLETE** (M4.1–M4.6 + Track-C on `main`) — see `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1, §4.4 |
 
 ### What Is Left
 

@@ -12,8 +12,8 @@
 - PR-6 retrieval baseline → **LOCKED**
 - `layer5.evidence_bundle.v1` contract → **LOCKED**
 - Layer-1 Governance → **LOCKED**
-- Layer-2 Compilation → **COMPLETE / LOCKED**
-- Layer-3 runtime core M3.0–M3.11 → **COMPLETE** (per tracker)
+- Layer-2 Compilation → **LOCKED** (`docs/LIVE_ROADMAP_TRACKER.md` §2.1.1)
+- Layer-3 runtime core M3.0–M3.11 → **COMPLETE** (M3.0–M3.11 on `main`; per tracker)
 - L5.8 grounded Ask harness + closure gate → **COMPLETE** (B2)
 - B1 retrieval generalization program → **CLOSED** (tracker; residual warnings non-blocking)
 - B3 plugin truthfulness MVP bar → **CLOSED**; Phase-1 truth proof → **LOCKED**

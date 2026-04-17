@@ -37,13 +37,13 @@ The **four constitutional layers** (L1–L4) are the doctrine and enforcement co
 
 - **Layer-1 — Governance (Constitution)**: **LOCKED**  
   - Constitutional manifest, phase doctrine (REF, CONF, DES, MIX, CODE, REACH), dominance rules, and golden exemplar governance are ratified and immutable without GREG. See `docs/MASTER_SYSTEM_SPEC.md` and `governance/CONSTITUTIONAL_MANIFEST_v1.0.md`.
-- **Layer-2 — ML Compilation (Stages 1–8)**: **COMPLETE / LOCKED**  
-  - Base→variants→Stage-6 mutation→freeze→SFT pipeline is closed. Stage-6C agent-loop mutation harness PASS, deterministic dataset freeze, SFT training and post-SFT revalidation PASS. See `docs/LIVE_ROADMAP_TRACKER.md` (§4.2.1, §4.2.2, §6.1), `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`, and `ml/training/FREEZE_CERTIFICATE_v1.json`.
-- **Layer-3 — Runtime Enforcement / Execution**: **COMPLETE (M3.0–M3.11 on `main`)** + follow-on milestones  
+- **Layer-2 — ML Compilation (Stages 1–8)**: **LOCKED**  
+  - Base→variants→Stage-6 mutation→freeze→SFT pipeline is closed. Stage-6C agent-loop mutation harness PASS, deterministic dataset freeze, SFT training and post-SFT revalidation PASS. See `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1, §4.2.1, §4.2.2, §6.1, `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`, and `ml/training/FREEZE_CERTIFICATE_v1.json`.
+- **Layer-3 — Runtime Enforcement / Execution**: **COMPLETE** (M3.0–M3.11 on `main`)  
   - Core runtime milestones **M3.0–M3.11** are **complete on `main`**; narrow repo-aware and integration work (**M3.12+**) may land on integration branches. **Governed execute** (`POST /v0/execute`) is validated for the closed MVP slice; Stage 3 controlled-loop burn-in is closed (**B7**). Canonical numbering is **M3.0–M3.18** in the tracker (do not use legacy labels such as M3.E0 in place of the M3.x table). See `docs/LAYER3_RUNTIME_SPEC.md`, `docs/runtime/RUNTIME_STATE_TRANSITIONS.md`, and `docs/LIVE_ROADMAP_TRACKER.md` (§1, §4.3, §6.20).
-- **Layer-4 — Observation / Drift Detection**: **Milestone closure COMPLETE (M4.1–M4.6 on `main`)**  
+- **Layer-4 — Observation / Drift Detection**: **COMPLETE** (M4.1–M4.6 + Track-C on `main`)  
   - **M4.1–M4.6** merged on `main` (see tracker §1 and merge report referenced there). Ongoing observation product work, if any, is tracked in `docs/LIVE_ROADMAP_TRACKER.md` and `observation/README.md`; do not infer “Layer-4 partial” from older summaries without checking the tracker.
-- **Layer-5 — Workspace intelligence (product extension)**: **Wave-level milestones CLOSED** per tracker (evidence bundle, Context Layer packaging, grounded-Ask harness class closures — see `docs/LIVE_ROADMAP_TRACKER.md` §1 and Layer-5 rows).  
+- **Layer-5 — Workspace intelligence (product extension)**: **CLOSED** (MVP slice) — waves, evidence bundle, Context Layer packaging, and grounded-Ask harness scope per `docs/LIVE_ROADMAP_TRACKER.md` §1 / §4.5.  
   - Primary paths: `runtime/context_layer_service/`, `runtime/layer5/`, `packaging/motadata-context-layer/`, `runtime/assist_layer/` (Assist is **advisory-only**). Not a substitute for Plan-Gate / Layer-3 governance.
 
 ### Roadmaps & Governance Navigation

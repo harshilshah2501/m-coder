@@ -102,9 +102,9 @@ flowchart TB
 
 | Layer | Milestone | Status | % Complete | Evidence Link | Blockers | Next Action |
 |-------|-----------|--------|------------|---------------|----------|-------------|
-| L1 | Governance lock | COMPLETE / LOCKED | 100 | GREG ratification; `governance/CONSTITUTIONAL_MANIFEST_v1.0.md` | — | — |
-| L2 | M2.1–M2.7 Layer-2 ML Compilation | COMPLETE / LOCKED | 100 | `docs/LIVE_ROADMAP_TRACKER.md` §4.2.1, §4.2.2, §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`; `ml/training/FREEZE_CERTIFICATE_v1.json` | — | Hand-off to Layer-3 runtime implementation |
-| L3 | Layer-3 M3.0–M3.18 (canonical) | COMPLETE (M3.0–M3.9) | — | **M3.0–M3.9 complete on main** (tag `layer3-runtime-governed-v1`). M3.10–M3.18 follow-on. See [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §4.3.1, §6. | — | — |
+| L1 | Governance lock | LOCKED | 100 | GREG ratification; `governance/CONSTITUTIONAL_MANIFEST_v1.0.md` | — | — |
+| L2 | M2.1–M2.7 Layer-2 ML Compilation | LOCKED | 100 | `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1, §4.2.1, §4.2.2, §6.1; `ml/artifacts/LAYER2_RELEASE_VERIFICATION.json`; `ml/training/FREEZE_CERTIFICATE_v1.json` | — | Hand-off to Layer-3 runtime implementation |
+| L3 | Layer-3 M3.0–M3.18 (canonical) | COMPLETE (M3.0–M3.11 on `main`) | — | Core milestones per [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) §2.1.1, §4.3.1, §6.; M3.12+ follow-on. | — | — |
 | L4 | M4.1–M4.5 Observation | NOT STARTED | 0 | — | Depends on M3.9 | Implement ledger ingestion, drift baseline, collapse tracking, reconciliation, and GREG automation |
 
 **Status key:** Not Started | In Progress | Complete | Blocked

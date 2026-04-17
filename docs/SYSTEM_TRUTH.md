@@ -19,7 +19,7 @@ This file is the **single navigation anchor** for “what the repo actually is r
 
 **Supporting (not competing) narrative:** `docs/production_closure_handbook_corrected_canonical_version.md` — **PARTIALLY_STALE:** its “gates OPEN / blocking closure” tables predate tracker-recorded closure; treat tracker + Action 14 artifacts as **CANONICAL** for closure state.
 
-**Root `README.md` Layer-3/Layer-4 status lines:** **NEEDS_CONFIRMATION / PARTIALLY_STALE** vs tracker (tracker: Layer-3 core milestones complete; Layer-4 M4.x complete on main). Prefer tracker for program status.
+**Root `README.md` Layer-3/Layer-4 status lines:** **NEEDS_CONFIRMATION / PARTIALLY_STALE** vs tracker (tracker §2.1.1: Layer-3 **COMPLETE** (M3.0–M3.11 on `main`); Layer-4 **COMPLETE** (M4.1–M4.6 + Track-C on `main`)). Prefer tracker for program status.
 
 ---
 
@@ -126,7 +126,7 @@ IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED
 | Topic | Conflicting sources | **Canonical winner** |
 |-------|----------------------|----------------------|
 | MVP gates open vs closed | `production_closure_handbook_*` vs tracker | **Tracker + Action 14 report** — gates **CLOSED** for declared MVP slice |
-| Layer-3 “in progress” vs milestones complete | Root `README.md` vs tracker | **Tracker** — core Layer-3 milestone line items **COMPLETE** per tracker §1 |
+| Layer-3 “in progress” vs milestones complete | Root `README.md` vs tracker | **Tracker** — Layer-3 rollup **COMPLETE** (M3.0–M3.11 on `main`) per tracker §2.1.1 / §1 |
 | B1 “ongoing” vs “closed” | Various validation docs | **Tracker:** B1 **CLOSED** with expanded suite; residual metrics may show **warnings** without reopening baseline |
 | **`evidence_quality` for broad / integration asks (WEAK vs STRONG)** | Older stdout / pre-**`108aabb`** runs vs current **main** | **§5 + closure doc:** after Ask v1 quality parity, verifier-visible **`ask_broad_correlation`** / **`ask_servicenow_sync_owner`** can report **STRONG**; cite artifact + commit in `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 |
 

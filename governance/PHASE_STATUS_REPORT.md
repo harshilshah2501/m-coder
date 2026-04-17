@@ -22,17 +22,17 @@ All gates green
 
 ### Phase-6 — Statistical & Collapse Stress
 
-Status: COMPLETE / LOCKED
+Status: **LOCKED**
 Notes: Stage-6C agent-loop mutation harness PASS with deterministic CONF runtime rendering; collapse vectors classified; CONF→DES drift eliminated (`S0 = 80`, `conf_to_des = 0`, `s2_s3 = 0`).
 
 ### Phase-7 — Dataset Compilation
 
-Status: COMPLETE / LOCKED
+Status: **LOCKED**
 Notes: Deterministic dataset freeze and manifest lock per `FREEZE_CERTIFICATE_v1.json`; no post-freeze edits allowed.
 
 ### Phase-8 — SFT Simulation
 
-Status: COMPLETE / LOCKED
+Status: **LOCKED**
 Notes: SFT / adapter training complete; invariance audit PASS; Layer-2 release verification PASS (`LAYER2_RELEASE_VERIFICATION.json`).
 
 ---

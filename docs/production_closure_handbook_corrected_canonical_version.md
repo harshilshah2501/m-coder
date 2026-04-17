@@ -40,13 +40,13 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 ### What is already solid
 
-- Layer-1 Governance → Locked
+- Layer-1 Governance → **LOCKED**
 
-- Layer-2 Compilation → Stable
+- Layer-2 Compilation → **LOCKED** (see `docs/LIVE_ROADMAP_TRACKER.md` §2.1.1)
 
-- Layer-3 Runtime Core → Structurally sound
+- Layer-3 Runtime Core → **COMPLETE** (M3.0–M3.11 on `main`)
 
-- Layer-4 Observation → Functional
+- Layer-4 Observation → **COMPLETE** (M4.1–M4.6 + Track-C on `main`)
 
 - `/v1/ask` → Contract-correct and deterministic
 
@@ -66,7 +66,7 @@ Feature completeness is irrelevant without **grounded correctness**.
 
 ### 1. Retrieval (Baseline Closed, Generalization Open)
 
-- PR-6 true-positive debug retrieval closure phase is **COMPLETE / LOCKED**
+- PR-6 true-positive debug retrieval closure phase is **LOCKED**
 - Deterministic retrieval baseline for debug grounding is now canonical
 - Locked baseline metrics:
   - Top-1: **10/10**
@@ -404,7 +404,7 @@ WSL → GPU
 
 ## Status
 
-**COMPLETE / LOCKED**
+**LOCKED**
 
 ## What PR-6 proved
 
@@ -462,7 +462,7 @@ This sequence is refined based on real validation learnings. PR-6 baseline closu
 - Mean first relevant rank: 1.00
 - Noise dominance: 0.00
 
-**Exit status:** COMPLETE / LOCKED (baseline contract preserved going forward)
+**Exit status:** **LOCKED** (baseline contract preserved going forward)
 
 ---
 
