@@ -23,6 +23,12 @@ Use only these in sequence for setup and usage:
 2. [runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md](runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md) - plugin-mediated usage and checks
 3. [demo/NEAR_PRODUCTION_VERTICAL_SLICE_RUNBOOK.md](demo/NEAR_PRODUCTION_VERTICAL_SLICE_RUNBOOK.md) - end-to-end operator demo flow
 
+### Click Navigation + Indexing
+
+- [NAVIGATION_HUB.md](NAVIGATION_HUB.md) - intent-based click-navigation across docs
+- [MOTADATA_DEMOBOOK.md](MOTADATA_DEMOBOOK.md) - definitive setup + capability testbook with exact commands
+- [index/doc_catalog.json](index/doc_catalog.json) - machine-readable docs routing catalog
+
 ### Latest Inclusions (2026-04)
 
 - Stage 2.5 Assist Layer v1 implemented and evaluated as advisory-only (no runtime query authority)

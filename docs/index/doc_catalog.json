@@ -1,0 +1,172 @@
+{
+  "schema_version": "docs.catalog.v1",
+  "generated_by": "runtime/scripts/generate_doc_catalog.py",
+  "description": "Curated documentation routing source used to generate doc_catalog.json.",
+  "entrypoints": [
+    {
+      "id": "live-roadmap",
+      "title": "Live Roadmap Tracker",
+      "path": "docs/LIVE_ROADMAP_TRACKER.md",
+      "role": "canonical",
+      "tags": [
+        "truth",
+        "status",
+        "milestones"
+      ]
+    },
+    {
+      "id": "master-system-spec",
+      "title": "Master System Spec",
+      "path": "docs/MASTER_SYSTEM_SPEC.md",
+      "role": "canonical",
+      "tags": [
+        "doctrine",
+        "contracts",
+        "authority"
+      ]
+    },
+    {
+      "id": "navigation-hub",
+      "title": "Documentation Navigation Hub",
+      "path": "docs/NAVIGATION_HUB.md",
+      "role": "index",
+      "tags": [
+        "navigation",
+        "entrypoint"
+      ]
+    },
+    {
+      "id": "demobook",
+      "title": "Motadata Demobook",
+      "path": "docs/MOTADATA_DEMOBOOK.md",
+      "role": "runbook",
+      "tags": [
+        "demo",
+        "setup",
+        "validation",
+        "capabilities"
+      ]
+    },
+    {
+      "id": "production-verification-guide",
+      "title": "Motadata AIOps Production Verification Guide",
+      "path": "docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md",
+      "role": "runbook",
+      "tags": [
+        "verification",
+        "capabilities",
+        "repeatability"
+      ]
+    },
+    {
+      "id": "demo-setup-runbook",
+      "title": "Motadata Demo Setup Runbook",
+      "path": "docs/MOTADATA_DEMO_SETUP_RUNBOOK.md",
+      "role": "runbook",
+      "tags": [
+        "gpu",
+        "wsl",
+        "windows",
+        "setup"
+      ]
+    },
+    {
+      "id": "demo-scenarios",
+      "title": "Motadata Demo Scenarios",
+      "path": "docs/MOTADATA_DEMO_SCENARIOS.md",
+      "role": "runbook",
+      "tags": [
+        "narrative",
+        "success-criteria"
+      ]
+    },
+    {
+      "id": "orchestrator-guide",
+      "title": "Governed Services Guide",
+      "path": "docs/guides/ORCHESTRATOR_GUIDE.md",
+      "role": "operations",
+      "tags": [
+        "services",
+        "governed_services",
+        "runtime"
+      ]
+    },
+    {
+      "id": "orchestrator-service-guide",
+      "title": "Systemd Optional Guide",
+      "path": "docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md",
+      "role": "operations",
+      "tags": [
+        "systemd",
+        "optional"
+      ]
+    },
+    {
+      "id": "product-slice",
+      "title": "Product Slice",
+      "path": "docs/PRODUCT_SLICE.md",
+      "role": "reference",
+      "tags": [
+        "scope",
+        "layer5",
+        "boundaries"
+      ]
+    },
+    {
+      "id": "architecture-4-layer",
+      "title": "Architecture 4 Layer",
+      "path": "docs/ARCHITECTURE_4_LAYER.md",
+      "role": "reference",
+      "tags": [
+        "architecture",
+        "layers"
+      ]
+    },
+    {
+      "id": "baseline-policy",
+      "title": "Motadata Baseline Artifact Policy",
+      "path": "docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md",
+      "role": "validation",
+      "tags": [
+        "baseline",
+        "artifacts",
+        "governance"
+      ]
+    },
+    {
+      "id": "post-closure-maintenance",
+      "title": "Post Closure Maintenance",
+      "path": "docs/validation/POST_CLOSURE_MAINTENANCE.md",
+      "role": "validation",
+      "tags": [
+        "maintenance",
+        "post-closure"
+      ]
+    },
+    {
+      "id": "scenario-pack",
+      "title": "Motadata Capability Scenario Pack",
+      "path": "docs/validation/motadata_aiops_behavior_scenarios.v1.json",
+      "role": "validation",
+      "tags": [
+        "scenarios",
+        "ask",
+        "debug",
+        "plan",
+        "code",
+        "agent"
+      ]
+    },
+    {
+      "id": "quality-policy",
+      "title": "Motadata Evidence Quality Policy",
+      "path": "docs/validation/motadata_evidence_quality_policy.v1.json",
+      "role": "validation",
+      "tags": [
+        "quality",
+        "retrieval",
+        "gates"
+      ]
+    }
+  ]
+}

@@ -58,6 +58,8 @@ The **four constitutional layers** (L1–L4) are the doctrine and enforcement co
   - End-to-end execution view: `docs/SYSTEM_EXECUTION_ROADMAP.md`
   - Archived (historical): `docs/archive/ROADMAP_L2_L3_L4.md` — entry/exit/failure tables; do not use for current status
 - **Master System Guide v1.7** (`MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md`): long-form narrative, demos, Appendix H — **supporting**; **canonical spec entry and gates:** `docs/MASTER_SYSTEM_SPEC.md` + `docs/LIVE_ROADMAP_TRACKER.md`
+- **Documentation click-navigation:** `docs/NAVIGATION_HUB.md`
+- **Definitive capability demobook:** `docs/MOTADATA_DEMOBOOK.md`
 
 ## 🚀 Quick Start
 
