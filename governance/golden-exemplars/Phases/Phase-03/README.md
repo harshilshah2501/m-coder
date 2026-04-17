@@ -1,5 +1,3 @@
----
-
 # **Phase-3 — Design Reasoning (DES)**
 
 *Making uncertainty explicit before decisions become irreversible*
