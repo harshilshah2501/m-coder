@@ -337,7 +337,7 @@ rsync -av /home/harshil/Harshil-PoCs/motadata-coder-iter10/ \
 ### Health Checks
 ```bash
 # Check all services
-sudo systemctl status motadata-orchestrator
+bash runtime/scripts/governed_services.sh status
 
 # Check individual services
 curl http://localhost:8000/v1/models  # vLLM

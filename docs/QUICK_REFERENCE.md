@@ -2,7 +2,7 @@
 
 **Last Updated**: January 5, 2026
 **Current Model**: V16 (Production Ready)
-**Service Management**: Systemd (motadata-orchestrator)
+**Service Management**: `runtime/scripts/governed_services.sh`
 
 ---
 
@@ -14,7 +14,7 @@
 | **Neo4j** | ✅ Running | 7687 | `curl http://localhost:7474` |
 | **RAG API** | ✅ Running | 8081 | `curl http://localhost:8081/health` |
 | **vLLM** | ✅ Running | 8000 | `curl http://localhost:8000/v1/models` |
-| **Orchestrator** | ✅ Systemd Service | - | `sudo systemctl status motadata-orchestrator` |
+| **Runtime Stack** | ✅ Script-managed | - | `bash runtime/scripts/governed_services.sh status` |
 
 ---
 
@@ -35,39 +35,37 @@
 
 ## Quick Commands
 
-### Service Management (Systemd)
+### Service Management (Current)
 
-#### Start All Services
+#### Start Services
 ```bash
-sudo systemctl start motadata-orchestrator
+bash runtime/scripts/governed_services.sh start
 ```
 
-#### Stop All Services
+#### Stop Services
 ```bash
-sudo systemctl stop motadata-orchestrator
+bash runtime/scripts/governed_services.sh stop
 ```
 
-#### Restart All Services
+#### Restart Services
 ```bash
-sudo systemctl restart motadata-orchestrator
+bash runtime/scripts/governed_services.sh restart
 ```
 
 #### Check Service Status
 ```bash
-sudo systemctl status motadata-orchestrator
+bash runtime/scripts/governed_services.sh status
 ```
 
 #### View Service Logs
 ```bash
-journalctl -u motadata-orchestrator -f
+bash runtime/scripts/governed_services.sh logs
 ```
 
-### Legacy Commands (Direct Script)
+### Optional Local systemd Wrapper
 ```bash
-# If you need to run the orchestrator script directly:
-cd /home/harshil/Harshil-PoCs
-bash runtime/scripts/governed_services.sh start
-bash runtime/scripts/governed_services.sh stop
+# Optional: author your own local unit that wraps governed_services.sh
+# The repository does not ship motadata-orchestrator.service anymore.
 ```
 
 ### Check Logs
@@ -199,13 +197,13 @@ GET /health
 
 ## Service Management Documentation
 
-For detailed information about the orchestrator service, see:
+For detailed runtime stack management, see:
 - **[ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** - Complete service management guide
 ## Contact & Resources
 
 - **Documentation**: `/docs/RAG_SYSTEM_ITERATIONS_ANALYSIS.md`
 - **Architecture Diagram**: See main documentation
 - **Issue Tracker**: Check diagnostics for session details
-- **Service Guide**: See ORCHESTRATOR_SERVICE_GUIDE.md for systemd management
+- **Service Guide**: See ORCHESTRATOR_SERVICE_GUIDE.md for current runtime stack management
 
 

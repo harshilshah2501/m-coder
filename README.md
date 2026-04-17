@@ -61,22 +61,22 @@ The **four constitutional layers** (L1–L4) are the doctrine and enforcement co
 
 ## 🚀 Quick Start
 
-### Start Services (Systemd)
+### Start Services (Current Flow)
 ```bash
-sudo systemctl start motadata-orchestrator
+bash runtime/scripts/governed_services.sh start
 ```
 
 ### Check Status
 ```bash
-sudo systemctl status motadata-orchestrator
+bash runtime/scripts/governed_services.sh status
 ```
 
 ### View Logs
 ```bash
-journalctl -u motadata-orchestrator -f
+bash runtime/scripts/governed_services.sh logs
 ```
 
-For more details, see [docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md](docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md)
+For more details, see [docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md](docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md) and [docs/guides/ORCHESTRATOR_GUIDE.md](docs/guides/ORCHESTRATOR_GUIDE.md).
 
 ---
 

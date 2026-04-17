@@ -211,38 +211,29 @@ User Query: "Which class is inherited by all API classes?"
 ### Starting and Stopping Services
 
 ```bash
-# Start all services (runs orchestrator.sh start internally)
-sudo systemctl start motadata-orchestrator
+# Start runtime stack
+bash runtime/scripts/governed_services.sh start
 
-# Stop all services (runs orchestrator.sh stop internally)
-sudo systemctl stop motadata-orchestrator
+# Stop runtime stack
+bash runtime/scripts/governed_services.sh stop
 
-# Restart all services
-sudo systemctl restart motadata-orchestrator
+# Restart runtime stack
+bash runtime/scripts/governed_services.sh restart
 
-# Check orchestrator status
-sudo systemctl status motadata-orchestrator
-
-# Quick status: "active (exited)" means orchestrator completed successfully
-systemctl is-active motadata-orchestrator
+# Check runtime stack status
+bash runtime/scripts/governed_services.sh status
 ```
 
 ### Viewing Logs
 
 ```bash
-# View orchestrator startup logs (shows service startup sequence)
-sudo journalctl -u motadata-orchestrator -f
-
-# View individual service logs
-sudo journalctl -u motadata-coder -f    # vLLM server
-sudo journalctl -u motadata-rag -f      # RAG API
-sudo journalctl -u motadata-api -f      # vLLM wrapper
-sudo journalctl -u motadata-monitor -f  # Health monitor
+# View runtime stack logs
+bash runtime/scripts/governed_services.sh logs
 ```
 
-### Startup Sequence (automatic)
+### Startup Sequence (script-managed)
 
-When you run `sudo systemctl start motadata-orchestrator`, it automatically:
+When you run `bash runtime/scripts/governed_services.sh start`, it brings up the governed stack in sequence:
 
 ```
 1. Docker (Qdrant + Neo4j)  ─────▶  Wait for HTTP health (60s timeout)
@@ -254,34 +245,12 @@ When you run `sudo systemctl start motadata-orchestrator`, it automatically:
 
 Total startup time: ~90-120 seconds (mostly vLLM model loading)
 
-### Boot Configuration
+### Optional Boot Configuration
 
-The orchestrator is configured as a systemd service for auto-start on boot:
+This repository does **not** ship `motadata-orchestrator.service`.
+If you need boot automation, create a local systemd unit that wraps `governed_services.sh start/stop`.
 
-| Service | Enabled | Purpose |
-|---------|---------|---------|
-| **motadata-orchestrator** | ✅ enabled | Master service - manages all others |
-| motadata-coder | disabled | Started by orchestrator |
-| motadata-api | disabled | Started by orchestrator |
-| motadata-rag | disabled | Started by orchestrator |
-| motadata-monitor | disabled | Started by orchestrator |
-
-```bash
-# Verify boot configuration
-systemctl is-enabled motadata-orchestrator  # Should show "enabled"
-
-# Enable/disable auto-start
-sudo systemctl enable motadata-orchestrator   # Enable boot start
-sudo systemctl disable motadata-orchestrator  # Disable boot start
-```
-
-### Orchestrator Service Details
-
-The orchestrator uses `Type=oneshot` with `RemainAfterExit=yes`:
-- Runs `orchestrator.sh start` once
-- Shows as `active (exited)` when complete (this is normal)
-- Runs `orchestrator.sh stop` when you stop the service
-- All logs are captured in journalctl
+See `docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md` and `docs/guides/ORCHESTRATOR_GUIDE.md` for current operational guidance.
 
 ## Usage Examples
 
