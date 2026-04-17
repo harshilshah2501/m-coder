@@ -313,6 +313,7 @@ Output report (always written):
 
 - `runtime/.run/motadata_behavior_validation.json` (override with `--out`)
 - Baseline/candidate naming + diff policy: `docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md`
+- Lane closure summary (locked vs follow-on, evidence pointers): `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`
 
 Pass criteria:
 

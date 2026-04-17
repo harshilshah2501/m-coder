@@ -110,6 +110,8 @@ Required in regression reports:
 
 **Rolling local pointer (optional):** `runtime/.run/motadata_behavior_validation.json` may still be overwritten by the latest ad-hoc run; **regression reports should cite the named V3 artifact path + commit above.**
 
+**Narrative closure (what is locked / follow-on):** `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`.
+
 ---
 
 ## 6) Authority Hardening v1 validation note

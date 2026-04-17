@@ -29,7 +29,7 @@
 
 - **Lane discipline:** split workstreams and keep only one active engineering lane at a time.
 - **Retrieval baseline:** anchored authority-gated retrieval is locked as working baseline; formal behavior snapshot promoted (see below).
-- **Latest closure:** **Ask v1 evidence quality parity** (`108aabb`) on **`feat/motadata-behavior-verification-guide`** — **`POST /v1/ask`** passes grounding + authority into **`assess_evidence_quality`**; WSL scenario suite **`all_pass=true`** including **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`**. Promoted artifact + SHA: **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** (`SERVICENOW_QUALITY_V3`, `108aabb098017b8c551629c745d71f63acf7`).
+- **Latest closure:** **Ask v1 evidence quality parity** (`108aabb`) on **`feat/motadata-behavior-verification-guide`** — **`POST /v1/ask`** passes grounding + authority into **`assess_evidence_quality`**; WSL scenario suite **`all_pass=true`** including **`ask_servicenow_sync_owner`** at **`evidence_quality: STRONG`**. Promoted artifact + SHA: **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** (`SERVICENOW_QUALITY_V3`, `108aabb098017b8c551629c745d71f63acf7`). **Narrative:** **`docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`**.
 - **Active engineering lane:** maintain promoted baseline; further retrieval tuning only under explicit charter (avoid silent regression vs §5).
 
 ---
