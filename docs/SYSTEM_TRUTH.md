@@ -1,7 +1,7 @@
 # SYSTEM_TRUTH — m-coder / Motadata AI Coding Assistant
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE` (governed HTTP + workspace backend + GPU stack)  
-**Last reconciled:** 2026-04-14 (against `docs/LIVE_ROADMAP_TRACKER.md`, `docs/PROGRAM_STATE_SNAPSHOT.md`, `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`)
+**Last reconciled:** 2026-04-17 (against `docs/LIVE_ROADMAP_TRACKER.md`, `docs/PROGRAM_STATE_SNAPSHOT.md`, `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`)
 
 This file is the **single navigation anchor** for “what the repo actually is right now.” Detailed doctrine remains in linked specs; **live closure and milestone truth** are owned by the tracker.
 
@@ -78,6 +78,7 @@ Operational runbooks that are IDE-centric remain **ARCHIVE / COMPATIBILITY** for
 
 | Invariant | Source of truth |
 |-----------|-------------------|
+| **Motadata behavior verification baseline (main):** `all_pass` scenario suite + promoted artifact SHA — **do not argue from stale “broad ask = WEAK”** narratives; Plan-Gate **`POST /v1/ask`** uses full grounding for `assess_evidence_quality` | `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`, `docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 |
 | Evidence bundle schema versioned and validated | `layer5.evidence_bundle.v1`, Layer-5 freeze language in tracker |
 | Ask remains **plan-only** posture unless contract explicitly allows execution flags | Ask handlers / audit |
 | **No silent fallback** on real service failures (controlled v1→v0 documented; contract errors do not silently “succeed”) | Audit + PRODUCT_SLICE_CHARTER |
@@ -127,11 +128,13 @@ IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED
 | MVP gates open vs closed | `production_closure_handbook_*` vs tracker | **Tracker + Action 14 report** — gates **CLOSED** for declared MVP slice |
 | Layer-3 “in progress” vs milestones complete | Root `README.md` vs tracker | **Tracker** — core Layer-3 milestone line items **COMPLETE** per tracker §1 |
 | B1 “ongoing” vs “closed” | Various validation docs | **Tracker:** B1 **CLOSED** with expanded suite; residual metrics may show **warnings** without reopening baseline |
+| **`evidence_quality` for broad / integration asks (WEAK vs STRONG)** | Older stdout / pre-**`108aabb`** runs vs current **main** | **§5 + closure doc:** after Ask v1 quality parity, verifier-visible **`ask_broad_correlation`** / **`ask_servicenow_sync_owner`** can report **STRONG**; cite artifact + commit in `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 |
 
 ---
 
 ## 10. Related canonical navigation
 
+- `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` — Motadata CLI verification closure (baseline pointers; team handoff)
 - `docs/PRODUCT_SLICE.md` — in/out of scope for *this* pass  
 - `docs/REPO_REALITY_MAP.md` — directory map  
 - `docs/CLI_VALIDATION_MATRIX.md` — proof commands  

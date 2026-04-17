@@ -7,6 +7,12 @@ This is the active guide. Use this for setup, manual verification, and repeatabl
 
 **Layering:** Validation here exercises the **HTTP stack** — **Layer-5** (Context Layer `export_evidence`) and **Layer-3** (Plan-Gate Ask/Plan/Execute) — see `docs/ARCHITECTURE_4_LAYER.md` and `docs/PRODUCT_SLICE.md`.
 
+**Team — baseline truth (read before debating retrieval quality):**
+
+- **Closure summary:** `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` — what is locked vs follow-on, evidence pointers.
+- **Formal baseline record (artifact + m-coder SHA):** `docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5.
+- **Narrative guardrail:** On **current `main`**, Plan-Gate **`POST /v1/ask`** evaluates evidence quality with the same grounding inputs as the layer5 export path. Do **not** treat “broad ask” or “integration owner” scenarios as **always WEAK** from older runs; check §5 and regenerate `motadata_behavior_verify.py` artifacts if unsure.
+
 ---
 
 ## 1) Scope and success criteria

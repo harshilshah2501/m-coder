@@ -64,3 +64,5 @@ Workspace-side **Context Layer** (WSL or Linux) exports **versioned evidence**; 
 ## Session rule
 
 If a session goal is “what is true / what is closed,” read **`docs/LIVE_ROADMAP_TRACKER.md`** first, then **`docs/SYSTEM_TRUTH.md`**. Do not re-derive closure from narrative handbooks alone.
+
+For **Motadata behavior verification** claims (evidence quality labels, broad vs anchored): use **`docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`** + **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5**, not ad-hoc “broad = WEAK” shorthand from older runs.
