@@ -102,6 +102,100 @@ def test_handle_ask_v1_identity_mismatch():
     assert ei.value.details is not None
 
 
+def _snippet_v1(text: str = "// code") -> dict:
+    return {
+        "text": text,
+        "start_line": 1,
+        "end_line": 1,
+        "start_byte_utf8": 0,
+        "end_byte_utf8": max(1, len(text.encode("utf-8"))),
+        "anchor_line": 1,
+        "matched_tokens": ["sync"],
+        "selection_reason": "query_token_substring_anchor",
+        "truncated_by_max_bytes": False,
+    }
+
+
+def _entry_v1(rank: int, path: str, role: str) -> dict:
+    return {
+        "provisional": False,
+        "rank": rank,
+        "relative_path": path,
+        "retrieval_score": 10 - rank,
+        "retrieval_breakdown": {"path_substrings": 1, "basename_substrings": 0, "content_substrings": 1},
+        "retrieval_role": role,
+        "snippet": _snippet_v1(),
+    }
+
+
+def test_handle_ask_v1_applies_grounding_and_owner_anchor_recovery():
+    """
+    /v1/ask must pass retrieval_role + authority into assess_evidence_quality (same as /v0/ask + layer5),
+    so integration owners can recover STRONG via OWNER_ANCHOR_RECOVERY when top-3 lacks core aiops.
+    """
+    paths = [
+        "motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+        "motadata/src/main/java/com/mindarray/visualization/VisualizationAvailabilityManager.java",
+        "motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+        "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyQueryProcessor.java",
+        "motadata/src/main/java/com/mindarray/aiops/DependencyManager.java",
+        "motadata/src/main/java/com/mindarray/aiops/package-info.java",
+        "motadata/src/main/java/com/mindarray/visualization/VisualizationEventManager.java",
+    ]
+    roles = [
+        "SUPPORTING_CONTEXT",
+        "SUPPORTING_CONTEXT",
+        "PRIMARY_OWNER_CANDIDATE",
+        "SUPPORTING_CONTEXT",
+        "SUPPORTING_CONTEXT",
+        "SUPPORTING_CONTEXT",
+        "SUPPORTING_CONTEXT",
+        "SUPPORTING_CONTEXT",
+    ]
+    entries = [_entry_v1(i, paths[i], roles[i]) for i in range(len(paths))]
+    ev = {
+        "provisional": False,
+        "schema_hint": "layer5.evidence_bundle.v1",
+        "query_raw": "Where is ServiceNow incident synchronization implemented?",
+        "query_tokens": ["ServiceNow", "sync"],
+        "top_k": 8,
+        "index_schema_version": "layer5.file_index.v1",
+        "workspace_identity_hash": "",
+        "workspace_is_dirty": False,
+        "workspace_snapshot_source": "path_only",
+        "canonical_root": "",
+        "a5_authority_note": (
+            "Candidate order and retrieval_score come from Stage B fusion "
+            "(lexical + authority + domain priors + constraints); A6 does not reorder by snippet."
+        ),
+        "entries": entries,
+        "authority_resolution": {
+            "matched_concepts": [],
+            "primary_owner": {
+                "file": "src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+                "class": "ServiceNowIntegration",
+                "confidence": "high",
+            },
+            "authority_confidence": "high",
+            "authority_status": "validated",
+            "control_flow": [],
+            "notes": [],
+            "forbidden_distractors": [],
+        },
+    }
+    req = _minimal_v1_ask(
+        ev,
+        query="Where is ServiceNow incident synchronization implemented?",
+        request_id="req-v1-owner-recovery",
+    )
+    assert not validate_ask_v1_request(req)
+    resp = handle_ask_v1_request(req)
+    meta = resp.get("metadata") or {}
+    assert meta.get("evidence_quality") == "STRONG"
+    assert "OWNER_ANCHOR_RECOVERY" in (meta.get("quality_reasons") or [])
+
+
 def test_handle_ask_v1_legacy_validation_details_missing_method_exists_accepted():
     ev = deepcopy(_load_golden_evidence())
     if not isinstance(ev.get("authority_resolution"), dict):

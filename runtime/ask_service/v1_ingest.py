@@ -17,6 +17,7 @@ from runtime.layer5.evidence.schema_validate import (
     validate_evidence_bundle_dict,
 )
 from runtime.layer5.evidence.usefulness_metrics import bundle_usefulness_metrics
+from runtime.layer5.retrieval.effective_intent import merge_effective_intent, resolve_lexical_task_type
 from runtime.layer5.retrieval.intent import GENERIC_INTENT
 from runtime.layer5.retrieval.quality_gate import (
     NO_MATCH,
@@ -144,9 +145,36 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     revision = str(ask_request.get("revision") or "").strip() or "evidence_bundle.v1"
     task_id = request_id or "ask-v1-task"
     bundle = context_bundle_from_evidence_dict(evidence_bundle, task_id=task_id, revision=revision)
-    quality = assess_evidence_quality(query, [item.path for item in bundle.items])
+
     ar_dict = evidence_bundle.get("authority_resolution")
     authority_resolution = ar_dict if isinstance(ar_dict, dict) else None
+    auth_owner_file = None
+    if authority_resolution:
+        po = authority_resolution.get("primary_owner")
+        if isinstance(po, dict):
+            auth_owner_file = str(po.get("file") or "").strip() or None
+
+    grounding_evidence: list[tuple[str, str, str]] = []
+    for ent in entries:
+        if not isinstance(ent, dict):
+            continue
+        rel = str(ent.get("relative_path") or "")
+        sn = ent.get("snippet") if isinstance(ent.get("snippet"), dict) else {}
+        sr = str(sn.get("selection_reason") or "")
+        role = str(ent.get("retrieval_role") or "")
+        grounding_evidence.append((rel, sr, role))
+
+    eff = merge_effective_intent(
+        resolve_lexical_task_type(str(task_type or "general"), query, authority_resolution),
+        query,
+    )
+    quality = assess_evidence_quality(
+        query,
+        [item.path for item in bundle.items],
+        grounding_entries=grounding_evidence if grounding_evidence else None,
+        effective_intent=eff,
+        authority_primary_owner_file=auth_owner_file,
+    )
     entries_list = evidence_bundle.get("entries") if isinstance(evidence_bundle.get("entries"), list) else []
     metadata = {
         "intent_type": quality.intent_type,
