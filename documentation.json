@@ -1,34 +1,41 @@
 {
   "name": "m-coder",
   "initialRoute": "README.md",
-  "navigation": [
-    {
-      "title": "Home",
-      "path": "README.md"
-    },
-    {
-      "title": "Architecture",
-      "path": "docs/ARCHITECTURE_4_LAYER.md"
-    },
-    {
-      "title": "Guides",
-      "path": "docs/guides/ORCHESTRATOR_GUIDE.md"
-    },
-    {
-      "title": "Reference",
-      "path": "docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md"
-    },
-    {
-      "title": "Runtime",
-      "path": "docs/runtime/README.md"
-    },
-    {
-      "title": "Validation",
-      "path": "docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md"
-    },
-    {
-      "title": "Troubleshooting",
-      "path": "docs/troubleshooting/DEBUGGING_GUIDE.md"
-    }
-  ]
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "pages": [
+          {
+            "title": "Home",
+            "path": "README.md"
+          },
+          {
+            "title": "Architecture",
+            "path": "docs/ARCHITECTURE_4_LAYER.md"
+          },
+          {
+            "title": "Guides",
+            "path": "docs/guides/ORCHESTRATOR_GUIDE.md"
+          },
+          {
+            "title": "Reference",
+            "path": "docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md"
+          },
+          {
+            "title": "Runtime",
+            "path": "docs/runtime/README.md"
+          },
+          {
+            "title": "Validation",
+            "path": "docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md"
+          },
+          {
+            "title": "Troubleshooting",
+            "path": "docs/troubleshooting/DEBUGGING_GUIDE.md"
+          }
+        ]
+      }
+    ]
+  }
 }
