@@ -1,6 +1,6 @@
 {
   "name": "m-coder",
-  "initialRoute": "docs/README.md",
+  "initialRoute": "README.md",
   "navigation": [
     {
       "title": "Home",
