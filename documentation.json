@@ -4,7 +4,7 @@
   "navigation": [
     {
       "title": "Home",
-      "path": "docs/README.md"
+      "path": "README.md"
     },
     {
       "title": "Architecture",
