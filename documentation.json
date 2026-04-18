@@ -1,34 +1,34 @@
 {
   "name": "m-coder",
-  "initialRoute": "./docs/README",
+  "initialRoute": "docs/README.md",
   "navigation": [
     {
       "title": "Home",
-      "path": "./docs/README"
+      "path": "docs/README.md"
     },
     {
       "title": "Architecture",
-      "path": "./docs/ARCHITECTURE_4_LAYER"
+      "path": "docs/ARCHITECTURE_4_LAYER.md"
     },
     {
       "title": "Guides",
-      "path": "./docs/guides/ORCHESTRATOR_GUIDE"
+      "path": "docs/guides/ORCHESTRATOR_GUIDE.md"
     },
     {
       "title": "Reference",
-      "path": "./docs/reference/DIRECTORY_STRUCTURE_ANALYSIS"
+      "path": "docs/reference/DIRECTORY_STRUCTURE_ANALYSIS.md"
     },
     {
       "title": "Runtime",
-      "path": "./docs/runtime/README"
+      "path": "docs/runtime/README.md"
     },
     {
       "title": "Validation",
-      "path": "./docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE"
+      "path": "docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md"
     },
     {
       "title": "Troubleshooting",
-      "path": "./docs/troubleshooting/DEBUGGING_GUIDE"
+      "path": "docs/troubleshooting/DEBUGGING_GUIDE.md"
     }
   ]
 }
