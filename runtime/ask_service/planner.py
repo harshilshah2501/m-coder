@@ -10,6 +10,7 @@ future runtime could investigate the question.
 """
 
 from dataclasses import dataclass
+import re
 from typing import Any, Dict, List, Optional
 
 from runtime.context.contracts import ContextBundle
@@ -61,6 +62,9 @@ class PlanOnlyPlanner:
         top_paths = ranked[:3]
 
         steps: List[str] = []
+
+        if _is_class_relationship_query(query):
+            steps.append(_class_relationship_answer_step(query, bundle))
 
         if focus_file:
             steps.append(f"Open {focus_file} and scan for logic related to \"{primary_token}\"." if primary_token else f"Open {focus_file} and scan for logic related to the question.")
@@ -137,4 +141,57 @@ def _select_primary_token(tokens: List[str], ranked_paths: List[str]) -> Optiona
     if top[0] > 0:
         return top[2]
     return max(tokens, key=len)
+
+
+_CLASS_DECL_RE = re.compile(
+    r"\bclass\s+([A-Za-z_]\w*)"
+    r"(?:\s+extends\s+([A-Za-z_][A-Za-z0-9_\.]*))?"
+    r"(?:\s+implements\s+([A-Za-z_][A-Za-z0-9_\.,\s]*))?",
+    re.IGNORECASE,
+)
+
+
+def _is_class_relationship_query(query: str) -> bool:
+    q = (query or "").lower()
+    triggers = (
+        "base class",
+        "parent class",
+        "extends",
+        "implements",
+        "which class",
+    )
+    return any(t in q for t in triggers)
+
+
+def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
+    q = (query or "").lower()
+    ask_base = "base class" in q or "parent class" in q or "extends" in q
+    ask_impl = "implements" in q
+
+    for item in bundle.items:
+        text = str(item.content or "")
+        m = _CLASS_DECL_RE.search(text)
+        if not m:
+            continue
+        cls = m.group(1)
+        base = (m.group(2) or "").strip()
+        impl = (m.group(3) or "").strip()
+        if ask_base and base:
+            return (
+                f"Direct answer (grounded): `{cls}` extends `{base}` "
+                f"(from snippet in `{item.path}`)."
+            )
+        if ask_impl and impl:
+            return (
+                f"Direct answer (grounded): `{cls}` implements `{impl}` "
+                f"(from snippet in `{item.path}`)."
+            )
+        if base or impl:
+            rel = f"extends `{base}`" if base else f"implements `{impl}`"
+            return f"Direct answer (grounded): `{cls}` {rel} (from `{item.path}`)."
+
+    return (
+        "Direct answer (grounded): could not determine the class inheritance/implementation "
+        "from retrieved snippets alone; class declaration line is not in top evidence."
+    )
 

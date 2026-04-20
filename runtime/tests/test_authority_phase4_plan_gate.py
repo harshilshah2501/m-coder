@@ -158,6 +158,34 @@ def test_planner_prefers_meaningful_token_over_question_word():
     assert "usages of \"apis\"" in text or "usages of \"api\"" in text
 
 
+def test_planner_class_query_returns_direct_grounded_answer_when_declaration_present():
+    p = PlanOnlyPlanner()
+    b = _ctx(["motadata/src/main/java/com/mindarray/api/APIServer.java"])
+    b.items[0].content = "public class APIServer extends BaseApiServer implements RestEndpoint {"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=None,
+    )
+    first = ps.steps[0]
+    assert first.startswith("Direct answer (grounded):")
+    assert "extends `BaseApiServer`" in first
+
+
+def test_planner_class_query_reports_insufficient_when_declaration_missing():
+    p = PlanOnlyPlanner()
+    b = _ctx(["motadata/src/main/java/com/mindarray/api/APIServer.java"])
+    b.items[0].content = "private void handleRequest() { return; }"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=None,
+    )
+    first = ps.steps[0].lower()
+    assert "could not determine" in first
+    assert "class declaration line is not in top evidence" in first
+
+
 def test_planner_uses_authority_when_present():
     registry = load_registry(REG)
     ar = build_authority_resolution("alert correlation", registry, None)
