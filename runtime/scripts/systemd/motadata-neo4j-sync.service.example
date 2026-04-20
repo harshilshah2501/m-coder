@@ -1,0 +1,30 @@
+# Example systemd unit — install on GPU server (adjust paths and user).
+#   sudo cp motadata-neo4j-sync.service.example /etc/systemd/system/motadata-neo4j-sync.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now motadata-neo4j-sync.timer
+#
+# Requires: Motadata clone + m-coder checkout, Docker Neo4j already bootstrapped,
+#           runtime/.run/neo4j_ask.env present (from neo4j_ask_stack.py bootstrap).
+
+[Unit]
+Description=Motadata git sync + Neo4j class graph refresh (Ask)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=harshil
+Group=harshil
+WorkingDirectory=/home/harshil/Harshil-PoCs/m-coder
+
+# Adjust to your GPU paths.
+Environment=MOTADATA_REPO_ROOT=/home/harshil/Projects/Motadata
+Environment=MCODER_ROOT=/home/harshil/Harshil-PoCs/m-coder
+Environment=SYNC_MODE=git
+Environment=REFRESH_GRAPH=1
+Environment=SOURCE_ENV_FILE=/home/harshil/Harshil-PoCs/m-coder/runtime/.run/neo4j_ask.env
+
+ExecStart=/home/harshil/Harshil-PoCs/m-coder/runtime/scripts/motadata_neo4j_repo_sync.sh
+
+[Install]
+WantedBy=multi-user.target
