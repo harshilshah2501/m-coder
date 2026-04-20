@@ -57,6 +57,11 @@ services:
     host: localhost
     user: neo4j
     password: password
+    uri: bolt://localhost:7687
+    enabled: false
+    ask_enabled: true
+    debug_enabled: false
+    code_enabled: false
 
 docker:
   compose_file: /home/harshil/Harshil-PoCs/rag/docker/docker-compose.yml

@@ -41,8 +41,9 @@ class PlanOnlyPlanner:
         query: str,
         bundle: ContextBundle,
         authority_resolution: Optional[Dict[str, Any]] = None,
+        graph_resolution_meta: Optional[Dict[str, Any]] = None,
     ) -> PlanSummary:
-        generic = self._plan_generic(query, bundle)
+        generic = self._plan_generic(query, bundle, graph_resolution_meta=graph_resolution_meta)
         auth_steps, meta = synthesize_authority_plan_steps(query, bundle, authority_resolution)
         steps = merge_plan_with_authority(generic.steps, auth_steps, authority_resolution)
         notes: List[str] | None = None
@@ -53,7 +54,13 @@ class PlanOnlyPlanner:
             ]
         return PlanSummary(steps=steps, notes=notes)
 
-    def _plan_generic(self, query: str, bundle: ContextBundle) -> PlanSummary:
+    def _plan_generic(
+        self,
+        query: str,
+        bundle: ContextBundle,
+        *,
+        graph_resolution_meta: Optional[Dict[str, Any]] = None,
+    ) -> PlanSummary:
         # Deterministic token extraction: prefer repo-meaningful terms over question words.
         tokens = [t for t in _tokenize(query) if t]
         ranked = [item.path for item in bundle.items[:8]]
@@ -65,7 +72,13 @@ class PlanOnlyPlanner:
         steps: List[str] = []
 
         if _is_class_relationship_query(query):
-            steps.append(_class_relationship_answer_step(query, bundle))
+            steps.append(
+                _class_relationship_answer_step(
+                    query,
+                    bundle,
+                    graph_resolution_meta=graph_resolution_meta,
+                )
+            )
 
         if focus_file:
             steps.append(f"Open {focus_file} and scan for logic related to \"{primary_token}\"." if primary_token else f"Open {focus_file} and scan for logic related to the question.")
@@ -164,12 +177,21 @@ def _is_class_relationship_query(query: str) -> bool:
     return any(t in q for t in triggers)
 
 
-def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
+def _class_relationship_answer_step(
+    query: str,
+    bundle: ContextBundle,
+    *,
+    graph_resolution_meta: Optional[Dict[str, Any]] = None,
+) -> str:
     q = (query or "").lower()
     ask_base = "base class" in q or "parent class" in q or "extends" in q
     ask_impl = "implements" in q
     query_mentions_api = (" api" in f" {q} ") or (" apis" in f" {q} ")
     universal_api_base_query = _is_universal_api_base_query(q)
+    if ask_base and universal_api_base_query and query_mentions_api:
+        graph_answer = _neo4j_common_base_answer(graph_resolution_meta)
+        if graph_answer:
+            return graph_answer
 
     candidates: List[tuple[str, str, str, str]] = []
     for item in bundle.items:
@@ -231,6 +253,23 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
     return (
         "Direct answer (grounded): could not determine the class inheritance/implementation "
         "from retrieved snippets alone; class declaration line is not in top evidence."
+    )
+
+
+def _neo4j_common_base_answer(graph_resolution_meta: Optional[Dict[str, Any]]) -> str | None:
+    if not isinstance(graph_resolution_meta, dict):
+        return None
+    if not bool(graph_resolution_meta.get("used")):
+        return None
+    if str(graph_resolution_meta.get("answer_type") or "").strip().lower() != "common_base":
+        return None
+    base = str(graph_resolution_meta.get("candidate_base") or "").strip()
+    support = int(graph_resolution_meta.get("support_count") or 0)
+    if not base or support < 2:
+        return None
+    return (
+        f"Direct answer (grounded via Neo4j graph): common API base class appears to be `{base}` "
+        f"(observed across {support} API class declarations in graph index)."
     )
 
 
