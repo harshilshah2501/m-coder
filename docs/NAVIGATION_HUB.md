@@ -4,6 +4,7 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 
 ## Fast Start Routes
 
+- **Simple path (pick automated vs manual API vs setup — read this first if docs feel fragmented):** [`../MOTADATA_SIMPLE_PATH.md`](../MOTADATA_SIMPLE_PATH.md)
 - **All user scenarios (Ask / Debug / Plan / Code / Agent) — root guide:** [`../MCODER_USER_SCENARIOS_GUIDE.md`](../MCODER_USER_SCENARIOS_GUIDE.md)
 - **Current system truth:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md)
 - **Canonical doctrine/spec spine:** [`MASTER_SYSTEM_SPEC.md`](MASTER_SYSTEM_SPEC.md)
