@@ -6,6 +6,7 @@ This document walks through what you see when you run `runtime/scripts/motadata_
 
 - Verifier script: `runtime/scripts/motadata_behavior_verify.py`
 - Scenario definitions (expected vs actual): `docs/validation/motadata_aiops_behavior_scenarios.v1.json`
+- Plain-language narratives (titles and paragraphs per scenario id): `docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json`
 - Quality gates (retrieval / evidence rules): `docs/validation/motadata_evidence_quality_policy.v1.json`
 - Full operator runbook: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`
 
@@ -15,14 +16,24 @@ This document walks through what you see when you run `runtime/scripts/motadata_
 
 Every run produces:
 
-1. **Text on the terminal** — human-readable, especially rich with `--print dev`.
-2. **A JSON file** — the machine-readable “source of truth” for pass/fail and for comparing runs over time.
+1. **Text on the terminal** — choose the audience:
+   - **`--print plain`** — a structured, plain-English report (quick system check + one block per scenario with “what this means” and “typical causes” on failure). Best for operators, PMs, or anyone who does not want JSON field names in stdout.
+   - **`--print dev`** — full technical dump (plan steps, evidence previews, raw expectations).
+   - **`--print concise`** — short technical lines (default).
+2. **A JSON file** — the machine-readable “source of truth” for pass/fail and for comparing runs over time. When the plain-language file is present, each scenario result also includes a **`plain_language`** object (title + paragraphs) so the saved file is easier to read without a separate legend.
 
 Default JSON path in the demobook:
 
 `runtime/.run/motadata_behavior_validation.json`
 
 Open that file after a run to see the same story in structured form: top-level keys include `all_pass`, `smoke`, `scenario_suite`, `quality_policy`, `workspace_root`, `timestamp_utc`.
+
+### `--print plain` (readable report)
+
+- **Stdout:** A titled report (“READABLE VERIFICATION REPORT”), overall pass/fail in plain language, an optional **quick system check** paragraph when smoke ran, then **one block per scenario** with title, id, a short explanation, and on failure both technical errors and “typical causes” from the narrative file.
+- **Does not print:** Raw `expect` JSON, full plan steps, or developer-only dumps (use `--print dev` for those).
+- **JSON on disk:** Unchanged schema, but `scenario_suite.results[]` gains **`plain_language`** per row when the narrative file is loaded (default: `docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json` next to the m-coder repo). If that file is missing, built-in fallback sentences are still attached so every result has something readable.
+- **CLI:** `--plain-language /path/to/custom.json` to point at an alternate narrative pack; invalid path → verifier exits with an error.
 
 ---
 

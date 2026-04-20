@@ -12,6 +12,7 @@ Validates these capabilities through live endpoints:
 Stdout modes:
   - concise: short pass/fail + clipped answers
   - dev: full plan steps, context_bundle files, evidence snippet previews
+  - plain: readable report for any audience (uses docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json when present)
   - json: full report JSON
 
 Optional --scenarios FILE runs contract JSON scenarios (see docs/validation/).
@@ -32,6 +33,7 @@ import datetime as dt
 import json
 import os
 import sys
+import textwrap
 import urllib.error
 import urllib.request
 import uuid
@@ -290,6 +292,242 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
         },
         "agent": checks.get("agent") or {},
     }
+
+
+def _m_coder_repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _default_plain_language_json_path() -> Path:
+    return _m_coder_repo_root() / "docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json"
+
+
+def _resolve_plain_language_path(cli_arg: str) -> tuple[Optional[Path], Optional[str]]:
+    """
+    Returns (path, error). If cli_arg is set, file must exist.
+    If empty, auto-use repo default file when present; otherwise None (fallback narratives only).
+    """
+    s = str(cli_arg).strip()
+    if s:
+        p = Path(s).expanduser()
+        if not p.is_file():
+            return None, f"plain-language file not found: {p}"
+        return p, None
+    auto = _default_plain_language_json_path()
+    return (auto, None) if auto.is_file() else (None, None)
+
+
+def _load_plain_narratives_file(path: Path) -> dict[str, dict[str, str]]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("schema_version") != "motadata_aiops_behavior_scenario_plain_language.v1":
+        raise ValueError(
+            f"unsupported plain_language schema_version: {data.get('schema_version')!r} "
+            "(expected motadata_aiops_behavior_scenario_plain_language.v1)"
+        )
+    raw = data.get("narratives") if isinstance(data.get("narratives"), dict) else {}
+    out: dict[str, dict[str, str]] = {}
+    for sid, block in raw.items():
+        if not isinstance(block, dict):
+            continue
+        out[str(sid)] = {str(k): str(v) for k, v in block.items() if isinstance(v, str)}
+    return out
+
+
+def _fallback_plain_narrative(result: dict[str, Any]) -> dict[str, str]:
+    sid = str(result.get("id") or "unknown")
+    cap = str(result.get("capability") or "unknown")
+    desc = str(result.get("description") or "").strip()
+    return {
+        "title": f"Check: {sid}",
+        "in_plain_english": desc
+        or f"This step checks that the “{cap}” capability responds the way the scenario contract describes.",
+        "what_pass_means": "The live system matched every expectation for this check.",
+        "what_failure_usually_means": "Something in the stack, policy, or workspace did not match the contract; see the error list or run with --print dev for technical detail.",
+    }
+
+
+def _plain_narrative_for_result(
+    result: dict[str, Any],
+    narratives_by_id: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    sid = str(result.get("id") or "")
+    base = _fallback_plain_narrative(result)
+    extra = narratives_by_id.get(sid) or {}
+    merged = {**base, **extra}
+    for k in ("title", "in_plain_english", "what_pass_means", "what_failure_usually_means"):
+        merged.setdefault(k, base.get(k, ""))
+    return merged
+
+
+def _enrich_scenario_suite_with_plain_language(
+    suite: dict[str, Any],
+    narratives_by_id: dict[str, dict[str, str]],
+    *,
+    source: str,
+) -> None:
+    suite["plain_language_source"] = source
+    for r in suite.get("results") or []:
+        if not isinstance(r, dict):
+            continue
+        r["plain_language"] = _plain_narrative_for_result(r, narratives_by_id)
+
+
+def _print_plain_smoke_intro(
+    smoke: dict[str, Any] | None,
+    *,
+    workspace_root: str,
+) -> None:
+    if not smoke:
+        return
+    repeat = int(smoke.get("repeat") or 1)
+    stable = bool(smoke.get("stable"))
+    all_pass = bool(smoke.get("all_pass"))
+    runs = smoke.get("runs") or []
+    verdict = "All quick checks passed." if all_pass else "At least one quick check did not pass."
+    stab = (
+        "Both runs behaved the same way (stable)."
+        if stable and repeat > 1
+        else ("Only one run was requested." if repeat <= 1 else "Runs differed slightly — review details if you need repeatability.")
+    )
+    print("")
+    print("  Quick system check (sample run through Ask, Debug, Plan, Code, Agent)")
+    print("  " + "-" * 72)
+    for line in textwrap.fill(
+        f"We exercised the live services using your workspace at {workspace_root}. "
+        f"We ran this end-to-end sequence {repeat} time(s). {stab} "
+        f"{verdict}",
+        width=76,
+    ).splitlines():
+        print(f"  {line}")
+    print("")
+    for idx, run in enumerate(runs, start=1):
+        s = run.get("summary") or {}
+        q = s.get("query") or {}
+        d = s.get("debug") or {}
+        p = s.get("plan") or {}
+        c = s.get("code") or {}
+        a = s.get("agent") or {}
+        rp = "passed" if s.get("pass") else "did not pass"
+        print(f"  Run {idx} — overall this lap {rp}.")
+        for line in textwrap.fill(
+            f"Questions from your repo (Ask): {'ok' if q.get('pass') else 'issue'}. "
+            f"Structured code explanation (Debug): {'ok' if d.get('pass') else 'issue'}. "
+            f"Policy planning (Plan): {'ok' if p.get('pass') else 'issue'}. "
+            f"Safe command (Code): {'ok' if c.get('pass') else 'issue'}. "
+            f"Agent route rules: {'ok' if a.get('pass') else 'issue'}.",
+            width=76,
+        ).splitlines():
+            print(f"  {line}")
+        print("")
+
+
+def _print_plain_scenario_section(suite: dict[str, Any]) -> None:
+    print("")
+    print("  Scenario checks (pinned, repeatable tests)")
+    print("  " + "-" * 72)
+    for line in textwrap.fill(
+        "Each item below is a named test with a plain-English meaning. "
+        "PASS means the live system matched the contract. FAIL means something must be fixed or configured "
+        "(for example services down, policy mismatch, or split-host execute paths).",
+        width=76,
+    ).splitlines():
+        print(f"  {line}")
+    print("")
+    for r in suite.get("results") or []:
+        if not isinstance(r, dict):
+            continue
+        st = "PASS" if r.get("pass") else "FAIL"
+        pl = r.get("plain_language") if isinstance(r.get("plain_language"), dict) else {}
+        title = str(pl.get("title") or r.get("id") or "scenario")
+        body = str(pl.get("in_plain_english") or "")
+        ok_mean = str(pl.get("what_pass_means") or "")
+        bad_mean = str(pl.get("what_failure_usually_means") or "")
+        print(f"  [{st}] {title}")
+        print(f"       id: {r.get('id')}  ({r.get('capability')})")
+        if body:
+            for line in textwrap.wrap(body, width=74):
+                print(f"       {line}")
+        if r.get("pass"):
+            if ok_mean:
+                for line in textwrap.wrap(f"When it passes: {ok_mean}", width=74):
+                    print(f"       {line}")
+        else:
+            errs = r.get("errors") or []
+            if errs:
+                print("       What went wrong (technical):")
+                for e in errs[:6]:
+                    for line in textwrap.wrap(str(e), width=74):
+                        print(f"       · {line}")
+                if len(errs) > 6:
+                    print(f"       · … and {len(errs) - 6} more")
+            if bad_mean:
+                for line in textwrap.wrap(f"Typical causes: {bad_mean}", width=74):
+                    print(f"       {line}")
+        print("")
+
+
+def _print_plain_utility_section(suite: dict[str, Any]) -> None:
+    print("")
+    print("  Optional developer utility checks")
+    print("  " + "-" * 72)
+    for line in textwrap.fill(
+        "These are extra heuristics for developers. They do not change the main product verdict unless you rely on them.",
+        width=76,
+    ).splitlines():
+        print(f"  {line}")
+    print("")
+    ap = "PASS" if suite.get("all_pass") else "FAIL"
+    print(f"  Overall utility suite: {ap}")
+    for r in suite.get("results") or []:
+        if not isinstance(r, dict):
+            continue
+        st = "PASS" if r.get("pass") else "FAIL"
+        print(f"  [{st}] {r.get('id')} — {r.get('description') or ''}".rstrip())
+        if r.get("errors"):
+            for e in (r.get("errors") or [])[:3]:
+                print(f"       {e}")
+    print("")
+
+
+def _print_plain_report(
+    final: dict[str, Any],
+    *,
+    workspace_root: str,
+    out_path: Path,
+    scenarios_only: bool,
+) -> None:
+    print("")
+    print("=" * 80)
+    print("  MOTADATA AI ASSISTANT — READABLE VERIFICATION REPORT")
+    print("=" * 80)
+    print("")
+    for line in textwrap.fill(
+        "This summary is meant for anyone reading the terminal: operators, reviewers, or teammates "
+        "who do not work with JSON every day. A machine-readable copy is still saved to a file at the end.",
+        width=78,
+    ).splitlines():
+        print(f"  {line}")
+    print("")
+    overall = "PASSED — everything in this run matched expectations." if final.get("all_pass") else (
+        "FAILED — at least one check needs attention before you treat the stack as fully healthy."
+    )
+    print(f"  Overall: {overall}")
+    print(f"  Workspace: {workspace_root}")
+    if not scenarios_only:
+        _print_plain_smoke_intro(final.get("smoke"), workspace_root=workspace_root)
+    if final.get("scenario_suite"):
+        _print_plain_scenario_section(final["scenario_suite"])
+    if final.get("developer_utility_suite"):
+        _print_plain_utility_section(final["developer_utility_suite"])
+    src = (final.get("scenario_suite") or {}).get("plain_language_source")
+    if src:
+        print("  Narrative text source:", src)
+    print("")
+    print("-" * 80)
+    print(f"  Full detail (JSON): {out_path}")
+    print("  For developers: re-run with --print dev to see requests, evidence, and raw fields.")
+    print("-" * 80)
+    print("")
 
 
 def _print_concise(final: dict[str, Any]) -> None:
@@ -1748,9 +1986,9 @@ def main() -> int:
     parser.add_argument(
         "--print",
         dest="print_mode",
-        choices=["concise", "dev", "json"],
+        choices=["concise", "dev", "plain", "json"],
         default="concise",
-        help="stdout: concise | dev (full answer + evidence) | json",
+        help="stdout: concise | dev (full answer + evidence) | plain (readable for any audience) | json",
     )
     parser.add_argument(
         "--scenarios",
@@ -1781,6 +2019,14 @@ def main() -> int:
         "--out",
         default="runtime/.run/motadata_behavior_validation.json",
         help="Output JSON report path",
+    )
+    parser.add_argument(
+        "--plain-language",
+        default="",
+        help=(
+            "Optional path to motadata_aiops_behavior_scenario_plain_language.v1.json. "
+            "When omitted, the verifier uses docs/validation/... next to the m-coder repo root if that file exists."
+        ),
     )
     parser.add_argument(
         "--export-stage-a",
@@ -1860,6 +2106,24 @@ def main() -> int:
             quality_policy=quality_policy,
             scenario_ids=scenario_id_filter,
         )
+        plain_path, plain_err = _resolve_plain_language_path(str(args.plain_language or ""))
+        if plain_err:
+            print(f"ERROR: {plain_err}", file=sys.stderr)
+            return 2
+        narratives: dict[str, dict[str, str]] = {}
+        if plain_path:
+            try:
+                narratives = _load_plain_narratives_file(plain_path)
+            except Exception as exc:
+                print(f"ERROR: invalid plain-language file {plain_path}: {exc}", file=sys.stderr)
+                return 2
+        if scenario_suite is not None:
+            src = (
+                str(plain_path.resolve())
+                if plain_path
+                else "fallback (built-in summaries only; add docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json in the m-coder repo)"
+            )
+            _enrich_scenario_suite_with_plain_language(scenario_suite, narratives, source=src)
 
     developer_utility_suite: dict[str, Any] | None = None
     if args.utility_scenarios.strip():
@@ -1917,6 +2181,13 @@ def main() -> int:
 
     if args.print_mode == "json":
         print(json.dumps(final, indent=2))
+    elif args.print_mode == "plain":
+        _print_plain_report(
+            final,
+            workspace_root=args.workspace_root,
+            out_path=out_path,
+            scenarios_only=args.scenarios_only,
+        )
     elif args.print_mode == "dev" and smoke_payload:
         dev_final = {
             "workspace_root": args.workspace_root,
@@ -1941,10 +2212,10 @@ def main() -> int:
         }
         _print_concise(dev_final)
 
-    if scenario_suite:
+    if scenario_suite and args.print_mode not in ("json", "plain"):
         _print_scenario_results(scenario_suite, dev=args.print_mode == "dev")
 
-    if developer_utility_suite:
+    if developer_utility_suite and args.print_mode not in ("json", "plain"):
         _print_utility_scenario_results(developer_utility_suite, dev=args.print_mode == "dev")
 
     print(f"\nSaved: {out_path}")

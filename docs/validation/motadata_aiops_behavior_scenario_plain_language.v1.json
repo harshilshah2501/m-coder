@@ -1,0 +1,72 @@
+{
+  "schema_version": "motadata_aiops_behavior_scenario_plain_language.v1",
+  "description": "Human-readable explanations for each pinned behavior scenario. Consumed by runtime/scripts/motadata_behavior_verify.py --print plain and embedded into the JSON report.",
+  "narratives": {
+    "ask_broad_correlation": {
+      "title": "Ask — broad product question",
+      "in_plain_english": "Someone asks how alert correlation and enrichment work, without pointing at a specific file. The assistant must pull real snippets from the workspace, answer in a plan-only way (no silent execution), and use the evidence-first path so answers stay grounded.",
+      "what_pass_means": "The system returned a grounded answer with at least one plan step and stayed on the safe, evidence-backed Ask path.",
+      "what_failure_usually_means": "Export or Ask failed, or the response did not follow the governed Ask contract (for example wrong path, missing steps, or execution enabled when it should not be)."
+    },
+    "ask_symbol_anchored": {
+      "title": "Ask — question tied to known code names",
+      "in_plain_english": "The question names specific engines or symbols so the answer should stay tied to real implementation details, not generic filler.",
+      "what_pass_means": "The answer path and content still match expectations, and the reply mentions expected symbols or correlation-related wording.",
+      "what_failure_usually_means": "Retrieval or answering drifted away from the anchored topic, or required terms never appeared in the answer."
+    },
+    "ask_anchor_owner_gate": {
+      "title": "Ask — owner and authority checks",
+      "in_plain_english": "For a question about a core engine, the system must recognize the owning area, surface the owner file among top evidence, and apply the configured owner lane rules. This mirrors how operators expect “who owns this code?” to behave.",
+      "what_pass_means": "Authority owner resolved, owner file appears in the top evidence set, and Stage A injected the owner lane as policy requires.",
+      "what_failure_usually_means": "Ownership metadata or Stage A routing did not meet the stricter policy (often indexing, workspace identity, or policy thresholds)."
+    },
+    "ask_anchor_owner_top1": {
+      "title": "Ask — strict owner ranking",
+      "in_plain_english": "Like the owner gate, but stricter: the owner should rank at the top under policy, and authority status should be validated.",
+      "what_pass_means": "Stricter owner and anchor checks passed, including validated authority where required.",
+      "what_failure_usually_means": "Ranking or authority validation did not reach the stricter bar; compare with the owner-gate scenario to see whether the issue is ranking-only."
+    },
+    "ask_api_request_routing_owner": {
+      "title": "Ask — API routing ownership",
+      "in_plain_english": "A question about where API request routing is handled should anchor to the right server-side ownership, not unrelated modules.",
+      "what_pass_means": "Governed Ask behavior holds, and the answer ties to API routing ownership as expected.",
+      "what_failure_usually_means": "Export/Ask failed or the answer did not reflect the expected routing ownership signals."
+    },
+    "ask_servicenow_sync_owner": {
+      "title": "Ask — ServiceNow sync ownership",
+      "in_plain_english": "A question about ServiceNow incident sync should anchor to the integration area that actually owns that code.",
+      "what_pass_means": "The governed Ask path works and the response reflects integration ownership for ServiceNow sync.",
+      "what_failure_usually_means": "Evidence or answer did not connect to the expected integration owner terms."
+    },
+    "debug_explain_selection": {
+      "title": "Debug — explain real code you point at",
+      "in_plain_english": "You select a real file and a short question. The assistant must explain that selection in a structured debug format (summary, evidence, limits), not generic chat, and stay honest about what the code can do.",
+      "what_pass_means": "EXPLAIN_DEBUG fired with the expected structure and referenced the selected file responsibly.",
+      "what_failure_usually_means": "Wrong routing mode, missing structured fields, or the answer did not ground in the selected file when the file was present in context."
+    },
+    "debug_explain_missing_selected_file": {
+      "title": "Debug — honest answer when context is missing",
+      "in_plain_english": "You ask about a file that is not in retrieved evidence. The assistant must say so clearly instead of inventing a deep analysis.",
+      "what_pass_means": "The system admitted insufficient grounding and flagged missing context in a controlled way.",
+      "what_failure_usually_means": "The model pretended to fully analyze missing code, or the required honesty markers never appeared."
+    },
+    "plan_pr_merge_shadow": {
+      "title": "Plan — policy decision on a merge-style event",
+      "in_plain_english": "Simulates asking the planner for a decision on a merge-like IDE event in shadow mode. A refusal is valid; the test only requires a real, schema-valid decision object.",
+      "what_pass_means": "Plan-Gate returned a proper decision envelope so governance can record what would happen.",
+      "what_failure_usually_means": "Plan endpoint error, missing decision payload, or wrong response shape."
+    },
+    "code_echo_probe": {
+      "title": "Code — safe command execution",
+      "in_plain_english": "Runs a harmless echo command through the governed execute path to prove bounded execution works. This checks wiring and policy, not your product logic.",
+      "what_pass_means": "The command was actually executed under safe posture, as reported by the execute API.",
+      "what_failure_usually_means": "Often the planning host cannot see the workspace path used as repo root (for example GPU vs WSL split). Set MOTADATA_VERIFY_EXECUTE_REPO_ROOT to a path that exists where Plan-Gate runs, or mirror the repo there."
+    },
+    "agent_no_route": {
+      "title": "Agent — no separate autonomous HTTP agent",
+      "in_plain_english": "Confirms there is no public “hands-off agent” API route, while normal Ask responses may still carry advisory assist metadata. This matches the product rule: assistance is governed, not a hidden autonomous agent endpoint.",
+      "what_pass_means": "Calling /v0/agent returns 404 as designed, and Ask still exposes assist metadata when expected.",
+      "what_failure_usually_means": "An unexpected agent route appeared, or assist metadata disappeared from Ask when it should be present."
+    }
+  }
+}

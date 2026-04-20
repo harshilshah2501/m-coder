@@ -92,7 +92,8 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 
 - Exit code **0** when every scenario passes.  
 - **`runtime/.run/motadata_behavior_validation.json`** — machine-readable artifact for CI or diffs.  
-- Read stdout with **`[PASS]` / `[FAIL]`** per scenario: [docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md)
+- Read stdout with **`[PASS]` / `[FAIL]`** per scenario: [docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md)  
+- For a **non-developer-friendly** narrative (plain English per scenario, no raw `expect` blobs), use **`--print plain`** instead of `--print dev`. Narratives live in [docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json](docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json); override with **`--plain-language PATH`** if you maintain a forked copy.
 
 ### 4.1 Smoke run with **your** Ask + Debug wording (still exercises all five)
 
