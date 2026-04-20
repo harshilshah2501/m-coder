@@ -523,26 +523,38 @@ Notes:
 - Ask remains `PLAN_ONLY`; Debug/Code Neo4j flags remain disabled by default.
 - If `--neo4j-password` and `MOTADATA_NEO4J_PASSWORD` are both missing, the script prompts securely in interactive shells.
 
-### 6.3.6 GPU Motadata mirror + drift automation (Neo4j stays on GPU)
+### 6.3.6 WSL → GPU Motadata mirror (rsync) + remote Neo4j refresh
 
-When Plan-Gate and Neo4j run on the **GPU server** and Motadata is edited elsewhere (for example WSL), treat the GPU checkout as a **mirror** of the same git remote:
+Use this when **Plan-Gate + Neo4j run on the GPU server** but the **Motadata git checkout and Context Layer stay on WSL**. The GPU does not need git credentials: WSL (or any host with repo access) pushes a file mirror, then optionally triggers a graph refresh on the GPU.
 
-- **Workflow:** commit/push from WSL (or your canonical branch), then GPU runs `git pull --ff-only` and refreshes the class graph.
-- **Automation:** run `runtime/scripts/motadata_neo4j_repo_sync.sh` on a timer (cron or systemd). It pulls Motadata and then runs `neo4j_ask_stack.py refresh` using credentials from `runtime/.run/neo4j_ask.env` (create that file once via `bootstrap`).
+1) **One-time on GPU:** create mirror directory and ensure Neo4j + `m-coder` paths exist (see §6.3.5).
 
-Manual run:
+2) **On WSL (on-demand):** sync Motadata into the GPU mirror and refresh the class graph:
 
 ```bash
-export MOTADATA_REPO_ROOT="/home/harshil/Projects/Motadata"
-export MCODER_ROOT="/home/harshil/Harshil-PoCs/m-coder"
-chmod +x runtime/scripts/motadata_neo4j_repo_sync.sh
-./runtime/scripts/motadata_neo4j_repo_sync.sh
+cd /path/to/m-coder
+export MOTADATA_REPO_ROOT="/home/<you>/Projects/Motadata"
+export GPU_SYNC_HOST="user@<gpu-host>"
+export GPU_MIRROR_ROOT="/data/motadata_mirror"
+export MCODER_REMOTE_ROOT="/root/Harshil-PoCs/m-coder"
+export REMOTE_REFRESH=1
+
+./runtime/scripts/sync_motadata_mirror_to_gpu.sh
 ```
 
-- `SYNC_MODE=none` skips `git pull` (graph refresh only).
-- `REFRESH_GRAPH=0` pulls only (no Neo4j refresh).
+3) **Plan-Gate on GPU** must use the same mirror path for indexing:
 
-Example systemd units (copy and edit paths/user): `runtime/scripts/systemd/motadata-neo4j-sync.service.example` and `motadata-neo4j-sync.timer.example`.
+- `neo4j_ask_stack.py --workspace-root "${GPU_MIRROR_ROOT}"` (already what `REMOTE_REFRESH` runs).
+
+4) **Drift control:** each sync writes `motadata_snapshot.json` at the mirror root with `git_commit` and `synced_at_utc` for auditing.
+
+5) **Cron on WSL** (example every 30 minutes): same exports as above, append logging:
+
+```bash
+*/30 * * * * cd /path/to/m-coder && MOTADATA_REPO_ROOT=... GPU_SYNC_HOST=... GPU_MIRROR_ROOT=... MCODER_REMOTE_ROOT=... REMOTE_REFRESH=1 ./runtime/scripts/sync_motadata_mirror_to_gpu.sh >>/tmp/motadata_sync.log 2>&1
+```
+
+6) **SSH key:** configure WSL → GPU key-based login (`RSYNC_RSH='ssh -i /path/key'` if not default).
 
 ---
 
