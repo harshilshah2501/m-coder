@@ -11,6 +11,7 @@ Capabilities:
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import os
 import shlex
@@ -73,6 +74,20 @@ def _workspace_root_from_arg(raw: str) -> Path:
 def _source_dirs(raw_dirs: Iterable[str]) -> tuple[str, ...]:
     vals = tuple(str(v).strip() for v in raw_dirs if str(v).strip())
     return vals if vals else ("motadata/src/main/java",)
+
+
+def _resolve_password(cli_password: str, env_password: str) -> str:
+    cli = (cli_password or "").strip()
+    if cli:
+        return cli
+    env = (env_password or "").strip()
+    if env:
+        return env
+    if sys.stdin.isatty():
+        prompt = getpass.getpass("Enter Neo4j password (MOTADATA_NEO4J_PASSWORD): ").strip()
+        if prompt:
+            return prompt
+    raise SystemExit("Neo4j password is required (--neo4j-password or MOTADATA_NEO4J_PASSWORD).")
 
 
 def _docker_names(only_running: bool) -> set[str]:
@@ -248,9 +263,10 @@ def main() -> int:
 
     workspace_root = _workspace_root_from_arg(args.workspace_root)
     source_dirs = _source_dirs(args.source_dir)
-    password = args.neo4j_password or os.environ.get("MOTADATA_NEO4J_PASSWORD", "").strip()
-    if not password:
-        raise SystemExit("Neo4j password is required (--neo4j-password or MOTADATA_NEO4J_PASSWORD).")
+    password = _resolve_password(
+        args.neo4j_password,
+        os.environ.get("MOTADATA_NEO4J_PASSWORD", ""),
+    )
     cfg = StackConfig(
         workspace_root=workspace_root,
         source_dirs=source_dirs,

@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from runtime.scripts.neo4j_ask_stack import (
     DEFAULT_MOTADATA_REPO_ROOT,
     StackConfig,
     _docker_run_command,
+    _resolve_password,
     _source_dirs,
     _workspace_root_from_arg,
 )
@@ -51,4 +54,29 @@ def test_docker_run_command_sets_restart_ports_and_volume():
     assert "-p 7687:7687" in text
     assert "-v motadata_neo4j_data:/data" in text
     assert "NEO4J_AUTH=neo4j/secret" in text
+
+
+def test_resolve_password_prefers_cli_value(monkeypatch):
+    monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: True)
+    assert _resolve_password("cli-secret", "env-secret") == "cli-secret"
+
+
+def test_resolve_password_uses_env_value(monkeypatch):
+    monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: True)
+    assert _resolve_password("", "env-secret") == "env-secret"
+
+
+def test_resolve_password_prompts_when_interactive(monkeypatch):
+    monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr(
+        "runtime.scripts.neo4j_ask_stack.getpass.getpass",
+        lambda _prompt: "prompt-secret",
+    )
+    assert _resolve_password("", "") == "prompt-secret"
+
+
+def test_resolve_password_raises_when_non_interactive_without_values(monkeypatch):
+    monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: False)
+    with pytest.raises(SystemExit):
+        _resolve_password("", "")
 
