@@ -8,6 +8,7 @@ before merge.
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -33,6 +34,8 @@ from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_code_debug_intent,
     infer_query_subsystems,
+    query_api_surface_focus,
+    query_class_relationship_focus,
     is_generic_eventbus_java_handler,
     is_noise_class,
     is_support_style_java_basename,
@@ -54,6 +57,16 @@ def _basename(rel: str) -> str:
     if "/" not in rel:
         return rel
     return rel.rsplit("/", 1)[-1]
+
+
+_CLASS_DECL_WITH_REL_RX = re.compile(
+    r"\b(class|interface|enum)\s+[a-z_][a-z0-9_]*\s+(extends|implements)\s+[a-z_][a-z0-9_\.]*",
+    re.IGNORECASE,
+)
+_CLASS_DECL_ANY_RX = re.compile(
+    r"\b(class|interface|enum)\s+[a-z_][a-z0-9_]*",
+    re.IGNORECASE,
+)
 
 
 def _diminish_content_mass(raw: int, cfg: LexicalRetrievalConfig) -> int:
@@ -437,6 +450,61 @@ def _basename_stem_exact_boost(
         if t == stem:
             return _scaled(raw, cfg)
     return 0
+
+
+def _class_relationship_boost(
+    *,
+    entry: FileIndexEntry,
+    root: Path,
+    tokens: Tuple[str, ...],
+    rel_l: str,
+    base_l: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    policy: Mapping,
+    cfg: LexicalRetrievalConfig,
+) -> int:
+    """
+    Deterministic score shaping for inheritance/implementation questions.
+
+    API-focused class-relationship queries get a targeted path/declaration boost so
+    broad keyword-heavy files do not outrank likely declaration owners.
+    """
+    if not code_intent_active or not cfg.enable_policy_bias:
+        return 0
+    if fpolicy.file_class not in ("core_aiops_code", "supporting_prod_code"):
+        return 0
+    if "/src/main/java/" not in rel_l:
+        return 0
+    if not query_class_relationship_focus(tokens):
+        return 0
+
+    text = _read_content_lower_cached(
+        str(root / entry.relative_path),
+        int(entry.mtime_ns),
+        int(entry.size_bytes),
+        int(cfg.max_content_bytes),
+    )
+    if not text:
+        return 0
+
+    boost = 0
+    rel_decl = float(policy.get("code_intent_class_relationship_decl_boost", 0.0))
+    any_decl = float(policy.get("code_intent_class_relationship_class_only_boost", 0.0))
+    if rel_decl > 0 and _CLASS_DECL_WITH_REL_RX.search(text):
+        boost += _scaled(rel_decl, cfg)
+    elif any_decl > 0 and _CLASS_DECL_ANY_RX.search(text):
+        boost += _scaled(any_decl, cfg)
+
+    if query_api_surface_focus(tokens):
+        api_path_boost = float(policy.get("code_intent_class_relationship_api_path_boost", 0.0))
+        non_api_dem = float(policy.get("code_intent_class_relationship_api_non_api_demotion", 0.0))
+        api_path_hit = "/api/" in rel_l or "api" in base_l
+        if api_path_hit and api_path_boost > 0:
+            boost += _scaled(api_path_boost, cfg)
+        elif (not api_path_hit) and non_api_dem > 0:
+            boost -= _scaled(non_api_dem, cfg)
+    return boost
 
 
 def _symbol_boost(
@@ -851,6 +919,17 @@ def _score_entry(
     basename_stem_exact_boost = _basename_stem_exact_boost(
         base_name, tokens, code_intent_active, policy, cfg
     )
+    class_relationship_boost = _class_relationship_boost(
+        entry=entry,
+        root=root,
+        tokens=tokens,
+        rel_l=rel_l,
+        base_l=base_l,
+        fpolicy=fpolicy,
+        code_intent_active=code_intent_active,
+        policy=policy,
+        cfg=cfg,
+    )
     engineering_aiops_prior = 0
     if (
         cfg.enable_engineering_aiops_path_prior
@@ -880,6 +959,7 @@ def _score_entry(
         - ingestion_log_parser_demotion
         + duplicate_incident_core_boost
         + basename_stem_exact_boost
+        + class_relationship_boost
         + engineering_aiops_prior
     )
     policy_part = (
@@ -896,6 +976,7 @@ def _score_entry(
         - ingestion_log_parser_demotion
         + duplicate_incident_core_boost
         + basename_stem_exact_boost
+        + class_relationship_boost
         + engineering_aiops_prior
     )
     diagnostics: Optional[Dict[str, int]] = None
@@ -925,6 +1006,7 @@ def _score_entry(
             "ingestion_log_parser_demotion": ingestion_log_parser_demotion,
             "duplicate_incident_core_boost": duplicate_incident_core_boost,
             "basename_stem_exact_boost": basename_stem_exact_boost,
+            "class_relationship_boost": class_relationship_boost,
             "engineering_aiops_prior": engineering_aiops_prior,
             "content_mass_lexical_trimmed": content_mass_trimmed,
             "facade_cap_basename_or_symbol_owner_signal": 1 if narrow_owner_signal_for_facade else 0,

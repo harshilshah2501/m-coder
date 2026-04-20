@@ -142,6 +142,14 @@ _CODE_DEBUG_INTENT_TOKENS: FrozenSet[str] = frozenset(
         "anomaly",
         "collector",
         "correlation",
+        "class",
+        "base",
+        "extends",
+        "implements",
+        "inheritance",
+        "superclass",
+        "api",
+        "apis",
         "debug",
         "delegation",
         "detector",
@@ -290,6 +298,36 @@ def query_duplicate_incident_focus(tokens: Tuple[str, ...]) -> bool:
     if "duplicate" not in ts:
         return False
     return "incident" in ts or "incidents" in ts
+
+
+def query_class_relationship_focus(tokens: Tuple[str, ...]) -> bool:
+    """
+    True when query asks inheritance/implementation relationships.
+
+    Keeps the trigger deterministic and lexical-only.
+    """
+    ts = set(tokens)
+    if "class" not in ts and "interface" not in ts:
+        return False
+    return bool(
+        {
+            "base",
+            "parent",
+            "extends",
+            "implements",
+            "inherit",
+            "inherits",
+            "inheritance",
+            "superclass",
+        }
+        & ts
+    )
+
+
+def query_api_surface_focus(tokens: Tuple[str, ...]) -> bool:
+    """True when query explicitly targets API/API-surface classes."""
+    ts = set(tokens)
+    return "api" in ts or "apis" in ts
 
 
 def is_generic_eventbus_java_handler(relative_path: str, basename: str) -> bool:

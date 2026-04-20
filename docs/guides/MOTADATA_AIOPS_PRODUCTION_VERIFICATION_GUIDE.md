@@ -373,6 +373,61 @@ python3 runtime/scripts/motadata_query_cli.py \
 
 This scores the response into `gold|silver|observational|banned` using phase/evidence/truthfulness/runtime components without changing runtime governance.
 
+### 6.3.3 Governed rollout / rollback gate (model + adapter)
+
+Use this section for production promotion decisions after model swap or adapter regeneration.
+
+1) Build Ask-v1 governed SFT pool (`gold/silver` only):
+
+```bash
+python3 runtime/scripts/build_governed_sft_dataset.py \
+  --inputs "docs/validation/artifacts/plugin_phase1_truth_proof/scenario_*/response.json" \
+           "archive/hostB_proof_pack/*/v1_ask_response.json" \
+           "/tmp/fresh_ask_v1.json" \
+  --out /tmp/governed_sft_events_askv1.jsonl \
+  --summary-out /tmp/governed_sft_events_askv1.summary.json
+```
+
+2) Compute assist baseline-vs-candidate reward deltas:
+
+```bash
+python3 runtime/scripts/assist_reward_delta_report.py \
+  --inputs "docs/validation/artifacts/assist_layer_v2_eval/assist_v2_batch_*.json" \
+  --out /tmp/assist_v2_reward_deltas.json
+```
+
+3) Automated behavior verification (baseline + candidate, same scenario pack):
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --repeat 2 \
+  --print concise \
+  --out /tmp/behavior_verify.candidate.json
+```
+
+Promotion thresholds (all required):
+
+- `governed_sft_events_askv1.summary.json` has `events_after_filter > 0`.
+- Behavior verifier: `all_pass == true` and `stable == true`.
+- Reward deltas: `delta_negative == 0` and `mean_delta >= 0`.
+- No `candidate_hard_violation_counts` entries for:
+  - `false_strong_under_low_evidence`
+  - `execution_bypass_plan_only`
+
+Rollback triggers (any one):
+
+- Scenario regression (`all_pass == false` on candidate).
+- Any hard-violation increase vs baseline.
+- Reward report shows `delta_negative > 0` on trusted Ask-v1-aligned eval set.
+
+Important:
+
+- Do not use assist-v2 `plan_only_response.v0.1` envelopes alone as SFT promotion evidence; they may not carry Ask-v1 `evidence_first_meta.ask_path` and will score `missing_ask_path`.
+- Promotion decisions must be based on Ask-v1-governed artifacts and scenario verification together.
+
 ---
 
 ## 7) Automated repeatable verification

@@ -185,6 +185,12 @@ RETRIEVAL_POLICY_V5: Final[Mapping[str, object]] = MappingProxyType(
         # beats generic topology/store keyword mass in sibling *Store* / *Engine* files.
         "code_intent_basename_stem_exact_boost": 380.0,
         "code_intent_basename_stem_exact_min_token_len": 12,
+        # Class-relationship query hardening: prefer declaration owners over broad keyword sinks.
+        "code_intent_class_relationship_decl_boost": 32.0,
+        "code_intent_class_relationship_class_only_boost": 10.0,
+        # API-focused relationship query shaping (e.g., "base class for all APIs").
+        "code_intent_class_relationship_api_path_boost": 40.0,
+        "code_intent_class_relationship_api_non_api_demotion": 12.0,
     }
 )
 """

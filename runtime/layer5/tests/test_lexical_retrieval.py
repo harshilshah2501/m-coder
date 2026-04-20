@@ -655,6 +655,52 @@ class TestSlice5MandatoryTop1Closure:
             mm = next(h for h in r.hits if "VisualizationMetricManager" in h.relative_path)
             assert (mm.diagnostics or {}).get("topic_focus_supporting_content_trimmed", 0) > 0
 
+    def test_class_relationship_api_query_prefers_api_declaration_owner(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            heavy = "which class base all apis is the for " * 280
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+                "package com.mindarray.visualization;\npublic final class VisualizationConstants {\n"
+                + heavy
+                + "\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/api/APIServer.java",
+                "package com.mindarray.api;\npublic class APIServer extends AbstractVerticle {\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+                "package com.mindarray.nms;\npublic class DiscoveryEngine extends Verticle {\n}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Which class is the base class for all APIs?",
+                top_k=3,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert r.hits[0].relative_path.endswith("APIServer.java")
+            assert (r.hits[0].diagnostics or {}).get("class_relationship_boost", 0) > 0
+
+    def test_non_relationship_api_query_does_not_apply_class_relationship_boost(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/api/APIServer.java",
+                "package com.mindarray.api;\npublic class APIServer extends AbstractVerticle {\n}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "How does API server request routing work?",
+                top_k=1,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            assert (r.hits[0].diagnostics or {}).get("class_relationship_boost", 0) == 0
+
 
 def test_engineering_intent_top_k_composition_promotes_cores_without_touching_rank0():
     """Deterministic composition: pull core_aiops_code from below top-k into slots 1..k-1 up to target."""
