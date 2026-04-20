@@ -11,6 +11,7 @@ future runtime could investigate the question.
 
 from dataclasses import dataclass
 import re
+from collections import Counter
 from typing import Any, Dict, List, Optional
 
 from runtime.context.contracts import ContextBundle
@@ -168,17 +169,16 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
     ask_base = "base class" in q or "parent class" in q or "extends" in q
     ask_impl = "implements" in q
     query_mentions_api = (" api" in f" {q} ") or (" apis" in f" {q} ")
+    universal_api_base_query = _is_universal_api_base_query(q)
 
     candidates: List[tuple[str, str, str, str]] = []
     for item in bundle.items:
         text = str(item.content or "")
-        m = _CLASS_DECL_RE.search(text)
-        if not m:
-            continue
-        cls = m.group(1)
-        base = (m.group(2) or "").strip()
-        impl = (m.group(3) or "").strip()
-        candidates.append((str(item.path), cls, base, impl))
+        for m in _CLASS_DECL_RE.finditer(text):
+            cls = m.group(1)
+            base = (m.group(2) or "").strip()
+            impl = (m.group(3) or "").strip()
+            candidates.append((str(item.path), cls, base, impl))
 
     if not candidates:
         return (
@@ -200,6 +200,19 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
             )
         candidates = api_candidates
 
+    if ask_base and universal_api_base_query and query_mentions_api:
+        common = _resolve_common_api_base(candidates)
+        if common is None:
+            return (
+                "Direct answer (grounded): could not determine a common base class for APIs "
+                "from retrieved snippets alone; more API class declarations are needed in top evidence."
+            )
+        base, count = common
+        return (
+            f"Direct answer (grounded): common API base class appears to be `{base}` "
+            f"(observed across {count} API class declarations in top evidence snippets)."
+        )
+
     for path, cls, base, impl in candidates:
         if ask_base and base:
             return (
@@ -219,4 +232,41 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
         "Direct answer (grounded): could not determine the class inheritance/implementation "
         "from retrieved snippets alone; class declaration line is not in top evidence."
     )
+
+
+def _is_universal_api_base_query(query_lower: str) -> bool:
+    q = f" {query_lower} "
+    phrases = (
+        " base class for all ",
+        " parent class for all ",
+        " all apis ",
+        " all api ",
+        " every api ",
+    )
+    return any(p in q for p in phrases)
+
+
+def _resolve_common_api_base(
+    candidates: List[tuple[str, str, str, str]],
+) -> tuple[str, int] | None:
+    # Exclude obvious API infrastructure wrappers from "all APIs" common-base voting.
+    infra_tokens = ("server", "router", "util", "constant", "handler", "proxy")
+    filtered = [
+        c
+        for c in candidates
+        if c[2]
+        and not any(t in c[1].lower() for t in infra_tokens)
+        and "apiserver" not in c[1].lower()
+    ]
+    base_pool = filtered if filtered else [c for c in candidates if c[2]]
+    if len(base_pool) < 2:
+        return None
+    counter = Counter(c[2] for c in base_pool)
+    base, count = counter.most_common(1)[0]
+    # Require at least 2 declarations and majority signal.
+    if count < 2:
+        return None
+    if count * 2 < len(base_pool):
+        return None
+    return (base, count)
 

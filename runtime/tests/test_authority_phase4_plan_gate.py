@@ -169,7 +169,8 @@ def test_planner_class_query_returns_direct_grounded_answer_when_declaration_pre
     )
     first = ps.steps[0]
     assert first.startswith("Direct answer (grounded):")
-    assert "extends `BaseApiServer`" in first
+    assert "common base class for apis" in first.lower()
+    assert "more api class declarations are needed" in first.lower()
 
 
 def test_planner_class_query_reports_insufficient_when_declaration_missing():
@@ -202,9 +203,8 @@ def test_planner_class_query_prefers_api_declaration_over_unrelated_declaration(
         authority_resolution=None,
     )
     first = ps.steps[0]
-    assert "APIServer" in first
-    assert "BaseApiServer" in first
-    assert "DiscoveryEngine" not in first
+    assert "common base class for apis" in first.lower()
+    assert "more api class declarations are needed" in first.lower()
 
 
 def test_planner_class_query_api_without_api_declaration_returns_api_specific_insufficiency():
@@ -219,6 +219,28 @@ def test_planner_class_query_api_without_api_declaration_returns_api_specific_in
     first = ps.steps[0].lower()
     assert "query asks about apis" in first
     assert "no api class declaration" in first
+
+
+def test_planner_class_query_universal_api_base_uses_common_parent_across_api_declarations():
+    p = PlanOnlyPlanner()
+    b = _ctx(
+        [
+            "motadata/src/main/java/com/mindarray/api/User.java",
+            "motadata/src/main/java/com/mindarray/api/Metric.java",
+            "motadata/src/main/java/com/mindarray/api/APIServer.java",
+        ]
+    )
+    b.items[0].content = "public class User extends AbstractAPI {"
+    b.items[1].content = "public class Metric extends AbstractAPI {"
+    b.items[2].content = "public class APIServer extends AbstractVerticle {"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=None,
+    )
+    first = ps.steps[0]
+    assert "common API base class appears to be `AbstractAPI`" in first
+    assert "APIServer" not in first
 
 
 def test_planner_uses_authority_when_present():
