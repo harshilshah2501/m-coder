@@ -52,11 +52,10 @@ class PlanOnlyPlanner:
         return PlanSummary(steps=steps, notes=notes)
 
     def _plan_generic(self, query: str, bundle: ContextBundle) -> PlanSummary:
-        # Simple deterministic symbol hint extraction: longest alphanumeric token.
+        # Deterministic token extraction: prefer repo-meaningful terms over question words.
         tokens = [t for t in _tokenize(query) if t]
-        primary_token = max(tokens, key=len) if tokens else None
-
         ranked = [item.path for item in bundle.items[:8]]
+        primary_token = _select_primary_token(tokens, ranked)
         selected = select_plan_action_target(ranked, query)
         focus_file = selected or (ranked[0] if ranked else None)
         top_paths = ranked[:3]
@@ -92,5 +91,50 @@ def _tokenize(text: str) -> List[str]:
     import re
 
     raw = re.split(r"[^A-Za-z0-9_]+", text)
-    return [t.lower() for t in raw if len(t) >= 3]
+    toks = [t.lower() for t in raw if len(t) >= 3]
+    stop = {
+        "which",
+        "what",
+        "where",
+        "when",
+        "why",
+        "how",
+        "this",
+        "that",
+        "these",
+        "those",
+        "does",
+        "work",
+        "works",
+        "repo",
+        "repository",
+    }
+    filtered = [t for t in toks if t not in stop]
+    return filtered or toks
+
+
+def _select_primary_token(tokens: List[str], ranked_paths: List[str]) -> Optional[str]:
+    """
+    Pick a token likely to map to code/search intent:
+    - prefer tokens that appear in top-ranked paths (with simple singularization)
+    - tie-break by token length then lexical order
+    - fallback to longest token
+    """
+    if not tokens:
+        return None
+    if not ranked_paths:
+        return max(tokens, key=len)
+
+    path_blob = "\n".join(ranked_paths).lower()
+    scored: List[tuple[int, int, str]] = []
+    for t in tokens:
+        stem = t[:-1] if t.endswith("s") and len(t) > 3 else t
+        variants = {t, stem}
+        hit = 1 if any(v and v in path_blob for v in variants) else 0
+        scored.append((hit, len(t), t))
+    scored.sort(reverse=True)
+    top = scored[0]
+    if top[0] > 0:
+        return top[2]
+    return max(tokens, key=len)
 

@@ -140,6 +140,24 @@ def test_planner_backward_compat_without_authority():
     assert any("open" in s.lower() or "search" in s.lower() for s in ps.steps)
 
 
+def test_planner_prefers_meaningful_token_over_question_word():
+    p = PlanOnlyPlanner()
+    b = _ctx(
+        [
+            "motadata/src/main/java/com/mindarray/api/APIServer.java",
+            "motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+        ]
+    )
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=None,
+    )
+    text = " ".join(ps.steps).lower()
+    assert "usages of \"which\"" not in text
+    assert "usages of \"apis\"" in text or "usages of \"api\"" in text
+
+
 def test_planner_uses_authority_when_present():
     registry = load_registry(REG)
     ar = build_authority_resolution("alert correlation", registry, None)
