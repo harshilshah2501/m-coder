@@ -475,6 +475,53 @@ Immediate rollback (no deploy rollback needed):
 export MOTADATA_NEO4J_ENABLED=0
 ```
 
+### 6.3.5 Neo4j all-in-one host + index service script
+
+Use this when you want a single command path for hosting Neo4j and keeping the graph fresh.
+
+Default Motadata root is preconfigured as:
+
+- `/home/harshil/Projects/Motadata`
+
+Bootstrap (host Neo4j with restart policy, wait for readiness, full rebuild index, emit env file):
+
+```bash
+python3 runtime/scripts/neo4j_ask_stack.py \
+  --neo4j-password "<your-password>" \
+  bootstrap
+```
+
+Optional explicit workspace path (if different):
+
+```bash
+python3 runtime/scripts/neo4j_ask_stack.py \
+  --workspace-root "/home/harshil/Projects/Motadata" \
+  --neo4j-password "<your-password>" \
+  bootstrap
+```
+
+Refresh index without wiping existing graph:
+
+```bash
+python3 runtime/scripts/neo4j_ask_stack.py \
+  --neo4j-password "<your-password>" \
+  refresh
+```
+
+Service lifecycle:
+
+```bash
+python3 runtime/scripts/neo4j_ask_stack.py --neo4j-password "<your-password>" status
+python3 runtime/scripts/neo4j_ask_stack.py --neo4j-password "<your-password>" up
+python3 runtime/scripts/neo4j_ask_stack.py --neo4j-password "<your-password>" down
+```
+
+Notes:
+
+- Script writes runtime flags to `runtime/.run/neo4j_ask.env` by default.
+- Neo4j container is started with `--restart unless-stopped` for always-on behavior.
+- Ask remains `PLAN_ONLY`; Debug/Code Neo4j flags remain disabled by default.
+
 ---
 
 ## 7) Automated repeatable verification
