@@ -1,7 +1,7 @@
 # SYSTEM_TRUTH — m-coder / Motadata AI Coding Assistant
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE` (governed HTTP + workspace backend + GPU stack)  
-**Last reconciled:** 2026-04-17 (against `docs/LIVE_ROADMAP_TRACKER.md`, `docs/PROGRAM_STATE_SNAPSHOT.md`, `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`)
+**Last reconciled:** 2026-04-18 (against `docs/LIVE_ROADMAP_TRACKER.md`, `docs/LAYER1_GOVERNANCE_SPEC.md`–`docs/LAYER4_OBSERVATION_SPEC.md`, `docs/PROGRAM_STATE_SNAPSHOT.md`, `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`)
 
 This file is the **single navigation anchor** for “what the repo actually is right now.” Detailed doctrine remains in linked specs; **live closure and milestone truth** are owned by the tracker.
 

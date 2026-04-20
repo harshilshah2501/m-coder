@@ -8,6 +8,8 @@ Layer-4 produces evidence of drift and constitutional compliance. It detects div
 
 **Directory:** `observation/` (operator/CLI boundary). The runtime-consumed Layer-4 implementation library lives under `runtime/observation/`; both are Layer-4. Two index entrypoints: `docs/OBSERVATION/README.md` (docs-spine Layer-4 index) and `observation/README.md` (package root).
 
+**Live program status:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 · [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md). **Layer-4 rollup:** **COMPLETE** (M4.1–M4.6 + Track-C on `main`; merge record: [`docs/reports/M4X_MAIN_MERGE_COMPLETION.md`](reports/M4X_MAIN_MERGE_COMPLETION.md)). **Trace reconstruction / observability closure** for the MVP slice: tracker **B4** and validation docs referenced there. **Slide PDF:** [`Layer-4_Observation_Architecture.pdf`](Layer-4_Observation_Architecture.pdf) is a visual snapshot only; authoritative text is this spec and [`OBSERVATION/README.md`](OBSERVATION/README.md).
+
 ---
 
 ## Ledger Ingestion
@@ -104,9 +106,11 @@ Structurally defined. Threshold values (numeric) are configuration, not spec. Th
 
 ## Definition of Done (Layer-4)
 
+These capabilities are **delivered on `main`** for the declared milestone set (M4.1–M4.6 + Track-C); see [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §4.4 and §2.1.1. Ongoing work is maintenance and integration touchpoints, not “unblocking” Layer-4 (tracker §4.4 priority note).
+
 - Drift baseline captured
 - Collapse vectors tracked in production
-- Ledger reconciliation dashboard operational
+- Ledger reconciliation and trace-style observability operational for the closed program slice (B4)
 - GREG-trigger automation runs on drift thresholds
 - Constitutional version lock signal emitted when evidence suffices
 

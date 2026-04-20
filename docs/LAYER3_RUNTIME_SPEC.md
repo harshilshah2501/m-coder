@@ -10,6 +10,27 @@ Layer-3 enforces constitutional judgment at execution time. It implements Phase-
 
 Deterministic runtime state machine semantics are defined in `docs/runtime/RUNTIME_STATE_TRANSITIONS.md` and the associated schemas in `runtime/state/schemas/`.
 
+**Live program status:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 · [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md). **Layer-3 rollup:** **COMPLETE** (M3.0–M3.12 on `main`). Follow-on milestones **M3.13–M3.18:** tracker §4.3.1. **Slide PDF:** [`Layer-3_Runtime_Enforcement.pdf`](Layer-3_Runtime_Enforcement.pdf) is a visual snapshot only; authoritative text is this spec and linked contracts.
+
+### Plan-Gate HTTP service vs in-process gate
+
+- **HTTP API (production):** `runtime/plan_gate_service/` — Plan-Gate, Ask, and governed execute over HTTP (e.g. `POST /v0/plan`, `POST /v0/ask`, `POST /v1/ask`, `POST /v0/execute`, `GET /healthz`, `GET /version`). See [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md) §3 and [`docs/audit/END_TO_END_SYSTEM_AUDIT_REPORT.md`](audit/END_TO_END_SYSTEM_AUDIT_REPORT.md).
+- **In-process library:** `runtime/plangate/` — authority validator, irreversibility detector, judge gate; consumed by execute and loop paths. **Not** the same artifact as the HTTP daemon; do not conflate the two (see [`ARCHITECTURE_4_LAYER.md`](ARCHITECTURE_4_LAYER.md) Layer-3 notes).
+
+### Evidence path (Layer-5 boundary)
+
+Workspace evidence is assembled **before** Plan-Gate evaluation: Context Layer `POST /v1/export_evidence`; frozen bundle schema **`layer5.evidence_bundle.v1`**. Layer-5 supplies structured context; **Layer-3** owns governance posture, routing, execution honesty, and `POST /v0/execute` outcomes.
+
+### Ask paths (known system condition)
+
+- **Compatibility / default IDE path:** `POST /v0/ask` when evidence-first is not in use.
+- **Evidence-first (CLI and opt-in IDE):** export → `POST /v1/ask` (see `runtime/scripts/verify_ask_path.sh`, `motadata_behavior_verify.py`).
+
+### Stage 3 loop and validation stance
+
+- **Controlled loop:** `runtime/loop/` — burn-in closure: tracker **B7**, `docs/validation/STAGE3_BURN_IN_REPORT.md`. **IDE → `Stage3LoopController` live E2E** is **follow-on** (tracker §1, §6.20), not the same bar as HTTP burn-in.
+- **Regression proof:** CLI + HTTP verification is the **canonical** repeatable surface (`SYSTEM_TRUTH.md` §4); [`JETBRAINS_PLUGIN_FLOW_V0_1.md`](JETBRAINS_PLUGIN_FLOW_V0_1.md) remains a **compatibility** contract for the plugin.
+
 ---
 
 ## Plan-Gate Architecture
@@ -81,7 +102,7 @@ No path exists to execute tool calls or cross irreversible boundaries without pl
 
 ## IDE Plugin Integration
 
-Plan/Judge/Authority integrated in IDE flow. Tool calls gated. Contracts: [JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md).
+Plan/Judge/Authority are integrated in the JetBrains plugin for **product compatibility**; tool calls are gated when the bridge is used. Contracts: [JETBRAINS_PLUGIN_FLOW_V0_1.md](JETBRAINS_PLUGIN_FLOW_V0_1.md). **Program-level regression proof** for the closed slice is **CLI/HTTP-first** per [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md) §4–§6.
 
 ---
 
@@ -132,12 +153,14 @@ Log-only enforcement. No execution side-effects. Validates telemetry and drift w
 
 ## Definition of Done (Layer-3)
 
-- Plan object spec defined; authority/irreversibility hooks specified
-- Authority validator implemented; no bypass paths
-- Irreversibility detector blocks at boundaries
-- IDE plugin integrated; tool calls gated
-- Ledger rows emitted per run
-- Shadow mode validated; no REF violations
+The following are **satisfied on `main`** for the closed MVP slice (**M3.0–M3.12**); detail and follow-on (**M3.13+**) are in [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §4.3.1.
+
+- Plan and ledger contracts defined; authority/irreversibility hooks implemented (`runtime/plangate/`, schemas under `runtime/ide/schemas/` and `runtime/schemas/`)
+- Authority validator implemented; no bypass paths when governed enforcement applies
+- Irreversibility detector blocks at boundaries; boundary phrase match between plan and ledger
+- HTTP Plan-Gate service and governed execute (`POST /v0/execute`) operational; outcomes validated for the MVP slice (tracker §1, §6.12)
+- JetBrains plugin bridge implemented for compatibility; **canonical regression proof** is CLI/HTTP per `SYSTEM_TRUTH.md` §4
+- Ledger rows emitted per governed run; shadow mode validated; no REF violations under test closure
 
 ---
 

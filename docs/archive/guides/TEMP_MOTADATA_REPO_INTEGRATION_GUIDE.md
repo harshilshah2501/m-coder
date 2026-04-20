@@ -6,6 +6,8 @@ Use the active production guide instead:
 
 - [`docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`](../../guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md)
 
+For a **root-level index** of all capabilities (ask / debug / plan / code / agent) and the scenario JSON, see [`MCODER_USER_SCENARIOS_GUIDE.md`](../../../MCODER_USER_SCENARIOS_GUIDE.md) at the repository root.
+
 That document is the current source of truth for:
 
 - setup chronology (GPU + WSL)

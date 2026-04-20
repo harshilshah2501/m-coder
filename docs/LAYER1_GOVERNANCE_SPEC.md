@@ -4,6 +4,8 @@
 
 **Constitutional doctrine source of truth:** [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md). This spec restates and expands for readability; the manifest is authoritative.
 
+**Live program status:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 · [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md). **Layer-1 rollup:** **LOCKED** (doctrine ratified; changes require GREG). **Slide PDF:** [`Layer_1_Governance_Specification.pdf`](Layer_1_Governance_Specification.pdf) is a visual snapshot only; authoritative text is this spec and the manifest.
+
 ## Purpose and Authority Model
 
 Layer-1 is semantic authority. It defines what judgment means and how it must behave. Nothing below Layer-1 may reinterpret it. Judgment precedes execution. Refusal precedes automation. Authority precedes action. If a lower layer disagrees with Layer-1, Layer-1 wins. Always.
@@ -117,6 +119,8 @@ Drift is observed behavior that diverges from constitutional expectation: REF co
 ---
 
 ## Definition of Done (Layer-1)
+
+These criteria describe a **ratified** Layer-1; the program records Layer-1 as **LOCKED** per [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 and §4.1.
 
 - Constitutional manifest ratified
 - Phase doctrine locked

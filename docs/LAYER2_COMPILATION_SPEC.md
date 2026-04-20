@@ -2,6 +2,8 @@
 
 **Entry point:** [MASTER_SYSTEM_SPEC.md](MASTER_SYSTEM_SPEC.md)
 
+**Live program status:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 · [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md). **Layer-2 rollup:** **LOCKED** (Stages 1–8 finished and frozen under release verification; see tracker §4.2). **Slide PDF:** [`Layer-2_Judgment_Compiler.pdf`](Layer-2_Judgment_Compiler.pdf) is a visual snapshot only; authoritative text is this spec and [`COMPILATION/README.md`](COMPILATION/README.md).
+
 ## Purpose
 
 Layer-2 is the judgment compiler. It turns constitutional doctrine into trainable artifacts. It does not define doctrine; it exercises semantics under stress. **Layer-2 may exercise semantics but never redefine them.** Constitutional semantics are read-only reference.
@@ -129,6 +131,8 @@ Required fields (per STAGE7_FREEZE_REFINEMENTS_PATCH): source_git_sha, corpus_ha
 ---
 
 ## Definition of Done (Layer-2)
+
+These criteria match a **completed** compilation pipeline; the program records Layer-2 as **LOCKED** per [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 (release verification **PASS**; evidence in Layer-2 artifacts per tracker §6.1).
 
 - Bases mapped; variants stable
 - Stage-6 mutation harness passes (tier2, tier3, non-dummy)

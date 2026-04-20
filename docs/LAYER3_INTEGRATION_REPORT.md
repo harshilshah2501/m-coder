@@ -1,5 +1,7 @@
 # Layer-3 Runtime Integration Report
 
+> **Current Layer-3 truth:** For **`main`** milestone status, HTTP contracts, and closure evidence, use [`LAYER3_RUNTIME_SPEC.md`](LAYER3_RUNTIME_SPEC.md) and [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §4.3.1. This report is a **historical integration-branch** record only.
+
 **Integration branch:** `integration/layer3-runtime-stack`  
 **Report date:** 2026-03-13  
 **Scope:** Consolidation of Layer-3 runtime lineage for architect review. No merge to main was performed.

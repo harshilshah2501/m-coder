@@ -60,6 +60,7 @@ The **four constitutional layers** (L1–L4) are the doctrine and enforcement co
 - **Master System Guide v1.7** (`MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md`): long-form narrative, demos, Appendix H — **supporting**; **canonical spec entry and gates:** `docs/MASTER_SYSTEM_SPEC.md` + `docs/LIVE_ROADMAP_TRACKER.md`
 - **Documentation click-navigation:** `docs/NAVIGATION_HUB.md`
 - **Definitive capability demobook:** `docs/MOTADATA_DEMOBOOK.md`
+- **User scenarios (Ask / Debug / Plan / Code / Agent) — root entry:** [`MCODER_USER_SCENARIOS_GUIDE.md`](MCODER_USER_SCENARIOS_GUIDE.md)
 
 ## 🚀 Quick Start
 

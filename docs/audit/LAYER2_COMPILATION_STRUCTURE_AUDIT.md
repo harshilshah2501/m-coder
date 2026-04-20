@@ -1,5 +1,7 @@
 # Phase 3 — Layer-2 Compilation / Training Structure Audit Report
 
+> **Program status:** Layer-2 is **LOCKED** per [`LIVE_ROADMAP_TRACKER.md`](../LIVE_ROADMAP_TRACKER.md) §2.1.1. This audit inventories **structure** as of 2026-03-15; pair it with [`LAYER2_COMPILATION_SPEC.md`](../LAYER2_COMPILATION_SPEC.md) for doctrine and tracker §6.1 for closure evidence.
+
 **Repository:** m-coder  
 **Audit phase:** Phase 3 only (Layer-2 compilation/training structural audit, read-only)  
 **Date:** 2026-03-15  

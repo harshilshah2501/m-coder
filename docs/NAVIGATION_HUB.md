@@ -4,6 +4,7 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 
 ## Fast Start Routes
 
+- **All user scenarios (Ask / Debug / Plan / Code / Agent) — root guide:** [`../MCODER_USER_SCENARIOS_GUIDE.md`](../MCODER_USER_SCENARIOS_GUIDE.md)
 - **Current system truth:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md)
 - **Canonical doctrine/spec spine:** [`MASTER_SYSTEM_SPEC.md`](MASTER_SYSTEM_SPEC.md)
 - **Program snapshot:** [`PROGRAM_STATE_SNAPSHOT.md`](PROGRAM_STATE_SNAPSHOT.md)

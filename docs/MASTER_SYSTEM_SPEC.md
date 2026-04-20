@@ -87,6 +87,8 @@ Key components of the runtime-governed agent architecture are elaborated in [run
 
 ## Canonical Specifications
 
+Each **LAYER\*_SPEC.md** file restates layer doctrine and includes **rollup status** and **live-system pointers** aligned with [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md) §2.1.1 and [`SYSTEM_TRUTH.md`](SYSTEM_TRUTH.md).
+
 | Document                                                                                                | Layer | Description                                                   |
 | ------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------- |
 | [governance/CONSTITUTIONAL_MANIFEST_v1.0.md](../governance/CONSTITUTIONAL_MANIFEST_v1.0.md)             | L1    | Phase definitions, dominance hierarchy, structural invariants |
