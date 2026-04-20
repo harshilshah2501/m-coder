@@ -271,13 +271,71 @@ Use when you need a custom **plan** `ide_event`, **execute** `command`, or **deb
 
 | Capability | What you control | Minimal flow |
 | ---------- | ---------------- | ------------ |
-| **Ask** | Your natural-language `query` | `POST ${CONTEXT_URL}/v1/export_evidence` with `workspace_root`, `query`, `top_k` → build `ask_request.v1.0` with that `evidence_bundle` → `POST ${PLAN_GATE_URL}/v1/ask`. |
+| **Ask** | Your natural-language `query` | `POST ${CONTEXT_URL}/v1/export_evidence` with `workspace_root`, `query`, `top_k` → build `ask_request.v1.0` with that `evidence_bundle` → `POST ${PLAN_GATE_URL}/v1/ask`. **Shell helper:** §6.3.1 (`run_v1_ask`). |
 | **Debug** | `query`, `selected_file`, `selection` text | Same export as Ask (often same base question) → `POST /v1/ask` with `task_type=EXPLAIN_DEBUG`, `selected_file`, `client_context.selection`, plus `evidence_bundle` / hash fields as in Plan-Gate docs. |
 | **Plan** | `ide_event`, `mode`, policy knobs | `POST ${PLAN_GATE_URL}/v0/plan` with `plan_request.v0.1` body (see `[runtime/plan_gate_service/README.md](../../runtime/plan_gate_service/README.md)`). |
 | **Code** | `command`, `repo_root` | `POST ${PLAN_GATE_URL}/v0/execute` with `execute_request.v0.1` (use a **non-destructive** command in production-like environments). |
 | **Agent** | N/A | `POST ${PLAN_GATE_URL}/v0/agent` → expect **404**; any successful `POST /v1/ask` should still include `assist_layer`-related fields as in your product contract. |
 
 **Combining approaches:** run Option A for a quick end-to-end sanity check with your Ask/Debug wording, then Option B only for the endpoints where you need custom plan/execute/debug shapes.
+
+<a id="canonical-manual-ask-v1"></a>
+
+### 6.3.1 Copy-paste: `run_v1_ask` (manual Ask v1)
+
+This is the **single maintained** shell helper for **`POST /v1/export_evidence` → build `ask_request.v1.0` → `POST /v1/ask`**. Other runbooks should **link here** instead of duplicating the block.
+
+**Environment:** `WORKSPACE_ROOT` (Motadata tree), `CONTEXT_URL`, `PLAN_GATE_URL`, `TOP_K` (e.g. `8`). Aligns with section 4.
+
+```bash
+run_v1_ask() {
+  local query="$1"
+  local out_json="$2"
+
+  : "${WORKSPACE_ROOT:?Set WORKSPACE_ROOT (Motadata path)}"
+  : "${CONTEXT_URL:?Set CONTEXT_URL}"
+  : "${PLAN_GATE_URL:?Set PLAN_GATE_URL}"
+
+  local tmp_dir ev req
+  tmp_dir="$(mktemp -d)"
+  ev="$tmp_dir/evidence.json"
+  req="$tmp_dir/ask_v1.json"
+
+  curl -sS --connect-timeout 5 --max-time 120 -X POST "${CONTEXT_URL}/v1/export_evidence" \
+    -H 'Content-Type: application/json' \
+    -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$query\",\"top_k\":${TOP_K:-8}" \
+    -o "$ev"
+
+  python3 - "$ev" "$req" "$query" <<'PY'
+import datetime, json, sys, uuid
+
+ev_path, req_path, query = sys.argv[1], sys.argv[2], sys.argv[3]
+ev = json.load(open(ev_path, "r", encoding="utf-8"))
+ask = {
+    "schema_version": "ask_request.v1.0",
+    "request_id": str(uuid.uuid4()),
+    "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    "query": query,
+    "evidence_bundle": ev,
+}
+h = ev.get("workspace_identity_hash")
+if h:
+    ask["expected_workspace_identity_hash"] = h
+json.dump(ask, open(req_path, "w", encoding="utf-8"), indent=2)
+PY
+
+  curl -sS --connect-timeout 5 --max-time 180 -X POST "${PLAN_GATE_URL}/v1/ask" \
+    -H 'Content-Type: application/json' --data-binary "@$req" | tee "$out_json"
+
+  rm -rf "$tmp_dir"
+}
+
+# Example:
+# export TOP_K=8
+# run_v1_ask "How does alert correlation work in this repo?" /tmp/ask_out.json
+```
+
+**Debug / EXPLAIN_DEBUG:** same export pattern, then `POST /v1/ask` with `task_type`, `selected_file`, and `client_context`; see Plan-Gate docs under `runtime/plan_gate_service/` — do not guess fields.
 
 ---
 
@@ -304,6 +362,7 @@ Stdout modes (`--print`):
 | Mode | Meaning |
 | ---- | ------- |
 | `concise` (default) | Short pass/fail plus clipped answer steps, debug summary, plan/code outcomes |
+| `plain` | Readable report for any audience (scenario narratives + no raw `expect` dumps on stdout); see [MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](../demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md) |
 | `dev` | Full `plan_summary.steps`, `context_bundle.files`, evidence snippet previews for smoke; for scenarios, expanded `expect`/`actual` plus `dev_snapshot` text for **ask** and **debug** rows |
 | `json` | Full report object on stdout (same shape as `--out`) |
 

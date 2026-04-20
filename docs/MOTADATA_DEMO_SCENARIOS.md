@@ -1,6 +1,7 @@
 # Motadata AI Coding Assistant — Demo Scenarios & Success Criteria
 
 **Purpose:** **What to demonstrate**, **how**, and **when the deployment counts as successful**. For machine setup order and commands, use [MOTADATA_DEMO_SETUP_RUNBOOK.md](MOTADATA_DEMO_SETUP_RUNBOOK.md). For architecture, use [MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md).
+For **repeatable HTTP/verifier verification** (not demo talk-track), use [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) and [MOTADATA_SIMPLE_PATH.md](../MOTADATA_SIMPLE_PATH.md).
 
 ---
 

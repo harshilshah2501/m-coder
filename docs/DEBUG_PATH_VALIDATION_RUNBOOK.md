@@ -91,62 +91,11 @@ source /path/to/m-coder/docs/set-envars.sh
 
 **One WSL shell. No m-coder dependency.**
 
-### 2.1 Define a reusable function once in shell
+### 2.1 Define `run_v1_ask` in your shell (canonical copy)
 
-```bash
-run_v1_ask() {
-  local query="$1"
-  local out_json="$2"
+**Do not fork the bash here.** Paste the **`run_v1_ask`** function from the production verification guide — **§6.3.1** ([`MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1`](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)) — so fixes stay in one place.
 
-  : "${WORKSPACE_ROOT:?Set WORKSPACE_ROOT (WSL Motadata path)}"
-  : "${CONTEXT_URL:?Set CONTEXT_URL}"
-  : "${PLAN_GATE_URL:?Set PLAN_GATE_URL}"
-
-  local tmp_dir ev req
-  tmp_dir="$(mktemp -d)"
-  ev="$tmp_dir/evidence.json"
-  req="$tmp_dir/ask_v1.json"
-
-  # A) Export evidence from WSL Context Layer.
-  curl -sS --connect-timeout 5 --max-time 60 -X POST "${CONTEXT_URL}/v1/export_evidence" \
-    -H 'Content-Type: application/json' \
-    -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$query\",\"top_k\":$TOP_K}" \
-    -o "$ev"
-
-  # B) Build ask_request.v1.0 payload.
-  python3 - "$ev" "$req" "$query" <<'PY'
-import datetime, json, sys, uuid
-
-ev_path, req_path, query = sys.argv[1], sys.argv[2], sys.argv[3]
-ev = json.load(open(ev_path, "r", encoding="utf-8"))
-ask = {
-    "schema_version": "ask_request.v1.0",
-    "request_id": str(uuid.uuid4()),
-    "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
-    "query": query,
-    "evidence_bundle": ev,
-}
-ws_hash = ev.get("workspace_identity_hash")
-if ws_hash:
-    ask["expected_workspace_identity_hash"] = ws_hash
-json.dump(ask, open(req_path, "w", encoding="utf-8"), indent=2)
-PY
-
-  # C) Call Plan-Gate and persist response.
-  curl -sS --connect-timeout 5 --max-time 60 -X POST "${PLAN_GATE_URL}/v1/ask" \
-    -H 'Content-Type: application/json' \
-    --data-binary "@$req" \
-    | tee "$out_json"
-
-  cp "$ev" "${out_json%.json}.evidence.json"
-  cp "$req" "${out_json%.json}.ask_v1.json"
-  rm -rf "$tmp_dir"
-
-  echo "[INFO] saved response: ${out_json}"
-  echo "[INFO] saved evidence: ${out_json%.json}.evidence.json"
-  echo "[INFO] saved request : ${out_json%.json}.ask_v1.json"
-}
-```
+This runbook’s **unique** content below is the **query set**, **capture checklist**, and **v1 vs v0** notes — not a second copy of `curl`/`python3` wiring.
 
 ### 2.2 Run the 4 required queries (exact)
 

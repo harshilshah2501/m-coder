@@ -6,7 +6,7 @@ This document describes the **developer utility** validation track: whether Ask,
 
 | Track | Proves | Primary guide / artifact |
 | ----- | ------ | ------------------------- |
-| **Contract / system** | Healthy services, expected routes, response shapes, governance fields, repeatability | [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) |
+| **Contract / system** | Healthy services, expected routes, response shapes, governance fields, repeatability | [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) (manual `curl` Ask v1: [§6.3.1](MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)) |
 | **Developer utility** | Heuristic checks on groundedness, honesty on weak evidence, explain structure, and plan content cues | This guide + `docs/validation/motadata_developer_utility_scenarios.v1.json` |
 
 Contract verification can pass while answers are vague or misleading; utility checks are an **additional** signal, not a replacement for human review.

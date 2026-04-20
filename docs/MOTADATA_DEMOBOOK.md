@@ -1,5 +1,7 @@
 # Motadata Capability Demobook (Definitive)
 
+**Production-style verification (setup, manual HTTP, scenarios):** [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) and the thin router [MOTADATA_SIMPLE_PATH.md](../MOTADATA_SIMPLE_PATH.md) — use those when you need one spine instead of demo-only steps.
+
 This demobook is the single execution script for setup and capability testing. It is command-first and aligned to the current governed stack (`governed_services.sh` + Context Layer + Plan-Gate Ask v1).
 
 ## 0) What this demobook validates

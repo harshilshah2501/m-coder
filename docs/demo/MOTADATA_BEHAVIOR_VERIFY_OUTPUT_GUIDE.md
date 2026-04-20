@@ -9,6 +9,7 @@ This document walks through what you see when you run `runtime/scripts/motadata_
 - Plain-language narratives (titles and paragraphs per scenario id): `docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json`
 - Quality gates (retrieval / evidence rules): `docs/validation/motadata_evidence_quality_policy.v1.json`
 - Full operator runbook: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`
+- Manual Ask over HTTP (single maintained `run_v1_ask` block): [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md §6.3.1](../guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)
 
 ---
 

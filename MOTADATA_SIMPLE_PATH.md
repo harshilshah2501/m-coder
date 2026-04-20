@@ -9,7 +9,7 @@ If the docs feel like a maze, use **only this page** until you know which branch
 | You want | Do this | Deeper detail (only if stuck) |
 |----------|---------|--------------------------------|
 | **A — Automated regression** (pinned tests, CI-style pass/fail) | [§ A — One verifier command](#a--automated-checks-scenario-suite) | [MCODER_USER_SCENARIOS_GUIDE.md](MCODER_USER_SCENARIOS_GUIDE.md) |
-| **B — Any question over HTTP** (your own query text, no scenario JSON) | [§ B — Manual Ask (curl)](#b--manual-ask-your-own-query) | [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) §6 Option B |
+| **B — Any question over HTTP** (your own query text, no scenario JSON) | [§ B — Manual Ask (curl)](#b--manual-ask-your-own-query) | [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md §6.3.1](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1) (single maintained `run_v1_ask` block) |
 | **C — First-time setup, ports, services, tunnels** | [§ C — Setup](#c--first-time-setup) | Same production guide §2–4 |
 
 **Rule of thumb:** Scenario files pin **fixed** questions + **fixed** expectations. Your **own** wording uses **§ B** (or the verifier **without** `--scenarios-only` and with `--query`, see § A.2).
@@ -57,51 +57,18 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 
 **Prerequisites:** `WORKSPACE_ROOT` = Motadata path, `CONTEXT_URL`, `PLAN_GATE_URL` reachable (defaults often `http://127.0.0.1:8091` and `http://127.0.0.1:8089`). Set `TOP_K` (e.g. `8`).
 
-Paste once, then call `run_v1_ask "your question" /tmp/ask_out.json`:
+**Single source of truth:** copy the **`run_v1_ask`** shell function from **[docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md §6.3.1](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)** into your shell (do not maintain a second copy in this file).
 
 ```bash
 export WORKSPACE_ROOT="${MOTADATA_REPO_ROOT:?set Motadata path}"
 export CONTEXT_URL="${CONTEXT_URL:-http://127.0.0.1:8091}"
 export PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
 export TOP_K="${TOP_K:-8}"
-
-run_v1_ask() {
-  local query="$1"
-  local out_json="$2"
-  local tmp_dir ev req
-  tmp_dir="$(mktemp -d)"
-  ev="$tmp_dir/evidence.json"
-  req="$tmp_dir/ask_v1.json"
-  curl -sS --connect-timeout 5 --max-time 120 -X POST "${CONTEXT_URL}/v1/export_evidence" \
-    -H 'Content-Type: application/json' \
-    -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$query\",\"top_k\":$TOP_K}" \
-    -o "$ev"
-  python3 - "$ev" "$req" "$query" <<'PY'
-import datetime, json, sys, uuid
-ev_path, req_path, query = sys.argv[1], sys.argv[2], sys.argv[3]
-ev = json.load(open(ev_path, "r", encoding="utf-8"))
-ask = {
-    "schema_version": "ask_request.v1.0",
-    "request_id": str(uuid.uuid4()),
-    "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-    "query": query,
-    "evidence_bundle": ev,
-}
-h = ev.get("workspace_identity_hash")
-if h:
-    ask["expected_workspace_identity_hash"] = h
-json.dump(ask, open(req_path, "w", encoding="utf-8"), indent=2)
-PY
-  curl -sS --connect-timeout 5 --max-time 180 -X POST "${PLAN_GATE_URL}/v1/ask" \
-    -H 'Content-Type: application/json' --data-binary "@$req" | tee "$out_json"
-  rm -rf "$tmp_dir"
-}
-
-# Example:
-# run_v1_ask "How does alert correlation work?" /tmp/ask_out.json
+# Then paste run_v1_ask from the production guide §6.3.1 and run:
+# run_v1_ask "Your question about the repo" /tmp/ask_out.json
 ```
 
-**Debug / EXPLAIN_DEBUG** uses the same export step, then `POST /v1/ask` with `task_type`, `selected_file`, and `client_context` — full shape is in the production guide §6; do not guess fields.
+**Debug / EXPLAIN_DEBUG** uses the same export step, then `POST /v1/ask` with `task_type`, `selected_file`, and `client_context` — full shape is in the production guide §6 Option B; do not guess fields.
 
 ---
 

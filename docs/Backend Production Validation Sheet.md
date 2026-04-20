@@ -169,39 +169,15 @@ Use these exact queries first before custom ones:
 
 ### Command sequence
 
+**Canonical wiring:** use the same **`run_v1_ask`** shell helper as in [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md §6.3.1](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1) (export → `ask_request.v1.0` → `POST /v1/ask`). Set `WORKSPACE_ROOT`, `CONTEXT_URL`, `PLAN_GATE_URL`, and `TOP_K` to match §A0.
+
+**This sheet’s historical replay:** after pasting `run_v1_ask` from that section, run:
+
 ```bash
-# Uses QUERY and TOP_K from A0 (defaults match this scenario)
-# 1) Export evidence
-curl -sS -X POST "$CONTEXT_URL/v1/export_evidence" \
-  -H "Content-Type: application/json" \
-  -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$QUERY\",\"top_k\":$TOP_K,\"request_id\":\"$REQUEST_ID\",\"trace_id\":\"$TRACE_ID\"}" \
-  > /tmp/evidence.json
-
-# 2) Build ask_request.v1.0 from evidence
-python3 - <<'PY'
-import datetime, json, os, uuid
-ev = json.load(open('/tmp/evidence.json', 'r', encoding='utf-8'))
-q = os.environ.get("QUERY", "How does alert correlation work in this repo?")
-req = {
-  "schema_version": "ask_request.v1.0",
-  "request_id": os.environ.get("REQUEST_ID", str(uuid.uuid4())),
-  "timestamp_utc": datetime.datetime.utcnow().isoformat() + "Z",
-  "trace_id": os.environ.get("TRACE_ID", ""),
-  "query": q,
-  "evidence_bundle": ev,
-}
-if ev.get("workspace_identity_hash"):
-  req["expected_workspace_identity_hash"] = ev["workspace_identity_hash"]
-json.dump(req, open('/tmp/ask_v1.json', 'w', encoding='utf-8'))
-print("wrote /tmp/ask_v1.json")
-PY
-
-# 3) Call /v1/ask
-curl -sS -X POST "$PLAN_GATE_URL/v1/ask" \
-  -H "Content-Type: application/json" \
-  --data-binary "@/tmp/ask_v1.json" \
-  > /tmp/ask_v1_response.json
+run_v1_ask "${QUERY:-How does alert correlation work in this repo?}" /tmp/ask_v1_response.json
 ```
+
+(Add `request_id` / `trace_id` to the Ask payload only if you are reproducing a trace-correlated audit; the helper matches §6.3.1 defaults.)
 
 ### Expected
 

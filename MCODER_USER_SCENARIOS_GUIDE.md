@@ -2,7 +2,9 @@
 
 **Purpose:** One self-sufficient entry for **what each capability is**, **how it maps to HTTP/services**, **how to run the full scenario suite**, **how to run any single scenario by id** ([§5](#single-scenario-commands)), and **where to go deeper**. This file lives at the repository root so operators and new contributors can find it without digging through `docs/`.
 
-**Overwhelmed by too many docs?** Use the single router first: **[MOTADATA_SIMPLE_PATH.md](MOTADATA_SIMPLE_PATH.md)** (three paths: automated checks, manual HTTP with your own query, or first-time setup).
+**Overwhelmed by too many docs?** Use the single router first: **[MOTADATA_SIMPLE_PATH.md](MOTADATA_SIMPLE_PATH.md)** (three paths: automated checks, manual HTTP with your own query, or first-time setup). This file is the **detailed** scenario contract; it does not repeat that router table.
+
+**Which files are in the verification/demo edit scope:** [docs/guides/VERIFICATION_DEMO_DOC_ALLOWLIST.md](docs/guides/VERIFICATION_DEMO_DOC_ALLOWLIST.md).
 
 **Scope:** Motadata AIOps-style verification (Context Layer + Plan-Gate + optional vLLM). Product behavior is **governed**: evidence-first Ask, structured EXPLAIN_DEBUG, plan decisions, bounded execute, no public “agent” API route.
 
