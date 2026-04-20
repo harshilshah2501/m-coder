@@ -542,6 +542,8 @@ export REMOTE_REFRESH=1
 ./runtime/scripts/sync_motadata_mirror_to_gpu.sh
 ```
 
+`MCODER_REMOTE_ROOT` must be the **real m-coder path on the GPU** (where `runtime/scripts/neo4j_ask_stack.py` lives), e.g. `/root/Harshil-PoCs/m-coder` if that is your layout. It is **not** a WSL path. A wrong value used to make the remote `python3` fall back to `$HOME/runtime/scripts/...` and fail with “No such file”.
+
 3) **Plan-Gate on GPU** must use the same mirror path for indexing:
 
 - `neo4j_ask_stack.py --workspace-root "${GPU_MIRROR_ROOT}"` (already what `REMOTE_REFRESH` runs).

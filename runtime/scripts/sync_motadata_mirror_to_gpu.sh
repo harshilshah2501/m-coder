@@ -104,10 +104,16 @@ if [[ "${REMOTE_REFRESH}" == "1" ]]; then
     echo "error: set MCODER_REMOTE_ROOT when REMOTE_REFRESH=1 (absolute path to m-coder on GPU)" >&2
     exit 1
   fi
-  REMOTE_REFRESH_CMD="$(printf 'cd %q && python3 runtime/scripts/neo4j_ask_stack.py --workspace-root %q refresh' \
-    "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}")"
+  REMOTE_STACK="${MCODER_REMOTE_ROOT%/}/runtime/scripts/neo4j_ask_stack.py"
+  # Use absolute script path so a failed cd / wrong cwd cannot run python3 from \$HOME/runtime/scripts/...
+  # bash -lc can also interact oddly with login profiles; use non-login -c for a predictable cwd.
+  REMOTE_REFRESH_CMD="$(
+    printf \
+      'set -euo pipefail; STACK=%q; ROOT=%q; MIR=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --workspace-root "$MIR" refresh' \
+      "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}"
+  )"
   # shellcheck disable=SC2086
-  ssh ${SSH_OPTS} "${GPU_SYNC_HOST}" bash -lc "${REMOTE_REFRESH_CMD}"
+  ssh ${SSH_OPTS} "${GPU_SYNC_HOST}" bash -c "${REMOTE_REFRESH_CMD}"
 fi
 
 echo "sync_motadata_mirror_to_gpu: ok"
