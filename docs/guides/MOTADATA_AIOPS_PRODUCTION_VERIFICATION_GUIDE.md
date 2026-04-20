@@ -345,6 +345,21 @@ PY
 
 **Debug / EXPLAIN_DEBUG:** same export pattern, then `POST /v1/ask` with `task_type`, `selected_file`, and `client_context`; see Plan-Gate docs under `runtime/plan_gate_service/` — do not guess fields.
 
+### 6.3.2 One-command Ask CLI (recommended for manual query testing)
+
+If you want simpler request/response execution than `run_v1_ask` + custom `jq`, use:
+
+```bash
+python3 runtime/scripts/motadata_query_cli.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --query "Which class is the base class for all APIs?" \
+  --out /tmp/q4.json
+```
+
+- Default prints a concise human summary (`request_id`, posture, ask_path, quality, first answer step).
+- Add `--print json` to emit full JSON to stdout.
+- Keep `--out` for the persisted artifact.
+
 ---
 
 ## 7) Automated repeatable verification

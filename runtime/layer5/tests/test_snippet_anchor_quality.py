@@ -50,3 +50,15 @@ public class X {
     assert span.selection_reason.value == "query_token_substring_anchor"
     assert "handleCorrelation" in span.text or "correlation" in span.text.lower()
     assert "Copyright" not in span.text.split("\n")[0] or "handleCorrelation" in span.text
+
+
+def test_pick_best_prefers_class_declaration_for_class_relationship_query():
+    bodies = [
+        "/* Which base class and API relation are used here? */",
+        "some unrelated comment with class token",
+        "public class APIServer extends BaseApiServer implements RestEndpoint {",
+        "  // body",
+    ]
+    idx, matched = pick_best_anchor_line(bodies, ("which", "class", "base", "apis"))
+    assert idx == 2
+    assert "class" in matched

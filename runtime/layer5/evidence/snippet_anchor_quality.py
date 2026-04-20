@@ -76,6 +76,13 @@ _BOILERPLATE_PATTERNS: Tuple[re.Pattern[str], ...] = (
     re.compile(r"legal action", re.I),
 )
 
+_CLASS_DECL_RX = re.compile(
+    r"^\s*(public|protected|private|abstract|final|sealed|non-sealed|static|\s)*\s*"
+    r"(class|interface|enum)\s+[A-Za-z_]\w*(\s+extends\s+[A-Za-z_][A-Za-z0-9_\.]*)?"
+    r"(\s+implements\s+[A-Za-z_][A-Za-z0-9_\.,\s]*)?",
+    re.IGNORECASE,
+)
+
 
 def _boilerplate_score_penalty(line_lower: str) -> int:
     """Higher penalty = worse line for human usefulness."""
@@ -116,6 +123,7 @@ def score_anchor_line(
     body: str,
     hit_tokens: Sequence[str],
     *,
+    query_tokens: Sequence[str],
     total_lines: int,
 ) -> int:
     """
@@ -139,6 +147,18 @@ def score_anchor_line(
     score += _code_shape_bonus(low)
     if _line_is_import_only(body):
         score -= 55
+
+    # For class-relationship questions, prefer class declaration lines.
+    qset = {t.lower() for t in query_tokens}
+    class_intent = bool(
+        {"class", "base", "extends", "implements", "api", "apis", "interface"} & qset
+    )
+    if class_intent and _CLASS_DECL_RX.search(body):
+        score += 160
+        if " extends " in low:
+            score += 40
+        if " implements " in low:
+            score += 40
 
     # Early file region: extra penalty for boilerplate-heavy headers (typical first ~45 lines).
     header_zone = 45
@@ -174,7 +194,7 @@ def pick_best_anchor_line(
         if not hit:
             continue
         matched = tuple(sorted(set(hit)))
-        sc = score_anchor_line(i, body, hit, total_lines=len(bodies))
+        sc = score_anchor_line(i, body, hit, query_tokens=query_tokens, total_lines=len(bodies))
         candidates.append((sc, i, matched))
 
     if not candidates:
