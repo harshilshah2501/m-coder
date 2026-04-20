@@ -309,6 +309,12 @@ class LexicalRetrievalConfig:
     owner-signal-strong for generic-content cap exemptions. Keeps one-token overlaps
     (e.g. generic *Engine.java) from escaping deterministic caps.
     """
+    code_intent_universal_api_non_api_content_cap: Optional[int] = 80
+    """
+    For universal API class-relationship queries (e.g. "base class for all APIs"),
+    cap effective content mass for non-API Java files so broad keyword-heavy classes
+    cannot suppress API declaration owners in top evidence.
+    """
     enable_deterministic_rank_nudge: bool = True
     """
     When True, apply a small bounded integer adjustment to each hit's score before sorting

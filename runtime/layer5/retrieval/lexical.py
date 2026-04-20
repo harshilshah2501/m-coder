@@ -278,6 +278,47 @@ def _apply_generic_facade_content_cap(
     return effective_content, 0
 
 
+def _apply_universal_api_relationship_content_cap(
+    effective_content: int,
+    *,
+    rel_l: str,
+    base_name: str,
+    fpolicy: FilePolicy,
+    code_intent_active: bool,
+    cfg: LexicalRetrievalConfig,
+    narrow_owner_signal: bool,
+    query_tokens: Tuple[str, ...],
+) -> Tuple[int, int]:
+    """
+    For universal API relationship questions, limit non-API keyword sinks.
+
+    This keeps broad high-mass classes from outranking API declaration files when the
+    query asks for a common base across all APIs.
+    """
+    if not code_intent_active or not cfg.enable_code_debug_content_gating:
+        return effective_content, 0
+    cap = cfg.code_intent_universal_api_non_api_content_cap
+    if cap is None:
+        return effective_content, 0
+    if fpolicy.file_class not in ("core_aiops_code", "supporting_prod_code"):
+        return effective_content, 0
+    if "/src/main/java/" not in rel_l:
+        return effective_content, 0
+    ts = set(query_tokens)
+    if not (query_class_relationship_focus(query_tokens) and query_api_surface_focus(query_tokens)):
+        return effective_content, 0
+    if not (("all" in ts) or ("every" in ts)):
+        return effective_content, 0
+    if ("/api/" in rel_l) or ("api" in base_name.lower()):
+        return effective_content, 0
+    if narrow_owner_signal:
+        return effective_content, 0
+    cap_i = max(0, int(cap))
+    if effective_content > cap_i:
+        return cap_i, effective_content - cap_i
+    return effective_content, 0
+
+
 def _scaled(score: float, cfg: LexicalRetrievalConfig) -> int:
     return int(round(score * cfg.policy_score_scale))
 
@@ -877,6 +918,16 @@ def _score_entry(
         narrow_owner_signal=narrow_owner_signal_for_facade,
         query_tokens=tokens,
     )
+    content_part, universal_api_relationship_content_trimmed = _apply_universal_api_relationship_content_cap(
+        content_part,
+        rel_l=rel_l,
+        base_name=base_name,
+        fpolicy=fpolicy,
+        code_intent_active=code_intent_active,
+        cfg=cfg,
+        narrow_owner_signal=narrow_owner_signal_for_facade,
+        query_tokens=tokens,
+    )
     prior_map = policy["path_prior"]
     class_prior = 0.0
     if isinstance(prior_map, Mapping):
@@ -997,6 +1048,7 @@ def _score_entry(
             "support_style_content_trimmed": support_style_content_trimmed,
             "generic_facade_content_trimmed": generic_facade_content_trimmed,
             "topic_focus_supporting_content_trimmed": topic_focus_supporting_content_trimmed,
+            "universal_api_relationship_content_trimmed": universal_api_relationship_content_trimmed,
             "code_intent": 1 if code_intent_active else 0,
             "basename_specificity": basename_specificity,
             "support_file_demotion": support_file_demotion,

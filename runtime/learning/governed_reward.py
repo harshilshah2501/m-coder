@@ -65,16 +65,34 @@ def _evidence_reward(resp: Dict[str, Any], hard_violations: List[str]) -> int:
         "insufficient",
     )
     is_honest_insuff = any(m in first for m in insuff_markers)
+    assertive_grounded = _looks_assertive_grounded_claim(first)
     if eq == "strong":
         return 4
     if eq == "weak":
         return 2
     if eq in {"insufficient", "no_match"}:
-        if is_honest_insuff:
+        if is_honest_insuff or not assertive_grounded:
             return 5 if eq == "no_match" else 4
         hard_violations.append("false_strong_under_low_evidence")
         return -10 if eq == "no_match" else -9
     return 0
+
+
+def _looks_assertive_grounded_claim(first_step_lower: str) -> bool:
+    if "direct answer (grounded):" not in first_step_lower:
+        return False
+    cautious = (
+        "could not determine",
+        "insufficient",
+        "no match",
+        "not in top evidence",
+        "more ",
+        "needed in top evidence",
+    )
+    if any(c in first_step_lower for c in cautious):
+        return False
+    claim_signals = (" extends ", " implements ", " appears to be ", " is `", " is ")
+    return any(s in first_step_lower for s in claim_signals)
 
 
 def _truthfulness_reward(resp: Dict[str, Any], hard_violations: List[str]) -> int:

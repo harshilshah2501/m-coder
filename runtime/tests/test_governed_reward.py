@@ -36,3 +36,13 @@ def test_reward_hard_violation_on_false_strong_low_evidence():
     assert "false_strong_under_low_evidence" in rr.hard_violations
     assert rr.eligibility == "banned"
 
+
+def test_reward_insufficient_neutral_plan_is_not_false_strong():
+    r = _base_resp()
+    r["metadata"]["evidence_quality"] = "INSUFFICIENT"
+    r["plan_summary"]["steps"] = ["Open config file and inspect relevant sections."]
+    rr = score_governed_response(r)
+    assert "false_strong_under_low_evidence" not in rr.hard_violations
+    assert rr.total_reward >= 0
+    assert rr.eligibility in {"observational", "silver", "gold"}
+

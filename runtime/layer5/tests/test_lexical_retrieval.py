@@ -701,6 +701,45 @@ class TestSlice5MandatoryTop1Closure:
             )
             assert (r.hits[0].diagnostics or {}).get("class_relationship_boost", 0) == 0
 
+    def test_universal_api_base_query_caps_non_api_keyword_sink_and_keeps_api_declarations(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            heavy = "which class is the base class for all apis " * 350
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/visualization/VisualizationConstants.java",
+                "package com.mindarray.visualization;\npublic class VisualizationConstants {\n"
+                + heavy
+                + "\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/api/User.java",
+                "package com.mindarray.api;\npublic class User extends AbstractAPI {\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/api/Metric.java",
+                "package com.mindarray.api;\npublic class Metric extends AbstractAPI {\n}\n",
+            )
+            _touch(
+                root / "motadata/src/main/java/com/mindarray/api/APIServer.java",
+                "package com.mindarray.api;\npublic class APIServer extends AbstractVerticle {\n}\n",
+            )
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "Which class is the base class for all APIs?",
+                top_k=4,
+                config=LexicalRetrievalConfig(include_score_diagnostics=True),
+            )
+            top = [h.relative_path for h in r.hits]
+            assert sum(1 for p in top[:3] if "/api/" in p.lower()) >= 2
+            sink = next(h for h in r.hits if "VisualizationConstants" in h.relative_path)
+            d = sink.diagnostics or {}
+            assert (
+                d.get("universal_api_relationship_content_trimmed", 0) > 0
+                or d.get("support_style_content_trimmed", 0) > 0
+            )
+
 
 def test_engineering_intent_top_k_composition_promotes_cores_without_touching_rank0():
     """Deterministic composition: pull core_aiops_code from below top-k into slots 1..k-1 up to target."""
