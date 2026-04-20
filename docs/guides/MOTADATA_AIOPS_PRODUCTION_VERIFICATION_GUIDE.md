@@ -303,8 +303,16 @@ run_v1_ask() {
 
   curl -sS --connect-timeout 5 --max-time 120 -X POST "${CONTEXT_URL}/v1/export_evidence" \
     -H 'Content-Type: application/json' \
-    -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$query\",\"top_k\":${TOP_K:-8}" \
+    -d "{\"workspace_root\":\"$WORKSPACE_ROOT\",\"query\":\"$query\",\"top_k\":${TOP_K:-8}}" \
     -o "$ev"
+
+  # Fail fast if export did not return a v1 evidence bundle.
+  python3 - "$ev" <<'PY'
+import json, sys
+ev = json.load(open(sys.argv[1], "r", encoding="utf-8"))
+if not isinstance(ev, dict) or "provisional" not in ev:
+    raise SystemExit(f"export_evidence did not return v1 evidence bundle: {ev}")
+PY
 
   python3 - "$ev" "$req" "$query" <<'PY'
 import datetime, json, sys, uuid
