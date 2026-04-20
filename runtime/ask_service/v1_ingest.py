@@ -304,9 +304,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         )
     ):
         ui_message += (
-            " This path does not produce a full architectural write-up—only investigation steps and file pointers. "
-            "For a precise how-it-works answer, use Motadata → Explain/Debug with source selected, "
-            "or ask again with a concrete class or symbol (e.g. AlertCorrelationEngine)."
+            " A concise grounded flow summary is included from evidence and authority signals when available. "
+            "For deeper branch-by-branch reasoning, use Motadata → Explain/Debug with source selected, "
+            "or ask again with a concrete class/method symbol (e.g. AlertCorrelationEngine.start)."
         )
 
     return _build_plan_only_response(

@@ -414,6 +414,17 @@ def test_v1_metadata_includes_operator_hints_and_usefulness_metrics():
     assert um.get("snippet_anchor_hits") == 1
 
 
+def test_v1_generic_ui_message_no_longer_says_no_architectural_writeup():
+    req = _minimal_v1_ask(
+        _load_golden_evidence(),
+        query="How does this work in the repo?",
+    )
+    resp = handle_ask_v1_request(req)
+    msg = ((resp.get("ui") or {}).get("message") or "").lower()
+    assert "does not produce a full architectural write-up" not in msg
+    assert "concise grounded flow summary" in msg
+
+
 def test_v0_v1_metadata_semantics_match_on_quality_keys(tmp_path):
     from runtime.ask_service.handlers import handle_ask_request
 

@@ -70,6 +70,24 @@ def test_anchored_synthesis_names_owner_and_control_flow():
     assert meta.get("anchor_mode") in ("anchored", "weak_or_stale")
 
 
+def test_anchored_synthesis_adds_how_it_works_for_broad_how_query():
+    registry = load_registry(REG)
+    ar = build_authority_resolution("alert correlation", registry, None)
+    assert ar is not None
+    po = ar["primary_owner"]
+    b = _ctx([po["file"]])
+    b.items[0].content = "correlation state is updated when down probes are processed."
+    steps, _ = synthesize_authority_plan_steps(
+        "How does alert correlation work in this repo?",
+        b,
+        ar,
+    )
+    text = " ".join(steps).lower()
+    assert "how it works (grounded)" in text
+    assert "main execution path" in text
+    assert "evidence excerpt" in text
+
+
 def test_stale_candidate_uncertainty_language():
     registry = load_registry(REG)
     ar = build_authority_resolution("incident deduplication", registry, None)

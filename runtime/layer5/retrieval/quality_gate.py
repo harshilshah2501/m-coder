@@ -313,8 +313,8 @@ def operator_hints_for_assessment(assessment: QualityAssessment) -> Tuple[str, .
         )
     if "QUERY_TOO_GENERIC" in reasons:
         hints.append(
-            "Generic-intent: PLAN_ONLY returns bounded investigation steps (open/search/trace) and ranked files, "
-            "not a full how-it-works narrative. For step-by-step implementation detail, use Motadata → Explain/Debug "
+            "Generic-intent: PLAN_ONLY returns grounded summary steps plus ranked files. "
+            "For deeper branch-level implementation detail, use Motadata → Explain/Debug "
             "with relevant Java selected, or ask again naming a concrete class, method, or path."
         )
         if assessment.evidence_quality == STRONG:

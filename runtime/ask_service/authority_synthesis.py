@@ -67,6 +67,27 @@ def _status_message(status: str, confidence: str) -> str:
     )
 
 
+def _is_how_it_works_query(query: str) -> bool:
+    q = (query or "").lower()
+    return "how" in q and ("work" in q or "flow" in q or "architecture" in q)
+
+
+def _primary_owner_snippet(bundle: ContextBundle, owner_file: str) -> str:
+    """
+    Best-effort snippet lookup for the authority owner in a ContextBundle.
+    Matches by normalized suffix so `src/...` and `motadata/src/...` both work.
+    """
+    owner_norm = _norm_path(owner_file)
+    if not owner_norm:
+        return ""
+    for item in bundle.items:
+        p = _norm_path(item.path)
+        if p == owner_norm or p.endswith("/" + owner_norm):
+            txt = " ".join(str(item.content or "").split())
+            return txt[:220].rstrip()
+    return ""
+
+
 def synthesize_authority_plan_steps(
     query: str,
     bundle: ContextBundle,
@@ -120,6 +141,17 @@ def synthesize_authority_plan_steps(
     steps.append(
         f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
     )
+
+    if _is_how_it_works_query(query):
+        snippet = _primary_owner_snippet(bundle, p_file)
+        how = (
+            f"How it works (grounded): `{p_class}`"
+            + (f".`{p_method}`" if p_method else "")
+            + " is the main execution path for this behavior."
+        )
+        if snippet:
+            how += f" Evidence excerpt: {snippet}"
+        steps.append(how)
 
     # Collaborators as supporting only
     collab = _collaborator_paths(ar)
