@@ -40,6 +40,7 @@ def test_docker_run_command_sets_restart_ports_and_volume():
         neo4j_uri="bolt://127.0.0.1:7687",
         neo4j_user="neo4j",
         neo4j_password="secret",
+        neo4j_password_file=None,
         container_name="motadata-neo4j",
         image="neo4j:5",
         data_volume="motadata_neo4j_data",
@@ -58,12 +59,22 @@ def test_docker_run_command_sets_restart_ports_and_volume():
 
 def test_resolve_password_prefers_cli_value(monkeypatch):
     monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: True)
-    assert _resolve_password("cli-secret", "env-secret") == "cli-secret"
+    assert _resolve_password("cli-secret", "", "", "env-secret") == ("cli-secret", None)
+
+
+def test_resolve_password_reads_file(monkeypatch, tmp_path):
+    monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: False)
+    p = tmp_path / "pw"
+    p.write_text("file-secret\n", encoding="utf-8")
+    p.chmod(0o600)
+    pw, emitted = _resolve_password("", str(p), "", "")
+    assert pw == "file-secret"
+    assert emitted == str(p.resolve())
 
 
 def test_resolve_password_uses_env_value(monkeypatch):
     monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: True)
-    assert _resolve_password("", "env-secret") == "env-secret"
+    assert _resolve_password("", "", "", "env-secret") == ("env-secret", None)
 
 
 def test_resolve_password_prompts_when_interactive(monkeypatch):
@@ -72,11 +83,10 @@ def test_resolve_password_prompts_when_interactive(monkeypatch):
         "runtime.scripts.neo4j_ask_stack.getpass.getpass",
         lambda _prompt: "prompt-secret",
     )
-    assert _resolve_password("", "") == "prompt-secret"
+    assert _resolve_password("", "", "", "") == ("prompt-secret", None)
 
 
 def test_resolve_password_raises_when_non_interactive_without_values(monkeypatch):
     monkeypatch.setattr("runtime.scripts.neo4j_ask_stack.sys.stdin.isatty", lambda: False)
     with pytest.raises(SystemExit):
-        _resolve_password("", "")
-
+        _resolve_password("", "", "", "")

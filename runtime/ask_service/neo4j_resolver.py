@@ -5,6 +5,8 @@ import re
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List
 
+from runtime.neo4j_credentials import neo4j_password_from_env
+
 
 @dataclass(frozen=True)
 class GraphResolutionMeta:
@@ -125,7 +127,7 @@ def resolve_relationship(query: str, *, capability: str = "ask") -> Dict[str, An
 
     uri = str(os.environ.get("MOTADATA_NEO4J_URI", "")).strip()
     user = str(os.environ.get("MOTADATA_NEO4J_USER", "")).strip()
-    password = str(os.environ.get("MOTADATA_NEO4J_PASSWORD", "")).strip()
+    password = neo4j_password_from_env()
     if not uri:
         return _meta(
             capability=capability,

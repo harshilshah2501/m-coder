@@ -28,6 +28,7 @@ _REPO_ROOT = _SCRIPT_DIR.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from runtime.neo4j_credentials import read_neo4j_password_file
 from runtime.scripts.build_neo4j_class_graph import index_class_graph
 
 
@@ -47,6 +48,7 @@ class StackConfig:
     neo4j_uri: str
     neo4j_user: str
     neo4j_password: str
+    neo4j_password_file: str | None
     container_name: str
     image: str
     data_volume: str
@@ -76,18 +78,39 @@ def _source_dirs(raw_dirs: Iterable[str]) -> tuple[str, ...]:
     return vals if vals else ("motadata/src/main/java",)
 
 
-def _resolve_password(cli_password: str, env_password: str) -> str:
+def _resolve_password(
+    cli_password: str,
+    cli_password_file: str,
+    env_password_file: str,
+    env_password: str,
+) -> tuple[str, str | None]:
+    """
+    Returns (password, password_file_path_for_emit).
+    Prefer secret file over plain env when configured (no password in exported env files).
+    """
     cli = (cli_password or "").strip()
     if cli:
-        return cli
+        return (cli, None)
+
+    path = (cli_password_file or env_password_file or "").strip()
+    if path:
+        try:
+            return (read_neo4j_password_file(path), path)
+        except Exception as exc:
+            raise SystemExit(f"cannot read MOTADATA_NEO4J_PASSWORD_FILE ({path}): {exc}") from exc
+
     env = (env_password or "").strip()
     if env:
-        return env
+        return (env, None)
+
     if sys.stdin.isatty():
         prompt = getpass.getpass("Enter Neo4j password (MOTADATA_NEO4J_PASSWORD): ").strip()
         if prompt:
-            return prompt
-    raise SystemExit("Neo4j password is required (--neo4j-password or MOTADATA_NEO4J_PASSWORD).")
+            return (prompt, None)
+    raise SystemExit(
+        "Neo4j password required: --neo4j-password-file / MOTADATA_NEO4J_PASSWORD_FILE, "
+        "or --neo4j-password / MOTADATA_NEO4J_PASSWORD, or interactive prompt."
+    )
 
 
 def _docker_names(only_running: bool) -> set[str]:
@@ -179,12 +202,15 @@ def _emit_env(cfg: StackConfig, env_out: Path | None) -> dict:
     payload = {
         "MOTADATA_NEO4J_URI": cfg.neo4j_uri,
         "MOTADATA_NEO4J_USER": cfg.neo4j_user,
-        "MOTADATA_NEO4J_PASSWORD": cfg.neo4j_password,
         "MOTADATA_NEO4J_ENABLED": "1",
         "MOTADATA_NEO4J_ASK_ENABLED": "1",
         "MOTADATA_NEO4J_DEBUG_ENABLED": "0",
         "MOTADATA_NEO4J_CODE_ENABLED": "0",
     }
+    if cfg.neo4j_password_file:
+        payload["MOTADATA_NEO4J_PASSWORD_FILE"] = cfg.neo4j_password_file
+    else:
+        payload["MOTADATA_NEO4J_PASSWORD"] = cfg.neo4j_password
     if env_out:
         env_out.parent.mkdir(parents=True, exist_ok=True)
         lines = [f'export {k}="{v}"' for k, v in payload.items()]
@@ -237,6 +263,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--neo4j-uri", default="bolt://127.0.0.1:7687")
     p.add_argument("--neo4j-user", default="neo4j")
     p.add_argument("--neo4j-password", default="")
+    p.add_argument(
+        "--neo4j-password-file",
+        default="",
+        help="First line = password; written as MOTADATA_NEO4J_PASSWORD_FILE in env export (not plaintext).",
+    )
     p.add_argument("--container-name", default=DEFAULT_CONTAINER_NAME)
     p.add_argument("--image", default=DEFAULT_IMAGE)
     p.add_argument("--data-volume", default=DEFAULT_DATA_VOLUME)
@@ -263,8 +294,10 @@ def main() -> int:
 
     workspace_root = _workspace_root_from_arg(args.workspace_root)
     source_dirs = _source_dirs(args.source_dir)
-    password = _resolve_password(
+    password, pw_file = _resolve_password(
         args.neo4j_password,
+        args.neo4j_password_file,
+        os.environ.get("MOTADATA_NEO4J_PASSWORD_FILE", ""),
         os.environ.get("MOTADATA_NEO4J_PASSWORD", ""),
     )
     cfg = StackConfig(
@@ -273,6 +306,7 @@ def main() -> int:
         neo4j_uri=args.neo4j_uri.strip(),
         neo4j_user=args.neo4j_user.strip(),
         neo4j_password=password,
+        neo4j_password_file=pw_file,
         container_name=args.container_name.strip(),
         image=args.image.strip(),
         data_volume=args.data_volume.strip(),
