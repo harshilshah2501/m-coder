@@ -114,18 +114,18 @@ if [[ "${REMOTE_REFRESH}" == "1" ]]; then
     exit 1
   fi
   REMOTE_STACK="${MCODER_REMOTE_ROOT%/}/runtime/scripts/neo4j_ask_stack.py"
-  # Use absolute script path so a failed cd / wrong cwd cannot run python3 from \$HOME/runtime/scripts/...
+  # Pass credentials via CLI (not only env) so SSH/bash -c cannot drop MOTADATA_NEO4J_* for the Python process.
   if [[ -n "${MOTADATA_NEO4J_PASSWORD_FILE:-}" ]]; then
     REMOTE_REFRESH_CMD="$(
       printf \
-        'set -euo pipefail; export MOTADATA_NEO4J_PASSWORD_FILE=%q; STACK=%q; ROOT=%q; MIR=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --workspace-root "$MIR" refresh' \
-        "${MOTADATA_NEO4J_PASSWORD_FILE}" "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}"
+        'set -euo pipefail; STACK=%q; ROOT=%q; MIR=%q; PW=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; test -f "$PW" || { echo "error: Neo4j password file not found on GPU (create chmod 600 file): $PW" >&2; exit 1; }; exec python3 "$STACK" --neo4j-password-file "$PW" --workspace-root "$MIR" refresh' \
+        "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}" "${MOTADATA_NEO4J_PASSWORD_FILE}"
     )"
   else
     REMOTE_REFRESH_CMD="$(
       printf \
-        'set -euo pipefail; export MOTADATA_NEO4J_PASSWORD=%q; STACK=%q; ROOT=%q; MIR=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --workspace-root "$MIR" refresh' \
-        "${MOTADATA_NEO4J_PASSWORD}" "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}"
+        'set -euo pipefail; STACK=%q; ROOT=%q; MIR=%q; PW=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --neo4j-password "$PW" --workspace-root "$MIR" refresh' \
+        "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}" "${MOTADATA_NEO4J_PASSWORD}"
     )"
   fi
   # shellcheck disable=SC2086

@@ -546,7 +546,7 @@ export MOTADATA_NEO4J_PASSWORD_FILE="/home/<gpu-user>/.secrets/motadata_neo4j"
 
 `MCODER_REMOTE_ROOT` must be the **real m-coder path on the GPU** (where `runtime/scripts/neo4j_ask_stack.py` lives), e.g. `/root/Harshil-PoCs/m-coder` if that is your layout. It is **not** a WSL path. A wrong value used to make the remote `python3` fall back to `$HOME/runtime/scripts/...` and fail with “No such file”.
 
-When `REMOTE_REFRESH=1`, set **`MOTADATA_NEO4J_PASSWORD_FILE`** to the **absolute path on the GPU** of a root-only-readable file whose first line is the Neo4j password (`chmod 600`). The sync script exports **only that path** over SSH (no secret in the environment). Legacy: **`MOTADATA_NEO4J_PASSWORD`** still works but is discouraged.
+When `REMOTE_REFRESH=1`, set **`MOTADATA_NEO4J_PASSWORD_FILE`** to the **absolute path on the GPU** of a root-only-readable file whose first line is the Neo4j password (`chmod 600`). The sync script passes **`--neo4j-password-file`** to `neo4j_ask_stack` on the GPU (path only). The file must exist on the GPU before sync. If you use `sudo` to run the sync script, preserve env with **`sudo -E`** or set the variable inline. Legacy: **`MOTADATA_NEO4J_PASSWORD`** still works but is discouraged.
 
 For Plan-Gate itself, prefer **`MOTADATA_NEO4J_PASSWORD_FILE`** (same file path) in `systemd`/`EnvironmentFile` instead of plaintext **`MOTADATA_NEO4J_PASSWORD`**.
 
