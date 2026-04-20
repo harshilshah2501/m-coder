@@ -1,6 +1,6 @@
 # m-coder — User scenarios guide (Ask · Debug · Plan · Code · Agent)
 
-**Purpose:** One self-sufficient entry for **what each capability is**, **how it maps to HTTP/services**, **how to run the full scenario suite**, and **where to go deeper**. This file lives at the repository root so operators and new contributors can find it without digging through `docs/`.
+**Purpose:** One self-sufficient entry for **what each capability is**, **how it maps to HTTP/services**, **how to run the full scenario suite**, **how to run any single scenario by id** ([§5](#single-scenario-commands)), and **where to go deeper**. This file lives at the repository root so operators and new contributors can find it without digging through `docs/`.
 
 **Scope:** Motadata AIOps-style verification (Context Layer + Plan-Gate + optional vLLM). Product behavior is **governed**: evidence-first Ask, structured EXPLAIN_DEBUG, plan decisions, bounded execute, no public “agent” API route.
 
@@ -111,7 +111,177 @@ Plan and execute steps use the verifier’s **built-in** synthetic plan event an
 
 ---
 
-## 5. Quick manual checklist (curl / IDE)
+<a id="single-scenario-commands"></a>
+
+## 5. Run **one** scenario at a time (exact commands)
+
+Use **`--scenario-id`** (repeatable) with the same scenario file. Only the matching row(s) from [motadata_aiops_behavior_scenarios.v1.json](docs/validation/motadata_aiops_behavior_scenarios.v1.json) run; the smoke pipeline is skipped when you add **`--scenarios-only`**.
+
+**Shared prerequisites** (from the m-coder repo root):
+
+```bash
+export M_CODER_ROOT="$(pwd)"
+export PYTHONPATH="$M_CODER_ROOT"
+export MOTADATA_REPO_ROOT="/path/to/your/Motadata"   # Linux path to Motadata workspace
+export CONTEXT_URL="${CONTEXT_URL:-http://127.0.0.1:8091}"
+export PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
+```
+
+**Template** (replace `SCENARIO_ID` and paths as needed):
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --context-url "${CONTEXT_URL}" \
+  --plan-gate-url "${PLAN_GATE_URL}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id SCENARIO_ID \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.json
+```
+
+- **Multiple ids in one run:** repeat `--scenario-id` (example: `--scenario-id ask_broad_correlation --scenario-id ask_symbol_anchored`).
+- **Unknown id:** the verifier prints a **WARNING** to stderr and that id is skipped; if nothing runs, the report has `all_pass: false`.
+- **Quality policy:** omit `--quality-policy ""` only if you intentionally want to disable scenario-time retrieval gates (same as the production guide).
+
+### 5.1 Ask (`capability: ask`)
+
+| `id` | What it tests (short) |
+|------|------------------------|
+| `ask_broad_correlation` | Broad repo question, v1 evidence, plan-only |
+| `ask_symbol_anchored` | Anchored symbols (correlation engines) |
+| `ask_anchor_owner_gate` | Authority owner + Stage A + owner in top-3 |
+| `ask_anchor_owner_top1` | Strict owner top-1 / validated authority |
+| `ask_api_request_routing_owner` | API routing → APIServer owner |
+| `ask_servicenow_sync_owner` | ServiceNow sync → integration owner |
+
+**Commands:**
+
+```bash
+# ask_broad_correlation
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_broad_correlation \
+  --scenarios-only --print dev
+
+# ask_symbol_anchored
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_symbol_anchored \
+  --scenarios-only --print dev
+
+# ask_anchor_owner_gate
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_anchor_owner_gate \
+  --scenarios-only --print dev
+
+# ask_anchor_owner_top1
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_anchor_owner_top1 \
+  --scenarios-only --print dev
+
+# ask_api_request_routing_owner
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_api_request_routing_owner \
+  --scenarios-only --print dev
+
+# ask_servicenow_sync_owner
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_servicenow_sync_owner \
+  --scenarios-only --print dev
+```
+
+### 5.2 Debug (`capability: debug`)
+
+| `id` | What it tests (short) |
+|------|------------------------|
+| `debug_explain_selection` | EXPLAIN_DEBUG with real file + selection text |
+| `debug_explain_missing_selected_file` | Honest “insufficient / missing_in_context” when file is absent |
+
+```bash
+# debug_explain_selection
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id debug_explain_selection \
+  --scenarios-only --print dev
+
+# debug_explain_missing_selected_file
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id debug_explain_missing_selected_file \
+  --scenarios-only --print dev
+```
+
+### 5.3 Plan (`capability: plan`)
+
+| `id` | What it tests (short) |
+|------|------------------------|
+| `plan_pr_merge_shadow` | Synthetic shadow PR-merge `plan_request` → `decision_response.v0.1` with a decision |
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id plan_pr_merge_shadow \
+  --scenarios-only --print dev
+```
+
+### 5.4 Code (`capability: code`)
+
+| `id` | What it tests (short) |
+|------|------------------------|
+| `code_echo_probe` | Governed execute: `echo motadata-execute-probe` expects `EXECUTED` / `executed: true` |
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id code_echo_probe \
+  --scenarios-only --print dev
+```
+
+### 5.5 Agent (`capability: agent`)
+
+| `id` | What it tests (short) |
+|------|------------------------|
+| `agent_no_route` | `POST /v0/agent` → **404**; Ask response includes **`assist_layer`** |
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id agent_no_route \
+  --scenarios-only --print dev
+```
+
+---
+
+## 6. Quick manual checklist (curl / IDE)
 
 Use when services are healthy ([production guide §6](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md)):
 
@@ -127,7 +297,7 @@ Plan-Gate route reference: [runtime/plan_gate_service/README.md](runtime/plan_ga
 
 ---
 
-## 6. IDE-oriented narrative (optional)
+## 7. IDE-oriented narrative (optional)
 
 For **what to click** and demo-style flows (JetBrains-oriented notes), see:
 
@@ -137,7 +307,7 @@ For **what to click** and demo-style flows (JetBrains-oriented notes), see:
 
 ---
 
-## 7. Related documents (by role)
+## 8. Related documents (by role)
 
 | Need | Document |
 |------|----------|
@@ -149,6 +319,6 @@ For **what to click** and demo-style flows (JetBrains-oriented notes), see:
 
 ---
 
-## 8. History note
+## 9. History note
 
 Older drafts pointed operators at a temporary integration guide; that file is archived and redirects to the **production verification guide**. This **User scenarios guide** is the root-level index for **capability coverage**; setup details remain in the production guide above.

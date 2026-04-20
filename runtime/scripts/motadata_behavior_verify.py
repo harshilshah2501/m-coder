@@ -16,6 +16,8 @@ Stdout modes:
 
 Optional --scenarios FILE runs contract JSON scenarios (see docs/validation/).
 
+Optional --scenario-id ID (repeatable) runs only matching scenario rows from --scenarios (see MCODER_USER_SCENARIOS_GUIDE.md).
+
 Optional --utility-scenarios FILE runs developer-utility scenarios (motadata_developer_utility_scenarios.v1).
 
 Exits non-zero on any failed check.
@@ -1662,6 +1664,7 @@ def run_scenario_suite(
     *,
     export_stage_a: Optional[bool] = None,
     quality_policy: dict[str, Any] | None = None,
+    scenario_ids: Optional[set[str]] = None,
 ) -> dict[str, Any]:
     data = json.loads(scenarios_path.read_text(encoding="utf-8"))
     if data.get("schema_version") != "motadata_aiops_behavior_scenarios.v1":
@@ -1674,8 +1677,22 @@ def run_scenario_suite(
     defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
     tk = int(defaults.get("top_k", top_k))
     results: list[dict[str, Any]] = []
+    file_ids: set[str] = set()
+    for sc in data.get("scenarios") or []:
+        if isinstance(sc, dict) and sc.get("id"):
+            file_ids.add(str(sc["id"]))
+    if scenario_ids:
+        unknown = scenario_ids - file_ids
+        if unknown:
+            print(
+                f"WARNING: --scenario-id not found in {scenarios_path}: {sorted(unknown)}",
+                file=sys.stderr,
+            )
     for sc in data.get("scenarios") or []:
         if not isinstance(sc, dict):
+            continue
+        sid = str(sc.get("id") or "")
+        if scenario_ids is not None and sid not in scenario_ids:
             continue
         results.append(
             _run_scenario_row(
@@ -1689,7 +1706,10 @@ def run_scenario_suite(
             )
         )
     all_pass = all(r.get("pass") for r in results) if results else False
-    return {"file": str(scenarios_path), "all_pass": all_pass, "results": results}
+    out: dict[str, Any] = {"file": str(scenarios_path), "all_pass": all_pass, "results": results}
+    if scenario_ids is not None:
+        out["scenario_id_filter"] = sorted(scenario_ids)
+    return out
 
 
 def main() -> int:
@@ -1721,6 +1741,16 @@ def main() -> int:
         "--scenarios",
         default="",
         help="Path to motadata_aiops_behavior_scenarios.v1.json (optional)",
+    )
+    parser.add_argument(
+        "--scenario-id",
+        action="append",
+        default=None,
+        metavar="ID",
+        help=(
+            "Run only scenario row(s) with this id from --scenarios (repeatable). "
+            "Example: --scenario-id ask_broad_correlation --scenario-id code_echo_probe"
+        ),
     )
     parser.add_argument(
         "--scenarios-only",
@@ -1802,6 +1832,9 @@ def main() -> int:
         if not sp.is_file():
             print(f"ERROR: scenarios file not found: {sp}", file=sys.stderr)
             return 2
+        scenario_id_filter: Optional[set[str]] = None
+        if getattr(args, "scenario_id", None):
+            scenario_id_filter = {str(x) for x in args.scenario_id if str(x).strip()}
         scenario_suite = run_scenario_suite(
             sp,
             args.workspace_root,
@@ -1810,6 +1843,7 @@ def main() -> int:
             args.top_k,
             export_stage_a=export_stage_a,
             quality_policy=quality_policy,
+            scenario_ids=scenario_id_filter,
         )
 
     developer_utility_suite: dict[str, Any] | None = None
