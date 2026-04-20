@@ -53,6 +53,24 @@ def _print_summary(resp: dict[str, Any]) -> None:
         print(f"next_step: {steps[1]}")
     print("")
 
+def _print_reward_summary(resp: dict[str, Any], assist_delta: str) -> dict[str, Any]:
+    from runtime.learning.governed_reward import score_governed_response
+
+    rr = score_governed_response(resp, assist_delta=assist_delta)
+    d = rr.to_dict()
+    print("=== Governed Reward (ART-lite) ===")
+    print(f"total: {d['total_reward']}  eligibility: {d['eligibility']}")
+    print(
+        "components: "
+        f"phase={d['phase_reward']} evidence={d['evidence_reward']} "
+        f"truthfulness={d['truthfulness_reward']} runtime={d['runtime_reward']} "
+        f"assist={d['assist_delta_reward']} collapse_penalty={d['collapse_penalty']}"
+    )
+    if d["hard_violations"]:
+        print(f"hard_violations: {d['hard_violations']}")
+    print("")
+    return d
+
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Ask v1 query CLI (export_evidence + /v1/ask).")
@@ -63,6 +81,14 @@ def main() -> int:
     p.add_argument("--top-k", type=int, default=8)
     p.add_argument("--out", default="", help="Optional: write full response JSON to this path")
     p.add_argument("--print", dest="print_mode", choices=["summary", "json"], default="summary")
+    p.add_argument("--with-reward", action="store_true", help="Print deterministic governed reward summary for this response")
+    p.add_argument(
+        "--assist-delta",
+        default="same",
+        choices=["improved", "same", "degraded_minor", "degraded_major"],
+        help="Assist delta label used for reward scoring when --with-reward is set",
+    )
+    p.add_argument("--reward-out", default="", help="Optional: write reward JSON to this path")
     args = p.parse_args()
 
     context_url = args.context_url.rstrip("/")
@@ -115,6 +141,14 @@ def main() -> int:
         print(json.dumps(resp, indent=2))
     else:
         _print_summary(resp)
+    reward_payload: dict[str, Any] | None = None
+    if args.with_reward:
+        reward_payload = _print_reward_summary(resp, args.assist_delta)
+        if args.reward_out.strip():
+            rp = Path(args.reward_out)
+            rp.parent.mkdir(parents=True, exist_ok=True)
+            rp.write_text(json.dumps(reward_payload, indent=2), encoding="utf-8")
+            print(f"Saved reward: {rp}")
 
     return 0
 

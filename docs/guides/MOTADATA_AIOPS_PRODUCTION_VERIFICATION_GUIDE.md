@@ -359,6 +359,19 @@ python3 runtime/scripts/motadata_query_cli.py \
 - Default prints a concise human summary (`request_id`, posture, ask_path, quality, first answer step).
 - Add `--print json` to emit full JSON to stdout.
 - Keep `--out` for the persisted artifact.
+- Optional deterministic reward labeling (Governed ART-lite):
+
+```bash
+python3 runtime/scripts/motadata_query_cli.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --query "Which class is the base class for all APIs?" \
+  --out /tmp/q4.json \
+  --with-reward \
+  --assist-delta same \
+  --reward-out /tmp/q4.reward.json
+```
+
+This scores the response into `gold|silver|observational|banned` using phase/evidence/truthfulness/runtime components without changing runtime governance.
 
 ---
 
