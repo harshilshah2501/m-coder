@@ -167,7 +167,9 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
     q = (query or "").lower()
     ask_base = "base class" in q or "parent class" in q or "extends" in q
     ask_impl = "implements" in q
+    query_mentions_api = (" api" in f" {q} ") or (" apis" in f" {q} ")
 
+    candidates: List[tuple[str, str, str, str]] = []
     for item in bundle.items:
         text = str(item.content or "")
         m = _CLASS_DECL_RE.search(text)
@@ -176,19 +178,42 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
         cls = m.group(1)
         base = (m.group(2) or "").strip()
         impl = (m.group(3) or "").strip()
+        candidates.append((str(item.path), cls, base, impl))
+
+    if not candidates:
+        return (
+            "Direct answer (grounded): could not determine the class inheritance/implementation "
+            "from retrieved snippets alone; class declaration line is not in top evidence."
+        )
+
+    # If query explicitly targets APIs, do not answer from non-API declarations.
+    if query_mentions_api:
+        api_candidates = [
+            c
+            for c in candidates
+            if ("api" in c[0].lower()) or ("api" in c[1].lower())
+        ]
+        if not api_candidates:
+            return (
+                "Direct answer (grounded): query asks about APIs, but no API class declaration "
+                "is present in top evidence snippets."
+            )
+        candidates = api_candidates
+
+    for path, cls, base, impl in candidates:
         if ask_base and base:
             return (
                 f"Direct answer (grounded): `{cls}` extends `{base}` "
-                f"(from snippet in `{item.path}`)."
+                f"(from snippet in `{path}`)."
             )
         if ask_impl and impl:
             return (
                 f"Direct answer (grounded): `{cls}` implements `{impl}` "
-                f"(from snippet in `{item.path}`)."
+                f"(from snippet in `{path}`)."
             )
         if base or impl:
             rel = f"extends `{base}`" if base else f"implements `{impl}`"
-            return f"Direct answer (grounded): `{cls}` {rel} (from `{item.path}`)."
+            return f"Direct answer (grounded): `{cls}` {rel} (from `{path}`)."
 
     return (
         "Direct answer (grounded): could not determine the class inheritance/implementation "

@@ -186,6 +186,41 @@ def test_planner_class_query_reports_insufficient_when_declaration_missing():
     assert "class declaration line is not in top evidence" in first
 
 
+def test_planner_class_query_prefers_api_declaration_over_unrelated_declaration():
+    p = PlanOnlyPlanner()
+    b = _ctx(
+        [
+            "motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+            "motadata/src/main/java/com/mindarray/api/APIServer.java",
+        ]
+    )
+    b.items[0].content = "public class DiscoveryEngine extends AbstractVerticle {"
+    b.items[1].content = "public class APIServer extends BaseApiServer {"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=None,
+    )
+    first = ps.steps[0]
+    assert "APIServer" in first
+    assert "BaseApiServer" in first
+    assert "DiscoveryEngine" not in first
+
+
+def test_planner_class_query_api_without_api_declaration_returns_api_specific_insufficiency():
+    p = PlanOnlyPlanner()
+    b = _ctx(["motadata/src/main/java/com/mindarray/nms/DiscoveryEngine.java"])
+    b.items[0].content = "public class DiscoveryEngine extends AbstractVerticle {"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=None,
+    )
+    first = ps.steps[0].lower()
+    assert "query asks about apis" in first
+    assert "no api class declaration" in first
+
+
 def test_planner_uses_authority_when_present():
     registry = load_registry(REG)
     ar = build_authority_resolution("alert correlation", registry, None)
