@@ -335,6 +335,8 @@ Asserts “404 on `/v0/agent`” and assist presence on Ask.
 
 ---
 
+<a id="code-echo-probe-failure"></a>
+
 ## 11) Your specific failure — `code_echo_probe`
 
 Your log shows:
@@ -362,10 +364,33 @@ This is **not** contradicting the smoke header by magic — it’s a stricter **
 
 - Your Plan-Gate returned a valid execute response, but with **`BLOCKED`** / **`executed: false`** under `safe_execute` posture.
 
+**Most common cause: `repo_root` does not exist on the Plan-Gate host**
+
+`POST /v0/execute` runs on the machine where **Plan-Gate** listens. The verifier sends `repo_root` = `--workspace-root` (your Motadata tree). If you run the verifier on **WSL** with `MOTADATA_REPO_ROOT=/root/Harshil-PoCs/Motadata` but Plan-Gate runs on a **GPU host** reached via SSH tunnel, that **Linux path usually does not exist on the GPU**. The execute handler then fails the “working directory exists” check and returns **`BLOCKED`** even though posture is **`safe_execute`**.
+
+**Fix (recommended):** set a path that exists **on the Plan-Gate host** for the execute probe only:
+
+```bash
+export MOTADATA_VERIFY_EXECUTE_REPO_ROOT="/path/on/plan-gate-host/Motadata"
+# or, for a minimal echo smoke test when only proving sandbox wiring:
+# export MOTADATA_VERIFY_EXECUTE_REPO_ROOT="/tmp"
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  ...same flags as before...
+```
+
+The verifier uses this env var for **`repo_root`** in both the smoke execute step and the **`code_echo_probe`** scenario (see `runtime/scripts/motadata_behavior_verify.py`). Ask/Debug scenarios are unchanged — they still use `--workspace-root` for Context Layer export.
+
+**Other causes**
+
+- Ledger persistence required but failing (`MOTADATA_EXECUTE_LEDGER_PATH` set but not writable).
+- Sandbox executor unavailable on that host.
+
 **What to do next (operator choices)**
 
-1. **Treat as environment/policy mismatch** — adjust Plan-Gate execute policy / sandbox settings for the environment where you want echo to run, then rerun until the scenario matches intent.
-2. **Treat as scenario drift** — if `BLOCKED` is the intended default for this deployment class, update the scenario expectation in `motadata_aiops_behavior_scenarios.v1.json` only after product owners agree (otherwise you weaken the contract accidentally).
+1. **Split-host verification** — set **`MOTADATA_VERIFY_EXECUTE_REPO_ROOT`** as above, or run the verifier on the same host as Plan-Gate with a real Motadata checkout path.
+2. **Policy / sandbox** — if `repo_root` is valid on the Plan-Gate host and you still see `BLOCKED`, inspect `reason` / logs under `runtime/.run/plan_gate.log` and execute/sandbox configuration.
+3. **Treat as scenario drift** — only if product owners agree: relax `code_echo_probe` expectations in `motadata_aiops_behavior_scenarios.v1.json` (weakens the contract).
 
 **How to confirm in the JSON artifact**
 

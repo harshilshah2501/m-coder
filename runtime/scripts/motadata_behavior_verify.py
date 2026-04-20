@@ -18,6 +18,8 @@ Optional --scenarios FILE runs contract JSON scenarios (see docs/validation/).
 
 Optional --scenario-id ID (repeatable) runs only matching scenario rows from --scenarios (see MCODER_USER_SCENARIOS_GUIDE.md).
 
+Environment: MOTADATA_VERIFY_EXECUTE_REPO_ROOT — if set, used as repo_root for POST /v0/execute (smoke + code scenario) when Plan-Gate runs on a different host than --workspace-root.
+
 Optional --utility-scenarios FILE runs developer-utility scenarios (motadata_developer_utility_scenarios.v1).
 
 Exits non-zero on any failed check.
@@ -28,6 +30,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -38,6 +41,18 @@ from typing import Any, Optional
 
 def _utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _execute_repo_root_for_plan_gate(workspace_root: str) -> str:
+    """
+    Plan-Gate POST /v0/execute resolves repo_root on the machine where Plan-Gate runs.
+    When the verifier runs on a workspace host (e.g. WSL) but Plan-Gate is remote (e.g. GPU
+    via SSH tunnel), workspace_root may not exist on the Plan-Gate host and execute returns
+    BLOCKED. Set MOTADATA_VERIFY_EXECUTE_REPO_ROOT to an absolute path that exists on the
+    Plan-Gate host (e.g. the Motadata checkout path there, or a temp dir for echo probes).
+    """
+    o = os.environ.get("MOTADATA_VERIFY_EXECUTE_REPO_ROOT", "").strip()
+    return o if o else workspace_root
 
 
 def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, dict[str, Any]]:
@@ -624,7 +639,7 @@ def run_once(
     execute_req = {
         "schema_version": "execute_request.v0.1",
         "request_id": str(uuid.uuid4()),
-        "repo_root": workspace_root,
+        "repo_root": _execute_repo_root_for_plan_gate(workspace_root),
         "command": "echo motadata-execute-probe",
     }
     code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)
@@ -1579,7 +1594,7 @@ def _run_scenario_row(
         execute_req = {
             "schema_version": "execute_request.v0.1",
             "request_id": str(uuid.uuid4()),
-            "repo_root": workspace_root,
+            "repo_root": _execute_repo_root_for_plan_gate(workspace_root),
             "command": cmd,
         }
         code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)

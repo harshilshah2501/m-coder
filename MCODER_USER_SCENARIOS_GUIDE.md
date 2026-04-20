@@ -264,6 +264,14 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --scenarios-only --print dev
 ```
 
+**Plan-Gate host vs workspace host:** `POST /v0/execute` resolves `repo_root` on the **Plan-Gate** machine. If that host does not have the same path as `MOTADATA_REPO_ROOT` (typical when Context Layer runs on WSL and Plan-Gate on a tunneled GPU), `code_echo_probe` can return **`BLOCKED`** even though other scenarios pass. Set a path that exists on the Plan-Gate host:
+
+```bash
+export MOTADATA_VERIFY_EXECUTE_REPO_ROOT="/path/on/plan-gate-host/to/Motadata"
+```
+
+Use **`/tmp`** only to confirm sandbox wiring; for production-like checks, point at a real repo root on that host. See [docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md — code_echo_probe / split host](docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md#code-echo-probe-failure).
+
 ### 5.5 Agent (`capability: agent`)
 
 | `id` | What it tests (short) |
