@@ -236,9 +236,7 @@ def get_java_ast_ingest_state(key: str = "java_ast") -> dict[str, Any] | None:
     query = """
     MATCH (state:GraphIngestState {key: $key})
     RETURN state.key AS key,
-           state.anchorCountVerticleRegistration AS anchor_count_verticle_registration,
-           state.anchorCountEventbusConsumerRegistration AS anchor_count_eventbus_consumer_registration,
-           state.anchorCountApiRouteRegistration AS anchor_count_api_route_registration
+           properties(state) AS props
     LIMIT 1
     """
     try:
@@ -248,9 +246,12 @@ def get_java_ast_ingest_state(key: str = "java_ast") -> dict[str, Any] | None:
         raise GraphUnavailableError(f"get_java_ast_ingest_state failed: {exc}") from exc
     if record is None:
         return None
+    props = record.get("props")
+    if not isinstance(props, dict):
+        props = {}
     return {
         "key": record.get("key"),
-        "anchor_count_verticle_registration": int(record.get("anchor_count_verticle_registration") or 0),
-        "anchor_count_eventbus_consumer_registration": int(record.get("anchor_count_eventbus_consumer_registration") or 0),
-        "anchor_count_api_route_registration": int(record.get("anchor_count_api_route_registration") or 0),
+        "anchor_count_verticle_registration": int(props.get("anchorCountVerticleRegistration") or 0),
+        "anchor_count_eventbus_consumer_registration": int(props.get("anchorCountEventbusConsumerRegistration") or 0),
+        "anchor_count_api_route_registration": int(props.get("anchorCountApiRouteRegistration") or 0),
     }

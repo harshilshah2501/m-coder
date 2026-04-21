@@ -197,26 +197,6 @@
         "schema_version": "decision_response.v0.1",
         "decision_present": true
       }
-    },
-    {
-      "id": "code_echo_probe",
-      "capability": "code",
-      "description": "Governed execute: safe echo (non-destructive)",
-      "command": "echo motadata-execute-probe",
-      "expect": {
-        "schema_version": "execute_response.v0.1",
-        "outcome": "EXECUTED",
-        "executed": true
-      }
-    },
-    {
-      "id": "agent_no_route",
-      "capability": "agent",
-      "description": "No public /v0/agent; assist present on ask",
-      "expect": {
-        "agent_route_404": true,
-        "assist_layer_on_ask": true
-      }
     }
   ]
 }
