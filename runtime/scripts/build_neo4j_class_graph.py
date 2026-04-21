@@ -16,8 +16,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Tuple
 
-from runtime.neo4j_credentials import neo4j_password_from_env
-
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([A-Za-z_][\w\.]*)\s*;", re.MULTILINE)
 CLASS_RE = re.compile(
@@ -181,7 +179,7 @@ def index_class_graph(
 
     uri = neo4j_uri.strip() or str(os.environ.get("MOTADATA_NEO4J_URI", "")).strip()
     user = neo4j_user.strip() or str(os.environ.get("MOTADATA_NEO4J_USER", "")).strip()
-    password = neo4j_password.strip() or neo4j_password_from_env()
+    password = neo4j_password.strip() or str(os.environ.get("MOTADATA_NEO4J_PASSWORD", "")).strip()
     if not uri:
         raise ValueError("missing Neo4j URI (set --neo4j-uri or MOTADATA_NEO4J_URI)")
 
