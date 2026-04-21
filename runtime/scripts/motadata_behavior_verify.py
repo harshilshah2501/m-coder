@@ -57,7 +57,13 @@ def _execute_repo_root_for_plan_gate(workspace_root: str) -> str:
     return o if o else workspace_root
 
 
-def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, dict[str, Any]]:
+def _post(
+    url: str,
+    payload: dict[str, Any],
+    timeout: int = 180,
+    *,
+    raise_for_status: bool = True,
+) -> tuple[int, dict[str, Any]]:
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         url,
@@ -70,6 +76,14 @@ def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, d
             return resp.getcode(), json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
+        if not raise_for_status:
+            try:
+                parsed = json.loads(body)
+                if isinstance(parsed, dict):
+                    return exc.code, parsed
+            except Exception:
+                pass
+            return exc.code, {}
         detail = body
         try:
             parsed = json.loads(body)
@@ -906,11 +920,13 @@ def run_once(
         "posture": execute_resp.get("posture"),
     }
 
-    try:
-        _post(f"{plan_gate_url}/v0/agent", {"request_id": "agent-probe"}, timeout=20)
-        no_agent_route = False
-    except urllib.error.HTTPError as exc:
-        no_agent_route = exc.code == 404
+    code_agent, _ = _post(
+        f"{plan_gate_url}/v0/agent",
+        {"request_id": "agent-probe"},
+        timeout=20,
+        raise_for_status=False,
+    )
+    no_agent_route = code_agent == 404
     checks["agent"] = {
         "pass": no_agent_route and ("assist_layer" in ask_query_resp),
         "agent_route_404": no_agent_route,
@@ -1889,11 +1905,13 @@ def _run_scenario_row(
                 req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
             _, resp = _post(f"{plan_gate_url}/v1/ask", req)
             assist = "assist_layer" in resp
-        no_route = False
-        try:
-            _post(f"{plan_gate_url}/v0/agent", {"request_id": "agent-probe"}, timeout=20)
-        except urllib.error.HTTPError as exc:
-            no_route = exc.code == 404
+        code_probe, _ = _post(
+            f"{plan_gate_url}/v0/agent",
+            {"request_id": "agent-probe"},
+            timeout=20,
+            raise_for_status=False,
+        )
+        no_route = code_probe == 404
         if expect.get("agent_route_404") and not no_route:
             errors.append("expected /v0/agent 404")
         if expect.get("assist_layer_on_ask") and not assist:
