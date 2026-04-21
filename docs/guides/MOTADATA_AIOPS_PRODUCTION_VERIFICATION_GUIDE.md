@@ -18,11 +18,12 @@ This is the active guide. Use this for setup, manual verification, and repeatabl
 
 ## 1) Scope and success criteria
 
-This guide validates three capabilities end-to-end:
+This guide validates four capabilities end-to-end:
 
 - `ask` (repo understanding via evidence-first Ask)
 - `debug` (EXPLAIN_DEBUG path with structured reasoning output)
 - `plan` (governed plan decision contract)
+- `code` (governed execute contract with mixed EXECUTED/BLOCKED probes)
 
 A verification run is considered successful when:
 
@@ -469,7 +470,7 @@ Pass criteria:
 - `stable == true` when `--repeat > 1` and smoke runs are included (not `--scenarios-only`)
 - If `--scenarios FILE` is set, `scenario_suite.all_pass` must be true as well
 
-### Scenario suite (ask / debug / plan)
+### Scenario suite (ask / debug / plan / code)
 
 Canonical definitions live in:
 
@@ -506,13 +507,18 @@ Expected fields per scenario capability (see `expect` in each JSON row; the veri
 
 | Capability | What is exercised | Typical `expect` keys | Pass means |
 | ---------- | ----------------- | ---------------------- | ---------- |
-| `ask` | `export_evidence` + `POST /v1/ask` | `governance_posture`, `execution`, `ask_path`, `min_plan_steps`, `text_contains_any`, `require_authority_primary_owner`, `require_owner_in_top3`, `require_stage_a_owner_injected_min` | HTTP 200, no expect errors, export returned entries |
-| `debug` | `POST /v1/ask` with `task_type=EXPLAIN_DEBUG` | `routing_mode`, `explain_debug_has_keys` | HTTP 200, `explain_debug` has `summary` or `error` as required |
-| `plan` | `POST /v0/plan` | `schema_version`, `decision_present` | HTTP 200, decision contract satisfied |
+| `ask` | `export_evidence` + `POST /v1/ask` | `governance_posture`, `execution`, `ask_path`, `min_plan_steps`, `text_contains_any`, `must_cite_file_or_symbol_anchor`, `forbid_generic_scan_answer` | HTTP 200, no expect errors, export returned entries |
+| `debug` | `POST /v1/ask` with `task_type=EXPLAIN_DEBUG` | `routing_mode`, `explain_debug_has_keys`, `must_have_confidence_limits`, selected-file checks | HTTP 200, `explain_debug` has `summary` or `error` as required |
+| `plan` | `POST /v0/plan` | `schema_version`, `decision_present`, optional `decision_any_of` | HTTP 200, decision contract satisfied |
+| `code` | `POST /v0/execute` | `schema_version`, `outcome`/`outcome_any_of`, `executed`/`executed_any_of`, optional `posture` | HTTP 200, execute contract satisfied |
 
 The saved JSON report includes `scenario_suite.results[]` with `actual_summary`, `errors`, and `dev_snapshot` (for **ask** and **debug** rows: full steps, bundle files, snippets, or explain-debug text).
 
-**Anchored owner gate scenario (`ask_anchor_owner_gate`):** The suite includes a pinned Ask row that asserts Layer-5 behavior on the **real** Motadata tree: `authority_resolution.primary_owner.file` is present, Stage A allocates the `owner_injected` lane, and the owner file appears in the **top-3** `export_evidence` entries. For each run, capture `actual_summary.retrieval_gates.workspace_identity_hash` (and the context-layer build SHA) next to your m-coder revision when you compare reports or file regressions—same rule as Stage A A/B below.
+The suite is now a balanced 20-scenario contract: 5 Ask + 5 Debug + 5 Plan + 5 Code, designed from `/home/harshil/Projects/Motadata` references and executed against `--workspace-root`.
+
+Critical usage rule:
+- Treat the one-shot 20-scenario execution as a **smoke/regression gate**.
+- For capability acceptance, run **targeted scenario slices** and validate each capability deeply with real use-cases and their expected/actual contracts.
 
 **Stage A OFF vs ON (A/B):** When diffing two `--out` reports (`--export-stage-a off` vs `on`), compare runs built from the **same** m-coder / context-layer **git SHA** and the same `--workspace-root`. If OFF and ON come from different revisions, you are mixing Stage A toggles with unrelated code changes—use matching artifact labels (e.g. both `*.v2_1_2.json`) only when the stack matches.
 
@@ -524,8 +530,9 @@ Functional scope under test in this flow:
 - `Ask`
 - `Debug`
 - `Plan`
+- `Code`
 
-`Code` execution and `Agent` endpoint semantics are not part of this acceptance slice.
+`Agent` endpoint semantics are not part of this acceptance slice.
 
 1) **Set workspace and branch context**
 
@@ -539,6 +546,7 @@ export PYTHONPATH="$(pwd)"
 Expected:
 - current branch is `feature/repo-graph-enrichment-v1`
 - `${MOTADATA_REPO_ROOT}` exists and is readable
+- scenario design references are maintained from `/home/harshil/Projects/Motadata`; runtime execution uses `--workspace-root`
 
 2) **Start graph stack**
 
@@ -613,28 +621,102 @@ PYTHONPATH="$(pwd)" python3 -m pytest \
   -q --tb=short
 ```
 
-8) **Run required Ask/Debug/Plan scenario verification**
+8) **Run deep capability-focused verification (primary acceptance)**
+
+Run each capability slice independently so expected vs actual can be reviewed with precision for real use-cases.
+
+8A) Ask deep checks (real repo understanding, anchor quality):
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "${MOTADATA_REPO_ROOT}" \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
   --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
-  --scenario-id ask_mail_config_domain \
+  --scenario-id ask_base_api_class \
+  --scenario-id ask_mail_server_configuration \
   --scenario-id ask_config_store_organization \
-  --scenario-id debug_explain_selection \
-  --scenario-id plan_pr_merge_shadow \
+  --scenario-id ask_api_layer_architecture \
+  --scenario-id ask_notification_handlers \
   --scenarios-only \
   --print dev \
-  --out runtime/.run/motadata_behavior_validation.graph_required.json
+  --out runtime/.run/motadata_behavior_validation.ask.deep.json
 ```
 
-Pass condition:
+8B) Debug deep checks (selected-file binding + concrete failure points):
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id debug_availability_correlation_flow \
+  --scenario-id debug_mail_config_update_path \
+  --scenario-id debug_config_store_null_path \
+  --scenario-id debug_snmp_trap_processing \
+  --scenario-id debug_missing_selected_file \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.debug.deep.json
+```
+
+8C) Plan deep checks (decision contract integrity):
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id plan_api_layer_change_shadow \
+  --scenario-id plan_mail_config_refactor_shadow \
+  --scenario-id plan_config_store_convention_shadow \
+  --scenario-id plan_notification_pipeline_shadow \
+  --scenario-id plan_dependency_flow_shadow \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.plan.deep.json
+```
+
+8D) Code deep checks (mixed governance behavior: EXECUTED + BLOCKED):
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id code_safe_echo_probe \
+  --scenario-id code_safe_pwd_probe \
+  --scenario-id code_block_rm_probe \
+  --scenario-id code_block_git_reset_probe \
+  --scenario-id code_block_shutdown_probe \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.code.deep.json
+```
+
+Capability pass conditions (must hold for each deep run artifact):
+- `all_pass=true`
+- every row has empty `errors`
+- each row includes `expect` and capability-specific `actual_summary`
+- Ask/Debug rows include `dev_snapshot` for grounded evidence review
+
+9) **Run the full 20-scenario Ask/Debug/Plan/Code suite (smoke/regression only)**
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.20slice.json
+```
+
+Smoke pass condition:
 - output JSON has `all_pass=true`
 - no scenario row contains `errors`
 - `graph_preflight.state=COMPLETE`
 
-9) **Run routed Ask acceptance queries**
+10) **Run routed Ask acceptance queries**
 
 ```bash
 python3 runtime/scripts/motadata_query_cli.py \
@@ -653,7 +735,7 @@ python3 runtime/scripts/motadata_query_cli.py \
   --out /tmp/t3.json --with-reward --reward-out /tmp/t3.reward.json
 ```
 
-10) **Assert routed query artifact outcomes**
+11) **Assert routed query artifact outcomes**
 
 ```bash
 python3 - <<'PY'
@@ -692,7 +774,12 @@ PY
 
 Final pass condition:
 - all commands above succeed
-- scenario artifact `runtime/.run/motadata_behavior_validation.graph_required.json` reports pass
+- deep capability artifacts pass:
+  - `runtime/.run/motadata_behavior_validation.ask.deep.json`
+  - `runtime/.run/motadata_behavior_validation.debug.deep.json`
+  - `runtime/.run/motadata_behavior_validation.plan.deep.json`
+  - `runtime/.run/motadata_behavior_validation.code.deep.json`
+- scenario artifact `runtime/.run/motadata_behavior_validation.20slice.json` reports pass
 - routed-query assertion block prints `repo-graph enrichment acceptance: PASS`
 
 ---

@@ -222,3 +222,63 @@ def test_run_scenario_suite_fails_fast_on_graph_unreachable(tmp_path: Path, monk
     assert out["all_pass"] is False
     assert out["results"] == []
     assert out["graph_preflight"]["state"] == "UNREACHABLE"
+
+
+def test_run_scenario_row_plan_supports_decision_any_of(monkeypatch) -> None:
+    scenario = {
+        "id": "plan_decision_any",
+        "capability": "plan",
+        "expect": {
+            "schema_version": "decision_response.v0.1",
+            "decision_present": True,
+            "decision_any_of": ["REFUSAL", "APPROVAL"],
+        },
+    }
+
+    def _fake_post(url: str, payload: dict, timeout: int = 180, *, raise_for_status: bool = True):
+        assert url.endswith("/v0/plan")
+        return 200, {"schema_version": "decision_response.v0.1", "decision": "REFUSAL"}
+
+    monkeypatch.setattr(verify, "_post", _fake_post)
+    out = verify._run_scenario_row(
+        scenario,
+        workspace_root="/tmp/ws",
+        context_url="http://context",
+        plan_gate_url="http://plan",
+        top_k=8,
+    )
+    assert out["pass"] is True
+    assert out["actual_summary"]["decision_present"] is True
+
+
+def test_run_scenario_row_code_supports_outcome_any_of(monkeypatch) -> None:
+    scenario = {
+        "id": "code_outcome_any",
+        "capability": "code",
+        "command": "echo hello",
+        "expect": {
+            "schema_version": "execute_response.v0.1",
+            "outcome_any_of": ["EXECUTED", "BLOCKED"],
+            "executed_any_of": [True, False],
+        },
+    }
+
+    def _fake_post(url: str, payload: dict, timeout: int = 180, *, raise_for_status: bool = True):
+        assert url.endswith("/v0/execute")
+        return 200, {
+            "schema_version": "execute_response.v0.1",
+            "outcome": "BLOCKED",
+            "executed": False,
+            "posture": "PLAN_ONLY",
+        }
+
+    monkeypatch.setattr(verify, "_post", _fake_post)
+    out = verify._run_scenario_row(
+        scenario,
+        workspace_root="/tmp/ws",
+        context_url="http://context",
+        plan_gate_url="http://plan",
+        top_k=8,
+    )
+    assert out["pass"] is True
+    assert out["actual_summary"]["command"] == "echo hello"

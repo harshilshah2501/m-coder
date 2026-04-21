@@ -1992,31 +1992,10 @@ def _run_scenario_row(
             errors.append(f"schema_version want {expect['schema_version']} got {plan_resp.get('schema_version')}")
         if expect.get("decision_present") and not plan_resp.get("decision"):
             errors.append("decision missing")
-        return {
-            "id": sid,
-            "capability": cap,
-            "description": desc,
-            "pass": len(errors) == 0 and code == 200,
-            "errors": errors,
-            "expect": expect,
-            "actual_summary": {"http": code, "decision": plan_resp.get("decision"), "schema_version": plan_resp.get("schema_version")},
-        }
-
-    if cap == "code":
-        cmd = str(scenario.get("command") or "echo motadata-execute-probe")
-        execute_req = {
-            "schema_version": "execute_request.v0.1",
-            "request_id": str(uuid.uuid4()),
-            "repo_root": _execute_repo_root_for_plan_gate(workspace_root),
-            "command": cmd,
-        }
-        code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)
-        if expect.get("schema_version") and execute_resp.get("schema_version") != expect["schema_version"]:
-            errors.append(f"schema_version want {expect['schema_version']} got {execute_resp.get('schema_version')}")
-        if "outcome" in expect and execute_resp.get("outcome") != expect["outcome"]:
-            errors.append(f"outcome want {expect['outcome']} got {execute_resp.get('outcome')}")
-        if "executed" in expect and execute_resp.get("executed") != expect["executed"]:
-            errors.append(f"executed want {expect['executed']} got {execute_resp.get('executed')}")
+        if "decision_any_of" in expect:
+            allowed = expect.get("decision_any_of")
+            if isinstance(allowed, list) and plan_resp.get("decision") not in allowed:
+                errors.append(f"decision want one of {allowed} got {plan_resp.get('decision')}")
         return {
             "id": sid,
             "capability": cap,
@@ -2026,6 +2005,49 @@ def _run_scenario_row(
             "expect": expect,
             "actual_summary": {
                 "http": code,
+                "decision": plan_resp.get("decision"),
+                "decision_present": bool(plan_resp.get("decision")),
+                "schema_version": plan_resp.get("schema_version"),
+            },
+        }
+
+    if cap == "code":
+        cmd = str(scenario.get("command") or "echo motadata-execute-probe")
+        execute_repo_root = _execute_repo_root_for_plan_gate(workspace_root)
+        execute_req = {
+            "schema_version": "execute_request.v0.1",
+            "request_id": str(uuid.uuid4()),
+            "repo_root": execute_repo_root,
+            "command": cmd,
+        }
+        code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)
+        if expect.get("schema_version") and execute_resp.get("schema_version") != expect["schema_version"]:
+            errors.append(f"schema_version want {expect['schema_version']} got {execute_resp.get('schema_version')}")
+        if "outcome" in expect and execute_resp.get("outcome") != expect["outcome"]:
+            errors.append(f"outcome want {expect['outcome']} got {execute_resp.get('outcome')}")
+        if "outcome_any_of" in expect:
+            allowed_outcomes = expect.get("outcome_any_of")
+            if isinstance(allowed_outcomes, list) and execute_resp.get("outcome") not in allowed_outcomes:
+                errors.append(f"outcome want one of {allowed_outcomes} got {execute_resp.get('outcome')}")
+        if "executed" in expect and execute_resp.get("executed") != expect["executed"]:
+            errors.append(f"executed want {expect['executed']} got {execute_resp.get('executed')}")
+        if "executed_any_of" in expect:
+            allowed_executed = expect.get("executed_any_of")
+            if isinstance(allowed_executed, list) and execute_resp.get("executed") not in allowed_executed:
+                errors.append(f"executed want one of {allowed_executed} got {execute_resp.get('executed')}")
+        if "posture" in expect and execute_resp.get("posture") != expect["posture"]:
+            errors.append(f"posture want {expect['posture']} got {execute_resp.get('posture')}")
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {
+                "http": code,
+                "command": cmd,
+                "repo_root": execute_repo_root,
                 "outcome": execute_resp.get("outcome"),
                 "executed": execute_resp.get("executed"),
                 "posture": execute_resp.get("posture"),
