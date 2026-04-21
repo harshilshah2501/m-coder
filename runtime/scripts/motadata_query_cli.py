@@ -232,6 +232,9 @@ def _relative_or_absolute(file_path: str, workspace_root: str) -> str:
 
 def _build_router_response(
     *,
+    query: str,
+    router: QueryRouter,
+    route_intent: QueryIntent,
     request_id: str,
     revision: str,
     answer: str,
@@ -241,6 +244,15 @@ def _build_router_response(
     workspace_root: str,
     file_paths: list[str] | None = None,
 ) -> dict[str, Any]:
+    lane_c = router.orchestrate_lane_c(
+        query=query,
+        route=route_intent,
+        route_answer=answer,
+        metadata=metadata,
+        mode="ask",
+    )
+    quality = lane_c["quality"]
+    composed = lane_c["composed_evidence"]
     files = [
         {
             "path": _relative_or_absolute(file_path, workspace_root),
@@ -251,8 +263,8 @@ def _build_router_response(
     ]
     response_metadata = {
         "intent_type": "GENERIC_INTENT",
-        "evidence_quality": "STRONG",
-        "quality_reasons": ["ROUTER_GROUNDED_RESPONSE"],
+        "evidence_quality": str(quality["evidence_quality"]),
+        "quality_reasons": list(quality["quality_reasons"]),
         "dominance_metrics": {
             "top_k_size": float(len(files)),
             "core_code_in_top_k_pct": 1.0 if files else 0.0,
@@ -262,6 +274,9 @@ def _build_router_response(
             "max_consecutive_noise": 0.0,
         },
         "policy_version": "quality_gate.v1",
+        "resolver_outputs": lane_c["resolver_outputs"],
+        "composed_evidence": composed,
+        "quality_evaluator": quality.get("metadata"),
     }
     response_metadata.update(metadata)
     if not isinstance(response_metadata.get("quality_reasons"), list):
@@ -277,7 +292,7 @@ def _build_router_response(
             "selectors_used": [f"router:{routing_mode}"],
         },
         "plan_summary": {
-            "steps": [answer],
+            "steps": lane_c["plan_steps"],
         },
         "governance_posture": "PLAN_ONLY",
         "execution": False,
@@ -362,6 +377,9 @@ def main() -> int:
 
         if router_result and router_result.intent == QueryIntent.IDENTITY:
             resp = _build_router_response(
+                query=args.query,
+                router=router,
+                route_intent=QueryIntent.IDENTITY,
                 request_id=request_id,
                 revision="router:identity",
                 answer=router_result.answer or IDENTITY_ANSWER,
@@ -379,6 +397,9 @@ def main() -> int:
                 if isinstance(graph_result, dict) and graph_result.get("file_path"):
                     file_paths = [str(graph_result.get("file_path"))]
                 resp = _build_router_response(
+                    query=args.query,
+                    router=router,
+                    route_intent=QueryIntent.STRUCTURAL,
                     request_id=request_id,
                     revision="router:structural",
                     answer=router_result.answer,

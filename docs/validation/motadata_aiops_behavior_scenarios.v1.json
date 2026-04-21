@@ -10,6 +10,7 @@
       "capability": "ask",
       "description": "Broad repo question: plan-only answer with v1 evidence path",
       "query": "How does alert correlation and enrichment work?",
+      "requires_behavior_flow": true,
       "expect": {
         "governance_posture": "PLAN_ONLY",
         "execution": false,
@@ -22,6 +23,7 @@
       "capability": "ask",
       "description": "Anchored question: expect correlation engine in plan or evidence",
       "query": "Where is alert correlation implemented? Reference AvailabilityCorrelationEngine or AlertCorrelationEngine.",
+      "must_cite_file_or_symbol_anchor": true,
       "expect": {
         "governance_posture": "PLAN_ONLY",
         "ask_path": "v1_evidence",
@@ -38,6 +40,8 @@
       "capability": "ask",
       "description": "Pinned anchored owner query (registry class + product terms): authority primary owner must resolve, Stage A must inject owner lane, owner file must appear in export evidence top-3. Record evidence.workspace_identity_hash with your m-coder git SHA when filing regressions.",
       "query": "Explain AlertCorrelationEngine behavior for alert correlation in the product.",
+      "requires_graph_path": true,
+      "must_cite_file_or_symbol_anchor": true,
       "expect": {
         "governance_posture": "PLAN_ONLY",
         "execution": false,
@@ -53,6 +57,8 @@
       "capability": "ask",
       "description": "Strict anchored owner query: owner should rank top-1 under policy.",
       "query": "Where is alert correlation implemented? Focus on AvailabilityCorrelationEngine.start.",
+      "requires_graph_path": true,
+      "must_cite_file_or_symbol_anchor": true,
       "expect": {
         "governance_posture": "PLAN_ONLY",
         "execution": false,
@@ -73,6 +79,8 @@
       "capability": "ask",
       "description": "API request routing should anchor to APIServer ownership.",
       "query": "Where is API request routing handled in Motadata?",
+      "requires_graph_path": true,
+      "must_cite_file_or_symbol_anchor": true,
       "expect": {
         "governance_posture": "PLAN_ONLY",
         "execution": false,
@@ -91,6 +99,8 @@
       "capability": "ask",
       "description": "ServiceNow sync query should anchor to integration owner.",
       "query": "Where is ServiceNow incident synchronization implemented?",
+      "requires_graph_path": true,
+      "must_cite_file_or_symbol_anchor": true,
       "expect": {
         "governance_posture": "PLAN_ONLY",
         "execution": false,
@@ -105,6 +115,36 @@
       }
     },
     {
+      "id": "ask_mail_config_domain",
+      "capability": "ask",
+      "description": "Mail config domain query must be anchored to concrete implementation paths/symbols.",
+      "query": "Where is mail configuration domain handling implemented in Motadata?",
+      "requires_graph_path": true,
+      "must_cite_file_or_symbol_anchor": true,
+      "forbid_generic_scan_answer": true,
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "execution": false,
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1
+      }
+    },
+    {
+      "id": "ask_config_store_organization",
+      "capability": "ask",
+      "description": "Config-store organization query must be anchored to concrete implementation paths/symbols.",
+      "query": "Where is configuration store organization implemented in Motadata?",
+      "requires_graph_path": true,
+      "must_cite_file_or_symbol_anchor": true,
+      "forbid_generic_scan_answer": true,
+      "expect": {
+        "governance_posture": "PLAN_ONLY",
+        "execution": false,
+        "ask_path": "v1_evidence",
+        "min_plan_steps": 1
+      }
+    },
+    {
       "id": "debug_explain_selection",
       "capability": "debug",
       "description": "EXPLAIN_DEBUG with explicit file + selection",
@@ -112,6 +152,7 @@
       "debug_query": "Debug why incident enrichment might be skipped for some events",
       "selected_file": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
       "selection": "Trace enrichment and correlation paths; list likely failure points.",
+      "requires_selected_file_binding": true,
       "expect": {
         "routing_mode": "explain_debug",
         "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
@@ -134,6 +175,7 @@
       "debug_query": "Explain failure points for a file that is not in retrieved context",
       "selected_file": "motadata/src/main/java/com/mindarray/aiops/doesnotexist/MissingEngine.java",
       "selection": "Trace branch and enrichment behavior.",
+      "requires_selected_file_binding": true,
       "expect": {
         "routing_mode": "explain_debug",
         "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
@@ -150,6 +192,7 @@
       "id": "plan_pr_merge_shadow",
       "capability": "plan",
       "description": "Governed PR merge decision (shadow)",
+      "requires_playbook": true,
       "expect": {
         "schema_version": "decision_response.v0.1",
         "decision_present": true

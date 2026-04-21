@@ -32,6 +32,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 import textwrap
 import urllib.error
@@ -993,6 +994,18 @@ _QUALITY_RANK: dict[str, int] = {
     "WEAK": 1,
 }
 
+_GENERIC_SCAN_FORBIDDEN_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"open .* and scan for logic related to", re.IGNORECASE),
+    re.compile(r"scan for logic related to", re.IGNORECASE),
+    re.compile(r"could not determine.*from retrieved snippets", re.IGNORECASE | re.DOTALL),
+]
+
+_GRAPH_PREFLIGHT_THRESHOLDS: dict[str, int] = {
+    "VERTICLE_REGISTRATION": 5,
+    "EVENTBUS_CONSUMER_REGISTRATION": 10,
+    "API_ROUTE_REGISTRATION": 1,
+}
+
 
 def _rank_evidence_quality(q: str | None) -> int:
     if not q or not isinstance(q, str):
@@ -1004,6 +1017,116 @@ def _haystack_plan_notes(resp: dict[str, Any]) -> str:
     ps = resp.get("plan_summary") if isinstance(resp.get("plan_summary"), dict) else {}
     notes = ps.get("notes") if isinstance(ps.get("notes"), list) else []
     return " ".join(str(n) for n in notes)
+
+
+def _scenario_flag(scenario: dict[str, Any], key: str) -> bool:
+    val = scenario.get(key)
+    if isinstance(val, bool):
+        return val
+    expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
+    return bool(expect.get(key) is True)
+
+
+def _text_contains_generic_scan_phrase(text: str) -> list[str]:
+    hits: list[str] = []
+    for pat in _GENERIC_SCAN_FORBIDDEN_PATTERNS:
+        if pat.search(text):
+            hits.append(pat.pattern)
+    return hits
+
+
+def _symbol_candidates_from_paths(paths: list[str]) -> list[str]:
+    symbols: list[str] = []
+    for p in paths:
+        if not p:
+            continue
+        base = p.rsplit("/", 1)[-1]
+        stem = base.rsplit(".", 1)[0]
+        if stem and len(stem) >= 3:
+            symbols.append(stem)
+    return symbols
+
+
+def _has_concrete_implementation_anchor(
+    plan_steps: list[str],
+    plan_notes: list[str],
+    context_bundle_files: list[dict[str, Any]],
+    top_paths: list[str | None],
+) -> bool:
+    paths = [str(x.get("path") or "") for x in context_bundle_files if isinstance(x, dict)]
+    paths.extend(str(p or "") for p in top_paths)
+    paths = [p for p in paths if p]
+    if not paths:
+        return False
+
+    text = " ".join(str(s) for s in plan_steps + plan_notes)
+    text_l = text.lower()
+    if re.search(r"(?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+\.(?:java|kt|py|ts|tsx|js|go|rb|cs|yaml|yml|json|xml|md)\b", text):
+        return True
+
+    path_basenames = [p.rsplit("/", 1)[-1].lower() for p in paths if "/" in p or "." in p]
+    if any(b and b in text_l for b in path_basenames):
+        return True
+
+    symbols = [s.lower() for s in _symbol_candidates_from_paths(paths)]
+    return any(sym and re.search(rf"\b{re.escape(sym)}\b", text_l) for sym in symbols)
+
+
+def _classify_graph_preflight_state(anchor_counts: dict[str, int]) -> str:
+    for key, threshold in _GRAPH_PREFLIGHT_THRESHOLDS.items():
+        if int(anchor_counts.get(key, 0)) <= int(threshold):
+            return "INCOMPLETE"
+    return "COMPLETE"
+
+
+def _graph_preflight() -> dict[str, Any]:
+    try:
+        from tools.ast_indexer.query_graph import GraphUnavailableError, get_java_ast_ingest_state
+    except Exception as exc:
+        return {
+            "state": "UNREACHABLE",
+            "reason": f"graph helper import failed: {exc}",
+            "anchor_counts": {},
+            "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+        }
+    try:
+        state = get_java_ast_ingest_state()
+    except GraphUnavailableError as exc:
+        return {
+            "state": "UNREACHABLE",
+            "reason": str(exc),
+            "anchor_counts": {},
+            "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+        }
+    if not isinstance(state, dict):
+        anchor_counts = {
+            "VERTICLE_REGISTRATION": 0,
+            "EVENTBUS_CONSUMER_REGISTRATION": 0,
+            "API_ROUTE_REGISTRATION": 0,
+        }
+        return {
+            "state": "INCOMPLETE",
+            "reason": "java_ast ingest state missing",
+            "anchor_counts": anchor_counts,
+            "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+        }
+    anchor_counts = {
+        "VERTICLE_REGISTRATION": int(state.get("anchor_count_verticle_registration") or 0),
+        "EVENTBUS_CONSUMER_REGISTRATION": int(state.get("anchor_count_eventbus_consumer_registration") or 0),
+        "API_ROUTE_REGISTRATION": int(state.get("anchor_count_api_route_registration") or 0),
+    }
+    pre_state = _classify_graph_preflight_state(anchor_counts)
+    reason = (
+        "graph ingest counters satisfy required thresholds"
+        if pre_state == "COMPLETE"
+        else "graph ingest counters are below required thresholds"
+    )
+    return {
+        "state": pre_state,
+        "reason": reason,
+        "anchor_counts": anchor_counts,
+        "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+    }
 
 
 def _check_utility_expect_ask(
@@ -1697,9 +1820,11 @@ def _run_scenario_row(
         code, resp = _post(f"{plan_gate_url}/v1/ask", req)
         meta = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
         plan_steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+        plan_notes = ((resp.get("plan_summary") or {}).get("notes") or []) if isinstance(resp.get("plan_summary"), dict) else []
         top_paths = [e.get("relative_path") for e in entries[:8] if isinstance(e, dict)]
         snips = _evidence_snippet_previews([e for e in entries if isinstance(e, dict)])
         haystack = _haystack_for_text_match([str(s) for s in plan_steps], top_paths, snips)
+        context_files = _context_bundle_files(resp)
         actual = {
             "governance_posture": resp.get("governance_posture"),
             "execution": resp.get("execution"),
@@ -1709,6 +1834,23 @@ def _run_scenario_row(
         }
         errors.extend(_check_expect_ask(actual, expect, haystack))
         errors.extend(_check_expect_ask_retrieval_gates(evidence, expect, top_k))
+        if _scenario_flag(scenario, "forbid_generic_scan_answer"):
+            text_for_scan_gate = " ".join(str(x) for x in (plan_steps + plan_notes))
+            matched_forbidden = _text_contains_generic_scan_phrase(text_for_scan_gate)
+            if matched_forbidden:
+                errors.append(
+                    "forbid_generic_scan_answer: response matched forbidden generic scan phrase(s): "
+                    f"{matched_forbidden}"
+                )
+        if _scenario_flag(scenario, "must_cite_file_or_symbol_anchor"):
+            if not _has_concrete_implementation_anchor(plan_steps, plan_notes, context_files, top_paths):
+                errors.append(
+                    "must_cite_file_or_symbol_anchor: missing concrete file/symbol implementation anchor in response"
+                )
+        if _scenario_flag(scenario, "requires_behavior_flow"):
+            flow_h = " ".join(str(x) for x in (plan_steps + plan_notes)).lower()
+            if not any(tok in flow_h for tok in ("flow", "branch", "path", "step", "method")):
+                errors.append("requires_behavior_flow: expected behavior/control-flow language in answer")
         if "evidence_quality_any_of" in expect:
             allowed = expect["evidence_quality_any_of"]
             if isinstance(allowed, list) and actual.get("evidence_quality") not in allowed:
@@ -1726,7 +1868,8 @@ def _run_scenario_row(
             "request_id": resp.get("request_id"),
             "trace_id": resp.get("trace_id") or (meta.get("trace_id") if isinstance(meta, dict) else None),
             "answer_steps": plan_steps,
-            "context_bundle_files": _context_bundle_files(resp),
+            "answer_notes": plan_notes,
+            "context_bundle_files": context_files,
             "evidence_snippet_previews": snips,
             "retrieval_metrics": rm,
             "retrieval_gates": rg,
@@ -1784,6 +1927,9 @@ def _run_scenario_row(
             "selected_file": sel or (entries[0].get("relative_path") if entries else ""),
             "client_context": {"selection": sel_text},
         }
+        if _scenario_flag(scenario, "requires_selected_file_binding"):
+            if not str(req.get("selected_file") or "").strip():
+                errors.append("requires_selected_file_binding: selected_file is required")
         if evidence.get("workspace_identity_hash"):
             req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
         code, resp = _post(f"{plan_gate_url}/v1/ask", req)
@@ -1840,6 +1986,8 @@ def _run_scenario_row(
             "client_policy": {"fail_closed_if_gate_unreachable": True},
         }
         code, plan_resp = _post(f"{plan_gate_url}/v0/plan", plan_req)
+        if _scenario_flag(scenario, "requires_playbook") and not plan_resp.get("decision"):
+            errors.append("requires_playbook: plan response must include a decision")
         if expect.get("schema_version") and plan_resp.get("schema_version") != expect["schema_version"]:
             errors.append(f"schema_version want {expect['schema_version']} got {plan_resp.get('schema_version')}")
         if expect.get("decision_present") and not plan_resp.get("decision"):
@@ -1937,6 +2085,28 @@ def _run_scenario_row(
     }
 
 
+def _skipped_scenario_result(
+    scenario: dict[str, Any],
+    *,
+    reason: str,
+) -> dict[str, Any]:
+    sid = str(scenario.get("id") or "unknown")
+    cap = str(scenario.get("capability") or "")
+    desc = scenario.get("description")
+    expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
+    return {
+        "id": sid,
+        "capability": cap,
+        "description": desc,
+        "pass": True,
+        "skipped": True,
+        "skip_reason": reason,
+        "errors": [],
+        "expect": expect,
+        "actual_summary": {"skipped": True, "reason": reason},
+    }
+
+
 def run_scenario_suite(
     scenarios_path: Path,
     workspace_root: str,
@@ -1958,6 +2128,15 @@ def run_scenario_suite(
         }
     defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
     tk = int(defaults.get("top_k", top_k))
+    preflight = _graph_preflight()
+    if preflight.get("state") == "UNREACHABLE":
+        return {
+            "file": str(scenarios_path),
+            "all_pass": False,
+            "error": f"graph preflight failed: {preflight.get('reason')}",
+            "graph_preflight": preflight,
+            "results": [],
+        }
     results: list[dict[str, Any]] = []
     file_ids: set[str] = set()
     for sc in data.get("scenarios") or []:
@@ -1976,6 +2155,17 @@ def run_scenario_suite(
         sid = str(sc.get("id") or "")
         if scenario_ids is not None and sid not in scenario_ids:
             continue
+        if preflight.get("state") == "INCOMPLETE" and _scenario_flag(sc, "requires_graph_path"):
+            results.append(
+                _skipped_scenario_result(
+                    sc,
+                    reason=(
+                        "requires_graph_path skipped because Neo4j ingest is INCOMPLETE: "
+                        f"{preflight.get('anchor_counts')}"
+                    ),
+                )
+            )
+            continue
         results.append(
             _run_scenario_row(
                 sc,
@@ -1988,7 +2178,12 @@ def run_scenario_suite(
             )
         )
     all_pass = all(r.get("pass") for r in results) if results else False
-    out: dict[str, Any] = {"file": str(scenarios_path), "all_pass": all_pass, "results": results}
+    out: dict[str, Any] = {
+        "file": str(scenarios_path),
+        "all_pass": all_pass,
+        "graph_preflight": preflight,
+        "results": results,
+    }
     if scenario_ids is not None:
         out["scenario_id_filter"] = sorted(scenario_ids)
     return out

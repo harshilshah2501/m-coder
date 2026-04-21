@@ -194,3 +194,63 @@ def timed_base_class(top_package: str) -> tuple[dict[str, Any] | None, float, st
     except GraphUnavailableError as exc:
         LOG.warning("timed_base_class unavailable for %s: %s", top_package, exc)
         return None, (perf_counter() - started) * 1000.0, str(exc)
+
+
+def list_eventbus_address_constants(limit: int = 5000) -> list[dict[str, Any]]:
+    query = """
+    MATCH (c:EventBusAddressConstant)-[:RESOLVES_TO]->(addr:EventBusAddress)
+    RETURN c.key AS key,
+           c.value AS value,
+           c.classQualifiedName AS class_qualified_name,
+           c.fieldName AS field_name,
+           c.filePath AS file_path,
+           addr.value AS normalized_value
+    ORDER BY c.key ASC
+    LIMIT $limit
+    """
+    try:
+        with _driver() as driver, driver.session() as session:
+            return [
+                {
+                    "key": record.get("key"),
+                    "value": record.get("value"),
+                    "class_qualified_name": record.get("class_qualified_name"),
+                    "field_name": record.get("field_name"),
+                    "file_path": record.get("file_path"),
+                    "normalized_value": record.get("normalized_value"),
+                }
+                for record in session.run(query, limit=limit)
+            ]
+    except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
+        LOG.warning("list_eventbus_address_constants failed: %s", exc)
+        return []
+
+
+def get_java_ast_ingest_state(key: str = "java_ast") -> dict[str, Any] | None:
+    """
+    Return the latest ingest state counters for the Java AST graph.
+
+    Raises GraphUnavailableError when Neo4j is unreachable or the driver is missing.
+    Returns None when no ingest state has been persisted yet.
+    """
+    query = """
+    MATCH (state:GraphIngestState {key: $key})
+    RETURN state.key AS key,
+           state.anchorCountVerticleRegistration AS anchor_count_verticle_registration,
+           state.anchorCountEventbusConsumerRegistration AS anchor_count_eventbus_consumer_registration,
+           state.anchorCountApiRouteRegistration AS anchor_count_api_route_registration
+    LIMIT 1
+    """
+    try:
+        with _driver() as driver, driver.session() as session:
+            record = session.run(query, key=key).single()
+    except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
+        raise GraphUnavailableError(f"get_java_ast_ingest_state failed: {exc}") from exc
+    if record is None:
+        return None
+    return {
+        "key": record.get("key"),
+        "anchor_count_verticle_registration": int(record.get("anchor_count_verticle_registration") or 0),
+        "anchor_count_eventbus_consumer_registration": int(record.get("anchor_count_eventbus_consumer_registration") or 0),
+        "anchor_count_api_route_registration": int(record.get("anchor_count_api_route_registration") or 0),
+    }

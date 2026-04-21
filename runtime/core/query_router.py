@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any
 
 from tools.ast_indexer.query_graph import find_base_class, find_classes_by_concept, timed_base_class
+from runtime.core.query_router_lane_c import LaneCOrchestrator
 
 
 IDENTITY_ANSWER = (
@@ -133,6 +134,9 @@ class RouterResult:
 
 
 class QueryRouter:
+    def __init__(self) -> None:
+        self._lane_c = LaneCOrchestrator()
+
     def classify(self, query: str) -> RouterResult:
         normalized = self._normalize(query)
         if self._matches_identity(normalized):
@@ -256,6 +260,30 @@ class QueryRouter:
             sub_queries=None,
             skip_rag=False,
             metadata=base_meta,
+        )
+
+    def orchestrate_lane_c(
+        self,
+        *,
+        query: str,
+        route: QueryIntent,
+        route_answer: str,
+        metadata: dict[str, Any],
+        mode: str = "ask",
+    ) -> dict[str, Any]:
+        if route == QueryIntent.IDENTITY:
+            route_name = "identity"
+        elif route == QueryIntent.STRUCTURAL:
+            route_name = "structural"
+        else:
+            route_name = "semantic"
+        return self._lane_c.orchestrate(
+            query=query,
+            route=route_name,
+            route_answer=route_answer,
+            metadata=metadata,
+            mode=mode,
+            default_fallback_step="Search for directly matching symbols/files before broad semantic exploration.",
         )
 
     def _matches_identity(self, normalized: str) -> bool:

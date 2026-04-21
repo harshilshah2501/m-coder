@@ -13,7 +13,15 @@ from pathlib import Path
 import pytest
 
 from runtime.core.query_router import QueryIntent, QueryRouter
-from runtime.scripts.motadata_query_cli import _merge_evidence_bundles
+from runtime.core.query_router_lane_c import (
+    AnswerAssembler,
+    C2EvidenceComposer,
+    C3QualityEvaluator,
+    ComposedEvidence,
+    QualityAssessment,
+    ResolverOutput,
+)
+from runtime.scripts.motadata_query_cli import _build_router_response, _merge_evidence_bundles
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -106,6 +114,147 @@ def test_merge_evidence_bundles_dedupes_and_preserves_router_metadata():
     assert [entry["relative_path"] for entry in entries[:3]] == ["src/B.java", "src/A.java", "src/C.java"]
     assert merged["fusion_diagnostics"]["router"]["intent"] == "decompose"
     assert merged["authority_resolution"]["authority_status"] == "validated"
+
+
+def test_resolver_output_contract_and_context_keys():
+    output = ResolverOutput(
+        source="behavior_flow_resolver",
+        anchors=["runtime/core/query_router.py"],
+        context={"stage": "trace", "mechanism": "flow_scan"},
+        provenance_weight=0.8,
+        confidence=0.72,
+        evidence_kind="stage",
+        conflict=False,
+        chain=["behavior_flow", "resolver"],
+    )
+    assert output.source == "behavior_flow_resolver"
+    assert output.evidence_kind == "stage"
+    assert output.chain == ["behavior_flow", "resolver"]
+    assert set(output.context.keys()).issubset({"stage", "failure_mode", "mechanism", "graph_path", "playbook_step"})
+
+    with pytest.raises(ValueError):
+        ResolverOutput(
+            source="bad_context",
+            anchors=[],
+            context={"unknown_key": "x"},
+            provenance_weight=0.1,
+            confidence=0.1,
+            evidence_kind="supporting",
+            conflict=False,
+            chain=[],
+        )
+
+
+def test_composer_conflict_markers_and_anchor_preservation():
+    composer = C2EvidenceComposer()
+    high = ResolverOutput(
+        source="high_priority",
+        anchors=["Owner.java"],
+        context={"stage": "collect", "mechanism": "owner_lookup"},
+        provenance_weight=0.95,
+        confidence=0.9,
+        evidence_kind="anchor",
+        conflict=False,
+        chain=["behavior_flow"],
+    )
+    low = ResolverOutput(
+        source="low_priority",
+        anchors=[],
+        context={"stage": "reconcile", "mechanism": "fallback"},
+        provenance_weight=0.2,
+        confidence=0.8,
+        evidence_kind="supporting",
+        conflict=False,
+        chain=["behavior_flow"],
+    )
+    composed = composer.compose([low, high])
+    assert composed.anchors[0] == "Owner.java"
+    assert composed.context["stage"] == "collect"
+    assert composed.conflict is True
+    markers = composed.metadata["conflict_markers"]
+    assert markers and markers[0]["kept_source"] == "high_priority"
+    assert markers[0]["rejected_source"] == "low_priority"
+    assert composed.confidence < high.confidence
+
+
+def test_quality_chain_behavior_flow_plus_graph_counts_with_chain():
+    evaluator = C3QualityEvaluator()
+    outputs = [
+        ResolverOutput(
+            source="behavior_flow_collector",
+            anchors=["com.mindarray.api.AbstractAPI", "runtime/core/query_router.py"],
+            context={"stage": "flow_validation", "mechanism": "trace_path"},
+            provenance_weight=0.9,
+            confidence=0.88,
+            evidence_kind="stage",
+            conflict=False,
+            chain=["behavior_flow", "graph_bridge"],
+        ),
+        ResolverOutput(
+            source="graph_resolver",
+            anchors=["com.mindarray.api.AbstractAPI"],
+            context={"graph_path": "com.mindarray.api.AbstractAPI"},
+            provenance_weight=0.85,
+            confidence=0.9,
+            evidence_kind="graph_path",
+            conflict=False,
+            chain=["behavior_flow", "graph_lookup"],
+        ),
+    ]
+    composed = C2EvidenceComposer().compose(outputs)
+    quality = evaluator.evaluate(composed, mode="ask")
+    assert quality.evidence_quality == "STRONG"
+    assert "BEHAVIOR_FLOW_PLUS_GRAPH_VALIDATED" in quality.quality_reasons
+    assert "behavior_flow" in quality.metadata["chain"]
+
+
+def test_answer_assembler_avoids_generic_scan_and_requires_anchor_context():
+    assembler = AnswerAssembler()
+    composed = ComposedEvidence(
+        anchors=["runtime/core/query_router.py"],
+        context={"stage": "structural_resolution", "mechanism": "neo4j_base_class_lookup"},
+        confidence=0.91,
+        conflict=False,
+        chain=["structural", "graph_lookup"],
+        provenance=[],
+        metadata={},
+        resolver_outputs=[],
+    )
+    quality = QualityAssessment(
+        evidence_quality="MODERATE",
+        quality_reasons=["BEHAVIOR_FLOW_PLUS_GRAPH_PARTIAL"],
+        metadata={},
+    )
+    steps = assembler.assemble(
+        route_answer="Direct answer (grounded): The base class is com.mindarray.api.AbstractAPI.",
+        composed=composed,
+        quality=quality,
+        default_fallback_step="Search for directly matching symbols/files before broad semantic exploration.",
+    )
+    assert "scan for logic" not in " ".join(steps).lower()
+    assert "Anchored by `runtime/core/query_router.py` with context:" in steps[0]
+    assert "constrained diagnostic" in steps[1].lower()
+
+
+def test_cli_router_response_uses_lane_c_plan_steps():
+    router = QueryRouter()
+    result = _build_router_response(
+        query="What model are you?",
+        router=router,
+        route_intent=QueryIntent.IDENTITY,
+        request_id="req-1",
+        revision="router:identity",
+        answer="I am Motadata Coder.",
+        metadata={"intent": QueryIntent.IDENTITY.value},
+        ask_path="identity_router",
+        routing_mode="identity_router",
+        workspace_root=str(REPO_ROOT),
+        file_paths=[],
+    )
+    steps = ((result.get("plan_summary") or {}).get("steps") or [])
+    assert len(steps) >= 2
+    assert "scan for logic" not in " ".join(steps).lower()
+    assert "Anchored by" in steps[0]
 
 
 def _healthcheck(url: str) -> bool:

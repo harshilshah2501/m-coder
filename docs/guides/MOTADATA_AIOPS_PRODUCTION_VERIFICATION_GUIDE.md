@@ -566,7 +566,7 @@ docker exec motadata-graph-neo4j cypher-shell \
   "RETURN 1;"
 ```
 
-4) **Force graph refresh and verify ingest state**
+4) **Force graph refresh and verify ingest-state counters (Lane D thresholds)**
 
 ```bash
 ./scripts/graph_stack.sh refresh
@@ -574,16 +574,53 @@ docker exec motadata-graph-neo4j cypher-shell \
   -a bolt://localhost:7687 \
   -u "${GRAPH_NEO4J_USER:-neo4j}" \
   -p "${GRAPH_NEO4J_PASSWORD:-NEO4J_PASSWORD}" \
-  "MATCH (s:GraphIngestState {key:'java_ast'}) RETURN s.classRecordCount AS classRecordCount, s.workspaceFingerprint AS workspaceFingerprint, s.updatedAt AS updatedAt LIMIT 1;"
+  "MATCH (s:GraphIngestState {key:'java_ast'}) RETURN s.classRecordCount AS classRecordCount, s.anchorCountVerticleRegistration AS verticle, s.anchorCountEventbusConsumerRegistration AS eventbusConsumer, s.anchorCountApiRouteRegistration AS apiRoute, s.workspaceFingerprint AS workspaceFingerprint, s.updatedAt AS updatedAt LIMIT 1;"
 ```
 
-5) **Run router/unit coverage**
+5) **Enforce preflight thresholds before scenario execution**
 
 ```bash
-python3 -m pytest tests/test_query_routing.py -q --tb=short
+docker exec motadata-graph-neo4j cypher-shell \
+  -a bolt://localhost:7687 \
+  -u "${GRAPH_NEO4J_USER:-neo4j}" \
+  -p "${GRAPH_NEO4J_PASSWORD:-NEO4J_PASSWORD}" \
+  "MATCH (s:GraphIngestState {key:'java_ast'}) RETURN s.anchorCountVerticleRegistration > 5 AS verticle_ok, s.anchorCountEventbusConsumerRegistration > 10 AS eventbus_consumer_ok, s.anchorCountApiRouteRegistration > 1 AS api_route_ok LIMIT 1;"
 ```
 
-6) **Run the three acceptance queries**
+All three booleans must be `true` to treat ingest as COMPLETE.
+
+6) **Run Lane A/B/C/D targeted test coverage**
+
+```bash
+PYTHONPATH="$(pwd)" python3 -m pytest \
+  runtime/tests/test_intelligence_schema.py \
+  runtime/tests/test_intelligence_loader.py \
+  runtime/tests/test_motadata_behavior_verify.py \
+  tests/test_query_routing.py \
+  tests/test_ast_indexer_lane_b_contracts.py \
+  -q --tb=short
+```
+
+7) **Run required scenario checks for graph-enrichment asks**
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
+  --scenario-id ask_mail_config_domain \
+  --scenario-id ask_config_store_organization \
+  --scenarios-only \
+  --print dev \
+  --out runtime/.run/motadata_behavior_validation.graph_required.json
+```
+
+Expected verifier behavior:
+- Neo4j unreachable -> suite fails fast (`graph_preflight.state=UNREACHABLE`)
+- Neo4j reachable but ingest incomplete -> graph-required rows are skipped with explicit reason
+- Neo4j reachable and ingest complete -> both rows execute and must pass
+
+8) **Run the three acceptance queries**
 
 ```bash
 python3 runtime/scripts/motadata_query_cli.py \
@@ -602,7 +639,7 @@ python3 runtime/scripts/motadata_query_cli.py \
   --out /tmp/t3.json --with-reward --reward-out /tmp/t3.reward.json
 ```
 
-7) **Assert expected outcomes from generated artifacts**
+9) **Assert expected outcomes from generated artifacts**
 
 ```bash
 python3 - <<'PY'
