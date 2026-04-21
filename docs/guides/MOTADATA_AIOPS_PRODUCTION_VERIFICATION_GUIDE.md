@@ -523,27 +523,6 @@ Notes:
 - Ask remains `PLAN_ONLY`; Debug/Code Neo4j flags remain disabled by default.
 - If `--neo4j-password` and `MOTADATA_NEO4J_PASSWORD` are both missing, the script prompts securely in interactive shells.
 
-### 6.3.6 GPU Motadata mirror + drift automation (Neo4j stays on GPU)
-
-When Plan-Gate and Neo4j run on the **GPU server** and Motadata is edited elsewhere (for example WSL), treat the GPU checkout as a **mirror** of the same git remote:
-
-- **Workflow:** commit/push from WSL (or your canonical branch), then GPU runs `git pull --ff-only` and refreshes the class graph.
-- **Automation:** run `runtime/scripts/motadata_neo4j_repo_sync.sh` on a timer (cron or systemd). It pulls Motadata and then runs `neo4j_ask_stack.py refresh` using credentials from `runtime/.run/neo4j_ask.env` (create that file once via `bootstrap`).
-
-Manual run:
-
-```bash
-export MOTADATA_REPO_ROOT="/home/harshil/Projects/Motadata"
-export MCODER_ROOT="/home/harshil/Harshil-PoCs/m-coder"
-chmod +x runtime/scripts/motadata_neo4j_repo_sync.sh
-./runtime/scripts/motadata_neo4j_repo_sync.sh
-```
-
-- `SYNC_MODE=none` skips `git pull` (graph refresh only).
-- `REFRESH_GRAPH=0` pulls only (no Neo4j refresh).
-
-Example systemd units (copy and edit paths/user): `runtime/scripts/systemd/motadata-neo4j-sync.service.example` and `motadata-neo4j-sync.timer.example`.
-
 ---
 
 ## 7) Automated repeatable verification
