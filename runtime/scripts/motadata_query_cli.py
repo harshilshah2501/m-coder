@@ -194,6 +194,32 @@ def _merge_evidence_bundles(
     return base
 
 
+def _build_decompose_ask_query(original_query: str, sub_queries: list[str]) -> str:
+    symbol_tokens: list[str] = []
+    seen_symbols: set[str] = set()
+    for sub_query in sub_queries:
+        for token in sub_query.split():
+            cleaned = token.strip(" ,?!.\t\n\r")
+            if not cleaned:
+                continue
+            if any(ch.isupper() for ch in cleaned[1:]) and cleaned not in seen_symbols:
+                seen_symbols.add(cleaned)
+                symbol_tokens.append(cleaned)
+
+    keyword_tokens: list[str] = []
+    seen_keywords: set[str] = set()
+    for token in _tokenize_query(original_query):
+        lowered = token.lower()
+        if lowered in {"how", "does", "do", "is", "are", "explain", "describe", "work", "through"}:
+            continue
+        if lowered not in seen_keywords:
+            seen_keywords.add(lowered)
+            keyword_tokens.append(token)
+
+    merged = keyword_tokens + symbol_tokens
+    return " ".join(merged[:12]) or original_query
+
+
 def _relative_or_absolute(file_path: str, workspace_root: str) -> str:
     if not file_path:
         return ""
@@ -365,12 +391,18 @@ def main() -> int:
                 routed_reward_stub = "structural"
 
         if resp is None:
+            ask_query = args.query
             if router_result and router_result.intent == QueryIntent.DECOMPOSE and router_result.sub_queries:
                 bundles = [
                     _export_evidence_bundle(context_url, args.workspace_root, sub_query, args.top_k)
                     for sub_query in router_result.sub_queries
                 ]
                 evidence = _merge_evidence_bundles(args.query, bundles, args.top_k, router_result.sub_queries)
+                ask_query = _build_decompose_ask_query(args.query, router_result.sub_queries)
+                fusion = evidence.get("fusion_diagnostics") if isinstance(evidence.get("fusion_diagnostics"), dict) else None
+                router_meta = fusion.get("router") if isinstance(fusion, dict) else None
+                if isinstance(router_meta, dict):
+                    router_meta["ask_query"] = ask_query
             else:
                 evidence = _export_evidence_bundle(context_url, args.workspace_root, args.query, args.top_k)
 
@@ -378,7 +410,7 @@ def main() -> int:
                 "schema_version": "ask_request.v1.0",
                 "request_id": request_id,
                 "timestamp_utc": _now_utc(),
-                "query": args.query,
+                "query": ask_query,
                 "evidence_bundle": evidence,
             }
             ws_hash = evidence.get("workspace_identity_hash")

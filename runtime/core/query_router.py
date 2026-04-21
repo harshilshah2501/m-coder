@@ -107,6 +107,8 @@ _CONCEPT_HINTS = {
     "mail": ["MailServerConfiguration", "EmailNotification"],
     "email": ["MailServerConfiguration", "EmailNotification"],
     "smtp": ["MailServerConfiguration", "EmailNotification"],
+    "server": ["MailServerConfiguration"],
+    "configuration": ["MailServerConfiguration", "Configuration"],
     "notification": ["Notification", "NotificationEngine"],
     "config": ["Configuration", "MailServerConfiguration"],
 }
@@ -274,7 +276,9 @@ class QueryRouter:
             return []
         matches = find_classes_by_concept(concept, limit=4)
         names = [str(match.get("name") or "").strip() for match in matches if str(match.get("name") or "").strip()]
-        return list(dict.fromkeys(names))
+        if names:
+            return list(dict.fromkeys(names))
+        return list(dict.fromkeys(seeded))
 
     def _asks_for_base_class(self, query: str) -> bool:
         normalized = self._normalize(query)
