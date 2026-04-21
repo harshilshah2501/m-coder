@@ -9,7 +9,6 @@
 #
 # Optional env:
 #   MCODER_REMOTE_ROOT   Path to m-coder on GPU (required when REMOTE_REFRESH=1).
-#   MOTADATA_NEO4J_PASSWORD  Required when REMOTE_REFRESH=1 — forwarded to GPU for non-interactive refresh.
 #   RSYNC_DELETE         If 1, pass --delete to rsync (default: 1).
 #   REMOTE_REFRESH       If 1, SSH to GPU and run neo4j_ask_stack refresh (default: 0).
 #   RSYNC_RSH            Passed to rsync -e (default: ssh). Example: ssh -i /path/to/key
@@ -30,7 +29,6 @@ MOTADATA_REPO_ROOT="${MOTADATA_REPO_ROOT:-}"
 GPU_SYNC_HOST="${GPU_SYNC_HOST:-}"
 GPU_MIRROR_ROOT="${GPU_MIRROR_ROOT:-}"
 MCODER_REMOTE_ROOT="${MCODER_REMOTE_ROOT:-}"
-MOTADATA_NEO4J_PASSWORD="${MOTADATA_NEO4J_PASSWORD:-}"
 RSYNC_DELETE="${RSYNC_DELETE:-1}"
 REMOTE_REFRESH="${REMOTE_REFRESH:-0}"
 RSYNC_RSH="${RSYNC_RSH:-ssh}"
@@ -106,17 +104,13 @@ if [[ "${REMOTE_REFRESH}" == "1" ]]; then
     echo "error: set MCODER_REMOTE_ROOT when REMOTE_REFRESH=1 (absolute path to m-coder on GPU)" >&2
     exit 1
   fi
-  if [[ -z "${MOTADATA_NEO4J_PASSWORD}" ]]; then
-    echo "error: set MOTADATA_NEO4J_PASSWORD when REMOTE_REFRESH=1 (GPU cannot prompt; Neo4j auth required)" >&2
-    exit 1
-  fi
   REMOTE_STACK="${MCODER_REMOTE_ROOT%/}/runtime/scripts/neo4j_ask_stack.py"
   # Use absolute script path so a failed cd / wrong cwd cannot run python3 from \$HOME/runtime/scripts/...
-  # Forward MOTADATA_NEO4J_PASSWORD so neo4j_ask_stack refresh works non-interactively over SSH.
+  # bash -lc can also interact oddly with login profiles; use non-login -c for a predictable cwd.
   REMOTE_REFRESH_CMD="$(
     printf \
-      'set -euo pipefail; export MOTADATA_NEO4J_PASSWORD=%q; STACK=%q; ROOT=%q; MIR=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --workspace-root "$MIR" refresh' \
-      "${MOTADATA_NEO4J_PASSWORD}" "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}"
+      'set -euo pipefail; STACK=%q; ROOT=%q; MIR=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --workspace-root "$MIR" refresh' \
+      "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}"
   )"
   # shellcheck disable=SC2086
   ssh ${SSH_OPTS} "${GPU_SYNC_HOST}" bash -c "${REMOTE_REFRESH_CMD}"
