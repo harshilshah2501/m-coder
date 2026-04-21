@@ -53,6 +53,22 @@ def test_resolve_structural_graph_hit(monkeypatch: pytest.MonkeyPatch):
     assert resolved.metadata["graph_query_ms"] == 2.5
 
 
+def test_resolve_structural_graph_unavailable(monkeypatch: pytest.MonkeyPatch):
+    router = QueryRouter()
+
+    def fake_timed_base_class(_: str):
+        return None, 3.0, "neo4j down"
+
+    monkeypatch.setattr("runtime.core.query_router.timed_base_class", fake_timed_base_class)
+    initial = router.classify("Which class is the base class for all APIs?")
+    resolved = router.resolve_structural("Which class is the base class for all APIs?", initial.metadata)
+    assert resolved.intent == QueryIntent.STRUCTURAL
+    assert resolved.skip_rag is True
+    assert "Graph is currently unavailable" in (resolved.answer or "")
+    assert resolved.metadata.get("quality_reasons") == ["GRAPH_UNAVAILABLE"]
+    assert resolved.metadata.get("evidence_quality") == "INSUFFICIENT"
+
+
 def test_merge_evidence_bundles_dedupes_and_preserves_router_metadata():
     bundle_a = {
         "workspace_identity_hash": "hash-1",
@@ -127,7 +143,11 @@ def _run_cli(query: str, out_path: Path, reward_path: Path) -> tuple[dict, dict,
 
 @pytest.mark.integration
 def test_cli_acceptance_routing_all_three_pass():
-    if not DEFAULT_WORKSPACE_ROOT.exists():
+    try:
+        workspace_exists = DEFAULT_WORKSPACE_ROOT.exists()
+    except PermissionError:
+        pytest.skip(f"Motadata workspace root is not accessible: {DEFAULT_WORKSPACE_ROOT}")
+    if not workspace_exists:
         pytest.skip(f"Motadata workspace root not found: {DEFAULT_WORKSPACE_ROOT}")
     if not _healthcheck("http://127.0.0.1:8091/healthz") or not _healthcheck("http://127.0.0.1:8089/healthz"):
         pytest.skip("Context Layer or Plan-Gate service is not running locally")

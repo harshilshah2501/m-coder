@@ -6,14 +6,25 @@ import logging
 import os
 from time import perf_counter
 from typing import Any
-from neo4j.exceptions import DriverError
+try:
+    from neo4j import GraphDatabase
+    from neo4j.exceptions import DriverError, Neo4jError
+except Exception:  # pragma: no cover - environment without neo4j package
+    GraphDatabase = None  # type: ignore[assignment]
 
-from neo4j import GraphDatabase
-from neo4j.exceptions import Neo4jError
+    class Neo4jError(Exception):
+        pass
+
+    class DriverError(Exception):
+        pass
 
 
 LOG = logging.getLogger(__name__)
 DEFAULT_NEO4J_PASSWORD = "NEO4J_PASSWORD"
+
+
+class GraphUnavailableError(RuntimeError):
+    """Raised when Neo4j is unavailable for structural queries."""
 
 
 def _neo4j_settings() -> tuple[str, str, str | None]:
@@ -25,6 +36,8 @@ def _neo4j_settings() -> tuple[str, str, str | None]:
 
 
 def _driver():
+    if GraphDatabase is None:
+        raise GraphUnavailableError("neo4j python driver is not installed")
     uri, user, password = _neo4j_settings()
     return GraphDatabase.driver(uri, auth=(user, password))
 
@@ -77,8 +90,7 @@ def find_base_class(top_package: str) -> dict[str, Any] | None:
                 preferred_package=preferred_package,
             ).single()
     except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
-        LOG.warning("find_base_class failed for %s: %s", top_package, exc)
-        return None
+        raise GraphUnavailableError(f"find_base_class failed for {top_package}: {exc}") from exc
     if record is None or record.get("qualified_name") is None:
         return None
     payload = _class_record_to_dict(record)
@@ -174,7 +186,11 @@ def get_class_detail(class_name: str) -> dict[str, Any] | None:
     return _class_record_to_dict(record)
 
 
-def timed_base_class(top_package: str) -> tuple[dict[str, Any] | None, float]:
+def timed_base_class(top_package: str) -> tuple[dict[str, Any] | None, float, str | None]:
     started = perf_counter()
-    result = find_base_class(top_package)
-    return result, (perf_counter() - started) * 1000.0
+    try:
+        result = find_base_class(top_package)
+        return result, (perf_counter() - started) * 1000.0, None
+    except GraphUnavailableError as exc:
+        LOG.warning("timed_base_class unavailable for %s: %s", top_package, exc)
+        return None, (perf_counter() - started) * 1000.0, str(exc)

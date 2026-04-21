@@ -189,9 +189,38 @@ class QueryRouter:
         package_hint = str(base_meta.get("package_hint") or self._structural_package_hint(self._normalize(query)) or "")
         graph_result = None
         graph_query_ms = 0.0
+        graph_error: str | None = None
 
         if package_hint and self._asks_for_base_class(query):
-            graph_result, graph_query_ms = timed_base_class(package_hint)
+            timed_result = timed_base_class(package_hint)
+            if len(timed_result) == 3:
+                graph_result, graph_query_ms, graph_error = timed_result
+            else:
+                graph_result, graph_query_ms = timed_result  # backward compatibility
+                graph_error = None
+
+        if graph_error:
+            answer = (
+                f"Structural query requires Neo4j graph access for package '{package_hint}'. "
+                "Graph is currently unavailable; no semantic fallback was used."
+            )
+            base_meta.update(
+                {
+                    "intent": QueryIntent.STRUCTURAL.value,
+                    "match_reason": "structural_graph_required_unavailable",
+                    "graph_query_ms": round(graph_query_ms, 3),
+                    "graph_error": graph_error,
+                    "evidence_quality": "INSUFFICIENT",
+                    "quality_reasons": ["GRAPH_UNAVAILABLE"],
+                }
+            )
+            return RouterResult(
+                intent=QueryIntent.STRUCTURAL,
+                answer=answer,
+                sub_queries=None,
+                skip_rag=True,
+                metadata=base_meta,
+            )
 
         if graph_result:
             fqcn = str(graph_result.get("qualified_name") or graph_result.get("name") or "")

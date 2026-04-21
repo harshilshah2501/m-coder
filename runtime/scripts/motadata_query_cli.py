@@ -383,12 +383,17 @@ def main() -> int:
                     revision="router:structural",
                     answer=router_result.answer,
                     metadata=router_result.metadata,
-                    ask_path="structural_router_graph",
+                    ask_path=(
+                        "structural_router_graph"
+                        if (isinstance(graph_result, dict) and graph_result.get("qualified_name"))
+                        else "structural_router_unavailable"
+                    ),
                     routing_mode="structural_router",
                     workspace_root=args.workspace_root,
                     file_paths=file_paths,
                 )
-                routed_reward_stub = "structural"
+                if isinstance(graph_result, dict) and graph_result.get("qualified_name"):
+                    routed_reward_stub = "structural"
 
         if resp is None:
             ask_query = args.query
