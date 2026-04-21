@@ -29,7 +29,6 @@ from runtime.layer5.retrieval.quality_gate import (
 from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
-from .neo4j_resolver import resolve_relationship
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 
@@ -211,8 +210,6 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         metadata["authority_resolution_present"] = True
         metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
         metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
-    graph_resolution_meta = resolve_relationship(query, capability="ask")
-    metadata["graph_resolution_meta"] = graph_resolution_meta
 
     selected_file = ask_request.get("selected_file")
     selection = (
@@ -282,10 +279,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     else:
         planner = PlanOnlyPlanner()
         plan_summary = planner.plan(
-            query=query,
-            bundle=bundle,
-            authority_resolution=authority_resolution,
-            graph_resolution_meta=graph_resolution_meta,
+            query=query, bundle=bundle, authority_resolution=authority_resolution
         )
         plan_steps = plan_summary.steps
     if quality.evidence_quality == WEAK:

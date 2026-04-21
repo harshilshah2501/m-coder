@@ -114,59 +114,6 @@ def test_handle_ask_v1_happy_path_plan_only():
     assert len(steps) >= 1
 
 
-def test_handle_ask_v1_attaches_graph_resolution_meta_and_uses_graph_answer():
-    ev = _load_golden_evidence()
-    req = _minimal_v1_ask(ev, query="Which class is the base class for all APIs?")
-    graph_meta = {
-        "schema_version": "graph_resolution_meta.v1",
-        "capability": "ask",
-        "enabled": True,
-        "attempted": True,
-        "used": True,
-        "source": "neo4j",
-        "answer_type": "common_base",
-        "confidence": "high",
-        "candidate_base": "AbstractAPI",
-        "support_count": 4,
-        "sample_classes": ["UserAPI", "MetricAPI"],
-        "fallback_reason": "",
-        "error": "",
-    }
-    with patch("runtime.ask_service.v1_ingest.resolve_relationship", return_value=graph_meta):
-        resp = handle_ask_v1_request(req)
-    meta = resp.get("metadata") or {}
-    assert (meta.get("graph_resolution_meta") or {}).get("schema_version") == "graph_resolution_meta.v1"
-    first = ((resp.get("plan_summary") or {}).get("steps") or [""])[0]
-    assert "grounded via Neo4j graph" in first
-    assert "`AbstractAPI`" in first
-
-
-def test_handle_ask_v1_neo4j_unavailable_falls_back_to_deterministic_path():
-    ev = _load_golden_evidence()
-    req = _minimal_v1_ask(ev, query="Which class is the base class for all APIs?")
-    graph_meta = {
-        "schema_version": "graph_resolution_meta.v1",
-        "capability": "ask",
-        "enabled": True,
-        "attempted": True,
-        "used": False,
-        "source": "neo4j",
-        "answer_type": "none",
-        "confidence": "none",
-        "candidate_base": "",
-        "support_count": 0,
-        "sample_classes": [],
-        "fallback_reason": "neo4j_query_failed",
-        "error": "connection timeout",
-    }
-    with patch("runtime.ask_service.v1_ingest.resolve_relationship", return_value=graph_meta):
-        resp = handle_ask_v1_request(req)
-    first = ((resp.get("plan_summary") or {}).get("steps") or [""])[0].lower()
-    assert "grounded via neo4j graph" not in first
-    assert "direct answer (grounded):" in first
-    assert (resp.get("metadata") or {}).get("graph_resolution_meta", {}).get("fallback_reason") == "neo4j_query_failed"
-
-
 def test_handle_ask_v1_dirty_buffer_overlay_reaches_reasoner_bundle():
     ev = _load_golden_evidence()
     first_path = str((ev.get("entries") or [])[0].get("relative_path") or "")

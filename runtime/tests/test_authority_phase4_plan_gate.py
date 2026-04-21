@@ -243,35 +243,6 @@ def test_planner_class_query_universal_api_base_uses_common_parent_across_api_de
     assert "APIServer" not in first
 
 
-def test_planner_prefers_neo4j_graph_answer_for_universal_api_base_query():
-    p = PlanOnlyPlanner()
-    b = _ctx(["motadata/src/main/java/com/mindarray/api/APIServer.java"])
-    b.items[0].content = "public class APIServer extends AbstractVerticle {"
-    ps = p.plan(
-        query="Which class is the base class for all APIs?",
-        bundle=b,
-        authority_resolution=None,
-        graph_resolution_meta={
-            "schema_version": "graph_resolution_meta.v1",
-            "capability": "ask",
-            "enabled": True,
-            "attempted": True,
-            "used": True,
-            "source": "neo4j",
-            "answer_type": "common_base",
-            "confidence": "high",
-            "candidate_base": "AbstractAPI",
-            "support_count": 6,
-            "sample_classes": ["UserAPI", "MetricAPI"],
-            "fallback_reason": "",
-            "error": "",
-        },
-    )
-    first = ps.steps[0]
-    assert "grounded via Neo4j graph" in first
-    assert "`AbstractAPI`" in first
-
-
 def test_planner_uses_authority_when_present():
     registry = load_registry(REG)
     ar = build_authority_resolution("alert correlation", registry, None)
