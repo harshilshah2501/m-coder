@@ -15,4 +15,4 @@
 
 **Manual / debug:** `runtime/scripts/start_explain_vllm.sh` can still be used to bring up vLLM only; then start Plan-Gate by hand — see [MOTADATA_DEMO_SETUP_RUNBOOK.md](../MOTADATA_DEMO_SETUP_RUNBOOK.md) §11 (alternative manual vLLM + Plan-Gate).
 
-The **legacy** FastAPI RAG stack (Qdrant, Neo4j, `rag_api.py`) lives under **`archive/legacy_runtime_rag/`** (retired from `runtime/rag/`). It is **not** started by `governed_services.sh` and is **not** the canonical Plan-Gate slice.
+The **legacy** FastAPI RAG stack (Qdrant, optional graph DB in archived compose, `rag_api.py`) lives under **`archive/legacy_runtime_rag/`** (retired from `runtime/rag/`). It is **not** started by `governed_services.sh` and is **not** the canonical Plan-Gate slice.

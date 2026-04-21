@@ -34,11 +34,11 @@ curl -X POST http://localhost:8081/search/semantic \
 ```
 
 ### Ports
-- **8081**: RAG API (main)
+- **8081**: RAG API (main) — archived legacy stack only
 - **8000**: vLLM inference
-- **6333**: Qdrant vector DB
-- **7474**: Neo4j UI
-- **7687**: Neo4j Bolt
+- **6333**: Qdrant vector DB — archived legacy stack only
+
+Additional services (if any) are defined only under `archive/legacy_runtime_rag/docker/`; the governed Plan-Gate slice does not require them.
 
 ### Directory Quick Access
 ```bash
@@ -187,8 +187,7 @@ ls -t debug_sessions/*.json | head -1 | xargs cat | python3 -m json.tool
 - vLLM config: See systemd service file
 
 ### Data
-- Qdrant storage: `RAG-Datastore/rag-system/qdrant_storage/`
-- Neo4j data: `RAG-Datastore/rag-system/neo4j_data/`
+- Qdrant storage: `RAG-Datastore/rag-system/qdrant_storage/` (legacy RAG layout only)
 - Training datasets: `Finetuning-Iter8/datasets/`
 
 ### Logs

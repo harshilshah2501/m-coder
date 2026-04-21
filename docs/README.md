@@ -210,9 +210,7 @@ The **8081** FastAPI service lived under **`archive/legacy_runtime_rag/`** and i
 | vLLM Base | 8000 | LLM inference server |
 | vLLM Wrapper | 8080 | Anti-repetition wrapper |
 | Legacy RAG API (archived) | 8081 | Was `archive/legacy_runtime_rag/`; not canonical slice |
-| Qdrant | 6333 | Vector database |
-| Neo4j HTTP | 7474 | Graph database UI |
-| Neo4j Bolt | 7687 | Graph database driver |
+| Qdrant | 6333 | Vector database (only if you run the archived RAG docker stack) |
 
 ## System Stats (example snapshot)
 
@@ -220,8 +218,7 @@ The **8081** FastAPI service lived under **`archive/legacy_runtime_rag/`** and i
 
 | Component | Details (illustrative) |
 |-----------|---------|
-| Qdrant | e.g. thousands of vectors (768 dim) |
-| Neo4j | e.g. node/edge counts from a given index run |
+| Qdrant | e.g. thousands of vectors (768 dim) — only if you run the archived RAG stack |
 | GPU | e.g. datacenter-class GPU; utilization varies |
 
 ## Service Management (governed stack)
@@ -238,7 +235,7 @@ If your deployment writes service logs next to a separate `rag/` checkout or cus
 - **[guides/ORCHESTRATOR_GUIDE.md](guides/ORCHESTRATOR_GUIDE.md)** — Governed stack (`governed_services.sh`)
 - **[guides/ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** — Optional systemd
 
-**Startup Sequence (historical / optional legacy stack):** Some deployments chained Qdrant, Neo4j, wrapper, and a **8081** RAG API; that RAG implementation is now **`archive/legacy_runtime_rag/`** and is **not** started by `governed_services.sh`. For the canonical slice, use Context Layer + Plan-Gate + vLLM per `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
+**Startup Sequence (historical / optional legacy stack):** Some deployments chained Qdrant, wrapper, and a **8081** RAG API; that RAG implementation is now **`archive/legacy_runtime_rag/`** and is **not** started by `governed_services.sh`. For the canonical slice, use Context Layer + Plan-Gate + vLLM per `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
 
 **Startup Time:** ~90-120 seconds (mostly vLLM model loading)
 
@@ -249,8 +246,7 @@ If your deployment writes service logs next to a separate `rag/` checkout or cus
 | vLLM | `venv/vllm/bin/python -m vllm.entrypoints.openai.api_server` | 8000 |
 | API Wrapper | `training/src/utils/api_server.py` | 8080 |
 | Legacy RAG API (archived) | `archive/legacy_runtime_rag/src/api/rag_api.py` | 8081 (if revived) |
-| Qdrant | Docker container | 6333 |
-| Neo4j | Docker container | 7474 |
+| Qdrant | Docker container (legacy RAG only) | 6333 |
 
 ## Model Training History
 

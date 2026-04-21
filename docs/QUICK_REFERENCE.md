@@ -10,11 +10,12 @@
 
 | Component | Status | Port | Health Check |
 |-----------|--------|------|--------------|
-| **Qdrant** | ✅ Running | 6333 | `curl http://localhost:6333/health` |
-| **Neo4j** | ✅ Running | 7687 | `curl http://localhost:7474` |
-| **RAG API** | ✅ Running | 8081 | `curl http://localhost:8081/health` |
+| **Qdrant** | Optional (legacy RAG only) | 6333 | `curl http://localhost:6333/health` |
+| **RAG API** | Optional (archived) | 8081 | `curl http://localhost:8081/health` |
 | **vLLM** | ✅ Running | 8000 | `curl http://localhost:8000/v1/models` |
 | **Runtime Stack** | ✅ Script-managed | - | `bash runtime/scripts/governed_services.sh status` |
+
+Canonical governed slice does **not** require Qdrant or the archived RAG API; those apply only if you revive `archive/legacy_runtime_rag/` and its Docker stack.
 
 ---
 
@@ -76,11 +77,8 @@ tail -f logs/rag/rag_api.log
 # Training logs
 tail -f training/artifacts/logs/training_v16.log
 
-# Qdrant logs
+# Qdrant logs (legacy RAG docker stack only)
 docker logs qdrant-motadata -f
-
-# Neo4j logs
-docker logs neo4j-motadata -f
 ```
 
 ### Test Query
@@ -112,7 +110,7 @@ curl http://localhost:8081/v1/diagnostics/sessions | jq .
 ## Common Issues & Solutions
 
 ### Issue: "Connection refused" on startup
-**Cause**: Qdrant/Neo4j still initializing  
+**Cause**: Backing services (e.g. Qdrant in a legacy RAG setup) still initializing  
 **Solution**: Wait 30 seconds, retry logic handles this automatically
 
 ### Issue: Low confidence scores
@@ -187,8 +185,7 @@ GET /health
 
 - [ ] All Docker containers running?
 - [ ] RAG API responding to health check?
-- [ ] Qdrant collection exists? (`curl http://localhost:6333/collections`)
-- [ ] Neo4j accessible? (`curl http://localhost:7474`)
+- [ ] Qdrant collection exists? (`curl http://localhost:6333/collections`) — only if using legacy RAG docker
 - [ ] vLLM model loaded? (`curl http://localhost:8000/v1/models`)
 - [ ] Check logs for errors
 - [ ] Verify diagnostics endpoint working

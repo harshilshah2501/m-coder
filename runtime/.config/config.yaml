@@ -51,18 +51,11 @@ services:
     port: 6333
     host: localhost
     collection_name: motadata_code
-  
-  neo4j:
-    port: 7474
-    host: localhost
-    user: neo4j
-    password: password
 
 docker:
   compose_file: /home/harshil/Harshil-PoCs/rag/docker/docker-compose.yml
   images:
     qdrant: qdrant/qdrant:latest
-    neo4j: neo4j:latest
 
 timeouts:
   docker: 60

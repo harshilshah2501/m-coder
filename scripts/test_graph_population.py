@@ -37,4 +37,4 @@ manager = get_project_manager()
 project = manager.index_project(str(Path("test_project").absolute()))
 
 print(f"✅ Indexing complete. Nodes: {project.node_count}")
-print("Check Neo4j for EXTENDS relationship between UserService and BaseService")
+print("Indexed project graph nodes; EXTENDS/implements edges depend on legacy indexer + graph DB if enabled.")
