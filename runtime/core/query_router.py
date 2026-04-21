@@ -108,9 +108,11 @@ _CONCEPT_HINTS = {
     "email": ["MailServerConfiguration", "EmailNotification"],
     "smtp": ["MailServerConfiguration", "EmailNotification"],
     "server": ["MailServerConfiguration"],
-    "configuration": ["MailServerConfiguration", "Configuration"],
+    "configuration": ["Configuration", "ConfigManager"],
     "notification": ["Notification", "NotificationEngine"],
-    "config": ["Configuration", "MailServerConfiguration"],
+    "config": ["Configuration", "ConfigManager", "AbstractConfigStore", "ConfigStore"],
+    "store": ["AbstractConfigStore", "ConfigStore", "com.mindarray.store"],
+    "stores": ["AbstractConfigStore", "ConfigStore", "com.mindarray.store"],
 }
 
 
@@ -284,12 +286,12 @@ class QueryRouter:
             primary = graph_matches[0]
             primary_name = str(primary.get("name") or "").strip()
             primary_qualified = str(primary.get("qualified_name") or primary_name).strip()
-            sub_queries = [primary_qualified, f"{base} {primary_qualified}"]
+            sub_queries = [base, primary_qualified, f"{base} {primary_qualified}"]
             if len(graph_matches) > 1:
                 secondary = graph_matches[1]
                 secondary_qualified = str(secondary.get("qualified_name") or secondary.get("name") or "").strip()
                 if secondary_qualified:
-                    sub_queries.append(f"{base} {secondary_qualified}")
+                    sub_queries.append(secondary_qualified)
             elif primary_name:
                 sub_queries.append(f"{base} {primary_name}")
             return self._dedupe_and_trim(sub_queries)[:3]
@@ -306,6 +308,17 @@ class QueryRouter:
     def _graph_concept_matches(self, query: str) -> list[dict[str, Any]]:
         tokens = [token for token in re.split(r"[^a-zA-Z0-9]+", query.lower()) if token and token not in _STOP_WORDS]
         seeded: list[str] = []
+        has_mail = any(token in {"mail", "email", "smtp"} for token in tokens)
+        has_store = any(token in {"store", "stores"} for token in tokens)
+        has_config = any(token in {"config", "configuration", "configurations"} for token in tokens)
+
+        # Prefer store-oriented seeds for config-store organization questions.
+        if has_store and has_config:
+            seeded.extend(["AbstractConfigStore", "ConfigStore", "com.mindarray.store"])
+        # Keep mail-oriented seeds only when mail/email tokens are present.
+        if has_mail:
+            seeded.extend(["MailServerConfiguration", "EmailNotification"])
+
         for token in tokens:
             seeded.extend(_CONCEPT_HINTS.get(token, []))
         concept = " ".join(dict.fromkeys(seeded or tokens[:4]))
@@ -331,13 +344,29 @@ class QueryRouter:
             return normalized_matches
         fallback_matches: list[dict[str, Any]] = []
         for seeded_name in dict.fromkeys(seeded):
+            qualified_name = self._seeded_fallback_qualified_name(seeded_name)
             fallback_matches.append(
                 {
                     "name": seeded_name,
-                    "qualified_name": f"com.mindarray.api.{seeded_name}",
+                    "qualified_name": qualified_name,
                 }
             )
         return fallback_matches
+
+    def _seeded_fallback_qualified_name(self, seeded_name: str) -> str:
+        name = seeded_name.strip()
+        if not name:
+            return name
+        if "." in name:
+            return name
+        lowered = name.lower()
+        if lowered.endswith("configstore") or lowered == "configstore":
+            return f"com.mindarray.store.{name}"
+        if lowered in {"configuration", "configmanager"}:
+            return f"com.mindarray.config.{name}"
+        if lowered in {"mailserverconfiguration", "emailnotification"}:
+            return f"com.mindarray.api.{name}"
+        return name
 
     def _asks_for_base_class(self, query: str) -> bool:
         normalized = self._normalize(query)

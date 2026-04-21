@@ -31,6 +31,16 @@ def test_router_smoke_no_network():
     assert router.classify("Show me the AlertManager class").intent == QueryIntent.SEMANTIC
 
 
+def test_decompose_config_store_prefers_store_context():
+    router = QueryRouter()
+    result = router.classify("How are config stores organized?")
+    assert result.intent == QueryIntent.DECOMPOSE
+    assert result.sub_queries is not None
+    joined = " | ".join(result.sub_queries)
+    assert "store" in joined.lower() or "configstore" in joined.lower()
+    assert "mailserverconfiguration" not in joined.lower()
+
+
 def test_resolve_structural_graph_hit(monkeypatch: pytest.MonkeyPatch):
     router = QueryRouter()
 
