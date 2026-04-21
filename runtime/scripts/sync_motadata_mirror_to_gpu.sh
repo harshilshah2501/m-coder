@@ -114,40 +114,22 @@ if [[ "${REMOTE_REFRESH}" == "1" ]]; then
     exit 1
   fi
   REMOTE_STACK="${MCODER_REMOTE_ROOT%/}/runtime/scripts/neo4j_ask_stack.py"
-  # Use stdin script (not bash -c one-liner): long/complex quoting was dropping --neo4j-password-file for Python.
-  STACK_Q=$(printf '%q' "${REMOTE_STACK}")
-  ROOT_Q=$(printf '%q' "${MCODER_REMOTE_ROOT}")
-  MIR_Q=$(printf '%q' "${GPU_MIRROR_ROOT}")
+  # Pass credentials via CLI (not only env) so SSH/bash -c cannot drop MOTADATA_NEO4J_* for the Python process.
   if [[ -n "${MOTADATA_NEO4J_PASSWORD_FILE:-}" ]]; then
-    PW_Q=$(printf '%q' "${MOTADATA_NEO4J_PASSWORD_FILE}")
-    # shellcheck disable=SC2086,SC2090
-    ssh ${SSH_OPTS} "${GPU_SYNC_HOST}" bash -s <<EOF
-set -euo pipefail
-STACK=${STACK_Q}
-ROOT=${ROOT_Q}
-MIR=${MIR_Q}
-PW=${PW_Q}
-test -f "\${STACK}" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): \${STACK}" >&2; exit 1; }
-test -d "\${ROOT}" || { echo "error: not a directory on GPU: \${ROOT}" >&2; exit 1; }
-test -f "\${PW}" || { echo "error: Neo4j password file not found on GPU (create chmod 600): \${PW}" >&2; exit 1; }
-export MOTADATA_NEO4J_PASSWORD_FILE="\${PW}"
-exec python3 "\${STACK}" --neo4j-password-file "\${PW}" --workspace-root "\${MIR}" refresh
-EOF
+    REMOTE_REFRESH_CMD="$(
+      printf \
+        'set -euo pipefail; STACK=%q; ROOT=%q; MIR=%q; PW=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; test -f "$PW" || { echo "error: Neo4j password file not found on GPU (create chmod 600 file): $PW" >&2; exit 1; }; exec python3 "$STACK" --neo4j-password-file "$PW" --workspace-root "$MIR" refresh' \
+        "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}" "${MOTADATA_NEO4J_PASSWORD_FILE}"
+    )"
   else
-    PW_Q=$(printf '%q' "${MOTADATA_NEO4J_PASSWORD}")
-    # shellcheck disable=SC2086,SC2090
-    ssh ${SSH_OPTS} "${GPU_SYNC_HOST}" bash -s <<EOF
-set -euo pipefail
-STACK=${STACK_Q}
-ROOT=${ROOT_Q}
-MIR=${MIR_Q}
-PW=${PW_Q}
-test -f "\${STACK}" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): \${STACK}" >&2; exit 1; }
-test -d "\${ROOT}" || { echo "error: not a directory on GPU: \${ROOT}" >&2; exit 1; }
-export MOTADATA_NEO4J_PASSWORD="\${PW}"
-exec python3 "\${STACK}" --neo4j-password "\${PW}" --workspace-root "\${MIR}" refresh
-EOF
+    REMOTE_REFRESH_CMD="$(
+      printf \
+        'set -euo pipefail; STACK=%q; ROOT=%q; MIR=%q; PW=%q; test -f "$STACK" || { echo "error: missing on GPU (fix MCODER_REMOTE_ROOT): $STACK" >&2; exit 1; }; test -d "$ROOT" || { echo "error: not a directory on GPU: $ROOT" >&2; exit 1; }; exec python3 "$STACK" --neo4j-password "$PW" --workspace-root "$MIR" refresh' \
+        "${REMOTE_STACK}" "${MCODER_REMOTE_ROOT}" "${GPU_MIRROR_ROOT}" "${MOTADATA_NEO4J_PASSWORD}"
+    )"
   fi
+  # shellcheck disable=SC2086
+  ssh ${SSH_OPTS} "${GPU_SYNC_HOST}" bash -c "${REMOTE_REFRESH_CMD}"
 fi
 
 echo "sync_motadata_mirror_to_gpu: ok"
