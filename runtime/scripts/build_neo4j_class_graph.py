@@ -14,7 +14,7 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Tuple
+from typing import Dict, Iterable, Iterator, List, Tuple
 
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([A-Za-z_][\w\.]*)\s*;", re.MULTILINE)
@@ -146,68 +146,6 @@ def _default_source_dirs(workspace_root: Path) -> List[str]:
     return found or ["."]
 
 
-def index_class_graph(
-    *,
-    workspace_root: Path,
-    source_dirs: List[str] | None = None,
-    max_files: int = 100000,
-    neo4j_uri: str = "",
-    neo4j_user: str = "",
-    neo4j_password: str = "",
-    clear_existing: bool = False,
-) -> Dict[str, Any]:
-    """
-    Index class inheritance/implementation graph into Neo4j and return summary stats.
-    """
-    if not workspace_root.exists() or not workspace_root.is_dir():
-        raise ValueError(f"workspace root not found or not a directory: {workspace_root}")
-
-    try:
-        from neo4j import GraphDatabase  # type: ignore
-    except Exception as exc:
-        raise RuntimeError(
-            "neo4j driver unavailable; install with `pip install neo4j` before indexing."
-        ) from exc
-
-    effective_sources = [str(x).strip() for x in (source_dirs or []) if str(x).strip()] or _default_source_dirs(
-        workspace_root
-    )
-    java_files = _discover_java_files(workspace_root, effective_sources, max(1, int(max_files)))
-    records: List[ClassRecord] = []
-    for p in java_files:
-        records.extend(_parse_java_file(p, workspace_root))
-
-    uri = neo4j_uri.strip() or str(os.environ.get("MOTADATA_NEO4J_URI", "")).strip()
-    user = neo4j_user.strip() or str(os.environ.get("MOTADATA_NEO4J_USER", "")).strip()
-    password = neo4j_password.strip() or str(os.environ.get("MOTADATA_NEO4J_PASSWORD", "")).strip()
-    if not uri:
-        raise ValueError("missing Neo4j URI (set --neo4j-uri or MOTADATA_NEO4J_URI)")
-
-    auth = (user, password) if user or password else None
-    driver = GraphDatabase.driver(uri, auth=auth)
-    try:
-        with driver.session() as session:
-            _upsert_graph(session, records, clear_existing=bool(clear_existing))
-            rel_counts = session.run(
-                "MATCH (c:Class) "
-                "OPTIONAL MATCH (c)-[e:EXTENDS]->() "
-                "OPTIONAL MATCH (c)-[i:IMPLEMENTS]->() "
-                "RETURN count(DISTINCT c) AS classes, count(DISTINCT e) AS extends_edges, count(DISTINCT i) AS implements_edges"
-            ).single()
-    finally:
-        driver.close()
-    rel_counts = rel_counts or {}
-    return {
-        "files": len(java_files),
-        "parsed_classes": len(records),
-        "graph_classes": int(rel_counts.get("classes") or 0),
-        "extends_edges": int(rel_counts.get("extends_edges") or 0),
-        "implements_edges": int(rel_counts.get("implements_edges") or 0),
-        "source_dirs": effective_sources,
-        "workspace_root": str(workspace_root),
-    }
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description="Index Java class relationships into Neo4j.")
     parser.add_argument("--workspace-root", required=True, help="Workspace root path.")
@@ -233,25 +171,51 @@ def main() -> int:
     args = parser.parse_args()
 
     workspace_root = Path(args.workspace_root).expanduser().resolve()
+    if not workspace_root.exists() or not workspace_root.is_dir():
+        raise SystemExit(f"workspace root not found or not a directory: {workspace_root}")
+
     try:
-        stats = index_class_graph(
-            workspace_root=workspace_root,
-            source_dirs=[str(x).strip() for x in (args.source_dir or []) if str(x).strip()],
-            max_files=max(1, int(args.max_files)),
-            neo4j_uri=args.neo4j_uri,
-            neo4j_user=args.neo4j_user,
-            neo4j_password=args.neo4j_password,
-            clear_existing=bool(args.clear_existing),
-        )
+        from neo4j import GraphDatabase  # type: ignore
     except Exception as exc:
-        raise SystemExit(str(exc)) from exc
+        raise SystemExit(
+            "neo4j driver unavailable; install with `pip install neo4j` before indexing. "
+            f"error={exc}"
+        ) from exc
+
+    source_dirs = [str(x).strip() for x in (args.source_dir or []) if str(x).strip()] or _default_source_dirs(
+        workspace_root
+    )
+    java_files = _discover_java_files(workspace_root, source_dirs, max(1, int(args.max_files)))
+    records: List[ClassRecord] = []
+    for p in java_files:
+        records.extend(_parse_java_file(p, workspace_root))
+
+    uri = args.neo4j_uri.strip() or str(os.environ.get("MOTADATA_NEO4J_URI", "")).strip()
+    user = args.neo4j_user.strip() or str(os.environ.get("MOTADATA_NEO4J_USER", "")).strip()
+    password = args.neo4j_password.strip() or str(os.environ.get("MOTADATA_NEO4J_PASSWORD", "")).strip()
+    if not uri:
+        raise SystemExit("missing Neo4j URI (set --neo4j-uri or MOTADATA_NEO4J_URI)")
+
+    auth = (user, password) if user or password else None
+    driver = GraphDatabase.driver(uri, auth=auth)
+    try:
+        with driver.session() as session:
+            _upsert_graph(session, records, clear_existing=bool(args.clear_existing))
+            rel_counts = session.run(
+                "MATCH (c:Class) "
+                "OPTIONAL MATCH (c)-[e:EXTENDS]->() "
+                "OPTIONAL MATCH (c)-[i:IMPLEMENTS]->() "
+                "RETURN count(DISTINCT c) AS classes, count(DISTINCT e) AS extends_edges, count(DISTINCT i) AS implements_edges"
+            ).single()
+    finally:
+        driver.close()
 
     print(
         "neo4j_class_graph_indexed "
-        f"files={stats['files']} classes={stats['parsed_classes']} "
-        f"graph_classes={stats['graph_classes']} "
-        f"extends_edges={stats['extends_edges']} "
-        f"implements_edges={stats['implements_edges']}"
+        f"files={len(java_files)} classes={len(records)} "
+        f"graph_classes={int(rel_counts.get('classes') or 0)} "
+        f"extends_edges={int(rel_counts.get('extends_edges') or 0)} "
+        f"implements_edges={int(rel_counts.get('implements_edges') or 0)}"
     )
     return 0
 
