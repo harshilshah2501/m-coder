@@ -18,13 +18,11 @@ This is the active guide. Use this for setup, manual verification, and repeatabl
 
 ## 1) Scope and success criteria
 
-This guide validates five capabilities end-to-end:
+This guide validates three capabilities end-to-end:
 
-- `query` (repo understanding via evidence-first Ask)
+- `ask` (repo understanding via evidence-first Ask)
 - `debug` (EXPLAIN_DEBUG path with structured reasoning output)
 - `plan` (governed plan decision contract)
-- `code` (governed execute contract)
-- `agent` (governed ask/execute behavior; no separate public `/v0/agent` route)
 
 A verification run is considered successful when:
 
@@ -40,7 +38,7 @@ Topology:
 
 - **GPU host** runs Plan-Gate + vLLM
 - **WSL/Linux workspace host** runs Context Layer next to Motadata repo
-- optional SSH tunnel exposes Plan-Gate/vLLM locally to WSL
+- SSH tunnel may be required when Plan-Gate/vLLM run on GPU host
 
 Chronology:
 
@@ -50,7 +48,7 @@ Chronology:
 | 1    | GPU      | Start governed services (`governed_services.sh`)                        |
 | 2    | WSL      | Start workspace stack (`wsl_plugin_mvp_stack.sh up`)                    |
 | 3    | WSL      | Run preflight and behavior verification                                 |
-| 4    | Optional | JetBrains plugin setup (separate from this no-plugin verification path) |
+| 4    | WSL      | Execute objective Ask/Debug/Plan verification runbook                    |
 
 
 ---
@@ -98,12 +96,12 @@ export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
 export CONTEXT_URL="http://127.0.0.1:8091"
 export PLAN_GATE_URL="http://127.0.0.1:8089"
 
-# Optional tunnel to GPU
+# Tunnel to GPU (required when Plan-Gate/vLLM are remote)
 export ENABLE_SSH_TUNNEL=1
 export GPU_USER="harshil"
 export GPU_HOST="45.195.82.10"
 export TUNNEL_TARGET="${GPU_USER}@${GPU_HOST}"
-# Optional: export TUNNEL_SSH_KEY=~/.ssh/id_ed25519
+# export TUNNEL_SSH_KEY=~/.ssh/id_ed25519
 
 ./scripts/wsl_plugin_mvp_stack.sh up
 ./scripts/wsl_plugin_mvp_stack.sh check
@@ -171,7 +169,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --out runtime/.run/motadata_behavior_validation.json
 ```
 
-4) Optional baseline freeze copy for regression comparisons:
+4) Baseline artifact copy for regression comparisons:
 
 ```bash
 cp runtime/.run/motadata_behavior_validation.json \
@@ -189,7 +187,7 @@ python3 runtime/scripts/lint_authority_registry_paths.py \
 
 Exit code `0` means every `primary_owner`, `collaborator`, `forbidden_distractor`, and `entry_point` file path exists as a regular file under `workspace-root`. Non-zero lists missing paths (fix the YAML or your checkout).
 
-Optional non-destructive drift proposal (suggestions only; no edits):
+Drift proposal command (reference; does not modify registry):
 
 ```bash
 export PYTHONPATH="$M_CODER_ROOT"
@@ -205,13 +203,11 @@ The output report proposes candidate path updates for missing registry entries a
 ## 5) API behavior map (capability to endpoint)
 
 
-| Capability | Context Layer                       | Plan-Gate                                     | vLLM                        | Deterministic expectation                                            |
-| ---------- | ----------------------------------- | --------------------------------------------- | --------------------------- | -------------------------------------------------------------------- |
-| Query      | `POST /v1/export_evidence`          | `POST /v1/ask`                                | optional                    | `ask_path=v1_evidence`, plan-only posture                            |
-| Debug      | optional `POST /v1/export_evidence` | `POST /v1/ask` with `task_type=EXPLAIN_DEBUG` | `POST /v1/chat/completions` | `routing_mode=explain_debug`, structured explain payload             |
-| Plan       | -                                   | `POST /v0/plan`                               | no                          | valid `decision_response.v0.1` with non-empty `decision`             |
-| Code       | -                                   | `POST /v0/execute`                            | no                          | valid `execute_response.v0.1` with explicit `outcome` and `executed` |
-| Agent      | optional                            | ask/execute governed spine                    | optional                    | `/v0/agent` absent by design; assist metadata present on Ask         |
+| Capability | Context Layer                       | Plan-Gate                                     | vLLM                        | Deterministic expectation                                |
+| ---------- | ----------------------------------- | --------------------------------------------- | --------------------------- | -------------------------------------------------------- |
+| Ask        | `POST /v1/export_evidence`          | `POST /v1/ask`                                | not required                | `ask_path=v1_evidence`, plan-only posture                |
+| Debug      | `POST /v1/export_evidence`          | `POST /v1/ask` with `task_type=EXPLAIN_DEBUG` | `POST /v1/chat/completions` | `routing_mode=explain_debug`, structured explain payload |
+| Plan       | -                                   | `POST /v0/plan`                               | not required                | valid `decision_response.v0.1` with non-empty `decision` |
 
 
 Plan-Gate routes: `/v0/plan`, `/v0/ask`, `/v1/ask`, `/v0/execute` per `[runtime/plan_gate_service/README.md](../../runtime/plan_gate_service/README.md)`.
@@ -239,18 +235,16 @@ Expected:
 
 | Requirement | Flow                               | Pass criteria                                                                                             |
 | ----------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Query       | `/v1/export_evidence` -> `/v1/ask` | `ask_path=v1_evidence`, `governance_posture=PLAN_ONLY`, `execution=false`, non-empty `plan_summary.steps` |
+| Ask         | `/v1/export_evidence` -> `/v1/ask` | `ask_path=v1_evidence`, `governance_posture=PLAN_ONLY`, `execution=false`, non-empty `plan_summary.steps` |
 | Debug       | `/v1/ask` with `EXPLAIN_DEBUG`     | `routing_mode=explain_debug`, `explain_debug.summary` or explicit `explain_debug.error`                   |
 | Plan        | `/v0/plan`                         | `schema_version=decision_response.v0.1`, non-empty `decision`                                             |
-| Code        | `/v0/execute`                      | `schema_version=execute_response.v0.1`, non-empty `outcome`, explicit `executed` boolean                  |
-| Agent       | probe `/v0/agent`, inspect Ask     | `/v0/agent` returns `404` (expected), Ask includes `assist_layer` metadata                                |
 
-### 6.3 Manual testing with your own queries
+### 6.3 Reference manual calls (non-acceptance)
 
-The JSON scenario suite (section 7) pins **fixed** prompts and expectations for regression. For **interactive** checks with **your** wording, use either the verifier smoke run (fast, one command) or raw HTTP (full control).
+The JSON scenario suite in section 7 is the acceptance source of truth. This subsection is for ad-hoc diagnostics and is not used for pass/fail sign-off.
 
-**Option A — Verifier smoke run (custom Ask + Debug text only)**  
-One pass still exercises **all five** capabilities in order (health, export, ask, explain-debug, plan, execute, agent probe). You only override the **Ask** and **EXPLAIN_DEBUG** strings:
+**Verifier smoke run (custom Ask + Debug text)**  
+One pass exercises the Ask/Debug/Plan flow; you override only the Ask and EXPLAIN_DEBUG strings:
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
@@ -262,22 +256,19 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 ```
 
 - **Query (Ask):** governed by `--query`. Inspect `plan_summary.steps`, `metadata`, and `context_bundle` in the dev output or `--print json`.
-- **Debug:** governed by `--debug-query`. The script sets `task_type=EXPLAIN_DEBUG` and picks **`selected_file` from the top retrieved evidence path** (same as the default smoke behavior). If you need a **specific** Java/Path file for debugging, use Option B for the debug call.
-- **Plan / Code:** this command still uses the verifier’s **built-in** shadow plan event and **safe** `echo` execute probe (not customizable via flags). To exercise **your** policy event or **your** command, use Option B for those two calls only.
-- **Agent:** there is no separate “agent query”; confirm `assist_layer` on the Ask response above and `404` on `GET/POST` `/v0/agent` (the script does both).
+- **Debug:** governed by `--debug-query`. The script sets `task_type=EXPLAIN_DEBUG` and picks `selected_file` from top retrieved evidence path.
+- **Plan:** this command uses the verifier’s built-in shadow plan event.
 
-**Option B — Raw HTTP (per capability, full payloads)**  
-Use when you need a custom **plan** `ide_event`, **execute** `command`, or **debug** `selected_file` / `client_context.selection`. Set `CONTEXT_URL`, `PLAN_GATE_URL`, and `MOTADATA_REPO_ROOT` as in section 4.
+**Raw HTTP (per capability, full payload control)**  
+Use when you need custom plan `ide_event` or debug `selected_file` / `client_context.selection`. Set `CONTEXT_URL`, `PLAN_GATE_URL`, and `MOTADATA_REPO_ROOT` as in section 4.
 
 | Capability | What you control | Minimal flow |
 | ---------- | ---------------- | ------------ |
-| **Ask** | Your natural-language `query` | `POST ${CONTEXT_URL}/v1/export_evidence` with `workspace_root`, `query`, `top_k` → build `ask_request.v1.0` with that `evidence_bundle` → `POST ${PLAN_GATE_URL}/v1/ask`. **Shell helper:** §6.3.1 (`run_v1_ask`). |
-| **Debug** | `query`, `selected_file`, `selection` text | Same export as Ask (often same base question) → `POST /v1/ask` with `task_type=EXPLAIN_DEBUG`, `selected_file`, `client_context.selection`, plus `evidence_bundle` / hash fields as in Plan-Gate docs. |
-| **Plan** | `ide_event`, `mode`, policy knobs | `POST ${PLAN_GATE_URL}/v0/plan` with `plan_request.v0.1` body (see `[runtime/plan_gate_service/README.md](../../runtime/plan_gate_service/README.md)`). |
-| **Code** | `command`, `repo_root` | `POST ${PLAN_GATE_URL}/v0/execute` with `execute_request.v0.1` (use a **non-destructive** command in production-like environments). |
-| **Agent** | N/A | `POST ${PLAN_GATE_URL}/v0/agent` → expect **404**; any successful `POST /v1/ask` should still include `assist_layer`-related fields as in your product contract. |
+| **Ask** | Your natural-language `query` | `POST ${CONTEXT_URL}/v1/export_evidence` with `workspace_root`, `query`, `top_k` -> build `ask_request.v1.0` with that `evidence_bundle` -> `POST ${PLAN_GATE_URL}/v1/ask`. |
+| **Debug** | `query`, `selected_file`, `selection` text | Same export as Ask -> `POST /v1/ask` with `task_type=EXPLAIN_DEBUG`, `selected_file`, `client_context.selection`, plus `evidence_bundle` / hash fields. |
+| **Plan** | `ide_event`, `mode`, policy knobs | `POST ${PLAN_GATE_URL}/v0/plan` with `plan_request.v0.1` body. |
 
-**Combining approaches:** run Option A for a quick end-to-end sanity check with your Ask/Debug wording, then Option B only for the endpoints where you need custom plan/execute/debug shapes.
+Use the verifier command for acceptance. Use raw HTTP only when debugging payload-level behavior.
 
 <a id="canonical-manual-ask-v1"></a>
 
@@ -359,7 +350,7 @@ python3 runtime/scripts/motadata_query_cli.py \
 - Default prints a concise human summary (`request_id`, posture, ask_path, quality, first answer step).
 - Add `--print json` to emit full JSON to stdout.
 - Keep `--out` for the persisted artifact.
-- Optional deterministic reward labeling (Governed ART-lite):
+- Deterministic reward labeling (Governed ART-lite):
 
 ```bash
 python3 runtime/scripts/motadata_query_cli.py \
@@ -452,7 +443,7 @@ Stdout modes (`--print`):
 
 | Mode | Meaning |
 | ---- | ------- |
-| `concise` (default) | Short pass/fail plus clipped answer steps, debug summary, plan/code outcomes |
+| `concise` (default) | Short pass/fail plus clipped answer steps, debug summary, and plan outcomes |
 | `plain` | Readable report for any audience (scenario narratives + no raw `expect` dumps on stdout); see [MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](../demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md) |
 | `dev` | Full `plan_summary.steps`, `context_bundle.files`, evidence snippet previews for smoke; for scenarios, expanded `expect`/`actual` plus `dev_snapshot` text for **ask** and **debug** rows |
 | `json` | Full report object on stdout (same shape as `--out`) |
@@ -478,7 +469,7 @@ Pass criteria:
 - `stable == true` when `--repeat > 1` and smoke runs are included (not `--scenarios-only`)
 - If `--scenarios FILE` is set, `scenario_suite.all_pass` must be true as well
 
-### Scenario suite (ask / debug / plan / code / agent)
+### Scenario suite (ask / debug / plan)
 
 Canonical definitions live in:
 
@@ -514,12 +505,10 @@ Quality policy:
 Expected fields per scenario capability (see `expect` in each JSON row; the verifier compares these to live responses):
 
 | Capability | What is exercised | Typical `expect` keys | Pass means |
-| ---------- | ------------------- | ---------------------- | ---------- |
-| `ask` | `export_evidence` + `POST /v1/ask` | `governance_posture`, `execution`, `ask_path`, `min_plan_steps`, optional `text_contains_any`; optional **anchored-owner gate**: `require_authority_primary_owner`, `require_owner_in_top3`, `require_stage_a_owner_injected_min` | HTTP 200, no expect errors, export returned entries |
+| ---------- | ----------------- | ---------------------- | ---------- |
+| `ask` | `export_evidence` + `POST /v1/ask` | `governance_posture`, `execution`, `ask_path`, `min_plan_steps`, `text_contains_any`, `require_authority_primary_owner`, `require_owner_in_top3`, `require_stage_a_owner_injected_min` | HTTP 200, no expect errors, export returned entries |
 | `debug` | `POST /v1/ask` with `task_type=EXPLAIN_DEBUG` | `routing_mode`, `explain_debug_has_keys` | HTTP 200, `explain_debug` has `summary` or `error` as required |
 | `plan` | `POST /v0/plan` | `schema_version`, `decision_present` | HTTP 200, decision contract satisfied |
-| `code` | `POST /v0/execute` | `schema_version`, `outcome`, `executed` | HTTP 200, execute contract satisfied |
-| `agent` | Probe `/v0/agent` + `assist_layer` on ask | `agent_route_404`, `assist_layer_on_ask` | No public agent route; assist metadata on ask |
 
 The saved JSON report includes `scenario_suite.results[]` with `actual_summary`, `errors`, and `dev_snapshot` (for **ask** and **debug** rows: full steps, bundle files, snippets, or explain-debug text).
 
@@ -527,17 +516,29 @@ The saved JSON report includes `scenario_suite.results[]` with `actual_summary`,
 
 **Stage A OFF vs ON (A/B):** When diffing two `--out` reports (`--export-stage-a off` vs `on`), compare runs built from the **same** m-coder / context-layer **git SHA** and the same `--workspace-root`. If OFF and ON come from different revisions, you are mixing Stage A toggles with unrelated code changes—use matching artifact labels (e.g. both `*.v2_1_2.json`) only when the stack matches.
 
-### Repo-graph enrichment verification (feature branch track)
+### Repo-graph enrichment verification (authoritative flow)
 
-This is the mandatory, fail-fast verification flow for Java AST -> Neo4j graph enrichment plus query routing (`feature/repo-graph-enrichment-v1`) before merge.
+This section is the single objective runbook for the current graph-enrichment stack on `feature/repo-graph-enrichment-v1`.
 
-1) **Set fixed workspace paths**
+Functional scope under test in this flow:
+- `Ask`
+- `Debug`
+- `Plan`
+
+`Code` execution and `Agent` endpoint semantics are not part of this acceptance slice.
+
+1) **Set workspace and branch context**
 
 ```bash
 cd ~/Harshil-PoCs/m-coder
+git branch --show-current
 export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
 export PYTHONPATH="$(pwd)"
 ```
+
+Expected:
+- current branch is `feature/repo-graph-enrichment-v1`
+- `${MOTADATA_REPO_ROOT}` exists and is readable
 
 2) **Start graph stack**
 
@@ -546,7 +547,15 @@ export PYTHONPATH="$(pwd)"
 ./scripts/graph_stack.sh status
 ```
 
-3) **Verify Neo4j reachability first (HTTP + Bolt + auth)**
+3) **Verify service health before running scenarios**
+
+```bash
+curl -fsS http://127.0.0.1:8091/healthz >/dev/null
+curl -fsS http://127.0.0.1:8089/healthz >/dev/null
+curl -fsS http://127.0.0.1:8000/v1/models >/dev/null
+```
+
+4) **Verify Neo4j reachability (HTTP + Bolt + auth)**
 
 ```bash
 curl -fsS http://127.0.0.1:7474 >/dev/null
@@ -566,7 +575,7 @@ docker exec motadata-graph-neo4j cypher-shell \
   "RETURN 1;"
 ```
 
-4) **Force graph refresh and verify ingest-state counters (Lane D thresholds)**
+5) **Refresh graph and verify ingest counters**
 
 ```bash
 ./scripts/graph_stack.sh refresh
@@ -577,7 +586,7 @@ docker exec motadata-graph-neo4j cypher-shell \
   "MATCH (s:GraphIngestState {key:'java_ast'}) RETURN s.classRecordCount AS classRecordCount, s.anchorCountVerticleRegistration AS verticle, s.anchorCountEventbusConsumerRegistration AS eventbusConsumer, s.anchorCountApiRouteRegistration AS apiRoute, s.workspaceFingerprint AS workspaceFingerprint, s.updatedAt AS updatedAt LIMIT 1;"
 ```
 
-5) **Enforce preflight thresholds before scenario execution**
+6) **Enforce preflight thresholds (must pass)**
 
 ```bash
 docker exec motadata-graph-neo4j cypher-shell \
@@ -587,9 +596,12 @@ docker exec motadata-graph-neo4j cypher-shell \
   "MATCH (s:GraphIngestState {key:'java_ast'}) RETURN s.anchorCountVerticleRegistration > 5 AS verticle_ok, s.anchorCountEventbusConsumerRegistration > 10 AS eventbus_consumer_ok, s.anchorCountApiRouteRegistration > 1 AS api_route_ok LIMIT 1;"
 ```
 
-All three booleans must be `true` to treat ingest as COMPLETE.
+Required:
+- `verticle_ok = true`
+- `eventbus_consumer_ok = true`
+- `api_route_ok = true`
 
-6) **Run Lane A/B/C/D targeted test coverage**
+7) **Run targeted test suite (Lane A/B/C/D contracts)**
 
 ```bash
 PYTHONPATH="$(pwd)" python3 -m pytest \
@@ -601,7 +613,7 @@ PYTHONPATH="$(pwd)" python3 -m pytest \
   -q --tb=short
 ```
 
-7) **Run required scenario checks for graph-enrichment asks**
+8) **Run required Ask/Debug/Plan scenario verification**
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
@@ -610,17 +622,19 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
   --scenario-id ask_mail_config_domain \
   --scenario-id ask_config_store_organization \
+  --scenario-id debug_explain_selection \
+  --scenario-id plan_pr_merge_shadow \
   --scenarios-only \
   --print dev \
   --out runtime/.run/motadata_behavior_validation.graph_required.json
 ```
 
-Expected verifier behavior:
-- Neo4j unreachable -> suite fails fast (`graph_preflight.state=UNREACHABLE`)
-- Neo4j reachable but ingest incomplete -> graph-required rows are skipped with explicit reason
-- Neo4j reachable and ingest complete -> both rows execute and must pass
+Pass condition:
+- output JSON has `all_pass=true`
+- no scenario row contains `errors`
+- `graph_preflight.state=COMPLETE`
 
-8) **Run the three acceptance queries**
+9) **Run routed Ask acceptance queries**
 
 ```bash
 python3 runtime/scripts/motadata_query_cli.py \
@@ -639,7 +653,7 @@ python3 runtime/scripts/motadata_query_cli.py \
   --out /tmp/t3.json --with-reward --reward-out /tmp/t3.reward.json
 ```
 
-9) **Assert expected outcomes from generated artifacts**
+10) **Assert routed query artifact outcomes**
 
 ```bash
 python3 - <<'PY'
@@ -676,7 +690,10 @@ print("repo-graph enrichment acceptance: PASS")
 PY
 ```
 
-Pass condition: every command above succeeds and the final Python assertion block prints `repo-graph enrichment acceptance: PASS`.
+Final pass condition:
+- all commands above succeed
+- scenario artifact `runtime/.run/motadata_behavior_validation.graph_required.json` reports pass
+- routed-query assertion block prints `repo-graph enrichment acceptance: PASS`
 
 ---
 
