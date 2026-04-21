@@ -65,8 +65,19 @@ def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, d
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.getcode(), json.loads(resp.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.getcode(), json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        detail = body
+        try:
+            parsed = json.loads(body)
+            if isinstance(parsed, dict):
+                detail = str(parsed.get("message") or parsed.get("error") or body)[:2000]
+        except Exception:
+            detail = body[:2000]
+        raise RuntimeError(f"HTTP {exc.code} POST {url}\n{detail}") from None
 
 
 def _get(url: str, timeout: int = 30) -> tuple[int, dict[str, Any]]:
@@ -2043,6 +2054,23 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+    ws_arg = str(args.workspace_root or "").strip()
+    if not ws_arg:
+        print(
+            "ERROR: --workspace-root is empty. "
+            "Set an absolute path to your Motadata checkout, e.g.\n"
+            '  export MOTADATA_REPO_ROOT="/home/you/Projects/Motadata"\n'
+            "then pass --workspace-root \"${MOTADATA_REPO_ROOT}\"",
+            file=sys.stderr,
+        )
+        return 2
+    if not Path(ws_arg).is_dir():
+        print(
+            f"ERROR: --workspace-root is not a directory: {ws_arg!r}",
+            file=sys.stderr,
+        )
+        return 2
+    args.workspace_root = ws_arg  # normalized
     export_stage_a = _export_stage_a_from_arg(args.export_stage_a)
     quality_policy: dict[str, Any] | None = None
     if str(args.quality_policy).strip():
