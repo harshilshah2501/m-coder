@@ -521,7 +521,6 @@ Notes:
 - Script writes runtime flags to `runtime/.run/neo4j_ask.env` by default.
 - Neo4j container is started with `--restart unless-stopped` for always-on behavior.
 - Ask remains `PLAN_ONLY`; Debug/Code Neo4j flags remain disabled by default.
-- If `--neo4j-password` and `MOTADATA_NEO4J_PASSWORD` are both missing, the script prompts securely in interactive shells.
 
 ---
 
