@@ -94,7 +94,7 @@ References:
 export M_CODER_ROOT="$HOME/Harshil-PoCs/m-coder"
 cd "$M_CODER_ROOT"
 
-export MOTADATA_REPO_ROOT="/home/harshil/Projects/Motadata"
+export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
 export CONTEXT_URL="http://127.0.0.1:8091"
 export PLAN_GATE_URL="http://127.0.0.1:8089"
 
@@ -138,7 +138,7 @@ Use this exact sequence after pulling latest branch changes:
 ```bash
 cd "$M_CODER_ROOT"
 export PYTHONPATH="$M_CODER_ROOT"
-export MOTADATA_REPO_ROOT="/home/harshil/Projects/Motadata"
+export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
 ```
 
 1) Registry/workspace alignment lint:
@@ -436,7 +436,7 @@ Canonical command:
 
 ```bash
 python3 runtime/scripts/build_authority_code_index.py \
-  --workspace-root "/home/harshil/Projects/Motadata" \
+  --workspace-root "/home/harshil/Harshil-PoCs/Motadata" \
   --out "runtime/.cache/authority_code_index.motadata.json"
 ```
 
@@ -444,7 +444,7 @@ Then run verification:
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
-  --workspace-root "/home/harshil/Projects/Motadata" \
+  --workspace-root "/home/harshil/Harshil-PoCs/Motadata" \
   --repeat 2
 ```
 
@@ -461,7 +461,7 @@ Use full JSON on stdout only when needed:
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
-  --workspace-root "/home/harshil/Projects/Motadata" \
+  --workspace-root "/home/harshil/Harshil-PoCs/Motadata" \
   --repeat 2 \
   --print json
 ```
@@ -488,7 +488,7 @@ Run smoke plus scenarios (same queries as in section 6.2 / manual examples):
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
-  --workspace-root "/home/harshil/Projects/Motadata" \
+  --workspace-root "/home/harshil/Harshil-PoCs/Motadata" \
   --repeat 2 \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
   --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
@@ -499,7 +499,7 @@ Scenarios only (skip the full smoke pipeline; faster when you only need capabili
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
-  --workspace-root "/home/harshil/Projects/Motadata" \
+  --workspace-root "/home/harshil/Harshil-PoCs/Motadata" \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
   --quality-policy docs/validation/motadata_evidence_quality_policy.v1.json \
   --scenarios-only \
@@ -527,22 +527,119 @@ The saved JSON report includes `scenario_suite.results[]` with `actual_summary`,
 
 **Stage A OFF vs ON (A/B):** When diffing two `--out` reports (`--export-stage-a off` vs `on`), compare runs built from the **same** m-coder / context-layer **git SHA** and the same `--workspace-root`. If OFF and ON come from different revisions, you are mixing Stage A toggles with unrelated code changes—use matching artifact labels (e.g. both `*.v2_1_2.json`) only when the stack matches.
 
-Useful variants:
+### Repo-graph enrichment verification (feature branch track)
+
+This is the mandatory, fail-fast verification flow for Java AST -> Neo4j graph enrichment plus query routing (`feature/repo-graph-enrichment-v1`) before merge.
+
+1) **Set fixed workspace paths**
 
 ```bash
-python3 runtime/scripts/motadata_behavior_verify.py --help
+cd ~/Harshil-PoCs/m-coder
+export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
+export PYTHONPATH="$(pwd)"
 ```
 
+2) **Start graph stack**
+
 ```bash
-python3 runtime/scripts/motadata_behavior_verify.py \
-  --workspace-root "/home/harshil/Projects/Motadata" \
-  --query "How does alert correlation and enrichment work?" \
-  --debug-query "Debug why incident enrichment might be skipped" \
-  --top-k 8 \
-  --repeat 3 \
-  --print concise \
-  --out runtime/.run/motadata_behavior_validation.motadata.json
+./scripts/graph_stack.sh up
+./scripts/graph_stack.sh status
 ```
+
+3) **Verify Neo4j reachability first (HTTP + Bolt + auth)**
+
+```bash
+curl -fsS http://127.0.0.1:7474 >/dev/null
+python3 - <<'PY'
+import socket
+with socket.create_connection(("127.0.0.1", 7687), timeout=3):
+    pass
+print("neo4j bolt reachable")
+PY
+set -a
+source docker/neo4j-graph/.env
+set +a
+docker exec motadata-graph-neo4j cypher-shell \
+  -a bolt://localhost:7687 \
+  -u "${GRAPH_NEO4J_USER:-neo4j}" \
+  -p "${GRAPH_NEO4J_PASSWORD:-NEO4J_PASSWORD}" \
+  "RETURN 1;"
+```
+
+4) **Force graph refresh and verify ingest state**
+
+```bash
+./scripts/graph_stack.sh refresh
+docker exec motadata-graph-neo4j cypher-shell \
+  -a bolt://localhost:7687 \
+  -u "${GRAPH_NEO4J_USER:-neo4j}" \
+  -p "${GRAPH_NEO4J_PASSWORD:-NEO4J_PASSWORD}" \
+  "MATCH (s:GraphIngestState {key:'java_ast'}) RETURN s.classRecordCount AS classRecordCount, s.workspaceFingerprint AS workspaceFingerprint, s.updatedAt AS updatedAt LIMIT 1;"
+```
+
+5) **Run router/unit coverage**
+
+```bash
+python3 -m pytest tests/test_query_routing.py -q --tb=short
+```
+
+6) **Run the three acceptance queries**
+
+```bash
+python3 runtime/scripts/motadata_query_cli.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --query "Which class is the base class for all APIs?" \
+  --out /tmp/t1.json --with-reward --reward-out /tmp/t1.reward.json
+
+python3 runtime/scripts/motadata_query_cli.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --query "How does mail server configuration work?" \
+  --out /tmp/t2.json --with-reward --reward-out /tmp/t2.reward.json
+
+python3 runtime/scripts/motadata_query_cli.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --query "What model are you?" \
+  --out /tmp/t3.json --with-reward --reward-out /tmp/t3.reward.json
+```
+
+7) **Assert expected outcomes from generated artifacts**
+
+```bash
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+t1 = json.loads(Path("/tmp/t1.json").read_text())
+t1r = json.loads(Path("/tmp/t1.reward.json").read_text())
+t2 = json.loads(Path("/tmp/t2.json").read_text())
+t2r = json.loads(Path("/tmp/t2.reward.json").read_text())
+t3 = json.loads(Path("/tmp/t3.json").read_text())
+t3r = json.loads(Path("/tmp/t3.reward.json").read_text())
+
+reasons_t1 = set((t1.get("metadata") or {}).get("quality_reasons") or [])
+assert (t1.get("metadata") or {}).get("evidence_quality") not in {"WEAK", "INSUFFICIENT"}
+assert "NO_CORE_IN_TOP3" not in reasons_t1
+assert int(t1r.get("total_reward", 0)) > 0
+assert t1r.get("eligibility") != "banned"
+assert "com.mindarray.api.AbstractAPI" in json.dumps(t1)
+
+reasons_t2 = set((t2.get("metadata") or {}).get("quality_reasons") or [])
+assert "HIGH_DISTRACTOR_RATIO" not in reasons_t2
+assert "NOISE_DOMINATED" not in reasons_t2
+assert "QUERY_TOO_GENERIC" not in reasons_t2
+assert int(t2r.get("total_reward", 0)) > 0
+assert t2r.get("eligibility") != "banned"
+
+assert int(t3r.get("total_reward", 0)) > 0
+assert t3r.get("eligibility") != "banned"
+assert not t3r.get("hard_violations")
+assert "Motadata Coder" in json.dumps(t3)
+
+print("repo-graph enrichment acceptance: PASS")
+PY
+```
+
+Pass condition: every command above succeeds and the final Python assertion block prints `repo-graph enrichment acceptance: PASS`.
 
 ---
 
