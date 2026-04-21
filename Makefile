@@ -7,7 +7,7 @@ ARTIFACTS := $(REPO_ROOT)/ml/artifacts
 CHECKPOINTS_DIR := $(ARTIFACTS)/checkpoints
 DATASETS_DIR := $(ARTIFACTS)/datasets
 
-.PHONY: dvc-push-checkpoints dvc-pull-checkpoints dvc-push-dataset dvc-pull-dataset dvc-init
+.PHONY: dvc-push-checkpoints dvc-pull-checkpoints dvc-push-dataset dvc-pull-dataset dvc-init graph-up graph-refresh graph-status graph-logs graph-down
 
 # Ensure DVC is initialized with localstore (local disk) as default
 dvc-init:
@@ -58,3 +58,18 @@ dvc-pull-dataset:
 		echo "--- Verification commands ---"; \
 		echo "  ls -la $(DATASETS_DIR)/$(FREEZE_ID)/"; \
 		echo "  sha256sum $(DATASETS_DIR)/$(FREEZE_ID)/*.jsonl 2>/dev/null || true"
+
+graph-up:
+	@cd "$(REPO_ROOT)" && ./scripts/graph_stack.sh up
+
+graph-refresh:
+	@cd "$(REPO_ROOT)" && ./scripts/graph_stack.sh refresh
+
+graph-status:
+	@cd "$(REPO_ROOT)" && ./scripts/graph_stack.sh status
+
+graph-logs:
+	@cd "$(REPO_ROOT)" && ./scripts/graph_stack.sh logs
+
+graph-down:
+	@cd "$(REPO_ROOT)" && ./scripts/graph_stack.sh down

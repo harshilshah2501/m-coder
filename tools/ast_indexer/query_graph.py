@@ -6,26 +6,26 @@ import logging
 import os
 from time import perf_counter
 from typing import Any
+from neo4j.exceptions import DriverError
 
 from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
 
 LOG = logging.getLogger(__name__)
+DEFAULT_NEO4J_PASSWORD = "NEO4J_PASSWORD"
 
 
 def _neo4j_settings() -> tuple[str, str, str | None]:
     return (
         os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687"),
         os.environ.get("NEO4J_USER", "neo4j"),
-        os.environ.get("NEO4J_PASSWORD"),
+        os.environ.get("NEO4J_PASSWORD", DEFAULT_NEO4J_PASSWORD),
     )
 
 
 def _driver():
     uri, user, password = _neo4j_settings()
-    if not password:
-        raise RuntimeError("NEO4J_PASSWORD is required")
     return GraphDatabase.driver(uri, auth=(user, password))
 
 
@@ -76,7 +76,7 @@ def find_base_class(top_package: str) -> dict[str, Any] | None:
                 top_package=top_package.strip().lower(),
                 preferred_package=preferred_package,
             ).single()
-    except (RuntimeError, Neo4jError) as exc:
+    except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
         LOG.warning("find_base_class failed for %s: %s", top_package, exc)
         return None
     if record is None or record.get("qualified_name") is None:
@@ -107,7 +107,7 @@ def find_implementors(interface_name: str, limit: int = 25) -> list[dict[str, An
     try:
         with _driver() as driver, driver.session() as session:
             return [_class_record_to_dict(record) for record in session.run(query, name=interface_name, limit=limit)]
-    except (RuntimeError, Neo4jError) as exc:
+    except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
         LOG.warning("find_implementors failed for %s: %s", interface_name, exc)
         return []
 
@@ -117,7 +117,7 @@ def find_classes_by_concept(concept: str, limit: int = 10) -> list[dict[str, Any
     if not cleaned:
         return []
     query = """
-    CALL db.index.fulltext.queryNodes('class_fulltext', $query) YIELD node, score
+    CALL db.index.fulltext.queryNodes('class_fulltext', $query_text) YIELD node, score
     OPTIONAL MATCH (node)-[:EXTENDS]->(parent:Class)
     RETURN node.name AS name,
            node.qualifiedName AS qualified_name,
@@ -139,9 +139,9 @@ def find_classes_by_concept(concept: str, limit: int = 10) -> list[dict[str, Any
                     **_class_record_to_dict(record),
                     "score": float(record.get("score") or 0.0),
                 }
-                for record in session.run(query, query=cleaned, limit=limit)
+                for record in session.run(query, query_text=cleaned, limit=limit)
             ]
-    except (RuntimeError, Neo4jError) as exc:
+    except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
         LOG.warning("find_classes_by_concept failed for %s: %s", concept, exc)
         return []
 
@@ -166,7 +166,7 @@ def get_class_detail(class_name: str) -> dict[str, Any] | None:
     try:
         with _driver() as driver, driver.session() as session:
             record = session.run(query, name=class_name).single()
-    except (RuntimeError, Neo4jError) as exc:
+    except (RuntimeError, Neo4jError, DriverError, OSError) as exc:
         LOG.warning("get_class_detail failed for %s: %s", class_name, exc)
         return None
     if record is None:

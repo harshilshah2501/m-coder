@@ -11,8 +11,10 @@ graph never invents fake external nodes.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import logging
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -24,6 +26,7 @@ from neo4j import GraphDatabase
 LOG = logging.getLogger(__name__)
 SCHEMA_PATH = Path(__file__).with_name("schema.cypher")
 DEFAULT_JAVA_ROOT_ENV = "MOTADATA_JAVA_ROOT"
+DEFAULT_NEO4J_PASSWORD = "NEO4J_PASSWORD"
 PROGRESS_EVERY = 50
 
 
@@ -44,9 +47,7 @@ class JavaClassRecord:
 def _neo4j_settings() -> tuple[str, str, str]:
     uri = os.environ.get("NEO4J_URI", "bolt://127.0.0.1:7687")
     user = os.environ.get("NEO4J_USER", "neo4j")
-    password = os.environ.get("NEO4J_PASSWORD")
-    if not password:
-        raise RuntimeError("NEO4J_PASSWORD is required")
+    password = os.environ.get("NEO4J_PASSWORD", DEFAULT_NEO4J_PASSWORD)
     return uri, user, password
 
 
@@ -74,9 +75,131 @@ def _type_name(type_node: Any) -> str | None:
     return None
 
 
+def _simple_type_name(type_name: str | None) -> str | None:
+    if not type_name:
+        return None
+    cleaned = type_name.strip()
+    if not cleaned:
+        return None
+    cleaned = cleaned.split("<", 1)[0].strip()
+    if not cleaned:
+        return None
+    return cleaned.rsplit(".", 1)[-1]
+
+
+def _extract_imports(source: str) -> tuple[str, tuple[str, ...]]:
+    package_match = re.search(r"(?m)^\s*package\s+([A-Za-z0-9_.]+)\s*;", source)
+    package_name = package_match.group(1) if package_match else ""
+    imports = tuple(
+        match.group(1)
+        for match in re.finditer(r"(?m)^\s*import\s+(?:static\s+)?([A-Za-z0-9_.*]+)\s*;", source)
+    )
+    return package_name, imports
+
+
+def _strip_inline_comments(line: str, *, in_block_comment: bool) -> tuple[str, bool]:
+    text = line
+    if in_block_comment:
+        end = text.find("*/")
+        if end == -1:
+            return "", True
+        text = text[end + 2 :]
+        in_block_comment = False
+
+    while "/*" in text:
+        start = text.find("/*")
+        end = text.find("*/", start + 2)
+        if end == -1:
+            return text[:start], True
+        text = text[:start] + text[end + 2 :]
+
+    if "//" in text:
+        text = text.split("//", 1)[0]
+    return text, in_block_comment
+
+
+def _parse_signature(signature: str) -> tuple[str, str | None, tuple[str, ...], bool, bool] | None:
+    normalized = " ".join(signature.replace("\n", " ").split())
+    match = re.search(
+        r"\b(?P<kind>class|interface)\s+"
+        r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)"
+        r"(?:\s+extends\s+(?P<extends>[A-Za-z0-9_$.<>]+))?"
+        r"(?:\s+implements\s+(?P<implements>[A-Za-z0-9_$.<>\s,]+))?\s*\{",
+        normalized,
+    )
+    if not match:
+        return None
+    kind = match.group("kind")
+    class_name = match.group("name")
+    extends_name = _simple_type_name(match.group("extends"))
+    implements_value = match.group("implements") or ""
+    implements = tuple(
+        candidate
+        for candidate in (_simple_type_name(part) for part in implements_value.split(","))
+        if candidate
+    )
+    is_interface = kind == "interface"
+    is_abstract = is_interface or " abstract " in f" {normalized} "
+    return class_name, extends_name, implements, is_abstract, is_interface
+
+
+def _parse_file_fallback(path: Path, source: str) -> list[JavaClassRecord]:
+    package_name, imports = _extract_imports(source)
+    records: list[JavaClassRecord] = []
+    brace_depth = 0
+    in_block_comment = False
+    signature_parts: list[str] = []
+    signature_depth = 0
+
+    for raw_line in source.splitlines():
+        line, in_block_comment = _strip_inline_comments(raw_line, in_block_comment=in_block_comment)
+        if not line.strip():
+            continue
+
+        if not signature_parts and brace_depth == 0 and (" class " in f" {line} " or " interface " in f" {line} "):
+            signature_parts = [line.strip()]
+            signature_depth = brace_depth
+            if "{" not in line:
+                brace_depth += line.count("{") - line.count("}")
+                continue
+        elif signature_parts:
+            signature_parts.append(line.strip())
+
+        if signature_parts and "{" in line:
+            parsed = _parse_signature(" ".join(signature_parts))
+            if parsed and signature_depth == 0:
+                class_name, extends_name, implements, is_abstract, is_interface = parsed
+                qualified_name = f"{package_name}.{class_name}" if package_name else class_name
+                records.append(
+                    JavaClassRecord(
+                        class_name=class_name,
+                        qualified_name=qualified_name,
+                        package=package_name,
+                        top_package=_top_package(package_name),
+                        extends=extends_name,
+                        implements=implements,
+                        is_abstract=is_abstract,
+                        is_interface=is_interface,
+                        file_path=str(path.resolve()),
+                        imports=imports,
+                    )
+                )
+            signature_parts = []
+
+        brace_depth += line.count("{") - line.count("}")
+
+    return records
+
+
 def _parse_file(path: Path) -> list[JavaClassRecord]:
     source = path.read_text(encoding="utf-8", errors="replace")
-    tree = javalang.parse.parse(source)
+    try:
+        tree = javalang.parse.parse(source)
+    except (javalang.parser.JavaSyntaxError, javalang.tokenizer.LexerError, TypeError, ValueError):
+        fallback_records = _parse_file_fallback(path, source)
+        if fallback_records:
+            return fallback_records
+        raise
     package_name = tree.package.name if tree.package else ""
     imports = tuple(imp.path for imp in (tree.imports or []) if getattr(imp, "path", None))
 
@@ -154,11 +277,30 @@ def _load_schema(driver) -> None:
             session.run(statement).consume()
 
 
+def _workspace_fingerprint(files: list[Path]) -> str:
+    digest = hashlib.sha256()
+    for path in files:
+        stat = path.stat()
+        digest.update(str(path).encode("utf-8", errors="replace"))
+        digest.update(str(stat.st_size).encode("utf-8"))
+        digest.update(str(stat.st_mtime_ns).encode("utf-8"))
+    return digest.hexdigest()
+
+
+def _reset_graph(session) -> None:
+    session.run("MATCH (n:GraphIngestState) DETACH DELETE n").consume()
+    session.run("MATCH (n:Class) DETACH DELETE n").consume()
+    session.run("MATCH (n:Package) DETACH DELETE n").consume()
+
+
 def _upsert_graph(
     driver,
     records: list[JavaClassRecord],
     resolved_extends: dict[str, str],
     resolved_implements: dict[str, tuple[str, ...]],
+    *,
+    reset: bool,
+    ingest_state: dict[str, Any],
 ) -> None:
     class_rows = [
         {
@@ -196,6 +338,8 @@ def _upsert_graph(
     ]
 
     with driver.session() as session:
+        if reset:
+            _reset_graph(session)
         session.run(
             """
             UNWIND $rows AS row
@@ -246,9 +390,25 @@ def _upsert_graph(
             """,
             rows=implements_rows,
         ).consume()
+        session.run(
+            """
+            MERGE (state:GraphIngestState {key: $key})
+            SET state.updatedAt = datetime(),
+                state.javaRoot = $javaRoot,
+                state.workspaceFingerprint = $workspaceFingerprint,
+                state.javaFileCount = $javaFileCount,
+                state.classRecordCount = $classRecordCount,
+                state.packageCount = $packageCount,
+                state.extendsEdgeCount = $extendsEdgeCount,
+                state.implementsEdgeCount = $implementsEdgeCount,
+                state.parseErrorCount = $parseErrorCount,
+                state.missingParentCount = $missingParentCount
+            """,
+            **ingest_state,
+        ).consume()
 
 
-def ingest(java_root: Path) -> dict[str, Any]:
+def ingest(java_root: Path, *, reset: bool = False) -> dict[str, Any]:
     parse_errors: list[str] = []
     missing_parents: set[str] = set()
     records: list[JavaClassRecord] = []
@@ -290,13 +450,7 @@ def ingest(java_root: Path) -> dict[str, Any]:
     driver = GraphDatabase.driver(uri, auth=(user, password))
     driver.verify_connectivity()
     _load_schema(driver)
-    _upsert_graph(driver, records, resolved_extends, resolved_implements)
-    driver.close()
-
-    for parent_name in sorted(missing_parents):
-        LOG.warning("skipping unresolved parent outside workspace: %s", parent_name)
-
-    return {
+    summary = {
         "java_files": len(files),
         "class_records": len(records),
         "package_count": len({record.package for record in records if record.package}),
@@ -304,7 +458,35 @@ def ingest(java_root: Path) -> dict[str, Any]:
         "implements_edges": sum(len(value) for value in resolved_implements.values()),
         "parse_errors": parse_errors,
         "missing_parent_count": len(missing_parents),
+        "workspace_fingerprint": _workspace_fingerprint(files),
+        "java_root": str(java_root),
+        "reset_applied": reset,
     }
+    _upsert_graph(
+        driver,
+        records,
+        resolved_extends,
+        resolved_implements,
+        reset=reset,
+        ingest_state={
+            "key": "java_ast",
+            "javaRoot": summary["java_root"],
+            "workspaceFingerprint": summary["workspace_fingerprint"],
+            "javaFileCount": summary["java_files"],
+            "classRecordCount": summary["class_records"],
+            "packageCount": summary["package_count"],
+            "extendsEdgeCount": summary["extends_edges"],
+            "implementsEdgeCount": summary["implements_edges"],
+            "parseErrorCount": len(parse_errors),
+            "missingParentCount": summary["missing_parent_count"],
+        },
+    )
+    driver.close()
+
+    for parent_name in sorted(missing_parents):
+        LOG.warning("skipping unresolved parent outside workspace: %s", parent_name)
+
+    return summary
 
 
 def main() -> int:
@@ -319,6 +501,11 @@ def main() -> int:
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
     )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Delete previously indexed Class/Package nodes before ingesting the current snapshot.",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(message)s")
@@ -326,7 +513,7 @@ def main() -> int:
     if java_root is None or not java_root.exists() or not java_root.is_dir():
         raise SystemExit("A valid --java-root or MOTADATA_JAVA_ROOT is required")
 
-    summary = ingest(java_root)
+    summary = ingest(java_root, reset=args.reset)
     LOG.info("ingest summary: %s", summary)
     return 0
 

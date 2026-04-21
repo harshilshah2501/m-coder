@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -90,6 +91,14 @@ def _healthcheck(url: str) -> bool:
         return False
 
 
+def _neo4j_reachable(host: str = "127.0.0.1", port: int = 7687) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except OSError:
+        return False
+
+
 def _run_cli(query: str, out_path: Path, reward_path: Path) -> tuple[dict, dict, subprocess.CompletedProcess[str]]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(REPO_ROOT)
@@ -122,8 +131,8 @@ def test_cli_acceptance_routing_all_three_pass():
         pytest.skip(f"Motadata workspace root not found: {DEFAULT_WORKSPACE_ROOT}")
     if not _healthcheck("http://127.0.0.1:8091/healthz") or not _healthcheck("http://127.0.0.1:8089/healthz"):
         pytest.skip("Context Layer or Plan-Gate service is not running locally")
-    if not os.environ.get("NEO4J_PASSWORD"):
-        pytest.skip("Neo4j credentials are not configured locally")
+    if not _neo4j_reachable():
+        pytest.skip("Neo4j is not reachable locally")
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_root = Path(tmp_dir)

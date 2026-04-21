@@ -250,11 +250,19 @@ class QueryRouter:
 
     def _build_sub_queries(self, query: str) -> list[str]:
         base = self._squash_ws(query)
-        graph_classes = self._graph_concept_hints(base)
-        if graph_classes:
-            sub_queries = [base]
-            for class_name in graph_classes[:2]:
-                sub_queries.append(f"{base} {class_name}")
+        graph_matches = self._graph_concept_matches(base)
+        if graph_matches:
+            primary = graph_matches[0]
+            primary_name = str(primary.get("name") or "").strip()
+            primary_qualified = str(primary.get("qualified_name") or primary_name).strip()
+            sub_queries = [primary_qualified, f"{base} {primary_qualified}"]
+            if len(graph_matches) > 1:
+                secondary = graph_matches[1]
+                secondary_qualified = str(secondary.get("qualified_name") or secondary.get("name") or "").strip()
+                if secondary_qualified:
+                    sub_queries.append(f"{base} {secondary_qualified}")
+            elif primary_name:
+                sub_queries.append(f"{base} {primary_name}")
             return self._dedupe_and_trim(sub_queries)[:3]
         fallback = [base, f"{base} com.mindarray", f"{base} class method"]
         return self._dedupe_and_trim(fallback)[:3]
@@ -266,7 +274,7 @@ class QueryRouter:
             return "graph_seeded_subqueries"
         return "deterministic_subqueries"
 
-    def _graph_concept_hints(self, query: str) -> list[str]:
+    def _graph_concept_matches(self, query: str) -> list[dict[str, Any]]:
         tokens = [token for token in re.split(r"[^a-zA-Z0-9]+", query.lower()) if token and token not in _STOP_WORDS]
         seeded: list[str] = []
         for token in tokens:
@@ -275,10 +283,32 @@ class QueryRouter:
         if not concept:
             return []
         matches = find_classes_by_concept(concept, limit=4)
-        names = [str(match.get("name") or "").strip() for match in matches if str(match.get("name") or "").strip()]
-        if names:
-            return list(dict.fromkeys(names))
-        return list(dict.fromkeys(seeded))
+        normalized_matches: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for match in matches:
+            qualified_name = str(match.get("qualified_name") or "").strip()
+            name = str(match.get("name") or "").strip()
+            key = qualified_name or name
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            normalized_matches.append(
+                {
+                    "name": name,
+                    "qualified_name": qualified_name,
+                }
+            )
+        if normalized_matches:
+            return normalized_matches
+        fallback_matches: list[dict[str, Any]] = []
+        for seeded_name in dict.fromkeys(seeded):
+            fallback_matches.append(
+                {
+                    "name": seeded_name,
+                    "qualified_name": f"com.mindarray.api.{seeded_name}",
+                }
+            )
+        return fallback_matches
 
     def _asks_for_base_class(self, query: str) -> bool:
         normalized = self._normalize(query)
