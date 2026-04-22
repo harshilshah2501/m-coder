@@ -29,6 +29,8 @@ from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_query_subsystems,
     is_noise_class,
+    query_api_surface_focus,
+    query_class_relationship_focus,
     is_support_style_java_basename,
 )
 from runtime.layer5.retrieval.query import normalize_query
@@ -516,13 +518,27 @@ def fuse_and_filter(
         fused_rows.append((orig, fused, per))
 
     # Broad ASK mode should be stricter with generic/support passengers.
+    #
+    # Special-case class-relationship API asks (e.g. "base class for all APIs"):
+    # keep broader API surface so declaration evidence (AbstractAPI) survives.
+    class_rel_api_ask = (
+        effective_intent.primary_mode == MODE_ASK
+        and query_class_relationship_focus(tuple(query_tokens))
+        and query_api_surface_focus(tuple(query_tokens))
+    )
     cap_cfg = cfg
     if (
         effective_intent.primary_mode == MODE_ASK
         and not selected_file
-        and cfg.ask_broad_generic_infra_paths < cfg.max_generic_infra_paths
+        and not class_rel_api_ask
     ):
-        cap_cfg = replace(cfg, max_generic_infra_paths=cfg.ask_broad_generic_infra_paths)
+        broad_cap = cfg.ask_broad_generic_infra_paths
+        # Owner-anchored ask responses should not accumulate additional generic
+        # infra passengers beyond the protected owner row.
+        if owner_path:
+            broad_cap = 0
+        if broad_cap < cfg.max_generic_infra_paths:
+            cap_cfg = replace(cfg, max_generic_infra_paths=broad_cap)
         diag_root["ask_broad_caps_applied"] = {
             "max_generic_infra_paths": cap_cfg.max_generic_infra_paths,
         }
