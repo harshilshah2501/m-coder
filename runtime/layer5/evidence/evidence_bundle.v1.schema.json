@@ -92,7 +92,7 @@
       "required": ["concept_id", "match_type", "confidence"],
       "properties": {
         "concept_id": { "type": "string" },
-        "match_type": { "type": "string", "enum": ["exact", "alias", "partial"] },
+        "match_type": { "type": "string", "enum": ["exact", "alias", "partial", "owner_class_in_query"] },
         "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
         "primary_owner": { "$ref": "#/definitions/authority_primary_owner" }
       }
