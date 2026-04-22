@@ -233,5 +233,22 @@ def merge_plan_with_authority(
 ) -> List[str]:
     """Prefer authority-first steps when resolution exists; otherwise generic."""
     if authority_resolution and authority_steps:
+        # Preserve structural direct answers from deterministic planner for class
+        # relationship asks, then append authority owner/context details.
+        if generic_steps:
+            first = str(generic_steps[0] or "").strip()
+            first_l = first.lower()
+            if first_l.startswith("direct answer (grounded):") and any(
+                tok in first_l
+                for tok in (
+                    "base class",
+                    "common api base class",
+                    "api base-class",
+                    "extends",
+                    "implements",
+                )
+            ):
+                if not authority_steps or first != authority_steps[0]:
+                    return [first] + authority_steps
         return authority_steps
     return generic_steps

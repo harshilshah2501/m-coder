@@ -256,6 +256,32 @@ def test_planner_uses_authority_when_present():
     assert any("Primary implementation owner" in s for s in ps.steps)
 
 
+def test_planner_preserves_structural_direct_answer_when_authority_exists():
+    registry = load_registry(REG)
+    ar = build_authority_resolution("api layer architecture", registry, None)
+    assert ar
+    p = PlanOnlyPlanner()
+    b = _ctx(
+        [
+            "motadata/src/main/java/com/mindarray/api/User.java",
+            "motadata/src/main/java/com/mindarray/api/Metric.java",
+            "motadata/src/main/java/com/mindarray/api/APIServer.java",
+        ]
+    )
+    b.items[0].content = "public class User extends AbstractAPI {"
+    b.items[1].content = "public class Metric extends AbstractAPI {"
+    b.items[2].content = "public class APIServer extends AbstractVerticle {"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=ar,
+    )
+    assert ps.steps
+    first = ps.steps[0]
+    assert "AbstractAPI" in first
+    assert any("Primary implementation owner" in s for s in ps.steps)
+
+
 def test_alert_correlation_owner_method_is_schema_valid_when_present():
     """When YAML includes primary_owner.method, evidence JSON keeps it as a non-empty string."""
     registry = load_registry(REG)

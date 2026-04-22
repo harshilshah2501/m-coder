@@ -60,7 +60,9 @@ def resolve_lexical_task_type(
     if isinstance(po, Mapping):
         file_ok = bool(str(po.get("file") or "").strip())
     if file_ok:
-        return "CODE"
+        # Keep ask flows in ASK mode even with authority owner available so
+        # ask-broad generic caps remain active during Stage B filtering.
+        return "ASK"
     qi = classify_intent(query or "")
     if qi.intent_type == CODE_INTENT:
         return "CODE"
