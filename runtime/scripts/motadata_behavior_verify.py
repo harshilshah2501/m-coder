@@ -1700,6 +1700,117 @@ def _check_expect_debug_explain(
     return errs
 
 
+def _collect_debug_text_blobs(explain_debug: dict[str, Any]) -> tuple[str, list[str], str]:
+    ev = explain_debug.get("evidence")
+    ev_list = [str(x) for x in ev] if isinstance(ev, list) else []
+    hay = " ".join(
+        str(explain_debug.get(k) or "")
+        for k in ("summary", "logic_flow", "likely_bug_risk", "confidence_limits", "error")
+    ).lower()
+    ev_h = " ".join(ev_list).lower()
+    return hay, ev_list, ev_h
+
+
+def _selected_symbol_hit_count(selected_file: str, text_lc: str, evidence_lc: str) -> int:
+    base = str(selected_file or "").split("/")[-1]
+    symbol = base.replace(".java", "").replace(".py", "").replace(".kt", "")
+    combined = f"{text_lc} {evidence_lc}"
+    terms = [t.lower() for t in (base, symbol) if t]
+    if not terms:
+        return 0
+    return sum(combined.count(t) for t in terms)
+
+
+def _method_like_mentions_count(text_lc: str, evidence: list[str]) -> int:
+    seen: set[str] = set()
+    blocked = {"if", "for", "while", "switch", "catch", "return", "new"}
+    for m in re.finditer(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(", text_lc):
+        name = m.group(1).lower()
+        if name not in blocked and len(name) >= 3:
+            seen.add(name)
+    for e in evidence:
+        if ":" not in e:
+            continue
+        tail = e.split(":")[-1].strip()
+        tail = re.sub(r"\(.*$", "", tail).strip()
+        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", tail):
+            name = tail.lower()
+            if name not in blocked and len(name) >= 3:
+                seen.add(name)
+    return len(seen)
+
+
+def _evidence_ref_count(evidence: list[str]) -> int:
+    count = 0
+    for e in evidence:
+        s = str(e).strip()
+        if "/" in s and ":" in s:
+            count += 1
+    return count
+
+
+def _control_flow_marker_count(text_lc: str) -> int:
+    markers = (
+        " if ",
+        " else ",
+        " branch",
+        " condition",
+        " return",
+        " null",
+        " exception",
+        " throw",
+        " catch",
+        " switch",
+        " method",
+    )
+    padded = f" {text_lc} "
+    return sum(1 for m in markers if m in padded)
+
+
+def _check_expect_debug_depth(
+    expect: dict[str, Any],
+    explain_debug: dict[str, Any],
+    selected_file: str,
+) -> tuple[list[str], dict[str, Any]]:
+    errs: list[str] = []
+    hay, ev_list, ev_h = _collect_debug_text_blobs(explain_debug)
+    symbol_hits = _selected_symbol_hit_count(selected_file, hay, ev_h)
+    method_mentions = _method_like_mentions_count(hay, ev_list)
+    evidence_refs = _evidence_ref_count(ev_list)
+    flow_markers = _control_flow_marker_count(hay)
+
+    if "require_selected_file_symbol_hits_min" in expect:
+        need = int(expect.get("require_selected_file_symbol_hits_min") or 0)
+        if symbol_hits < need:
+            errs.append(f"require_selected_file_symbol_hits_min: want >= {need} got {symbol_hits}")
+    if "require_method_name_mentions_min" in expect:
+        need = int(expect.get("require_method_name_mentions_min") or 0)
+        if method_mentions < need:
+            errs.append(f"require_method_name_mentions_min: want >= {need} got {method_mentions}")
+    if "require_evidence_line_refs_min" in expect:
+        need = int(expect.get("require_evidence_line_refs_min") or 0)
+        if evidence_refs < need:
+            errs.append(f"require_evidence_line_refs_min: want >= {need} got {evidence_refs}")
+    if "require_control_flow_markers_min" in expect:
+        need = int(expect.get("require_control_flow_markers_min") or 0)
+        if flow_markers < need:
+            errs.append(f"require_control_flow_markers_min: want >= {need} got {flow_markers}")
+
+    forbid = expect.get("forbid_generic_phrases_any")
+    if isinstance(forbid, list):
+        matched = [str(p) for p in forbid if str(p).strip() and str(p).lower() in hay]
+        if matched:
+            errs.append(f"forbid_generic_phrases_any: found disallowed generic phrases {matched}")
+
+    signals = {
+        "selected_symbol_hits": symbol_hits,
+        "method_name_mentions": method_mentions,
+        "evidence_line_refs": evidence_refs,
+        "control_flow_markers": flow_markers,
+    }
+    return errs, signals
+
+
 def _load_quality_policy(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
@@ -1961,37 +2072,51 @@ def _run_scenario_row(
         ed = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
         cb_files = _context_bundle_files(resp)
         ctx_paths = [str(r.get("path") or "") for r in cb_files if isinstance(r, dict)]
+        contract_errors: list[str] = []
+        depth_errors: list[str] = []
         if expect.get("routing_mode") and resp.get("routing_mode") != expect["routing_mode"]:
-            errors.append(f"routing_mode want {expect['routing_mode']} got {resp.get('routing_mode')}")
+            contract_errors.append(f"routing_mode want {expect['routing_mode']} got {resp.get('routing_mode')}")
         keys_req = expect.get("explain_debug_has_keys")
         if isinstance(keys_req, list):
             for k in keys_req:
                 if k not in ed:
-                    errors.append(f"explain_debug missing key {k}")
-        errors.extend(
-            _check_expect_debug_explain(
-                expect,
-                ed,
-                str(req.get("selected_file") or ""),
-                context_paths=ctx_paths,
-            )
+                    contract_errors.append(f"explain_debug missing key {k}")
+        contract_errors.extend(
+            _check_expect_debug_explain(expect, ed, str(req.get("selected_file") or ""), context_paths=ctx_paths)
         )
+        depth_errors, depth_signals = _check_expect_debug_depth(expect, ed, str(req.get("selected_file") or ""))
+        errors.extend(contract_errors)
+        errors.extend(depth_errors)
         ok_body = code == 200 and ("summary" in ed or "error" in ed)
+        contract_pass = len(contract_errors) == 0 and ok_body
+        depth_pass = len(depth_errors) == 0
         dev_snapshot = {
             "routing_mode": resp.get("routing_mode"),
             "summary": ed.get("summary"),
             "likely_bug_risk": ed.get("likely_bug_risk"),
             "logic_flow": ed.get("logic_flow"),
             "error": ed.get("error"),
+            "contract_errors": contract_errors,
+            "depth_errors": depth_errors,
+            "depth_signals": depth_signals,
         }
         return {
             "id": sid,
             "capability": cap,
             "description": desc,
-            "pass": len(errors) == 0 and ok_body,
+            "pass": contract_pass and depth_pass,
+            "contract_pass": contract_pass,
+            "depth_pass": depth_pass,
             "errors": errors,
             "expect": expect,
-            "actual_summary": {"http": code, "routing_mode": resp.get("routing_mode"), "has_summary": bool(ed.get("summary"))},
+            "actual_summary": {
+                "http": code,
+                "routing_mode": resp.get("routing_mode"),
+                "has_summary": bool(ed.get("summary")),
+                "contract_pass": contract_pass,
+                "depth_pass": depth_pass,
+                "depth_signals": depth_signals,
+            },
             "dev_snapshot": dev_snapshot,
         }
 

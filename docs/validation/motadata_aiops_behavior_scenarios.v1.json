@@ -113,6 +113,16 @@
         "require_selected_file_in_context_bundle": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
+        "require_selected_file_symbol_hits_min": 2,
+        "require_method_name_mentions_min": 1,
+        "require_evidence_line_refs_min": 1,
+        "require_control_flow_markers_min": 2,
+        "forbid_generic_phrases_any": [
+          "not directly visible",
+          "difficult to pinpoint exact failure points",
+          "without more context",
+          "speculative risks"
+        ],
         "required_text_contains_any": [
           "AvailabilityCorrelationEngine",
           "branch",
@@ -137,6 +147,16 @@
         "require_selected_file_in_context_bundle": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
+        "require_selected_file_symbol_hits_min": 2,
+        "require_method_name_mentions_min": 1,
+        "require_evidence_line_refs_min": 1,
+        "require_control_flow_markers_min": 1,
+        "forbid_generic_phrases_any": [
+          "not directly visible",
+          "difficult to pinpoint exact failure points",
+          "without more context",
+          "speculative risks"
+        ],
         "required_text_contains_any": [
           "MailServerConfiguration",
           "beforeUpdate",
@@ -161,6 +181,16 @@
         "require_selected_file_in_context_bundle": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
+        "require_selected_file_symbol_hits_min": 2,
+        "require_method_name_mentions_min": 1,
+        "require_evidence_line_refs_min": 1,
+        "require_control_flow_markers_min": 2,
+        "forbid_generic_phrases_any": [
+          "not directly visible",
+          "difficult to pinpoint exact failure points",
+          "without more context",
+          "speculative risks"
+        ],
         "required_text_contains_any": [
           "AbstractConfigStore",
           "null",
@@ -184,6 +214,16 @@
         "require_selected_file_in_evidence": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
+        "require_selected_file_symbol_hits_min": 2,
+        "require_method_name_mentions_min": 1,
+        "require_evidence_line_refs_min": 1,
+        "require_control_flow_markers_min": 2,
+        "forbid_generic_phrases_any": [
+          "not directly visible",
+          "difficult to pinpoint exact failure points",
+          "without more context",
+          "speculative risks"
+        ],
         "required_text_contains_any": [
           "SNMPTrapProcessor",
           "parse",

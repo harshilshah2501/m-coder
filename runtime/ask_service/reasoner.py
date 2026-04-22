@@ -168,6 +168,7 @@ def _build_prompt(
     lines.append("- Do not invent symbols, methods, files, or stack behavior not present in provided context.")
     lines.append("- If selected-file grounding is weak or missing, explicitly say analysis is insufficiently grounded.")
     lines.append("- Prefer concrete control-flow and method-level clues over generic advice.")
+    lines.append("- If you cannot cite at least one concrete method or branch clue from the selected file, state `insufficient_for_precise_trace` in confidence_limits.")
     lines.append("- Keep confidence limits explicit; avoid definitive root-cause claims without evidence.")
     lines.append("")
     lines.append(
@@ -393,7 +394,8 @@ def _ensure_selected_grounding(
         )
     if not has_flow:
         likely = (likely + " " if likely else "") + (
-            "Control-flow cues are limited in the selected snippet; verify surrounding guards and return conditions."
+            f"The selected file `{sel_base}` appears declaration-heavy for the retrieved snippet; "
+            "trace inherited/update hooks in nearby classes before asserting a root cause."
         )
     elif not any(x in joined for x in ("if ", "when ", "branch", "condition", "return")):
         likely = (likely + " " if likely else "") + (
@@ -424,6 +426,10 @@ def _ensure_selected_grounding(
         confidence = (
             "Bounded to provided evidence bundle; validate against full caller/callee chain before code changes."
         )
+    if not methods and not branches:
+        marker = "insufficient_for_precise_trace"
+        if marker not in confidence.lower():
+            confidence += f" {marker}: selected file evidence lacks concrete method/branch anchors in this context window."
     if minimal_sel:
         confidence += " Selected highlight is minimal; conclusions rely on broader selected-file context."
 

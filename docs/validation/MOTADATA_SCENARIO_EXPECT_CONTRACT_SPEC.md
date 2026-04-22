@@ -94,6 +94,19 @@ When `--quality-policy` is supplied, Ask scenarios are also checked against poli
 | `must_have_confidence_limits` | bool | `confidence_limits` must be present and non-empty. |
 | `require_insufficient_grounding` | bool | Must explicitly report insufficient grounding when context is missing. |
 | `require_missing_in_context_marker` | bool | Evidence must contain `missing_in_context` marker. |
+| `require_selected_file_symbol_hits_min` | int | Minimum count of selected file/symbol mentions across explain text + evidence. |
+| `require_method_name_mentions_min` | int | Minimum number of method-like mentions in explain text/evidence refs. |
+| `require_evidence_line_refs_min` | int | Minimum count of evidence refs shaped like `path:method_or_anchor`. |
+| `require_control_flow_markers_min` | int | Minimum count of control-flow cues (`if`, `branch`, `return`, `null`, etc.). |
+| `forbid_generic_phrases_any` | list[string] | Disallowed generic phrases that should fail depth quality when present. |
+
+### Contract pass vs depth pass (Debug)
+
+Debug scenarios now report two outcomes:
+- `contract_pass`: routing/schema/truthfulness contract checks
+- `depth_pass`: engineering-depth checks (symbol hits, method mentions, evidence refs, anti-generic language)
+
+Overall scenario `pass` for Debug is `contract_pass AND depth_pass`.
 
 ---
 
@@ -168,7 +181,10 @@ When `--quality-policy` is supplied, Ask scenarios are also checked against poli
     "routing_mode": "explain_debug",
     "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
     "require_selected_file_in_evidence": true,
-    "must_suggest_concrete_failure_points": true
+    "must_suggest_concrete_failure_points": true,
+    "require_selected_file_symbol_hits_min": 2,
+    "require_method_name_mentions_min": 1,
+    "require_evidence_line_refs_min": 1
   }
 }
 ```

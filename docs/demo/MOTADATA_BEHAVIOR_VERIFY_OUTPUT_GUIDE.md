@@ -336,6 +336,12 @@ The **`dev:`** blocks under Ask scenarios are **extra demonstrator output**: ste
 ### 10.5 Debug scenarios
 
 These assert structured EXPLAIN_DEBUG behavior (keys present, routing mode, honesty cases like missing selected files).
+They now also split Debug quality into:
+
+- `contract_pass` — protocol/truthfulness checks
+- `depth_pass` — method/branch/evidence specificity checks
+
+So a Debug scenario can be protocol-correct but still fail depth if the answer remains generic.
 
 ### 10.6 Plan scenarios
 
