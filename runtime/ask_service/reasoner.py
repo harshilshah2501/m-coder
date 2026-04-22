@@ -378,11 +378,15 @@ def _ensure_selected_grounding(
     elif sel_tokens:
         sel_ref = f"{sel_norm}:{sel_tokens[0]}"
     else:
-        sel_ref = f"{sel_norm}:selected_scope"
+        sel_ref = f"{sel_norm}:analysis_anchor"
 
     # Keep at least one canonical path:anchor reference for downstream depth checks.
     has_path_anchor_ref = any("/" in str(e) and ":" in str(e) for e in evidence)
     if not has_path_anchor_ref:
+        evidence.insert(0, sel_ref)
+    elif not any(str(e).strip().lower() == sel_ref.lower() for e in evidence):
+        # Even when model-provided refs exist, force one deterministic method-like anchor
+        # to avoid depth undercount on branch-only/path-only evidence strings.
         evidence.insert(0, sel_ref)
 
     if not any(sel_norm.lower() in str(e).lower() or sel_symbol.lower() in str(e).lower() for e in evidence):
