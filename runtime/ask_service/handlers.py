@@ -278,6 +278,11 @@ def handle_ask_request(ask_request: dict) -> dict:
         metadata["authority_resolution_present"] = True
         metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
         metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
+    skip_grounding_block_for_explain_debug = (
+        str(task_type or "") == "EXPLAIN_DEBUG"
+        and bool((str(selected_file or "").strip()))
+        and (bool(selection) or bool(bundle.items))
+    )
     fd = evidence_bundle_dict.get("fusion_diagnostics") if evidence_bundle_dict else None
     if isinstance(fd, dict):
         ei = fd.get("effective_intent")
@@ -285,7 +290,7 @@ def handle_ask_request(ask_request: dict) -> dict:
             metadata["retrieval_primary_mode"] = ei["primary_mode"]
         if fd.get("per_path") is not None:
             metadata["fusion_per_path_count"] = len(fd["per_path"]) if isinstance(fd["per_path"], list) else 0
-    if quality.blocked:
+    if quality.blocked and not skip_grounding_block_for_explain_debug:
         block_message = (
             "No context files matched relevant code evidence for this ask."
             if quality.evidence_quality == NO_MATCH
@@ -307,6 +312,9 @@ def handle_ask_request(ask_request: dict) -> dict:
             routing_mode="plan_only",
             trace_id=trace_id or None,
         )
+
+    if quality.blocked and skip_grounding_block_for_explain_debug:
+        metadata["grounding_block_overridden_by_explain_debug"] = True
 
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
@@ -332,6 +340,11 @@ def handle_ask_request(ask_request: dict) -> dict:
             query=query, bundle=bundle, authority_resolution=authority_resolution
         )
         plan_steps = plan_summary.steps
+    if quality.blocked and skip_grounding_block_for_explain_debug:
+        weak_note.append(
+            "Plan-grounding gate reported weak or ungrounded evidence; EXPLAIN_DEBUG still ran "
+            "using selected_file/selection as explicit anchors."
+        )
     if quality.evidence_quality == WEAK:
         weak_note.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
 

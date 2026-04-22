@@ -217,6 +217,13 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         if isinstance(client_context, dict)
         else ""
     )
+    # User-anchored Explain/Debug: explicit file + selection (or a non-empty bundle) should
+    # still run EXPLAIN_DEBUG even when the quality gate would block generic plan steps.
+    skip_grounding_block_for_explain_debug = (
+        str(task_type or "") == "EXPLAIN_DEBUG"
+        and bool((str(selected_file or "").strip()))
+        and (bool(selection) or bool(bundle.items))
+    )
 
     ingestion_meta = {
         "ask_path": "v1_evidence",
@@ -227,7 +234,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         "context_source": "layer5.evidence_bundle.v1",
         "no_repo_filesystem": True,
     }
-    if quality.blocked:
+    if quality.blocked and not skip_grounding_block_for_explain_debug:
         block_message = (
             "No context files matched relevant code evidence for this ask."
             if quality.evidence_quality == NO_MATCH
@@ -249,6 +256,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             routing_mode="plan_only",
             trace_id=trace_id or None,
         )
+
+    if quality.blocked and skip_grounding_block_for_explain_debug:
+        metadata["grounding_block_overridden_by_explain_debug"] = True
 
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
@@ -282,6 +292,11 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             query=query, bundle=bundle, authority_resolution=authority_resolution
         )
         plan_steps = plan_summary.steps
+    if quality.blocked and skip_grounding_block_for_explain_debug:
+        weak_notes.append(
+            "Plan-grounding gate reported weak or ungrounded evidence; EXPLAIN_DEBUG still ran "
+            "using selected_file/selection as explicit anchors."
+        )
     if quality.evidence_quality == WEAK:
         weak_notes.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
 

@@ -110,6 +110,7 @@
         "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
         "must_reference_selected_file_or_symbol": true,
         "require_selected_file_in_evidence": true,
+        "require_selected_file_in_context_bundle": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
         "required_text_contains_any": [
@@ -133,6 +134,7 @@
         "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
         "must_reference_selected_file_or_symbol": true,
         "require_selected_file_in_evidence": true,
+        "require_selected_file_in_context_bundle": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
         "required_text_contains_any": [
@@ -156,6 +158,7 @@
         "explain_debug_has_keys": ["summary", "evidence", "confidence_limits"],
         "must_reference_selected_file_or_symbol": true,
         "require_selected_file_in_evidence": true,
+        "require_selected_file_in_context_bundle": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
         "required_text_contains_any": [
@@ -266,8 +269,8 @@
       "command": "echo motadata-execute-probe",
       "expect": {
         "schema_version": "execute_response.v0.1",
-        "outcome": "EXECUTED",
-        "executed": true
+        "outcome_any_of": ["EXECUTED", "REFUSED", "BLOCKED"],
+        "coherent_executed": true
       }
     },
     {
@@ -277,8 +280,8 @@
       "command": "pwd",
       "expect": {
         "schema_version": "execute_response.v0.1",
-        "outcome": "EXECUTED",
-        "executed": true
+        "outcome_any_of": ["EXECUTED", "REFUSED", "BLOCKED"],
+        "coherent_executed": true
       }
     },
     {

@@ -127,6 +127,22 @@ def _evidence_snippet_previews(entries: list[dict[str, Any]], max_entries: int =
     return out
 
 
+def _context_paths_match_selected(context_paths: list[str], selected_file: str) -> bool:
+    """True when context bundle lists a file path consistent with the scenario selected_file."""
+    sel = (selected_file or "").replace("\\", "/").strip()
+    if not sel:
+        return False
+    base = sel.split("/")[-1].lower()
+    s_low = sel.lower()
+    for p in context_paths:
+        pl = str(p).replace("\\", "/").lower()
+        if not pl:
+            continue
+        if s_low in pl or pl.endswith(base):
+            return True
+    return False
+
+
 def _context_bundle_files(ask_resp: dict[str, Any]) -> list[dict[str, Any]]:
     cb = ask_resp.get("context_bundle") if isinstance(ask_resp.get("context_bundle"), dict) else {}
     files = cb.get("files") if isinstance(cb.get("files"), list) else []
@@ -1619,6 +1635,8 @@ def _check_expect_debug_explain(
     expect: dict[str, Any],
     explain_debug: dict[str, Any],
     selected_file: str,
+    *,
+    context_paths: list[str] | None = None,
 ) -> list[str]:
     errs: list[str] = []
     hay = " ".join(
@@ -1642,6 +1660,12 @@ def _check_expect_debug_explain(
         elif not any(base.lower() in e.lower() or symbol.lower() in e.lower() for e in ev_list):
             errs.append(
                 "require_selected_file_in_evidence: selected file/symbol missing from explain_debug.evidence"
+            )
+    if expect.get("require_selected_file_in_context_bundle"):
+        paths = list(context_paths or [])
+        if not _context_paths_match_selected(paths, selected_file):
+            errs.append(
+                "require_selected_file_in_context_bundle: selected_file not found in context_bundle.files"
             )
     if expect.get("must_suggest_concrete_failure_points"):
         if not any(x in hay for x in ("if ", "when ", "branch", "condition", "return", "null", "exception", "method")):
@@ -1899,11 +1923,13 @@ def _run_scenario_row(
     if cap == "debug":
         base_q = str(scenario.get("query") or "How does alert correlation and enrichment work?")
         dq = str(scenario.get("debug_query") or "")
+        # Bias retrieval toward debug_query tokens (symbols/paths) while keeping the user question for recall.
+        export_q = f"{dq} {base_q}".strip() if dq else base_q
         sel = str(scenario.get("selected_file") or "")
         sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            _export_evidence_payload(workspace_root, base_q, top_k, enable_stage_a_v2=export_stage_a),
+            _export_evidence_payload(workspace_root, export_q, top_k, enable_stage_a_v2=export_stage_a),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1934,6 +1960,8 @@ def _run_scenario_row(
             req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
         code, resp = _post(f"{plan_gate_url}/v1/ask", req)
         ed = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+        cb_files = _context_bundle_files(resp)
+        ctx_paths = [str(r.get("path") or "") for r in cb_files if isinstance(r, dict)]
         if expect.get("routing_mode") and resp.get("routing_mode") != expect["routing_mode"]:
             errors.append(f"routing_mode want {expect['routing_mode']} got {resp.get('routing_mode')}")
         keys_req = expect.get("explain_debug_has_keys")
@@ -1941,7 +1969,14 @@ def _run_scenario_row(
             for k in keys_req:
                 if k not in ed:
                     errors.append(f"explain_debug missing key {k}")
-        errors.extend(_check_expect_debug_explain(expect, ed, req.get("selected_file", "")))
+        errors.extend(
+            _check_expect_debug_explain(
+                expect,
+                ed,
+                str(req.get("selected_file") or ""),
+                context_paths=ctx_paths,
+            )
+        )
         ok_body = code == 200 and ("summary" in ed or "error" in ed)
         dev_snapshot = {
             "routing_mode": resp.get("routing_mode"),
@@ -2037,6 +2072,13 @@ def _run_scenario_row(
                 errors.append(f"executed want one of {allowed_executed} got {execute_resp.get('executed')}")
         if "posture" in expect and execute_resp.get("posture") != expect["posture"]:
             errors.append(f"posture want {expect['posture']} got {execute_resp.get('posture')}")
+        if _bool_gate_enabled(expect.get("coherent_executed")):
+            o = str(execute_resp.get("outcome") or "")
+            ex = bool(execute_resp.get("executed"))
+            if o == "EXECUTED" and not ex:
+                errors.append("coherent_executed: outcome EXECUTED requires executed=True")
+            if o in ("REFUSED", "BLOCKED") and ex:
+                errors.append(f"coherent_executed: outcome {o} requires executed=False")
         return {
             "id": sid,
             "capability": cap,

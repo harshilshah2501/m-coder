@@ -208,6 +208,36 @@ def test_quality_chain_behavior_flow_plus_graph_counts_with_chain():
     assert "behavior_flow" in quality.metadata["chain"]
 
 
+def test_answer_assembler_direct_structural_answer_skips_generic_scan_fallback():
+    assembler = AnswerAssembler()
+    composed = ComposedEvidence(
+        anchors=["com.mindarray.api.AbstractAPI"],
+        context={"graph_path": "com.mindarray.api.AbstractAPI"},
+        confidence=0.55,
+        conflict=False,
+        chain=["structural", "graph_lookup"],
+        provenance=[],
+        metadata={},
+        resolver_outputs=[],
+    )
+    quality = QualityAssessment(
+        evidence_quality="WEAK",
+        quality_reasons=["LEXICAL_ONLY"],
+        metadata={},
+    )
+    fallback = "Search for directly matching symbols/files before broad semantic exploration."
+    steps = assembler.assemble(
+        route_answer="Direct answer (grounded): The base class is com.mindarray.api.AbstractAPI.",
+        composed=composed,
+        quality=quality,
+        default_fallback_step=fallback,
+    )
+    joined = " ".join(steps).lower()
+    assert "search for directly matching" not in joined
+    assert "broad semantic exploration" not in joined
+    assert "com.mindarray.api.abstractapi" in joined or "abstractapi" in joined
+
+
 def test_answer_assembler_avoids_generic_scan_and_requires_anchor_context():
     assembler = AnswerAssembler()
     composed = ComposedEvidence(

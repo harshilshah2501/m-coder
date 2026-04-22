@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
@@ -265,6 +266,37 @@ class C3QualityEvaluator:
 
 
 class AnswerAssembler:
+    @staticmethod
+    def _route_has_direct_structural_answer(route_answer: str) -> bool:
+        """
+        Detect when the model already delivered a file/symbol-scoped direct answer
+        (e.g. graph-backed base class) so the next step must not default to a generic scan.
+        """
+        s = (route_answer or "").strip()
+        if not s:
+            return False
+        sl = s.lower()
+        if sl.startswith("direct answer"):
+            return True
+        if re.search(r"\bthe base class is\s+com\.", sl):
+            return True
+        if re.search(r"\b(extends|implements)\s+com\.", sl):
+            return True
+        if "com.mindarray" in s or re.search(r"\bcom\.[a-z0-9_]{4,}\.[a-z0-9_.]+", s, re.I):
+            if any(
+                w in sl
+                for w in (
+                    "subclass",
+                    "base class",
+                    "implements",
+                    "extends",
+                    "inherits",
+                    "qualified",
+                )
+            ):
+                return True
+        return False
+
     def assemble(
         self,
         *,
@@ -280,18 +312,38 @@ class AnswerAssembler:
             summary = f"{summary} Anchored by `{composed.anchors[0]}` with context: {self._context_text(composed.context)}."
         elif quality.evidence_quality == "WEAK":
             summary = f"{summary} Available evidence remains weak, so no fabricated precision is added."
-        return [summary, self._next_step(composed, quality, default_fallback_step)]
+        return [summary, self._next_step(composed, quality, default_fallback_step, route_answer)]
 
     def _context_text(self, context: dict[str, str]) -> str:
         return ", ".join(f"{k}={context[k]}" for k in ALLOWED_CONTEXT_KEYS if context.get(k))
 
-    def _next_step(self, composed: ComposedEvidence, quality: QualityAssessment, fallback: str) -> str:
+    def _next_step(
+        self,
+        composed: ComposedEvidence,
+        quality: QualityAssessment,
+        fallback: str,
+        route_answer: str,
+    ) -> str:
         if quality.evidence_quality == "STRONG":
             owner = composed.anchors[0] if composed.anchors else (composed.context.get("graph_path") or "owner anchor")
             return f"Inspect `{owner}` first, then validate downstream callers touched by this routed answer."
         if quality.evidence_quality == "MODERATE":
             target = self._diagnostic_anchor(composed) or composed.context.get("failure_mode") or "required anchor"
             return f"Run a constrained diagnostic around `{target}` and verify required file anchors before changes."
+        fb = (fallback or "").lower()
+        generic_trawl_fallback = "scan" in fb or (
+            "semantic" in fb and "broad" in fb
+        ) or "broad exploration" in fb
+        if self._route_has_direct_structural_answer(route_answer) and generic_trawl_fallback:
+            anchor = self._diagnostic_anchor(composed) or composed.context.get("graph_path")
+            if anchor:
+                return (
+                    f"Use `{anchor}` as the primary reference; confirm cited symbols in source without "
+                    "a broad repository scan."
+                )
+            return (
+                "Confirm the symbol names in the direct answer in source order; avoid broad file or semantic scans."
+            )
         return fallback
 
     def _diagnostic_anchor(self, composed: ComposedEvidence) -> str | None:
