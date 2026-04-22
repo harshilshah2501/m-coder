@@ -155,22 +155,21 @@ def _context_bundle_files(ask_resp: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _is_generic_infra_path(path: str) -> bool:
+    """
+    Keep verifier generic-infra accounting aligned with Stage-B fusion caps.
+    """
+    from runtime.layer5.retrieval.policy import classify_file, is_support_style_java_basename
+
     p = str(path or "").lower()
     if not p:
         return False
-    tokens = (
-        "/api/",
-        "/db/",
-        "/notification/",
-        "/cache/",
-        "/integration/",
-        "/manager/",
-        "config",
-        "constants",
-        "util",
-        "helper",
-    )
-    return any(t in p for t in tokens)
+    pol = classify_file(p)
+    if pol.file_class == "config":
+        return True
+    if any(tok in p for tok in ("/api/", "/db/", "/notification/", "/cache/", "/integration/", "/manager/")):
+        return True
+    base = p.rsplit("/", 1)[-1]
+    return bool(is_support_style_java_basename(base))
 
 
 def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict[str, Any]:
@@ -1539,7 +1538,7 @@ def run_utility_scenario_suite(
     }
 
 
-def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: str) -> list[str]:
+def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], answer_haystack: str) -> list[str]:
     errs: list[str] = []
     if "governance_posture" in expect and actual.get("governance_posture") != expect["governance_posture"]:
         errs.append(f"governance_posture want {expect['governance_posture']} got {actual.get('governance_posture')}")
@@ -1553,8 +1552,8 @@ def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: 
             errs.append(f"min_plan_steps want >= {expect['min_plan_steps']} got {n}")
     subs = expect.get("text_contains_any")
     if isinstance(subs, list) and subs:
-        if not any(str(s).lower() in haystack for s in subs if s):
-            errs.append(f"text_contains_any: none of {subs} found in plan paths/snippets")
+        if not any(str(s).lower() in answer_haystack for s in subs if s):
+            errs.append(f"text_contains_any: none of {subs} found in answer text (plan steps/notes)")
     return errs
 
 
@@ -1847,7 +1846,7 @@ def _run_scenario_row(
         plan_notes = ((resp.get("plan_summary") or {}).get("notes") or []) if isinstance(resp.get("plan_summary"), dict) else []
         top_paths = [e.get("relative_path") for e in entries[:8] if isinstance(e, dict)]
         snips = _evidence_snippet_previews([e for e in entries if isinstance(e, dict)])
-        haystack = _haystack_for_text_match([str(s) for s in plan_steps], top_paths, snips)
+        answer_haystack = " ".join(str(x) for x in (plan_steps + plan_notes)).lower()
         context_files = _context_bundle_files(resp)
         actual = {
             "governance_posture": resp.get("governance_posture"),
@@ -1856,7 +1855,7 @@ def _run_scenario_row(
             "plan_steps": plan_steps,
             "evidence_quality": meta.get("evidence_quality"),
         }
-        errors.extend(_check_expect_ask(actual, expect, haystack))
+        errors.extend(_check_expect_ask(actual, expect, answer_haystack))
         errors.extend(_check_expect_ask_retrieval_gates(evidence, expect, top_k))
         if _scenario_flag(scenario, "forbid_generic_scan_answer"):
             text_for_scan_gate = " ".join(str(x) for x in (plan_steps + plan_notes))
