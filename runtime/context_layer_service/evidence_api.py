@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import time
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
@@ -23,6 +24,81 @@ def _code_index_enabled() -> bool:
     """Return True when authority code-index build is enabled for exports."""
     raw = str(os.environ.get("MOTADATA_CONTEXT_DISABLE_CODE_INDEX", "")).strip().lower()
     return raw not in {"1", "true", "yes", "on"}
+
+
+def _extract_method_hints(query: str, cap: int = 6) -> list[str]:
+    """Heuristic method-token extraction for debug-targeted retrieval diagnostics."""
+    out: list[str] = []
+    seen: set[str] = set()
+    blocked = {
+        "debug",
+        "trace",
+        "branch",
+        "branches",
+        "condition",
+        "conditions",
+        "method",
+        "methods",
+        "failure",
+        "failures",
+        "selected",
+        "file",
+        "path",
+        "class",
+        "null",
+        "return",
+        "returns",
+    }
+    for tok in re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", str(query or "")):
+        tl = tok.lower()
+        if tl in blocked:
+            continue
+        if tl in seen:
+            continue
+        # Keep camelCase-ish or update/get/parse/dispatch style method cues.
+        if re.search(r"[a-z][A-Z]", tok) or tl.startswith(("get", "set", "parse", "dispatch", "update", "before", "after")):
+            seen.add(tl)
+            out.append(tok)
+            if len(out) >= cap:
+                break
+    return out
+
+
+def _selected_method_body_present(
+    bundle_dict: Dict[str, Any],
+    selected_file: Optional[str],
+    method_hints: list[str],
+) -> Optional[bool]:
+    """
+    Determine whether selected-file snippets contain any requested method-like tokens.
+    Returns None when check is not applicable (no selected_file or no hints).
+    """
+    sel = str(selected_file or "").replace("\\", "/").strip().lower()
+    if not sel or not method_hints:
+        return None
+    entries = bundle_dict.get("entries")
+    if not isinstance(entries, list):
+        return False
+    base = sel.split("/")[-1]
+    selected_text_parts: list[str] = []
+    for ent in entries:
+        if not isinstance(ent, dict):
+            continue
+        rp = str(ent.get("relative_path") or "").replace("\\", "/").strip().lower()
+        if not rp:
+            continue
+        if rp == sel or rp.endswith("/" + base) or rp.endswith(base):
+            sn = ent.get("snippet")
+            sn = sn if isinstance(sn, dict) else {}
+            selected_text_parts.append(str(sn.get("text") or ""))
+    if not selected_text_parts:
+        return False
+    hay = "\n".join(selected_text_parts)
+    for h in method_hints:
+        # Accept declaration/call-like or direct identifier mention in selected snippet window.
+        if re.search(rf"\b{re.escape(h)}\s*\(", hay) or re.search(rf"\b{re.escape(h)}\b", hay):
+            return True
+    return False
 
 
 def export_evidence_bundle_dict(
@@ -316,4 +392,17 @@ def export_evidence_bundle_dict(
         fusion_diagnostics=fusion_diag if fusion_diag else None,
         evidence_quality=qa.evidence_quality,
     )
-    return evb.to_dict()
+    out = evb.to_dict()
+    fd = out.get("fusion_diagnostics")
+    if not isinstance(fd, dict):
+        fd = {}
+        out["fusion_diagnostics"] = fd
+    method_hints = _extract_method_hints(q) if str(task_type or "").upper() == "EXPLAIN_DEBUG" else []
+    method_body_present = _selected_method_body_present(out, selected_anchor, method_hints)
+    if method_hints:
+        fd["selected_method_hints"] = method_hints
+    if method_body_present is not None:
+        fd["selected_method_body_present"] = bool(method_body_present)
+        if not method_body_present:
+            fd["selected_method_body_missing_reason"] = "selected_file_snippets_missing_method_hints"
+    return out

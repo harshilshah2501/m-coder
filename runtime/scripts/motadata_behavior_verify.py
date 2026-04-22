@@ -1716,6 +1716,28 @@ def _check_expect_debug_explain(
     return errs
 
 
+def _check_expect_debug_method_body(
+    expect: dict[str, Any],
+    evidence: dict[str, Any],
+) -> list[str]:
+    errs: list[str] = []
+    if not expect.get("require_selected_method_body_present"):
+        return errs
+    fd = evidence.get("fusion_diagnostics")
+    fd = fd if isinstance(fd, dict) else {}
+    present = fd.get("selected_method_body_present")
+    hints = fd.get("selected_method_hints") if isinstance(fd.get("selected_method_hints"), list) else []
+    if not hints:
+        errs.append("require_selected_method_body_present: no selected_method_hints exported in fusion_diagnostics")
+        return errs
+    if present is not True:
+        errs.append(
+            "require_selected_method_body_present: selected method body not present in selected-file snippets "
+            f"(hints={hints}, reason={fd.get('selected_method_body_missing_reason')})"
+        )
+    return errs
+
+
 def _collect_debug_text_blobs(explain_debug: dict[str, Any]) -> tuple[str, list[str], str]:
     ev = explain_debug.get("evidence")
     ev_list = [str(x) for x in ev] if isinstance(ev, list) else []
@@ -2108,6 +2130,7 @@ def _run_scenario_row(
         contract_errors.extend(
             _check_expect_debug_explain(expect, ed, str(req.get("selected_file") or ""), context_paths=ctx_paths)
         )
+        contract_errors.extend(_check_expect_debug_method_body(expect, evidence))
         depth_errors, depth_signals = _check_expect_debug_depth(expect, ed, str(req.get("selected_file") or ""))
         errors.extend(contract_errors)
         errors.extend(depth_errors)
@@ -2123,6 +2146,8 @@ def _run_scenario_row(
             "contract_errors": contract_errors,
             "depth_errors": depth_errors,
             "depth_signals": depth_signals,
+            "selected_method_hints": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_hints") if isinstance(evidence, dict) else None),
+            "selected_method_body_present": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_body_present") if isinstance(evidence, dict) else None),
         }
         return {
             "id": sid,
@@ -2140,6 +2165,8 @@ def _run_scenario_row(
                 "contract_pass": contract_pass,
                 "depth_pass": depth_pass,
                 "depth_signals": depth_signals,
+                "selected_method_hints": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_hints") if isinstance(evidence, dict) else None),
+                "selected_method_body_present": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_body_present") if isinstance(evidence, dict) else None),
             },
             "dev_snapshot": dev_snapshot,
         }

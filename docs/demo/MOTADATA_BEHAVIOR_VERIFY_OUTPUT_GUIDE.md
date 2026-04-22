@@ -342,6 +342,7 @@ They now also split Debug quality into:
 - `depth_pass` — method/branch/evidence specificity checks
 
 So a Debug scenario can be protocol-correct but still fail depth if the answer remains generic.
+Some debug rows may also enforce selected-method-body presence via export diagnostics (`selected_method_hints`, `selected_method_body_present`) to distinguish exact-trace readiness from neighborhood-only grounding.
 
 ### 10.6 Plan scenarios
 
