@@ -277,13 +277,21 @@ def _export_evidence_payload(
     query: str,
     top_k: int,
     *,
+    task_type: str = "general",
+    selected_file: str | None = None,
+    active_file: str | None = None,
     enable_stage_a_v2: Optional[bool] = None,
 ) -> dict[str, Any]:
     p: dict[str, Any] = {
         "workspace_root": workspace_root,
         "query": query,
         "top_k": top_k,
+        "task_type": str(task_type or "general"),
     }
+    if selected_file:
+        p["selected_file"] = str(selected_file)
+    if active_file:
+        p["active_file"] = str(active_file)
     if enable_stage_a_v2 is not None:
         p["enable_stage_a_v2"] = enable_stage_a_v2
     return p
@@ -1384,7 +1392,15 @@ def _run_utility_scenario_row(
         sel_text = str(inputs.get("selection_text") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            _export_evidence_payload(ws, q, top_k, enable_stage_a_v2=export_stage_a),
+            _export_evidence_payload(
+                ws,
+                q,
+                top_k,
+                task_type="EXPLAIN_DEBUG",
+                selected_file=sel or None,
+                active_file=sel or None,
+                enable_stage_a_v2=export_stage_a,
+            ),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -2039,7 +2055,15 @@ def _run_scenario_row(
         sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            _export_evidence_payload(workspace_root, export_q, top_k, enable_stage_a_v2=export_stage_a),
+            _export_evidence_payload(
+                workspace_root,
+                export_q,
+                top_k,
+                task_type="EXPLAIN_DEBUG",
+                selected_file=sel or None,
+                active_file=sel or None,
+                enable_stage_a_v2=export_stage_a,
+            ),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []

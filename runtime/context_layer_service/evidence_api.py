@@ -30,6 +30,9 @@ def export_evidence_bundle_dict(
     query: str,
     top_k: int = 8,
     *,
+    task_type: str = "general",
+    selected_file: Optional[str] = None,
+    active_file: Optional[str] = None,
     file_index: Optional[_FileIndex] = None,
     authority_adapter: Optional[Any] = None,
     index_cache: Optional[Any] = None,
@@ -236,17 +239,20 @@ def export_evidence_bundle_dict(
     else:
         lex_cfg = LexicalRetrievalConfig(enable_stage_a_v2=enable_stage_a_v2)
     lex_task = resolve_lexical_task_type(
-        "general",
+        str(task_type or "general"),
         q,
         authority_resolution if isinstance(authority_resolution, dict) else None,
     )
+    selected_anchor = str(selected_file or "").strip() or None
+    active_anchor = str(active_file or "").strip() or selected_anchor
     r = retrieve_lexical(
         idx,
         q,
         top_k,
         lex_cfg,
         task_type=lex_task,
-        selected_file=None,
+        selected_file=selected_anchor,
+        active_file=active_anchor,
         authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
     )
 
@@ -264,7 +270,7 @@ def export_evidence_bundle_dict(
             effective_intent=effective,
             registry=registry,
             code_index_adapter=adapter,
-            selected_file=None,
+            selected_file=selected_anchor,
             fusion_config=FusionConfig(),
             index=idx,
             authority_resolution=authority_resolution if isinstance(authority_resolution, dict) else None,
@@ -277,7 +283,7 @@ def export_evidence_bundle_dict(
             r,
             fusion_config=FusionConfig(),
             owner_path=owner_file,
-            selected_file=None,
+            selected_file=selected_anchor,
             collaborator_paths=set(),
         )
         r = filtered
