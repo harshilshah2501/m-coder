@@ -276,6 +276,16 @@ def _extract_selection_tokens(selection: str, cap: int = 5) -> List[str]:
         "true",
         "false",
         "new",
+        "trace",
+        "debug",
+        "list",
+        "identify",
+        "likely",
+        "failure",
+        "failures",
+        "points",
+        "condition",
+        "conditions",
     }
     for tok in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", selection or ""):
         t = tok.strip()
@@ -367,6 +377,14 @@ def _ensure_selected_grounding(
         sel_ref = f"{sel_norm}:{methods[0]}"
     elif sel_tokens:
         sel_ref = f"{sel_norm}:{sel_tokens[0]}"
+    else:
+        sel_ref = f"{sel_norm}:selected_scope"
+
+    # Keep at least one canonical path:anchor reference for downstream depth checks.
+    has_path_anchor_ref = any("/" in str(e) and ":" in str(e) for e in evidence)
+    if not has_path_anchor_ref:
+        evidence.insert(0, sel_ref)
+
     if not any(sel_norm.lower() in str(e).lower() or sel_symbol.lower() in str(e).lower() for e in evidence):
         evidence.insert(0, sel_ref)
     elif evidence and not (sel_norm.lower() in str(evidence[0]).lower() or sel_symbol.lower() in str(evidence[0]).lower()):
@@ -397,20 +415,26 @@ def _ensure_selected_grounding(
             f"The selected file `{sel_base}` appears declaration-heavy for the retrieved snippet; "
             "trace inherited/update hooks in nearby classes before asserting a root cause."
         )
+        logic_flow = (logic_flow + " " if logic_flow else "") + (
+            "Use method-level branch/condition checks and return/error paths from nearby hooks."
+        )
     elif not any(x in joined for x in ("if ", "when ", "branch", "condition", "return")):
         likely = (likely + " " if likely else "") + (
             "Likely risk centers on conditional branches and early-return paths in the selected-file flow."
         )
 
     # Reduce generic/hedged phrasing when we actually have grounded clues.
+    generic_phrases = (
+        "not directly visible",
+        "not shown",
+        "not enough information",
+        "limited context",
+        "could imply",
+        "difficult to pinpoint exact failure points",
+        "without more context",
+        "speculative risks",
+    )
     if methods or branches:
-        generic_phrases = (
-            "not directly visible",
-            "not shown",
-            "not enough information",
-            "limited context",
-            "could imply",
-        )
         if any(g in summary.lower() for g in generic_phrases):
             details = []
             if methods:
@@ -421,6 +445,11 @@ def _ensure_selected_grounding(
                 f"Grounded analysis for `{sel_base}` from `{sel_norm}`: "
                 + ", ".join(details)
             )
+    elif any(g in summary.lower() for g in generic_phrases):
+        summary = (
+            f"Grounded but shallow analysis for `{sel_base}` from `{sel_norm}`; "
+            "current selected-file context lacks direct method/branch anchors for a precise trace."
+        )
 
     if not confidence:
         confidence = (
