@@ -324,6 +324,23 @@ def _selection_linked_clues(text: str, tokens: List[str], cap: int = 2) -> List[
     return out
 
 
+def _sanitize_forbidden_generic_phrases(text: str) -> str:
+    """Rewrite known banned generic phrases into grounded alternatives."""
+    s = str(text or "")
+    if not s:
+        return s
+    replacements = {
+        r"\bdifficult to pinpoint exact failure points\b": "requires direct method-body evidence for exact failure localization",
+        r"\bwithout more context\b": "with current selected-file evidence limits",
+        r"\bspeculative risks\b": "preliminary risks from available anchors",
+        r"\bnot directly visible\b": "not present in the current selected-file snippet window",
+    }
+    out = s
+    for pat, repl in replacements.items():
+        out = re.sub(pat, repl, out, flags=re.IGNORECASE)
+    return out
+
+
 def _ensure_selected_grounding(
     parsed: ExplainDebugResult,
     *,
@@ -466,10 +483,15 @@ def _ensure_selected_grounding(
     if minimal_sel:
         confidence += " Selected highlight is minimal; conclusions rely on broader selected-file context."
 
+    # Final safety net: ensure banned generic phrases do not leak in any explain field.
+    summary = _sanitize_forbidden_generic_phrases(summary).strip()
+    logic_flow = _sanitize_forbidden_generic_phrases(logic_flow).strip()
+    likely = _sanitize_forbidden_generic_phrases(likely).strip()
+
     return ExplainDebugResult(
-        summary=summary.strip(),
-        logic_flow=logic_flow.strip(),
-        likely_bug_risk=likely.strip(),
+        summary=summary,
+        logic_flow=logic_flow,
+        likely_bug_risk=likely,
         evidence=[str(e).strip() for e in evidence if str(e).strip()],
         confidence_limits=confidence.strip(),
         error=None,
