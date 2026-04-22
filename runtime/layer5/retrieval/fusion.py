@@ -315,8 +315,21 @@ def _apply_hard_path_caps(
         for h, sc, diag, reason in dropped_rows:
             if len(kept) >= min_keep:
                 break
+            pol = classify_file(h.relative_path)
+            is_gen = _is_generic_infra_path(h.relative_path)
+            is_dist = is_noise_class(pol.file_class)
+            # Preserve hard-cap intent during floor restore: never re-introduce
+            # rows that would violate generic/distractor budgets again.
+            if is_gen and generic_count >= cfg.max_generic_infra_paths:
+                continue
+            if is_dist and distractor_count >= cfg.max_distractor_paths:
+                continue
             kept.append((h, sc, dict(diag)))
             restored.append({"path": h.relative_path, "from_reason": reason})
+            if is_gen:
+                generic_count += 1
+            if is_dist:
+                distractor_count += 1
 
     return kept, {
         "kept": len(kept),
