@@ -68,7 +68,13 @@ class PlanOnlyPlanner:
             steps.append(_class_relationship_answer_step(query, bundle))
 
         if focus_file:
-            steps.append(f"Open {focus_file} and scan for logic related to \"{primary_token}\"." if primary_token else f"Open {focus_file} and scan for logic related to the question.")
+            steps.append(
+                (
+                    f"Open {focus_file} and inspect the control flow relevant to \"{primary_token}\"."
+                    if primary_token
+                    else f"Open {focus_file} and inspect the control flow relevant to the question."
+                )
+            )
 
         if len(top_paths) > 1:
             steps.append("Review neighboring context files: " + ", ".join(top_paths[1:]) + ".")
@@ -182,8 +188,8 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
 
     if not candidates:
         return (
-            "Direct answer (grounded): could not determine the class inheritance/implementation "
-            "from retrieved snippets alone; class declaration line is not in top evidence."
+            "Direct answer (grounded): inheritance/implementation could not be asserted from "
+            "the current top evidence snippets; class declaration lines are missing."
         )
 
     # If query explicitly targets APIs, do not answer from non-API declarations.
@@ -203,9 +209,15 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
     if ask_base and universal_api_base_query and query_mentions_api:
         common = _resolve_common_api_base(candidates)
         if common is None:
+            preferred = _prefer_api_base_from_evidence(candidates)
+            if preferred:
+                return (
+                    f"Direct answer (grounded): strongest API base-class signal in current evidence "
+                    f"is `{preferred}` (limited declaration coverage in top snippets)."
+                )
             return (
-                "Direct answer (grounded): could not determine a common base class for APIs "
-                "from retrieved snippets alone; more API class declarations are needed in top evidence."
+                "Direct answer (grounded): no single common API base class can be confirmed from "
+                "current top snippets; additional API declarations are needed."
             )
         base, count = common
         return (
@@ -229,8 +241,8 @@ def _class_relationship_answer_step(query: str, bundle: ContextBundle) -> str:
             return f"Direct answer (grounded): `{cls}` {rel} (from `{path}`)."
 
     return (
-        "Direct answer (grounded): could not determine the class inheritance/implementation "
-        "from retrieved snippets alone; class declaration line is not in top evidence."
+        "Direct answer (grounded): inheritance/implementation could not be asserted from "
+        "the current top evidence snippets; class declaration lines are missing."
     )
 
 
@@ -269,4 +281,20 @@ def _resolve_common_api_base(
     if count * 2 < len(base_pool):
         return None
     return (base, count)
+
+
+def _prefer_api_base_from_evidence(candidates: List[tuple[str, str, str, str]]) -> str | None:
+    """
+    Deterministic fallback for universal API-base asks when top snippets are sparse.
+    Prefer explicit Abstract* API bases first; otherwise return the most frequent base.
+    """
+    bases = [c[2] for c in candidates if c[2]]
+    if not bases:
+        return None
+    for b in bases:
+        bl = b.lower()
+        if "abstractapi" in bl or (bl.startswith("abstract") and "api" in bl):
+            return b
+    counter = Counter(bases)
+    return counter.most_common(1)[0][0]
 

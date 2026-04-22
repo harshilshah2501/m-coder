@@ -64,7 +64,10 @@ def resolve_lexical_task_type(
     qi = classify_intent(query or "")
     if qi.intent_type == CODE_INTENT:
         return "CODE"
-    return "general"
+    # Ask-style general queries should still prefer implementation-bearing files.
+    # Returning ASK here keeps Stage A candidate filtering code-oriented without
+    # requiring authority owner injection to be present first.
+    return "ASK"
 
 
 def merge_effective_intent(task_type: str, query: str) -> EffectiveIntent:
@@ -81,6 +84,10 @@ def merge_effective_intent(task_type: str, query: str) -> EffectiveIntent:
         primary = MODE_DEBUG
         if qi.intent_type == CODE_INTENT:
             conflicts.append("task_type_EXPLAIN_DEBUG_vs_query_CODE_INTENT")
+    elif tt.upper() == "ASK":
+        primary = MODE_ASK
+        if qi.intent_type == DEBUG_INTENT:
+            conflicts.append("task_type_ASK_vs_query_DEBUG_INTENT")
     elif tt.upper() == "CODE":
         primary = MODE_CODE
         if qi.intent_type == DEBUG_INTENT:

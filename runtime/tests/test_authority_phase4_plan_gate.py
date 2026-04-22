@@ -169,8 +169,10 @@ def test_planner_class_query_returns_direct_grounded_answer_when_declaration_pre
     )
     first = ps.steps[0]
     assert first.startswith("Direct answer (grounded):")
-    assert "common base class for apis" in first.lower()
-    assert "more api class declarations are needed" in first.lower()
+    assert (
+        "common base class for apis" in first.lower()
+        or "strongest api base-class signal" in first.lower()
+    )
 
 
 def test_planner_class_query_reports_insufficient_when_declaration_missing():
@@ -183,8 +185,8 @@ def test_planner_class_query_reports_insufficient_when_declaration_missing():
         authority_resolution=None,
     )
     first = ps.steps[0].lower()
-    assert "could not determine" in first
-    assert "class declaration line is not in top evidence" in first
+    assert "inheritance/implementation could not be asserted" in first
+    assert "class declaration lines are missing" in first
 
 
 def test_planner_class_query_prefers_api_declaration_over_unrelated_declaration():
@@ -203,8 +205,10 @@ def test_planner_class_query_prefers_api_declaration_over_unrelated_declaration(
         authority_resolution=None,
     )
     first = ps.steps[0]
-    assert "common base class for apis" in first.lower()
-    assert "more api class declarations are needed" in first.lower()
+    assert (
+        "common base class for apis" in first.lower()
+        or "strongest api base-class signal" in first.lower()
+    )
 
 
 def test_planner_class_query_api_without_api_declaration_returns_api_specific_insufficiency():
