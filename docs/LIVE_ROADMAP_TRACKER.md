@@ -22,6 +22,7 @@
 | **Authority Expansion Hardening v1** | Stage A noise suppression; API routing scenario — §5 |
 | **Method-window surfacing + Execution Stitching v1.1 calibration** | Achieved in bounded Ask scope; conservative truthful partial/non-stitched behavior preserved |
 | **Assist Layer v2 Ask activation (output-shape only)** | **COMPLETE** — diagnostics + `assist_v2.answer/evidence/gaps/next_steps`; no retrieval/governance/routing/execution changes |
+| **Assist Layer v2 (Ask + Debug + Investigate Bridge)** | **COMPLETE and invariant-safe** — Ask selection, Debug inspection, deterministic grounded handoff; no routing/governance/execution drift |
 | **Ask v1 evidence quality parity** | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
 | **Behavior baseline promotion** | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
 | **Layer-1 / L2 / L4 milestone tables (declared rows)** | **LOCKED** or **COMPLETE** per §2.1; layer rollups per §2.1.1; details §4.1–§4.4 |
@@ -54,6 +55,11 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Do not pick L5.7 only because it is “next” in the L5 table.** **L5.7** (dirty buffer / live overlay) matters when the dominant pain is **editor buffer vs on-disk index** (unsaved edits missing from Ask/Debug). If that is not the pain, L5.7 is not automatically the next engineering bet.
 - **Recommended primary focus:** execute the **L5.7 dirty buffer / live overlay** charter (**§1.4**, `docs/L5_7_DIRTY_BUFFER_CHARTER.md`) to close unsaved-buffer vs on-disk mismatches for Ask/Debug, while preserving **`MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** guardrails.
 - **If the only choice is L5.7 vs M3.13:** prefer **L5.7** for **current developer UX** on the existing workspace path; **M3.13** (Jira ingestion) **expands upstream surface area** and is noisier unless Jira-backed workflows are explicitly queued.
+
+### Assist v2 phase scope freeze (2026-04-23)
+
+- **Out of scope for Assist v2 Ask/Debug/Investigate Bridge completion:** model upgrades (Qwen3 or similar), retrieval redesign, multi-hop tracing, auto-debug/auto-fix, and Plan/Code productization.
+- Treat these as follow-on phases only; current Assist v2 completion is closure-scoped and invariant-safe.
 
 ---
 

@@ -143,6 +143,14 @@ def augment_assist_v2_with_response(
     out["evidence"] = _build_evidence_block(meta, context_files, owner)
     out["gaps"] = _build_gaps_block(meta, plan_steps, notes)
     out["next_steps"] = _build_next_steps_block(meta, owner, context_files)
+    if mode == AssistV2Mode.ASK.value:
+        investigate = _build_investigate_bridge(
+            ask_response=ask_response,
+            owner=owner,
+            meta=meta,
+        )
+        if investigate:
+            out["investigate"] = investigate
     return out
 
 
@@ -290,6 +298,86 @@ def _build_next_steps_block(
             candidates.append(f"Open `{p}` and verify whether current snippet includes downstream method declarations/call edges.")
     # Keep actionable and bounded.
     return {"bounded_verification_steps": candidates[:3]}
+
+
+def _build_investigate_bridge(
+    *,
+    ask_response: Dict[str, Any],
+    owner: Dict[str, str],
+    meta: Dict[str, Any],
+) -> Dict[str, Any] | None:
+    # Omit by default unless eligibility is explicitly grounded.
+    evidence_first = ask_response.get("evidence_first_meta")
+    ask_path = ""
+    if isinstance(evidence_first, dict):
+        ask_path = str(evidence_first.get("ask_path") or "").strip()
+    governance_posture = str(ask_response.get("governance_posture") or "").strip()
+    execution = ask_response.get("execution")
+    owner_file = str(owner.get("file") or "").strip()
+    owner_method = str(owner.get("method") or "").strip()
+    owner_symbol = str(owner.get("symbol") or "").strip()
+    quality = str(meta.get("evidence_quality") or "").strip().upper()
+    method_visible, grounding_tier = _resolve_owner_method_visibility(meta)
+
+    eligible = (
+        ask_path == "v1_evidence"
+        and governance_posture == "PLAN_ONLY"
+        and execution is False
+        and quality == "STRONG"
+        and bool(owner_file)
+        and bool(owner_method)
+        and bool(method_visible)
+    )
+    if not eligible:
+        return None
+
+    reason = "owner_method_grounded" if grounding_tier == "executable" else "owner_method_visible"
+    return {
+        "available": True,
+        "reason": reason,
+        "target": {
+            "file": owner_file,
+            "method": owner_method,
+            "symbol_hints": _symbol_hints(owner_symbol, owner_method),
+        },
+        "handoff_context": {
+            "source_mode": "ask",
+            "ask_path": ask_path,
+            "governance_posture": governance_posture,
+            "execution": False,
+        },
+        "evidence_anchor": {
+            "owner_file": owner_file,
+            "owner_method_visible": True,
+            "grounding_tier": grounding_tier,
+            "proof_density": {
+                "method_window_visible_rate": meta.get("method_window_visible_rate"),
+                "execution_path_stitched": meta.get("execution_path_stitched"),
+                "call_site_resolution_state": meta.get("call_site_resolution_state"),
+            },
+        },
+        "suggested_prompt": "Investigate this owner method and trace visible failure points.",
+    }
+
+
+def _resolve_owner_method_visibility(meta: Dict[str, Any]) -> tuple[bool, str]:
+    explicit = meta.get("explicit_method_body_evidence_present") is True
+    mwr = meta.get("method_window_visible_rate")
+    stitched = meta.get("execution_path_stitched")
+    if explicit and isinstance(mwr, (int, float)) and float(mwr) >= 1.0:
+        return True, "executable"
+    if explicit or (isinstance(mwr, (int, float)) and float(mwr) > 0.0):
+        return True, "partial" if stitched is False else "executable"
+    return False, "declarative"
+
+
+def _symbol_hints(owner_symbol: str, owner_method: str) -> list[str]:
+    hints = []
+    for raw in (owner_symbol, owner_method):
+        tok = str(raw or "").strip()
+        if tok and tok not in hints:
+            hints.append(tok)
+    return hints
 
 
 def _build_debug_v2_block(
