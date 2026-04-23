@@ -4,9 +4,13 @@ Phase 4 — Plan-Gate consumption, answer anchoring, distractor synthesis guard,
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
-from runtime.ask_service.authority_synthesis import synthesize_authority_plan_steps
+from runtime.ask_service.authority_synthesis import (
+    prioritize_owner_in_bundle,
+    synthesize_authority_plan_steps,
+)
 from runtime.ask_service.planner import PlanOnlyPlanner
 from runtime.context.contracts import (
     ContextBundle,
@@ -364,6 +368,64 @@ def test_authority_synthesis_adds_execution_path_stitch_when_traces_present():
     assert "Execution-path stitch:" in joined
     assert "APIServer.route" in joined
     assert "NotificationEngine.start" in joined
+
+
+def test_authority_synthesis_surfaces_method_window_from_owner_file_when_snippet_sparse():
+    with tempfile.TemporaryDirectory() as raw:
+        root = Path(raw)
+        rel = Path("src/main/java/com/mindarray/api/MailServerConfiguration.java")
+        full = root / rel
+        full.parent.mkdir(parents=True, exist_ok=True)
+        full.write_text(
+            "public class MailServerConfiguration extends AbstractAPI {\n"
+            "  public void beforeUpdate(Request req) {\n"
+            "    if (req == null) { return; }\n"
+            "    persist(req);\n"
+            "  }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        b = _ctx([str(rel)])
+        b.provenance.root_path = str(root)
+        # Sparse snippet lacks method window.
+        b.items[0].content = "public class MailServerConfiguration extends AbstractAPI {"
+        ar = {
+            "authority_status": "validated",
+            "authority_confidence": "high",
+            "primary_owner": {
+                "file": "src/main/java/com/mindarray/api/MailServerConfiguration.java",
+                "class": "MailServerConfiguration",
+                "method": "beforeUpdate",
+            },
+            "collaborators": [],
+            "forbidden_distractors": [],
+        }
+        steps, meta = synthesize_authority_plan_steps("how does mail update work", b, ar)
+        text = " ".join(steps)
+        assert "Method-window excerpt" in text
+        assert "beforeUpdate" in text
+        assert meta.get("method_window_source") == "owner_file_surfacing"
+
+
+def test_prioritize_owner_in_bundle_promotes_owner_to_top1():
+    b = _ctx(
+        [
+            "src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+            "src/main/java/com/mindarray/api/APIServer.java",
+            "src/main/java/com/mindarray/notification/NotificationEngine.java",
+        ]
+    )
+    ar = {
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/APIServer.java",
+            "class": "APIServer",
+            "method": "start",
+        }
+    }
+    meta = prioritize_owner_in_bundle(b, ar)
+    assert meta.get("owner_promoted_for_context") is True
+    assert meta.get("owner_original_rank_in_bundle") == 2
+    assert b.items[0].path.endswith("APIServer.java")
 
 
 def test_planner_preserves_structural_direct_answer_when_authority_exists():

@@ -2151,6 +2151,14 @@ def _run_scenario_row(
             "retrieval_gates": rg,
             "quality_policy_profile": qprof,
             "stage_a": sa,
+            "proof_density": {
+                "method_window_visible_rate": meta.get("method_window_visible_rate"),
+                "explicit_method_body_evidence_present": meta.get("explicit_method_body_evidence_present"),
+                "execution_path_stitched": meta.get("execution_path_stitched"),
+                "owner_promoted_for_context": meta.get("owner_promoted_for_context"),
+                "owner_original_rank_in_bundle": meta.get("owner_original_rank_in_bundle"),
+                "method_claim_alignment_pass": meta.get("method_claim_alignment_pass"),
+            },
         }
         return {
             "id": sid,
@@ -2168,6 +2176,14 @@ def _run_scenario_row(
                 "retrieval_gates": rg,
                 "quality_policy_profile": qprof,
                 "stage_a": sa,
+                "proof_density": {
+                    "method_window_visible_rate": meta.get("method_window_visible_rate"),
+                    "explicit_method_body_evidence_present": meta.get("explicit_method_body_evidence_present"),
+                    "execution_path_stitched": meta.get("execution_path_stitched"),
+                    "owner_promoted_for_context": meta.get("owner_promoted_for_context"),
+                    "owner_original_rank_in_bundle": meta.get("owner_original_rank_in_bundle"),
+                    "method_claim_alignment_pass": meta.get("method_claim_alignment_pass"),
+                },
             },
             "dev_snapshot": dev_snapshot,
         }

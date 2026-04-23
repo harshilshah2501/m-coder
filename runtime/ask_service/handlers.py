@@ -30,6 +30,7 @@ from runtime.layer5.retrieval.quality_gate import NO_MATCH, WEAK, assess_evidenc
 
 from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
 from .evidence_bridge import resolve_workspace_input_path, try_build_layer5_evidence
+from .authority_synthesis import prioritize_owner_in_bundle
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 
@@ -319,6 +320,11 @@ def handle_ask_request(ask_request: dict) -> dict:
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
     weak_note: List[str] = []
+    owner_bias_meta: Dict[str, Any] = {}
+
+    if authority_resolution:
+        owner_bias_meta = prioritize_owner_in_bundle(bundle, authority_resolution)
+        metadata.update(owner_bias_meta)
 
     if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
         result = explain_debug(
@@ -340,6 +346,8 @@ def handle_ask_request(ask_request: dict) -> dict:
             query=query, bundle=bundle, authority_resolution=authority_resolution
         )
         plan_steps = plan_summary.steps
+        if isinstance(plan_summary.meta, dict):
+            metadata.update(plan_summary.meta)
     if quality.blocked and skip_grounding_block_for_explain_debug:
         weak_note.append(
             "Plan-grounding gate reported weak or ungrounded evidence; EXPLAIN_DEBUG still ran "
@@ -347,6 +355,17 @@ def handle_ask_request(ask_request: dict) -> dict:
         )
     if quality.evidence_quality == WEAK:
         weak_note.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
+    if metadata.get("method_window_visible"):
+        metadata["method_window_visible_rate"] = 1.0
+    elif metadata.get("method_claim_alignment_pass") is False:
+        metadata["method_window_visible_rate"] = 0.0
+    metadata["execution_path_stitched"] = bool(
+        any(str(s).startswith("Execution-path stitch:") for s in (plan_steps or []))
+    )
+    metadata["explicit_method_body_evidence_present"] = bool(
+        metadata.get("method_window_visible")
+        or any("Method-window excerpt:" in str(s) or "Visible method-window evidence:" in str(s) for s in (plan_steps or []))
+    )
 
     routing_mode = (
         "explain_debug"

@@ -7,6 +7,7 @@ No LLM: produces bounded plan steps for Plan-Gate when evidence carries authorit
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from runtime.context.contracts import ContextBundle
@@ -144,6 +145,24 @@ def _extract_method_window(content: str, method: str, cap_chars: int = 260) -> s
     return win[:cap_chars].rstrip()
 
 
+def _load_owner_source_from_root(bundle: ContextBundle, owner_file: str, cap_bytes: int = 262_144) -> str:
+    """Best-effort bounded owner-file read from provenance root for proof-density enrichment."""
+    root = str(getattr(bundle.provenance, "root_path", "") or "").strip()
+    rel = str(owner_file or "").strip()
+    if not root or not rel:
+        return ""
+    root_p = Path(root)
+    candidates = [root_p / rel, root_p / f"motadata/{rel}"]
+    for p in candidates:
+        try:
+            if p.exists() and p.is_file():
+                raw = p.read_bytes()[:cap_bytes]
+                return raw.decode("utf-8", errors="replace")
+        except Exception:
+            continue
+    return ""
+
+
 def _stitch_execution_path(authority_resolution: Dict[str, Any], owner_class: str, owner_method: str) -> str:
     """
     Deterministic execution-path stitch for Ask explanations.
@@ -223,6 +242,43 @@ def _shape_collaborators(
     return shaped[:cap]
 
 
+def prioritize_owner_in_bundle(
+    bundle: ContextBundle,
+    authority_resolution: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """
+    Soft owner top1 bias for Ask context shaping only (no retrieval/ranking rewrite).
+    """
+    meta: Dict[str, Any] = {
+        "owner_promoted_for_context": False,
+        "owner_original_rank_in_bundle": None,
+        "owner_rank_after_bias": None,
+    }
+    if not authority_resolution:
+        return meta
+    po = authority_resolution.get("primary_owner")
+    po = po if isinstance(po, dict) else {}
+    owner_file = str(po.get("file") or "").strip()
+    if not owner_file or not getattr(bundle, "items", None):
+        return meta
+    owner_norm = _norm_path(owner_file)
+    idx = -1
+    for i, it in enumerate(bundle.items):
+        p = _norm_path(it.path)
+        if p == owner_norm or p.endswith("/" + owner_norm):
+            idx = i
+            break
+    if idx < 0:
+        return meta
+    meta["owner_original_rank_in_bundle"] = idx + 1
+    if idx > 0:
+        item = bundle.items.pop(idx)
+        bundle.items.insert(0, item)
+        meta["owner_promoted_for_context"] = True
+    meta["owner_rank_after_bias"] = 1
+    return meta
+
+
 def synthesize_authority_plan_steps(
     query: str,
     bundle: ContextBundle,
@@ -273,10 +329,20 @@ def synthesize_authority_plan_steps(
     if isinstance(cf, list) and cf:
         role_line = " Control flow trace: " + " → ".join(str(x) for x in cf[:6]) + "."
     owner_content = _owner_item_content(bundle, p_file)
+    source_used = "snippet_window"
     method_supported = _snippet_mentions_method(owner_content, p_method)
     method_window = _extract_method_window(owner_content, p_method) if method_supported else ""
+    if p_method and not method_supported:
+        full_src = _load_owner_source_from_root(bundle, p_file)
+        if full_src:
+            full_supported = _snippet_mentions_method(full_src, p_method)
+            if full_supported:
+                method_supported = True
+                method_window = _extract_method_window(full_src, p_method)
+                source_used = "owner_file_surfacing"
     meta["method_claim_alignment_pass"] = bool(method_supported)
     meta["method_window_visible"] = bool(method_window)
+    meta["method_window_source"] = source_used if method_window else "none"
     method_bit = f", method `{p_method}`" if p_method and method_supported else ""
     steps.append(
         f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"

@@ -24,6 +24,7 @@ from .authority_synthesis import merge_plan_with_authority, synthesize_authority
 class PlanSummary:
     steps: List[str]
     notes: List[str] | None = None
+    meta: Dict[str, Any] | None = None
 
 
 class PlanOnlyPlanner:
@@ -51,7 +52,7 @@ class PlanOnlyPlanner:
                 f"authority_anchor_mode={meta.get('anchor_mode')}",
                 f"authority_uncertainty={meta.get('uncertainty', False)}",
             ]
-        return PlanSummary(steps=steps, notes=notes)
+        return PlanSummary(steps=steps, notes=notes, meta=meta if meta else None)
 
     def _plan_generic(self, query: str, bundle: ContextBundle) -> PlanSummary:
         # Deterministic token extraction: prefer repo-meaningful terms over question words.
