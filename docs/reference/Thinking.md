@@ -215,3 +215,35 @@ Legend:
 - Ask capability is currently in a healthy **strong-pass** state for this 5-scenario slice.
 - Debug capability is now governance-strong and depth-checked, but method-body retrieval remains the key limiter for three scenarios.
 
+---
+
+## Ask v1 Proof Density Patch (Method-window + Path Stitch)
+
+Status: implemented after Ask-path caveat review.
+
+### What was added
+
+- **Method-claim alignment guard**
+  - Keep class/file owner anchors deterministic.
+  - Only claim `method X` as visible when owner snippet content actually contains that method token/declaration.
+  - Expose `method_claim_alignment_pass` metadata for verifier/dev snapshots.
+
+- **Method-window enrichment**
+  - For "how it works" asks, prefer a compact method-window excerpt around the owner method over generic class excerpt.
+  - Expose `method_window_visible` metadata.
+
+- **Execution-path stitching**
+  - Build a deterministic path line from `entry_trace.path` + owner class/method + `control_flow`.
+  - Output as: `Execution-path stitch: ...` (bounded hops).
+
+### Why this matters
+
+- Keeps Ask answers **owner-correct** while increasing **mechanistic proof density**.
+- Reduces shallow class-level narration when method evidence is available.
+- Gives operators explicit call/flow chains without requiring EXPLAIN_DEBUG mode.
+
+### Remaining caveat
+
+- If top snippets still do not expose method bodies, Ask remains intentionally conservative.
+- Deep branch-level analysis remains a Debug-path strength; Ask is now "owner + stitched flow" rather than full branch tracer.
+

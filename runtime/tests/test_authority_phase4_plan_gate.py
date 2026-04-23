@@ -314,6 +314,58 @@ def test_authority_synthesis_shapes_collaborators_to_owner_domain():
     assert int(meta.get("collaborator_paths_emitted") or 0) <= 4
 
 
+def test_authority_synthesis_prefers_method_window_excerpt_for_how_query():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/MailServerConfiguration.java",
+            "class": "MailServerConfiguration",
+            "method": "beforeUpdate",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"]])
+    b.items[0].content = """
+public class MailServerConfiguration extends AbstractAPI {
+  public void beforeUpdate(Request req) {
+    if (req == null) { return; }
+    persist(req);
+  }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("how does mail update work", b, ar)
+    text = " ".join(steps)
+    assert "Method-window excerpt" in text
+    assert "beforeUpdate" in text
+    assert meta.get("method_claim_alignment_pass") is True
+    assert meta.get("method_window_visible") is True
+
+
+def test_authority_synthesis_adds_execution_path_stitch_when_traces_present():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/notification/NotificationEngine.java",
+            "class": "NotificationEngine",
+            "method": "start",
+        },
+        "entry_trace": {"path": ["APIServer.route", "UIActionEventHandler.handle"]},
+        "control_flow": ["validate payload", "dispatch channel handlers", "emit event"],
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"]])
+    b.items[0].content = "public class NotificationEngine { public void start() { dispatch(); } }"
+    steps, _meta = synthesize_authority_plan_steps("notification handlers", b, ar)
+    joined = " ".join(steps)
+    assert "Execution-path stitch:" in joined
+    assert "APIServer.route" in joined
+    assert "NotificationEngine.start" in joined
+
+
 def test_planner_preserves_structural_direct_answer_when_authority_exists():
     registry = load_registry(REG)
     ar = build_authority_resolution("api layer architecture", registry, None)

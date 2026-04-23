@@ -117,6 +117,63 @@ def _snippet_mentions_method(snippet: str, method: str) -> bool:
     return False
 
 
+def _extract_method_window(content: str, method: str, cap_chars: int = 260) -> str:
+    """
+    Best-effort extract around a method declaration/invocation in owner snippet content.
+
+    Returns a compact single-line window or empty string when method anchor is missing.
+    """
+    txt = str(content or "")
+    m = str(method or "").strip()
+    if not txt or not m:
+        return ""
+    esc = re.escape(m)
+    # Prefer declaration-like pattern, fallback to any mention.
+    pat = re.compile(
+        rf"(?:public|private|protected|static|final|\s)+[^\n\r{{;]*?\b{esc}\s*\([^;\n\r]*\)\s*\{{?",
+        flags=re.IGNORECASE,
+    )
+    hit = pat.search(txt)
+    if hit is None:
+        hit = re.search(rf"\b{esc}\s*\(", txt)
+    if hit is None:
+        return ""
+    start = max(0, hit.start() - 80)
+    end = min(len(txt), hit.end() + 160)
+    win = " ".join(txt[start:end].split())
+    return win[:cap_chars].rstrip()
+
+
+def _stitch_execution_path(authority_resolution: Dict[str, Any], owner_class: str, owner_method: str) -> str:
+    """
+    Deterministic execution-path stitch for Ask explanations.
+
+    Uses entry_trace path + control_flow when present to produce an explicit call/flow chain.
+    """
+    hops: List[str] = []
+    et = authority_resolution.get("entry_trace")
+    if isinstance(et, dict):
+        p = et.get("path")
+        if isinstance(p, list):
+            for x in p[:3]:
+                sx = str(x).strip()
+                if sx:
+                    hops.append(sx)
+    owner_hop = owner_class + (f".{owner_method}" if owner_method else "")
+    if owner_hop and owner_hop not in hops:
+        hops.append(owner_hop)
+
+    cf = authority_resolution.get("control_flow")
+    if isinstance(cf, list):
+        for x in cf[:3]:
+            sx = str(x).strip()
+            if sx and sx not in hops:
+                hops.append(sx)
+    if len(hops) < 2:
+        return ""
+    return "Execution-path stitch: " + " -> ".join(hops[:6]) + "."
+
+
 def _owner_domain_key(path: str) -> str:
     norm = _norm_path(path)
     i = norm.find("com/mindarray/")
@@ -217,7 +274,9 @@ def synthesize_authority_plan_steps(
         role_line = " Control flow trace: " + " → ".join(str(x) for x in cf[:6]) + "."
     owner_content = _owner_item_content(bundle, p_file)
     method_supported = _snippet_mentions_method(owner_content, p_method)
+    method_window = _extract_method_window(owner_content, p_method) if method_supported else ""
     meta["method_claim_alignment_pass"] = bool(method_supported)
+    meta["method_window_visible"] = bool(method_window)
     method_bit = f", method `{p_method}`" if p_method and method_supported else ""
     steps.append(
         f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
@@ -234,9 +293,17 @@ def synthesize_authority_plan_steps(
             + (f".`{p_method}`" if p_method and method_supported else "")
             + " is the main execution path for this behavior."
         )
-        if snippet:
+        if method_window:
+            how += f" Method-window excerpt: {method_window}"
+        elif snippet:
             how += f" Evidence excerpt: {snippet}"
         steps.append(how)
+    elif method_window:
+        steps.append(f"Visible method-window evidence: {method_window}")
+
+    stitched = _stitch_execution_path(ar, p_class, p_method if method_supported else "")
+    if stitched:
+        steps.append(stitched)
 
     # Collaborators as supporting only
     collab = _collaborator_paths(ar)
