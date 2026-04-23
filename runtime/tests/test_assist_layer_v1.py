@@ -282,6 +282,10 @@ def test_assist_v2_shape_is_diagnostics_only_and_supports_post_response_hooks():
     assert hooks["execution_path_stitched"] is False
     assert hooks["call_site_resolution_state"] == "unresolved"
     assert hooks["method_window_visible_rate"] == 0.66
+    assert "answer" in enriched
+    assert "evidence" in enriched
+    assert "gaps" in enriched
+    assert "next_steps" in enriched
 
 
 def test_apply_assist_payload_includes_assist_v2_diagnostics_block():
@@ -298,3 +302,87 @@ def test_apply_assist_payload_includes_assist_v2_diagnostics_block():
     route_decision = assist_meta["assist_v2"]["route_decision"]
     assert route_decision["mode"] == "mixed"
     assert assist_meta["assist_v2"]["diagnostics_only"] is True
+
+
+def test_assist_v2_ask_activation_uses_existing_ask_outputs_only():
+    decision = decide_assist_v2_mode(
+        task_type_label="general",
+        selected_file="src/main/java/com/mindarray/api/APIServer.java",
+        selection_text="",
+    )
+    shell = build_assist_v2_response_shell(decision)
+    ask_response = {
+        "governance_posture": "PLAN_ONLY",
+        "execution": False,
+        "evidence_first_meta": {"ask_path": "v1_evidence"},
+        "plan_summary": {
+            "steps": [
+                "Direct answer (grounded): strongest API base-class signal in current evidence is `AbstractAPI`.",
+                "Primary implementation owner: `APIServer` in `src/main/java/com/mindarray/api/APIServer.java`, method `start`.",
+                "Owner method body is visible, but only a partial first-hop trace could be confirmed from current evidence.",
+            ],
+            "notes": [],
+        },
+        "context_bundle": {
+            "files": [
+                {
+                    "path": "motadata/src/main/java/com/mindarray/api/APIServer.java",
+                    "selection_reason": "query_token_substring_anchor",
+                }
+            ]
+        },
+        "metadata": {
+            "execution_path_stitched": False,
+            "call_site_resolution_state": "unresolved",
+            "method_window_visible_rate": 1.0,
+            "explicit_method_body_evidence_present": True,
+            "context_budget": {
+                "prompt_input_tokens": 500,
+                "evidence_file_count": 1,
+                "method_snippet_count": 1,
+                "snippet_total_bytes": 120,
+                "loop_context_bytes": 90,
+                "truncation_applied": False,
+            },
+        },
+    }
+    enriched = augment_assist_v2_with_response(skeleton=shell, ask_response=ask_response)
+    assert "answer" in enriched and enriched["answer"]["direct_grounded_answer"].startswith(
+        "Direct answer (grounded):"
+    )
+    assert enriched["answer"]["primary_owner_or_locus"]["file"] == "src/main/java/com/mindarray/api/APIServer.java"
+    assert "evidence" in enriched
+    assert enriched["evidence"]["proof_density_summary"]["call_site_resolution_state"] == "unresolved"
+    assert enriched["evidence"]["context_budget_telemetry_summary"]["evidence_file_count"] == 1
+    assert "gaps" in enriched
+    assert enriched["gaps"]["explicit_evidence_limits"]
+    assert "next_steps" in enriched
+    assert enriched["next_steps"]["bounded_verification_steps"]
+    # Underlying ask semantics are unchanged by assist shaping.
+    assert ask_response["governance_posture"] == "PLAN_ONLY"
+    assert ask_response["execution"] is False
+    assert ask_response["evidence_first_meta"]["ask_path"] == "v1_evidence"
+
+
+def test_assist_v2_ask_activation_skips_debug_shape_changes():
+    decision = decide_assist_v2_mode(
+        task_type_label="EXPLAIN_DEBUG",
+        selected_file="src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        selection_text="trace branch",
+    )
+    shell = build_assist_v2_response_shell(decision)
+    enriched = augment_assist_v2_with_response(
+        skeleton=shell,
+        ask_response={
+            "metadata": {
+                "execution_path_stitched": False,
+                "call_site_resolution_state": "unresolved",
+                "method_window_visible_rate": 1.0,
+            }
+        },
+    )
+    assert "answer" not in enriched
+    assert "evidence" not in enriched
+    assert "gaps" not in enriched
+    assert "next_steps" not in enriched
+    assert enriched["proof_density_hooks"]["call_site_resolution_state"] == "unresolved"

@@ -345,6 +345,18 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
         assert response.get("schema_version") == "plan_only_response.v0.1"
         assert response.get("request_id") == "http-v1"
         assert response.get("evidence_first_meta", {}).get("ask_path") == "v1_evidence"
+        assert response.get("governance_posture") == "PLAN_ONLY"
+        assert response.get("execution") is False
+        assist = response.get("assist_layer") if isinstance(response.get("assist_layer"), dict) else {}
+        assist_v2 = assist.get("assist_v2") if isinstance(assist.get("assist_v2"), dict) else {}
+        for key in ("answer", "evidence", "gaps", "next_steps"):
+            assert key in assist_v2
+        # Ask activation must preserve proof-density diagnostics from metadata.
+        hooks = assist_v2.get("proof_density_hooks") if isinstance(assist_v2.get("proof_density_hooks"), dict) else {}
+        md = response.get("metadata") if isinstance(response.get("metadata"), dict) else {}
+        assert hooks.get("execution_path_stitched") == md.get("execution_path_stitched")
+        assert hooks.get("call_site_resolution_state") == md.get("call_site_resolution_state")
+        assert hooks.get("method_window_visible_rate") == md.get("method_window_visible_rate")
 
         bad = json.dumps(_minimal_v1_ask(_load_golden_evidence(), evidence_bundle={"bad": True})).encode(
             "utf-8"
