@@ -114,9 +114,26 @@ _JAVA_IMPL_TOKEN = re.compile(
     re.I,
 )
 
+# Executable control flow (branch / loop / exception path) — required for method-body truth.
+_EXECUTABLE_CF = re.compile(
+    r"\b(if|while|for|switch)\s*\(|"
+    r"\b(try|catch|finally)\b|"
+    r"\belse\s+if\b|"
+    r"\bcase\s+[^:]+:",
+    re.I,
+)
+
+
+def _snippet_has_executable_control_flow(text: str) -> bool:
+    """True when the excerpt shows real branching/iteration/exception flow, not declarations only."""
+    t = text.strip()
+    if len(t) < 12:
+        return False
+    return bool(_EXECUTABLE_CF.search(t))
+
 
 def _java_snippet_has_implementation_signals(text: str) -> bool:
-    """True when excerpt looks like Java implementation, not only banner/imports."""
+    """True when excerpt looks like Java implementation, not only banner/imports (basename fallback helper)."""
     t = text.strip()
     if len(t) < 16:
         return False
@@ -131,9 +148,6 @@ def _java_snippet_has_implementation_signals(text: str) -> bool:
             return True
         if re.search(r"\b(if|for|while)\s*\(", t, re.I):
             return True
-    # Substantial braced chunk (methods / blocks) — still above tiny import-only excerpts.
-    if "{" in t and len(t) >= 80:
-        return True
     return False
 
 
@@ -156,22 +170,23 @@ def _hint_matches_selected_snippet(hint: str, hay: str) -> bool:
     return False
 
 
-def _selected_method_body_present(
+def _selected_method_body_diagnosis(
     bundle_dict: Dict[str, Any],
     selected_file: Optional[str],
     method_hints: list[str],
-) -> Optional[bool]:
+) -> tuple[Optional[bool], Optional[str]]:
     """
-    Determine whether selected-file snippets contain any requested method-like tokens.
-    Returns None when check is not applicable (no selected_file or no hints).
+    Whether selected-file snippets ground debug in executable logic (not declarations-only).
+
+    Returns (None, None) when inapplicable; (False, reason) or (True, None) when applicable.
     """
     sel_norm = str(selected_file or "").replace("\\", "/").strip()
     if not sel_norm or not method_hints:
-        return None
+        return None, None
     sel = sel_norm.lower()
     entries = bundle_dict.get("entries")
     if not isinstance(entries, list):
-        return False
+        return False, "evidence_bundle_missing_entries"
     base = sel.split("/")[-1]
     selected_text_parts: list[str] = []
     for ent in entries:
@@ -186,18 +201,28 @@ def _selected_method_body_present(
             sn = sn if isinstance(sn, dict) else {}
             selected_text_parts.append(str(sn.get("text") or ""))
     if not selected_text_parts:
-        return False
+        return False, "selected_file_not_in_evidence_entries"
     hay = "\n".join(selected_text_parts)
+    if not _snippet_has_executable_control_flow(hay):
+        return False, "selected_file_snippet_missing_executable_control_flow"
     for h in method_hints:
         if _hint_matches_selected_snippet(h, hay):
-            return True
-    # Large files: snippet window may anchor on query tokens mid-file and omit the type
-    # declaration or camelCase methods that hints name; basename is still an explicit hint.
+            return True, None
     stem = Path(sel_norm).stem
     if stem and any(str(h).lower() == stem.lower() for h in method_hints):
         if _java_snippet_has_implementation_signals(hay):
-            return True
-    return False
+            return True, None
+    return False, "selected_file_snippets_missing_method_hints"
+
+
+def _selected_method_body_present(
+    bundle_dict: Dict[str, Any],
+    selected_file: Optional[str],
+    method_hints: list[str],
+) -> Optional[bool]:
+    """Backward-compatible bool wrapper for :func:`_selected_method_body_diagnosis`."""
+    present, _reason = _selected_method_body_diagnosis(bundle_dict, selected_file, method_hints)
+    return present
 
 
 def export_evidence_bundle_dict(
@@ -501,11 +526,11 @@ def export_evidence_bundle_dict(
         if str(task_type or "").upper() == "EXPLAIN_DEBUG"
         else []
     )
-    method_body_present = _selected_method_body_present(out, selected_anchor, method_hints)
+    present, missing_reason = _selected_method_body_diagnosis(out, selected_anchor, method_hints)
     if method_hints:
         fd["selected_method_hints"] = method_hints
-    if method_body_present is not None:
-        fd["selected_method_body_present"] = bool(method_body_present)
-        if not method_body_present:
-            fd["selected_method_body_missing_reason"] = "selected_file_snippets_missing_method_hints"
+    if present is not None:
+        fd["selected_method_body_present"] = bool(present)
+        if not present and missing_reason:
+            fd["selected_method_body_missing_reason"] = missing_reason
     return out

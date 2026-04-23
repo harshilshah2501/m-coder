@@ -1716,6 +1716,43 @@ def _check_expect_debug_explain(
     return errs
 
 
+def _check_method_body_answer_alignment(
+    expect: dict[str, Any],
+    evidence: dict[str, Any],
+    explain_debug: dict[str, Any],
+) -> list[str]:
+    """
+    Optional hard alignment: fusion says snippets include grounded method/control-flow evidence,
+    but explain_debug still asserts total absence of grounding (truth-binding failure).
+    """
+    if not expect.get("require_method_body_answer_alignment"):
+        return []
+    if not expect.get("require_selected_method_body_present"):
+        return []
+    fd = evidence.get("fusion_diagnostics")
+    if not isinstance(fd, dict):
+        return []
+    if fd.get("selected_method_body_present") is not True:
+        return []
+    hay_lc, _, _ = _collect_debug_text_blobs(explain_debug)
+    needles = (
+        "is not present in the retrieved context",
+        "without that file body",
+        "cannot trace concrete method",
+        "insufficiently grounded",
+        "missing_in_context:",
+    )
+    hits = [n for n in needles if n.lower() in hay_lc]
+    if hits:
+        return [
+            "require_method_body_answer_alignment: explain_debug contradicts "
+            "fusion selected_method_body_present="
+            + str(fd.get("selected_method_body_present"))
+            + f" (matched phrases={hits})"
+        ]
+    return []
+
+
 def _check_expect_debug_method_body(
     expect: dict[str, Any],
     evidence: dict[str, Any],
@@ -2131,6 +2168,7 @@ def _run_scenario_row(
             _check_expect_debug_explain(expect, ed, str(req.get("selected_file") or ""), context_paths=ctx_paths)
         )
         contract_errors.extend(_check_expect_debug_method_body(expect, evidence))
+        contract_errors.extend(_check_method_body_answer_alignment(expect, evidence, ed))
         depth_errors, depth_signals = _check_expect_debug_depth(expect, ed, str(req.get("selected_file") or ""))
         errors.extend(contract_errors)
         errors.extend(depth_errors)

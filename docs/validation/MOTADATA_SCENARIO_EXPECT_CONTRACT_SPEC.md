@@ -94,7 +94,8 @@ When `--quality-policy` is supplied, Ask scenarios are also checked against poli
 | `must_have_confidence_limits` | bool | `confidence_limits` must be present and non-empty. |
 | `require_insufficient_grounding` | bool | Must explicitly report insufficient grounding when context is missing. |
 | `require_missing_in_context_marker` | bool | Evidence must contain `missing_in_context` marker. |
-| `require_selected_method_body_present` | bool | Require exported diagnostics to confirm selected-file snippets include requested method-token hints. |
+| `require_selected_method_body_present` | bool | Exported diagnostics must show selected-file excerpt contains **executable control-flow** (`if`/`for`/`while`/`switch`/`try`/…) **and** at least one requested method/token hint or basename-anchor match (see `fusion_diagnostics`). Declaration-only snippets do **not** qualify. |
+| `require_method_body_answer_alignment` | bool | Optional. When true (and `require_selected_method_body_present`), fail if fusion reports `selected_method_body_present=true` while `explain_debug` still contains hard contradiction phrases (`is not present in the retrieved context`, `without that file body`, …). Enables truth-binding QA between retrieval diagnostics and prose. |
 | `require_selected_file_symbol_hits_min` | int | Minimum count of selected file/symbol mentions across explain text + evidence. |
 | `require_method_name_mentions_min` | int | Minimum number of method-like mentions in explain text/evidence refs. |
 | `require_evidence_line_refs_min` | int | Minimum count of evidence refs shaped like `path:method_or_anchor`. |
@@ -111,7 +112,9 @@ Overall scenario `pass` for Debug is `contract_pass AND depth_pass`.
 
 When `require_selected_method_body_present=true`, verifier also checks `evidence_bundle.fusion_diagnostics`:
 - `selected_method_hints` must be present and non-empty
-- `selected_method_body_present` must be `true`
+- `selected_method_body_present` must be `true` (semantic: snippets include control-flow groundings, not headers-only)
+
+When `require_method_body_answer_alignment=true`, verifier cross-checks `explain_debug` summary/logic_flow/likely_bug_risk against those diagnostics for contradictory “missing context” claims.
 
 ---
 
