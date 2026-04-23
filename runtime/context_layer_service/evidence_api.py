@@ -106,6 +106,25 @@ def _extract_method_hints(query: str, selected_file: Optional[str], cap: int = 8
     return out[:cap]
 
 
+def _hint_matches_selected_snippet(hint: str, hay: str) -> bool:
+    """
+    Match debug hints against snippet text.
+
+    Whole-word checks fail for typical Java camelCase methods (``dispatchTraps()``,
+    ``parsePdu()``) where the hint token is ``dispatch`` or ``parse``.
+    """
+    if not hint or not hay:
+        return False
+    esc = re.escape(hint)
+    # Method-ish: foo(, fooBar(, parsePdu(
+    if re.search(rf"\b{esc}(?:[A-Z][a-zA-Z0-9_]*)?\s*\(", hay):
+        return True
+    # Type names, fields, or exact token
+    if re.search(rf"\b{esc}\b", hay):
+        return True
+    return False
+
+
 def _selected_method_body_present(
     bundle_dict: Dict[str, Any],
     selected_file: Optional[str],
@@ -137,8 +156,7 @@ def _selected_method_body_present(
         return False
     hay = "\n".join(selected_text_parts)
     for h in method_hints:
-        # Accept declaration/call-like or direct identifier mention in selected snippet window.
-        if re.search(rf"\b{re.escape(h)}\s*\(", hay) or re.search(rf"\b{re.escape(h)}\b", hay):
+        if _hint_matches_selected_snippet(h, hay):
             return True
     return False
 
