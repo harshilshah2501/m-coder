@@ -114,12 +114,19 @@ _JAVA_IMPL_TOKEN = re.compile(
     re.I,
 )
 
-# Executable control flow (branch / loop / exception path) — required for method-body truth.
+# Executable control flow — branch / loop / exit / guards (not declarations-only).
+# Avoid treating Javadoc ``@return`` as a Java ``return`` via negative lookbehind.
 _EXECUTABLE_CF = re.compile(
     r"\b(if|while|for|switch)\s*\(|"
+    r"\b(do)\s*\{|"
     r"\b(try|catch|finally)\b|"
-    r"\belse\s+if\b|"
-    r"\bcase\s+[^:]+:",
+    r"\belse\b\s*(?:if\b|\{)|"
+    r"\bcase\b\s+[^:]+?\s*(?:->|:)|"
+    r"->\s*\{|"
+    r"(?<![@])\breturn\b|"
+    r"\bthrow\b|"
+    r"[!=]=\s*null\b|"
+    r"\?\s*[^:]+:",
     re.I,
 )
 

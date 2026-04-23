@@ -8,6 +8,13 @@ from runtime.context_layer_service.evidence_api import (
 )
 
 
+def test_executable_cf_null_guard_return_lambda():
+    assert _snippet_has_executable_control_flow("if (x != null) { ok(); }")
+    assert _snippet_has_executable_control_flow("void run() { return; }")
+    assert _snippet_has_executable_control_flow("Runnable r = () -> { log(); };")
+    assert not _snippet_has_executable_control_flow(" * @return the foo")
+
+
 def test_hint_matches_camel_case_dispatch_and_parse_methods():
     hay = """
     class SNMPTrapProcessor {

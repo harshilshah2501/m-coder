@@ -215,6 +215,7 @@
         "must_reference_selected_file_or_symbol": true,
         "require_selected_file_in_evidence": true,
         "require_selected_method_body_present": true,
+        "require_method_body_answer_alignment": true,
         "must_suggest_concrete_failure_points": true,
         "must_have_confidence_limits": true,
         "require_selected_file_symbol_hits_min": 2,
