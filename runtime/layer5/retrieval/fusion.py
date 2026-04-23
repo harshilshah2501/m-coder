@@ -131,7 +131,7 @@ def _active_file_delta(
 ) -> float:
     if not selected_file:
         return 0.0
-    if _norm_rel(path).lower() != _norm_rel(selected_file).lower():
+    if not paths_match_workspace(path, selected_file):
         return 0.0
     if effective.primary_mode == MODE_DEBUG:
         return cfg.active_file_boost_debug
@@ -273,7 +273,6 @@ def _apply_hard_path_caps(
     if not ordered:
         return ordered, {"kept": 0, "dropped": 0}
 
-    selected_n = _norm_rel(selected_file).lower() if selected_file else ""
     kept: List[Tuple[RetrievalHit, float, Dict[str, Any]]] = []
     dropped_rows: List[Tuple[RetrievalHit, float, Dict[str, Any], str]] = []
     dropped: List[Dict[str, Any]] = []
@@ -281,10 +280,9 @@ def _apply_hard_path_caps(
     distractor_count = 0
 
     for h, sc, diag in ordered:
-        rel_n = _norm_rel(h.relative_path).lower()
         protected = bool(
             (owner_path and paths_match_workspace(h.relative_path, owner_path))
-            or (selected_n and rel_n == selected_n)
+            or (selected_file and paths_match_workspace(h.relative_path, selected_file))
         )
         pol = classify_file(h.relative_path)
         is_gen = _is_generic_infra_path(h.relative_path)
