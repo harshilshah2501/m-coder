@@ -5,6 +5,7 @@ from __future__ import annotations
 from runtime.ask_service.reasoner import (
     ExplainDebugResult,
     _build_prompt,
+    _debug_control_flow_marker_count,
     _extract_method_clues,
     _has_control_flow_cues,
     _ensure_selected_grounding,
@@ -212,3 +213,47 @@ public void parse() {
 }
 """
     assert _has_control_flow_cues(text) is True
+
+
+def test_ensure_selected_grounding_injects_branching_markers_when_linear():
+    b = ContextBundle(
+        task_id="t4",
+        revision="r4",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
+                content=(
+                    "public void loadTrapTypes() {\n"
+                    "  for (Trap t : traps) {\n"
+                    "    try { parse(t); } catch (Exception e) { throw e; }\n"
+                    "  }\n"
+                    "}\n"
+                ),
+                byte_size=180,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(
+        summary="The code reads config and parses entries.",
+        logic_flow="The flow is read then parse then iterate entries.",
+        likely_bug_risk="Potential file/decryption failure.",
+        evidence=[],
+    )
+    out = _ensure_selected_grounding(
+        parsed,
+        selected_file="motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
+        selection="parse trap-types",
+        bundle=b,
+    )
+    assert out.error is None
+    combined = f"{out.summary} {out.logic_flow} {out.likely_bug_risk}"
+    assert _debug_control_flow_marker_count(combined) >= 2
