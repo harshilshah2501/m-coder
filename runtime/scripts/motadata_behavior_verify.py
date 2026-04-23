@@ -320,6 +320,7 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
             "evidence_snippet_previews": query.get("evidence_snippet_previews") or [],
             "retrieval_metrics": query.get("retrieval_metrics") or {},
             "stage_a": query.get("stage_a") or export.get("stage_a") or {},
+            "context_budget_telemetry": query.get("context_budget_telemetry") or {},
         },
         "debug": {
             "pass": debug.get("pass", False),
@@ -859,6 +860,9 @@ def run_once(
         "evidence_snippet_previews": snip_previews,
         "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
         "stage_a": _stage_a_summary_from_evidence(evidence),
+        "context_budget_telemetry": query_meta.get("context_budget")
+        if isinstance(query_meta.get("context_budget"), dict)
+        else {},
     }
 
     first_path = entries[0].get("relative_path") if entries else "runtime/plan_gate_service/app.py"
@@ -2133,6 +2137,7 @@ def _run_scenario_row(
                 errors.append(f"evidence_quality want one of {allowed} got {actual.get('evidence_quality')}")
         sa = _stage_a_summary_from_evidence(evidence)
         rm = _compute_retrieval_metrics(evidence, top_k=top_k)
+        cb_meta = meta.get("context_budget") if isinstance(meta.get("context_budget"), dict) else {}
         rg = {
             "owner_file": _owner_file_from_evidence(evidence),
             "workspace_identity_hash": evidence.get("workspace_identity_hash"),
@@ -2151,6 +2156,7 @@ def _run_scenario_row(
             "retrieval_gates": rg,
             "quality_policy_profile": qprof,
             "stage_a": sa,
+            "context_budget_telemetry": cb_meta,
             "proof_density": {
                 "method_window_visible_rate": meta.get("method_window_visible_rate"),
                 "explicit_method_body_evidence_present": meta.get("explicit_method_body_evidence_present"),
@@ -2182,6 +2188,7 @@ def _run_scenario_row(
                 "retrieval_gates": rg,
                 "quality_policy_profile": qprof,
                 "stage_a": sa,
+                "context_budget_telemetry": cb_meta,
                 "proof_density": {
                     "method_window_visible_rate": meta.get("method_window_visible_rate"),
                     "explicit_method_body_evidence_present": meta.get("explicit_method_body_evidence_present"),

@@ -51,13 +51,17 @@ def test_build_context_budget_metadata_emits_required_telemetry_keys():
     for key in (
         "prompt_input_tokens",
         "evidence_entry_count",
+        "evidence_file_count",
         "method_snippet_count",
         "snippet_total_bytes",
         "tool_output_bytes",
         "loop_context_bytes",
         "truncation_flags",
+        "truncation_applied",
     ):
         assert key in meta
     assert meta["evidence_entry_count"] == 1
+    assert meta["evidence_file_count"] == 1
     assert meta["method_snippet_count"] == 1
     assert meta["truncation_flags"] == ["context_file_cap_reached"]
+    assert meta["truncation_applied"] is True

@@ -93,6 +93,7 @@ def build_context_budget_metadata(
 ) -> Dict[str, Any]:
     snippet_total_bytes, method_snippet_count = _snippet_bytes_and_method_count(evidence_entries)
     bundle_context_bytes = sum(_item_bytes(i) for i in bundle.items)
+    evidence_file_count = len(list(evidence_entries))
     plan_text = "\n".join(str(s) for s in (plan_steps or []))
     explain_text = ""
     if isinstance(explain_debug_payload, dict):
@@ -110,13 +111,17 @@ def build_context_budget_metadata(
         ]
     )
     flags = sorted({str(f) for f in (truncation_flags or []) if str(f).strip()})
+    truncation_applied = bool(flags)
     return {
         "prompt_input_tokens": _estimate_tokens(prompt_payload),
-        "evidence_entry_count": len(list(evidence_entries)),
+        # Keep legacy key for backward compatibility while exposing the canonical alias.
+        "evidence_entry_count": evidence_file_count,
+        "evidence_file_count": evidence_file_count,
         "method_snippet_count": method_snippet_count,
         "snippet_total_bytes": snippet_total_bytes,
         "tool_output_bytes": int(tool_output_bytes),
         "loop_context_bytes": len((plan_text + "\n" + explain_text).encode("utf-8")),
         "truncation_flags": flags,
+        "truncation_applied": truncation_applied,
         "bundle_context_bytes": bundle_context_bytes,
     }

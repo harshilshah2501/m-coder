@@ -116,6 +116,55 @@ def test_run_scenario_row_requires_concrete_anchor(monkeypatch) -> None:
     assert any("must_cite_file_or_symbol_anchor" in e for e in out["errors"])
 
 
+def test_run_scenario_row_surfaces_context_budget_telemetry(monkeypatch) -> None:
+    scenario = {
+        "id": "ask_context_budget_telemetry",
+        "capability": "ask",
+        "query": "Where is mail domain config implemented?",
+        "expect": {
+            "governance_posture": "PLAN_ONLY",
+            "execution": False,
+            "ask_path": "v1_evidence",
+            "min_plan_steps": 1,
+        },
+    }
+    evidence = _evidence_bundle()
+    ask_resp = _ask_resp_with_steps(["Open MailConfigDomainService.java and inspect update flow."])
+    ask_resp["metadata"] = {
+        "evidence_quality": "STRONG",
+        "context_budget": {
+            "prompt_input_tokens": 120,
+            "evidence_file_count": 1,
+            "method_snippet_count": 1,
+            "snippet_total_bytes": 80,
+            "tool_output_bytes": 0,
+            "loop_context_bytes": 25,
+            "truncation_applied": False,
+        },
+    }
+
+    def _fake_post(url: str, payload: dict, timeout: int = 180, *, raise_for_status: bool = True):
+        if url.endswith("/v1/export_evidence"):
+            return 200, evidence
+        if url.endswith("/v1/ask"):
+            return 200, ask_resp
+        raise AssertionError(f"unexpected URL {url}")
+
+    monkeypatch.setattr(verify, "_post", _fake_post)
+    out = verify._run_scenario_row(
+        scenario,
+        workspace_root="/tmp/ws",
+        context_url="http://context",
+        plan_gate_url="http://plan",
+        top_k=8,
+    )
+    assert out["pass"] is True
+    cb = out["actual_summary"]["context_budget_telemetry"]
+    assert cb["prompt_input_tokens"] == 120
+    assert cb["evidence_file_count"] == 1
+    assert cb["truncation_applied"] is False
+
+
 def test_classify_graph_preflight_state_thresholds() -> None:
     assert (
         verify._classify_graph_preflight_state(
