@@ -460,6 +460,12 @@ def fuse_and_filter(
             owner_path = resolved_owner
         hits_list = _ensure_owner_present(hits_list, owner_path, index)
 
+    if index is not None and selected_file:
+        ps_sel = {e.relative_path for e in index.files}
+        resolved_sel = resolve_owner_path_in_index(selected_file.strip(), ps_sel, owner_class=None)
+        if resolved_sel:
+            hits_list = _ensure_owner_present(hits_list, resolved_sel, index)
+
     by_path = {h.relative_path: h for h in hits_list}
     pairs = [(h.relative_path, float(h.score)) for h in hits_list]
     ranked: List[RankedHit] = ranker.rank_hits(pairs, ctx)
