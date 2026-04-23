@@ -2071,10 +2071,10 @@ def _run_scenario_row(
     if cap == "debug":
         base_q = str(scenario.get("query") or "How does alert correlation and enrichment work?")
         dq = str(scenario.get("debug_query") or "")
-        # Include selection text so camelCase hooks (beforeUpdate/getItem/parse/…) land in export query_tokens + hint extraction.
-        export_q = " ".join(x for x in (dq, base_q, sel_text) if str(x).strip()).strip() if dq else f"{base_q} {sel_text}".strip()
         sel = str(scenario.get("selected_file") or "")
         sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
+        # Include selection text so camelCase hooks (beforeUpdate/getItem/parse/…) land in export query_tokens + hint extraction.
+        export_q = " ".join(x for x in (dq, base_q, sel_text) if str(x).strip()).strip() if dq else f"{base_q} {sel_text}".strip()
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
             _export_evidence_payload(
