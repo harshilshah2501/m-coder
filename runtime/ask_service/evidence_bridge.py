@@ -169,6 +169,11 @@ def try_build_layer5_evidence(
         r = filtered
         roles_map = {p: ra.role for p, ra in role_objs.items()}
 
+    rescue_sel = (
+        (selected_file or "").strip()
+        if str(task_type or "").upper() == "EXPLAIN_DEBUG"
+        else ""
+    )
     evb = build_evidence_bundle(
         r,
         idx,
@@ -177,6 +182,7 @@ def try_build_layer5_evidence(
         role_by_path=roles_map if roles_map else None,
         authority_note=fusion_authority_note() if registry is not None else None,
         fusion_diagnostics=fusion_diag if fusion_diag else None,
+        debug_snippet_rescue_selected_file=rescue_sel or None,
     )
 
     paths = [e.relative_path for e in evb.entries]

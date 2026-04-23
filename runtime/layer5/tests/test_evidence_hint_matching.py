@@ -4,15 +4,15 @@ from runtime.context_layer_service.evidence_api import (
     _java_snippet_has_implementation_signals,
     _selected_method_body_present,
     _hint_matches_selected_snippet,
-    _snippet_has_executable_control_flow,
 )
+from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 
 
 def test_executable_cf_null_guard_return_lambda():
-    assert _snippet_has_executable_control_flow("if (x != null) { ok(); }")
-    assert _snippet_has_executable_control_flow("void run() { return; }")
-    assert _snippet_has_executable_control_flow("Runnable r = () -> { log(); };")
-    assert not _snippet_has_executable_control_flow(" * @return the foo")
+    assert text_has_executable_control_flow("if (x != null) { ok(); }")
+    assert text_has_executable_control_flow("void run() { return; }")
+    assert text_has_executable_control_flow("Runnable r = () -> { log(); };")
+    assert not text_has_executable_control_flow(" * @return the foo")
 
 
 def test_hint_matches_camel_case_dispatch_and_parse_methods():
@@ -54,7 +54,7 @@ def test_java_impl_signals_substantial_brace_block():
     body = "{\n" + ("  //x\n" * 15) + "  if (q != null) { a(b); }\n}\n"
     assert len(body) >= 40
     assert _java_snippet_has_implementation_signals(body)
-    assert _snippet_has_executable_control_flow(body)
+    assert text_has_executable_control_flow(body)
 
 
 def test_selected_path_motadata_prefix_vs_index_entry():

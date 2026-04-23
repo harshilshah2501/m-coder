@@ -14,6 +14,7 @@ class SelectionReason(str, Enum):
     """Allowed ``snippet.selection_reason`` strings (v1)."""
 
     QUERY_TOKEN_SUBSTRING_ANCHOR = "query_token_substring_anchor"
+    EXECUTABLE_CONTROL_FLOW_RESCUE_ANCHOR = "executable_control_flow_rescue_anchor"
     NO_QUERY_TOKEN_IN_BODY_FILE_START = "no_query_token_in_body_file_start"
     NO_QUERY_TOKENS_FILE_START = "no_query_tokens_file_start"
     FILE_MISSING = "file_missing"

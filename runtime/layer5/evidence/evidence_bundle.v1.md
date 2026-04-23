@@ -41,6 +41,7 @@ Let `raw = read_bytes(path)[:max_file_bytes]` and `T = decode(raw, utf-8, errors
 Exact strings only (see `selection_reason.py`):
 
 - `query_token_substring_anchor`
+- `executable_control_flow_rescue_anchor` (EXPLAIN_DEBUG: re-anchor when the query-token window is declaration-only but the file contains executable control-flow later)
 - `no_query_token_in_body_file_start`
 - `no_query_tokens_file_start`
 - `file_missing`

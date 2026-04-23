@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
+from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.retrieval.path_resolve import paths_match_workspace
 
 # Forward type for callers that already built a lexical index (e.g. Stage 2 runner).
@@ -114,31 +115,6 @@ _JAVA_IMPL_TOKEN = re.compile(
     re.I,
 )
 
-# Executable control flow — branch / loop / exit / guards (not declarations-only).
-# Avoid treating Javadoc ``@return`` as a Java ``return`` via negative lookbehind.
-_EXECUTABLE_CF = re.compile(
-    r"\b(if|while|for|switch)\s*\(|"
-    r"\b(do)\s*\{|"
-    r"\b(try|catch|finally)\b|"
-    r"\belse\b\s*(?:if\b|\{)|"
-    r"\bcase\b\s+[^:]+?\s*(?:->|:)|"
-    r"->\s*\{|"
-    r"(?<![@])\breturn\b|"
-    r"\bthrow\b|"
-    r"[!=]=\s*null\b|"
-    r"\?\s*[^:]+:",
-    re.I,
-)
-
-
-def _snippet_has_executable_control_flow(text: str) -> bool:
-    """True when the excerpt shows real branching/iteration/exception flow, not declarations only."""
-    t = text.strip()
-    if len(t) < 12:
-        return False
-    return bool(_EXECUTABLE_CF.search(t))
-
-
 def _java_snippet_has_implementation_signals(text: str) -> bool:
     """True when excerpt looks like Java implementation, not only banner/imports (basename fallback helper)."""
     t = text.strip()
@@ -210,7 +186,7 @@ def _selected_method_body_diagnosis(
     if not selected_text_parts:
         return False, "selected_file_not_in_evidence_entries"
     hay = "\n".join(selected_text_parts)
-    if not _snippet_has_executable_control_flow(hay):
+    if not text_has_executable_control_flow(hay):
         return False, "selected_file_snippet_missing_executable_control_flow"
     for h in method_hints:
         if _hint_matches_selected_snippet(h, hay):
@@ -513,6 +489,11 @@ def export_evidence_bundle_dict(
     )
     fusion_diag["quality_reasons"] = list(qa.quality_reasons)
 
+    rescue_sel = (
+        (selected_anchor or "").strip()
+        if str(task_type or "").upper() == "EXPLAIN_DEBUG"
+        else ""
+    )
     evb = build_evidence_bundle(
         r,
         idx,
@@ -522,6 +503,7 @@ def export_evidence_bundle_dict(
         authority_note=fusion_authority_note() if registry is not None else None,
         fusion_diagnostics=fusion_diag if fusion_diag else None,
         evidence_quality=qa.evidence_quality,
+        debug_snippet_rescue_selected_file=rescue_sel or None,
     )
     out = evb.to_dict()
     fd = out.get("fusion_diagnostics")

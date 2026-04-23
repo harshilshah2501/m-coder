@@ -20,9 +20,11 @@ from runtime.layer5.retrieval.models import RetrievalResult
 from runtime.layer5.retrieval.roles import DISTRACTOR_RISK, SUPPORTING_CONTEXT
 
 from runtime.layer5.evidence.config import SnippetConfig
+from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.evidence.identity_policy import IdentityMismatchError
 from runtime.layer5.evidence.models import SCHEMA_HINT, EvidenceBundle, EvidenceEntry
-from runtime.layer5.evidence.snippet import extract_snippet
+from runtime.layer5.evidence.snippet import extract_snippet, extract_snippet_executable_rescue
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace
 
 
 A5_AUTHORITY_NOTE = (
@@ -48,6 +50,7 @@ def build_evidence_bundle(
     authority_note: Optional[str] = None,
     fusion_diagnostics: Optional[Dict[str, Any]] = None,
     evidence_quality: Optional[str] = None,
+    debug_snippet_rescue_selected_file: Optional[str] = None,
 ) -> EvidenceBundle:
     """
     Produce an ``EvidenceBundle`` (v1) for one A5 result and its source index.
@@ -62,6 +65,10 @@ def build_evidence_bundle(
 
     Raises:
         IdentityMismatchError: Strict identity mismatch (see ``identity_policy``).
+
+    ``debug_snippet_rescue_selected_file``: when set, for hits whose path matches that
+    workspace-relative selected file, replace a primary snippet that lacks executable
+    control-flow with the first top-down CF-rescue window (see ``snippet.py``).
     """
     if require_identity_match and retrieval.workspace_identity_hash != index.workspace_identity_hash:
         raise IdentityMismatchError(retrieval.workspace_identity_hash, index.workspace_identity_hash)
@@ -69,22 +76,35 @@ def build_evidence_bundle(
     cfg = snippet_config or SnippetConfig()
     root = Path(index.canonical_root)
     roles = dict(role_by_path) if role_by_path else {}
-    entries: Tuple[EvidenceEntry, ...] = tuple(
-        EvidenceEntry.from_hit(
-            rank=rank,
+    rescue_sel = (debug_snippet_rescue_selected_file or "").strip()
+    built: list[EvidenceEntry] = []
+    for rank, hit in enumerate(retrieval.hits):
+        span = extract_snippet(
+            canonical_root=root,
             relative_path=hit.relative_path,
-            retrieval_score=hit.score,
-            retrieval_breakdown=hit.breakdown,
-            span=extract_snippet(
-                canonical_root=root,
-                relative_path=hit.relative_path,
-                query_tokens=retrieval.query_tokens,
-                config=cfg,
-            ),
-            retrieval_role=roles.get(hit.relative_path, ""),
+            query_tokens=retrieval.query_tokens,
+            config=cfg,
         )
-        for rank, hit in enumerate(retrieval.hits)
-    )
+        if rescue_sel and paths_match_workspace(hit.relative_path, rescue_sel):
+            if not text_has_executable_control_flow(span.text):
+                alt = extract_snippet_executable_rescue(
+                    canonical_root=root,
+                    relative_path=hit.relative_path,
+                    config=cfg,
+                )
+                if alt is not None and text_has_executable_control_flow(alt.text):
+                    span = alt
+        built.append(
+            EvidenceEntry.from_hit(
+                rank=rank,
+                relative_path=hit.relative_path,
+                retrieval_score=hit.score,
+                retrieval_breakdown=hit.breakdown,
+                span=span,
+                retrieval_role=roles.get(hit.relative_path, ""),
+            )
+        )
+    entries: Tuple[EvidenceEntry, ...] = tuple(built)
 
     supporting_paths = tuple(
         p for p, r in roles.items() if r == SUPPORTING_CONTEXT
