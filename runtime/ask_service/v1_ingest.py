@@ -320,7 +320,8 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     elif metadata.get("method_claim_alignment_pass") is False:
         metadata["method_window_visible_rate"] = 0.0
     metadata["execution_path_stitched"] = bool(
-        any(str(s).startswith("Execution-path stitch:") for s in (plan_steps or []))
+        metadata.get("execution_path_stitched")
+        or any(str(s).startswith("Execution-path stitch:") for s in (plan_steps or []))
     )
     metadata["explicit_method_body_evidence_present"] = bool(
         metadata.get("method_window_visible")

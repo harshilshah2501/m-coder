@@ -17,6 +17,7 @@ from runtime.layer5.authority.authority_code_reasoning import (
     generate_change_reasoning,
     infer_intent,
 )
+from .execution_stitcher import stitch_first_hop
 
 
 def _norm_path(p: str) -> str:
@@ -161,36 +162,6 @@ def _load_owner_source_from_root(bundle: ContextBundle, owner_file: str, cap_byt
         except Exception:
             continue
     return ""
-
-
-def _stitch_execution_path(authority_resolution: Dict[str, Any], owner_class: str, owner_method: str) -> str:
-    """
-    Deterministic execution-path stitch for Ask explanations.
-
-    Uses entry_trace path + control_flow when present to produce an explicit call/flow chain.
-    """
-    hops: List[str] = []
-    et = authority_resolution.get("entry_trace")
-    if isinstance(et, dict):
-        p = et.get("path")
-        if isinstance(p, list):
-            for x in p[:3]:
-                sx = str(x).strip()
-                if sx:
-                    hops.append(sx)
-    owner_hop = owner_class + (f".{owner_method}" if owner_method else "")
-    if owner_hop and owner_hop not in hops:
-        hops.append(owner_hop)
-
-    cf = authority_resolution.get("control_flow")
-    if isinstance(cf, list):
-        for x in cf[:3]:
-            sx = str(x).strip()
-            if sx and sx not in hops:
-                hops.append(sx)
-    if len(hops) < 2:
-        return ""
-    return "Execution-path stitch: " + " -> ".join(hops[:6]) + "."
 
 
 def _owner_domain_key(path: str) -> str:
@@ -343,6 +314,10 @@ def synthesize_authority_plan_steps(
     meta["method_claim_alignment_pass"] = bool(method_supported)
     meta["method_window_visible"] = bool(method_window)
     meta["method_window_source"] = source_used if method_window else "none"
+    meta["execution_path_stitched"] = False
+    meta["stitched_edge_count"] = 0
+    meta["stitched_edge_type"] = "none"
+    meta["stitch_confidence"] = "none"
     method_bit = f", method `{p_method}`" if p_method and method_supported else ""
     steps.append(
         f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
@@ -367,12 +342,34 @@ def synthesize_authority_plan_steps(
     elif method_window:
         steps.append(f"Visible method-window evidence: {method_window}")
 
-    stitched = _stitch_execution_path(ar, p_class, p_method if method_supported else "")
-    if stitched:
-        steps.append(stitched)
-
     # Collaborators as supporting only
     collab = _collaborator_paths(ar)
+    stitch = stitch_first_hop(
+        bundle=bundle,
+        owner_file=p_file,
+        owner_class=p_class,
+        owner_method=p_method if method_supported else "",
+        owner_method_window=method_window,
+        collaborator_paths=collab,
+    )
+    meta["execution_path_stitched"] = bool(stitch.stitched)
+    meta["stitched_edge_count"] = int(stitch.stitched_edge_count)
+    meta["stitched_edge_type"] = str(stitch.edge_type or "none")
+    meta["stitch_confidence"] = str(stitch.confidence or "none")
+    if stitch.stitched:
+        owner_hop = f"{p_class}.{p_method}"
+        target_cls = p_class if _norm_path(stitch.target_file) == _norm_path(p_file) else (
+            Path(str(stitch.target_file)).stem or "target"
+        )
+        target_hop = f"{target_cls}.{stitch.target_method}" if stitch.target_method else target_cls
+        steps.append(f"Execution-path stitch: {owner_hop} -> {target_hop}.")
+        if stitch.target_window:
+            steps.append(f"Immediate downstream evidence ({stitch.edge_type}): {stitch.target_window}")
+    elif stitch.confidence == "partial":
+        steps.append(
+            "Owner method body is visible, but only a partial first-hop trace could be confirmed from current evidence."
+        )
+
     if collab:
         shaped = _shape_collaborators(collab, owner_file=p_file, bundle=bundle)
         meta["collaborator_paths_total"] = len(collab)

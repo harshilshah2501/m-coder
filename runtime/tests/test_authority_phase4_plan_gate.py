@@ -356,18 +356,60 @@ def test_authority_synthesis_adds_execution_path_stitch_when_traces_present():
             "class": "NotificationEngine",
             "method": "start",
         },
-        "entry_trace": {"path": ["APIServer.route", "UIActionEventHandler.handle"]},
-        "control_flow": ["validate payload", "dispatch channel handlers", "emit event"],
+        "collaborators": [
+            {"file": "src/main/java/com/mindarray/notification/EmailNotification.java"},
+        ],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"], "src/main/java/com/mindarray/notification/EmailNotification.java"])
+    b.items[0].content = """
+public class NotificationEngine {
+  public void start() {
+    EmailNotification.send("x");
+  }
+}
+"""
+    b.items[1].content = """
+public class EmailNotification {
+  public static void send(String msg) { transport(msg); }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("notification handlers", b, ar)
+    joined = " ".join(steps)
+    assert "Execution-path stitch:" in joined
+    assert "NotificationEngine.start" in joined
+    assert "EmailNotification.send" in joined
+    assert meta.get("execution_path_stitched") is True
+    assert meta.get("stitched_edge_count") == 1
+    assert meta.get("stitch_confidence") == "visible"
+
+
+def test_authority_synthesis_reports_partial_trace_when_target_not_resolved():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/APIServer.java",
+            "class": "APIServer",
+            "method": "start",
+        },
         "collaborators": [],
         "forbidden_distractors": [],
     }
     b = _ctx([ar["primary_owner"]["file"]])
-    b.items[0].content = "public class NotificationEngine { public void start() { dispatch(); } }"
-    steps, _meta = synthesize_authority_plan_steps("notification handlers", b, ar)
+    b.items[0].content = """
+public class APIServer {
+  public void start() {
+    registerRoutes(router);
+  }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("api layer architecture", b, ar)
     joined = " ".join(steps)
-    assert "Execution-path stitch:" in joined
-    assert "APIServer.route" in joined
-    assert "NotificationEngine.start" in joined
+    assert "partial first-hop trace" in joined
+    assert meta.get("execution_path_stitched") is False
+    assert meta.get("stitched_edge_count") == 0
+    assert meta.get("stitch_confidence") in ("partial", "none")
 
 
 def test_authority_synthesis_surfaces_method_window_from_owner_file_when_snippet_sparse():
