@@ -13,6 +13,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
+from runtime.layer5.retrieval.path_resolve import paths_match_workspace
+
 # Forward type for callers that already built a lexical index (e.g. Stage 2 runner).
 _FileIndex = Any
 
@@ -106,35 +108,33 @@ def _extract_method_hints(query: str, selected_file: Optional[str], cap: int = 8
     return out[:cap]
 
 
+_JAVA_IMPL_TOKEN = re.compile(
+    r"\b(void|public|private|protected|static|final|class|interface|enum|return|new|throw|"
+    r"catch|try|else|switch|case|break|continue|implements|extends|native|synchronized)\b",
+    re.I,
+)
+
+
 def _java_snippet_has_implementation_signals(text: str) -> bool:
     """True when excerpt looks like Java implementation, not only banner/imports."""
     t = text.strip()
-    if len(t) < 24:
+    if len(t) < 16:
         return False
+    if _JAVA_IMPL_TOKEN.search(t):
+        return True
     tl = t.lower()
-    if "{" not in t and "(" not in t:
-        return False
-    return any(
-        k in tl
-        for k in (
-            "void ",
-            "public ",
-            "private ",
-            "protected ",
-            "class ",
-            "interface ",
-            "if(",
-            "if (",
-            "return ",
-            "throw ",
-            "catch ",
-            "switch ",
-            "while ",
-            "for(",
-            "for (",
-            "@override",
-        )
-    )
+    if "@override" in tl or "@deprecated" in tl:
+        return True
+    # Logic / operators without relying on ``void `` + space (tabs / newline after keyword).
+    if len(t) >= 40:
+        if re.search(r"[!=]=|[<>]=?|\|\||&&", t):
+            return True
+        if re.search(r"\b(if|for|while)\s*\(", t, re.I):
+            return True
+    # Substantial braced chunk (methods / blocks) — still above tiny import-only excerpts.
+    if "{" in t and len(t) >= 80:
+        return True
+    return False
 
 
 def _hint_matches_selected_snippet(hint: str, hay: str) -> bool:
@@ -165,9 +165,10 @@ def _selected_method_body_present(
     Determine whether selected-file snippets contain any requested method-like tokens.
     Returns None when check is not applicable (no selected_file or no hints).
     """
-    sel = str(selected_file or "").replace("\\", "/").strip().lower()
-    if not sel or not method_hints:
+    sel_norm = str(selected_file or "").replace("\\", "/").strip()
+    if not sel_norm or not method_hints:
         return None
+    sel = sel_norm.lower()
     entries = bundle_dict.get("entries")
     if not isinstance(entries, list):
         return False
@@ -176,10 +177,11 @@ def _selected_method_body_present(
     for ent in entries:
         if not isinstance(ent, dict):
             continue
-        rp = str(ent.get("relative_path") or "").replace("\\", "/").strip().lower()
+        rp = str(ent.get("relative_path") or "").replace("\\", "/").strip()
         if not rp:
             continue
-        if rp == sel or rp.endswith("/" + base) or rp.endswith(base):
+        rp_l = rp.lower()
+        if paths_match_workspace(rp, sel_norm) or rp_l == sel or rp_l.endswith("/" + base) or rp_l.endswith(base):
             sn = ent.get("snippet")
             sn = sn if isinstance(sn, dict) else {}
             selected_text_parts.append(str(sn.get("text") or ""))
@@ -191,7 +193,7 @@ def _selected_method_body_present(
             return True
     # Large files: snippet window may anchor on query tokens mid-file and omit the type
     # declaration or camelCase methods that hints name; basename is still an explicit hint.
-    stem = Path(str(selected_file).replace("\\", "/")).stem
+    stem = Path(sel_norm).stem
     if stem and any(str(h).lower() == stem.lower() for h in method_hints):
         if _java_snippet_has_implementation_signals(hay):
             return True
