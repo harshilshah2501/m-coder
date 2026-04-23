@@ -229,7 +229,20 @@ def _extract_method_clues(text: str, cap: int = 3) -> List[str]:
 
 def _has_control_flow_cues(text: str) -> bool:
     tl = text.lower()
-    cues = (" if ", " else ", " return", " catch", " throw", " null", " exception", " branch")
+    cues = (
+        " if ",
+        " else ",
+        " for ",
+        " while ",
+        " switch",
+        " return",
+        " catch",
+        " try",
+        " throw",
+        " null",
+        " exception",
+        " branch",
+    )
     return any(c in f" {tl} " for c in cues)
 
 
@@ -433,8 +446,8 @@ def _ensure_selected_grounding(
         )
     if not has_flow:
         likely = (likely + " " if likely else "") + (
-            f"The selected file `{sel_base}` appears declaration-heavy for the retrieved snippet; "
-            "trace inherited/update hooks in nearby classes before asserting a root cause."
+            f"Selected snippet window in `{sel_base}` has sparse local control-flow anchors; "
+            "validate adjacent methods/callees before asserting a root cause."
         )
         logic_flow = (logic_flow + " " if logic_flow else "") + (
             "Use method-level branch/condition checks and return/error paths from nearby hooks."

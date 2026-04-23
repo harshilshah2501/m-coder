@@ -6,6 +6,7 @@ from runtime.ask_service.reasoner import (
     ExplainDebugResult,
     _build_prompt,
     _extract_method_clues,
+    _has_control_flow_cues,
     _ensure_selected_grounding,
 )
 from runtime.context.contracts import (
@@ -196,3 +197,18 @@ public class AvailabilityCorrelationEngine {
     clues = _extract_method_clues(text, cap=5)
     assert "processAlerts" in clues
     assert "JsonArray" not in clues
+
+
+def test_has_control_flow_cues_detects_for_and_try_blocks():
+    text = """
+public void parse() {
+    for (Trap t : traps) {
+        try {
+            handle(t);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+}
+"""
+    assert _has_control_flow_cues(text) is True
