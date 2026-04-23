@@ -6,6 +6,7 @@ No LLM: produces bounded plan steps for Plan-Gate when evidence carries authorit
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from runtime.context.contracts import ContextBundle
@@ -88,6 +89,83 @@ def _primary_owner_snippet(bundle: ContextBundle, owner_file: str) -> str:
     return ""
 
 
+def _owner_item_content(bundle: ContextBundle, owner_file: str) -> str:
+    owner_norm = _norm_path(owner_file)
+    if not owner_norm:
+        return ""
+    for item in bundle.items:
+        p = _norm_path(item.path)
+        if p == owner_norm or p.endswith("/" + owner_norm):
+            return str(item.content or "")
+    return ""
+
+
+def _snippet_mentions_method(snippet: str, method: str) -> bool:
+    m = str(method or "").strip()
+    if not m:
+        return True
+    hay = str(snippet or "")
+    if not hay:
+        return False
+    esc = re.escape(m)
+    # declaration or invocation
+    if re.search(rf"\b{esc}\s*\(", hay):
+        return True
+    # registry method can also be a lifecycle token in comments / docs
+    if re.search(rf"\b{esc}\b", hay):
+        return True
+    return False
+
+
+def _owner_domain_key(path: str) -> str:
+    norm = _norm_path(path)
+    i = norm.find("com/mindarray/")
+    if i == -1:
+        return ""
+    tail = norm[i + len("com/mindarray/") :]
+    seg = tail.split("/", 1)[0]
+    return seg
+
+
+def _shape_collaborators(
+    collab: Set[str],
+    *,
+    owner_file: str,
+    bundle: ContextBundle,
+    cap: int = 4,
+) -> List[str]:
+    """Prefer collaborators close to owner domain and currently in context bundle."""
+    if not collab:
+        return []
+    owner_norm = _norm_path(owner_file)
+    owner_dir = owner_norm.rsplit("/", 1)[0] if "/" in owner_norm else owner_norm
+    owner_domain = _owner_domain_key(owner_norm)
+    bundle_paths = {_norm_path(it.path) for it in bundle.items}
+
+    ordered = sorted(collab)
+    bucket_in_bundle: List[str] = []
+    bucket_same_dir: List[str] = []
+    bucket_same_domain: List[str] = []
+    bucket_other: List[str] = []
+
+    for p in ordered:
+        pn = _norm_path(p)
+        if pn in bundle_paths or any(bp.endswith("/" + pn) for bp in bundle_paths):
+            bucket_in_bundle.append(p)
+            continue
+        pdir = pn.rsplit("/", 1)[0] if "/" in pn else pn
+        if owner_dir and pdir == owner_dir:
+            bucket_same_dir.append(p)
+            continue
+        if owner_domain and _owner_domain_key(pn) == owner_domain:
+            bucket_same_domain.append(p)
+            continue
+        bucket_other.append(p)
+
+    shaped = bucket_in_bundle + bucket_same_dir + bucket_same_domain + bucket_other
+    return shaped[:cap]
+
+
 def synthesize_authority_plan_steps(
     query: str,
     bundle: ContextBundle,
@@ -137,16 +215,23 @@ def synthesize_authority_plan_steps(
     cf = ar.get("control_flow") or []
     if isinstance(cf, list) and cf:
         role_line = " Control flow trace: " + " → ".join(str(x) for x in cf[:6]) + "."
-    method_bit = f", method `{p_method}`" if p_method else ""
+    owner_content = _owner_item_content(bundle, p_file)
+    method_supported = _snippet_mentions_method(owner_content, p_method)
+    meta["method_claim_alignment_pass"] = bool(method_supported)
+    method_bit = f", method `{p_method}`" if p_method and method_supported else ""
     steps.append(
         f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
     )
+    if p_method and not method_supported:
+        steps.append(
+            f"Method-level owner hook `{p_method}` is authority-derived; current owner snippet window does not expose that method body."
+        )
 
     if _is_how_it_works_query(query):
         snippet = _primary_owner_snippet(bundle, p_file)
         how = (
             f"How it works (grounded): `{p_class}`"
-            + (f".`{p_method}`" if p_method else "")
+            + (f".`{p_method}`" if p_method and method_supported else "")
             + " is the main execution path for this behavior."
         )
         if snippet:
@@ -156,7 +241,10 @@ def synthesize_authority_plan_steps(
     # Collaborators as supporting only
     collab = _collaborator_paths(ar)
     if collab:
-        preview = ", ".join(sorted(collab))[:400]
+        shaped = _shape_collaborators(collab, owner_file=p_file, bundle=bundle)
+        meta["collaborator_paths_total"] = len(collab)
+        meta["collaborator_paths_emitted"] = len(shaped)
+        preview = ", ".join(shaped)[:400]
         steps.append(
             f"Supporting context only (collaborators; not alternative owners): related paths include {preview}."
         )
@@ -216,9 +304,16 @@ def synthesize_authority_plan_steps(
             )
             break
 
+    ar_for_reasoning = ar
+    if p_method and not method_supported:
+        po = dict(primary)
+        po["method"] = ""
+        ar_for_reasoning = dict(ar)
+        ar_for_reasoning["primary_owner"] = po
+
     intent = infer_intent(query)
     meta["intent"] = intent
-    cr = generate_change_reasoning(bundle, authority_resolution, intent)
+    cr = generate_change_reasoning(bundle, ar_for_reasoning, intent)
     if cr:
         meta["change_reasoning"] = cr
         steps.extend(change_reasoning_to_action_steps(cr))

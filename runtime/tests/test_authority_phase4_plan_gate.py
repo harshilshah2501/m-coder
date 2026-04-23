@@ -256,6 +256,64 @@ def test_planner_uses_authority_when_present():
     assert any("Primary implementation owner" in s for s in ps.steps)
 
 
+def test_authority_synthesis_omits_unanchored_method_claim_when_snippet_missing_method():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/MailServerConfiguration.java",
+            "class": "MailServerConfiguration",
+            "method": "beforeUpdate",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    po = ar["primary_owner"]
+    b = _ctx([po["file"]])
+    # Deliberately declaration-heavy content without method declaration.
+    b.items[0].content = "public class MailServerConfiguration extends AbstractAPI { public static final String X = \"y\"; }"
+    steps, meta = synthesize_authority_plan_steps("how does mail update work", b, ar)
+    joined = " ".join(steps)
+    assert "Primary implementation owner" in joined
+    assert ", method `beforeUpdate`" not in joined
+    assert "method beforeUpdate" not in joined
+    assert "authority-derived" in joined
+    assert meta.get("method_claim_alignment_pass") is False
+
+
+def test_authority_synthesis_shapes_collaborators_to_owner_domain():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/APIServer.java",
+            "class": "APIServer",
+            "method": "start",
+        },
+        "collaborators": [
+            {"file": "src/main/java/com/mindarray/api/AbstractAPI.java"},
+            {"file": "src/main/java/com/mindarray/notification/NotificationEngine.java"},
+            {"file": "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"},
+            {"file": "src/main/java/com/mindarray/aiops/DependencyManager.java"},
+            {"file": "src/main/java/com/mindarray/nms/DiscoveryEngine.java"},
+        ],
+        "forbidden_distractors": [],
+    }
+    b = _ctx(
+        [
+            "src/main/java/com/mindarray/api/APIServer.java",
+            "src/main/java/com/mindarray/notification/NotificationEngine.java",
+        ]
+    )
+    steps, meta = synthesize_authority_plan_steps("api layer architecture", b, ar)
+    collab_line = next((s for s in steps if s.startswith("Supporting context only")), "")
+    cl = collab_line.lower()
+    assert "abstractapi" in cl
+    assert "notificationengine" in cl
+    assert meta.get("collaborator_paths_total") == 5
+    assert int(meta.get("collaborator_paths_emitted") or 0) <= 4
+
+
 def test_planner_preserves_structural_direct_answer_when_authority_exists():
     registry = load_registry(REG)
     ar = build_authority_resolution("api layer architecture", registry, None)
