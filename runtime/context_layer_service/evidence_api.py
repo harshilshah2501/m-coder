@@ -10,6 +10,8 @@ import logging
 import time
 import os
 import re
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
@@ -134,6 +136,55 @@ def _java_snippet_has_implementation_signals(text: str) -> bool:
     return False
 
 
+class DebugGroundingTier(str, Enum):
+    """Grounding strength for selected-file debug evidence snippets."""
+
+    NONE = "none"
+    DECLARATIVE = "declarative"
+    PARTIAL = "partial"
+    EXECUTABLE = "executable"
+    TRACEABLE = "traceable"
+
+
+@dataclass(frozen=True)
+class GroundingAssessment:
+    tier: DebugGroundingTier
+    matched_file: Optional[str]
+    matched_method_names: list[str]
+    executable_markers: list[str]
+    control_flow_markers: int
+    operation_markers: int
+    line_refs: int
+    rationale: list[str]
+    missing_reason: Optional[str]
+
+
+_CONTROL_FLOW_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("if", re.compile(r"\bif\s*\(")),
+    ("else", re.compile(r"\belse\b")),
+    ("switch", re.compile(r"\bswitch\s*\(")),
+    ("for", re.compile(r"\bfor\s*\(")),
+    ("while", re.compile(r"\bwhile\s*\(")),
+    ("try", re.compile(r"\btry\b")),
+    ("catch", re.compile(r"\bcatch\b")),
+    ("return", re.compile(r"(?<![@])\breturn\b")),
+    ("throw", re.compile(r"\bthrow\b")),
+)
+_OPERATION_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("call", re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\s*\(")),
+    ("chained_call", re.compile(r"\.\s*[A-Za-z_][A-Za-z0-9_]*\s*\(")),
+    ("new_object", re.compile(r"\bnew\s+[A-Za-z_][A-Za-z0-9_]*\s*\(")),
+    ("assignment", re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\s*=\s*[^=]")),
+    ("mutation", re.compile(r"\.(put|add|remove|set|update)\s*\(")),
+)
+_DECLARATIVE_ONLY_LINE = re.compile(
+    r"^\s*(package|import)\b|^\s*(public|private|protected)?\s*(static\s+)?(final\s+)?"
+    r"(class|interface|enum)\b|^\s*(public|private|protected)?\s*(static\s+)?(final\s+)?"
+    r"[A-Za-z_][A-Za-z0-9_<>\[\]]*\s+[A-Za-z_][A-Za-z0-9_]*\s*(=\s*[^;]+)?;\s*$",
+    re.I,
+)
+
+
 def _hint_matches_selected_snippet(hint: str, hay: str) -> bool:
     """
     Match debug hints against snippet text.
@@ -153,6 +204,179 @@ def _hint_matches_selected_snippet(hint: str, hay: str) -> bool:
     return False
 
 
+def _selected_snippet_entries(bundle_dict: Dict[str, Any], selected_file: str) -> list[dict[str, Any]]:
+    entries = bundle_dict.get("entries")
+    if not isinstance(entries, list):
+        return []
+    sel_norm = str(selected_file or "").replace("\\", "/").strip()
+    if not sel_norm:
+        return []
+    sel = sel_norm.lower()
+    base = sel.split("/")[-1]
+    out: list[dict[str, Any]] = []
+    for ent in entries:
+        if not isinstance(ent, dict):
+            continue
+        rp = str(ent.get("relative_path") or "").replace("\\", "/").strip()
+        if not rp:
+            continue
+        rp_l = rp.lower()
+        if paths_match_workspace(rp, sel_norm) or rp_l == sel or rp_l.endswith("/" + base) or rp_l.endswith(base):
+            out.append(ent)
+    return out
+
+
+def _line_ref_count(selected_entries: list[dict[str, Any]]) -> int:
+    refs = 0
+    for ent in selected_entries:
+        sn = ent.get("snippet")
+        sn = sn if isinstance(sn, dict) else {}
+        if isinstance(sn.get("start_line"), int) and isinstance(sn.get("end_line"), int):
+            refs += 1
+    return refs
+
+
+def _detect_markers(hay: str, patterns: tuple[tuple[str, re.Pattern[str]], ...]) -> list[str]:
+    hits: list[str] = []
+    for name, rx in patterns:
+        if rx.search(hay):
+            hits.append(name)
+    return hits
+
+
+def _has_non_declarative_statements(hay: str) -> bool:
+    for line in hay.splitlines():
+        ln = line.strip()
+        if not ln:
+            continue
+        if ln.startswith("//") or ln.startswith("*") or ln.startswith("/*") or ln.startswith("*/"):
+            continue
+        if _DECLARATIVE_ONLY_LINE.match(ln):
+            continue
+        if re.search(r"[=()]|->|\.", ln):
+            return True
+    return False
+
+
+def detect_selected_method_grounding(
+    bundle_dict: Dict[str, Any],
+    selected_file: Optional[str],
+    method_hints: list[str],
+) -> GroundingAssessment:
+    """
+    Classify selected-file grounding strength for EXPLAIN_DEBUG diagnostics.
+
+    Deterministic and text-only: examines selected-file snippets in evidence bundle.
+    """
+    sel_norm = str(selected_file or "").replace("\\", "/").strip()
+    if not sel_norm:
+        return GroundingAssessment(
+            tier=DebugGroundingTier.NONE,
+            matched_file=None,
+            matched_method_names=[],
+            executable_markers=[],
+            control_flow_markers=0,
+            operation_markers=0,
+            line_refs=0,
+            rationale=["selected_file_missing"],
+            missing_reason="selected_file_missing",
+        )
+    selected_entries = _selected_snippet_entries(bundle_dict, sel_norm)
+    if not selected_entries:
+        return GroundingAssessment(
+            tier=DebugGroundingTier.NONE,
+            matched_file=None,
+            matched_method_names=[],
+            executable_markers=[],
+            control_flow_markers=0,
+            operation_markers=0,
+            line_refs=0,
+            rationale=["selected_file_not_in_evidence_entries"],
+            missing_reason="selected_file_not_in_evidence_entries",
+        )
+    selected_text_parts: list[str] = []
+    for ent in selected_entries:
+        sn = ent.get("snippet")
+        sn = sn if isinstance(sn, dict) else {}
+        selected_text_parts.append(str(sn.get("text") or ""))
+    hay = "\n".join(selected_text_parts)
+    matched_hints = [h for h in method_hints if _hint_matches_selected_snippet(h, hay)]
+    stem = Path(sel_norm).stem
+    stem_hint = bool(stem and any(str(h).lower() == stem.lower() for h in method_hints))
+    cf_markers = _detect_markers(hay, _CONTROL_FLOW_PATTERNS)
+    op_markers = _detect_markers(hay, _OPERATION_PATTERNS)
+    line_refs = _line_ref_count(selected_entries)
+    rationale: list[str] = [f"selected_entry_count={len(selected_entries)}"]
+
+    if not text_has_executable_control_flow(hay):
+        if not _has_non_declarative_statements(hay):
+            rationale.append("declarations_only")
+            return GroundingAssessment(
+                tier=DebugGroundingTier.DECLARATIVE,
+                matched_file=sel_norm,
+                matched_method_names=matched_hints,
+                executable_markers=[],
+                control_flow_markers=0,
+                operation_markers=len(op_markers),
+                line_refs=line_refs,
+                rationale=rationale,
+                missing_reason="selected_file_snippet_declarative_only",
+            )
+        rationale.append("non_declarative_but_not_control_flow")
+        return GroundingAssessment(
+            tier=DebugGroundingTier.PARTIAL,
+            matched_file=sel_norm,
+            matched_method_names=matched_hints,
+            executable_markers=[],
+            control_flow_markers=0,
+            operation_markers=len(op_markers),
+            line_refs=line_refs,
+            rationale=rationale,
+            missing_reason="selected_file_snippet_partial_non_executable",
+        )
+
+    if not matched_hints and not (stem_hint and _java_snippet_has_implementation_signals(hay)):
+        rationale.append("control_flow_present_but_method_hints_missing")
+        return GroundingAssessment(
+            tier=DebugGroundingTier.PARTIAL,
+            matched_file=sel_norm,
+            matched_method_names=[],
+            executable_markers=cf_markers,
+            control_flow_markers=len(cf_markers),
+            operation_markers=len(op_markers),
+            line_refs=line_refs,
+            rationale=rationale,
+            missing_reason="selected_file_snippets_missing_method_hints",
+        )
+
+    if len(cf_markers) >= 2 and len(op_markers) >= 2 and line_refs >= 1:
+        rationale.append("traceable_local_flow")
+        return GroundingAssessment(
+            tier=DebugGroundingTier.TRACEABLE,
+            matched_file=sel_norm,
+            matched_method_names=matched_hints or ([stem] if stem_hint and stem else []),
+            executable_markers=cf_markers,
+            control_flow_markers=len(cf_markers),
+            operation_markers=len(op_markers),
+            line_refs=line_refs,
+            rationale=rationale,
+            missing_reason=None,
+        )
+
+    rationale.append("executable_method_body_present")
+    return GroundingAssessment(
+        tier=DebugGroundingTier.EXECUTABLE,
+        matched_file=sel_norm,
+        matched_method_names=matched_hints or ([stem] if stem_hint and stem else []),
+        executable_markers=cf_markers,
+        control_flow_markers=len(cf_markers),
+        operation_markers=len(op_markers),
+        line_refs=line_refs,
+        rationale=rationale,
+        missing_reason=None,
+    )
+
+
 def _selected_method_body_diagnosis(
     bundle_dict: Dict[str, Any],
     selected_file: Optional[str],
@@ -166,36 +390,9 @@ def _selected_method_body_diagnosis(
     sel_norm = str(selected_file or "").replace("\\", "/").strip()
     if not sel_norm or not method_hints:
         return None, None
-    sel = sel_norm.lower()
-    entries = bundle_dict.get("entries")
-    if not isinstance(entries, list):
-        return False, "evidence_bundle_missing_entries"
-    base = sel.split("/")[-1]
-    selected_text_parts: list[str] = []
-    for ent in entries:
-        if not isinstance(ent, dict):
-            continue
-        rp = str(ent.get("relative_path") or "").replace("\\", "/").strip()
-        if not rp:
-            continue
-        rp_l = rp.lower()
-        if paths_match_workspace(rp, sel_norm) or rp_l == sel or rp_l.endswith("/" + base) or rp_l.endswith(base):
-            sn = ent.get("snippet")
-            sn = sn if isinstance(sn, dict) else {}
-            selected_text_parts.append(str(sn.get("text") or ""))
-    if not selected_text_parts:
-        return False, "selected_file_not_in_evidence_entries"
-    hay = "\n".join(selected_text_parts)
-    if not text_has_executable_control_flow(hay):
-        return False, "selected_file_snippet_missing_executable_control_flow"
-    for h in method_hints:
-        if _hint_matches_selected_snippet(h, hay):
-            return True, None
-    stem = Path(sel_norm).stem
-    if stem and any(str(h).lower() == stem.lower() for h in method_hints):
-        if _java_snippet_has_implementation_signals(hay):
-            return True, None
-    return False, "selected_file_snippets_missing_method_hints"
+    assess = detect_selected_method_grounding(bundle_dict, sel_norm, method_hints)
+    present = assess.tier in {DebugGroundingTier.EXECUTABLE, DebugGroundingTier.TRACEABLE}
+    return present, assess.missing_reason
 
 
 def _selected_method_body_present(
@@ -515,11 +712,20 @@ def export_evidence_bundle_dict(
         if str(task_type or "").upper() == "EXPLAIN_DEBUG"
         else []
     )
-    present, missing_reason = _selected_method_body_diagnosis(out, selected_anchor, method_hints)
-    if method_hints:
-        fd["selected_method_hints"] = method_hints
-    if present is not None:
-        fd["selected_method_body_present"] = bool(present)
-        if not present and missing_reason:
-            fd["selected_method_body_missing_reason"] = missing_reason
+    if str(task_type or "").upper() == "EXPLAIN_DEBUG":
+        assessment = detect_selected_method_grounding(out, selected_anchor, method_hints)
+        present, missing_reason = _selected_method_body_diagnosis(out, selected_anchor, method_hints)
+        if method_hints:
+            fd["selected_method_hints"] = method_hints
+        fd["selected_method_grounding_tier"] = assessment.tier.value
+        fd["selected_method_grounding_rationale"] = list(assessment.rationale)
+        fd["selected_method_control_flow_markers"] = int(assessment.control_flow_markers)
+        fd["selected_method_operation_markers"] = int(assessment.operation_markers)
+        fd["selected_method_line_refs"] = int(assessment.line_refs)
+        if assessment.matched_method_names:
+            fd["selected_method_matched_names"] = list(assessment.matched_method_names)
+        if present is not None:
+            fd["selected_method_body_present"] = bool(present)
+            if not present and missing_reason:
+                fd["selected_method_body_missing_reason"] = missing_reason
     return out

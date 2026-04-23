@@ -1,6 +1,8 @@
 """Hint matching for EXPLAIN_DEBUG selected-file body checks (camelCase Java)."""
 
 from runtime.context_layer_service.evidence_api import (
+    DebugGroundingTier,
+    detect_selected_method_grounding,
     _java_snippet_has_implementation_signals,
     _selected_method_body_present,
     _hint_matches_selected_snippet,
@@ -101,3 +103,84 @@ def test_selected_method_body_present_basename_hint_mid_file_window_without_clas
     }
     hints = ["SNMPTrapProcessor", "parse", "dispatch"]
     assert _selected_method_body_present(bundle, "motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java", hints) is True
+
+
+def test_detect_selected_method_grounding_declarative_tier():
+    bundle = {
+        "entries": [
+            {
+                "relative_path": "motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+                "snippet": {
+                    "text": (
+                        "package com.mindarray.api;\n"
+                        "public class MailServerConfiguration extends AbstractAPI {\n"
+                        "  private static final String MAIL_SERVER_USERNAME = \"mail.server.username\";\n"
+                        "}\n"
+                    ),
+                    "start_line": 1,
+                    "end_line": 4,
+                },
+            }
+        ]
+    }
+    out = detect_selected_method_grounding(
+        bundle,
+        "motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+        ["beforeUpdate", "afterUpdate", "MailServerConfiguration"],
+    )
+    assert out.tier == DebugGroundingTier.DECLARATIVE
+    assert out.missing_reason == "selected_file_snippet_declarative_only"
+
+
+def test_detect_selected_method_grounding_partial_when_no_method_hint_match():
+    bundle = {
+        "entries": [
+            {
+                "relative_path": "motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
+                "snippet": {
+                    "text": "void handle() {\n  if (raw == null) { return; }\n}\n",
+                    "start_line": 11,
+                    "end_line": 13,
+                },
+            }
+        ]
+    }
+    out = detect_selected_method_grounding(
+        bundle,
+        "motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
+        ["parse", "dispatch"],
+    )
+    assert out.tier == DebugGroundingTier.PARTIAL
+    assert out.missing_reason == "selected_file_snippets_missing_method_hints"
+
+
+def test_detect_selected_method_grounding_traceable_tier():
+    bundle = {
+        "entries": [
+            {
+                "relative_path": "motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
+                "snippet": {
+                    "text": (
+                        "void dispatchTraps() {\n"
+                        "  for (Trap t : traps) {\n"
+                        "    if (t == null) { continue; }\n"
+                        "    parser.parse(t);\n"
+                        "    handlers.add(t);\n"
+                        "  }\n"
+                        "  return;\n"
+                        "}\n"
+                    ),
+                    "start_line": 41,
+                    "end_line": 49,
+                },
+            }
+        ]
+    }
+    out = detect_selected_method_grounding(
+        bundle,
+        "motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
+        ["SNMPTrapProcessor", "parse", "dispatch"],
+    )
+    assert out.tier == DebugGroundingTier.TRACEABLE
+    assert out.missing_reason is None
+    assert out.control_flow_markers >= 2

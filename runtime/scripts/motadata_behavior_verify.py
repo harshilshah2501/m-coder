@@ -1732,24 +1732,77 @@ def _check_method_body_answer_alignment(
     fd = evidence.get("fusion_diagnostics")
     if not isinstance(fd, dict):
         return []
-    if fd.get("selected_method_body_present") is not True:
+    tier = str(fd.get("selected_method_grounding_tier") or "").strip().lower()
+    body_present = fd.get("selected_method_body_present") is True
+    exec_tier = tier in {"executable", "traceable"}
+    if not tier and not body_present:
         return []
     hay_lc, _, _ = _collect_debug_text_blobs(explain_debug)
-    needles = (
+    absence_needles = (
         "is not present in the retrieved context",
         "without that file body",
         "cannot trace concrete method",
         "insufficiently grounded",
         "missing_in_context:",
+        "lacks specific details",
+        "does not contain",
+        "not present in the given context",
+        "cannot trace",
+        "no direct reference",
+        "unclear how this relates",
+        "without seeing the actual implementations",
+        "declaration-heavy",
+        "trace inherited/update hooks in nearby classes",
     )
-    hits = [n for n in needles if n.lower() in hay_lc]
-    if hits:
+    absence_hits = [n for n in absence_needles if n.lower() in hay_lc]
+    if exec_tier and absence_hits:
         return [
             "require_method_body_answer_alignment: explain_debug contradicts "
-            "fusion selected_method_body_present="
-            + str(fd.get("selected_method_body_present"))
-            + f" (matched phrases={hits})"
+            f"fusion selected_method_grounding_tier={tier!r} "
+            + f"(matched phrases={absence_hits})"
         ]
+
+    if tier in {"none", "declarative", "partial"}:
+        overclaim_needles = (
+            "the method does",
+            "this branch executes",
+            "the code returns",
+            "exact failure path",
+            "root cause is",
+        )
+        overclaim_hits = [n for n in overclaim_needles if n in hay_lc]
+        if overclaim_hits:
+            return [
+                "require_method_body_answer_alignment: explain_debug overclaims method-level certainty "
+                f"for selected_method_grounding_tier={tier!r} (matched phrases={overclaim_hits})"
+            ]
+
+    if exec_tier:
+        op_needles = (
+            "read",
+            "parse",
+            "dispatch",
+            "decrypt",
+            "initialize",
+            "update",
+            "set",
+            "put",
+            "add",
+            "remove",
+            "return",
+            "throw",
+            "call",
+            "loop",
+            "iterate",
+            "map",
+            "hashset",
+        )
+        op_hits = [n for n in op_needles if n in hay_lc]
+        if not op_hits:
+            return [
+                "require_method_body_answer_alignment: selected_method_body_present but explain_debug lacks "
+                "concrete operation verbs tied to selected-file logic"
+            ]
     return []
 
 
@@ -1763,10 +1816,24 @@ def _check_expect_debug_method_body(
     fd = evidence.get("fusion_diagnostics")
     fd = fd if isinstance(fd, dict) else {}
     present = fd.get("selected_method_body_present")
+    tier = str(fd.get("selected_method_grounding_tier") or "").strip().lower()
     hints = fd.get("selected_method_hints") if isinstance(fd.get("selected_method_hints"), list) else []
     if not hints:
         errs.append("require_selected_method_body_present: no selected_method_hints exported in fusion_diagnostics")
         return errs
+    if tier:
+        if tier not in {"executable", "traceable"}:
+            errs.append(
+                "require_selected_method_body_present: selected method grounding tier is not executable "
+                f"(tier={tier!r}, hints={hints}, reason={fd.get('selected_method_body_missing_reason')})"
+            )
+            return errs
+        if present is not True:
+            errs.append(
+                "require_selected_method_body_present: selected_method_body_present must be true "
+                f"when tier={tier!r} (hints={hints})"
+            )
+            return errs
     if present is not True:
         errs.append(
             "require_selected_method_body_present: selected method body not present in selected-file snippets "
@@ -2186,6 +2253,8 @@ def _run_scenario_row(
             "depth_signals": depth_signals,
             "selected_method_hints": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_hints") if isinstance(evidence, dict) else None),
             "selected_method_body_present": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_body_present") if isinstance(evidence, dict) else None),
+            "selected_method_grounding_tier": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_grounding_tier") if isinstance(evidence, dict) else None),
+            "selected_method_grounding_rationale": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_grounding_rationale") if isinstance(evidence, dict) else None),
         }
         return {
             "id": sid,
@@ -2205,6 +2274,7 @@ def _run_scenario_row(
                 "depth_signals": depth_signals,
                 "selected_method_hints": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_hints") if isinstance(evidence, dict) else None),
                 "selected_method_body_present": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_body_present") if isinstance(evidence, dict) else None),
+                "selected_method_grounding_tier": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_grounding_tier") if isinstance(evidence, dict) else None),
             },
             "dev_snapshot": dev_snapshot,
         }

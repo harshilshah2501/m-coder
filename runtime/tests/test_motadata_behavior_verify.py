@@ -282,3 +282,66 @@ def test_run_scenario_row_code_supports_outcome_any_of(monkeypatch) -> None:
     )
     assert out["pass"] is True
     assert out["actual_summary"]["command"] == "echo hello"
+
+
+def test_check_expect_debug_method_body_uses_grounding_tier() -> None:
+    expect = {"require_selected_method_body_present": True}
+    evidence = {
+        "fusion_diagnostics": {
+            "selected_method_hints": ["beforeUpdate", "afterUpdate"],
+            "selected_method_body_present": True,
+            "selected_method_grounding_tier": "partial",
+            "selected_method_body_missing_reason": "selected_file_snippet_partial_non_executable",
+        }
+    }
+    errs = verify._check_expect_debug_method_body(expect, evidence)
+    assert errs
+    assert "grounding tier is not executable" in errs[0]
+
+
+def test_check_method_body_answer_alignment_flags_absence_phrases_for_executable() -> None:
+    expect = {
+        "require_selected_method_body_present": True,
+        "require_method_body_answer_alignment": True,
+    }
+    evidence = {
+        "fusion_diagnostics": {
+            "selected_method_hints": ["parse", "dispatch"],
+            "selected_method_body_present": True,
+            "selected_method_grounding_tier": "executable",
+        }
+    }
+    explain = {
+        "summary": "The selected file lacks specific details and no direct reference was found.",
+        "logic_flow": "Cannot trace concrete method behavior from this context.",
+        "likely_bug_risk": "",
+        "confidence_limits": "",
+        "evidence": [],
+    }
+    errs = verify._check_method_body_answer_alignment(expect, evidence, explain)
+    assert errs
+    assert "contradicts fusion selected_method_grounding_tier" in errs[0]
+
+
+def test_check_method_body_answer_alignment_flags_overclaim_for_declarative() -> None:
+    expect = {
+        "require_selected_method_body_present": True,
+        "require_method_body_answer_alignment": True,
+    }
+    evidence = {
+        "fusion_diagnostics": {
+            "selected_method_hints": ["beforeUpdate"],
+            "selected_method_body_present": False,
+            "selected_method_grounding_tier": "declarative",
+        }
+    }
+    explain = {
+        "summary": "The method does X and this branch executes before persistence.",
+        "logic_flow": "The code returns null in this branch.",
+        "likely_bug_risk": "",
+        "confidence_limits": "",
+        "evidence": [],
+    }
+    errs = verify._check_method_body_answer_alignment(expect, evidence, explain)
+    assert errs
+    assert "overclaims method-level certainty" in errs[0]
