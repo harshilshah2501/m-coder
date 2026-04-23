@@ -364,7 +364,7 @@ def test_assist_v2_ask_activation_uses_existing_ask_outputs_only():
     assert ask_response["evidence_first_meta"]["ask_path"] == "v1_evidence"
 
 
-def test_assist_v2_ask_activation_skips_debug_shape_changes():
+def test_assist_v2_debug_activation_adds_debug_v2_without_ask_sections():
     decision = decide_assist_v2_mode(
         task_type_label="EXPLAIN_DEBUG",
         selected_file="src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
@@ -374,10 +374,21 @@ def test_assist_v2_ask_activation_skips_debug_shape_changes():
     enriched = augment_assist_v2_with_response(
         skeleton=shell,
         ask_response={
+            "explain_debug": {
+                "summary": "Grounded on selected file.",
+                "logic_flow": "Executable grounding: selected-file methods and branch cues are present.",
+                "likely_bug_risk": "Failure branch articulation: verify condition checks before dispatch.",
+                "evidence": [
+                    "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java:runCorrelation",
+                    "src/main/java/com/mindarray/aiops/DependencyManager.java:resolveDependencies",
+                ],
+                "confidence_limits": "Grounded to selected-file method/branch evidence; validate downstream callees.",
+            },
             "metadata": {
-                "execution_path_stitched": False,
-                "call_site_resolution_state": "unresolved",
+                "execution_path_stitched": True,
+                "call_site_resolution_state": "resolved_visible",
                 "method_window_visible_rate": 1.0,
+                "explicit_method_body_evidence_present": True,
             }
         },
     )
@@ -385,4 +396,48 @@ def test_assist_v2_ask_activation_skips_debug_shape_changes():
     assert "evidence" not in enriched
     assert "gaps" not in enriched
     assert "next_steps" not in enriched
-    assert enriched["proof_density_hooks"]["call_site_resolution_state"] == "unresolved"
+    debug_v2 = enriched.get("debug_v2") or {}
+    assert debug_v2["summary"] == "Grounded on selected file."
+    assert debug_v2["execution_flow"].startswith("Executable grounding")
+    assert debug_v2["likely_failure_points"]
+    assert debug_v2["evidence"]["selected_file"].endswith("AvailabilityCorrelationEngine.java")
+    assert debug_v2["evidence"]["selected_method"] == "runCorrelation"
+    assert debug_v2["evidence"]["grounding_tier"] == "executable"
+    assert debug_v2["confidence_limits"]["visible"]
+    assert debug_v2["next_inspection_targets"]
+
+
+def test_assist_v2_debug_activation_preserves_missing_file_insufficiency():
+    decision = decide_assist_v2_mode(
+        task_type_label="EXPLAIN_DEBUG",
+        selected_file="src/main/java/com/mindarray/aiops/MissingFile.java",
+        selection_text="trace branch",
+    )
+    shell = build_assist_v2_response_shell(decision)
+    enriched = augment_assist_v2_with_response(
+        skeleton=shell,
+        ask_response={
+            "explain_debug": {
+                "summary": "Selected file is not present in retrieved context.",
+                "logic_flow": "Cannot trace concrete method/branch behavior without selected file body.",
+                "likely_bug_risk": "Any root-cause claim would be speculative.",
+                "evidence": ["missing_in_context:src/main/java/com/mindarray/aiops/MissingFile.java"],
+                "confidence_limits": "Insufficient grounding: include selected file in evidence and retry.",
+            },
+            "metadata": {
+                "execution_path_stitched": False,
+                "call_site_resolution_state": "unresolved",
+                "method_window_visible_rate": 0.0,
+                "explicit_method_body_evidence_present": False,
+            },
+        },
+    )
+
+    assert "explain_debug" not in enriched
+    debug_v2 = enriched.get("debug_v2") or {}
+    assert debug_v2["evidence"]["grounding_tier"] == "none"
+    assert debug_v2["evidence"]["selected_file"].endswith("MissingFile.java")
+    assert debug_v2["evidence"]["selected_method"] == ""
+    assert debug_v2["confidence_limits"]["not_visible"]
+    assert debug_v2["confidence_limits"]["requires_next_inspection"]
+    assert debug_v2["likely_failure_points"] == ["Any root-cause claim would be speculative."]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from enum import Enum
 import re
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
 class AssistV2Mode(str, Enum):
@@ -117,6 +117,7 @@ def augment_assist_v2_with_response(
     notes = [str(n) for n in (summary.get("notes") or []) if str(n).strip()]
     context_bundle = ask_response.get("context_bundle") if isinstance(ask_response.get("context_bundle"), dict) else {}
     context_files = context_bundle.get("files") if isinstance(context_bundle.get("files"), list) else []
+    explain_debug = ask_response.get("explain_debug") if isinstance(ask_response.get("explain_debug"), dict) else {}
 
     proof_density = {
         "execution_path_stitched": meta.get("execution_path_stitched"),
@@ -128,7 +129,13 @@ def augment_assist_v2_with_response(
         **proof_density,
     }
     if mode == AssistV2Mode.DEBUG.value:
-        # Ask-path activation only; preserve debug behavior and avoid forcing ask-shaped sections.
+        owner = _extract_primary_owner(plan_steps)
+        out["debug_v2"] = _build_debug_v2_block(
+            explain_debug=explain_debug,
+            meta=meta,
+            context_files=context_files,
+            owner=owner,
+        )
         return out
 
     owner = _extract_primary_owner(plan_steps)
@@ -283,3 +290,278 @@ def _build_next_steps_block(
             candidates.append(f"Open `{p}` and verify whether current snippet includes downstream method declarations/call edges.")
     # Keep actionable and bounded.
     return {"bounded_verification_steps": candidates[:3]}
+
+
+def _build_debug_v2_block(
+    *,
+    explain_debug: Dict[str, Any],
+    meta: Dict[str, Any],
+    context_files: list[dict[str, Any]],
+    owner: Dict[str, str],
+) -> Dict[str, Any]:
+    evidence_list = [str(x).strip() for x in (explain_debug.get("evidence") or []) if str(x).strip()]
+    selected_file = _extract_selected_file(evidence_list, context_files, owner)
+    selected_method = _extract_selected_method(evidence_list, selected_file, owner)
+    line_refs = _extract_line_refs(evidence_list)
+    grounding_tier = _resolve_grounding_tier(
+        evidence=evidence_list,
+        meta=meta,
+        selected_file=selected_file,
+        selected_method=selected_method,
+    )
+    confidence_limits = _build_debug_confidence_limits(
+        explain_debug=explain_debug,
+        meta=meta,
+        selected_file=selected_file,
+        selected_method=selected_method,
+    )
+    return {
+        "summary": str(explain_debug.get("summary") or ""),
+        "execution_flow": str(explain_debug.get("logic_flow") or ""),
+        "likely_failure_points": _as_string_list(str(explain_debug.get("likely_bug_risk") or "")),
+        "evidence": {
+            "selected_file": selected_file,
+            "selected_method": selected_method,
+            "line_refs": line_refs,
+            "grounding_tier": grounding_tier,
+        },
+        "confidence_limits": confidence_limits,
+        "next_inspection_targets": _build_next_inspection_targets(
+            selected_file=selected_file,
+            selected_method=selected_method,
+            evidence=evidence_list,
+            owner=owner,
+        ),
+    }
+
+
+def _extract_selected_file(
+    evidence: List[str],
+    context_files: list[dict[str, Any]],
+    owner: Dict[str, str],
+) -> str:
+    missing = _extract_missing_in_context_path(evidence)
+    if missing:
+        return missing
+    for entry in evidence:
+        path = _extract_evidence_path(entry)
+        if path:
+            return path
+    owner_file = str(owner.get("file") or "").strip()
+    if owner_file:
+        return owner_file
+    for item in context_files:
+        if not isinstance(item, dict):
+            continue
+        path = str(item.get("path") or "").strip()
+        if path:
+            return path
+    return ""
+
+
+def _extract_selected_method(evidence: List[str], selected_file: str, owner: Dict[str, str]) -> str:
+    for entry in evidence:
+        path = _extract_evidence_path(entry)
+        if not path:
+            continue
+        if selected_file and path.lower() != selected_file.lower():
+            continue
+        anchor = _extract_evidence_anchor(entry)
+        if not anchor:
+            continue
+        if anchor == "analysis_anchor":
+            continue
+        if re.match(r"^\d+(-\d+)?$", anchor):
+            continue
+        return anchor
+    owner_file = str(owner.get("file") or "").strip()
+    owner_method = str(owner.get("method") or "").strip()
+    if owner_file and owner_method and selected_file and owner_file.lower() == selected_file.lower():
+        return owner_method
+    return ""
+
+
+def _extract_line_refs(evidence: List[str]) -> list[str]:
+    refs: list[str] = []
+    seen = set()
+    for entry in evidence:
+        path = _extract_evidence_path(entry)
+        anchor = _extract_evidence_anchor(entry)
+        if not path or not anchor:
+            continue
+        if not re.match(r"^\d+(-\d+)?$", anchor):
+            continue
+        ref = f"{path}:{anchor}"
+        if ref in seen:
+            continue
+        seen.add(ref)
+        refs.append(ref)
+    return refs
+
+
+def _extract_evidence_path(entry: str) -> str:
+    text = str(entry or "").strip().strip("`")
+    if text.startswith("missing_in_context:"):
+        return text.split(":", 1)[1].strip()
+    if ":" not in text:
+        return ""
+    path, _ = text.split(":", 1)
+    path = path.strip()
+    if "/" not in path and "." not in path:
+        return ""
+    return path
+
+
+def _extract_evidence_anchor(entry: str) -> str:
+    text = str(entry or "").strip().strip("`")
+    if text.startswith("missing_in_context:") or ":" not in text:
+        return ""
+    _, anchor = text.split(":", 1)
+    return anchor.strip()
+
+
+def _extract_missing_in_context_path(evidence: List[str]) -> str:
+    for entry in evidence:
+        text = str(entry or "").strip()
+        if text.startswith("missing_in_context:"):
+            return text.split(":", 1)[1].strip()
+    return ""
+
+
+def _resolve_grounding_tier(
+    *,
+    evidence: List[str],
+    meta: Dict[str, Any],
+    selected_file: str,
+    selected_method: str,
+) -> str:
+    if _extract_missing_in_context_path(evidence):
+        return "none"
+    mwr = meta.get("method_window_visible_rate")
+    explicit = meta.get("explicit_method_body_evidence_present")
+    stitched = meta.get("execution_path_stitched")
+    if (
+        selected_file
+        and selected_method
+        and explicit is True
+        and isinstance(mwr, (int, float))
+        and float(mwr) >= 1.0
+        and stitched is not False
+    ):
+        return "executable"
+    if selected_file and (selected_method or explicit is True or (isinstance(mwr, (int, float)) and float(mwr) > 0.0)):
+        return "partial"
+    if evidence:
+        return "declarative"
+    return "none"
+
+
+def _build_debug_confidence_limits(
+    *,
+    explain_debug: Dict[str, Any],
+    meta: Dict[str, Any],
+    selected_file: str,
+    selected_method: str,
+) -> Dict[str, list[str]]:
+    visible: list[str] = []
+    not_visible: list[str] = []
+    requires_next: list[str] = []
+
+    confidence = str(explain_debug.get("confidence_limits") or "").strip()
+    if confidence:
+        requires_next.append(confidence)
+    missing = _extract_missing_in_context_path(
+        [str(x).strip() for x in (explain_debug.get("evidence") or []) if str(x).strip()]
+    )
+    if missing:
+        not_visible.append(f"Selected file `{missing}` is not present in retrieved evidence.")
+    elif selected_file:
+        visible.append(f"Selected file `{selected_file}` is present in current debug evidence.")
+    if selected_method:
+        visible.append(f"Selected method anchor `{selected_method}` is visible in selected-file evidence.")
+
+    if meta.get("execution_path_stitched") is False:
+        requires_next.append("Execution-path stitch is unresolved for downstream confirmation.")
+    if str(meta.get("call_site_resolution_state") or "") == "unresolved":
+        requires_next.append("Call-site resolution remains unresolved in currently visible evidence.")
+    mwr = meta.get("method_window_visible_rate")
+    if mwr == 0 or meta.get("explicit_method_body_evidence_present") is False:
+        not_visible.append("Full method-window/body evidence is not visible in current context.")
+    return {
+        "visible": _dedupe_preserve(visible),
+        "not_visible": _dedupe_preserve(not_visible),
+        "requires_next_inspection": _dedupe_preserve(requires_next),
+    }
+
+
+def _build_next_inspection_targets(
+    *,
+    selected_file: str,
+    selected_method: str,
+    evidence: List[str],
+    owner: Dict[str, str],
+) -> list[dict[str, str]]:
+    targets: list[dict[str, str]] = []
+    if selected_file:
+        targets.append(
+            {
+                "file": selected_file,
+                "method": selected_method or "",
+                "reason": "selected_file_adjacent_method_hint",
+            }
+        )
+
+    collaborator = _extract_explicit_collaborator(evidence=evidence, selected_file=selected_file)
+    if collaborator:
+        targets.append(
+            {
+                "file": collaborator["file"],
+                "method": collaborator["method"],
+                "reason": "explicit_collaborator_in_evidence",
+            }
+        )
+
+    owner_file = str(owner.get("file") or "").strip()
+    owner_method = str(owner.get("method") or "").strip()
+    if owner_file and not any(t.get("file", "").lower() == owner_file.lower() for t in targets):
+        targets.append(
+            {
+                "file": owner_file,
+                "method": owner_method,
+                "reason": "owner_anchor_from_existing_metadata",
+            }
+        )
+    return targets[:3]
+
+
+def _extract_explicit_collaborator(*, evidence: List[str], selected_file: str) -> Dict[str, str]:
+    for entry in evidence:
+        path = _extract_evidence_path(entry)
+        if not path:
+            continue
+        if selected_file and path.lower() == selected_file.lower():
+            continue
+        method = _extract_evidence_anchor(entry)
+        if re.match(r"^\d+(-\d+)?$", method or ""):
+            method = ""
+        return {"file": path, "method": method}
+    return {}
+
+
+def _as_string_list(value: str) -> list[str]:
+    v = str(value or "").strip()
+    if not v:
+        return []
+    return [v]
+
+
+def _dedupe_preserve(items: list[str]) -> list[str]:
+    out: list[str] = []
+    seen = set()
+    for item in items:
+        text = str(item or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
+    return out

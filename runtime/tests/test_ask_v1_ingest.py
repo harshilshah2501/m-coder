@@ -381,6 +381,81 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
         proc.wait(timeout=5)
 
 
+def test_ask_v1_debug_v2_via_plan_gate_http_preserves_explain_debug_shape(tmp_path):
+    port = random.randint(20000, 49151)
+    env = os.environ.copy()
+    env["PLAN_GATE_PORT"] = str(port)
+    env.pop("MOTADATA_EXPLAIN_VLLM_URL", None)
+
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "runtime.plan_gate_service.app"],
+        cwd=str(_REPO_ROOT),
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        base = f"http://127.0.0.1:{port}"
+        for _ in range(50):
+            try:
+                req = urllib.request.Request(f"{base}/healthz", method="GET")
+                with urllib.request.urlopen(req, timeout=1) as r:
+                    if r.status == 200:
+                        break
+            except (urllib.error.URLError, OSError):
+                time.sleep(0.1)
+        else:
+            pytest.fail("Plan-Gate did not become ready")
+
+        ev = _load_golden_evidence()
+        entries = ev.get("entries") if isinstance(ev.get("entries"), list) else []
+        selected_file = str(entries[0].get("relative_path") or "") if entries else ""
+        body = json.dumps(
+            _minimal_v1_ask(
+                ev,
+                request_id="http-v1-debug-v2",
+                query="Explain the highlighted code.",
+                task_type="EXPLAIN_DEBUG",
+                selected_file=selected_file,
+                client_context={"selection": "def hello_unit():\n    return \"hello\"\n"},
+            )
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base}/v1/ask",
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            assert r.status == 200
+            response = json.loads(r.read().decode("utf-8"))
+
+        assist = response.get("assist_layer") if isinstance(response.get("assist_layer"), dict) else {}
+        assist_v2 = assist.get("assist_v2") if isinstance(assist.get("assist_v2"), dict) else {}
+        route_decision = assist_v2.get("route_decision") if isinstance(assist_v2.get("route_decision"), dict) else {}
+        assert route_decision.get("mode") == "debug"
+        assert "debug_v2" in assist_v2
+        assert "answer" not in assist_v2 and "evidence" not in assist_v2
+
+        debug_v2 = assist_v2.get("debug_v2") if isinstance(assist_v2.get("debug_v2"), dict) else {}
+        for key in ("summary", "execution_flow", "likely_failure_points", "evidence", "confidence_limits", "next_inspection_targets"):
+            assert key in debug_v2
+        assert isinstance(debug_v2.get("likely_failure_points"), list)
+        assert isinstance(debug_v2.get("next_inspection_targets"), list)
+        assert isinstance(debug_v2.get("evidence"), dict)
+
+        explain_debug = response.get("explain_debug") if isinstance(response.get("explain_debug"), dict) else {}
+        assert explain_debug, "existing explain_debug payload must remain present"
+        if "summary" in explain_debug:
+            assert debug_v2.get("summary") == explain_debug.get("summary")
+        if "logic_flow" in explain_debug:
+            assert debug_v2.get("execution_flow") == explain_debug.get("logic_flow")
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+
+
 def test_v1_blocked_has_refusal_shape_and_metadata():
     ev = _load_golden_evidence()
     ev["entries"] = [
