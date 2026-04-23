@@ -332,6 +332,7 @@ def test_assist_v2_ask_activation_uses_existing_ask_outputs_only():
             ]
         },
         "metadata": {
+            "evidence_quality": "STRONG",
             "execution_path_stitched": False,
             "call_site_resolution_state": "unresolved",
             "method_window_visible_rate": 1.0,
@@ -358,10 +359,95 @@ def test_assist_v2_ask_activation_uses_existing_ask_outputs_only():
     assert enriched["gaps"]["explicit_evidence_limits"]
     assert "next_steps" in enriched
     assert enriched["next_steps"]["bounded_verification_steps"]
+    assert "investigate" not in enriched  # mixed mode should not expose ask-only investigate bridge
     # Underlying ask semantics are unchanged by assist shaping.
     assert ask_response["governance_posture"] == "PLAN_ONLY"
     assert ask_response["execution"] is False
     assert ask_response["evidence_first_meta"]["ask_path"] == "v1_evidence"
+
+
+def test_assist_v2_investigate_bridge_added_for_grounded_ask_mode():
+    decision = decide_assist_v2_mode(
+        task_type_label="general",
+        selected_file="",
+        selection_text="",
+    )
+    shell = build_assist_v2_response_shell(decision)
+    ask_response = {
+        "governance_posture": "PLAN_ONLY",
+        "execution": False,
+        "evidence_first_meta": {"ask_path": "v1_evidence"},
+        "plan_summary": {
+            "steps": [
+                "Direct answer (grounded): sync orchestration is rooted in ServiceNowIntegration.",
+                "Primary implementation owner: `ServiceNowIntegration` in `src/main/java/com/mindarray/integration/ServiceNowIntegration.java`, method `synchronizeIncident`.",
+                "Owner method body is visible, but only a partial first-hop trace could be confirmed from current evidence.",
+            ],
+            "notes": [],
+        },
+        "context_bundle": {
+            "files": [
+                {
+                    "path": "src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+                    "selection_reason": "query_token_substring_anchor",
+                }
+            ]
+        },
+        "metadata": {
+            "evidence_quality": "STRONG",
+            "execution_path_stitched": False,
+            "call_site_resolution_state": "unresolved",
+            "method_window_visible_rate": 1.0,
+            "explicit_method_body_evidence_present": True,
+        },
+    }
+    enriched = augment_assist_v2_with_response(skeleton=shell, ask_response=ask_response)
+    investigate = enriched.get("investigate") or {}
+    assert investigate["available"] is True
+    assert investigate["reason"] == "owner_method_grounded"
+    assert investigate["target"]["file"] == "src/main/java/com/mindarray/integration/ServiceNowIntegration.java"
+    assert investigate["target"]["method"] == "synchronizeIncident"
+    assert investigate["target"]["symbol_hints"] == ["ServiceNowIntegration", "synchronizeIncident"]
+    assert investigate["handoff_context"]["source_mode"] == "ask"
+    assert investigate["handoff_context"]["ask_path"] == "v1_evidence"
+    assert investigate["handoff_context"]["governance_posture"] == "PLAN_ONLY"
+    assert investigate["handoff_context"]["execution"] is False
+    assert investigate["evidence_anchor"]["grounding_tier"] == "executable"
+    assert investigate["suggested_prompt"] == "Investigate this owner method and trace visible failure points."
+    # Existing Ask-mode shaping remains present.
+    assert "answer" in enriched
+    assert "evidence" in enriched
+    assert "gaps" in enriched
+    assert "next_steps" in enriched
+
+
+def test_assist_v2_investigate_bridge_omitted_when_ask_is_weak():
+    decision = decide_assist_v2_mode(
+        task_type_label="general",
+        selected_file="",
+        selection_text="",
+    )
+    shell = build_assist_v2_response_shell(decision)
+    ask_response = {
+        "governance_posture": "PLAN_ONLY",
+        "execution": False,
+        "evidence_first_meta": {"ask_path": "v1_evidence"},
+        "plan_summary": {
+            "steps": [
+                "Primary implementation owner: `ServiceNowIntegration` in `src/main/java/com/mindarray/integration/ServiceNowIntegration.java`, method `synchronizeIncident`."
+            ],
+            "notes": [],
+        },
+        "metadata": {
+            "evidence_quality": "WEAK",
+            "method_window_visible_rate": 1.0,
+            "explicit_method_body_evidence_present": True,
+            "execution_path_stitched": False,
+            "call_site_resolution_state": "unresolved",
+        },
+    }
+    enriched = augment_assist_v2_with_response(skeleton=shell, ask_response=ask_response)
+    assert "investigate" not in enriched
 
 
 def test_assist_v2_debug_activation_adds_debug_v2_without_ask_sections():
@@ -396,6 +482,7 @@ def test_assist_v2_debug_activation_adds_debug_v2_without_ask_sections():
     assert "evidence" not in enriched
     assert "gaps" not in enriched
     assert "next_steps" not in enriched
+    assert "investigate" not in enriched
     debug_v2 = enriched.get("debug_v2") or {}
     assert debug_v2["summary"] == "Grounded on selected file."
     assert debug_v2["execution_flow"].startswith("Executable grounding")

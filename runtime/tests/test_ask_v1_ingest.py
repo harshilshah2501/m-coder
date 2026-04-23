@@ -203,6 +203,70 @@ def _entry_v1(rank: int, path: str, role: str) -> dict:
     }
 
 
+def _strong_owner_method_evidence_v1() -> dict:
+    return {
+        "provisional": False,
+        "schema_hint": "layer5.evidence_bundle.v1",
+        "query_raw": "Where is ServiceNow incident synchronization implemented?",
+        "query_tokens": ["ServiceNow", "sync"],
+        "top_k": 1,
+        "index_schema_version": "layer5.file_index.v1",
+        "workspace_identity_hash": "",
+        "workspace_is_dirty": False,
+        "workspace_snapshot_source": "path_only",
+        "canonical_root": "",
+        "a5_authority_note": (
+            "Candidate order and retrieval_score come from Stage B fusion "
+            "(lexical + authority + domain priors + constraints); A6 does not reorder by snippet."
+        ),
+        "entries": [
+            {
+                "provisional": False,
+                "rank": 0,
+                "relative_path": "motadata/src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+                "retrieval_score": 10,
+                "retrieval_breakdown": {
+                    "path_substrings": 2,
+                    "basename_substrings": 1,
+                    "content_substrings": 2,
+                },
+                "retrieval_role": "PRIMARY_OWNER_CANDIDATE",
+                "snippet": {
+                    "text": (
+                        "public class ServiceNowIntegration {\n"
+                        "  public void synchronizeIncident() {\n"
+                        "    if (incident == null) return;\n"
+                        "  }\n"
+                        "}\n"
+                    ),
+                    "start_line": 1,
+                    "end_line": 5,
+                    "start_byte_utf8": 0,
+                    "end_byte_utf8": 120,
+                    "anchor_line": 2,
+                    "matched_tokens": ["ServiceNow", "sync"],
+                    "selection_reason": "query_token_substring_anchor",
+                    "truncated_by_max_bytes": False,
+                },
+            }
+        ],
+        "authority_resolution": {
+            "matched_concepts": [],
+            "primary_owner": {
+                "file": "src/main/java/com/mindarray/integration/ServiceNowIntegration.java",
+                "class": "ServiceNowIntegration",
+                "method": "synchronizeIncident",
+                "confidence": "high",
+            },
+            "authority_confidence": "high",
+            "authority_status": "validated",
+            "control_flow": [],
+            "notes": [],
+            "forbidden_distractors": [],
+        },
+    }
+
+
 def test_handle_ask_v1_applies_grounding_and_owner_anchor_recovery():
     """
     /v1/ask must pass retrieval_role + authority into assess_evidence_quality (same as /v0/ask + layer5),
@@ -451,6 +515,70 @@ def test_ask_v1_debug_v2_via_plan_gate_http_preserves_explain_debug_shape(tmp_pa
             assert debug_v2.get("summary") == explain_debug.get("summary")
         if "logic_flow" in explain_debug:
             assert debug_v2.get("execution_flow") == explain_debug.get("logic_flow")
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+
+
+def test_ask_v1_ask_mode_via_plan_gate_http_surfaces_investigate_bridge(tmp_path):
+    port = random.randint(20000, 49151)
+    env = os.environ.copy()
+    env["PLAN_GATE_PORT"] = str(port)
+    env.pop("MOTADATA_EXPLAIN_VLLM_URL", None)
+
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "runtime.plan_gate_service.app"],
+        cwd=str(_REPO_ROOT),
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        base = f"http://127.0.0.1:{port}"
+        for _ in range(50):
+            try:
+                req = urllib.request.Request(f"{base}/healthz", method="GET")
+                with urllib.request.urlopen(req, timeout=1) as r:
+                    if r.status == 200:
+                        break
+            except (urllib.error.URLError, OSError):
+                time.sleep(0.1)
+        else:
+            pytest.fail("Plan-Gate did not become ready")
+
+        ev = _strong_owner_method_evidence_v1()
+        body = json.dumps(
+            _minimal_v1_ask(
+                ev,
+                request_id="http-v1-investigate-bridge",
+                query="Where is ServiceNow incident synchronization implemented?",
+            )
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base}/v1/ask",
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            assert r.status == 200
+            response = json.loads(r.read().decode("utf-8"))
+
+        assert response.get("governance_posture") == "PLAN_ONLY"
+        assert response.get("execution") is False
+        assert response.get("evidence_first_meta", {}).get("ask_path") == "v1_evidence"
+
+        assist = response.get("assist_layer") if isinstance(response.get("assist_layer"), dict) else {}
+        assist_v2 = assist.get("assist_v2") if isinstance(assist.get("assist_v2"), dict) else {}
+        route = assist_v2.get("route_decision") if isinstance(assist_v2.get("route_decision"), dict) else {}
+        assert route.get("mode") == "ask"
+        investigate = assist_v2.get("investigate") if isinstance(assist_v2.get("investigate"), dict) else {}
+        assert investigate.get("available") is True
+        assert investigate.get("reason") in {"owner_method_grounded", "owner_method_visible"}
+        target = investigate.get("target") if isinstance(investigate.get("target"), dict) else {}
+        assert target.get("file") == "src/main/java/com/mindarray/integration/ServiceNowIntegration.java"
+        assert target.get("method") == "synchronizeIncident"
     finally:
         proc.terminate()
         proc.wait(timeout=5)
