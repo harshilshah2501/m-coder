@@ -23,6 +23,7 @@
 | **Method-window surfacing + Execution Stitching v1.1 calibration** | Achieved in bounded Ask scope; conservative truthful partial/non-stitched behavior preserved |
 | **Assist Layer v2 Ask activation (output-shape only)** | **COMPLETE** — diagnostics + `assist_v2.answer/evidence/gaps/next_steps`; no retrieval/governance/routing/execution changes |
 | **Assist Layer v2 (Ask + Debug + Investigate Bridge)** | **COMPLETE and invariant-safe** — Ask selection, Debug inspection, deterministic grounded handoff; no routing/governance/execution drift |
+| **Assist v2 API contract freeze + deploy gate pack** | **IN_PROGRESS** — backend hardening phase for canonical contract, HTTP deploy gate, and runbook closure |
 | **Ask v1 evidence quality parity** | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
 | **Behavior baseline promotion** | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
 | **Layer-1 / L2 / L4 milestone tables (declared rows)** | **LOCKED** or **COMPLETE** per §2.1; layer rollups per §2.1.1; details §4.1–§4.4 |
@@ -41,6 +42,7 @@
 | **Debug quality tightening (executable-grounded phrasing)** | **IN_PROGRESS** | Active refinement lane; preserve missing-file insufficiency contract |
 | **Context budget policy enforcement (Ask/Debug + declared Plan/Code budgets)** | **IN_PROGRESS** | telemetry-to-policy lane |
 | **Plan/Code validation pack expansion** | **IN_PROGRESS (next-surface readiness)** | governed validation lane with expanded scenario coverage/artifacts |
+| **Assist v2 API freeze + deploy gate hardening** | **IN_PROGRESS** | backend-only closure hardening; plugin remains out of scope in this phase |
 | **IDE → Stage3LoopController E2E** | **Follow-on** (not burn-in closure) | §B7, §6.20, runbook §7 |
 | **§B3 residual** | e.g. `plan_summary.notes` on all surfaces | §B3 bullets |
 | **Assist influence** | **NOT ENABLED** (advisory-only by design) | §1.5 |
@@ -71,7 +73,7 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**. **M3.12** narrow doc-manifest slice is **on `main`** (see §6.16.1).  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization; debug depth charter (`DEBUG-DEPTH-CHARTER-V1`). **Current focus:** post-closure controlled expansion with **Assist v2 Ask activation complete**, plus active lanes for **debug quality tightening**, **Plan/Code validation expansion**, and **context-budget policy enforcement** (see `docs/validation/PHASE_NEXT_PARALLEL_DEPTH_REPORT.md` and `docs/validation/CONTEXT_BUDGET_POLICY_ENFORCEMENT_V1.md`), while keeping §1.4 optional charters (`docs/L5_7_DIRTY_BUFFER_CHARTER.md`, §B1/L5-RET with §5 guardrails).
+- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization; debug depth charter (`DEBUG-DEPTH-CHARTER-V1`). **Current focus:** post-closure controlled expansion with **Assist v2 backend phase closed (Ask + Debug + Investigate Bridge)** and active hardening on **API contract freeze + deploy gate** (canonical spec, HTTP regression gate, deployment runbook), plus standing lanes for **Plan/Code validation expansion** and **context-budget policy enforcement**. Plugin work remains explicitly out of scope for this backend hardening phase.
 - **Overall status summary**:  
   - **Layer-1** — **LOCKED** (governance doctrine).  
   - **Layer-2** — **LOCKED** (ML compilation: Stage-6C cure, deterministic CONF, release verification PASS).  
