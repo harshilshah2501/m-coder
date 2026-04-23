@@ -92,7 +92,7 @@
       "required": ["concept_id", "match_type", "confidence"],
       "properties": {
         "concept_id": { "type": "string" },
-        "match_type": { "type": "string", "enum": ["exact", "alias", "partial"] },
+        "match_type": { "type": "string", "enum": ["exact", "alias", "partial", "owner_class_in_query"] },
         "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
         "primary_owner": { "$ref": "#/definitions/authority_primary_owner" }
       }
@@ -316,6 +316,7 @@
           "type": "string",
           "enum": [
             "query_token_substring_anchor",
+            "executable_control_flow_rescue_anchor",
             "no_query_token_in_body_file_start",
             "no_query_tokens_file_start",
             "file_missing",

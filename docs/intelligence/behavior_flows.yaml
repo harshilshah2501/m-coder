@@ -1,0 +1,301 @@
+schema_version: intelligence.behavior_flows.v1
+maintainer: lane-a
+behavior_flows:
+  - behavior_id: notification_dispatch
+    summary: Route resolved alert events to user-facing notification channels.
+    priority: P0
+    stages:
+      - name: assemble_notification_payload
+        mechanisms:
+          - type: DIRECT_CALL
+            source_symbol: NotificationFacade.dispatch
+            target_symbol: NotificationPayloadAssembler.build
+            file_paths:
+              - runtime/notify/facade.py
+              - runtime/notify/payload.py
+      - name: publish_dispatch_request
+        mechanisms:
+          - type: EVENTBUS
+            address: event.notification.dispatch.request
+            source_symbol: NotificationPublisher.publish
+            file_paths:
+              - runtime/notify/publisher.py
+      - name: persist_delivery_record
+        mechanisms:
+          - type: STORE
+            store_class: NotificationStore
+            config_bound: true
+            config_key: notification.delivery.ttl
+            target_symbol: NotificationStore.save_record
+            file_paths:
+              - runtime/notify/store.py
+    data_transformations:
+      - input: alert_event
+        operation: map severity and tenant metadata to channel payload
+        output: dispatch_payload
+        produced_fields: [severity, tenant_id, routing_key]
+    known_failure_modes:
+      - symptom: Notifications acknowledged but never received by users.
+        diagnostic_files:
+          - runtime/notify/publisher.py
+          - runtime/notify/store.py
+    query_aliases:
+      - alias: notification dispatch
+        match_strategy: exact
+      - alias: send alert to channel
+        match_strategy: token
+      - alias: notify people
+        match_strategy: fuzzy
+        fuzzy_guardrails:
+          min_score: 0.72
+          min_token_overlap: 2
+          max_candidates: 5
+
+  - behavior_id: config_store_access
+    summary: Resolve runtime configuration reads and writes from managed config store.
+    priority: P0
+    stages:
+      - name: read_config_snapshot
+        mechanisms:
+          - type: STORE
+            store_class: ConfigStore
+            config_bound: true
+            config_key: config.cache.refresh_seconds
+            source_symbol: ConfigService.read
+            file_paths:
+              - runtime/config/service.py
+              - runtime/config/store.py
+      - name: publish_config_invalidation
+        mechanisms:
+          - type: EVENTBUS
+            address: event.config.invalidate
+            source_symbol: ConfigPublisher.invalidate
+            file_paths:
+              - runtime/config/publisher.py
+    data_transformations:
+      - input: config_document
+        operation: normalize scoped keys into flat runtime map
+        output: normalized_config
+        conditions: applied only for active tenant scope
+        produced_fields: [scope, key, value]
+    known_failure_modes:
+      - symptom: Config writes succeed but stale values remain in workers.
+        diagnostic_files:
+          - runtime/config/service.py
+          - runtime/config/publisher.py
+    query_aliases:
+      - alias: config store access
+        match_strategy: exact
+      - alias: read runtime config
+        match_strategy: token
+
+  - behavior_id: incident_correlation
+    summary: Correlate related alerts into incident groups using topology and timing.
+    priority: P1
+    stages:
+      - name: aggregate_alert_context
+        mechanisms:
+          - type: DIRECT_CALL
+            source_symbol: CorrelationEngine.correlate
+            target_symbol: CorrelationContextBuilder.build
+            file_paths:
+              - runtime/correlation/engine.py
+      - name: publish_incident_candidate
+        mechanisms:
+          - type: EVENTBUS
+            address: event.incident.candidate
+            source_symbol: CorrelationPublisher.publish_candidate
+            file_paths:
+              - runtime/correlation/publisher.py
+    data_transformations:
+      - input: alert_batch
+        operation: score candidate links by topology distance and time window
+        output: incident_candidates
+        produced_fields: [incident_id, score, related_alert_ids]
+    known_failure_modes:
+      - symptom: Alerts stay fragmented even when topology and timing overlap.
+        diagnostic_files:
+          - runtime/correlation/engine.py
+          - runtime/correlation/scoring.py
+    query_aliases:
+      - alias: incident correlation
+        match_strategy: exact
+      - alias: group related alerts
+        match_strategy: token
+
+  - behavior_id: alarm_enrichment
+    summary: Enrich raw alarms with CMDB, ownership, and runbook metadata.
+    priority: P1
+    stages:
+      - name: call_enrichment_route
+        mechanisms:
+          - type: API_ROUTE
+            source_symbol: EnrichmentApi.handle
+            target_symbol: EnrichmentService.enrich
+            file_paths:
+              - runtime/enrichment/api.py
+      - name: cache_enriched_alarm
+        mechanisms:
+          - type: STORE
+            store_class: EnrichmentCacheStore
+            config_bound: false
+            target_symbol: EnrichmentCacheStore.put
+            file_paths:
+              - runtime/enrichment/cache.py
+    data_transformations:
+      - input: raw_alarm
+        operation: merge alarm body with cmdb owner and runbook links
+        output: enriched_alarm
+        produced_fields: [owner, service_tier, runbook_url]
+    known_failure_modes:
+      - symptom: Alarm cards render without owner metadata.
+        diagnostic_files:
+          - runtime/enrichment/service.py
+          - runtime/enrichment/cache.py
+    query_aliases:
+      - alias: alarm enrichment
+        match_strategy: exact
+      - alias: add cmdb context
+        match_strategy: token
+
+  - behavior_id: topology_sync
+    summary: Sync topology updates from discovery into runtime graph services.
+    priority: P1
+    stages:
+      - name: consume_discovery_updates
+        mechanisms:
+          - type: EVENTBUS
+            address: event.discovery.topology.changed
+            target_symbol: TopologySyncConsumer.handle
+            file_paths:
+              - runtime/topology/consumer.py
+      - name: persist_graph_snapshot
+        mechanisms:
+          - type: STORE
+            store_class: TopologyGraphStore
+            config_bound: true
+            config_key: topology.snapshot.ttl
+            target_symbol: TopologyGraphStore.replace_snapshot
+            file_paths:
+              - runtime/topology/store.py
+    data_transformations:
+      - input: topology_delta
+        operation: apply node and edge diff to graph snapshot
+        output: topology_snapshot
+        produced_fields: [nodes, edges, updated_at]
+    known_failure_modes:
+      - symptom: New devices appear in discovery but not in correlation graph.
+        diagnostic_files:
+          - runtime/topology/consumer.py
+          - runtime/topology/store.py
+    query_aliases:
+      - alias: topology sync
+        match_strategy: exact
+      - alias: apply topology updates
+        match_strategy: token
+
+  - behavior_id: alert_deduplication
+    summary: Collapse duplicate alerts into canonical records before downstream handling.
+    priority: P1
+    stages:
+      - name: compute_dedup_signature
+        mechanisms:
+          - type: DIRECT_CALL
+            source_symbol: DedupService.process
+            target_symbol: DedupSignatureBuilder.build
+            file_paths:
+              - runtime/dedup/service.py
+      - name: update_dedup_store
+        mechanisms:
+          - type: STORE
+            store_class: DedupStore
+            config_bound: true
+            config_key: dedup.window.seconds
+            target_symbol: DedupStore.upsert_signature
+            file_paths:
+              - runtime/dedup/store.py
+    data_transformations:
+      - input: alarm_event
+        operation: hash canonical key fields and compare within dedup window
+        output: dedup_decision
+        produced_fields: [signature, is_duplicate, canonical_alert_id]
+    known_failure_modes:
+      - symptom: Duplicate alarms still trigger multiple notifications.
+        diagnostic_files:
+          - runtime/dedup/service.py
+          - runtime/dedup/store.py
+    query_aliases:
+      - alias: alert deduplication
+        match_strategy: exact
+      - alias: merge duplicate alarms
+        match_strategy: token
+
+  - behavior_id: ticket_sync
+    summary: Sync incident state transitions with external ticketing systems.
+    priority: P2
+    stages:
+      - name: publish_ticket_update
+        mechanisms:
+          - type: EVENTBUS
+            address: event.ticket.sync.request
+            source_symbol: TicketSyncPublisher.publish
+            file_paths:
+              - runtime/ticket_sync/publisher.py
+      - name: call_ticket_api
+        mechanisms:
+          - type: API_ROUTE
+            source_symbol: TicketSyncConsumer.handle
+            target_symbol: TicketApiClient.apply_update
+            file_paths:
+              - runtime/ticket_sync/consumer.py
+              - runtime/ticket_sync/client.py
+    data_transformations:
+      - input: incident_state_change
+        operation: map internal incident fields to external ticket payload
+        output: ticket_update_payload
+        produced_fields: [ticket_id, state, priority, comment]
+    known_failure_modes:
+      - symptom: Ticket remains stale while incident is already resolved.
+        diagnostic_files:
+          - runtime/ticket_sync/consumer.py
+          - runtime/ticket_sync/client.py
+    query_aliases:
+      - alias: ticket sync
+        match_strategy: exact
+      - alias: update external ticket
+        match_strategy: token
+
+  - behavior_id: escalation_routing
+    summary: Route escalations based on policy windows and ownership hierarchy.
+    priority: P2
+    stages:
+      - name: evaluate_escalation_policy
+        mechanisms:
+          - type: DIRECT_CALL
+            source_symbol: EscalationService.evaluate
+            target_symbol: EscalationPolicyEngine.resolve
+            file_paths:
+              - runtime/escalation/service.py
+              - runtime/escalation/policy.py
+      - name: publish_escalation_event
+        mechanisms:
+          - type: EVENTBUS
+            address: event.escalation.route
+            source_symbol: EscalationPublisher.publish
+            file_paths:
+              - runtime/escalation/publisher.py
+    data_transformations:
+      - input: incident_snapshot
+        operation: map policy decision to escalation targets
+        output: escalation_targets
+        produced_fields: [primary_oncall, backup_oncall, escalation_level]
+    known_failure_modes:
+      - symptom: Critical incidents skip escalation windows.
+        diagnostic_files:
+          - runtime/escalation/policy.py
+          - runtime/escalation/publisher.py
+    query_aliases:
+      - alias: escalation routing
+        match_strategy: exact
+      - alias: route escalation
+        match_strategy: token

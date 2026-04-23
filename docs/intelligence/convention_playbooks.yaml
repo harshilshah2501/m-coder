@@ -1,0 +1,50 @@
+schema_version: intelligence.convention_playbooks.v1
+maintainer: lane-a
+convention_playbooks:
+  - playbook_id: eventbus_address_lifecycle
+    summary: Keep eventbus addresses discoverable, validated, and contract-safe.
+    required_steps:
+      - order: 1
+        action: Add or update EVENTBUS mechanisms in behavior flows.
+        verification: Ensure each EVENTBUS mechanism has non-empty address and symbol context.
+        file_template: docs/intelligence/behavior_flows.yaml
+      - order: 2
+        action: Re-run normalization with extracted eventbus constants.
+        verification: Resolve UNRESOLVED_EVENTBUS_ADDRESS warnings before merge.
+        file_template: runtime/intelligence/normalize.py
+      - order: 3
+        action: Update loader tests with new address cases.
+        verification: Confirm derived publishes/consumes include all intended addresses.
+        file_template: runtime/tests/test_intelligence_loader.py
+
+  - playbook_id: store_binding_hardening
+    summary: Enforce strict STORE mechanism contracts for config-bound access.
+    required_steps:
+      - order: 1
+        action: Declare STORE mechanism with store_class and config_bound flag.
+        verification: Validator rejects STORE mechanisms missing store_class.
+        file_template: docs/intelligence/behavior_flows.yaml
+      - order: 2
+        action: Add config_key for config-bound stores.
+        verification: Validator fails when config_bound=true and config_key missing.
+        file_template: runtime/intelligence/schema.py
+      - order: 3
+        action: Add regression tests for forbidden irrelevant fields.
+        verification: Non-STORE mechanisms cannot carry store_class/config_key/config_bound.
+        file_template: runtime/tests/test_intelligence_schema.py
+
+  - playbook_id: alias_search_precision
+    summary: Keep query aliases predictable while still allowing controlled fuzzy matching.
+    required_steps:
+      - order: 1
+        action: Choose exact or token strategy unless fuzzy is explicitly justified.
+        verification: match_strategy values remain exact|token|fuzzy only.
+        file_template: docs/intelligence/behavior_flows.yaml
+      - order: 2
+        action: Add fuzzy_guardrails for each fuzzy alias.
+        verification: min_score in [0,1], min_token_overlap>=1, max_candidates>=1.
+        file_template: runtime/intelligence/schema.py
+      - order: 3
+        action: Extend tests for fuzzy guardrail failures.
+        verification: Invalid fuzzy aliases fail schema validation deterministically.
+        file_template: runtime/tests/test_intelligence_schema.py

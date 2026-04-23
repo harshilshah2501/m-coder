@@ -27,6 +27,8 @@ from runtime.layer5.retrieval.quality_gate import (
 )
 
 from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
+from .authority_synthesis import prioritize_owner_in_bundle
+from .context_budget import apply_context_budget, build_context_budget_metadata
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
 from .planner import PlanOnlyPlanner
@@ -159,6 +161,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     client_context = ask_request.get("client_context") or {}
     dirty_buffers, dirty_buffer_parse = extract_dirty_buffers(client_context)
     bundle, overlay_meta = apply_dirty_buffer_overlay(bundle, dirty_buffers)
+    bundle, budget_flags, _ = apply_context_budget(bundle)
 
     ar_dict = evidence_bundle.get("authority_resolution")
     authority_resolution = ar_dict if isinstance(ar_dict, dict) else None
@@ -205,6 +208,12 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             "invalid_count": int(dirty_buffer_parse.get("invalid_count", 0)),
             "valid_count": int(dirty_buffer_parse.get("valid_count", 0)),
         },
+        "context_budget": build_context_budget_metadata(
+            query=query,
+            bundle=bundle,
+            evidence_entries=[e for e in entries if isinstance(e, dict)],
+            truncation_flags=budget_flags,
+        ),
     }
     if authority_resolution:
         metadata["authority_resolution_present"] = True
@@ -217,6 +226,13 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         if isinstance(client_context, dict)
         else ""
     )
+    # User-anchored Explain/Debug: explicit file + selection (or a non-empty bundle) should
+    # still run EXPLAIN_DEBUG even when the quality gate would block generic plan steps.
+    skip_grounding_block_for_explain_debug = (
+        str(task_type or "") == "EXPLAIN_DEBUG"
+        and bool((str(selected_file or "").strip()))
+        and (bool(selection) or bool(bundle.items))
+    )
 
     ingestion_meta = {
         "ask_path": "v1_evidence",
@@ -227,7 +243,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         "context_source": "layer5.evidence_bundle.v1",
         "no_repo_filesystem": True,
     }
-    if quality.blocked:
+    if quality.blocked and not skip_grounding_block_for_explain_debug:
         block_message = (
             "No context files matched relevant code evidence for this ask."
             if quality.evidence_quality == NO_MATCH
@@ -250,9 +266,13 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             trace_id=trace_id or None,
         )
 
+    if quality.blocked and skip_grounding_block_for_explain_debug:
+        metadata["grounding_block_overridden_by_explain_debug"] = True
+
     explain_debug_result: ExplainDebugResult | None = None
     plan_steps: List[str]
     weak_notes: List[str] = []
+    owner_bias_meta: Dict[str, Any] = {}
     if dirty_buffer_parse.get("invalid_count", 0) > 0:
         weak_notes.append(
             "Dirty buffer overlay payload contained invalid entries; ignored malformed items and kept deterministic fallback behavior."
@@ -261,6 +281,10 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         weak_notes.append(
             "Dirty buffer overlay payload was provided but no matching bundle paths were overlaid."
         )
+
+    if authority_resolution:
+        owner_bias_meta = prioritize_owner_in_bundle(bundle, authority_resolution)
+        metadata.update(owner_bias_meta)
 
     if task_type == "EXPLAIN_DEBUG" and selected_file and (selection or bundle.items):
         result = explain_debug(
@@ -282,8 +306,40 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             query=query, bundle=bundle, authority_resolution=authority_resolution
         )
         plan_steps = plan_summary.steps
+        if isinstance(plan_summary.meta, dict):
+            metadata.update(plan_summary.meta)
+    if quality.blocked and skip_grounding_block_for_explain_debug:
+        weak_notes.append(
+            "Plan-grounding gate reported weak or ungrounded evidence; EXPLAIN_DEBUG still ran "
+            "using selected_file/selection as explicit anchors."
+        )
     if quality.evidence_quality == WEAK:
         weak_notes.append("Evidence quality is WEAK; plan/explanation may be incomplete.")
+    if metadata.get("method_window_visible"):
+        metadata["method_window_visible_rate"] = 1.0
+    elif metadata.get("method_claim_alignment_pass") is False:
+        metadata["method_window_visible_rate"] = 0.0
+    metadata["execution_path_stitched"] = bool(
+        metadata.get("execution_path_stitched")
+        or any(str(s).startswith("Execution-path stitch:") for s in (plan_steps or []))
+    )
+    metadata["explicit_method_body_evidence_present"] = bool(
+        metadata.get("method_window_visible")
+        or any(
+            "Method-window excerpt:" in str(s) or "Visible method-window evidence:" in str(s)
+            for s in (plan_steps or [])
+        )
+    )
+    metadata["context_budget"] = build_context_budget_metadata(
+        query=query,
+        bundle=bundle,
+        evidence_entries=[e for e in entries if isinstance(e, dict)],
+        selected_file=str(selected_file or ""),
+        selection=str(selection or ""),
+        plan_steps=plan_steps,
+        explain_debug_payload=explain_debug_result.to_dict() if explain_debug_result else None,
+        truncation_flags=budget_flags,
+    )
 
     routing_mode = (
         "explain_debug"

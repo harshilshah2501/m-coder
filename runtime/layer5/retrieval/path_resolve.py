@@ -17,10 +17,10 @@ def normalize_rel(p: str) -> str:
 
 
 def workspace_path_key(p: str) -> str:
-    """Lowercased path with optional ``motadata/`` prefix stripped for comparison."""
+    """Lowercased path with any leading ``motadata/`` segment(s) stripped for comparison."""
     n = normalize_rel(p).lower()
-    if n.startswith("motadata/"):
-        return n[len("motadata/") :]
+    while n.startswith("motadata/"):
+        n = n[len("motadata/") :]
     return n
 
 

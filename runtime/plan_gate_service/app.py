@@ -12,7 +12,13 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-from runtime.assist_layer import AssistInput, run_assist_layer_v1
+from runtime.assist_layer import (
+    AssistInput,
+    run_assist_layer_v1,
+    decide_assist_v2_mode,
+    build_assist_v2_response_shell,
+    augment_assist_v2_with_response,
+)
 from runtime.assist_layer.observability import emit_assist_event
 from runtime.layer5.build_info import layer5_build_info
 
@@ -80,12 +86,19 @@ def _apply_assist_to_ask_payload(data: dict, path: str) -> tuple[dict, dict]:
     )
     assist_output, assist_event = run_assist_layer_v1(assist_input)
     emit_assist_event(LOG, assist_event)
+    client_context = data.get("client_context") if isinstance(data.get("client_context"), dict) else {}
+    route = decide_assist_v2_mode(
+        task_type_label=str(data.get("task_type") or "general"),
+        selected_file=str(data.get("selected_file") or ""),
+        selection_text=str(client_context.get("selection") or ""),
+    )
+    assist_v2 = build_assist_v2_response_shell(route)
 
     ask_payload = dict(data)
     ask_payload["original_query"] = assist_output.original_query
     # Assist v1 is advisory-only: runtime Ask logic remains anchored to original query.
     ask_payload["query"] = assist_output.original_query
-    return ask_payload, assist_output.to_dict()
+    return ask_payload, {**assist_output.to_dict(), "assist_v2": assist_v2}
 
 
 def _request_id_from_body(data: object) -> str:
@@ -285,6 +298,10 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             try:
                 ask_payload, assist_meta = _apply_assist_to_ask_payload(data, path)
                 response = handle_ask_request(ask_payload)
+                assist_meta["assist_v2"] = augment_assist_v2_with_response(
+                    skeleton=assist_meta.get("assist_v2") if isinstance(assist_meta, dict) else {},
+                    ask_response=response,
+                )
                 response["assist_layer"] = assist_meta
                 self._send_json(200, response)
                 rm = str(response.get("routing_mode") or "n/a")
@@ -341,6 +358,10 @@ class PlanGateHandler(BaseHTTPRequestHandler):
             try:
                 ask_payload, assist_meta = _apply_assist_to_ask_payload(data, path)
                 response = handle_ask_v1_request(ask_payload)
+                assist_meta["assist_v2"] = augment_assist_v2_with_response(
+                    skeleton=assist_meta.get("assist_v2") if isinstance(assist_meta, dict) else {},
+                    ask_response=response,
+                )
                 response["assist_layer"] = assist_meta
                 self._send_json(200, response)
                 rm = str(response.get("routing_mode") or "n/a")

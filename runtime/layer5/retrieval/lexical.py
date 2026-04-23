@@ -837,6 +837,50 @@ def _apply_top_k_owner_injection_correction(
     return tops
 
 
+def _apply_top_k_selected_file_injection_correction(
+    tops: List[RetrievalHit],
+    full_sorted_hits: List[RetrievalHit],
+    top_k: int,
+    *,
+    selected_file: Optional[str],
+    task_type: str,
+) -> List[RetrievalHit]:
+    """
+    EXPLAIN_DEBUG: IDE-selected paths must survive engineering top-k swaps that promote
+    ``core_aiops_code`` rows — e.g. NMS/support Java under ``com/mindarray/nms`` can be
+    displaced even when Stage A seeded it.
+    """
+    if top_k <= 0 or not tops or not selected_file:
+        return tops
+    if str(task_type or "").strip().upper() != "EXPLAIN_DEBUG":
+        return tops
+    sf = str(selected_file).strip()
+    if not sf:
+        return tops
+    path_set = {h.relative_path for h in full_sorted_hits}
+    resolved = resolve_owner_path_in_index(sf, path_set, owner_class=None)
+    if not resolved:
+        resolved = resolve_path_in_set(sf, path_set)
+    if not resolved:
+        return tops
+    if any(paths_match_workspace(h.relative_path, resolved) for h in tops):
+        return tops
+    sel_hit: RetrievalHit | None = None
+    for h in full_sorted_hits:
+        if paths_match_workspace(h.relative_path, resolved):
+            sel_hit = h
+            break
+    if sel_hit is None:
+        return tops
+    out = list(tops)
+    if len(out) < top_k:
+        out.append(sel_hit)
+        return out
+    replace_i = min(range(len(out)), key=lambda i: (out[i].score, out[i].relative_path))
+    out[replace_i] = sel_hit
+    return out
+
+
 def _score_entry(
     entry: FileIndexEntry,
     tokens: Tuple[str, ...],
@@ -1259,6 +1303,13 @@ def retrieve_lexical(
                 intent_type,
                 target_core=tgt,
             )
+        corrected = _apply_top_k_selected_file_injection_correction(
+            list(corrected),
+            working,
+            top_k,
+            selected_file=selected_file,
+            task_type=task_type,
+        )
         chosen = tuple(corrected)
 
     return RetrievalResult(

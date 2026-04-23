@@ -20,6 +20,7 @@
 | **B7 Stage 3 burn-in / acceptance** | **CLOSED** — §B7 |
 | **Debug Usefulness v1.1** | EXPLAIN_DEBUG grounding — §5 |
 | **Authority Expansion Hardening v1** | Stage A noise suppression; API routing scenario — §5 |
+| **Method-window surfacing + Execution Stitching v1.1 calibration** | Achieved in bounded Ask scope; conservative truthful partial/non-stitched behavior preserved |
 | **Ask v1 evidence quality parity** | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
 | **Behavior baseline promotion** | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
 | **Layer-1 / L2 / L4 milestone tables (declared rows)** | **LOCKED** or **COMPLETE** per §2.1; layer rollups per §2.1.1; details §4.1–§4.4 |
@@ -35,6 +36,8 @@
 | **L5.7** Dirty buffer / live overlay | **NOT_STARTED** | §4.5 row L5.7 |
 | **M3.13–M3.16, M3.18** | Jira/PR pipelines, evaluation harness — **NOT_STARTED** | §4.3.1 |
 | **§1.4 tracks** | L5-OBS ops follow-through; L5-RET / §B1 expansion; debug depth (`DEBUG-DEPTH-CHARTER-V1`); dirty buffer (`L57-DIRTY-BUFFER-CHARTER-V1`) | §1.4 |
+| **Context budget telemetry (Ask/Plan/Code observability)** | **IN_PROGRESS (enabling)** | §1.4 follow-on telemetry lane |
+| **Plan/Code validation pack expansion** | **IN_PROGRESS (next-surface readiness)** | §1.4 governed validation lane |
 | **IDE → Stage3LoopController E2E** | **Follow-on** (not burn-in closure) | §B7, §6.20, runbook §7 |
 | **§B3 residual** | e.g. `plan_summary.notes` on all surfaces | §B3 bullets |
 | **Assist influence** | **NOT ENABLED** (advisory-only by design) | §1.5 |
@@ -60,7 +63,7 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**. **M3.12** narrow doc-manifest slice is **on `main`** (see §6.16.1).  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization; debug depth charter (`DEBUG-DEPTH-CHARTER-V1`). **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) and **optional charters** (§1.4: L5.7 dirty buffer charter `docs/L5_7_DIRTY_BUFFER_CHARTER.md`, §B1/L5-RET with §5 guardrails).
+- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization; debug depth charter (`DEBUG-DEPTH-CHARTER-V1`). **Current focus:** **post-closure maintenance** (`docs/validation/POST_CLOSURE_MAINTENANCE.md`) plus controlled expansion lanes for **context telemetry** and **Plan/Code validation pack depth** (see `docs/validation/PHASE_NEXT_PARALLEL_DEPTH_REPORT.md`), while keeping §1.4 optional charters (`docs/L5_7_DIRTY_BUFFER_CHARTER.md`, §B1/L5-RET with §5 guardrails).
 - **Overall status summary**:  
   - **Layer-1** — **LOCKED** (governance doctrine).  
   - **Layer-2** — **LOCKED** (ML compilation: Stage-6C cure, deterministic CONF, release verification PASS).  
@@ -131,6 +134,8 @@ All production gates are now **closed** for the MVP vertical slice:
 | **Debug depth / “thinking with code”** | **DEBUG-DEPTH-CHARTER-V1** | Separate initiative captured in `docs/DEBUG_DEPTH_CHARTER.md`. Not “more retrieval” or fusion churn. Scope: prompts, selection, vLLM constraints, and richer **`explain_debug`** output. Track apart from lexical/Stage A work unless tracker merges lanes. |
 | **Dirty buffer / live overlay** | **L57-DIRTY-BUFFER-CHARTER-V1** | Separate initiative captured in `docs/L5_7_DIRTY_BUFFER_CHARTER.md`. Scope: deterministic overlay of unsaved editor buffers for Ask/Debug evidence without mutating on-disk index truth. |
 | **§B1 expanded suites / exploratory asks** | **§B1 / L5-RET (existing)** | Only with **metrics + guardrails** against **`docs/validation/MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** — same scenario suite and policy file; document regressions with artifact diff + m-coder SHA. |
+| **Context telemetry (Ask/Plan/Code/loop assembly observability)** | **L5-OBS-CTX-1** | Add bounded prompt/context telemetry fields in diagnostics/artifacts (tokens/bytes/snippet counts/truncation) without behavior change or governance changes. |
+| **Plan/Code validation expansion** | **PLAN-CODE-VALIDATION-PACK-V1** | Extend governed scenario coverage for decision/outcome contract truth, bounded multi-step behavior, and refusal/block checks; keep retrieval/governance semantics unchanged. |
 
 **Which follow-on first?** §0 **Post-closure prioritization** — with debug depth charter closed, `L57-DIRTY-BUFFER-CHARTER-V1` is the recommended next charter vs ad-hoc M3.13+.
 

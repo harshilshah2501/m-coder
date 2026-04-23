@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from runtime.layer5.index.models import FileIndexEntry, WorkspaceFileIndex
 from runtime.layer5.retrieval.intent import classify_intent
-from runtime.layer5.retrieval.path_resolve import resolve_owner_path_in_index, resolve_path_in_set
+from runtime.layer5.retrieval.path_resolve import resolve_owner_path_in_index
 from runtime.layer5.retrieval.models import RetrievalHit
 from runtime.layer5.retrieval.policy import (
     classify_file,
@@ -122,8 +122,10 @@ def _primary_owner_file(authority_resolution: Optional[Mapping[str, Any]]) -> Op
     return f or None
 
 
-def _path_in_index(norm: str, path_set: Set[str]) -> Optional[str]:
-    return resolve_path_in_set(norm, path_set)
+def _resolve_editor_file_in_index(raw: str, path_set: Set[str]) -> Optional[str]:
+    """Map IDE-selected paths into ``path_set`` including basename drift like owner injection."""
+    n = _norm_rel(raw).strip()
+    return resolve_owner_path_in_index(n, path_set, owner_class=None) if n else None
 
 
 def _owner_class_from_authority(authority_resolution: Optional[Mapping[str, Any]]) -> Optional[str]:
@@ -316,7 +318,7 @@ def _collect_local_seeds(
     seen: Set[str] = set()
 
     def add(p: str, reason: str, injected: bool = False) -> None:
-        resolved = _path_in_index(_norm_rel(p), path_set)
+        resolved = _resolve_editor_file_in_index(p, path_set)
         if not resolved or resolved in seen:
             return
         if not _candidate_eligible_for_task(
@@ -343,9 +345,9 @@ def _collect_local_seeds(
 
     sel = None
     if selected_file:
-        sel = _path_in_index(_norm_rel(selected_file), path_set)
+        sel = _resolve_editor_file_in_index(selected_file, path_set)
     if not sel and active_file:
-        sel = _path_in_index(_norm_rel(active_file), path_set)
+        sel = _resolve_editor_file_in_index(active_file, path_set)
     if sel:
         sel_subsystem = infer_file_subsystem(sel)
         for nb in _same_package_neighbors(sel, index, cap=neighbor_cap):
@@ -699,7 +701,7 @@ def generate_candidates(
 
     sel_resolved: Optional[str] = None
     if selected_file:
-        sel_resolved = _path_in_index(_norm_rel(selected_file), path_set)
+        sel_resolved = _resolve_editor_file_in_index(selected_file, path_set)
 
     if debug and sel_resolved:
         have_sel = any(c.path == sel_resolved for c in merged)

@@ -768,3 +768,37 @@ def test_engineering_intent_top_k_composition_promotes_cores_without_touching_ra
     )
     assert out[0].relative_path == tops[0].relative_path
     assert sum(1 for h in out if _is_core_aiops_hit(h)) == 4
+
+
+def test_explain_debug_pins_selected_supporting_java_after_engineering_composition():
+    """
+    ``com/mindarray/nms`` maps to supporting_prod_code, not core_aiops_code.
+    Engineering top-k composition swaps in cores and can evict NMS paths unless
+    EXPLAIN_DEBUG selected-file pinning runs after it.
+    """
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    sel = "motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java"
+    _touch(
+        root / sel,
+        "public class SNMPTrapProcessor { void parse() {} void dispatchTraps() {} }\n",
+    )
+    # Many aiops/java files scoring on snmp + failure wording so they rank globally.
+    for i in range(14):
+        _touch(
+            root / f"motadata/src/main/java/com/mindarray/aiops/trap/AiopsSnmp{i}.java",
+            ("snmp trap failure polling exception " * 40) + f"class AiopsSnmp{i} {{}}\n",
+        )
+    ident = _identity_for(root)
+    idx = build_file_index(ident)
+    r = retrieve_lexical(
+        idx,
+        "snmp trap failure polling exception",
+        8,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="EXPLAIN_DEBUG",
+        selected_file=sel,
+    )
+    paths = [h.relative_path for h in r.hits]
+    assert sel in paths
+    tmp.cleanup()

@@ -32,6 +32,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 import textwrap
 import urllib.error
@@ -126,6 +127,22 @@ def _evidence_snippet_previews(entries: list[dict[str, Any]], max_entries: int =
     return out
 
 
+def _context_paths_match_selected(context_paths: list[str], selected_file: str) -> bool:
+    """True when context bundle lists a file path consistent with the scenario selected_file."""
+    sel = (selected_file or "").replace("\\", "/").strip()
+    if not sel:
+        return False
+    base = sel.split("/")[-1].lower()
+    s_low = sel.lower()
+    for p in context_paths:
+        pl = str(p).replace("\\", "/").lower()
+        if not pl:
+            continue
+        if s_low in pl or pl.endswith(base):
+            return True
+    return False
+
+
 def _context_bundle_files(ask_resp: dict[str, Any]) -> list[dict[str, Any]]:
     cb = ask_resp.get("context_bundle") if isinstance(ask_resp.get("context_bundle"), dict) else {}
     files = cb.get("files") if isinstance(cb.get("files"), list) else []
@@ -138,22 +155,21 @@ def _context_bundle_files(ask_resp: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _is_generic_infra_path(path: str) -> bool:
+    """
+    Keep verifier generic-infra accounting aligned with Stage-B fusion caps.
+    """
+    from runtime.layer5.retrieval.policy import classify_file, is_support_style_java_basename
+
     p = str(path or "").lower()
     if not p:
         return False
-    tokens = (
-        "/api/",
-        "/db/",
-        "/notification/",
-        "/cache/",
-        "/integration/",
-        "/manager/",
-        "config",
-        "constants",
-        "util",
-        "helper",
-    )
-    return any(t in p for t in tokens)
+    pol = classify_file(p)
+    if pol.file_class == "config":
+        return True
+    if any(tok in p for tok in ("/api/", "/db/", "/notification/", "/cache/", "/integration/", "/manager/")):
+        return True
+    base = p.rsplit("/", 1)[-1]
+    return bool(is_support_style_java_basename(base))
 
 
 def _compute_retrieval_metrics(evidence: dict[str, Any], top_k: int = 8) -> dict[str, Any]:
@@ -261,13 +277,21 @@ def _export_evidence_payload(
     query: str,
     top_k: int,
     *,
+    task_type: str = "general",
+    selected_file: str | None = None,
+    active_file: str | None = None,
     enable_stage_a_v2: Optional[bool] = None,
 ) -> dict[str, Any]:
     p: dict[str, Any] = {
         "workspace_root": workspace_root,
         "query": query,
         "top_k": top_k,
+        "task_type": str(task_type or "general"),
     }
+    if selected_file:
+        p["selected_file"] = str(selected_file)
+    if active_file:
+        p["active_file"] = str(active_file)
     if enable_stage_a_v2 is not None:
         p["enable_stage_a_v2"] = enable_stage_a_v2
     return p
@@ -296,6 +320,7 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
             "evidence_snippet_previews": query.get("evidence_snippet_previews") or [],
             "retrieval_metrics": query.get("retrieval_metrics") or {},
             "stage_a": query.get("stage_a") or export.get("stage_a") or {},
+            "context_budget_telemetry": query.get("context_budget_telemetry") or {},
         },
         "debug": {
             "pass": debug.get("pass", False),
@@ -835,6 +860,9 @@ def run_once(
         "evidence_snippet_previews": snip_previews,
         "retrieval_metrics": _compute_retrieval_metrics(evidence, top_k=top_k),
         "stage_a": _stage_a_summary_from_evidence(evidence),
+        "context_budget_telemetry": query_meta.get("context_budget")
+        if isinstance(query_meta.get("context_budget"), dict)
+        else {},
     }
 
     first_path = entries[0].get("relative_path") if entries else "runtime/plan_gate_service/app.py"
@@ -993,6 +1021,18 @@ _QUALITY_RANK: dict[str, int] = {
     "WEAK": 1,
 }
 
+_GENERIC_SCAN_FORBIDDEN_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"open .* and scan for logic related to", re.IGNORECASE),
+    re.compile(r"scan for logic related to", re.IGNORECASE),
+    re.compile(r"could not determine.*from retrieved snippets", re.IGNORECASE | re.DOTALL),
+]
+
+_GRAPH_PREFLIGHT_THRESHOLDS: dict[str, int] = {
+    "VERTICLE_REGISTRATION": 5,
+    "EVENTBUS_CONSUMER_REGISTRATION": 10,
+    "API_ROUTE_REGISTRATION": 1,
+}
+
 
 def _rank_evidence_quality(q: str | None) -> int:
     if not q or not isinstance(q, str):
@@ -1004,6 +1044,116 @@ def _haystack_plan_notes(resp: dict[str, Any]) -> str:
     ps = resp.get("plan_summary") if isinstance(resp.get("plan_summary"), dict) else {}
     notes = ps.get("notes") if isinstance(ps.get("notes"), list) else []
     return " ".join(str(n) for n in notes)
+
+
+def _scenario_flag(scenario: dict[str, Any], key: str) -> bool:
+    val = scenario.get(key)
+    if isinstance(val, bool):
+        return val
+    expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
+    return bool(expect.get(key) is True)
+
+
+def _text_contains_generic_scan_phrase(text: str) -> list[str]:
+    hits: list[str] = []
+    for pat in _GENERIC_SCAN_FORBIDDEN_PATTERNS:
+        if pat.search(text):
+            hits.append(pat.pattern)
+    return hits
+
+
+def _symbol_candidates_from_paths(paths: list[str]) -> list[str]:
+    symbols: list[str] = []
+    for p in paths:
+        if not p:
+            continue
+        base = p.rsplit("/", 1)[-1]
+        stem = base.rsplit(".", 1)[0]
+        if stem and len(stem) >= 3:
+            symbols.append(stem)
+    return symbols
+
+
+def _has_concrete_implementation_anchor(
+    plan_steps: list[str],
+    plan_notes: list[str],
+    context_bundle_files: list[dict[str, Any]],
+    top_paths: list[str | None],
+) -> bool:
+    paths = [str(x.get("path") or "") for x in context_bundle_files if isinstance(x, dict)]
+    paths.extend(str(p or "") for p in top_paths)
+    paths = [p for p in paths if p]
+    if not paths:
+        return False
+
+    text = " ".join(str(s) for s in plan_steps + plan_notes)
+    text_l = text.lower()
+    if re.search(r"(?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+\.(?:java|kt|py|ts|tsx|js|go|rb|cs|yaml|yml|json|xml|md)\b", text):
+        return True
+
+    path_basenames = [p.rsplit("/", 1)[-1].lower() for p in paths if "/" in p or "." in p]
+    if any(b and b in text_l for b in path_basenames):
+        return True
+
+    symbols = [s.lower() for s in _symbol_candidates_from_paths(paths)]
+    return any(sym and re.search(rf"\b{re.escape(sym)}\b", text_l) for sym in symbols)
+
+
+def _classify_graph_preflight_state(anchor_counts: dict[str, int]) -> str:
+    for key, threshold in _GRAPH_PREFLIGHT_THRESHOLDS.items():
+        if int(anchor_counts.get(key, 0)) <= int(threshold):
+            return "INCOMPLETE"
+    return "COMPLETE"
+
+
+def _graph_preflight() -> dict[str, Any]:
+    try:
+        from tools.ast_indexer.query_graph import GraphUnavailableError, get_java_ast_ingest_state
+    except Exception as exc:
+        return {
+            "state": "UNREACHABLE",
+            "reason": f"graph helper import failed: {exc}",
+            "anchor_counts": {},
+            "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+        }
+    try:
+        state = get_java_ast_ingest_state()
+    except GraphUnavailableError as exc:
+        return {
+            "state": "UNREACHABLE",
+            "reason": str(exc),
+            "anchor_counts": {},
+            "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+        }
+    if not isinstance(state, dict):
+        anchor_counts = {
+            "VERTICLE_REGISTRATION": 0,
+            "EVENTBUS_CONSUMER_REGISTRATION": 0,
+            "API_ROUTE_REGISTRATION": 0,
+        }
+        return {
+            "state": "INCOMPLETE",
+            "reason": "java_ast ingest state missing",
+            "anchor_counts": anchor_counts,
+            "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+        }
+    anchor_counts = {
+        "VERTICLE_REGISTRATION": int(state.get("anchor_count_verticle_registration") or 0),
+        "EVENTBUS_CONSUMER_REGISTRATION": int(state.get("anchor_count_eventbus_consumer_registration") or 0),
+        "API_ROUTE_REGISTRATION": int(state.get("anchor_count_api_route_registration") or 0),
+    }
+    pre_state = _classify_graph_preflight_state(anchor_counts)
+    reason = (
+        "graph ingest counters satisfy required thresholds"
+        if pre_state == "COMPLETE"
+        else "graph ingest counters are below required thresholds"
+    )
+    return {
+        "state": pre_state,
+        "reason": reason,
+        "anchor_counts": anchor_counts,
+        "thresholds": dict(_GRAPH_PREFLIGHT_THRESHOLDS),
+    }
 
 
 def _check_utility_expect_ask(
@@ -1246,7 +1396,15 @@ def _run_utility_scenario_row(
         sel_text = str(inputs.get("selection_text") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            _export_evidence_payload(ws, q, top_k, enable_stage_a_v2=export_stage_a),
+            _export_evidence_payload(
+                ws,
+                q,
+                top_k,
+                task_type="EXPLAIN_DEBUG",
+                selected_file=sel or None,
+                active_file=sel or None,
+                enable_stage_a_v2=export_stage_a,
+            ),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1400,7 +1558,7 @@ def run_utility_scenario_suite(
     }
 
 
-def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: str) -> list[str]:
+def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], answer_haystack: str) -> list[str]:
     errs: list[str] = []
     if "governance_posture" in expect and actual.get("governance_posture") != expect["governance_posture"]:
         errs.append(f"governance_posture want {expect['governance_posture']} got {actual.get('governance_posture')}")
@@ -1414,8 +1572,8 @@ def _check_expect_ask(actual: dict[str, Any], expect: dict[str, Any], haystack: 
             errs.append(f"min_plan_steps want >= {expect['min_plan_steps']} got {n}")
     subs = expect.get("text_contains_any")
     if isinstance(subs, list) and subs:
-        if not any(str(s).lower() in haystack for s in subs if s):
-            errs.append(f"text_contains_any: none of {subs} found in plan paths/snippets")
+        if not any(str(s).lower() in answer_haystack for s in subs if s):
+            errs.append(f"text_contains_any: none of {subs} found in answer text (plan steps/notes)")
     return errs
 
 
@@ -1496,6 +1654,8 @@ def _check_expect_debug_explain(
     expect: dict[str, Any],
     explain_debug: dict[str, Any],
     selected_file: str,
+    *,
+    context_paths: list[str] | None = None,
 ) -> list[str]:
     errs: list[str] = []
     hay = " ".join(
@@ -1519,6 +1679,12 @@ def _check_expect_debug_explain(
         elif not any(base.lower() in e.lower() or symbol.lower() in e.lower() for e in ev_list):
             errs.append(
                 "require_selected_file_in_evidence: selected file/symbol missing from explain_debug.evidence"
+            )
+    if expect.get("require_selected_file_in_context_bundle"):
+        paths = list(context_paths or [])
+        if not _context_paths_match_selected(paths, selected_file):
+            errs.append(
+                "require_selected_file_in_context_bundle: selected_file not found in context_bundle.files"
             )
     if expect.get("must_suggest_concrete_failure_points"):
         if not any(x in hay for x in ("if ", "when ", "branch", "condition", "return", "null", "exception", "method")):
@@ -1552,6 +1718,243 @@ def _check_expect_debug_explain(
                 "require_missing_in_context_marker: explain_debug.evidence missing missing_in_context marker"
             )
     return errs
+
+
+def _check_method_body_answer_alignment(
+    expect: dict[str, Any],
+    evidence: dict[str, Any],
+    explain_debug: dict[str, Any],
+) -> list[str]:
+    """
+    Optional hard alignment: fusion says snippets include grounded method/control-flow evidence,
+    but explain_debug still asserts total absence of grounding (truth-binding failure).
+    """
+    if not expect.get("require_method_body_answer_alignment"):
+        return []
+    if not expect.get("require_selected_method_body_present"):
+        return []
+    fd = evidence.get("fusion_diagnostics")
+    if not isinstance(fd, dict):
+        return []
+    tier = str(fd.get("selected_method_grounding_tier") or "").strip().lower()
+    body_present = fd.get("selected_method_body_present") is True
+    exec_tier = tier in {"executable", "traceable"}
+    if not tier and not body_present:
+        return []
+    hay_lc, _, _ = _collect_debug_text_blobs(explain_debug)
+    absence_needles = (
+        "is not present in the retrieved context",
+        "without that file body",
+        "cannot trace concrete method",
+        "insufficiently grounded",
+        "missing_in_context:",
+        "lacks specific details",
+        "does not contain",
+        "not present in the given context",
+        "cannot trace",
+        "no direct reference",
+        "unclear how this relates",
+        "without seeing the actual implementations",
+        "declaration-heavy",
+        "trace inherited/update hooks in nearby classes",
+    )
+    absence_hits = [n for n in absence_needles if n.lower() in hay_lc]
+    if exec_tier and absence_hits:
+        return [
+            "require_method_body_answer_alignment: explain_debug contradicts "
+            f"fusion selected_method_grounding_tier={tier!r} "
+            + f"(matched phrases={absence_hits})"
+        ]
+
+    if tier in {"none", "declarative", "partial"}:
+        overclaim_needles = (
+            "the method does",
+            "this branch executes",
+            "the code returns",
+            "exact failure path",
+            "root cause is",
+        )
+        overclaim_hits = [n for n in overclaim_needles if n in hay_lc]
+        if overclaim_hits:
+            return [
+                "require_method_body_answer_alignment: explain_debug overclaims method-level certainty "
+                f"for selected_method_grounding_tier={tier!r} (matched phrases={overclaim_hits})"
+            ]
+
+    if exec_tier:
+        op_needles = (
+            "read",
+            "parse",
+            "dispatch",
+            "decrypt",
+            "initialize",
+            "update",
+            "set",
+            "put",
+            "add",
+            "remove",
+            "return",
+            "throw",
+            "call",
+            "loop",
+            "iterate",
+            "map",
+            "hashset",
+        )
+        op_hits = [n for n in op_needles if n in hay_lc]
+        if not op_hits:
+            return [
+                "require_method_body_answer_alignment: selected_method_body_present but explain_debug lacks "
+                "concrete operation verbs tied to selected-file logic"
+            ]
+    return []
+
+
+def _check_expect_debug_method_body(
+    expect: dict[str, Any],
+    evidence: dict[str, Any],
+) -> list[str]:
+    errs: list[str] = []
+    if not expect.get("require_selected_method_body_present"):
+        return errs
+    fd = evidence.get("fusion_diagnostics")
+    fd = fd if isinstance(fd, dict) else {}
+    present = fd.get("selected_method_body_present")
+    tier = str(fd.get("selected_method_grounding_tier") or "").strip().lower()
+    hints = fd.get("selected_method_hints") if isinstance(fd.get("selected_method_hints"), list) else []
+    if not hints:
+        errs.append("require_selected_method_body_present: no selected_method_hints exported in fusion_diagnostics")
+        return errs
+    if tier:
+        if tier not in {"executable", "traceable"}:
+            errs.append(
+                "require_selected_method_body_present: selected method grounding tier is not executable "
+                f"(tier={tier!r}, hints={hints}, reason={fd.get('selected_method_body_missing_reason')})"
+            )
+            return errs
+        if present is not True:
+            errs.append(
+                "require_selected_method_body_present: selected_method_body_present must be true "
+                f"when tier={tier!r} (hints={hints})"
+            )
+            return errs
+    if present is not True:
+        errs.append(
+            "require_selected_method_body_present: selected method body not present in selected-file snippets "
+            f"(hints={hints}, reason={fd.get('selected_method_body_missing_reason')})"
+        )
+    return errs
+
+
+def _collect_debug_text_blobs(explain_debug: dict[str, Any]) -> tuple[str, list[str], str]:
+    ev = explain_debug.get("evidence")
+    ev_list = [str(x) for x in ev] if isinstance(ev, list) else []
+    hay = " ".join(
+        str(explain_debug.get(k) or "")
+        for k in ("summary", "logic_flow", "likely_bug_risk", "confidence_limits", "error")
+    ).lower()
+    ev_h = " ".join(ev_list).lower()
+    return hay, ev_list, ev_h
+
+
+def _selected_symbol_hit_count(selected_file: str, text_lc: str, evidence_lc: str) -> int:
+    base = str(selected_file or "").split("/")[-1]
+    symbol = base.replace(".java", "").replace(".py", "").replace(".kt", "")
+    combined = f"{text_lc} {evidence_lc}"
+    terms = [t.lower() for t in (base, symbol) if t]
+    if not terms:
+        return 0
+    return sum(combined.count(t) for t in terms)
+
+
+def _method_like_mentions_count(text_lc: str, evidence: list[str]) -> int:
+    seen: set[str] = set()
+    blocked = {"if", "for", "while", "switch", "catch", "return", "new"}
+    for m in re.finditer(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(", text_lc):
+        name = m.group(1).lower()
+        if name not in blocked and len(name) >= 3:
+            seen.add(name)
+    for e in evidence:
+        if ":" not in e:
+            continue
+        tail = e.split(":")[-1].strip()
+        tail = re.sub(r"\(.*$", "", tail).strip()
+        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", tail):
+            name = tail.lower()
+            if name not in blocked and len(name) >= 3:
+                seen.add(name)
+    return len(seen)
+
+
+def _evidence_ref_count(evidence: list[str]) -> int:
+    count = 0
+    for e in evidence:
+        s = str(e).strip()
+        if "/" in s and ":" in s:
+            count += 1
+    return count
+
+
+def _control_flow_marker_count(text_lc: str) -> int:
+    markers = (
+        " if ",
+        " else ",
+        " branch",
+        " condition",
+        " return",
+        " null",
+        " exception",
+        " throw",
+        " catch",
+        " switch",
+        " method",
+    )
+    padded = f" {text_lc} "
+    return sum(1 for m in markers if m in padded)
+
+
+def _check_expect_debug_depth(
+    expect: dict[str, Any],
+    explain_debug: dict[str, Any],
+    selected_file: str,
+) -> tuple[list[str], dict[str, Any]]:
+    errs: list[str] = []
+    hay, ev_list, ev_h = _collect_debug_text_blobs(explain_debug)
+    symbol_hits = _selected_symbol_hit_count(selected_file, hay, ev_h)
+    method_mentions = _method_like_mentions_count(hay, ev_list)
+    evidence_refs = _evidence_ref_count(ev_list)
+    flow_markers = _control_flow_marker_count(hay)
+
+    if "require_selected_file_symbol_hits_min" in expect:
+        need = int(expect.get("require_selected_file_symbol_hits_min") or 0)
+        if symbol_hits < need:
+            errs.append(f"require_selected_file_symbol_hits_min: want >= {need} got {symbol_hits}")
+    if "require_method_name_mentions_min" in expect:
+        need = int(expect.get("require_method_name_mentions_min") or 0)
+        if method_mentions < need:
+            errs.append(f"require_method_name_mentions_min: want >= {need} got {method_mentions}")
+    if "require_evidence_line_refs_min" in expect:
+        need = int(expect.get("require_evidence_line_refs_min") or 0)
+        if evidence_refs < need:
+            errs.append(f"require_evidence_line_refs_min: want >= {need} got {evidence_refs}")
+    if "require_control_flow_markers_min" in expect:
+        need = int(expect.get("require_control_flow_markers_min") or 0)
+        if flow_markers < need:
+            errs.append(f"require_control_flow_markers_min: want >= {need} got {flow_markers}")
+
+    forbid = expect.get("forbid_generic_phrases_any")
+    if isinstance(forbid, list):
+        matched = [str(p) for p in forbid if str(p).strip() and str(p).lower() in hay]
+        if matched:
+            errs.append(f"forbid_generic_phrases_any: found disallowed generic phrases {matched}")
+
+    signals = {
+        "selected_symbol_hits": symbol_hits,
+        "method_name_mentions": method_mentions,
+        "evidence_line_refs": evidence_refs,
+        "control_flow_markers": flow_markers,
+    }
+    return errs, signals
 
 
 def _load_quality_policy(path: Path) -> dict[str, Any]:
@@ -1697,9 +2100,11 @@ def _run_scenario_row(
         code, resp = _post(f"{plan_gate_url}/v1/ask", req)
         meta = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
         plan_steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+        plan_notes = ((resp.get("plan_summary") or {}).get("notes") or []) if isinstance(resp.get("plan_summary"), dict) else []
         top_paths = [e.get("relative_path") for e in entries[:8] if isinstance(e, dict)]
         snips = _evidence_snippet_previews([e for e in entries if isinstance(e, dict)])
-        haystack = _haystack_for_text_match([str(s) for s in plan_steps], top_paths, snips)
+        answer_haystack = " ".join(str(x) for x in (plan_steps + plan_notes)).lower()
+        context_files = _context_bundle_files(resp)
         actual = {
             "governance_posture": resp.get("governance_posture"),
             "execution": resp.get("execution"),
@@ -1707,14 +2112,32 @@ def _run_scenario_row(
             "plan_steps": plan_steps,
             "evidence_quality": meta.get("evidence_quality"),
         }
-        errors.extend(_check_expect_ask(actual, expect, haystack))
+        errors.extend(_check_expect_ask(actual, expect, answer_haystack))
         errors.extend(_check_expect_ask_retrieval_gates(evidence, expect, top_k))
+        if _scenario_flag(scenario, "forbid_generic_scan_answer"):
+            text_for_scan_gate = " ".join(str(x) for x in (plan_steps + plan_notes))
+            matched_forbidden = _text_contains_generic_scan_phrase(text_for_scan_gate)
+            if matched_forbidden:
+                errors.append(
+                    "forbid_generic_scan_answer: response matched forbidden generic scan phrase(s): "
+                    f"{matched_forbidden}"
+                )
+        if _scenario_flag(scenario, "must_cite_file_or_symbol_anchor"):
+            if not _has_concrete_implementation_anchor(plan_steps, plan_notes, context_files, top_paths):
+                errors.append(
+                    "must_cite_file_or_symbol_anchor: missing concrete file/symbol implementation anchor in response"
+                )
+        if _scenario_flag(scenario, "requires_behavior_flow"):
+            flow_h = " ".join(str(x) for x in (plan_steps + plan_notes)).lower()
+            if not any(tok in flow_h for tok in ("flow", "branch", "path", "step", "method")):
+                errors.append("requires_behavior_flow: expected behavior/control-flow language in answer")
         if "evidence_quality_any_of" in expect:
             allowed = expect["evidence_quality_any_of"]
             if isinstance(allowed, list) and actual.get("evidence_quality") not in allowed:
                 errors.append(f"evidence_quality want one of {allowed} got {actual.get('evidence_quality')}")
         sa = _stage_a_summary_from_evidence(evidence)
         rm = _compute_retrieval_metrics(evidence, top_k=top_k)
+        cb_meta = meta.get("context_budget") if isinstance(meta.get("context_budget"), dict) else {}
         rg = {
             "owner_file": _owner_file_from_evidence(evidence),
             "workspace_identity_hash": evidence.get("workspace_identity_hash"),
@@ -1726,12 +2149,28 @@ def _run_scenario_row(
             "request_id": resp.get("request_id"),
             "trace_id": resp.get("trace_id") or (meta.get("trace_id") if isinstance(meta, dict) else None),
             "answer_steps": plan_steps,
-            "context_bundle_files": _context_bundle_files(resp),
+            "answer_notes": plan_notes,
+            "context_bundle_files": context_files,
             "evidence_snippet_previews": snips,
             "retrieval_metrics": rm,
             "retrieval_gates": rg,
             "quality_policy_profile": qprof,
             "stage_a": sa,
+            "context_budget_telemetry": cb_meta,
+            "proof_density": {
+                "method_window_visible_rate": meta.get("method_window_visible_rate"),
+                "explicit_method_body_evidence_present": meta.get("explicit_method_body_evidence_present"),
+                "execution_path_stitched": meta.get("execution_path_stitched"),
+                "stitched_edge_count": meta.get("stitched_edge_count"),
+                "stitched_edge_type": meta.get("stitched_edge_type"),
+                "stitch_confidence": meta.get("stitch_confidence"),
+                "call_site_candidates_detected": meta.get("call_site_candidates_detected"),
+                "call_site_candidate_count": meta.get("call_site_candidate_count"),
+                "call_site_resolution_state": meta.get("call_site_resolution_state"),
+                "owner_promoted_for_context": meta.get("owner_promoted_for_context"),
+                "owner_original_rank_in_bundle": meta.get("owner_original_rank_in_bundle"),
+                "method_claim_alignment_pass": meta.get("method_claim_alignment_pass"),
+            },
         }
         return {
             "id": sid,
@@ -1749,6 +2188,21 @@ def _run_scenario_row(
                 "retrieval_gates": rg,
                 "quality_policy_profile": qprof,
                 "stage_a": sa,
+                "context_budget_telemetry": cb_meta,
+                "proof_density": {
+                    "method_window_visible_rate": meta.get("method_window_visible_rate"),
+                    "explicit_method_body_evidence_present": meta.get("explicit_method_body_evidence_present"),
+                    "execution_path_stitched": meta.get("execution_path_stitched"),
+                    "stitched_edge_count": meta.get("stitched_edge_count"),
+                    "stitched_edge_type": meta.get("stitched_edge_type"),
+                    "stitch_confidence": meta.get("stitch_confidence"),
+                    "call_site_candidates_detected": meta.get("call_site_candidates_detected"),
+                    "call_site_candidate_count": meta.get("call_site_candidate_count"),
+                    "call_site_resolution_state": meta.get("call_site_resolution_state"),
+                    "owner_promoted_for_context": meta.get("owner_promoted_for_context"),
+                    "owner_original_rank_in_bundle": meta.get("owner_original_rank_in_bundle"),
+                    "method_claim_alignment_pass": meta.get("method_claim_alignment_pass"),
+                },
             },
             "dev_snapshot": dev_snapshot,
         }
@@ -1758,9 +2212,19 @@ def _run_scenario_row(
         dq = str(scenario.get("debug_query") or "")
         sel = str(scenario.get("selected_file") or "")
         sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
+        # Include selection text so camelCase hooks (beforeUpdate/getItem/parse/…) land in export query_tokens + hint extraction.
+        export_q = " ".join(x for x in (dq, base_q, sel_text) if str(x).strip()).strip() if dq else f"{base_q} {sel_text}".strip()
         code, evidence = _post(
             f"{context_url}/v1/export_evidence",
-            _export_evidence_payload(workspace_root, base_q, top_k, enable_stage_a_v2=export_stage_a),
+            _export_evidence_payload(
+                workspace_root,
+                export_q,
+                top_k,
+                task_type="EXPLAIN_DEBUG",
+                selected_file=sel or None,
+                active_file=sel or None,
+                enable_stage_a_v2=export_stage_a,
+            ),
             timeout=300,
         )
         entries = evidence.get("entries") if isinstance(evidence.get("entries"), list) else []
@@ -1784,34 +2248,69 @@ def _run_scenario_row(
             "selected_file": sel or (entries[0].get("relative_path") if entries else ""),
             "client_context": {"selection": sel_text},
         }
+        if _scenario_flag(scenario, "requires_selected_file_binding"):
+            if not str(req.get("selected_file") or "").strip():
+                errors.append("requires_selected_file_binding: selected_file is required")
         if evidence.get("workspace_identity_hash"):
             req["expected_workspace_identity_hash"] = evidence["workspace_identity_hash"]
         code, resp = _post(f"{plan_gate_url}/v1/ask", req)
         ed = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+        cb_files = _context_bundle_files(resp)
+        ctx_paths = [str(r.get("path") or "") for r in cb_files if isinstance(r, dict)]
+        contract_errors: list[str] = []
+        depth_errors: list[str] = []
         if expect.get("routing_mode") and resp.get("routing_mode") != expect["routing_mode"]:
-            errors.append(f"routing_mode want {expect['routing_mode']} got {resp.get('routing_mode')}")
+            contract_errors.append(f"routing_mode want {expect['routing_mode']} got {resp.get('routing_mode')}")
         keys_req = expect.get("explain_debug_has_keys")
         if isinstance(keys_req, list):
             for k in keys_req:
                 if k not in ed:
-                    errors.append(f"explain_debug missing key {k}")
-        errors.extend(_check_expect_debug_explain(expect, ed, req.get("selected_file", "")))
+                    contract_errors.append(f"explain_debug missing key {k}")
+        contract_errors.extend(
+            _check_expect_debug_explain(expect, ed, str(req.get("selected_file") or ""), context_paths=ctx_paths)
+        )
+        contract_errors.extend(_check_expect_debug_method_body(expect, evidence))
+        contract_errors.extend(_check_method_body_answer_alignment(expect, evidence, ed))
+        depth_errors, depth_signals = _check_expect_debug_depth(expect, ed, str(req.get("selected_file") or ""))
+        errors.extend(contract_errors)
+        errors.extend(depth_errors)
         ok_body = code == 200 and ("summary" in ed or "error" in ed)
+        contract_pass = len(contract_errors) == 0 and ok_body
+        depth_pass = len(depth_errors) == 0
         dev_snapshot = {
             "routing_mode": resp.get("routing_mode"),
             "summary": ed.get("summary"),
             "likely_bug_risk": ed.get("likely_bug_risk"),
             "logic_flow": ed.get("logic_flow"),
             "error": ed.get("error"),
+            "contract_errors": contract_errors,
+            "depth_errors": depth_errors,
+            "depth_signals": depth_signals,
+            "selected_method_hints": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_hints") if isinstance(evidence, dict) else None),
+            "selected_method_body_present": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_body_present") if isinstance(evidence, dict) else None),
+            "selected_method_grounding_tier": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_grounding_tier") if isinstance(evidence, dict) else None),
+            "selected_method_grounding_rationale": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_grounding_rationale") if isinstance(evidence, dict) else None),
         }
         return {
             "id": sid,
             "capability": cap,
             "description": desc,
-            "pass": len(errors) == 0 and ok_body,
+            "pass": contract_pass and depth_pass,
+            "contract_pass": contract_pass,
+            "depth_pass": depth_pass,
             "errors": errors,
             "expect": expect,
-            "actual_summary": {"http": code, "routing_mode": resp.get("routing_mode"), "has_summary": bool(ed.get("summary"))},
+            "actual_summary": {
+                "http": code,
+                "routing_mode": resp.get("routing_mode"),
+                "has_summary": bool(ed.get("summary")),
+                "contract_pass": contract_pass,
+                "depth_pass": depth_pass,
+                "depth_signals": depth_signals,
+                "selected_method_hints": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_hints") if isinstance(evidence, dict) else None),
+                "selected_method_body_present": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_body_present") if isinstance(evidence, dict) else None),
+                "selected_method_grounding_tier": ((evidence.get("fusion_diagnostics") or {}).get("selected_method_grounding_tier") if isinstance(evidence, dict) else None),
+            },
             "dev_snapshot": dev_snapshot,
         }
 
@@ -1840,35 +2339,16 @@ def _run_scenario_row(
             "client_policy": {"fail_closed_if_gate_unreachable": True},
         }
         code, plan_resp = _post(f"{plan_gate_url}/v0/plan", plan_req)
+        if _scenario_flag(scenario, "requires_playbook") and not plan_resp.get("decision"):
+            errors.append("requires_playbook: plan response must include a decision")
         if expect.get("schema_version") and plan_resp.get("schema_version") != expect["schema_version"]:
             errors.append(f"schema_version want {expect['schema_version']} got {plan_resp.get('schema_version')}")
         if expect.get("decision_present") and not plan_resp.get("decision"):
             errors.append("decision missing")
-        return {
-            "id": sid,
-            "capability": cap,
-            "description": desc,
-            "pass": len(errors) == 0 and code == 200,
-            "errors": errors,
-            "expect": expect,
-            "actual_summary": {"http": code, "decision": plan_resp.get("decision"), "schema_version": plan_resp.get("schema_version")},
-        }
-
-    if cap == "code":
-        cmd = str(scenario.get("command") or "echo motadata-execute-probe")
-        execute_req = {
-            "schema_version": "execute_request.v0.1",
-            "request_id": str(uuid.uuid4()),
-            "repo_root": _execute_repo_root_for_plan_gate(workspace_root),
-            "command": cmd,
-        }
-        code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)
-        if expect.get("schema_version") and execute_resp.get("schema_version") != expect["schema_version"]:
-            errors.append(f"schema_version want {expect['schema_version']} got {execute_resp.get('schema_version')}")
-        if "outcome" in expect and execute_resp.get("outcome") != expect["outcome"]:
-            errors.append(f"outcome want {expect['outcome']} got {execute_resp.get('outcome')}")
-        if "executed" in expect and execute_resp.get("executed") != expect["executed"]:
-            errors.append(f"executed want {expect['executed']} got {execute_resp.get('executed')}")
+        if "decision_any_of" in expect:
+            allowed = expect.get("decision_any_of")
+            if isinstance(allowed, list) and plan_resp.get("decision") not in allowed:
+                errors.append(f"decision want one of {allowed} got {plan_resp.get('decision')}")
         return {
             "id": sid,
             "capability": cap,
@@ -1878,6 +2358,56 @@ def _run_scenario_row(
             "expect": expect,
             "actual_summary": {
                 "http": code,
+                "decision": plan_resp.get("decision"),
+                "decision_present": bool(plan_resp.get("decision")),
+                "schema_version": plan_resp.get("schema_version"),
+            },
+        }
+
+    if cap == "code":
+        cmd = str(scenario.get("command") or "echo motadata-execute-probe")
+        execute_repo_root = _execute_repo_root_for_plan_gate(workspace_root)
+        execute_req = {
+            "schema_version": "execute_request.v0.1",
+            "request_id": str(uuid.uuid4()),
+            "repo_root": execute_repo_root,
+            "command": cmd,
+        }
+        code, execute_resp = _post(f"{plan_gate_url}/v0/execute", execute_req)
+        if expect.get("schema_version") and execute_resp.get("schema_version") != expect["schema_version"]:
+            errors.append(f"schema_version want {expect['schema_version']} got {execute_resp.get('schema_version')}")
+        if "outcome" in expect and execute_resp.get("outcome") != expect["outcome"]:
+            errors.append(f"outcome want {expect['outcome']} got {execute_resp.get('outcome')}")
+        if "outcome_any_of" in expect:
+            allowed_outcomes = expect.get("outcome_any_of")
+            if isinstance(allowed_outcomes, list) and execute_resp.get("outcome") not in allowed_outcomes:
+                errors.append(f"outcome want one of {allowed_outcomes} got {execute_resp.get('outcome')}")
+        if "executed" in expect and execute_resp.get("executed") != expect["executed"]:
+            errors.append(f"executed want {expect['executed']} got {execute_resp.get('executed')}")
+        if "executed_any_of" in expect:
+            allowed_executed = expect.get("executed_any_of")
+            if isinstance(allowed_executed, list) and execute_resp.get("executed") not in allowed_executed:
+                errors.append(f"executed want one of {allowed_executed} got {execute_resp.get('executed')}")
+        if "posture" in expect and execute_resp.get("posture") != expect["posture"]:
+            errors.append(f"posture want {expect['posture']} got {execute_resp.get('posture')}")
+        if _bool_gate_enabled(expect.get("coherent_executed")):
+            o = str(execute_resp.get("outcome") or "")
+            ex = bool(execute_resp.get("executed"))
+            if o == "EXECUTED" and not ex:
+                errors.append("coherent_executed: outcome EXECUTED requires executed=True")
+            if o in ("REFUSED", "BLOCKED") and ex:
+                errors.append(f"coherent_executed: outcome {o} requires executed=False")
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0 and code == 200,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {
+                "http": code,
+                "command": cmd,
+                "repo_root": execute_repo_root,
                 "outcome": execute_resp.get("outcome"),
                 "executed": execute_resp.get("executed"),
                 "posture": execute_resp.get("posture"),
@@ -1937,6 +2467,28 @@ def _run_scenario_row(
     }
 
 
+def _skipped_scenario_result(
+    scenario: dict[str, Any],
+    *,
+    reason: str,
+) -> dict[str, Any]:
+    sid = str(scenario.get("id") or "unknown")
+    cap = str(scenario.get("capability") or "")
+    desc = scenario.get("description")
+    expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
+    return {
+        "id": sid,
+        "capability": cap,
+        "description": desc,
+        "pass": True,
+        "skipped": True,
+        "skip_reason": reason,
+        "errors": [],
+        "expect": expect,
+        "actual_summary": {"skipped": True, "reason": reason},
+    }
+
+
 def run_scenario_suite(
     scenarios_path: Path,
     workspace_root: str,
@@ -1958,6 +2510,15 @@ def run_scenario_suite(
         }
     defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
     tk = int(defaults.get("top_k", top_k))
+    preflight = _graph_preflight()
+    if preflight.get("state") == "UNREACHABLE":
+        return {
+            "file": str(scenarios_path),
+            "all_pass": False,
+            "error": f"graph preflight failed: {preflight.get('reason')}",
+            "graph_preflight": preflight,
+            "results": [],
+        }
     results: list[dict[str, Any]] = []
     file_ids: set[str] = set()
     for sc in data.get("scenarios") or []:
@@ -1976,6 +2537,17 @@ def run_scenario_suite(
         sid = str(sc.get("id") or "")
         if scenario_ids is not None and sid not in scenario_ids:
             continue
+        if preflight.get("state") == "INCOMPLETE" and _scenario_flag(sc, "requires_graph_path"):
+            results.append(
+                _skipped_scenario_result(
+                    sc,
+                    reason=(
+                        "requires_graph_path skipped because Neo4j ingest is INCOMPLETE: "
+                        f"{preflight.get('anchor_counts')}"
+                    ),
+                )
+            )
+            continue
         results.append(
             _run_scenario_row(
                 sc,
@@ -1988,7 +2560,12 @@ def run_scenario_suite(
             )
         )
     all_pass = all(r.get("pass") for r in results) if results else False
-    out: dict[str, Any] = {"file": str(scenarios_path), "all_pass": all_pass, "results": results}
+    out: dict[str, Any] = {
+        "file": str(scenarios_path),
+        "all_pass": all_pass,
+        "graph_preflight": preflight,
+        "results": results,
+    }
     if scenario_ids is not None:
         out["scenario_id_filter"] = sorted(scenario_ids)
     return out

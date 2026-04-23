@@ -169,6 +169,19 @@ def try_build_layer5_evidence(
         r = filtered
         roles_map = {p: ra.role for p, ra in role_objs.items()}
 
+    rescue_sel = (
+        (selected_file or "").strip()
+        if str(task_type or "").upper() == "EXPLAIN_DEBUG"
+        else ""
+    )
+    owner_method_rescue: Dict[str, Tuple[str, ...]] = {}
+    if str(task_type or "").upper() != "EXPLAIN_DEBUG" and isinstance(authority_resolution, dict):
+        po = authority_resolution.get("primary_owner") or {}
+        if isinstance(po, dict):
+            pf = str(po.get("file") or "").strip()
+            pm = str(po.get("method") or "").strip()
+            if pf and pm:
+                owner_method_rescue[pf] = (pm,)
     evb = build_evidence_bundle(
         r,
         idx,
@@ -177,6 +190,8 @@ def try_build_layer5_evidence(
         role_by_path=roles_map if roles_map else None,
         authority_note=fusion_authority_note() if registry is not None else None,
         fusion_diagnostics=fusion_diag if fusion_diag else None,
+        debug_snippet_rescue_selected_file=rescue_sel or None,
+        owner_method_rescue_hints_by_path=owner_method_rescue or None,
     )
 
     paths = [e.relative_path for e in evb.entries]

@@ -29,6 +29,8 @@ from runtime.layer5.retrieval.policy import (
     classify_file,
     infer_query_subsystems,
     is_noise_class,
+    query_api_surface_focus,
+    query_class_relationship_focus,
     is_support_style_java_basename,
 )
 from runtime.layer5.retrieval.query import normalize_query
@@ -129,7 +131,7 @@ def _active_file_delta(
 ) -> float:
     if not selected_file:
         return 0.0
-    if _norm_rel(path).lower() != _norm_rel(selected_file).lower():
+    if not paths_match_workspace(path, selected_file):
         return 0.0
     if effective.primary_mode == MODE_DEBUG:
         return cfg.active_file_boost_debug
@@ -271,7 +273,6 @@ def _apply_hard_path_caps(
     if not ordered:
         return ordered, {"kept": 0, "dropped": 0}
 
-    selected_n = _norm_rel(selected_file).lower() if selected_file else ""
     kept: List[Tuple[RetrievalHit, float, Dict[str, Any]]] = []
     dropped_rows: List[Tuple[RetrievalHit, float, Dict[str, Any], str]] = []
     dropped: List[Dict[str, Any]] = []
@@ -279,10 +280,9 @@ def _apply_hard_path_caps(
     distractor_count = 0
 
     for h, sc, diag in ordered:
-        rel_n = _norm_rel(h.relative_path).lower()
         protected = bool(
             (owner_path and paths_match_workspace(h.relative_path, owner_path))
-            or (selected_n and rel_n == selected_n)
+            or (selected_file and paths_match_workspace(h.relative_path, selected_file))
         )
         pol = classify_file(h.relative_path)
         is_gen = _is_generic_infra_path(h.relative_path)
@@ -315,8 +315,21 @@ def _apply_hard_path_caps(
         for h, sc, diag, reason in dropped_rows:
             if len(kept) >= min_keep:
                 break
+            pol = classify_file(h.relative_path)
+            is_gen = _is_generic_infra_path(h.relative_path)
+            is_dist = is_noise_class(pol.file_class)
+            # Preserve hard-cap intent during floor restore: never re-introduce
+            # rows that would violate generic/distractor budgets again.
+            if is_gen and generic_count >= cfg.max_generic_infra_paths:
+                continue
+            if is_dist and distractor_count >= cfg.max_distractor_paths:
+                continue
             kept.append((h, sc, dict(diag)))
             restored.append({"path": h.relative_path, "from_reason": reason})
+            if is_gen:
+                generic_count += 1
+            if is_dist:
+                distractor_count += 1
 
     return kept, {
         "kept": len(kept),
@@ -447,6 +460,12 @@ def fuse_and_filter(
             owner_path = resolved_owner
         hits_list = _ensure_owner_present(hits_list, owner_path, index)
 
+    if index is not None and selected_file:
+        ps_sel = {e.relative_path for e in index.files}
+        resolved_sel = resolve_owner_path_in_index(selected_file.strip(), ps_sel, owner_class=None)
+        if resolved_sel:
+            hits_list = _ensure_owner_present(hits_list, resolved_sel, index)
+
     by_path = {h.relative_path: h for h in hits_list}
     pairs = [(h.relative_path, float(h.score)) for h in hits_list]
     ranked: List[RankedHit] = ranker.rank_hits(pairs, ctx)
@@ -503,13 +522,27 @@ def fuse_and_filter(
         fused_rows.append((orig, fused, per))
 
     # Broad ASK mode should be stricter with generic/support passengers.
+    #
+    # Special-case class-relationship API asks (e.g. "base class for all APIs"):
+    # keep broader API surface so declaration evidence (AbstractAPI) survives.
+    class_rel_api_ask = (
+        effective_intent.primary_mode == MODE_ASK
+        and query_class_relationship_focus(tuple(query_tokens))
+        and query_api_surface_focus(tuple(query_tokens))
+    )
     cap_cfg = cfg
     if (
         effective_intent.primary_mode == MODE_ASK
         and not selected_file
-        and cfg.ask_broad_generic_infra_paths < cfg.max_generic_infra_paths
+        and not class_rel_api_ask
     ):
-        cap_cfg = replace(cfg, max_generic_infra_paths=cfg.ask_broad_generic_infra_paths)
+        broad_cap = cfg.ask_broad_generic_infra_paths
+        # Owner-anchored ask responses should not accumulate additional generic
+        # infra passengers beyond the protected owner row.
+        if owner_path:
+            broad_cap = 0
+        if broad_cap < cfg.max_generic_infra_paths:
+            cap_cfg = replace(cfg, max_generic_infra_paths=broad_cap)
         diag_root["ask_broad_caps_applied"] = {
             "max_generic_infra_paths": cap_cfg.max_generic_infra_paths,
         }

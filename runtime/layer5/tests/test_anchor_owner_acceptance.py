@@ -132,7 +132,7 @@ def test_motadata_prefix_drift_owner_in_top3_and_stage_a_injection():
     assert po["file"].endswith("AvailabilityCorrelationEngine.java")
 
     lex_task = resolve_lexical_task_type("general", q, ar)
-    assert lex_task == "CODE"
+    assert lex_task == "ASK"
 
     r = retrieve_lexical(
         idx,

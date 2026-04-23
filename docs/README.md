@@ -156,6 +156,7 @@ Some subtrees under `ml/` or `scripts/` may not collect cleanly without extra de
 ### 📌 Core References
 - **[reference/MODEL_VERIFICATION_REPORT.md](reference/MODEL_VERIFICATION_REPORT.md)** - Model verification and rollback decisions
 - **[reference/DIRECTORY_STRUCTURE_ANALYSIS.md](reference/DIRECTORY_STRUCTURE_ANALYSIS.md)** - Repository structure and disk usage analysis
+- **[reference/MOTADATA_REPO_SOURCE_TREE.md](reference/MOTADATA_REPO_SOURCE_TREE.md)** - Motadata **product** workspace tree (`motadata/`, `com.mindarray` packages); regenerate when the product repo layout changes
 
 ## V16 Documentation
 

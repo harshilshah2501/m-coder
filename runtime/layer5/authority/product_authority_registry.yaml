@@ -155,6 +155,11 @@ concepts:
       - "request routing"
       - "api request handling"
       - "rest request flow"
+      - "api layer architecture"
+      - "api layer"
+      - "base class for all apis"
+      - "all apis"
+      - "abstractapi"
 
     collaborators:
       - file: "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"
@@ -177,6 +182,87 @@ concepts:
         method: "start"
         event_type: ""
 
+  mail_server_configuration:
+    primary_owner:
+      file: "src/main/java/com/mindarray/api/MailServerConfiguration.java"
+      class: "MailServerConfiguration"
+      method: "beforeUpdate"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-22T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "Mail server API configuration lifecycle maps to MailServerConfiguration."
+      staleness_threshold_days: 90
+
+    aliases:
+      - "mail server configuration"
+      - "mail configuration"
+      - "smtp configuration"
+      - "mail settings"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/api/AbstractAPI.java"
+        role: "api_base"
+        relationship: "shared_api_lifecycle"
+      - file: "src/main/java/com/mindarray/notification/EmailNotification.java"
+        role: "mail_delivery_consumer"
+        relationship: "mail_channel_dependency"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java"
+        reason: "AIOps correlation domain, unrelated to mail server API configuration"
+
+    notes:
+      - "Anchors asks/debugs about mail server update hooks and API-level persistence."
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/api/MailServerConfiguration.java"
+        method: "beforeUpdate"
+        event_type: ""
+
+  config_store_organization:
+    primary_owner:
+      file: "src/main/java/com/mindarray/store/AbstractConfigStore.java"
+      class: "AbstractConfigStore"
+      method: "getItem"
+      confidence: "high"
+
+    verification:
+      last_verified_at: "2026-04-22T00:00:00Z"
+      verification_source: "human"
+      verification_notes: "Store package configuration retrieval/write paths anchor to AbstractConfigStore."
+      staleness_threshold_days: 90
+
+    aliases:
+      - "config store"
+      - "config stores"
+      - "store package"
+      - "protocol mapper config store"
+      - "how are config stores organized"
+
+    collaborators:
+      - file: "src/main/java/com/mindarray/store/ProtocolMapperConfigStore.java"
+        role: "specialized_store"
+        relationship: "store_extension"
+      - file: "src/main/java/com/mindarray/store/ObjectConfigStore.java"
+        role: "store_variant"
+        relationship: "store_specialization"
+
+    forbidden_distractors:
+      - file: "src/main/java/com/mindarray/config/ConfigManager.java"
+        reason: "Configuration manager orchestration, not store package ownership"
+
+    notes:
+      - "Keeps retrieval anchored in com.mindarray.store owners for config-store asks."
+
+    entry_points:
+      - type: "service"
+        file: "src/main/java/com/mindarray/store/AbstractConfigStore.java"
+        method: "getItem"
+        event_type: ""
+
   notification_dispatch:
     primary_owner:
       file: "src/main/java/com/mindarray/notification/NotificationEngine.java"
@@ -195,11 +281,20 @@ concepts:
       - "alert notification"
       - "dispatch notification"
       - "email slack sms notification"
+      - "notification handlers"
+      - "classes that handle notifications"
+      - "notifications"
 
     collaborators:
       - file: "src/main/java/com/mindarray/notification/Notification.java"
         role: "channel_base"
         relationship: "notification_abstraction"
+      - file: "src/main/java/com/mindarray/notification/EmailNotification.java"
+        role: "email_channel"
+        relationship: "channel_handler"
+      - file: "src/main/java/com/mindarray/notification/SMSNotification.java"
+        role: "sms_channel"
+        relationship: "channel_handler"
       - file: "src/main/java/com/mindarray/api/APIServer.java"
         role: "upstream_source"
         relationship: "api_triggered_notifications"

@@ -13,6 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 from runtime.layer5.evidence import SnippetConfig, build_evidence_bundle
+from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.evidence.identity_policy import IdentityMismatchError
 from runtime.layer5.evidence.schema_validate import validate_evidence_bundle_dict
 from runtime.layer5.index import build_file_index
@@ -118,3 +119,83 @@ class TestEvidenceBundle:
             bundle = build_evidence_bundle(r, idx)
             assert bundle.entries[0].snippet_selection_reason == "file_missing"
             assert bundle.entries[0].snippet_text == ""
+
+    def test_debug_snippet_rescue_reanchors_declaration_only_window(self):
+        """EXPLAIN_DEBUG rescue replaces query-token windows that lack executable CF."""
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            rel = "src/AvailabilityCorrelationEngine.java"
+            java_src = """package com.example;
+
+public class AvailabilityCorrelationEngine {
+    private static final int A0 = 0;
+    private static final int A1 = 1;
+    private static final int A2 = 2;
+    private static final int A3 = 3;
+    private static final int A4 = 4;
+    private static final int A5 = 5;
+
+    public void correlate() {
+        if (name == null) {
+            return;
+        }
+    }
+}
+"""
+            _touch(root / rel, java_src)
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "AvailabilityCorrelationEngine",
+                top_k=1,
+                config=LexicalRetrievalConfig(),
+            )
+            assert r.hits[0].relative_path == rel
+            primary = build_evidence_bundle(r, idx)
+            assert not text_has_executable_control_flow(primary.entries[0].snippet_text)
+            rescued = build_evidence_bundle(
+                r,
+                idx,
+                debug_snippet_rescue_selected_file=rel,
+            )
+            assert rescued.entries[0].snippet_selection_reason == "executable_control_flow_rescue_anchor"
+            assert text_has_executable_control_flow(rescued.entries[0].snippet_text)
+
+    def test_owner_method_rescue_reanchors_owner_method_window(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            rel = "src/MailServerConfiguration.java"
+            java_src = """package com.example;
+
+public class MailServerConfiguration {
+    private String host;
+    private int port;
+    private String user;
+    private String pass;
+
+    public void beforeUpdate() {
+        if (host == null) {
+            throw new IllegalStateException("missing host");
+        }
+        this.port = normalizePort(port);
+    }
+}
+"""
+            _touch(root / rel, java_src)
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "MailServerConfiguration",
+                top_k=1,
+                config=LexicalRetrievalConfig(),
+            )
+            primary = build_evidence_bundle(r, idx)
+            assert "beforeUpdate" not in primary.entries[0].snippet_text
+            rescued = build_evidence_bundle(
+                r,
+                idx,
+                owner_method_rescue_hints_by_path={rel: ("beforeUpdate",)},
+            )
+            assert "beforeUpdate" in rescued.entries[0].snippet_text

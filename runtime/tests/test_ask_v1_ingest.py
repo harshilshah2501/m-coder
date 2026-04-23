@@ -345,6 +345,18 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
         assert response.get("schema_version") == "plan_only_response.v0.1"
         assert response.get("request_id") == "http-v1"
         assert response.get("evidence_first_meta", {}).get("ask_path") == "v1_evidence"
+        assert response.get("governance_posture") == "PLAN_ONLY"
+        assert response.get("execution") is False
+        assist = response.get("assist_layer") if isinstance(response.get("assist_layer"), dict) else {}
+        assist_v2 = assist.get("assist_v2") if isinstance(assist.get("assist_v2"), dict) else {}
+        for key in ("answer", "evidence", "gaps", "next_steps"):
+            assert key in assist_v2
+        # Ask activation must preserve proof-density diagnostics from metadata.
+        hooks = assist_v2.get("proof_density_hooks") if isinstance(assist_v2.get("proof_density_hooks"), dict) else {}
+        md = response.get("metadata") if isinstance(response.get("metadata"), dict) else {}
+        assert hooks.get("execution_path_stitched") == md.get("execution_path_stitched")
+        assert hooks.get("call_site_resolution_state") == md.get("call_site_resolution_state")
+        assert hooks.get("method_window_visible_rate") == md.get("method_window_visible_rate")
 
         bad = json.dumps(_minimal_v1_ask(_load_golden_evidence(), evidence_bundle={"bad": True})).encode(
             "utf-8"
@@ -399,6 +411,53 @@ def test_v1_blocked_has_refusal_shape_and_metadata():
     md = resp.get("metadata") or {}
     assert md.get("evidence_quality") in {"INSUFFICIENT", "NO_MATCH"}
     assert isinstance(md.get("quality_reasons"), list) and len(md["quality_reasons"]) >= 1
+
+
+def test_v1_explain_debug_runs_when_grounding_blocked_but_file_selection_anchored():
+    """EXPLAIN_DEBUG must not short-circuit on quality.blocked when the user selected a file + prompt."""
+    ev = _load_golden_evidence()
+    ev["entries"] = [
+        {
+            "provisional": False,
+            "rank": 0,
+            "relative_path": "logs/app.log",
+            "retrieval_score": 1,
+            "retrieval_breakdown": {
+                "path_substrings": 1,
+                "basename_substrings": 0,
+                "content_substrings": 0,
+            },
+            "snippet": {
+                "text": "error happened",
+                "start_line": 1,
+                "end_line": 1,
+                "start_byte_utf8": 0,
+                "end_byte_utf8": 14,
+                "anchor_line": 1,
+                "matched_tokens": ["error"],
+                "selection_reason": "query_token_substring_anchor",
+                "truncated_by_max_bytes": False,
+            },
+        }
+    ]
+    req = _minimal_v1_ask(
+        ev,
+        query="Debug this path",
+        request_id="req-v1-explain-override",
+        task_type="EXPLAIN_DEBUG",
+        selected_file="logs/app.log",
+        client_context={"selection": "Find failure points in the log line."},
+    )
+    with patch("runtime.ask_service.v1_ingest.explain_debug") as mock_explain:
+        mock_explain.return_value = ExplainDebugResult(summary="anchored")
+        resp = handle_ask_v1_request(req)
+
+    assert resp.get("routing_mode") == "explain_debug"
+    mock_explain.assert_called_once()
+    md = resp.get("metadata") or {}
+    assert md.get("grounding_block_overridden_by_explain_debug") is True
+    assert md.get("evidence_quality") in {"INSUFFICIENT", "NO_MATCH"}
+    assert resp.get("explain_debug") is not None
 
 
 def test_v1_metadata_includes_operator_hints_and_usefulness_metrics():

@@ -337,9 +337,15 @@ class ContextLayerHandler(BaseHTTPRequestHandler):
 
         index_metrics: dict = {}
         esa = data.get("enable_stage_a_v2")
+        task_type = str(data.get("task_type") or "general")
+        selected_file = str(data.get("selected_file") or "").strip() or None
+        active_file = str(data.get("active_file") or "").strip() or selected_file
         export_kw: dict = {
             "index_cache": _get_workspace_index_cache(),
             "index_cache_metrics": index_metrics,
+            "task_type": task_type,
+            "selected_file": selected_file,
+            "active_file": active_file,
         }
         if isinstance(esa, bool):
             export_kw["enable_stage_a_v2"] = esa

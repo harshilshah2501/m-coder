@@ -22,9 +22,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple
+import re
+from typing import Optional, Tuple
 
 from runtime.layer5.evidence.config import SnippetConfig
+from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.evidence.selection_reason import SelectionReason
 from runtime.layer5.evidence.snippet_anchor_quality import pick_best_anchor_line
 
@@ -166,5 +168,145 @@ def extract_snippet(
         anchor_line=anchor_idx + 1,
         matched_tokens=matched,
         selection_reason=reason,
+        truncated_by_max_bytes=truncated,
+    )
+
+
+def extract_snippet_executable_rescue(
+    *,
+    canonical_root: Path,
+    relative_path: str,
+    config: SnippetConfig,
+) -> Optional[SnippetSpan]:
+    """
+    Re-anchor on the first physical line that contains executable control-flow signals.
+
+    Used when the primary query-token anchor lands in declaration/header zones for
+    EXPLAIN_DEBUG selected files. Deterministic: top-to-bottom first matching line.
+    """
+    path = canonical_root / relative_path
+    try:
+        raw = path.read_bytes()[: config.max_file_bytes]
+    except FileNotFoundError:
+        return None
+    except (OSError, PermissionError):
+        return None
+
+    truncated = path.is_file() and path.stat().st_size > config.max_file_bytes
+    text = raw.decode("utf-8", errors="replace")
+    if not text:
+        return None
+
+    segments = text.splitlines(True)
+    if not segments:
+        return None
+
+    starts_char: list[int] = []
+    pos = 0
+    for seg in segments:
+        starts_char.append(pos)
+        pos += len(seg)
+
+    bodies = [s.rstrip("\r\n") for s in segments]
+    n = len(bodies)
+    anchor_idx: Optional[int] = None
+    for i, line in enumerate(bodies):
+        if text_has_executable_control_flow(line):
+            anchor_idx = i
+            break
+    if anchor_idx is None:
+        return None
+
+    before = max(0, anchor_idx - config.context_lines_before)
+    after = min(n - 1, anchor_idx + config.context_lines_after)
+    snippet_text = "".join(segments[before : after + 1])
+
+    start_char = starts_char[before]
+    end_char = starts_char[after] + len(segments[after])
+    start_b = _utf8_byte_offset(text, start_char)
+    end_b = _utf8_byte_offset(text, end_char)
+
+    return SnippetSpan(
+        text=snippet_text,
+        start_line=before + 1,
+        end_line=after + 1,
+        start_byte_utf8=start_b,
+        end_byte_utf8=end_b,
+        anchor_line=anchor_idx + 1,
+        matched_tokens=(),
+        selection_reason=SelectionReason.EXECUTABLE_CONTROL_FLOW_RESCUE_ANCHOR,
+        truncated_by_max_bytes=truncated,
+    )
+
+
+def extract_snippet_method_anchor_rescue(
+    *,
+    canonical_root: Path,
+    relative_path: str,
+    method_hints: Tuple[str, ...],
+    config: SnippetConfig,
+) -> Optional[SnippetSpan]:
+    """
+    Re-anchor on first line that matches a method hint token (declaration or call).
+
+    Used by Ask owner-proof-density pass when the owner snippet window is declaration-heavy.
+    """
+    hints = tuple(str(h).strip() for h in method_hints if str(h).strip())
+    if not hints:
+        return None
+    path = canonical_root / relative_path
+    try:
+        raw = path.read_bytes()[: config.max_file_bytes]
+    except FileNotFoundError:
+        return None
+    except (OSError, PermissionError):
+        return None
+
+    truncated = path.is_file() and path.stat().st_size > config.max_file_bytes
+    text = raw.decode("utf-8", errors="replace")
+    if not text:
+        return None
+
+    segments = text.splitlines(True)
+    if not segments:
+        return None
+    starts_char: list[int] = []
+    pos = 0
+    for seg in segments:
+        starts_char.append(pos)
+        pos += len(seg)
+    bodies = [s.rstrip("\r\n") for s in segments]
+    n = len(bodies)
+    anchor_idx: Optional[int] = None
+    matched_hint = ""
+    for i, line in enumerate(bodies):
+        for h in hints:
+            esc = re.escape(h)
+            if re.search(rf"\b{esc}\s*\(", line) or re.search(rf"\b{esc}\b", line):
+                anchor_idx = i
+                matched_hint = h
+                break
+        if anchor_idx is not None:
+            break
+    if anchor_idx is None:
+        return None
+
+    before = max(0, anchor_idx - config.context_lines_before)
+    after = min(n - 1, anchor_idx + config.context_lines_after)
+    snippet_text = "".join(segments[before : after + 1])
+    start_char = starts_char[before]
+    end_char = starts_char[after] + len(segments[after])
+    start_b = _utf8_byte_offset(text, start_char)
+    end_b = _utf8_byte_offset(text, end_char)
+
+    return SnippetSpan(
+        text=snippet_text,
+        start_line=before + 1,
+        end_line=after + 1,
+        start_byte_utf8=start_b,
+        end_byte_utf8=end_b,
+        anchor_line=anchor_idx + 1,
+        matched_tokens=(matched_hint,) if matched_hint else (),
+        selection_reason=SelectionReason.QUERY_TOKEN_SUBSTRING_ANCHOR,
         truncated_by_max_bytes=truncated,
     )

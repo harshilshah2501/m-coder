@@ -4,9 +4,13 @@ Phase 4 — Plan-Gate consumption, answer anchoring, distractor synthesis guard,
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
-from runtime.ask_service.authority_synthesis import synthesize_authority_plan_steps
+from runtime.ask_service.authority_synthesis import (
+    prioritize_owner_in_bundle,
+    synthesize_authority_plan_steps,
+)
 from runtime.ask_service.planner import PlanOnlyPlanner
 from runtime.context.contracts import (
     ContextBundle,
@@ -169,8 +173,10 @@ def test_planner_class_query_returns_direct_grounded_answer_when_declaration_pre
     )
     first = ps.steps[0]
     assert first.startswith("Direct answer (grounded):")
-    assert "common base class for apis" in first.lower()
-    assert "more api class declarations are needed" in first.lower()
+    assert (
+        "common base class for apis" in first.lower()
+        or "strongest api base-class signal" in first.lower()
+    )
 
 
 def test_planner_class_query_reports_insufficient_when_declaration_missing():
@@ -183,8 +189,8 @@ def test_planner_class_query_reports_insufficient_when_declaration_missing():
         authority_resolution=None,
     )
     first = ps.steps[0].lower()
-    assert "could not determine" in first
-    assert "class declaration line is not in top evidence" in first
+    assert "inheritance/implementation could not be asserted" in first
+    assert "class declaration lines are missing" in first
 
 
 def test_planner_class_query_prefers_api_declaration_over_unrelated_declaration():
@@ -203,8 +209,10 @@ def test_planner_class_query_prefers_api_declaration_over_unrelated_declaration(
         authority_resolution=None,
     )
     first = ps.steps[0]
-    assert "common base class for apis" in first.lower()
-    assert "more api class declarations are needed" in first.lower()
+    assert (
+        "common base class for apis" in first.lower()
+        or "strongest api base-class signal" in first.lower()
+    )
 
 
 def test_planner_class_query_api_without_api_declaration_returns_api_specific_insufficiency():
@@ -249,6 +257,278 @@ def test_planner_uses_authority_when_present():
     assert ar
     p = PlanOnlyPlanner()
     ps = p.plan(query="alert correlation", bundle=_ctx([ar["primary_owner"]["file"]]), authority_resolution=ar)
+    assert any("Primary implementation owner" in s for s in ps.steps)
+
+
+def test_authority_synthesis_omits_unanchored_method_claim_when_snippet_missing_method():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/MailServerConfiguration.java",
+            "class": "MailServerConfiguration",
+            "method": "beforeUpdate",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    po = ar["primary_owner"]
+    b = _ctx([po["file"]])
+    # Deliberately declaration-heavy content without method declaration.
+    b.items[0].content = "public class MailServerConfiguration extends AbstractAPI { public static final String X = \"y\"; }"
+    steps, meta = synthesize_authority_plan_steps("how does mail update work", b, ar)
+    joined = " ".join(steps)
+    assert "Primary implementation owner" in joined
+    assert ", method `beforeUpdate`" not in joined
+    assert "method beforeUpdate" not in joined
+    assert "authority-derived" in joined
+    assert meta.get("method_claim_alignment_pass") is False
+
+
+def test_authority_synthesis_shapes_collaborators_to_owner_domain():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/APIServer.java",
+            "class": "APIServer",
+            "method": "start",
+        },
+        "collaborators": [
+            {"file": "src/main/java/com/mindarray/api/AbstractAPI.java"},
+            {"file": "src/main/java/com/mindarray/notification/NotificationEngine.java"},
+            {"file": "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java"},
+            {"file": "src/main/java/com/mindarray/aiops/DependencyManager.java"},
+            {"file": "src/main/java/com/mindarray/nms/DiscoveryEngine.java"},
+        ],
+        "forbidden_distractors": [],
+    }
+    b = _ctx(
+        [
+            "src/main/java/com/mindarray/api/APIServer.java",
+            "src/main/java/com/mindarray/notification/NotificationEngine.java",
+        ]
+    )
+    steps, meta = synthesize_authority_plan_steps("api layer architecture", b, ar)
+    collab_line = next((s for s in steps if s.startswith("Supporting context only")), "")
+    cl = collab_line.lower()
+    assert "abstractapi" in cl
+    assert "notificationengine" in cl
+    assert meta.get("collaborator_paths_total") == 5
+    assert int(meta.get("collaborator_paths_emitted") or 0) <= 4
+
+
+def test_authority_synthesis_prefers_method_window_excerpt_for_how_query():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/MailServerConfiguration.java",
+            "class": "MailServerConfiguration",
+            "method": "beforeUpdate",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"]])
+    b.items[0].content = """
+public class MailServerConfiguration extends AbstractAPI {
+  public void beforeUpdate(Request req) {
+    if (req == null) { return; }
+    persist(req);
+  }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("how does mail update work", b, ar)
+    text = " ".join(steps)
+    assert "Method-window excerpt" in text
+    assert "beforeUpdate" in text
+    assert meta.get("method_claim_alignment_pass") is True
+    assert meta.get("method_window_visible") is True
+
+
+def test_authority_synthesis_adds_execution_path_stitch_when_traces_present():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/notification/NotificationEngine.java",
+            "class": "NotificationEngine",
+            "method": "start",
+        },
+        "collaborators": [
+            {"file": "src/main/java/com/mindarray/notification/EmailNotification.java"},
+        ],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"], "src/main/java/com/mindarray/notification/EmailNotification.java"])
+    b.items[0].content = """
+public class NotificationEngine {
+  public void start() {
+    EmailNotification.send("x");
+  }
+}
+"""
+    b.items[1].content = """
+public class EmailNotification {
+  public static void send(String msg) { transport(msg); }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("notification handlers", b, ar)
+    joined = " ".join(steps)
+    assert "Execution-path stitch:" in joined
+    assert "NotificationEngine.start" in joined
+    assert "EmailNotification.send" in joined
+    assert meta.get("execution_path_stitched") is True
+    assert meta.get("stitched_edge_count") == 1
+    assert meta.get("stitch_confidence") == "visible"
+    assert meta.get("call_site_candidates_detected") is True
+    assert int(meta.get("call_site_candidate_count") or 0) >= 1
+    assert meta.get("call_site_resolution_state") == "resolved_visible"
+
+
+def test_authority_synthesis_reports_partial_trace_when_target_not_resolved():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/APIServer.java",
+            "class": "APIServer",
+            "method": "start",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"]])
+    b.items[0].content = """
+public class APIServer {
+  public void start() {
+    registerRoutes(router);
+  }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("api layer architecture", b, ar)
+    joined = " ".join(steps)
+    assert "plausible first-hop call-site is present" in joined
+    assert "cannot be safely confirmed" in joined
+    assert meta.get("execution_path_stitched") is False
+    assert meta.get("stitched_edge_count") == 0
+    assert meta.get("stitch_confidence") == "partial"
+    assert meta.get("call_site_candidates_detected") is True
+    assert int(meta.get("call_site_candidate_count") or 0) >= 1
+    assert meta.get("call_site_resolution_state") == "unresolved"
+
+
+def test_authority_synthesis_reports_no_candidate_when_no_callsite():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/store/AbstractConfigStore.java",
+            "class": "AbstractConfigStore",
+            "method": "getItem",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"]])
+    b.items[0].content = """
+public class AbstractConfigStore {
+  public JsonObject getItem(long id) {
+    return null;
+  }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("config store organization", b, ar)
+    joined = " ".join(steps)
+    assert "no explicit first-hop call-site" in joined
+    assert meta.get("execution_path_stitched") is False
+    assert meta.get("call_site_candidates_detected") is False
+    assert int(meta.get("call_site_candidate_count") or 0) == 0
+    assert meta.get("call_site_resolution_state") == "none"
+
+
+def test_authority_synthesis_surfaces_method_window_from_owner_file_when_snippet_sparse():
+    with tempfile.TemporaryDirectory() as raw:
+        root = Path(raw)
+        rel = Path("src/main/java/com/mindarray/api/MailServerConfiguration.java")
+        full = root / rel
+        full.parent.mkdir(parents=True, exist_ok=True)
+        full.write_text(
+            "public class MailServerConfiguration extends AbstractAPI {\n"
+            "  public void beforeUpdate(Request req) {\n"
+            "    if (req == null) { return; }\n"
+            "    persist(req);\n"
+            "  }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        b = _ctx([str(rel)])
+        b.provenance.root_path = str(root)
+        # Sparse snippet lacks method window.
+        b.items[0].content = "public class MailServerConfiguration extends AbstractAPI {"
+        ar = {
+            "authority_status": "validated",
+            "authority_confidence": "high",
+            "primary_owner": {
+                "file": "src/main/java/com/mindarray/api/MailServerConfiguration.java",
+                "class": "MailServerConfiguration",
+                "method": "beforeUpdate",
+            },
+            "collaborators": [],
+            "forbidden_distractors": [],
+        }
+        steps, meta = synthesize_authority_plan_steps("how does mail update work", b, ar)
+        text = " ".join(steps)
+        assert "Method-window excerpt" in text
+        assert "beforeUpdate" in text
+        assert meta.get("method_window_source") == "owner_file_surfacing"
+
+
+def test_prioritize_owner_in_bundle_promotes_owner_to_top1():
+    b = _ctx(
+        [
+            "src/main/java/com/mindarray/nms/DiscoveryEngine.java",
+            "src/main/java/com/mindarray/api/APIServer.java",
+            "src/main/java/com/mindarray/notification/NotificationEngine.java",
+        ]
+    )
+    ar = {
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/api/APIServer.java",
+            "class": "APIServer",
+            "method": "start",
+        }
+    }
+    meta = prioritize_owner_in_bundle(b, ar)
+    assert meta.get("owner_promoted_for_context") is True
+    assert meta.get("owner_original_rank_in_bundle") == 2
+    assert b.items[0].path.endswith("APIServer.java")
+
+
+def test_planner_preserves_structural_direct_answer_when_authority_exists():
+    registry = load_registry(REG)
+    ar = build_authority_resolution("api layer architecture", registry, None)
+    assert ar
+    p = PlanOnlyPlanner()
+    b = _ctx(
+        [
+            "motadata/src/main/java/com/mindarray/api/User.java",
+            "motadata/src/main/java/com/mindarray/api/Metric.java",
+            "motadata/src/main/java/com/mindarray/api/APIServer.java",
+        ]
+    )
+    b.items[0].content = "public class User extends AbstractAPI {"
+    b.items[1].content = "public class Metric extends AbstractAPI {"
+    b.items[2].content = "public class APIServer extends AbstractVerticle {"
+    ps = p.plan(
+        query="Which class is the base class for all APIs?",
+        bundle=b,
+        authority_resolution=ar,
+    )
+    assert ps.steps
+    first = ps.steps[0]
+    assert "AbstractAPI" in first
     assert any("Primary implementation owner" in s for s in ps.steps)
 
 

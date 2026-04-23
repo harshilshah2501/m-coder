@@ -266,6 +266,79 @@ def test_fusion_broad_ask_uses_stricter_generic_cap():
     tmp.cleanup()
 
 
+def test_fusion_owner_anchored_ask_uses_zero_passenger_generic_cap():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    owner = "src/main/java/com/mindarray/api/MailServerConfiguration.java"
+    _touch(root / owner, "class MailServerConfiguration {}\n")
+    _touch(root / "src/main/java/com/mindarray/policy/PolicyEngineConstants.java", "class PolicyEngineConstants {}\n")
+    _touch(root / "src/main/java/com/mindarray/eventbus/UIActionEventHandler.java", "class UIActionEventHandler {}\n")
+    _touch(root / "src/main/java/com/mindarray/aiops/DependencyManager.java", "class DependencyManager {}\n")
+    idx = _idx_for(root)
+    q = "How does mail server configuration work?"
+    r = retrieve_lexical(
+        idx,
+        q,
+        5,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="ASK",
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    reg = load_registry(Path(__file__).resolve().parents[1] / "authority" / "product_authority_registry.yaml")
+    eff = merge_effective_intent("general", q)
+    fused, diag, _roles = fuse_and_filter(
+        r,
+        effective_intent=eff,
+        registry=reg,
+        code_index_adapter=None,
+        selected_file=None,
+        fusion_config=FusionConfig(max_generic_infra_paths=2, ask_broad_generic_infra_paths=1),
+        index=idx,
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    assert fused.hits
+    hard = diag.get("hard_caps") or {}
+    # Only protected owner generic path should remain counted.
+    assert int(hard.get("generic_infra_kept", 99)) <= 1
+    assert (diag.get("ask_broad_caps_applied") or {}).get("max_generic_infra_paths") == 0
+    tmp.cleanup()
+
+
+def test_fusion_class_relationship_api_ask_skips_broad_generic_cap_tightening():
+    tmp = tempfile.TemporaryDirectory()
+    root = Path(tmp.name)
+    owner = "src/main/java/com/mindarray/api/APIServer.java"
+    _touch(root / owner, "public class APIServer extends AbstractVerticle {}\n")
+    _touch(root / "src/main/java/com/mindarray/api/User.java", "public class User extends AbstractAPI {}\n")
+    _touch(root / "src/main/java/com/mindarray/aiops/DependencyManager.java", "class DependencyManager {}\n")
+    idx = _idx_for(root)
+    q = "Which class is the base class for all APIs?"
+    r = retrieve_lexical(
+        idx,
+        q,
+        6,
+        LexicalRetrievalConfig(enable_stage_a_v2=True),
+        task_type="ASK",
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    reg = load_registry(Path(__file__).resolve().parents[1] / "authority" / "product_authority_registry.yaml")
+    eff = merge_effective_intent("general", q)
+    fused, diag, _roles = fuse_and_filter(
+        r,
+        effective_intent=eff,
+        registry=reg,
+        code_index_adapter=None,
+        selected_file=None,
+        fusion_config=FusionConfig(max_generic_infra_paths=2, ask_broad_generic_infra_paths=1),
+        index=idx,
+        authority_resolution={"primary_owner": {"file": owner}},
+    )
+    assert fused.hits
+    # For class-relationship API asks, broad cap tightening should not be forced.
+    assert "ask_broad_caps_applied" not in diag
+    tmp.cleanup()
+
+
 def test_hard_filter_only_applies_caps_without_registry():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)

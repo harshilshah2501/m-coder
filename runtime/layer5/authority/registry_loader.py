@@ -210,8 +210,20 @@ class AuthorityRegistry:
 
 def _tokenize(text: str) -> Tuple[str, ...]:
     """Split text into lowercase tokens."""
-    tokens = re.split(r"[_\s\-]+", text.lower())
-    return tuple(t for t in tokens if len(t) >= 2)
+    raw = [t for t in re.split(r"[_\s\-]+", text.lower()) if len(t) >= 2]
+    out: List[str] = []
+    seen: set[str] = set()
+    for t in raw:
+        if t not in seen:
+            seen.add(t)
+            out.append(t)
+        # Lightweight plural handling (notifications -> notification, stores -> store).
+        if len(t) > 3 and t.endswith("s"):
+            stem = t[:-1]
+            if len(stem) >= 2 and stem not in seen:
+                seen.add(stem)
+                out.append(stem)
+    return tuple(out)
 
 
 def _parse_datetime(value: str) -> datetime:
