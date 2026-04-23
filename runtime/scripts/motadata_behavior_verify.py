@@ -2071,8 +2071,8 @@ def _run_scenario_row(
     if cap == "debug":
         base_q = str(scenario.get("query") or "How does alert correlation and enrichment work?")
         dq = str(scenario.get("debug_query") or "")
-        # Bias retrieval toward debug_query tokens (symbols/paths) while keeping the user question for recall.
-        export_q = f"{dq} {base_q}".strip() if dq else base_q
+        # Include selection text so camelCase hooks (beforeUpdate/getItem/parse/…) land in export query_tokens + hint extraction.
+        export_q = " ".join(x for x in (dq, base_q, sel_text) if str(x).strip()).strip() if dq else f"{base_q} {sel_text}".strip()
         sel = str(scenario.get("selected_file") or "")
         sel_text = str(scenario.get("selection") or "Investigate likely failure points and trace flow.")
         code, evidence = _post(

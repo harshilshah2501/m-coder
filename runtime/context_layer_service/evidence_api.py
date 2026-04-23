@@ -26,10 +26,18 @@ def _code_index_enabled() -> bool:
     return raw not in {"1", "true", "yes", "on"}
 
 
-def _extract_method_hints(query: str, cap: int = 6) -> list[str]:
-    """Heuristic method-token extraction for debug-targeted retrieval diagnostics."""
+def _extract_method_hints(query: str, selected_file: Optional[str], cap: int = 8) -> list[str]:
+    """
+    Method / symbol hints for EXPLAIN_DEBUG diagnostics.
+
+    Prefer camelCase/PascalCase identifiers (beforeUpdate, AbstractConfigStore), the
+    selected file's type basename, and a tiny allowlist of common debug verbs (parse, dispatch).
+    Avoid single generic tokens like \"before\" from \"before alert\".
+    """
+    raw = str(query or "").replace(".", " ").replace(":", " ")
     out: list[str] = []
     seen: set[str] = set()
+
     blocked = {
         "debug",
         "trace",
@@ -48,20 +56,54 @@ def _extract_method_hints(query: str, cap: int = 6) -> list[str]:
         "null",
         "return",
         "returns",
+        "before",
+        "after",
+        "updates",
+        "update",
+        "alert",
+        "alerts",
     }
-    for tok in re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", str(query or "")):
+
+    def add(tok: str) -> None:
+        if not tok or len(tok) < 3:
+            return
         tl = tok.lower()
         if tl in blocked:
-            continue
+            return
         if tl in seen:
-            continue
-        # Keep camelCase-ish or update/get/parse/dispatch style method cues.
-        if re.search(r"[a-z][A-Z]", tok) or tl.startswith(("get", "set", "parse", "dispatch", "update", "before", "after")):
-            seen.add(tl)
-            out.append(tok)
-            if len(out) >= cap:
+            return
+        seen.add(tl)
+        out.append(tok)
+
+    # camelCase method names: beforeUpdate, getItem
+    for m in re.finditer(r"\b[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)+\b", raw):
+        add(m.group(0))
+        if len(out) >= cap:
+            return out[:cap]
+
+    # PascalCase types: AbstractConfigStore, AvailabilityCorrelationEngine
+    for m in re.finditer(r"\b[A-Z][a-z]+(?:[A-Z][a-z0-9]*)+\b", raw):
+        add(m.group(0))
+        if len(out) >= cap:
+            return out[:cap]
+
+    # Selected Java/Kotlin basename as a structural anchor
+    if selected_file:
+        base = Path(str(selected_file).replace("\\", "/")).name
+        for suf in (".java", ".kt", ".py"):
+            if base.endswith(suf):
+                add(base[: -len(suf)])
                 break
-    return out
+
+    # Short verb anchors often used in debug selections (never single-letter glue words)
+    raw_l = raw.lower()
+    for verb, canon in (("parse", "parse"), ("dispatch", "dispatch")):
+        if re.search(rf"\b{re.escape(verb)}\b", raw_l):
+            add(canon)
+        if len(out) >= cap:
+            return out[:cap]
+
+    return out[:cap]
 
 
 def _selected_method_body_present(
@@ -397,7 +439,11 @@ def export_evidence_bundle_dict(
     if not isinstance(fd, dict):
         fd = {}
         out["fusion_diagnostics"] = fd
-    method_hints = _extract_method_hints(q) if str(task_type or "").upper() == "EXPLAIN_DEBUG" else []
+    method_hints = (
+        _extract_method_hints(q, selected_anchor)
+        if str(task_type or "").upper() == "EXPLAIN_DEBUG"
+        else []
+    )
     method_body_present = _selected_method_body_present(out, selected_anchor, method_hints)
     if method_hints:
         fd["selected_method_hints"] = method_hints
