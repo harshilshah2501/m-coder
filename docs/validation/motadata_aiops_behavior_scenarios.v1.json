@@ -321,6 +321,50 @@
       }
     },
     {
+      "id": "plan_refusal_or_bounded_approval_safe_patch",
+      "capability": "plan",
+      "description": "Plan decision check for bounded SAFE_PATCH action path.",
+      "requires_playbook": true,
+      "plan_request_override": {
+        "mode": "guarded_shadow",
+        "requested_capabilities": ["plan_and_decide", "risk_scan"],
+        "action": {
+          "action_type": "SAFE_PATCH",
+          "target": "feature/guarded-safe-patch"
+        }
+      },
+      "expect": {
+        "schema_version": "decision_response.v0.1",
+        "decision_present": true,
+        "decision_any_of": [
+          "APPROVAL",
+          "REFUSAL"
+        ]
+      }
+    },
+    {
+      "id": "plan_refusal_or_bounded_approval_doc_update",
+      "capability": "plan",
+      "description": "Plan decision check for bounded DOC_UPDATE action path.",
+      "requires_playbook": true,
+      "plan_request_override": {
+        "mode": "guarded_shadow",
+        "requested_capabilities": ["plan_and_decide"],
+        "action": {
+          "action_type": "DOC_UPDATE",
+          "target": "docs/LIVE_ROADMAP_TRACKER.md"
+        }
+      },
+      "expect": {
+        "schema_version": "decision_response.v0.1",
+        "decision_present": true,
+        "decision_any_of": [
+          "APPROVAL",
+          "REFUSAL"
+        ]
+      }
+    },
+    {
       "id": "code_safe_echo_probe",
       "capability": "code",
       "description": "Safe execute probe: echo should be executable in correctly configured environment.",
@@ -353,6 +397,21 @@
           "EXECUTED",
           "BLOCKED"
         ],
+        "coherent_executed": true
+      }
+    },
+    {
+      "id": "code_loop_iteration_observation_probe",
+      "capability": "code",
+      "description": "Bounded loop probe to observe per-iteration output growth without changing execution policy.",
+      "command": "for i in 1 2 3; do echo lane2-iter-$i; done",
+      "expect": {
+        "schema_version": "execute_response.v0.1",
+        "outcome_any_of": [
+          "EXECUTED",
+          "BLOCKED"
+        ],
+        "executed_any_of": [true, false],
         "coherent_executed": true
       }
     },

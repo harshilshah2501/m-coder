@@ -8,6 +8,39 @@ from runtime.context.contracts import ContextBundle
 
 DEFAULT_MAX_CONTEXT_FILES = 40
 DEFAULT_MAX_CONTEXT_BYTES = 350_000
+CONTEXT_BUDGET_POLICY_VERSION = "context_budget_policy.v1"
+CONTEXT_BUDGET_TRUNCATION_ORDER = [
+    "bundle_items_order",
+    "max_files",
+    "max_bytes",
+]
+
+_SURFACE_POLICY = {
+    "ask": {
+        "warn_prompt_input_tokens": 7_500,
+        "warn_bundle_context_bytes": 240_000,
+        "max_files": DEFAULT_MAX_CONTEXT_FILES,
+        "max_bytes": DEFAULT_MAX_CONTEXT_BYTES,
+    },
+    "debug": {
+        "warn_prompt_input_tokens": 9_000,
+        "warn_bundle_context_bytes": 280_000,
+        "max_files": DEFAULT_MAX_CONTEXT_FILES,
+        "max_bytes": DEFAULT_MAX_CONTEXT_BYTES,
+    },
+    "plan": {
+        "warn_prompt_input_tokens": 4_000,
+        "warn_bundle_context_bytes": 140_000,
+        "max_files": 24,
+        "max_bytes": 220_000,
+    },
+    "code": {
+        "warn_prompt_input_tokens": 3_500,
+        "warn_bundle_context_bytes": 120_000,
+        "max_files": 20,
+        "max_bytes": 180_000,
+    },
+}
 
 
 def _estimate_tokens(text: str) -> int:
@@ -47,6 +80,13 @@ def _snippet_bytes_and_method_count(entries: Sequence[Dict[str, Any]]) -> Tuple[
     return total, method_like
 
 
+def _resolve_surface_budget(surface: str) -> Dict[str, int]:
+    key = str(surface or "").strip().lower()
+    if key in _SURFACE_POLICY:
+        return dict(_SURFACE_POLICY[key])
+    return dict(_SURFACE_POLICY["ask"])
+
+
 def apply_context_budget(
     bundle: ContextBundle,
     *,
@@ -77,6 +117,61 @@ def apply_context_budget(
     bundle.limits.max_bytes = min(int(bundle.limits.max_bytes), int(max_bytes))
     bundle.limits.truncated = bool(flags) or bool(bundle.limits.truncated)
     return bundle, flags, used_bytes
+
+
+def apply_context_budget_for_surface(
+    bundle: ContextBundle,
+    *,
+    surface: str,
+) -> Tuple[ContextBundle, List[str], int, Dict[str, Any]]:
+    p = _resolve_surface_budget(surface)
+    out_bundle, flags, used_bytes = apply_context_budget(
+        bundle,
+        max_files=int(p["max_files"]),
+        max_bytes=int(p["max_bytes"]),
+    )
+    return out_bundle, flags, used_bytes, {
+        "surface": str(surface or "ask").strip().lower() or "ask",
+        "max_files": int(p["max_files"]),
+        "max_bytes": int(p["max_bytes"]),
+        "warn_prompt_input_tokens": int(p["warn_prompt_input_tokens"]),
+        "warn_bundle_context_bytes": int(p["warn_bundle_context_bytes"]),
+        "truncation_order": list(CONTEXT_BUDGET_TRUNCATION_ORDER),
+    }
+
+
+def evaluate_context_budget_policy(
+    *,
+    surface: str,
+    telemetry: Dict[str, Any],
+    policy_config: Dict[str, Any],
+) -> Dict[str, Any]:
+    prompt_tokens = int(telemetry.get("prompt_input_tokens") or 0)
+    bundle_bytes = int(telemetry.get("bundle_context_bytes") or 0)
+    truncation_applied = bool(telemetry.get("truncation_applied"))
+    warn_tokens = int(policy_config.get("warn_prompt_input_tokens") or 0)
+    warn_bundle = int(policy_config.get("warn_bundle_context_bytes") or 0)
+    warnings: List[str] = []
+    if warn_tokens > 0 and prompt_tokens >= warn_tokens:
+        warnings.append("warn_prompt_input_tokens_exceeded")
+    if warn_bundle > 0 and bundle_bytes >= warn_bundle:
+        warnings.append("warn_bundle_context_bytes_exceeded")
+    if truncation_applied:
+        warnings.append("hard_cap_truncation_applied")
+    return {
+        "policy_version": CONTEXT_BUDGET_POLICY_VERSION,
+        "surface": str(surface or "ask").strip().lower() or "ask",
+        "warning_thresholds": {
+            "prompt_input_tokens": warn_tokens,
+            "bundle_context_bytes": warn_bundle,
+        },
+        "hard_caps": {
+            "max_files": int(policy_config.get("max_files") or 0),
+            "max_bytes": int(policy_config.get("max_bytes") or 0),
+        },
+        "truncation_order": list(policy_config.get("truncation_order") or CONTEXT_BUDGET_TRUNCATION_ORDER),
+        "warnings": warnings,
+    }
 
 
 def build_context_budget_metadata(

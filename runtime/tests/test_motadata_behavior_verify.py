@@ -300,6 +300,43 @@ def test_run_scenario_row_plan_supports_decision_any_of(monkeypatch) -> None:
     assert out["actual_summary"]["decision_present"] is True
 
 
+def test_run_scenario_row_plan_supports_request_overrides(monkeypatch) -> None:
+    scenario = {
+        "id": "plan_with_override",
+        "capability": "plan",
+        "plan_request_override": {
+            "mode": "guarded_shadow",
+            "requested_capabilities": ["plan_and_decide", "risk_scan"],
+            "action": {"action_type": "SAFE_PATCH", "target": "feature"},
+        },
+        "expect": {
+            "schema_version": "decision_response.v0.1",
+            "decision_present": True,
+        },
+    }
+
+    def _fake_post(url: str, payload: dict, timeout: int = 180, *, raise_for_status: bool = True):
+        assert url.endswith("/v0/plan")
+        ide_event = payload.get("ide_event") if isinstance(payload.get("ide_event"), dict) else {}
+        action = ide_event.get("action") if isinstance(ide_event.get("action"), dict) else {}
+        assert payload.get("mode") == "guarded_shadow"
+        assert payload.get("requested_capabilities") == ["plan_and_decide", "risk_scan"]
+        assert action.get("action_type") == "SAFE_PATCH"
+        assert action.get("target") == "feature"
+        return 200, {"schema_version": "decision_response.v0.1", "decision": "REFUSAL"}
+
+    monkeypatch.setattr(verify, "_post", _fake_post)
+    out = verify._run_scenario_row(
+        scenario,
+        workspace_root="/tmp/ws",
+        context_url="http://context",
+        plan_gate_url="http://plan",
+        top_k=8,
+    )
+    assert out["pass"] is True
+    assert out["actual_summary"]["action_type"] == "SAFE_PATCH"
+
+
 def test_run_scenario_row_code_supports_outcome_any_of(monkeypatch) -> None:
     scenario = {
         "id": "code_outcome_any",
@@ -331,6 +368,45 @@ def test_run_scenario_row_code_supports_outcome_any_of(monkeypatch) -> None:
     )
     assert out["pass"] is True
     assert out["actual_summary"]["command"] == "echo hello"
+
+
+def test_run_scenario_row_code_emits_observability_and_threshold_checks(monkeypatch) -> None:
+    scenario = {
+        "id": "code_observability",
+        "capability": "code",
+        "command": "for i in 1 2 3; do echo iter-$i; done",
+        "expect": {
+            "schema_version": "execute_response.v0.1",
+            "outcome_any_of": ["EXECUTED", "BLOCKED"],
+            "executed_any_of": [True, False],
+            "min_stdout_line_count": 3,
+        },
+    }
+
+    def _fake_post(url: str, payload: dict, timeout: int = 180, *, raise_for_status: bool = True):
+        assert url.endswith("/v0/execute")
+        return 200, {
+            "schema_version": "execute_response.v0.1",
+            "outcome": "EXECUTED",
+            "executed": True,
+            "posture": "safe_execute",
+            "stdout": "iter-1\niter-2\niter-3\n",
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(verify, "_post", _fake_post)
+    out = verify._run_scenario_row(
+        scenario,
+        workspace_root="/tmp/ws",
+        context_url="http://context",
+        plan_gate_url="http://plan",
+        top_k=8,
+    )
+    assert out["pass"] is True
+    obs = out["actual_summary"]["code_observability"]
+    assert obs["stdout_line_count"] == 3
+    assert obs["loop_or_multistep_command"] is True
+    assert obs["context_growth_observed"] is True
 
 
 def test_check_expect_debug_method_body_uses_grounding_tier() -> None:

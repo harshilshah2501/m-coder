@@ -344,6 +344,74 @@ def _build_run_summary(run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _build_plan_request_from_scenario(
+    *,
+    scenario_id: str,
+    workspace_root: str,
+    scenario: dict[str, Any],
+) -> dict[str, Any]:
+    plan_req: dict[str, Any] = {
+        "schema_version": "plan_request.v0.1",
+        "request_id": str(uuid.uuid4()),
+        "timestamp_utc": _utc_now(),
+        "mode": "shadow",
+        "ide_event": {
+            "schema_version": "ide_event.v0.1",
+            "event_id": f"evt-scenario-{scenario_id}",
+            "timestamp_utc": _utc_now(),
+            "ide_context": {
+                "product": "cli",
+                "ide": "none",
+                "project": "Motadata",
+                "repo_root": workspace_root,
+                "branch": "main",
+                "user": "operator",
+            },
+            "action": {"action_type": "PR_MERGE", "target": "main"},
+            "evidence_refs": [{"type": "note", "ref": scenario_id}],
+        },
+        "requested_capabilities": ["plan_and_decide"],
+        "client_policy": {"fail_closed_if_gate_unreachable": True},
+    }
+    ov = scenario.get("plan_request_override") if isinstance(scenario.get("plan_request_override"), dict) else {}
+    if not ov:
+        return plan_req
+    if isinstance(ov.get("mode"), str) and ov.get("mode"):
+        plan_req["mode"] = ov["mode"]
+    if isinstance(ov.get("requested_capabilities"), list) and ov.get("requested_capabilities"):
+        plan_req["requested_capabilities"] = [str(x) for x in ov.get("requested_capabilities") if str(x).strip()]
+    act = ov.get("action") if isinstance(ov.get("action"), dict) else {}
+    if act:
+        ide_event = plan_req.get("ide_event") if isinstance(plan_req.get("ide_event"), dict) else {}
+        action = ide_event.get("action") if isinstance(ide_event.get("action"), dict) else {}
+        if isinstance(act.get("action_type"), str) and act.get("action_type"):
+            action["action_type"] = str(act["action_type"])
+        if "target" in act:
+            action["target"] = act.get("target")
+        ide_event["action"] = action
+        plan_req["ide_event"] = ide_event
+    return plan_req
+
+
+def _code_observability_snapshot(command: str, execute_resp: dict[str, Any]) -> dict[str, Any]:
+    stdout = str(execute_resp.get("stdout") or "")
+    stderr = str(execute_resp.get("stderr") or "")
+    output = str(execute_resp.get("output") or "")
+    output_bytes = len(output.encode("utf-8")) if output else 0
+    stdout_bytes = len(stdout.encode("utf-8")) if stdout else 0
+    stderr_bytes = len(stderr.encode("utf-8")) if stderr else 0
+    line_count = len([ln for ln in stdout.splitlines() if ln.strip()]) if stdout else 0
+    looks_loop_like = "for " in command or "while " in command or "&&" in command
+    return {
+        "output_bytes": output_bytes,
+        "stdout_bytes": stdout_bytes,
+        "stderr_bytes": stderr_bytes,
+        "stdout_line_count": line_count,
+        "loop_or_multistep_command": looks_loop_like,
+        "context_growth_observed": bool(output_bytes > 0 or stdout_bytes > 0 or stderr_bytes > 0),
+    }
+
+
 def _m_coder_repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -2315,29 +2383,11 @@ def _run_scenario_row(
         }
 
     if cap == "plan":
-        plan_req: dict[str, Any] = {
-            "schema_version": "plan_request.v0.1",
-            "request_id": str(uuid.uuid4()),
-            "timestamp_utc": _utc_now(),
-            "mode": "shadow",
-            "ide_event": {
-                "schema_version": "ide_event.v0.1",
-                "event_id": f"evt-scenario-{sid}",
-                "timestamp_utc": _utc_now(),
-                "ide_context": {
-                    "product": "cli",
-                    "ide": "none",
-                    "project": "Motadata",
-                    "repo_root": workspace_root,
-                    "branch": "main",
-                    "user": "operator",
-                },
-                "action": {"action_type": "PR_MERGE", "target": "main"},
-                "evidence_refs": [{"type": "note", "ref": sid}],
-            },
-            "requested_capabilities": ["plan_and_decide"],
-            "client_policy": {"fail_closed_if_gate_unreachable": True},
-        }
+        plan_req = _build_plan_request_from_scenario(
+            scenario_id=sid,
+            workspace_root=workspace_root,
+            scenario=scenario,
+        )
         code, plan_resp = _post(f"{plan_gate_url}/v0/plan", plan_req)
         if _scenario_flag(scenario, "requires_playbook") and not plan_resp.get("decision"):
             errors.append("requires_playbook: plan response must include a decision")
@@ -2361,6 +2411,10 @@ def _run_scenario_row(
                 "decision": plan_resp.get("decision"),
                 "decision_present": bool(plan_resp.get("decision")),
                 "schema_version": plan_resp.get("schema_version"),
+                "mode": plan_req.get("mode"),
+                "requested_capabilities": plan_req.get("requested_capabilities"),
+                "action_type": ((plan_req.get("ide_event") or {}).get("action") or {}).get("action_type"),
+                "action_target": ((plan_req.get("ide_event") or {}).get("action") or {}).get("target"),
             },
         }
 
@@ -2397,6 +2451,15 @@ def _run_scenario_row(
                 errors.append("coherent_executed: outcome EXECUTED requires executed=True")
             if o in ("REFUSED", "BLOCKED") and ex:
                 errors.append(f"coherent_executed: outcome {o} requires executed=False")
+        obs = _code_observability_snapshot(cmd, execute_resp if isinstance(execute_resp, dict) else {})
+        if "min_output_bytes" in expect:
+            min_output = int(expect.get("min_output_bytes") or 0)
+            if int(obs.get("output_bytes") or 0) < min_output:
+                errors.append(f"output_bytes want >= {min_output} got {obs.get('output_bytes')}")
+        if "min_stdout_line_count" in expect:
+            min_lines = int(expect.get("min_stdout_line_count") or 0)
+            if int(obs.get("stdout_line_count") or 0) < min_lines:
+                errors.append(f"stdout_line_count want >= {min_lines} got {obs.get('stdout_line_count')}")
         return {
             "id": sid,
             "capability": cap,
@@ -2411,6 +2474,7 @@ def _run_scenario_row(
                 "outcome": execute_resp.get("outcome"),
                 "executed": execute_resp.get("executed"),
                 "posture": execute_resp.get("posture"),
+                "code_observability": obs,
             },
         }
 

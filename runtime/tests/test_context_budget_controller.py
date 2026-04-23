@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from runtime.ask_service.context_budget import apply_context_budget, build_context_budget_metadata
+from runtime.ask_service.context_budget import (
+    apply_context_budget,
+    apply_context_budget_for_surface,
+    build_context_budget_metadata,
+    evaluate_context_budget_policy,
+)
 from runtime.context.contracts import ContextBundle, ContextBundleLimits, ContextBundleProvenance, ContextItem
 
 
@@ -65,3 +70,42 @@ def test_build_context_budget_metadata_emits_required_telemetry_keys():
     assert meta["method_snippet_count"] == 1
     assert meta["truncation_flags"] == ["context_file_cap_reached"]
     assert meta["truncation_applied"] is True
+
+
+def test_apply_context_budget_for_surface_uses_declared_caps():
+    b = _bundle(
+        [
+            ContextItem(path=f"f{i}.py", content="x" * 20_000, byte_size=20_000, selection_reason="direct:file")
+            for i in range(30)
+        ]
+    )
+    out, flags, _, policy = apply_context_budget_for_surface(b, surface="plan")
+    assert policy["surface"] == "plan"
+    assert policy["max_files"] == 24
+    assert policy["max_bytes"] == 220_000
+    assert len(out.items) <= 24
+    assert "truncation_order" in policy
+    assert flags  # capped in this synthetic case
+
+
+def test_evaluate_context_budget_policy_emits_warnings_and_caps():
+    telemetry = {
+        "prompt_input_tokens": 8_000,
+        "bundle_context_bytes": 260_000,
+        "truncation_applied": True,
+    }
+    policy = {
+        "max_files": 40,
+        "max_bytes": 350_000,
+        "warn_prompt_input_tokens": 7_500,
+        "warn_bundle_context_bytes": 240_000,
+        "truncation_order": ["bundle_items_order", "max_files", "max_bytes"],
+    }
+    out = evaluate_context_budget_policy(surface="ask", telemetry=telemetry, policy_config=policy)
+    assert out["policy_version"] == "context_budget_policy.v1"
+    assert out["surface"] == "ask"
+    assert out["hard_caps"]["max_files"] == 40
+    assert out["hard_caps"]["max_bytes"] == 350_000
+    assert "warn_prompt_input_tokens_exceeded" in out["warnings"]
+    assert "warn_bundle_context_bytes_exceeded" in out["warnings"]
+    assert "hard_cap_truncation_applied" in out["warnings"]
