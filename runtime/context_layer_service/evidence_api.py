@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING, Tuple
 
 from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.retrieval.path_resolve import paths_match_workspace
@@ -691,6 +691,14 @@ def export_evidence_bundle_dict(
         if str(task_type or "").upper() == "EXPLAIN_DEBUG"
         else ""
     )
+    owner_method_rescue: Dict[str, Tuple[str, ...]] = {}
+    if str(task_type or "").upper() != "EXPLAIN_DEBUG" and isinstance(authority_resolution, dict):
+        po = authority_resolution.get("primary_owner") or {}
+        if isinstance(po, dict):
+            pf = str(po.get("file") or "").strip()
+            pm = str(po.get("method") or "").strip()
+            if pf and pm:
+                owner_method_rescue[pf] = (pm,)
     evb = build_evidence_bundle(
         r,
         idx,
@@ -701,6 +709,7 @@ def export_evidence_bundle_dict(
         fusion_diagnostics=fusion_diag if fusion_diag else None,
         evidence_quality=qa.evidence_quality,
         debug_snippet_rescue_selected_file=rescue_sel or None,
+        owner_method_rescue_hints_by_path=owner_method_rescue or None,
     )
     out = evb.to_dict()
     fd = out.get("fusion_diagnostics")

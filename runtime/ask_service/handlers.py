@@ -31,6 +31,7 @@ from runtime.layer5.retrieval.quality_gate import NO_MATCH, WEAK, assess_evidenc
 from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
 from .evidence_bridge import resolve_workspace_input_path, try_build_layer5_evidence
 from .authority_synthesis import prioritize_owner_in_bundle
+from .context_budget import apply_context_budget, build_context_budget_metadata
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 
@@ -214,6 +215,12 @@ def handle_ask_request(ask_request: dict) -> dict:
             )
 
     bundle, overlay_meta = apply_dirty_buffer_overlay(bundle, dirty_buffers)
+    evidence_entries = []
+    if isinstance(evidence_bundle_dict, dict):
+        raw_entries = evidence_bundle_dict.get("entries")
+        if isinstance(raw_entries, list):
+            evidence_entries = [e for e in raw_entries if isinstance(e, dict)]
+    bundle, budget_flags, _ = apply_context_budget(bundle)
     if dirty_buffer_parse.get("invalid_count", 0) > 0:
         repo_aware_notes.append(
             "Dirty buffer overlay payload contained invalid entries; ignored malformed items and kept deterministic fallback behavior."
@@ -274,6 +281,14 @@ def handle_ask_request(ask_request: dict) -> dict:
             "invalid_count": int(dirty_buffer_parse.get("invalid_count", 0)),
             "valid_count": int(dirty_buffer_parse.get("valid_count", 0)),
         },
+        "context_budget": build_context_budget_metadata(
+            query=query,
+            bundle=bundle,
+            evidence_entries=evidence_entries,
+            selected_file="",
+            selection="",
+            truncation_flags=budget_flags,
+        ),
     }
     if authority_resolution:
         metadata["authority_resolution_present"] = True
@@ -365,6 +380,16 @@ def handle_ask_request(ask_request: dict) -> dict:
     metadata["explicit_method_body_evidence_present"] = bool(
         metadata.get("method_window_visible")
         or any("Method-window excerpt:" in str(s) or "Visible method-window evidence:" in str(s) for s in (plan_steps or []))
+    )
+    metadata["context_budget"] = build_context_budget_metadata(
+        query=query,
+        bundle=bundle,
+        evidence_entries=evidence_entries,
+        selected_file=str(selected_file or ""),
+        selection=str(selection or ""),
+        plan_steps=plan_steps,
+        explain_debug_payload=explain_debug_result.to_dict() if explain_debug_result else None,
+        truncation_flags=budget_flags,
     )
 
     routing_mode = (

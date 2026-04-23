@@ -23,7 +23,11 @@ from runtime.layer5.evidence.config import SnippetConfig
 from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.evidence.identity_policy import IdentityMismatchError
 from runtime.layer5.evidence.models import SCHEMA_HINT, EvidenceBundle, EvidenceEntry
-from runtime.layer5.evidence.snippet import extract_snippet, extract_snippet_executable_rescue
+from runtime.layer5.evidence.snippet import (
+    extract_snippet,
+    extract_snippet_executable_rescue,
+    extract_snippet_method_anchor_rescue,
+)
 from runtime.layer5.retrieval.path_resolve import paths_match_workspace
 
 
@@ -51,6 +55,7 @@ def build_evidence_bundle(
     fusion_diagnostics: Optional[Dict[str, Any]] = None,
     evidence_quality: Optional[str] = None,
     debug_snippet_rescue_selected_file: Optional[str] = None,
+    owner_method_rescue_hints_by_path: Optional[Mapping[str, Tuple[str, ...]]] = None,
 ) -> EvidenceBundle:
     """
     Produce an ``EvidenceBundle`` (v1) for one A5 result and its source index.
@@ -69,6 +74,9 @@ def build_evidence_bundle(
     ``debug_snippet_rescue_selected_file``: when set, for hits whose path matches that
     workspace-relative selected file, replace a primary snippet that lacks executable
     control-flow with the first top-down CF-rescue window (see ``snippet.py``).
+    ``owner_method_rescue_hints_by_path``: optional Ask proof-density rescue map
+    from owner path -> method hints; when primary snippet misses those hints,
+    re-anchor on first method-hint line in that file (no rescoring/reordering).
     """
     if require_identity_match and retrieval.workspace_identity_hash != index.workspace_identity_hash:
         raise IdentityMismatchError(retrieval.workspace_identity_hash, index.workspace_identity_hash)
@@ -77,6 +85,16 @@ def build_evidence_bundle(
     root = Path(index.canonical_root)
     roles = dict(role_by_path) if role_by_path else {}
     rescue_sel = (debug_snippet_rescue_selected_file or "").strip()
+    owner_rescue = dict(owner_method_rescue_hints_by_path or {})
+
+    def _rescue_hints_for_hit(rel_path: str) -> Tuple[str, ...]:
+        for p, hints in owner_rescue.items():
+            if paths_match_workspace(rel_path, str(p)):
+                hs = tuple(str(h).strip() for h in (hints or ()) if str(h).strip())
+                if hs:
+                    return hs
+        return ()
+
     built: list[EvidenceEntry] = []
     for rank, hit in enumerate(retrieval.hits):
         span = extract_snippet(
@@ -94,6 +112,16 @@ def build_evidence_bundle(
                 )
                 if alt is not None and text_has_executable_control_flow(alt.text):
                     span = alt
+        owner_hints = _rescue_hints_for_hit(hit.relative_path)
+        if owner_hints and not any(h in span.text for h in owner_hints):
+            mres = extract_snippet_method_anchor_rescue(
+                canonical_root=root,
+                relative_path=hit.relative_path,
+                method_hints=owner_hints,
+                config=cfg,
+            )
+            if mres is not None:
+                span = mres
         built.append(
             EvidenceEntry.from_hit(
                 rank=rank,

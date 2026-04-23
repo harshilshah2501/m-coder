@@ -161,3 +161,41 @@ public class AvailabilityCorrelationEngine {
             )
             assert rescued.entries[0].snippet_selection_reason == "executable_control_flow_rescue_anchor"
             assert text_has_executable_control_flow(rescued.entries[0].snippet_text)
+
+    def test_owner_method_rescue_reanchors_owner_method_window(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            rel = "src/MailServerConfiguration.java"
+            java_src = """package com.example;
+
+public class MailServerConfiguration {
+    private String host;
+    private int port;
+    private String user;
+    private String pass;
+
+    public void beforeUpdate() {
+        if (host == null) {
+            throw new IllegalStateException("missing host");
+        }
+        this.port = normalizePort(port);
+    }
+}
+"""
+            _touch(root / rel, java_src)
+            ident = _identity_for(root)
+            idx = build_file_index(ident)
+            r = retrieve_lexical(
+                idx,
+                "MailServerConfiguration",
+                top_k=1,
+                config=LexicalRetrievalConfig(),
+            )
+            primary = build_evidence_bundle(r, idx)
+            assert "beforeUpdate" not in primary.entries[0].snippet_text
+            rescued = build_evidence_bundle(
+                r,
+                idx,
+                owner_method_rescue_hints_by_path={rel: ("beforeUpdate",)},
+            )
+            assert "beforeUpdate" in rescued.entries[0].snippet_text
