@@ -33,6 +33,12 @@ class StitchResult:
     target_window: str
     confidence: str  # none|partial|visible
     stitched_edge_count: int
+    call_site_candidates_detected: bool
+    call_site_candidate_count: int
+    call_site_resolution_state: str  # none|unresolved|resolved_visible
+    resolved_from_method: str
+    resolved_to_method: str
+    resolved_to_file: str
     reason: str
 
 
@@ -130,6 +136,37 @@ def _extract_calls(method_window: str, owner_method: str) -> Sequence[Tuple[str,
     return out
 
 
+def _dedupe_calls(calls: Sequence[Tuple[str, str, str]]) -> Sequence[Tuple[str, str, str]]:
+    seen: Set[Tuple[str, str, str]] = set()
+    out: list[Tuple[str, str, str]] = []
+    for c in calls:
+        if c in seen:
+            continue
+        seen.add(c)
+        out.append(c)
+    return out
+
+
+def _none_result(owner_method_window: str, reason: str, *, confidence: str = "none") -> StitchResult:
+    return StitchResult(
+        stitched=False,
+        edge_type="none",
+        owner_method_window=owner_method_window,
+        target_file="",
+        target_method="",
+        target_window="",
+        confidence=confidence,
+        stitched_edge_count=0,
+        call_site_candidates_detected=False,
+        call_site_candidate_count=0,
+        call_site_resolution_state="none",
+        resolved_from_method="",
+        resolved_to_method="",
+        resolved_to_file="",
+        reason=reason,
+    )
+
+
 def stitch_first_hop(
     *,
     bundle: ContextBundle,
@@ -152,15 +189,16 @@ def stitch_first_hop(
         or max_methods_total < 2
         or max_additional_files < 1
     ):
-        return StitchResult(False, "none", owner_method_window, "", "", "", "none", 0, "insufficient_owner_method")
+        return _none_result(owner_method_window, "insufficient_owner_method")
 
     if _line_count(owner_method_window) > max_total_stitch_lines:
-        return StitchResult(False, "none", owner_method_window, "", "", "", "partial", 0, "owner_window_over_budget")
+        return _none_result(owner_method_window, "owner_window_over_budget", confidence="partial")
 
     owner_content = _item_content(bundle, owner_file)
-    calls = _extract_calls(owner_method_window, owner_method)
+    calls = _dedupe_calls(_extract_calls(owner_method_window, owner_method))
+    candidate_count = len(calls)
     if not calls:
-        return StitchResult(False, "none", owner_method_window, "", "", "", "partial", 0, "no_visible_downstream_call")
+        return _none_result(owner_method_window, "no_visible_downstream_call", confidence="partial")
 
     collab_by_class: Dict[str, str] = {}
     collab_norms: Set[str] = set()
@@ -185,6 +223,12 @@ def stitch_first_hop(
                     target_window,
                     "visible",
                     1,
+                        True,
+                        candidate_count,
+                        "resolved_visible",
+                        owner_method,
+                        meth,
+                        owner_file,
                     "same_file_helper",
                 )
 
@@ -204,6 +248,12 @@ def stitch_first_hop(
                         tw,
                         "visible",
                         1,
+                        True,
+                        candidate_count,
+                        "resolved_visible",
+                        owner_method,
+                        meth,
+                        path,
                         "collaborator_class_qualified",
                     )
 
@@ -224,7 +274,29 @@ def stitch_first_hop(
                             tw,
                             "visible",
                             1,
+                            True,
+                            candidate_count,
+                            "resolved_visible",
+                            owner_method,
+                            meth,
+                            str(cp),
                             "collaborator_method_match",
                         )
 
-    return StitchResult(False, "none", owner_method_window, "", "", "", "partial", 0, "target_not_resolved_within_bounds")
+    return StitchResult(
+        stitched=False,
+        edge_type="none",
+        owner_method_window=owner_method_window,
+        target_file="",
+        target_method="",
+        target_window="",
+        confidence="partial",
+        stitched_edge_count=0,
+        call_site_candidates_detected=True,
+        call_site_candidate_count=candidate_count,
+        call_site_resolution_state="unresolved",
+        resolved_from_method=owner_method,
+        resolved_to_method="",
+        resolved_to_file="",
+        reason="target_not_resolved_within_bounds",
+    )

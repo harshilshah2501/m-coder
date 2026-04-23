@@ -318,6 +318,9 @@ def synthesize_authority_plan_steps(
     meta["stitched_edge_count"] = 0
     meta["stitched_edge_type"] = "none"
     meta["stitch_confidence"] = "none"
+    meta["call_site_candidates_detected"] = False
+    meta["call_site_candidate_count"] = 0
+    meta["call_site_resolution_state"] = "none"
     method_bit = f", method `{p_method}`" if p_method and method_supported else ""
     steps.append(
         f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
@@ -356,18 +359,29 @@ def synthesize_authority_plan_steps(
     meta["stitched_edge_count"] = int(stitch.stitched_edge_count)
     meta["stitched_edge_type"] = str(stitch.edge_type or "none")
     meta["stitch_confidence"] = str(stitch.confidence or "none")
+    meta["call_site_candidates_detected"] = bool(stitch.call_site_candidates_detected)
+    meta["call_site_candidate_count"] = int(stitch.call_site_candidate_count)
+    meta["call_site_resolution_state"] = str(stitch.call_site_resolution_state or "none")
     if stitch.stitched:
         owner_hop = f"{p_class}.{p_method}"
         target_cls = p_class if _norm_path(stitch.target_file) == _norm_path(p_file) else (
             Path(str(stitch.target_file)).stem or "target"
         )
         target_hop = f"{target_cls}.{stitch.target_method}" if stitch.target_method else target_cls
+        meta["resolved_from_method"] = str(stitch.resolved_from_method or p_method)
+        meta["resolved_to_method"] = str(stitch.resolved_to_method or stitch.target_method or "")
+        meta["resolved_to_file"] = str(stitch.resolved_to_file or stitch.target_file or "")
         steps.append(f"Execution-path stitch: {owner_hop} -> {target_hop}.")
         if stitch.target_window:
             steps.append(f"Immediate downstream evidence ({stitch.edge_type}): {stitch.target_window}")
-    elif stitch.confidence == "partial":
+    elif stitch.call_site_resolution_state == "unresolved":
         steps.append(
-            "Owner method body is visible, but only a partial first-hop trace could be confirmed from current evidence."
+            "Owner method body is visible, and a plausible first-hop call-site is present, "
+            "but the downstream target cannot be safely confirmed from current evidence."
+        )
+    elif stitch.call_site_resolution_state == "none":
+        steps.append(
+            "Owner method body is visible, but no explicit first-hop call-site could be confirmed from current evidence."
         )
 
     if collab:

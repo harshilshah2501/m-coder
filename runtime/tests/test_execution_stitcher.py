@@ -54,6 +54,11 @@ def test_stitch_first_hop_resolves_same_file_helper():
     assert out.edge_type == "direct_call"
     assert out.target_method == "registerRoutes"
     assert out.stitched_edge_count == 1
+    assert out.call_site_candidates_detected is True
+    assert out.call_site_candidate_count >= 1
+    assert out.call_site_resolution_state == "resolved_visible"
+    assert out.resolved_from_method == "start"
+    assert out.resolved_to_method == "registerRoutes"
 
 
 def test_stitch_first_hop_reports_partial_when_no_target_method_visible():
@@ -78,3 +83,31 @@ def test_stitch_first_hop_reports_partial_when_no_target_method_visible():
     assert out.stitched is False
     assert out.edge_type == "none"
     assert out.confidence == "partial"
+    assert out.call_site_candidates_detected is True
+    assert out.call_site_candidate_count >= 1
+    assert out.call_site_resolution_state == "unresolved"
+
+
+def test_stitch_first_hop_reports_none_when_no_call_sites():
+    b = _bundle(
+        [
+            ContextItem(
+                path="src/main/java/com/mindarray/store/AbstractConfigStore.java",
+                content="public class AbstractConfigStore { public JsonObject getItem(long id) { return null; } }",
+                byte_size=0,
+                selection_reason="query_token_substring_anchor",
+            )
+        ]
+    )
+    out = stitch_first_hop(
+        bundle=b,
+        owner_file="src/main/java/com/mindarray/store/AbstractConfigStore.java",
+        owner_class="AbstractConfigStore",
+        owner_method="getItem",
+        owner_method_window="public JsonObject getItem(long id) { return null; }",
+        collaborator_paths=[],
+    )
+    assert out.stitched is False
+    assert out.call_site_candidates_detected is False
+    assert out.call_site_candidate_count == 0
+    assert out.call_site_resolution_state == "none"

@@ -382,6 +382,9 @@ public class EmailNotification {
     assert meta.get("execution_path_stitched") is True
     assert meta.get("stitched_edge_count") == 1
     assert meta.get("stitch_confidence") == "visible"
+    assert meta.get("call_site_candidates_detected") is True
+    assert int(meta.get("call_site_candidate_count") or 0) >= 1
+    assert meta.get("call_site_resolution_state") == "resolved_visible"
 
 
 def test_authority_synthesis_reports_partial_trace_when_target_not_resolved():
@@ -406,10 +409,43 @@ public class APIServer {
 """
     steps, meta = synthesize_authority_plan_steps("api layer architecture", b, ar)
     joined = " ".join(steps)
-    assert "partial first-hop trace" in joined
+    assert "plausible first-hop call-site is present" in joined
+    assert "cannot be safely confirmed" in joined
     assert meta.get("execution_path_stitched") is False
     assert meta.get("stitched_edge_count") == 0
-    assert meta.get("stitch_confidence") in ("partial", "none")
+    assert meta.get("stitch_confidence") == "partial"
+    assert meta.get("call_site_candidates_detected") is True
+    assert int(meta.get("call_site_candidate_count") or 0) >= 1
+    assert meta.get("call_site_resolution_state") == "unresolved"
+
+
+def test_authority_synthesis_reports_no_candidate_when_no_callsite():
+    ar = {
+        "authority_status": "validated",
+        "authority_confidence": "high",
+        "primary_owner": {
+            "file": "src/main/java/com/mindarray/store/AbstractConfigStore.java",
+            "class": "AbstractConfigStore",
+            "method": "getItem",
+        },
+        "collaborators": [],
+        "forbidden_distractors": [],
+    }
+    b = _ctx([ar["primary_owner"]["file"]])
+    b.items[0].content = """
+public class AbstractConfigStore {
+  public JsonObject getItem(long id) {
+    return null;
+  }
+}
+"""
+    steps, meta = synthesize_authority_plan_steps("config store organization", b, ar)
+    joined = " ".join(steps)
+    assert "no explicit first-hop call-site" in joined
+    assert meta.get("execution_path_stitched") is False
+    assert meta.get("call_site_candidates_detected") is False
+    assert int(meta.get("call_site_candidate_count") or 0) == 0
+    assert meta.get("call_site_resolution_state") == "none"
 
 
 def test_authority_synthesis_surfaces_method_window_from_owner_file_when_snippet_sparse():
