@@ -463,3 +463,28 @@ def test_ask_weak_includes_caveat_note(tmp_path):
     if md.get("evidence_quality") == "WEAK":
         notes = response.get("plan_summary", {}).get("notes", [])
         assert any("WEAK" in n for n in notes)
+
+
+def test_ask_context_budget_policy_metadata_present(tmp_path):
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / "src").mkdir()
+    (repo_root / "src" / "main.py").write_text("def main():\n    return 1\n", encoding="utf-8")
+
+    response = handle_ask_request(
+        {
+            "schema_version": "ask_request.v0.1",
+            "request_id": "budget-policy",
+            "timestamp_utc": "2026-03-15T12:00:00Z",
+            "repo_root": str(repo_root),
+            "revision": "r3",
+            "query": "how does main work",
+        }
+    )
+    md = response.get("metadata") or {}
+    cbp = md.get("context_budget_policy") or {}
+    assert cbp.get("policy_version") == "context_budget_policy.v1"
+    assert cbp.get("surface") == "ask"
+    assert isinstance(cbp.get("warning_thresholds"), dict)
+    assert isinstance(cbp.get("hard_caps"), dict)
+    assert isinstance(cbp.get("truncation_order"), list)

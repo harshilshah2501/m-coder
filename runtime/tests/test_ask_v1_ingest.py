@@ -112,6 +112,10 @@ def test_handle_ask_v1_happy_path_plan_only():
     assert cr.get("no_repo_filesystem") is True
     steps = resp["plan_summary"]["steps"]
     assert len(steps) >= 1
+    md = resp.get("metadata") or {}
+    cbp = md.get("context_budget_policy") or {}
+    assert cbp.get("policy_version") == "context_budget_policy.v1"
+    assert cbp.get("surface") == "ask"
 
 
 def test_handle_ask_v1_dirty_buffer_overlay_reaches_reasoner_bundle():

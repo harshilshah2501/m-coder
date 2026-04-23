@@ -190,6 +190,8 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --scenario-id plan_notification_pipeline_shadow \
   --scenario-id plan_dependency_flow_shadow \
   --scenario-id plan_governed_decision_contract_any \
+  --scenario-id plan_refusal_or_bounded_approval_safe_patch \
+  --scenario-id plan_refusal_or_bounded_approval_doc_update \
   --scenarios-only \
   --print dev \
   --out runtime/.run/motadata_behavior_validation.plan.deep.json
@@ -205,6 +207,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --scenario-id code_safe_echo_probe \
   --scenario-id code_safe_pwd_probe \
   --scenario-id code_bounded_multistep_probe \
+  --scenario-id code_loop_iteration_observation_probe \
   --scenario-id code_block_rm_probe \
   --scenario-id code_refusal_or_blocked_privileged_probe \
   --scenario-id code_block_git_reset_probe \

@@ -257,3 +257,52 @@ def test_ensure_selected_grounding_injects_branching_markers_when_linear():
     assert out.error is None
     combined = f"{out.summary} {out.logic_flow} {out.likely_bug_risk}"
     assert _debug_control_flow_marker_count(combined) >= 2
+
+
+def test_ensure_selected_grounding_tightens_wording_when_executable():
+    b = ContextBundle(
+        task_id="t5",
+        revision="r5",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+                content=(
+                    "public class MailServerConfiguration {\n"
+                    "  public void beforeUpdate() {\n"
+                    "    if (authEnabled) { return; }\n"
+                    "    else { throw new RuntimeException(); }\n"
+                    "  }\n"
+                    "}\n"
+                ),
+                byte_size=220,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(
+        summary="Behavior is not directly visible without more context.",
+        logic_flow="",
+        likely_bug_risk="",
+        evidence=[],
+        confidence_limits="",
+    )
+    out = _ensure_selected_grounding(
+        parsed,
+        selected_file="motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+        selection="beforeUpdate",
+        bundle=b,
+    )
+    assert out.error is None
+    assert "not directly visible" not in out.summary.lower()
+    assert "without more context" not in out.summary.lower()
+    assert "executable grounding" in out.logic_flow.lower()
+    assert any(tok in out.likely_bug_risk.lower() for tok in ("branch", "early-return", "exception"))
+    assert "insufficient_for_precise_trace" not in out.confidence_limits.lower()

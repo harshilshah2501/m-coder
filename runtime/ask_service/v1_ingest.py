@@ -28,7 +28,11 @@ from runtime.layer5.retrieval.quality_gate import (
 
 from .dirty_buffer_overlay import apply_dirty_buffer_overlay, extract_dirty_buffers
 from .authority_synthesis import prioritize_owner_in_bundle
-from .context_budget import apply_context_budget, build_context_budget_metadata
+from .context_budget import (
+    apply_context_budget_for_surface,
+    build_context_budget_metadata,
+    evaluate_context_budget_policy,
+)
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
 from .planner import PlanOnlyPlanner
@@ -161,7 +165,10 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     client_context = ask_request.get("client_context") or {}
     dirty_buffers, dirty_buffer_parse = extract_dirty_buffers(client_context)
     bundle, overlay_meta = apply_dirty_buffer_overlay(bundle, dirty_buffers)
-    bundle, budget_flags, _ = apply_context_budget(bundle)
+    budget_surface = "debug" if str(task_type or "") == "EXPLAIN_DEBUG" else "ask"
+    bundle, budget_flags, _, budget_policy_cfg = apply_context_budget_for_surface(
+        bundle, surface=budget_surface
+    )
 
     ar_dict = evidence_bundle.get("authority_resolution")
     authority_resolution = ar_dict if isinstance(ar_dict, dict) else None
@@ -193,6 +200,12 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         authority_primary_owner_file=auth_owner_file,
     )
     entries_list = evidence_bundle.get("entries") if isinstance(evidence_bundle.get("entries"), list) else []
+    context_budget_meta = build_context_budget_metadata(
+        query=query,
+        bundle=bundle,
+        evidence_entries=[e for e in entries if isinstance(e, dict)],
+        truncation_flags=budget_flags,
+    )
     metadata = {
         "intent_type": quality.intent_type,
         "evidence_quality": quality.evidence_quality,
@@ -208,13 +221,13 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             "invalid_count": int(dirty_buffer_parse.get("invalid_count", 0)),
             "valid_count": int(dirty_buffer_parse.get("valid_count", 0)),
         },
-        "context_budget": build_context_budget_metadata(
-            query=query,
-            bundle=bundle,
-            evidence_entries=[e for e in entries if isinstance(e, dict)],
-            truncation_flags=budget_flags,
-        ),
+        "context_budget": context_budget_meta,
     }
+    metadata["context_budget_policy"] = evaluate_context_budget_policy(
+        surface=budget_surface,
+        telemetry=context_budget_meta,
+        policy_config=budget_policy_cfg,
+    )
     if authority_resolution:
         metadata["authority_resolution_present"] = True
         metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
@@ -339,6 +352,11 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         plan_steps=plan_steps,
         explain_debug_payload=explain_debug_result.to_dict() if explain_debug_result else None,
         truncation_flags=budget_flags,
+    )
+    metadata["context_budget_policy"] = evaluate_context_budget_policy(
+        surface=budget_surface,
+        telemetry=metadata["context_budget"] if isinstance(metadata.get("context_budget"), dict) else {},
+        policy_config=budget_policy_cfg,
     )
 
     routing_mode = (

@@ -503,6 +503,16 @@ def _ensure_selected_grounding(
             f"Grounded but shallow analysis for `{sel_base}` from `{sel_norm}`; "
             "current selected-file context lacks direct method/branch anchors for a precise trace."
         )
+    executable_grounding = bool(methods and branches and has_flow)
+    if executable_grounding:
+        if "executable grounding" not in logic_flow.lower():
+            logic_flow = (logic_flow + " " if logic_flow else "") + (
+                "Executable grounding: selected-file methods and branch cues are present in the current context window."
+            )
+        if not any(tok in likely.lower() for tok in ("failure branch", "early-return", "exception branch")):
+            likely = (likely + " " if likely else "") + (
+                "Failure branch articulation: verify condition checks and early-return/exception branches before downstream dispatch."
+            )
 
     if not confidence:
         confidence = (
@@ -514,6 +524,11 @@ def _ensure_selected_grounding(
             confidence += f" {marker}: selected file evidence lacks concrete method/branch anchors in this context window."
     if minimal_sel:
         confidence += " Selected highlight is minimal; conclusions rely on broader selected-file context."
+    if executable_grounding and "insufficient_for_precise_trace" not in confidence.lower():
+        confidence = (
+            "Grounded to executable selected-file method/branch evidence in current context; "
+            "validate downstream callees for cross-file effects."
+        )
 
     # Final safety net: ensure banned generic phrases do not leak in any explain field.
     summary = _sanitize_forbidden_generic_phrases(summary).strip()
