@@ -106,6 +106,37 @@ def _extract_method_hints(query: str, selected_file: Optional[str], cap: int = 8
     return out[:cap]
 
 
+def _java_snippet_has_implementation_signals(text: str) -> bool:
+    """True when excerpt looks like Java implementation, not only banner/imports."""
+    t = text.strip()
+    if len(t) < 24:
+        return False
+    tl = t.lower()
+    if "{" not in t and "(" not in t:
+        return False
+    return any(
+        k in tl
+        for k in (
+            "void ",
+            "public ",
+            "private ",
+            "protected ",
+            "class ",
+            "interface ",
+            "if(",
+            "if (",
+            "return ",
+            "throw ",
+            "catch ",
+            "switch ",
+            "while ",
+            "for(",
+            "for (",
+            "@override",
+        )
+    )
+
+
 def _hint_matches_selected_snippet(hint: str, hay: str) -> bool:
     """
     Match debug hints against snippet text.
@@ -157,6 +188,12 @@ def _selected_method_body_present(
     hay = "\n".join(selected_text_parts)
     for h in method_hints:
         if _hint_matches_selected_snippet(h, hay):
+            return True
+    # Large files: snippet window may anchor on query tokens mid-file and omit the type
+    # declaration or camelCase methods that hints name; basename is still an explicit hint.
+    stem = Path(str(selected_file).replace("\\", "/")).stem
+    if stem and any(str(h).lower() == stem.lower() for h in method_hints):
+        if _java_snippet_has_implementation_signals(hay):
             return True
     return False
 
