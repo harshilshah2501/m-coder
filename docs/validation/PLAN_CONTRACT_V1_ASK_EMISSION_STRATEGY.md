@@ -1,7 +1,7 @@
 # Plan Contract v1 on `/v1/ask` — Emission Strategy
 
 Date: 2026-04-24  
-Status: strategy freeze (documentation only; no runtime wiring in this slice)  
+Status: strategy frozen and executed through Slice 2 (`/v1/ask` opt-in emission + gate)  
 Scope: controlled emission of `plan_contract.v1` on `POST /v1/ask` while preserving `plan_only_response.v0.1` behavior and existing clients.
 
 ## 1) Goal
@@ -137,3 +137,10 @@ This strategy does not:
 ## 10) Summary decision
 
 Proceed with additive-first `plan_contract` emission on `/v1/ask` behind explicit request opt-in via `response_extensions: ["plan_contract.v1"]`, preserving all current Plan-Only safety invariants and client stability.
+
+## 11) Slice 2 completion note
+
+Slice 2 (HTTP opt-in emission + gate) is complete and validated. See `docs/validation/PLAN_CONTRACT_V1_ASK_EMISSION_REPORT.md` and WSL artifacts:
+
+- `TestRunEvals/plan_code_http_deploy_gate.plan_contract_optin.wsl.json`
+- `TestRunEvals/plan_code_http_deploy_gate.plan_contract_optin.wsl.nograph.json`
