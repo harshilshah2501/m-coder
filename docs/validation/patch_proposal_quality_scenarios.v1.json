@@ -1,0 +1,297 @@
+{
+  "schema_version": "motadata_aiops_behavior_scenarios.v1",
+  "description": "Offline patch_proposal quality validation scenarios (no HTTP/runtime mutation).",
+  "defaults": {
+    "top_k": 8
+  },
+  "scenarios": [
+    {
+      "id": "patch_proposal_quality_clear_and_bounded",
+      "capability": "patch_proposal_validate",
+      "description": "Valid proposal with concrete rationale and bounded scope.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {"summary": "Refactor bounded service path", "kind": "refactor"},
+        "affected_files": [
+          {"path": "src/service.py", "role": "primary"},
+          {"path": "src/helpers.py", "role": "secondary"}
+        ],
+        "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+        "change_boundaries": {"in_scope": ["Refactor internals"], "out_of_scope": ["No execute changes"], "max_files_touched": 2, "max_diff_lines_hint": 120},
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text"],
+        "forbidden_actions": ["execute_shell", "privileged_write"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {"known": [], "unknown": [], "requires_resolution": []}
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "ppq-clear",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "bounds": {
+          "max_iterations": 4,
+          "max_tool_calls": 0,
+          "max_evidence_refs_per_step": 8,
+          "max_step_text_chars": 1024,
+          "max_patch_intent_files": 2,
+          "max_patch_intent_lines_total": 120,
+          "summarize_between_steps": true
+        },
+        "steps": [
+          {
+            "step_index": 0,
+            "step_kind": "LOCATE_TARGET",
+            "status": "complete",
+            "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+            "evidence_refs_used": ["ask.evidence_bundle"],
+            "rationale": "Locate target modules for bounded refactor.",
+            "summary": "Locate target modules"
+          },
+          {
+            "step_index": 1,
+            "step_kind": "INSPECT_CONTEXT",
+            "status": "complete",
+            "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+            "evidence_refs_used": ["ask.metadata"],
+            "rationale": "Inspect context and assumptions.",
+            "summary": "Inspect context"
+          },
+          {
+            "step_index": 2,
+            "step_kind": "CHANGE_STRATEGY",
+            "status": "complete",
+            "evidence_requirements": {"must_have": ["plan_contract"], "nice_to_have": [], "insufficient_without": []},
+            "evidence_refs_used": ["plan_contract"],
+            "rationale": "Build strategy within plan boundaries.",
+            "summary": "Build strategy"
+          },
+          {
+            "step_index": 3,
+            "step_kind": "FINAL_PROPOSAL",
+            "status": "complete",
+            "evidence_requirements": {"must_have": ["plan_contract"], "nice_to_have": [], "insufficient_without": []},
+            "evidence_refs_used": ["plan_contract"],
+            "rationale": "Finalize planning-only proposal.",
+            "summary": "Finalize proposal"
+          }
+        ],
+        "terminal": {"outcome": "completed", "reason_code": "trace_ready_plan_only", "human_message": "Trace complete.", "execution_requested": false}
+      },
+      "patch_proposal_fixture": {
+        "schema_version": "patch_proposal.v1",
+        "proposal_ref": "patch_proposal:ppq-clear",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "code_reasoning_trace_ref": "code_reasoning_trace_sha256:y",
+        "bounded_scope": {
+          "max_files_touched": 2,
+          "max_diff_lines": 120,
+          "allowed_paths": ["src/service.py", "src/helpers.py"],
+          "forbidden_paths": [".git/", "/etc/"]
+        },
+        "proposed_edits": [
+          {"path": "src/service.py", "intent": "edit", "rationale": "Refactor service orchestration to isolate decision branches."},
+          {"path": "src/helpers.py", "intent": "edit", "rationale": "Extract helper utility used by service orchestration path."}
+        ],
+        "validation_and_risk": {
+          "risk_class": "medium",
+          "key_risks": ["Behavior regression if branch assumptions are wrong"],
+          "assumptions": ["Owner context is current"]
+        },
+        "test_plan_required": {
+          "required_checks": ["Run service unit tests", "Run helper integration tests"],
+          "pass_fail_criteria": "All targeted tests pass with no new regressions."
+        },
+        "rollback_plan_required": {
+          "strategy": "Revert touched files and re-run targeted tests.",
+          "safety_checks": ["Capture pre-change diff", "Verify rollback restores prior behavior"]
+        },
+        "review_requirements": {
+          "human_review_required": true,
+          "checklist": ["Verify bounds", "Verify rationale vs trace", "Verify no execute path changes"]
+        }
+      },
+      "expect": {
+        "patch_proposal_quality_category": "clear_and_bounded"
+      }
+    },
+    {
+      "id": "patch_proposal_quality_missing_rollback",
+      "capability": "patch_proposal_validate",
+      "description": "Invalid proposal missing rollback strategy details.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {"summary": "Refactor bounded service path", "kind": "refactor"},
+        "affected_files": [{"path": "src/service.py", "role": "primary"}],
+        "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+        "change_boundaries": {"in_scope": ["Refactor internals"], "out_of_scope": ["No execute changes"], "max_files_touched": 1, "max_diff_lines_hint": 80},
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text"],
+        "forbidden_actions": ["execute_shell", "privileged_write"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {"known": [], "unknown": [], "requires_resolution": []}
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "ppq-missing-rollback",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "bounds": {"max_iterations": 3, "max_tool_calls": 0, "max_evidence_refs_per_step": 8, "max_step_text_chars": 1024, "max_patch_intent_files": 1, "max_patch_intent_lines_total": 80, "summarize_between_steps": true},
+        "steps": [
+          {"step_index": 0, "step_kind": "LOCATE_TARGET", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.evidence_bundle"], "rationale": "Locate file.", "summary": "Locate file"},
+          {"step_index": 1, "step_kind": "INSPECT_CONTEXT", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.metadata"], "rationale": "Inspect context.", "summary": "Inspect context"},
+          {"step_index": 2, "step_kind": "FINAL_PROPOSAL", "status": "complete", "evidence_requirements": {"must_have": ["plan_contract"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["plan_contract"], "rationale": "Finalize.", "summary": "Finalize"}
+        ],
+        "terminal": {"outcome": "completed", "reason_code": "trace_ready_plan_only", "human_message": "Trace complete.", "execution_requested": false}
+      },
+      "patch_proposal_fixture": {
+        "schema_version": "patch_proposal.v1",
+        "proposal_ref": "patch_proposal:ppq-missing-rollback",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "code_reasoning_trace_ref": "code_reasoning_trace_sha256:y",
+        "bounded_scope": {"max_files_touched": 1, "max_diff_lines": 80, "allowed_paths": ["src/service.py"], "forbidden_paths": [".git/"]},
+        "proposed_edits": [{"path": "src/service.py", "intent": "edit", "rationale": "Refactor service branch order."}],
+        "validation_and_risk": {"risk_class": "medium", "key_risks": ["Branch ordering regression"], "assumptions": ["Context current"]},
+        "test_plan_required": {"required_checks": ["Run service unit tests"], "pass_fail_criteria": "Targeted checks pass."},
+        "rollback_plan_required": {"safety_checks": ["Capture pre-change diff"]},
+        "review_requirements": {"human_review_required": true, "checklist": ["Verify rationale"]}
+      },
+      "expect": {
+        "patch_proposal_quality_category": "missing_rollback"
+      }
+    },
+    {
+      "id": "patch_proposal_quality_overbound",
+      "capability": "patch_proposal_validate",
+      "description": "Proposal exceeds max file bounds and must fail overbound checks.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {"summary": "Small bounded update", "kind": "fix"},
+        "affected_files": [{"path": "src/service.py", "role": "primary"}],
+        "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+        "change_boundaries": {"in_scope": ["Small update"], "out_of_scope": ["Broad refactor"], "max_files_touched": 1, "max_diff_lines_hint": 40},
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text"],
+        "forbidden_actions": ["execute_shell", "privileged_write"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {"known": [], "unknown": [], "requires_resolution": []}
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "ppq-overbound",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "bounds": {"max_iterations": 3, "max_tool_calls": 0, "max_evidence_refs_per_step": 8, "max_step_text_chars": 1024, "max_patch_intent_files": 1, "max_patch_intent_lines_total": 40, "summarize_between_steps": true},
+        "steps": [
+          {"step_index": 0, "step_kind": "LOCATE_TARGET", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.evidence_bundle"], "rationale": "Locate file.", "summary": "Locate file"},
+          {"step_index": 1, "step_kind": "INSPECT_CONTEXT", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.metadata"], "rationale": "Inspect context.", "summary": "Inspect context"},
+          {"step_index": 2, "step_kind": "FINAL_PROPOSAL", "status": "complete", "evidence_requirements": {"must_have": ["plan_contract"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["plan_contract"], "rationale": "Finalize.", "summary": "Finalize"}
+        ],
+        "terminal": {"outcome": "completed", "reason_code": "trace_ready_plan_only", "human_message": "Trace complete.", "execution_requested": false}
+      },
+      "patch_proposal_fixture": {
+        "schema_version": "patch_proposal.v1",
+        "proposal_ref": "patch_proposal:ppq-overbound",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "code_reasoning_trace_ref": "code_reasoning_trace_sha256:y",
+        "bounded_scope": {"max_files_touched": 2, "max_diff_lines": 50, "allowed_paths": ["src/service.py", "src/helpers.py"], "forbidden_paths": [".git/"]},
+        "proposed_edits": [
+          {"path": "src/service.py", "intent": "edit", "rationale": "Adjust service path."},
+          {"path": "src/helpers.py", "intent": "edit", "rationale": "Adjust helper path."}
+        ],
+        "validation_and_risk": {"risk_class": "medium", "key_risks": ["Bounds overrun"], "assumptions": ["Context current"]},
+        "test_plan_required": {"required_checks": ["Run targeted tests"], "pass_fail_criteria": "All pass."},
+        "rollback_plan_required": {"strategy": "Revert files.", "safety_checks": ["Capture diff"]},
+        "review_requirements": {"human_review_required": true, "checklist": ["Check bounds"]}
+      },
+      "expect": {
+        "patch_proposal_quality_category": "overbound"
+      }
+    },
+    {
+      "id": "patch_proposal_quality_weak_test_plan",
+      "capability": "patch_proposal_validate",
+      "description": "Proposal has weak/non-specific test plan.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {"summary": "Bounded update", "kind": "fix"},
+        "affected_files": [{"path": "src/service.py", "role": "primary"}],
+        "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+        "change_boundaries": {"in_scope": ["Small update"], "out_of_scope": ["Broad refactor"], "max_files_touched": 1, "max_diff_lines_hint": 40},
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text"],
+        "forbidden_actions": ["execute_shell", "privileged_write"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {"known": [], "unknown": [], "requires_resolution": []}
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "ppq-weak-tests",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "bounds": {"max_iterations": 3, "max_tool_calls": 0, "max_evidence_refs_per_step": 8, "max_step_text_chars": 1024, "max_patch_intent_files": 1, "max_patch_intent_lines_total": 40, "summarize_between_steps": true},
+        "steps": [
+          {"step_index": 0, "step_kind": "LOCATE_TARGET", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.evidence_bundle"], "rationale": "Locate file.", "summary": "Locate file"},
+          {"step_index": 1, "step_kind": "INSPECT_CONTEXT", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.metadata"], "rationale": "Inspect context.", "summary": "Inspect context"},
+          {"step_index": 2, "step_kind": "FINAL_PROPOSAL", "status": "complete", "evidence_requirements": {"must_have": ["plan_contract"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["plan_contract"], "rationale": "Finalize.", "summary": "Finalize"}
+        ],
+        "terminal": {"outcome": "completed", "reason_code": "trace_ready_plan_only", "human_message": "Trace complete.", "execution_requested": false}
+      },
+      "patch_proposal_fixture": {
+        "schema_version": "patch_proposal.v1",
+        "proposal_ref": "patch_proposal:ppq-weak-tests",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "code_reasoning_trace_ref": "code_reasoning_trace_sha256:y",
+        "bounded_scope": {"max_files_touched": 1, "max_diff_lines": 40, "allowed_paths": ["src/service.py"], "forbidden_paths": [".git/"]},
+        "proposed_edits": [{"path": "src/service.py", "intent": "edit", "rationale": "Adjust service path."}],
+        "validation_and_risk": {"risk_class": "medium", "key_risks": ["Regression risk"], "assumptions": ["Context current"]},
+        "test_plan_required": {"required_checks": ["Run tests"], "pass_fail_criteria": "All tests pass"},
+        "rollback_plan_required": {"strategy": "Revert file.", "safety_checks": ["Capture diff"]},
+        "review_requirements": {"human_review_required": true, "checklist": ["Check plan"]}
+      },
+      "expect": {
+        "patch_proposal_quality_category": "weak_test_plan"
+      }
+    },
+    {
+      "id": "patch_proposal_quality_good_reviewer_structure",
+      "capability": "patch_proposal_validate",
+      "description": "Proposal is reviewer-ready with clear checklist, rollback, and tests.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {"summary": "Bounded refactor", "kind": "refactor"},
+        "affected_files": [{"path": "src/service.py", "role": "primary"}],
+        "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []},
+        "change_boundaries": {"in_scope": ["Refactor internals"], "out_of_scope": ["No execute changes"], "max_files_touched": 1, "max_diff_lines_hint": 90},
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text"],
+        "forbidden_actions": ["execute_shell", "privileged_write"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {"known": [], "unknown": [], "requires_resolution": []}
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "ppq-reviewer",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "bounds": {"max_iterations": 3, "max_tool_calls": 0, "max_evidence_refs_per_step": 8, "max_step_text_chars": 1024, "max_patch_intent_files": 1, "max_patch_intent_lines_total": 90, "summarize_between_steps": true},
+        "steps": [
+          {"step_index": 0, "step_kind": "LOCATE_TARGET", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.evidence_bundle"], "rationale": "Locate file.", "summary": "Locate file"},
+          {"step_index": 1, "step_kind": "INSPECT_CONTEXT", "status": "complete", "evidence_requirements": {"must_have": ["grounded_context_bundle"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["ask.metadata"], "rationale": "Inspect context.", "summary": "Inspect context"},
+          {"step_index": 2, "step_kind": "FINAL_PROPOSAL", "status": "complete", "evidence_requirements": {"must_have": ["plan_contract"], "nice_to_have": [], "insufficient_without": []}, "evidence_refs_used": ["plan_contract"], "rationale": "Finalize.", "summary": "Finalize"}
+        ],
+        "terminal": {"outcome": "completed", "reason_code": "trace_ready_plan_only", "human_message": "Trace complete.", "execution_requested": false}
+      },
+      "patch_proposal_fixture": {
+        "schema_version": "patch_proposal.v1",
+        "proposal_ref": "patch_proposal:ppq-reviewer",
+        "plan_contract_ref": "plan_contract_sha256:x",
+        "code_reasoning_trace_ref": "code_reasoning_trace_sha256:y",
+        "bounded_scope": {"max_files_touched": 1, "max_diff_lines": 90, "allowed_paths": ["src/service.py"], "forbidden_paths": [".git/"]},
+        "proposed_edits": [{"path": "src/service.py", "intent": "edit", "rationale": "Restructure service flow while keeping behavior unchanged."}],
+        "validation_and_risk": {"risk_class": "medium", "key_risks": ["Subtle regression in branch sequencing"], "assumptions": ["Current tests cover branch ordering"]},
+        "test_plan_required": {"required_checks": ["Run service unit tests", "Run branch-order regression test"], "pass_fail_criteria": "All targeted checks pass and no branch-order regressions are observed."},
+        "rollback_plan_required": {"strategy": "Revert service.py and rerun targeted tests.", "safety_checks": ["Capture diff", "Verify post-rollback tests"]},
+        "review_requirements": {"human_review_required": true, "checklist": ["Verify bounds", "Verify rationale", "Verify rollback/test plan quality"]}
+      },
+      "expect": {
+        "patch_proposal_quality_category": "good_reviewer_structure"
+      }
+    }
+  ]
+}

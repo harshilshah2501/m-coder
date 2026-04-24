@@ -10,6 +10,7 @@ Validates these capabilities through live endpoints:
   - agent   (no dedicated /v0/agent route; assist metadata on ask)
   - plan_contract_validate  (offline fixture vs docs/validation/PLAN_CONTRACT_FREEZE_V1.md; no /v1/ask)
   - code_reasoning_trace_validate  (offline plan_contract + code_reasoning_trace fixtures; no HTTP)
+  - patch_proposal_validate  (offline plan/trace/patch proposal quality fixtures; no /v1/ask)
 
 Stdout modes:
   - concise: short pass/fail + clipped answers
@@ -50,6 +51,11 @@ from runtime.code_reasoning.v1_validate import (
 from runtime.plan_contract.v1_validate import (
     validate_plan_contract_category,
     validate_plan_contract_v1,
+)
+from runtime.patch_proposal.v1_validate import (
+    score_patch_proposal_quality,
+    validate_patch_proposal_quality_category,
+    validate_patch_proposal_v1,
 )
 
 
@@ -855,6 +861,53 @@ def _print_scenario_results(suite: dict[str, Any], *, dev: bool = False) -> None
                 if ds.get("error"):
                     print(f"    error: {ds.get('error')}")
         print("")
+
+
+def _patch_quality_summary(suite: dict[str, Any]) -> dict[str, Any] | None:
+    rows = suite.get("results") if isinstance(suite.get("results"), list) else []
+    patch_rows = [
+        r for r in rows if isinstance(r, dict) and str(r.get("capability") or "") == "patch_proposal_validate"
+    ]
+    if not patch_rows:
+        return None
+
+    scores: list[float] = []
+    failed_counts: dict[str, int] = {}
+    for row in patch_rows:
+        actual = row.get("actual_summary") if isinstance(row.get("actual_summary"), dict) else {}
+        q = actual.get("quality_score") if isinstance(actual.get("quality_score"), dict) else {}
+        score = q.get("score_percent")
+        if isinstance(score, (int, float)):
+            scores.append(float(score))
+        criteria = q.get("criteria") if isinstance(q.get("criteria"), dict) else {}
+        for key, ok in criteria.items():
+            if isinstance(key, str) and isinstance(ok, bool) and not ok:
+                failed_counts[key] = int(failed_counts.get(key, 0)) + 1
+
+    top_failed = sorted(failed_counts.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
+    avg_score = round(sum(scores) / len(scores), 2) if scores else 0.0
+    return {
+        "scenario_count": len(patch_rows),
+        "average_score_percent": avg_score,
+        "top_failed_criteria": top_failed,
+    }
+
+
+def _print_patch_quality_summary(suite: dict[str, Any]) -> None:
+    summary = _patch_quality_summary(suite)
+    if not summary:
+        return
+    print("")
+    print("### Patch Proposal Quality Summary")
+    print(f"- scenarios: {summary.get('scenario_count')}")
+    print(f"- average_score_percent: {summary.get('average_score_percent')}")
+    top_failed = summary.get("top_failed_criteria") or []
+    if top_failed:
+        print("- top_failed_criteria:")
+        for name, count in top_failed:
+            print(f"  - {name}: {count}")
+    else:
+        print("- top_failed_criteria: none")
 
 
 def run_once(
@@ -2534,6 +2587,65 @@ def _run_scenario_row(
             "dev_snapshot": {"trace_schema": tr.get("schema_version")},
         }
 
+    if cap == "patch_proposal_validate":
+        pc = scenario.get("plan_contract_fixture")
+        tr = scenario.get("code_reasoning_trace_fixture")
+        pp = scenario.get("patch_proposal_fixture")
+        if not isinstance(pc, dict):
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": ["plan_contract_fixture must be a JSON object"],
+                "expect": expect,
+                "actual_summary": None,
+                "dev_snapshot": None,
+            }
+        if not isinstance(tr, dict):
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": ["code_reasoning_trace_fixture must be a JSON object"],
+                "expect": expect,
+                "actual_summary": None,
+                "dev_snapshot": None,
+            }
+        if not isinstance(pp, dict):
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": ["patch_proposal_fixture must be a JSON object"],
+                "expect": expect,
+                "actual_summary": None,
+                "dev_snapshot": None,
+            }
+        cat = expect.get("patch_proposal_quality_category")
+        if isinstance(cat, str) and cat.strip():
+            errors.extend(validate_patch_proposal_quality_category(pp, pc, tr, cat.strip()))
+        elif "patch_proposal_quality_category" in expect:
+            errors.append("patch_proposal_quality_category must be a non-empty string when present")
+        else:
+            errors.extend(validate_patch_proposal_v1(pp, pc, tr))
+        quality_score = score_patch_proposal_quality(pp, pc, tr)
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {
+                "category": cat if isinstance(cat, str) else None,
+                "quality_score": quality_score,
+            },
+            "dev_snapshot": {"patch_proposal_schema": pp.get("schema_version")},
+        }
+
     if cap == "plan_contract_validate":
         fixture = scenario.get("plan_contract_fixture")
         if not isinstance(fixture, dict):
@@ -2674,7 +2786,9 @@ def run_scenario_suite(
     defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
     tk = int(defaults.get("top_k", top_k))
     subset = _scenarios_subset_for_preflight(data, scenario_ids)
-    offline_only_scenarios = frozenset({"plan_contract_validate", "code_reasoning_trace_validate"})
+    offline_only_scenarios = frozenset(
+        {"plan_contract_validate", "code_reasoning_trace_validate", "patch_proposal_validate"}
+    )
     offline_only = bool(subset) and all(str(s.get("capability")) in offline_only_scenarios for s in subset)
     preflight = _graph_preflight()
     if preflight.get("state") == "UNREACHABLE" and not offline_only:
@@ -2913,6 +3027,9 @@ def main() -> int:
                 else "fallback (built-in summaries only; add docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json in the m-coder repo)"
             )
             _enrich_scenario_suite_with_plain_language(scenario_suite, narratives, source=src)
+            patch_q = _patch_quality_summary(scenario_suite)
+            if patch_q is not None:
+                scenario_suite["patch_quality_summary"] = patch_q
 
     developer_utility_suite: dict[str, Any] | None = None
     if args.utility_scenarios.strip():
@@ -3003,6 +3120,7 @@ def main() -> int:
 
     if scenario_suite and args.print_mode not in ("json", "plain"):
         _print_scenario_results(scenario_suite, dev=args.print_mode == "dev")
+        _print_patch_quality_summary(scenario_suite)
 
     if developer_utility_suite and args.print_mode not in ("json", "plain"):
         _print_utility_scenario_results(developer_utility_suite, dev=args.print_mode == "dev")

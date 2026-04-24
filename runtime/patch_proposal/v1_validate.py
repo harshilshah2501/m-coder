@@ -30,6 +30,16 @@ PATCH_TOP_LEVEL = frozenset(
     }
 )
 
+PATCH_PROPOSAL_QUALITY_CATEGORIES = frozenset(
+    {
+        "clear_and_bounded",
+        "missing_rollback",
+        "overbound",
+        "weak_test_plan",
+        "good_reviewer_structure",
+    }
+)
+
 
 def _is_non_empty_str(val: Any) -> bool:
     return isinstance(val, str) and bool(val.strip())
@@ -161,4 +171,190 @@ def validate_patch_proposal_v1(
         _check_string_list("patch_proposal.review_requirements.checklist", rr.get("checklist"), errs)
 
     return errs
+
+
+def validate_patch_proposal_quality_category(
+    proposal: dict[str, Any],
+    plan_contract: dict[str, Any],
+    code_reasoning_trace: dict[str, Any],
+    category: str,
+) -> list[str]:
+    errs: list[str] = []
+    if category not in PATCH_PROPOSAL_QUALITY_CATEGORIES:
+        return [f"unknown patch_proposal_quality_category: {category!r}"]
+
+    structural = validate_patch_proposal_v1(proposal, plan_contract, code_reasoning_trace)
+    rr = proposal.get("review_requirements") if isinstance(proposal.get("review_requirements"), dict) else {}
+    edits = proposal.get("proposed_edits") if isinstance(proposal.get("proposed_edits"), list) else []
+    rollback = (
+        proposal.get("rollback_plan_required")
+        if isinstance(proposal.get("rollback_plan_required"), dict)
+        else {}
+    )
+    test_plan = (
+        proposal.get("test_plan_required")
+        if isinstance(proposal.get("test_plan_required"), dict)
+        else {}
+    )
+
+    if category == "overbound":
+        if not structural:
+            errs.append("overbound: expected structural bound violations")
+        elif not any("exceeds" in e.lower() or "over" in e.lower() for e in structural):
+            errs.append("overbound: expected bound-related structural errors")
+        return errs
+
+    if category == "missing_rollback":
+        if not structural:
+            errs.append("missing_rollback: expected rollback structural errors")
+        elif not any("rollback_plan_required" in e for e in structural):
+            errs.append("missing_rollback: expected rollback_plan_required error")
+        return errs
+
+    if category == "weak_test_plan":
+        if not structural:
+            # Structural schema can still pass while quality is weak; enforce content checks here.
+            checks = test_plan.get("required_checks")
+            criteria = str(test_plan.get("pass_fail_criteria") or "")
+            if not isinstance(checks, list) or len(checks) < 2:
+                return []
+            if "all tests pass" in criteria.lower() and len(criteria.split()) <= 4:
+                return []
+            errs.append("weak_test_plan: expected weak/non-specific test plan signal")
+            return errs
+        # If structural failed, allow only test-plan related failures.
+        if not any("test_plan_required" in e for e in structural):
+            errs.append("weak_test_plan: structural errors are not test-plan related")
+        return errs
+
+    if structural:
+        errs.extend(structural)
+        return errs
+
+    # Positive-quality categories
+    if category == "clear_and_bounded":
+        if not edits:
+            errs.append("clear_and_bounded: expected at least one proposed edit")
+        for i, row in enumerate(edits):
+            if not isinstance(row, dict):
+                continue
+            rationale = str(row.get("rationale") or "").strip()
+            if len(rationale.split()) < 4:
+                errs.append(f"clear_and_bounded: proposed_edits[{i}].rationale too terse")
+
+    if category == "good_reviewer_structure":
+        if rr.get("human_review_required") is not True:
+            errs.append("good_reviewer_structure: human_review_required must be true")
+        checklist = rr.get("checklist")
+        if not isinstance(checklist, list) or len(checklist) < 2:
+            errs.append("good_reviewer_structure: checklist must have at least 2 actionable entries")
+        if not str(rollback.get("strategy") or "").strip():
+            errs.append("good_reviewer_structure: rollback strategy must be non-empty")
+        checks = test_plan.get("required_checks")
+        if not isinstance(checks, list) or len(checks) < 2:
+            errs.append("good_reviewer_structure: required_checks must include at least 2 checks")
+
+    return errs
+
+
+def score_patch_proposal_quality(
+    proposal: dict[str, Any],
+    plan_contract: dict[str, Any],
+    code_reasoning_trace: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Non-authoritative quality scoring for reviewer usefulness.
+
+    This does not change structural validity semantics; it complements
+    validate_patch_proposal_v1 with measurable rubric signals.
+    """
+    criteria: dict[str, bool] = {}
+    structural_errors = validate_patch_proposal_v1(proposal, plan_contract, code_reasoning_trace)
+
+    rr = proposal.get("review_requirements") if isinstance(proposal.get("review_requirements"), dict) else {}
+    edits = proposal.get("proposed_edits") if isinstance(proposal.get("proposed_edits"), list) else []
+    rollback = (
+        proposal.get("rollback_plan_required")
+        if isinstance(proposal.get("rollback_plan_required"), dict)
+        else {}
+    )
+    test_plan = (
+        proposal.get("test_plan_required")
+        if isinstance(proposal.get("test_plan_required"), dict)
+        else {}
+    )
+    bounded_scope = proposal.get("bounded_scope") if isinstance(proposal.get("bounded_scope"), dict) else {}
+    plan_cb = (
+        plan_contract.get("change_boundaries")
+        if isinstance(plan_contract.get("change_boundaries"), dict)
+        else {}
+    )
+
+    # A: clarity
+    criteria["clarity_has_edits"] = len(edits) > 0
+    criteria["clarity_rationales_specific"] = all(
+        isinstance(row, dict)
+        and isinstance(row.get("rationale"), str)
+        and len(str(row.get("rationale") or "").strip().split()) >= 4
+        for row in edits
+    ) if edits else False
+    criteria["clarity_paths_deduped"] = len(
+        {
+            str(row.get("path")).strip()
+            for row in edits
+            if isinstance(row, dict) and isinstance(row.get("path"), str)
+        }
+    ) == len(edits) if edits else False
+
+    # B: bounds realism
+    try:
+        max_files = int(bounded_scope.get("max_files_touched", -1))
+        max_lines = int(bounded_scope.get("max_diff_lines", -1))
+        plan_max_files = int(plan_cb.get("max_files_touched", -1))
+        plan_max_lines = int(plan_cb.get("max_diff_lines_hint", -1))
+    except (TypeError, ValueError):
+        max_files = max_lines = plan_max_files = plan_max_lines = -1
+    criteria["bounds_edit_count_within_scope"] = max_files >= 0 and len(edits) <= max_files
+    criteria["bounds_max_files_within_plan"] = max_files >= 0 and plan_max_files >= 0 and max_files <= plan_max_files
+    criteria["bounds_max_lines_within_plan"] = max_lines >= 0 and plan_max_lines >= 0 and max_lines <= plan_max_lines
+
+    # C: rollback quality
+    criteria["rollback_strategy_present"] = isinstance(rollback.get("strategy"), str) and bool(
+        str(rollback.get("strategy") or "").strip()
+    )
+    criteria["rollback_safety_checks_present"] = isinstance(rollback.get("safety_checks"), list) and len(
+        rollback.get("safety_checks") or []
+    ) >= 1
+    criteria["rollback_not_placeholder"] = criteria["rollback_strategy_present"] and str(
+        rollback.get("strategy") or ""
+    ).strip().lower() not in {"rollback", "revert", "undo"}
+
+    # D: test usefulness
+    required_checks = test_plan.get("required_checks") if isinstance(test_plan.get("required_checks"), list) else []
+    criteria["tests_required_checks_count"] = len(required_checks) >= 2
+    criteria["tests_criteria_present"] = isinstance(test_plan.get("pass_fail_criteria"), str) and bool(
+        str(test_plan.get("pass_fail_criteria") or "").strip()
+    )
+    criteria["tests_not_generic_only"] = criteria["tests_criteria_present"] and "all tests pass" not in str(
+        test_plan.get("pass_fail_criteria") or ""
+    ).strip().lower()
+
+    # E/F: omission/reviewer UX-like checks on emitted proposals
+    criteria["review_human_required_true"] = rr.get("human_review_required") is True
+    checklist = rr.get("checklist") if isinstance(rr.get("checklist"), list) else []
+    criteria["review_checklist_min_two"] = len(checklist) >= 2
+    criteria["review_checklist_non_empty"] = all(isinstance(x, str) and bool(x.strip()) for x in checklist)
+
+    total = len(criteria)
+    passed = sum(1 for ok in criteria.values() if ok)
+    score_percent = float((passed / total) * 100.0) if total else 0.0
+
+    return {
+        "structural_valid": len(structural_errors) == 0,
+        "structural_error_count": len(structural_errors),
+        "score_percent": round(score_percent, 2),
+        "passed_criteria": passed,
+        "total_criteria": total,
+        "criteria": criteria,
+    }
 
