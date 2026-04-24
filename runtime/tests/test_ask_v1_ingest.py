@@ -20,6 +20,7 @@ from runtime.ask_service.v1_ingest import (
     validate_ask_v1_request,
 )
 from runtime.ask_service.plan_contract_builder import PlanContractBuildResult
+from runtime.ask_service.code_reasoning_trace_builder import CodeReasoningTraceBuildResult
 from runtime.ask_service.reasoner import ExplainDebugResult
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -155,6 +156,7 @@ def test_handle_ask_v1_happy_path_plan_only():
     assert cbp.get("policy_version") == "context_budget_policy.v1"
     assert cbp.get("surface") == "ask"
     assert "plan_contract" not in resp
+    assert "code_reasoning_trace" not in resp
 
 
 def test_handle_ask_v1_optin_emits_plan_contract_when_valid():
@@ -193,6 +195,46 @@ def test_handle_ask_v1_optin_omits_plan_contract_when_builder_omits(monkeypatch:
     assert pc_meta.get("requested") is True
     assert pc_meta.get("emitted") is False
     assert pc_meta.get("omission_reason") == "missing_metadata:evidence_quality"
+
+
+def test_handle_ask_v1_paired_optin_emits_trace_when_valid():
+    ev = _strong_owner_method_evidence_v1()
+    req = _minimal_v1_ask(
+        ev,
+        response_extensions=["plan_contract.v1", "code_reasoning_trace.v1"],
+    )
+    resp = handle_ask_v1_request(req)
+    assert resp["schema_version"] == "plan_only_response.v0.1"
+    assert resp["governance_posture"] == "PLAN_ONLY"
+    assert resp["execution"] is False
+    assert isinstance(resp.get("plan_contract"), dict)
+    crt = resp.get("code_reasoning_trace")
+    assert isinstance(crt, dict)
+    assert crt.get("schema_version") == "code_reasoning_trace.v1"
+    tr_meta = (resp.get("metadata") or {}).get("code_reasoning_trace_v1") or {}
+    assert tr_meta.get("requested") is True
+    assert tr_meta.get("emitted") is True
+
+
+def test_handle_ask_v1_paired_optin_omits_trace_with_diagnostic(monkeypatch: pytest.MonkeyPatch):
+    ev = _load_golden_evidence()
+    req = _minimal_v1_ask(
+        ev,
+        response_extensions=["plan_contract.v1", "code_reasoning_trace.v1"],
+    )
+    monkeypatch.setattr(
+        "runtime.ask_service.v1_ingest.build_code_reasoning_trace_v1",
+        lambda **_k: CodeReasoningTraceBuildResult(
+            code_reasoning_trace=None,
+            omission_reason="insufficient_metadata",
+        ),
+    )
+    resp = handle_ask_v1_request(req)
+    assert "code_reasoning_trace" not in resp
+    tr_meta = (resp.get("metadata") or {}).get("code_reasoning_trace_v1") or {}
+    assert tr_meta.get("requested") is True
+    assert tr_meta.get("emitted") is False
+    assert tr_meta.get("omission_reason") == "insufficient_metadata"
 
 
 def test_handle_ask_v1_dirty_buffer_overlay_reaches_reasoner_bundle():
@@ -526,6 +568,49 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
         pc = optin_resp.get("plan_contract")
         assert isinstance(pc, dict)
         assert pc.get("schema_version") == "plan_contract.v1"
+
+        body_trace_optin = json.dumps(
+            _minimal_v1_ask(
+                _strong_owner_method_evidence_v1(),
+                request_id="http-v1-trace-optin",
+                response_extensions=["plan_contract.v1", "code_reasoning_trace.v1"],
+            )
+        ).encode("utf-8")
+        req_trace_optin = urllib.request.Request(
+            f"{base}/v1/ask",
+            data=body_trace_optin,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req_trace_optin, timeout=10) as r:
+            assert r.status == 200
+            trace_resp = json.loads(r.read().decode("utf-8"))
+        assert trace_resp.get("schema_version") == "plan_only_response.v0.1"
+        assert trace_resp.get("governance_posture") == "PLAN_ONLY"
+        assert trace_resp.get("execution") is False
+        crt = trace_resp.get("code_reasoning_trace")
+        assert isinstance(crt, dict)
+        assert crt.get("schema_version") == "code_reasoning_trace.v1"
+
+        body_trace_only = json.dumps(
+            _minimal_v1_ask(
+                _load_golden_evidence(),
+                request_id="http-v1-trace-only",
+                response_extensions=["code_reasoning_trace.v1"],
+            )
+        ).encode("utf-8")
+        req_trace_only = urllib.request.Request(
+            f"{base}/v1/ask",
+            data=body_trace_only,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with pytest.raises(urllib.error.HTTPError) as he_dep:
+            urllib.request.urlopen(req_trace_only, timeout=10)
+        assert he_dep.value.code == 400
+        dep_body = json.loads(he_dep.value.read().decode("utf-8"))
+        details = dep_body.get("details") if isinstance(dep_body.get("details"), list) else []
+        assert any("code_reasoning_trace.v1 requires plan_contract.v1" in str(x) for x in details)
 
         bad = json.dumps(_minimal_v1_ask(_load_golden_evidence(), evidence_bundle={"bad": True})).encode(
             "utf-8"
