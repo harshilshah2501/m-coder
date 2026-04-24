@@ -1,7 +1,7 @@
 # Bounded Patch Proposal v1 — Strategy Freeze
 
 Date: 2026-04-24  
-Status: strategy freeze (design only; no runtime wiring in this slice)  
+Status: strategy frozen and executed through Slice 1/2 (`/v1/ask` triple opt-in emission + gate; strict WSL artifact required for closure)  
 Scope: define a governed, review-first `patch_proposal.v1` contract for `/v1/ask` plan surfaces without enabling apply/execute behavior.
 
 ## 1) Goal
@@ -142,22 +142,22 @@ Example omission reasons:
 5. **Regression gates**
    - existing plan_contract + code_reasoning_trace gates remain green
 
-## 10) Implementation sequence (future, not this slice)
+## 10) Implementation sequence
 
-### Slice A — Contract + schema freeze
+### Slice A — Contract + schema freeze (complete)
 
 - define `patch_proposal.v1` schema
 - add request extension token and dependency rules
 - document exact required fields
 
-### Slice B — Builder skeleton + bounds validator
+### Slice B — Builder skeleton + bounds validator (complete)
 
 - deterministic proposal builder
 - strict bounds checker against `plan_contract`
 - trace reference integrity checker
 - omission diagnostics
 
-### Slice C — `/v1/ask` triple opt-in emission + gate
+### Slice C — `/v1/ask` triple opt-in emission + gate (complete)
 
 - emit only on valid chain and bounds
 - add HTTP gate assertions and regression tests
@@ -175,3 +175,9 @@ This strategy does not:
 ## 12) Summary decision
 
 Proceed with a bounded, additive, human-review-first `patch_proposal.v1` strategy anchored to `plan_contract.v1` and `code_reasoning_trace.v1`. Enforce strict scope bounds, required rollback/test plans, and deterministic omission/rejection behavior while preserving all Plan-Only execution invariants.
+
+## 13) Closure artifact target
+
+Canonical strict WSL artifact for this phase:
+
+- `TestRunEvals/plan_code_http_deploy_gate.patch_proposal_optin.wsl.json`
