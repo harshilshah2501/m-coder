@@ -117,9 +117,7 @@ Work **small PR-sized slices** on `plan-code-reasoning-solidification`; merge to
 
 2. **Lane 2 — Plan validation scenarios** — **Delivered (offline):** four `plan_contract_validate` rows in `motadata_aiops_behavior_scenarios.v1.json`; structural + category checks in `runtime/plan_contract/v1_validate.py`; `motadata_behavior_verify.py` integration + graph bypass when **only** those scenarios are selected. **`/v1/ask` does not emit `plan_contract` yet.**
 
-3. **Lane 3 — Multi-step Code reasoning design**  
-   - Spec only first: step enum (locate → inspect → strategy → bounded patch intent → proposal), max iterations, summarization policy, fail-closed wording.  
-   - Map each step to **existing** evidence/authority inputs; avoid new retrieval.
+3. **Lane 3 — Multi-step Code reasoning design** — **Delivered (design-only):** `docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md` (`code_reasoning_trace.v1`, step kinds, bounds, `patch_intent.v1`, terminal/refusal, ledger hook names, handoff rules from `plan_contract`). **No** runtime or HTTP changes.
 
 4. **Lane 4 — Code validation / deploy gate**  
    - Implement HTTP gate script + `runtime/tests/test_*` with `http.server` stubs (pattern from Assist v2 gate tests).  

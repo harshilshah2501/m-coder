@@ -200,6 +200,8 @@ Exact JSON fixtures and verifier assertions are **in scope** for Lane 2 as above
 - **`plan_contract`** does not set **`execution`** to true and does not imply **`safe_execute`** from Plan-Gate.
 - Any future code proposal or execute request MUST remain subject to existing **Plan-Gate**, **execute handler**, and **ledger** rules.
 
-## 8) Next slice (after Lane 1)
+## 8) Next slices (program order)
 
-Per program sequencing: **Plan validation pack** (scenarios + verifier expectations wired to **`motadata_behavior_verify`** or dedicated tests) — **not** multi-step code reasoning contract or HTTP Code gate until Plan contract validation is in motion.
+- **Lane 2 (done):** offline **`plan_contract_validate`** pack — see §6.
+- **Lane 3 (design):** multi-step code reasoning — **`docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md`** (`code_reasoning_trace.v1`, `patch_intent.v1`; no runtime).
+- **Lane 4+:** code reasoning validation fixtures, then HTTP/runtime gate.
