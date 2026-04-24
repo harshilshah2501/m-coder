@@ -261,6 +261,17 @@ python3 runtime/scripts/plan_code_http_deploy_gate.py \
   --out TestRunEvals/plan_code_http_deploy_gate.patch_proposal_optin.wsl.json
 ```
 
+`patch_proposal.v1` quality hardening suite artifact (Q1/Q2):
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios-only \
+  --scenarios docs/validation/patch_proposal_quality_scenarios.v1.json \
+  --print concise \
+  --out TestRunEvals/patch_proposal_quality_validation.q2.wsl.json
+```
+
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "${MOTADATA_REPO_ROOT}" \

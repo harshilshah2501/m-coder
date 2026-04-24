@@ -1,7 +1,7 @@
 # Patch Proposal Quality Hardening — Discovery (Doc Only)
 
 Date: 2026-04-24  
-Status: discovery freeze (quality hardening scope only; no runtime/execution changes)  
+Status: Q1/Q2 executed (quality diagnostics + builder hardening + offline suite); Q3 follow-up  
 Depends on: `docs/validation/BOUNDED_PATCH_PROPOSAL_V1_STRATEGY.md`, `docs/validation/BOUNDED_PATCH_PROPOSAL_V1_REPORT.md`
 
 ## 1) Objective
@@ -126,3 +126,17 @@ This hardening phase does not:
 
 `patch_proposal.v1` capability is complete for governed non-autonomous proposal emission.  
 Next value is proposal quality hardening: make outputs clearer, more realistic, and more reviewer-actionable while preserving all current safety contracts.
+
+## 9) Q1/Q2 closure evidence
+
+- Added offline quality fixture pack: `docs/validation/patch_proposal_quality_scenarios.v1.json`
+- Added validator quality scoring + scenario summary:
+  - `runtime/patch_proposal/v1_validate.py`
+  - `runtime/scripts/motadata_behavior_verify.py` (`scenario_suite.patch_quality_summary`)
+- Q2 builder hardening completed in `runtime/ask_service/patch_proposal_builder.py`:
+  - 2+ concrete reviewer checklist items
+  - 2+ specific required test checks
+  - rationale specificity with explicit file/path + plan bounds cue
+- WSL artifact:
+  - `TestRunEvals/patch_proposal_quality_validation.q2.wsl.json`
+  - `all_pass=true`, `scenario_count=6`, `average_score_percent=85.56` (up from 82.67 baseline)
