@@ -243,6 +243,15 @@ python3 runtime/scripts/plan_code_http_deploy_gate.py \
   --out TestRunEvals/plan_code_http_deploy_gate.plan_contract_optin.wsl.nograph.json
 ```
 
+`/v1/ask` `code_reasoning_trace.v1` paired opt-in emission gate artifact (Slice A/B/C):
+
+```bash
+python3 runtime/scripts/plan_code_http_deploy_gate.py \
+  --plan-gate-url "${PLAN_GATE_URL}" \
+  --workspace-root "${MOTADATA_GATE_WORKSPACE_ROOT:-${MOTADATA_REPO_ROOT}}" \
+  --out TestRunEvals/plan_code_http_deploy_gate.code_reasoning_trace_optin.wsl.json
+```
+
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "${MOTADATA_REPO_ROOT}" \

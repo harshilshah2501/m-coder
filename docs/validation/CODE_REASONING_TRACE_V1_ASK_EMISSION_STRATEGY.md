@@ -1,7 +1,7 @@
 # Code Reasoning Trace v1 on `/v1/ask` — Emission Strategy
 
 Date: 2026-04-24  
-Status: strategy freeze (documentation only; no runtime wiring in this slice)  
+Status: strategy frozen and executed through Slice A/B/C on branch (paired opt-in wiring complete; final WSL strict artifact collection pending)  
 Scope: controlled emission strategy for `code_reasoning_trace.v1` on `POST /v1/ask` after `plan_contract.v1` opt-in is already available.
 
 ## 1) Goal
@@ -176,3 +176,15 @@ This strategy does not:
 ## 13) Summary decision
 
 Proceed with additive-first `code_reasoning_trace.v1` strategy on `/v1/ask`, gated by explicit paired opt-in with `plan_contract.v1`, strict dependency enforcement, and omission-with-diagnostic on missing/invalid prerequisites.
+
+## 14) Slice completion note
+
+Slices A/B/C are implemented on `code-reasoning-trace-emission-strategy`:
+
+- Slice A: schema + negotiation freeze (`response_extensions` token + dependency validation)
+- Slice B: deterministic trace builder skeleton + omission diagnostics
+- Slice C: paired opt-in `/v1/ask` emission + deploy-gate/test coverage
+
+Final strict WSL gate artifact target for closure:
+
+- `TestRunEvals/plan_code_http_deploy_gate.code_reasoning_trace_optin.wsl.json`
