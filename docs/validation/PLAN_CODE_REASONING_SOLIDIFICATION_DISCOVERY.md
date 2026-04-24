@@ -105,7 +105,7 @@ Conclusion: the codebase has **strong governance primitives** (Plan-Gate posture
 | 2 | **Plan validation pack** | Extend **`motadata_aiops_behavior_scenarios.v1.json`** + verifier expectations; possibly add **`runtime/tests/test_plan_contract_*.py`** for pure JSON-schema + invariants. |
 | 3 | **Multi-step Code reasoning contract** | Design **`code_reasoning_trace.v0.1`** (name TBD) — either nested under Ask when in “code reasoning” mode **or** separate internal envelope mirrored to diagnostics; align fields with **Stage3** frame concepts (`iteration_index`, `remaining_budget`, proposal refs, tool refs) without copying the whole loop into Ask. |
 | 4 | **Loop/context safeguards** | **Reuse Stage 3 parameters** as source of truth: `attempt_budget`, tool policy, evidence ref closure, max steps — document caps in contract doc; enforce in server-side validation for any new payload. |
-| 5 | **HTTP-level Plan/Code gate** | New script **`runtime/scripts/plan_code_http_deploy_gate.py`** (mirror `assist_v2_http_deploy_gate.py`): targets `PLAN_GATE_URL` + scenarios (Ask with enriched plan, optional execute probe in **dry** mode only), asserts refusal/boundedness/`execution=false`/ledger consistency **where observable over HTTP**. |
+| 5 | **HTTP-level Plan/Code gate** | **Delivered:** `runtime/scripts/plan_code_http_deploy_gate.py` + tests + `docs/validation/PLAN_CODE_HTTP_RUNTIME_GATE.md` — `/v0/plan`, `/v0/execute`, `/v1/ask` observational checks; optional `--ledger-path`; **no** new Ask payload fields required. |
 
 ---
 

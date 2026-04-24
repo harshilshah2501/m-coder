@@ -169,4 +169,5 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 2. Plan validation pack (offline) ✅  
 3. **This document — Code reasoning contract design** ✅  
 4. Code reasoning validation fixtures (offline) ✅ — §10  
-5. Runtime wiring / HTTP gate (later)
+5. **HTTP/runtime observational gate** — `runtime/scripts/plan_code_http_deploy_gate.py` + `docs/validation/PLAN_CODE_HTTP_RUNTIME_GATE.md` (existing Plan/Code/Ask surfaces; no `plan_contract` / `code_reasoning_trace` emission yet)  
+6. Runtime wiring of richer contracts into live responses (later)
