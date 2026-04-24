@@ -134,6 +134,19 @@ def test_patch_proposal_builder_builds_valid_proposal_for_valid_chain() -> None:
     assert isinstance(res.patch_proposal, dict)
     assert res.patch_proposal.get("schema_version") == "patch_proposal.v1"
     assert validate_patch_proposal_v1(res.patch_proposal, pc, tr) == []
+    review_checklist = ((res.patch_proposal.get("review_requirements") or {}).get("checklist") or [])
+    assert isinstance(review_checklist, list)
+    assert len(review_checklist) >= 2
+    required_checks = ((res.patch_proposal.get("test_plan_required") or {}).get("required_checks") or [])
+    assert isinstance(required_checks, list)
+    assert len(required_checks) >= 2
+    edits = res.patch_proposal.get("proposed_edits") or []
+    assert isinstance(edits, list) and edits
+    for row in edits:
+        rationale = str((row or {}).get("rationale") or "")
+        path = str((row or {}).get("path") or "")
+        assert path in rationale
+        assert "plan bounds" in rationale
 
 
 def test_patch_proposal_builder_omits_when_plan_missing() -> None:

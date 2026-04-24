@@ -33,6 +33,21 @@ def _edit_intent_for_path(path: str) -> str:
     return "edit"
 
 
+def _build_edit_rationale(
+    *,
+    path: str,
+    query: str,
+    plan_steps: list[str],
+    max_files: int,
+    max_lines: int,
+) -> str:
+    step_hint = plan_steps[0] if plan_steps else f"Address query intent: {query[:100]}"
+    return (
+        f"Update `{path}` to {step_hint.lower()}, keeping scope within "
+        f"plan bounds (max_files={max_files}, max_diff_lines={max_lines})."
+    )
+
+
 def build_patch_proposal_v1(
     *,
     request_id: str,
@@ -106,7 +121,13 @@ def build_patch_proposal_v1(
             {
                 "path": p,
                 "intent": _edit_intent_for_path(p),
-                "rationale": (steps[0] if steps else f"Bounded change intent for query: {q[:140]}"),
+                "rationale": _build_edit_rationale(
+                    path=p,
+                    query=q,
+                    plan_steps=steps,
+                    max_files=max_files,
+                    max_lines=max_lines,
+                ),
             }
             for p in paths
         ],
@@ -120,9 +141,13 @@ def build_patch_proposal_v1(
         },
         "test_plan_required": {
             "required_checks": [
-                "Run relevant unit tests",
-                "Run targeted regression tests",
-                "Verify lint/static checks for touched files",
+                (
+                    f"Run targeted unit tests covering {paths[0]}"
+                    if paths
+                    else "Run targeted unit tests for touched module"
+                ),
+                "Run targeted regression scenario for the affected behavior path",
+                "Run linter/static checks for touched files only",
             ],
             "pass_fail_criteria": "All required checks pass with no new critical regressions.",
         },
@@ -136,9 +161,9 @@ def build_patch_proposal_v1(
         "review_requirements": {
             "human_review_required": True,
             "checklist": [
-                "Verify bounded scope is within plan_contract limits",
-                "Verify proposal remains consistent with code_reasoning_trace",
-                "Confirm no execute/apply behavior is implied",
+                "Verify proposed file paths are inside plan_contract bounded scope",
+                "Verify rollback steps are actionable and reference touched files",
+                "Verify test plan covers changed behavior and touched modules",
             ],
         },
     }

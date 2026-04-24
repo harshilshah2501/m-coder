@@ -59,6 +59,7 @@ def test_run_scenario_suite_patch_proposal_offline_graph_unreachable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     ids = {
+        "patch_proposal_quality_builder_generated_control",
         "patch_proposal_quality_clear_and_bounded",
         "patch_proposal_quality_missing_rollback",
         "patch_proposal_quality_overbound",
@@ -80,7 +81,7 @@ def test_run_scenario_suite_patch_proposal_offline_graph_unreachable(
     )
     assert "error" not in out
     assert out.get("all_pass") is True
-    assert len(out.get("results") or []) == 5
+    assert len(out.get("results") or []) == 6
     for r in out.get("results") or []:
         qs = ((r.get("actual_summary") or {}).get("quality_score") or {})
         assert "score_percent" in qs
@@ -148,6 +149,7 @@ def test_patch_quality_summary_can_be_derived_from_scenario_suite(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     ids = {
+        "patch_proposal_quality_builder_generated_control",
         "patch_proposal_quality_clear_and_bounded",
         "patch_proposal_quality_missing_rollback",
     }
@@ -166,6 +168,23 @@ def test_patch_quality_summary_can_be_derived_from_scenario_suite(
     )
     summary = verify._patch_quality_summary(out)
     assert isinstance(summary, dict)
-    assert summary.get("scenario_count") == 2
+    assert summary.get("scenario_count") == 3
     assert "average_score_percent" in summary
+
+
+def test_builder_generated_quality_scenario_passes() -> None:
+    row = _scenario_by_id("patch_proposal_quality_builder_generated_control")
+    res = verify._run_scenario_row(
+        row,
+        workspace_root=str(REPO_ROOT),
+        context_url="http://127.0.0.1:8091",
+        plan_gate_url="http://127.0.0.1:8089",
+        top_k=8,
+        quality_policy=None,
+        export_stage_a=None,
+    )
+    assert res.get("pass") is True
+    qs = ((res.get("actual_summary") or {}).get("quality_score") or {})
+    assert qs.get("structural_valid") is True
+    assert float(qs.get("score_percent") or 0.0) >= 90.0
 

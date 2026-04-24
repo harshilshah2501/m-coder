@@ -57,6 +57,7 @@ from runtime.patch_proposal.v1_validate import (
     validate_patch_proposal_quality_category,
     validate_patch_proposal_v1,
 )
+from runtime.ask_service.patch_proposal_builder import build_patch_proposal_v1
 
 
 def _utc_now() -> str:
@@ -2591,6 +2592,7 @@ def _run_scenario_row(
         pc = scenario.get("plan_contract_fixture")
         tr = scenario.get("code_reasoning_trace_fixture")
         pp = scenario.get("patch_proposal_fixture")
+        builder_input = scenario.get("patch_proposal_builder_input")
         if not isinstance(pc, dict):
             return {
                 "id": sid,
@@ -2613,13 +2615,38 @@ def _run_scenario_row(
                 "actual_summary": None,
                 "dev_snapshot": None,
             }
+        if pp is None and isinstance(builder_input, dict):
+            build_res = build_patch_proposal_v1(
+                request_id=str(builder_input.get("request_id") or sid),
+                query=str(builder_input.get("query") or "Builder-generated quality scenario"),
+                plan_steps=[
+                    str(x).strip()
+                    for x in (builder_input.get("plan_steps") or [])
+                    if isinstance(x, str) and str(x).strip()
+                ],
+                metadata=builder_input.get("metadata") if isinstance(builder_input.get("metadata"), dict) else {},
+                plan_contract=pc,
+                code_reasoning_trace=tr,
+            )
+            pp = build_res.patch_proposal
+            if pp is None:
+                return {
+                    "id": sid,
+                    "capability": cap,
+                    "description": desc,
+                    "pass": False,
+                    "errors": [f"patch_proposal builder omitted fixture: {build_res.omission_reason}"],
+                    "expect": expect,
+                    "actual_summary": None,
+                    "dev_snapshot": None,
+                }
         if not isinstance(pp, dict):
             return {
                 "id": sid,
                 "capability": cap,
                 "description": desc,
                 "pass": False,
-                "errors": ["patch_proposal_fixture must be a JSON object"],
+                "errors": ["patch_proposal_fixture must be a JSON object (or provide patch_proposal_builder_input)"],
                 "expect": expect,
                 "actual_summary": None,
                 "dev_snapshot": None,
