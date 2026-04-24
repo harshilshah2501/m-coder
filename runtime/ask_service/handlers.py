@@ -477,6 +477,8 @@ def _build_plan_only_response(
     routing_mode: str | None = None,
     trace_id: str | None = None,
     plan_contract: Dict[str, Any] | None = None,
+    code_reasoning_trace: Dict[str, Any] | None = None,
+    patch_proposal: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -542,6 +544,10 @@ def _build_plan_only_response(
         payload["trace_id"] = trace_id
     if plan_contract is not None:
         payload["plan_contract"] = plan_contract
+    if code_reasoning_trace is not None:
+        payload["code_reasoning_trace"] = code_reasoning_trace
+    if patch_proposal is not None:
+        payload["patch_proposal"] = patch_proposal
     return payload
 
 

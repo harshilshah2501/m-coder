@@ -41,7 +41,34 @@ def _execute_resp(outcome: str, executed: bool, **extra: object) -> dict:
     return r
 
 
-def _ask_resp(*, include_plan_contract: bool = False, omission_reason: str | None = None) -> dict:
+def _ask_resp(
+    *,
+    include_plan_contract: bool = False,
+    include_trace: bool = False,
+    include_patch: bool = False,
+    omission_reason: str | None = None,
+    trace_omission_reason: str | None = None,
+    patch_omission_reason: str | None = None,
+) -> dict:
+    metadata: dict = {}
+    if omission_reason:
+        metadata["plan_contract_v1"] = {
+            "requested": True,
+            "emitted": False,
+            "omission_reason": omission_reason,
+        }
+    if trace_omission_reason:
+        metadata["code_reasoning_trace_v1"] = {
+            "requested": True,
+            "emitted": False,
+            "omission_reason": trace_omission_reason,
+        }
+    if patch_omission_reason:
+        metadata["patch_proposal_v1"] = {
+            "requested": True,
+            "emitted": False,
+            "omission_reason": patch_omission_reason,
+        }
     return {
         "schema_version": "plan_only_response.v0.1",
         "request_id": "a1",
@@ -57,10 +84,12 @@ def _ask_resp(*, include_plan_contract: bool = False, omission_reason: str | Non
             else {}
         ),
         **(
-            {"metadata": {"plan_contract_v1": {"requested": True, "emitted": False, "omission_reason": omission_reason}}}
-            if omission_reason
+            {"code_reasoning_trace": {"schema_version": "code_reasoning_trace.v1", "request_id": "a1"}}
+            if include_trace
             else {}
         ),
+        **({"patch_proposal": {"schema_version": "patch_proposal.v1", "proposal_ref": "pp-1", "review_requirements": {"human_review_required": True}}} if include_patch else {}),
+        **({"metadata": metadata} if metadata else {}),
     }
 
 
@@ -83,10 +112,22 @@ def test_ask_allows_empty_steps_when_ui_or_notes_present(
             _execute_resp("REFUSED", False),
             _ask_empty_steps_with_ui(),
             _ask_resp(include_plan_contract=True),
-            _ask_resp(include_plan_contract=True),
+            _ask_resp(include_plan_contract=True, include_trace=True),
+            _ask_resp(include_plan_contract=True, include_trace=True, include_patch=True),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture"),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture", patch_omission_reason="missing_code_reasoning_trace"),
         ]
     )
     monkeypatch.setattr(gate, "_post_json", lambda *_a, **_k: next(responses))
+    monkeypatch.setattr(
+        gate,
+        "_post_json_with_status",
+        lambda *_a, **_k: (400, {"details": [
+            "code_reasoning_trace.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires code_reasoning_trace.v1",
+        ]}),
+    )
     monkeypatch.setattr(
         gate,
         "_graph_preflight",
@@ -113,7 +154,10 @@ def test_run_plan_code_gate_all_pass(monkeypatch: pytest.MonkeyPatch) -> None:
             _execute_resp("REFUSED", False),
             _ask_resp(),
             _ask_resp(include_plan_contract=True),
-            _ask_resp(include_plan_contract=True),
+            _ask_resp(include_plan_contract=True, include_trace=True),
+            _ask_resp(include_plan_contract=True, include_trace=True, include_patch=True),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture"),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture", patch_omission_reason="missing_code_reasoning_trace"),
         ]
     )
 
@@ -122,6 +166,15 @@ def test_run_plan_code_gate_all_pass(monkeypatch: pytest.MonkeyPatch) -> None:
         gate,
         "_graph_preflight",
         lambda: {"state": "COMPLETE", "reason": "ok"},
+    )
+    monkeypatch.setattr(
+        gate,
+        "_post_json_with_status",
+        lambda *_a, **_k: (400, {"details": [
+            "code_reasoning_trace.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires code_reasoning_trace.v1",
+        ]}),
     )
 
     out = gate.run_gate(
@@ -147,10 +200,22 @@ def test_graph_preflight_strict_failure(monkeypatch: pytest.MonkeyPatch) -> None
             _execute_resp("REFUSED", False),
             _ask_resp(),
             _ask_resp(include_plan_contract=True),
-            _ask_resp(include_plan_contract=True),
+            _ask_resp(include_plan_contract=True, include_trace=True),
+            _ask_resp(include_plan_contract=True, include_trace=True, include_patch=True),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture"),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture", patch_omission_reason="missing_code_reasoning_trace"),
         ]
     )
     monkeypatch.setattr(gate, "_post_json", lambda *_a, **_k: next(responses))
+    monkeypatch.setattr(
+        gate,
+        "_post_json_with_status",
+        lambda *_a, **_k: (400, {"details": [
+            "code_reasoning_trace.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires code_reasoning_trace.v1",
+        ]}),
+    )
     monkeypatch.setattr(gate, "_graph_preflight", lambda: {"state": "UNREACHABLE", "reason": "no driver"})
     out = gate.run_gate(
         "http://x",
@@ -172,11 +237,23 @@ def test_script_main_writes_output(tmp_path: Path, monkeypatch: pytest.MonkeyPat
             _execute_resp("REFUSED", False),
             _ask_resp(),
             _ask_resp(include_plan_contract=True),
-            _ask_resp(include_plan_contract=True),
+            _ask_resp(include_plan_contract=True, include_trace=True),
+            _ask_resp(include_plan_contract=True, include_trace=True, include_patch=True),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture"),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture", patch_omission_reason="missing_code_reasoning_trace"),
         ]
     )
     monkeypatch.setattr(gate, "_post_json", lambda *_a, **_k: next(responses))
     monkeypatch.setattr(gate, "_graph_preflight", lambda: {"state": "COMPLETE", "reason": "ok"})
+    monkeypatch.setattr(
+        gate,
+        "_post_json_with_status",
+        lambda *_a, **_k: (400, {"details": [
+            "code_reasoning_trace.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires code_reasoning_trace.v1",
+        ]}),
+    )
     out_file = tmp_path / "out.json"
     rc = gate.main(
         [
@@ -204,11 +281,23 @@ def test_optin_omission_requires_diagnostic(monkeypatch: pytest.MonkeyPatch) -> 
             _execute_resp("REFUSED", False),
             _ask_resp(),  # default no opt-in
             _ask_resp(include_plan_contract=True),  # strong opt-in
-            _ask_resp(omission_reason="missing_metadata:evidence_quality"),  # weak opt-in omitted with diagnostic
+            _ask_resp(include_plan_contract=True, include_trace=True),  # paired trace opt-in
+            _ask_resp(include_plan_contract=True, include_trace=True, include_patch=True),  # triple patch opt-in
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture"),  # paired opt-in omitted with diagnostic
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture", patch_omission_reason="missing_code_reasoning_trace"),  # triple opt-in omitted with diagnostic
         ]
     )
     monkeypatch.setattr(gate, "_post_json", lambda *_a, **_k: next(responses))
     monkeypatch.setattr(gate, "_graph_preflight", lambda: {"state": "COMPLETE", "reason": "ok"})
+    monkeypatch.setattr(
+        gate,
+        "_post_json_with_status",
+        lambda *_a, **_k: (400, {"details": [
+            "code_reasoning_trace.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires plan_contract.v1",
+            "patch_proposal.v1 requires code_reasoning_trace.v1",
+        ]}),
+    )
     out = gate.run_gate(
         "http://x",
         "/tmp",
@@ -218,3 +307,27 @@ def test_optin_omission_requires_diagnostic(monkeypatch: pytest.MonkeyPatch) -> 
     )
     assert out["all_pass"] is True
     assert out["checks"]["ask_v1_optin_omission_diagnostic"]["pass"] is True
+
+
+def test_trace_only_dependency_check_fails_when_not_400(monkeypatch: pytest.MonkeyPatch) -> None:
+    responses = iter(
+        [
+            _plan_resp(),
+            _plan_resp(),
+            _execute_resp("EXECUTED", True),
+            _execute_resp("REFUSED", False),
+            _execute_resp("REFUSED", False),
+            _ask_resp(),
+            _ask_resp(include_plan_contract=True),
+            _ask_resp(include_plan_contract=True, include_trace=True),
+            _ask_resp(include_plan_contract=True, include_trace=True, include_patch=True),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture"),
+            _ask_resp(include_plan_contract=True, trace_omission_reason="forbidden_or_refusal_posture", patch_omission_reason="missing_code_reasoning_trace"),
+        ]
+    )
+    monkeypatch.setattr(gate, "_post_json", lambda *_a, **_k: next(responses))
+    monkeypatch.setattr(gate, "_graph_preflight", lambda: {"state": "COMPLETE", "reason": "ok"})
+    monkeypatch.setattr(gate, "_post_json_with_status", lambda *_a, **_k: (200, {}))
+    out = gate.run_gate("http://x", "/tmp", 5, require_graph_preflight=True, ledger_path=None)
+    assert out["all_pass"] is False
+    assert out["checks"]["ask_v1_trace_only_dependency_rejected"]["pass"] is False
