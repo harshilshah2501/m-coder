@@ -71,6 +71,24 @@ def test_validate_ask_v1_request_accepts_valid_dirty_buffers():
     assert not errs
 
 
+def test_validate_ask_v1_request_accepts_response_extensions_plan_contract_v1():
+    data = _minimal_v1_ask(
+        _load_golden_evidence(),
+        response_extensions=["plan_contract.v1"],
+    )
+    errs = validate_ask_v1_request(data)
+    assert not errs
+
+
+def test_validate_ask_v1_request_rejects_unknown_response_extensions():
+    data = _minimal_v1_ask(
+        _load_golden_evidence(),
+        response_extensions=["unknown.extension.v1"],
+    )
+    errs = validate_ask_v1_request(data)
+    assert errs
+
+
 def test_handle_ask_v1_dirty_buffer_noop_invalid_entries_are_noted():
     ev = _load_golden_evidence()
     req = _minimal_v1_ask(

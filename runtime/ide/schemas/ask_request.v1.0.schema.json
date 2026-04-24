@@ -81,6 +81,15 @@
     "trace_id": {
       "type": "string",
       "description": "End-to-end correlation ID (same across v1 and fallback v0 for one logical Ask)."
+    },
+    "response_extensions": {
+      "type": "array",
+      "description": "Optional additive response extensions requested by client. Unsupported values are rejected for deterministic negotiation.",
+      "items": {
+        "type": "string",
+        "enum": ["plan_contract.v1"]
+      },
+      "uniqueItems": true
     }
   },
   "additionalProperties": false
