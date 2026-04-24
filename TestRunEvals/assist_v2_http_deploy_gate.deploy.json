@@ -1,0 +1,37 @@
+{
+  "checks": {
+    "grounded_ask_shape": {
+      "pass": true,
+      "errors": []
+    },
+    "weak_ask_investigate_omission": {
+      "pass": true,
+      "errors": []
+    },
+    "debug_shape_and_fail_closed": {
+      "pass": true,
+      "errors": []
+    },
+    "graph_preflight_healthy": {
+      "pass": true,
+      "required": true,
+      "details": {
+        "state": "COMPLETE",
+        "reason": "graph ingest counters satisfy required thresholds",
+        "anchor_counts": {
+          "VERTICLE_REGISTRATION": 8,
+          "EVENTBUS_CONSUMER_REGISTRATION": 22,
+          "API_ROUTE_REGISTRATION": 222
+        },
+        "thresholds": {
+          "VERTICLE_REGISTRATION": 5,
+          "EVENTBUS_CONSUMER_REGISTRATION": 10,
+          "API_ROUTE_REGISTRATION": 1
+        }
+      },
+      "errors": []
+    }
+  },
+  "errors": [],
+  "all_pass": true
+}
