@@ -121,13 +121,11 @@ Work **small PR-sized slices** on `plan-code-reasoning-solidification`; merge to
 
 4. **Lane 4 — Code reasoning validation fixtures** — **Delivered (offline):** `code_reasoning_trace_validate` scenarios + `runtime/code_reasoning/v1_validate.py` + verifier wiring (see `CODE_REASONING_CONTRACT_DESIGN_V1.md` §10). **HTTP / deploy gate** for Code reasoning remains **next** (separate slice from offline fixtures).
 
-5. **Lane 5 — Docs/tracker / phase report**  
-   - Phase report `docs/validation/PLAN_CODE_REASONING_SOLIDIFICATION_REPORT.md` on closure (optional batch).  
-   - Tracker rows updated incrementally with Lanes 1–4.
+5. **Lane 5 — HTTP/runtime Plan+Code deploy gate** — **Delivered:** `runtime/scripts/plan_code_http_deploy_gate.py` + tests + WSL proof artifact `TestRunEvals/plan_code_http_deploy_gate.wsl.json` (`all_pass=true`).
 
-6. **Lane 6 (next engineering)** — HTTP/runtime **Plan+Code reasoning deploy gate** (separate from offline fixtures).
+6. **Lane 6 — Docs/tracker / phase report** — **Delivered:** `docs/validation/PLAN_CODE_REASONING_SOLIDIFICATION_REPORT.md` + tracker updates with offline + HTTP evidence.
 
-**Dependency order:** Lanes 1–4 are sequential for contract truth; HTTP/runtime gate (Lane 6) only after offline validators stay green.
+**Dependency order:** Lanes 1–4 are sequential for contract truth; HTTP/runtime gate follows after offline validators stay green (now satisfied).
 
 ---
 

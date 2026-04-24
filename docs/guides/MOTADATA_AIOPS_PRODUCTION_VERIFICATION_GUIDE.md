@@ -203,6 +203,10 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 python3 runtime/scripts/motadata_behavior_verify.py \
   --workspace-root "${MOTADATA_REPO_ROOT}" \
   --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id plan_contract_v1_safe_documentation \
+  --scenario-id plan_contract_v1_risky_behavior_change \
+  --scenario-id plan_contract_v1_insufficient_evidence \
+  --scenario-id plan_contract_v1_privileged_destructive_refusal \
   --scenario-id code_reasoning_trace_v1_completed_valid \
   --scenario-id code_reasoning_trace_v1_deferred_insufficient_evidence \
   --scenario-id code_reasoning_trace_v1_refused_forbidden_action \
@@ -210,7 +214,16 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --scenario-id code_reasoning_trace_v1_invalid_step_ordering \
   --scenarios-only \
   --print concise \
-  --out runtime/.run/motadata_behavior_validation.code_reasoning_trace_v1.json
+  --out TestRunEvals/plan_code_reasoning_offline_validation.wsl.json
+```
+
+Plan+Code HTTP/runtime observational gate:
+
+```bash
+python3 runtime/scripts/plan_code_http_deploy_gate.py \
+  --plan-gate-url "${PLAN_GATE_URL}" \
+  --workspace-root "${MOTADATA_GATE_WORKSPACE_ROOT:-${MOTADATA_REPO_ROOT}}" \
+  --out TestRunEvals/plan_code_http_deploy_gate.wsl.json
 ```
 
 ```bash
