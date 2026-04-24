@@ -23,7 +23,7 @@
 | **Method-window surfacing + Execution Stitching v1.1 calibration** | Achieved in bounded Ask scope; conservative truthful partial/non-stitched behavior preserved |
 | **Assist Layer v2 Ask activation (output-shape only)** | **COMPLETE** — diagnostics + `assist_v2.answer/evidence/gaps/next_steps`; no retrieval/governance/routing/execution changes |
 | **Assist Layer v2 (Ask + Debug + Investigate Bridge)** | **COMPLETE and invariant-safe** — Ask selection, Debug inspection, deterministic grounded handoff; no routing/governance/execution drift |
-| **Assist v2 API contract freeze + deploy gate pack** | **COMPLETE** — `docs/validation/ASSIST_V2_API_CONTRACT_FREEZE_V1.md` + `runtime/scripts/assist_v2_http_deploy_gate.py` + tests + runbook + phase report; WSL strict gate evidence: `TestRunEvals/assist_v2_http_deploy_gate.deploy.json` |
+| **Assist v2 API contract freeze + deploy gate pack** | **COMPLETE** — `docs/validation/ASSIST_V2_API_CONTRACT_FREEZE_V1.md` + `runtime/scripts/assist_v2_http_deploy_gate.py` + tests + runbook + phase report; WSL strict gate evidence: `TestRunEvals/assist_v2_http_deploy_gate.deploy.json`; remote-via-tunnel verification record: `docs/validation/ASSIST_V2_DEPLOY_GATE_WSL_TUNNEL_VERIFICATION.md` |
 | **Ask v1 evidence quality parity** | `108aabb` on `main`; `POST /v1/ask` uses grounding for `assess_evidence_quality` |
 | **Behavior baseline promotion** | `MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5 + `MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` |
 | **Layer-1 / L2 / L4 milestone tables (declared rows)** | **LOCKED** or **COMPLETE** per §2.1; layer rollups per §2.1.1; details §4.1–§4.4 |

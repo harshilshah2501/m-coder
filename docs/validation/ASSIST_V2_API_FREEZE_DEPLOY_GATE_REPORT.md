@@ -72,6 +72,12 @@ No changes were made to:
 - execution behavior
 - plugin/UI code
 
+## Lane 5 — Remote verification via WSL SSH tunnel
+
+When Plan-Gate runs on a remote host, strict gate runs from **WSL** often use **`http://127.0.0.1:8089`** as the **local SSH tunnel bind**, not a separate on-box Plan-Gate. Evidence, commands, and conclusion for that pattern:
+
+- `docs/validation/ASSIST_V2_DEPLOY_GATE_WSL_TUNNEL_VERIFICATION.md`
+
 ## Outcome
 
 This phase adds deploy-grade contract hardening and regression gates without expanding product behavior scope. It is a freeze-and-verify batch, not a feature expansion batch.

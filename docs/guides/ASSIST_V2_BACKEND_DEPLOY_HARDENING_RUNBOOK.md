@@ -73,7 +73,15 @@ python3 runtime/scripts/assist_v2_http_deploy_gate.py \
 
 Use only for local smoke where graph stack is intentionally unavailable.
 
-### 4.3 Deep slice behavior verification (WSL/staging)
+### 4.3 WSL + SSH tunnel: strict gate against remote Plan-Gate
+
+If Plan-Gate is on a **remote** host, start the tunnel per `scripts/wsl_plugin_mvp_stack.sh` (`ENABLE_SSH_TUNNEL=1`, `PLAN_GATE_URL=http://127.0.0.1:8089`, etc.). Then run the **same strict gate** as §4.1; the local URL is the tunnel endpoint.
+
+Full objective, commands, observed results, and conclusion:
+
+- `docs/validation/ASSIST_V2_DEPLOY_GATE_WSL_TUNNEL_VERIFICATION.md`
+
+### 4.4 Deep slice behavior verification (WSL/staging)
 
 Use canonical commands from:
 
@@ -115,6 +123,7 @@ git checkout <known_good_tag_or_commit>
 - Deploy gate outputs:
   - `runtime/.run/assist_v2_http_deploy_gate.deploy.json`
   - `runtime/.run/assist_v2_http_deploy_gate.local.json`
+  - `runtime/.run/assist_v2_http_deploy_gate.staging.json` (example name for tunnel/remote strict runs; often gitignored — copy to `TestRunEvals/` to retain)
 - Behavior verification outputs:
   - `runtime/.run/motadata_behavior_validation.ask.deep.json`
   - `runtime/.run/motadata_behavior_validation.debug.deep.json`
