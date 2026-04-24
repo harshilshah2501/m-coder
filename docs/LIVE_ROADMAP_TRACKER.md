@@ -63,6 +63,13 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Out of scope for Assist v2 Ask/Debug/Investigate Bridge completion:** model upgrades (Qwen3 or similar), retrieval redesign, multi-hop tracing, auto-debug/auto-fix, and Plan/Code productization.
 - Treat these as follow-on phases only; current Assist v2 completion is closure-scoped and invariant-safe.
 
+### Acting System (Stage 3) status clarification (discovery lane)
+
+- **Status:** **Discovery Only** for future acting-system expansion.
+- **Current system remains:** governed **thinking/proposal** system (planning artifacts, bounded contracts, policy-first posture).
+- **Explicit boundary:** Stage 3 execution integration and mutation-capable behavior remain **out of scope** until explicit approval.
+- **No-go baseline during discovery:** no runtime behavior changes, no schema rewires, no execution-path authority expansion.
+
 ---
 
 ## 1. Header
