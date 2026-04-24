@@ -19,6 +19,7 @@ from runtime.ask_service.v1_ingest import (
     handle_ask_v1_request,
     validate_ask_v1_request,
 )
+from runtime.ask_service.plan_contract_builder import PlanContractBuildResult
 from runtime.ask_service.reasoner import ExplainDebugResult
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -134,6 +135,45 @@ def test_handle_ask_v1_happy_path_plan_only():
     cbp = md.get("context_budget_policy") or {}
     assert cbp.get("policy_version") == "context_budget_policy.v1"
     assert cbp.get("surface") == "ask"
+    assert "plan_contract" not in resp
+
+
+def test_handle_ask_v1_optin_emits_plan_contract_when_valid():
+    ev = _load_golden_evidence()
+    req = _minimal_v1_ask(
+        ev,
+        revision="client-sha-1",
+        response_extensions=["plan_contract.v1"],
+    )
+    resp = handle_ask_v1_request(req)
+    assert resp["schema_version"] == "plan_only_response.v0.1"
+    assert resp["governance_posture"] == "PLAN_ONLY"
+    assert resp["execution"] is False
+    pc = resp.get("plan_contract")
+    assert isinstance(pc, dict)
+    assert pc.get("schema_version") == "plan_contract.v1"
+    pc_meta = (resp.get("metadata") or {}).get("plan_contract_v1") or {}
+    assert pc_meta.get("requested") is True
+    assert pc_meta.get("emitted") is True
+
+
+def test_handle_ask_v1_optin_omits_plan_contract_when_builder_omits(monkeypatch: pytest.MonkeyPatch):
+    ev = _load_golden_evidence()
+    req = _minimal_v1_ask(
+        ev,
+        response_extensions=["plan_contract.v1"],
+    )
+
+    monkeypatch.setattr(
+        "runtime.ask_service.v1_ingest.build_plan_contract_v1",
+        lambda **_k: PlanContractBuildResult(plan_contract=None, omission_reason="missing_metadata:evidence_quality"),
+    )
+    resp = handle_ask_v1_request(req)
+    assert "plan_contract" not in resp
+    pc_meta = (resp.get("metadata") or {}).get("plan_contract_v1") or {}
+    assert pc_meta.get("requested") is True
+    assert pc_meta.get("emitted") is False
+    assert pc_meta.get("omission_reason") == "missing_metadata:evidence_quality"
 
 
 def test_handle_ask_v1_dirty_buffer_overlay_reaches_reasoner_bundle():
@@ -433,6 +473,7 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
         assert response.get("evidence_first_meta", {}).get("ask_path") == "v1_evidence"
         assert response.get("governance_posture") == "PLAN_ONLY"
         assert response.get("execution") is False
+        assert "plan_contract" not in response
         assist = response.get("assist_layer") if isinstance(response.get("assist_layer"), dict) else {}
         assist_v2 = assist.get("assist_v2") if isinstance(assist.get("assist_v2"), dict) else {}
         for key in ("answer", "evidence", "gaps", "next_steps"):
@@ -443,6 +484,29 @@ def test_ask_v1_via_plan_gate_http(tmp_path):
         assert hooks.get("execution_path_stitched") == md.get("execution_path_stitched")
         assert hooks.get("call_site_resolution_state") == md.get("call_site_resolution_state")
         assert hooks.get("method_window_visible_rate") == md.get("method_window_visible_rate")
+
+        body_optin = json.dumps(
+            _minimal_v1_ask(
+                _load_golden_evidence(),
+                request_id="http-v1-optin",
+                response_extensions=["plan_contract.v1"],
+            )
+        ).encode("utf-8")
+        req_optin = urllib.request.Request(
+            f"{base}/v1/ask",
+            data=body_optin,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req_optin, timeout=10) as r:
+            assert r.status == 200
+            optin_resp = json.loads(r.read().decode("utf-8"))
+        assert optin_resp.get("schema_version") == "plan_only_response.v0.1"
+        assert optin_resp.get("governance_posture") == "PLAN_ONLY"
+        assert optin_resp.get("execution") is False
+        pc = optin_resp.get("plan_contract")
+        assert isinstance(pc, dict)
+        assert pc.get("schema_version") == "plan_contract.v1"
 
         bad = json.dumps(_minimal_v1_ask(_load_golden_evidence(), evidence_bundle={"bad": True})).encode(
             "utf-8"

@@ -35,6 +35,7 @@ from .context_budget import (
 )
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
+from .plan_contract_builder import build_plan_contract_v1
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 
@@ -112,6 +113,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     request_id = str(ask_request.get("request_id", ""))
     trace_id = str(ask_request.get("trace_id") or "").strip()
     task_type = ask_request.get("task_type") or "general"
+    response_extensions = ask_request.get("response_extensions")
+    extension_set = set(response_extensions) if isinstance(response_extensions, list) else set()
+    want_plan_contract = "plan_contract.v1" in extension_set
     LOG.info(
         "[ASK_V1] trace_id=%s request_id=%s task_type=%s",
         trace_id or "(none)",
@@ -256,12 +260,30 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         "context_source": "layer5.evidence_bundle.v1",
         "no_repo_filesystem": True,
     }
+
+    def _maybe_build_plan_contract(current_steps: List[str], current_metadata: Dict[str, Any]) -> Dict[str, Any] | None:
+        if not want_plan_contract:
+            return None
+        result = build_plan_contract_v1(
+            query=query,
+            plan_steps=current_steps,
+            metadata=current_metadata,
+            evidence_bundle=evidence_bundle,
+        )
+        current_metadata["plan_contract_v1"] = {
+            "requested": True,
+            "emitted": result.plan_contract is not None,
+            "omission_reason": result.omission_reason,
+        }
+        return result.plan_contract
+
     if quality.blocked and not skip_grounding_block_for_explain_debug:
         block_message = (
             "No context files matched relevant code evidence for this ask."
             if quality.evidence_quality == NO_MATCH
             else "No context files matched enough grounded evidence; plan steps are ungrounded."
         )
+        plan_contract = _maybe_build_plan_contract([], metadata)
         return _build_plan_only_response(
             request_id=request_id,
             bundle=bundle,
@@ -277,6 +299,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             metadata=metadata,
             routing_mode="plan_only",
             trace_id=trace_id or None,
+            plan_contract=plan_contract,
         )
 
     if quality.blocked and skip_grounding_block_for_explain_debug:
@@ -383,6 +406,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             "or ask again with a concrete class/method symbol (e.g. AlertCorrelationEngine.start)."
         )
 
+    plan_contract = _maybe_build_plan_contract(plan_steps, metadata)
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
@@ -398,4 +422,5 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         metadata=metadata,
         routing_mode=routing_mode,
         trace_id=trace_id or None,
+        plan_contract=plan_contract,
     )

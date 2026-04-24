@@ -26,7 +26,10 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from runtime.scripts.assist_v2_http_deploy_gate import _weak_evidence_v1
+from runtime.scripts.assist_v2_http_deploy_gate import (
+    _strong_owner_method_evidence_v1,
+    _weak_evidence_v1,
+)
 from runtime.scripts.motadata_behavior_verify import _graph_preflight
 
 VALID_PLAN_DECISIONS = frozenset({"APPROVE", "CONDITIONAL_BLOCK", "REFUSAL", "BOUNDING"})
@@ -227,7 +230,7 @@ def run_gate(
     out["checks"]["execute_privileged_blocked"] = {"pass": not priv_errors, "errors": priv_errors}
     out["errors"].extend(priv_errors)
 
-    # --- /v1/ask: plan-only surface (no new plan_contract fields required) ---
+    # --- /v1/ask: default plan-only surface (no opt-in => no plan_contract) ---
     try:
         ask_resp = _post_json(
             f"{base}/v1/ask",
@@ -264,6 +267,84 @@ def run_gate(
     )
     out["checks"]["ask_v1_plan_only_surface"] = {"pass": not ask_errors, "errors": ask_errors}
     out["errors"].extend(ask_errors)
+
+    ask_default_errors = _assert(
+        [
+            ("plan_contract" not in ask_resp, "ask v1 default: plan_contract must be absent without opt-in"),
+        ]
+    )
+    out["checks"]["ask_v1_default_no_plan_contract"] = {"pass": not ask_default_errors, "errors": ask_default_errors}
+    out["errors"].extend(ask_default_errors)
+
+    # --- /v1/ask: opt-in plan_contract must be emitted when build succeeds ---
+    try:
+        ask_optin_resp = _post_json(
+            f"{base}/v1/ask",
+            {
+                "schema_version": "ask_request.v1.0",
+                "request_id": str(uuid.uuid4()),
+                "timestamp_utc": _utc_now(),
+                "query": "Where is ServiceNow incident synchronization implemented?",
+                "evidence_bundle": _strong_owner_method_evidence_v1(),
+                "response_extensions": ["plan_contract.v1"],
+            },
+            timeout_s,
+        )
+    except Exception as exc:  # pragma: no cover
+        out["errors"].append(f"ask v1 opt-in: {exc}")
+        ask_optin_resp = {}
+
+    ask_optin_errors = _assert(
+        [
+            (ask_optin_resp.get("schema_version") == "plan_only_response.v0.1", "ask v1 opt-in: schema_version drift"),
+            (ask_optin_resp.get("governance_posture") == "PLAN_ONLY", "ask v1 opt-in: governance_posture must be PLAN_ONLY"),
+            (ask_optin_resp.get("execution") is False, "ask v1 opt-in: execution must be false"),
+            (isinstance(ask_optin_resp.get("plan_contract"), dict), "ask v1 opt-in: plan_contract missing"),
+            ((ask_optin_resp.get("plan_contract") or {}).get("schema_version") == "plan_contract.v1", "ask v1 opt-in: plan_contract schema_version drift"),
+        ]
+    )
+    out["checks"]["ask_v1_optin_plan_contract_present"] = {"pass": not ask_optin_errors, "errors": ask_optin_errors}
+    out["errors"].extend(ask_optin_errors)
+
+    # --- /v1/ask: opt-in weak probe supports omission with diagnostic ---
+    try:
+        ask_optin_weak_resp = _post_json(
+            f"{base}/v1/ask",
+            {
+                "schema_version": "ask_request.v1.0",
+                "request_id": str(uuid.uuid4()),
+                "timestamp_utc": _utc_now(),
+                "query": "in this system",
+                "evidence_bundle": _weak_evidence_v1(),
+                "response_extensions": ["plan_contract.v1"],
+            },
+            timeout_s,
+        )
+    except Exception as exc:  # pragma: no cover
+        out["errors"].append(f"ask v1 opt-in weak: {exc}")
+        ask_optin_weak_resp = {}
+
+    omission_meta = ((ask_optin_weak_resp.get("metadata") or {}).get("plan_contract_v1") or {}) if isinstance(
+        ask_optin_weak_resp.get("metadata"), dict
+    ) else {}
+    omitted = "plan_contract" not in ask_optin_weak_resp
+    ask_optin_diag_errors = _assert(
+        [
+            (ask_optin_weak_resp.get("schema_version") == "plan_only_response.v0.1", "ask v1 opt-in weak: schema_version drift"),
+            (ask_optin_weak_resp.get("governance_posture") == "PLAN_ONLY", "ask v1 opt-in weak: governance_posture must be PLAN_ONLY"),
+            (ask_optin_weak_resp.get("execution") is False, "ask v1 opt-in weak: execution must be false"),
+            (
+                (not omitted)
+                or (
+                    isinstance(omission_meta.get("omission_reason"), str)
+                    and bool(str(omission_meta.get("omission_reason")).strip())
+                ),
+                "ask v1 opt-in weak: when plan_contract is omitted, metadata.plan_contract_v1.omission_reason must be present",
+            )
+        ]
+    )
+    out["checks"]["ask_v1_optin_omission_diagnostic"] = {"pass": not ask_optin_diag_errors, "errors": ask_optin_diag_errors}
+    out["errors"].extend(ask_optin_diag_errors)
 
     preflight = _graph_preflight()
     preflight_errors: list[str] = []

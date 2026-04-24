@@ -10,7 +10,10 @@ Provide a **single-command HTTP smoke** against **existing** Plan-Gate surfaces:
 
 - **`POST /v0/plan`** — shadow PR merge + shadow doc update; asserts governed **`decision_response.v0.1`** shape and decision enum.
 - **`POST /v0/execute`** — safe echo (coherent `outcome` vs `executed`), destructive `rm` probe (**must** `REFUSED` or `BLOCKED`, **`executed: false`** — some stacks classify the pattern as refusal rather than “blocked by policy”); privileged probe (**must** `REFUSED` or `BLOCKED`).
-- **`POST /v1/ask`** — weak-evidence probe; asserts **`plan_only_response.v0.1`**, **`PLAN_ONLY`**, **`execution=false`**, and a **visible plan surface** via at least one of: non-empty **`plan_summary.steps`**, non-empty **`plan_summary.notes`**, or non-empty **`ui.message`** (empty steps alone are allowed when the UI or notes still explain the plan-only outcome).
+- **`POST /v1/ask`** — default weak-evidence probe asserts **`plan_only_response.v0.1`**, **`PLAN_ONLY`**, **`execution=false`**, and a **visible plan surface** via at least one of: non-empty **`plan_summary.steps`**, non-empty **`plan_summary.notes`**, or non-empty **`ui.message`** (empty steps alone are allowed when the UI or notes still explain the plan-only outcome).
+- **`POST /v1/ask`** with **`response_extensions=["plan_contract.v1"]`**:
+  - strong evidence probe: `plan_contract` must be present with `schema_version=plan_contract.v1`
+  - weak evidence probe: `plan_contract` may be present; if omitted, `metadata.plan_contract_v1.omission_reason` must be present.
 
 **Does not** assert or require **`plan_contract`** / **`code_reasoning_trace`** on Ask responses (next wiring lane).
 
