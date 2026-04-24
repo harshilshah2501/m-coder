@@ -50,7 +50,45 @@ def _ask_resp() -> dict:
         "execution": False,
         "context_bundle": {"revision": "r", "files": [], "selectors_used": []},
         "plan_summary": {"steps": ["step one"], "notes": []},
+        "ui": {"title": "t", "message": "m", "severity": "info"},
     }
+
+
+def _ask_empty_steps_with_ui() -> dict:
+    """WSL-like: empty plan steps with UI message (weak / grounded-block paths)."""
+    r = _ask_resp()
+    r["plan_summary"] = {"steps": [], "notes": []}
+    return r
+
+
+def test_ask_allows_empty_steps_when_ui_or_notes_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    responses = iter(
+        [
+            _plan_resp("BOUNDING"),
+            _plan_resp("APPROVE"),
+            _execute_resp("EXECUTED", True),
+            _execute_resp("REFUSED", False),
+            _execute_resp("REFUSED", False),
+            _ask_empty_steps_with_ui(),
+        ]
+    )
+    monkeypatch.setattr(gate, "_post_json", lambda *_a, **_k: next(responses))
+    monkeypatch.setattr(
+        gate,
+        "_graph_preflight",
+        lambda: {"state": "COMPLETE", "reason": "ok"},
+    )
+    out = gate.run_gate(
+        "http://127.0.0.1:8089",
+        workspace_root="/tmp/ws",
+        timeout_s=5,
+        require_graph_preflight=True,
+        ledger_path=None,
+    )
+    assert out["all_pass"] is True
+    assert out["checks"]["ask_v1_plan_only_surface"]["pass"] is True
 
 
 def test_run_plan_code_gate_all_pass(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -59,7 +97,7 @@ def test_run_plan_code_gate_all_pass(monkeypatch: pytest.MonkeyPatch) -> None:
             _plan_resp("BOUNDING"),
             _plan_resp("APPROVE"),
             _execute_resp("EXECUTED", True, decision_ledger_row_id="ldg-1", ledger_row_id="lx-1"),
-            _execute_resp("BLOCKED", False),
+            _execute_resp("REFUSED", False),
             _execute_resp("REFUSED", False),
             _ask_resp(),
         ]
@@ -91,7 +129,7 @@ def test_graph_preflight_strict_failure(monkeypatch: pytest.MonkeyPatch) -> None
             _plan_resp(),
             _plan_resp(),
             _execute_resp("EXECUTED", True),
-            _execute_resp("BLOCKED", False),
+            _execute_resp("REFUSED", False),
             _execute_resp("REFUSED", False),
             _ask_resp(),
         ]
@@ -114,7 +152,7 @@ def test_script_main_writes_output(tmp_path: Path, monkeypatch: pytest.MonkeyPat
             _plan_resp(),
             _plan_resp(),
             _execute_resp("EXECUTED", True),
-            _execute_resp("BLOCKED", False),
+            _execute_resp("REFUSED", False),
             _execute_resp("REFUSED", False),
             _ask_resp(),
         ]

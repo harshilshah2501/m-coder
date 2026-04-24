@@ -194,10 +194,11 @@ def run_gate(
         out["errors"].append(f"execute rm: {exc}")
         rm_resp = {}
 
+    rm_out = str(rm_resp.get("outcome") or "")
     rm_errors = _assert(
         [
             (rm_resp.get("schema_version") == "execute_response.v0.1", "execute rm: schema_version drift"),
-            (rm_resp.get("outcome") == "BLOCKED", f"execute rm: expected BLOCKED got {rm_resp.get('outcome')!r}"),
+            (rm_out in ("BLOCKED", "REFUSED"), f"execute rm: expected BLOCKED or REFUSED got {rm_out!r}"),
             (rm_resp.get("executed") is False, "execute rm: executed must be false"),
         ]
     )
@@ -243,14 +244,22 @@ def run_gate(
         out["errors"].append(f"ask v1: {exc}")
         ask_resp = {}
 
+    ps = ask_resp.get("plan_summary")
+    step_list = (ps or {}).get("steps") if isinstance(ps, dict) else None
+    note_list = (ps or {}).get("notes") if isinstance(ps, dict) else None
+    ui = ask_resp.get("ui")
+    ui_msg = str(ui.get("message") or "").strip() if isinstance(ui, dict) else ""
+    n_steps = len(step_list) if isinstance(step_list, list) else -1
+    n_notes = len(note_list) if isinstance(note_list, list) else -1
+    has_visible_surface = (n_steps >= 1) or (n_notes >= 1) or bool(ui_msg)
     ask_errors = _assert(
         [
             (ask_resp.get("schema_version") == "plan_only_response.v0.1", "ask v1: schema_version drift"),
             (ask_resp.get("governance_posture") == "PLAN_ONLY", "ask v1: governance_posture must be PLAN_ONLY"),
             (ask_resp.get("execution") is False, "ask v1: execution must be false"),
             (isinstance(ask_resp.get("plan_summary"), dict), "ask v1: plan_summary missing"),
-            (isinstance((ask_resp.get("plan_summary") or {}).get("steps"), list), "ask v1: plan_summary.steps missing"),
-            (len((ask_resp.get("plan_summary") or {}).get("steps") or []) >= 1, "ask v1: plan_summary.steps must be non-empty"),
+            (isinstance(step_list, list), "ask v1: plan_summary.steps must be a list when present"),
+            (has_visible_surface, "ask v1: need plan_summary.steps, plan_summary.notes, or ui.message for a visible plan surface"),
         ]
     )
     out["checks"]["ask_v1_plan_only_surface"] = {"pass": not ask_errors, "errors": ask_errors}

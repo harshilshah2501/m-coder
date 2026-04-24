@@ -9,8 +9,8 @@ Tests: `runtime/tests/test_plan_code_http_deploy_gate.py`
 Provide a **single-command HTTP smoke** against **existing** Plan-Gate surfaces:
 
 - **`POST /v0/plan`** — shadow PR merge + shadow doc update; asserts governed **`decision_response.v0.1`** shape and decision enum.
-- **`POST /v0/execute`** — safe echo (coherent `outcome` vs `executed`), destructive `rm` probe (**must** `BLOCKED`), privileged probe (**must** `REFUSED` or `BLOCKED`).
-- **`POST /v1/ask`** — weak-evidence probe; asserts **`plan_only_response.v0.1`**, **`PLAN_ONLY`**, **`execution=false`**, non-empty **`plan_summary.steps`**.
+- **`POST /v0/execute`** — safe echo (coherent `outcome` vs `executed`), destructive `rm` probe (**must** `REFUSED` or `BLOCKED`, **`executed: false`** — some stacks classify the pattern as refusal rather than “blocked by policy”); privileged probe (**must** `REFUSED` or `BLOCKED`).
+- **`POST /v1/ask`** — weak-evidence probe; asserts **`plan_only_response.v0.1`**, **`PLAN_ONLY`**, **`execution=false`**, and a **visible plan surface** via at least one of: non-empty **`plan_summary.steps`**, non-empty **`plan_summary.notes`**, or non-empty **`ui.message`** (empty steps alone are allowed when the UI or notes still explain the plan-only outcome).
 
 **Does not** assert or require **`plan_contract`** / **`code_reasoning_trace`** on Ask responses (next wiring lane).
 
