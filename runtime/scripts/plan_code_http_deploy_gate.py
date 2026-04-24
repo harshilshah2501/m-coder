@@ -290,6 +290,7 @@ def run_gate(
         [
             ("plan_contract" not in ask_resp, "ask v1 default: plan_contract must be absent without opt-in"),
             ("code_reasoning_trace" not in ask_resp, "ask v1 default: code_reasoning_trace must be absent without opt-in"),
+            ("patch_proposal" not in ask_resp, "ask v1 default: patch_proposal must be absent without opt-in"),
         ]
     )
     out["checks"]["ask_v1_default_no_plan_contract"] = {"pass": not ask_default_errors, "errors": ask_default_errors}
@@ -356,6 +357,47 @@ def run_gate(
     out["checks"]["ask_v1_paired_optin_trace_present"] = {"pass": not ask_trace_errors, "errors": ask_trace_errors}
     out["errors"].extend(ask_trace_errors)
 
+    # --- /v1/ask: triple opt-in (plan + trace + patch_proposal) ---
+    try:
+        ask_patch_resp = _post_json(
+            f"{base}/v1/ask",
+            {
+                "schema_version": "ask_request.v1.0",
+                "request_id": str(uuid.uuid4()),
+                "timestamp_utc": _utc_now(),
+                "query": "Where is ServiceNow incident synchronization implemented?",
+                "evidence_bundle": _strong_owner_method_evidence_v1(),
+                "response_extensions": [
+                    "plan_contract.v1",
+                    "code_reasoning_trace.v1",
+                    "patch_proposal.v1",
+                ],
+            },
+            timeout_s,
+        )
+    except Exception as exc:  # pragma: no cover
+        out["errors"].append(f"ask v1 patch opt-in: {exc}")
+        ask_patch_resp = {}
+
+    ask_patch_errors = _assert(
+        [
+            (ask_patch_resp.get("schema_version") == "plan_only_response.v0.1", "ask v1 patch opt-in: schema_version drift"),
+            (ask_patch_resp.get("governance_posture") == "PLAN_ONLY", "ask v1 patch opt-in: governance_posture must be PLAN_ONLY"),
+            (ask_patch_resp.get("execution") is False, "ask v1 patch opt-in: execution must be false"),
+            (isinstance(ask_patch_resp.get("plan_contract"), dict), "ask v1 patch opt-in: plan_contract missing"),
+            (isinstance(ask_patch_resp.get("code_reasoning_trace"), dict), "ask v1 patch opt-in: code_reasoning_trace missing"),
+            (isinstance(ask_patch_resp.get("patch_proposal"), dict), "ask v1 patch opt-in: patch_proposal missing"),
+            ((ask_patch_resp.get("patch_proposal") or {}).get("schema_version") == "patch_proposal.v1", "ask v1 patch opt-in: patch_proposal schema_version drift"),
+            (
+                ((ask_patch_resp.get("patch_proposal") or {}).get("review_requirements") or {}).get("human_review_required")
+                is True,
+                "ask v1 patch opt-in: review_requirements.human_review_required must be true",
+            ),
+        ]
+    )
+    out["checks"]["ask_v1_triple_optin_patch_present"] = {"pass": not ask_patch_errors, "errors": ask_patch_errors}
+    out["errors"].extend(ask_patch_errors)
+
     # --- /v1/ask: trace-only opt-in must be rejected by dependency validation ---
     try:
         trace_only_status, trace_only_body = _post_json_with_status(
@@ -383,6 +425,39 @@ def run_gate(
     )
     out["checks"]["ask_v1_trace_only_dependency_rejected"] = {"pass": not ask_trace_dep_errors, "errors": ask_trace_dep_errors}
     out["errors"].extend(ask_trace_dep_errors)
+
+    # --- /v1/ask: patch-only dependency validation (must fail) ---
+    try:
+        patch_only_status, patch_only_body = _post_json_with_status(
+            f"{base}/v1/ask",
+            {
+                "schema_version": "ask_request.v1.0",
+                "request_id": str(uuid.uuid4()),
+                "timestamp_utc": _utc_now(),
+                "query": "Where is ServiceNow incident synchronization implemented?",
+                "evidence_bundle": _strong_owner_method_evidence_v1(),
+                "response_extensions": ["patch_proposal.v1"],
+            },
+            timeout_s,
+        )
+    except Exception as exc:  # pragma: no cover
+        out["errors"].append(f"ask v1 patch-only: {exc}")
+        patch_only_status, patch_only_body = 0, {}
+    patch_only_details = patch_only_body.get("details")
+    patch_only_blob = (
+        " ".join(str(x) for x in patch_only_details)
+        if isinstance(patch_only_details, list)
+        else str(patch_only_details or "")
+    )
+    ask_patch_dep_errors = _assert(
+        [
+            (patch_only_status == 400, f"ask v1 patch-only: expected HTTP 400 got {patch_only_status}"),
+            ("patch_proposal.v1 requires plan_contract.v1" in patch_only_blob, "ask v1 patch-only: expected plan dependency message"),
+            ("patch_proposal.v1 requires code_reasoning_trace.v1" in patch_only_blob, "ask v1 patch-only: expected trace dependency message"),
+        ]
+    )
+    out["checks"]["ask_v1_patch_only_dependency_rejected"] = {"pass": not ask_patch_dep_errors, "errors": ask_patch_dep_errors}
+    out["errors"].extend(ask_patch_dep_errors)
 
     # --- /v1/ask: paired opt-in weak probe supports trace omission with diagnostic ---
     try:
@@ -424,6 +499,45 @@ def run_gate(
     )
     out["checks"]["ask_v1_optin_omission_diagnostic"] = {"pass": not ask_optin_diag_errors, "errors": ask_optin_diag_errors}
     out["errors"].extend(ask_optin_diag_errors)
+
+    # --- /v1/ask: triple opt-in weak probe supports patch omission with diagnostic ---
+    try:
+        ask_patch_weak_resp = _post_json(
+            f"{base}/v1/ask",
+            {
+                "schema_version": "ask_request.v1.0",
+                "request_id": str(uuid.uuid4()),
+                "timestamp_utc": _utc_now(),
+                "query": "in this system",
+                "evidence_bundle": _weak_evidence_v1(),
+                "response_extensions": ["plan_contract.v1", "code_reasoning_trace.v1", "patch_proposal.v1"],
+            },
+            timeout_s,
+        )
+    except Exception as exc:  # pragma: no cover
+        out["errors"].append(f"ask v1 patch opt-in weak: {exc}")
+        ask_patch_weak_resp = {}
+    patch_omission_meta = ((ask_patch_weak_resp.get("metadata") or {}).get("patch_proposal_v1") or {}) if isinstance(
+        ask_patch_weak_resp.get("metadata"), dict
+    ) else {}
+    patch_omitted = "patch_proposal" not in ask_patch_weak_resp
+    ask_patch_weak_errors = _assert(
+        [
+            (ask_patch_weak_resp.get("schema_version") == "plan_only_response.v0.1", "ask v1 patch opt-in weak: schema_version drift"),
+            (ask_patch_weak_resp.get("governance_posture") == "PLAN_ONLY", "ask v1 patch opt-in weak: governance_posture must be PLAN_ONLY"),
+            (ask_patch_weak_resp.get("execution") is False, "ask v1 patch opt-in weak: execution must be false"),
+            (
+                (not patch_omitted)
+                or (
+                    isinstance(patch_omission_meta.get("omission_reason"), str)
+                    and bool(str(patch_omission_meta.get("omission_reason")).strip())
+                ),
+                "ask v1 patch opt-in weak: when patch_proposal is omitted, metadata.patch_proposal_v1.omission_reason must be present",
+            ),
+        ]
+    )
+    out["checks"]["ask_v1_patch_optin_omission_diagnostic"] = {"pass": not ask_patch_weak_errors, "errors": ask_patch_weak_errors}
+    out["errors"].extend(ask_patch_weak_errors)
 
     preflight = _graph_preflight()
     preflight_errors: list[str] = []

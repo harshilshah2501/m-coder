@@ -36,6 +36,7 @@ from .context_budget import (
 from .evidence_bridge import context_bundle_from_evidence_dict
 from .handlers import _build_plan_only_response
 from .code_reasoning_trace_builder import build_code_reasoning_trace_v1
+from .patch_proposal_builder import build_patch_proposal_v1
 from .plan_contract_builder import build_plan_contract_v1
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
@@ -83,11 +84,20 @@ def validate_ask_v1_request(data: dict) -> List[str]:
         errs.append(e.message)
     # Extension dependency freeze:
     # code_reasoning_trace.v1 opt-in requires plan_contract.v1 to also be requested.
+    # patch_proposal.v1 opt-in requires both plan_contract.v1 and code_reasoning_trace.v1.
     ext = data.get("response_extensions")
     ext_set = set(ext) if isinstance(ext, list) else set()
     if "code_reasoning_trace.v1" in ext_set and "plan_contract.v1" not in ext_set:
         errs.append(
             "response_extensions dependency error: code_reasoning_trace.v1 requires plan_contract.v1"
+        )
+    if "patch_proposal.v1" in ext_set and "plan_contract.v1" not in ext_set:
+        errs.append(
+            "response_extensions dependency error: patch_proposal.v1 requires plan_contract.v1"
+        )
+    if "patch_proposal.v1" in ext_set and "code_reasoning_trace.v1" not in ext_set:
+        errs.append(
+            "response_extensions dependency error: patch_proposal.v1 requires code_reasoning_trace.v1"
         )
     return errs
 
@@ -126,6 +136,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     extension_set = set(response_extensions) if isinstance(response_extensions, list) else set()
     want_plan_contract = "plan_contract.v1" in extension_set
     want_code_reasoning_trace = "code_reasoning_trace.v1" in extension_set
+    want_patch_proposal = "patch_proposal.v1" in extension_set
     LOG.info(
         "[ASK_V1] trace_id=%s request_id=%s task_type=%s",
         trace_id or "(none)",
@@ -308,6 +319,29 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         }
         return result.code_reasoning_trace
 
+    def _maybe_build_patch_proposal(
+        current_steps: List[str],
+        current_metadata: Dict[str, Any],
+        current_plan_contract: Dict[str, Any] | None,
+        current_code_reasoning_trace: Dict[str, Any] | None,
+    ) -> Dict[str, Any] | None:
+        if not want_patch_proposal:
+            return None
+        result = build_patch_proposal_v1(
+            request_id=request_id,
+            query=query,
+            plan_steps=current_steps,
+            metadata=current_metadata,
+            plan_contract=current_plan_contract,
+            code_reasoning_trace=current_code_reasoning_trace,
+        )
+        current_metadata["patch_proposal_v1"] = {
+            "requested": True,
+            "emitted": result.patch_proposal is not None,
+            "omission_reason": result.omission_reason,
+        }
+        return result.patch_proposal
+
     if quality.blocked and not skip_grounding_block_for_explain_debug:
         block_message = (
             "No context files matched relevant code evidence for this ask."
@@ -316,6 +350,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         )
         plan_contract = _maybe_build_plan_contract([], metadata)
         code_reasoning_trace = _maybe_build_code_reasoning_trace([], metadata, plan_contract)
+        patch_proposal = _maybe_build_patch_proposal([], metadata, plan_contract, code_reasoning_trace)
         return _build_plan_only_response(
             request_id=request_id,
             bundle=bundle,
@@ -333,6 +368,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             trace_id=trace_id or None,
             plan_contract=plan_contract,
             code_reasoning_trace=code_reasoning_trace,
+            patch_proposal=patch_proposal,
         )
 
     if quality.blocked and skip_grounding_block_for_explain_debug:
@@ -441,6 +477,12 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
 
     plan_contract = _maybe_build_plan_contract(plan_steps, metadata)
     code_reasoning_trace = _maybe_build_code_reasoning_trace(plan_steps, metadata, plan_contract)
+    patch_proposal = _maybe_build_patch_proposal(
+        plan_steps,
+        metadata,
+        plan_contract,
+        code_reasoning_trace,
+    )
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
@@ -458,4 +500,5 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         trace_id=trace_id or None,
         plan_contract=plan_contract,
         code_reasoning_trace=code_reasoning_trace,
+        patch_proposal=patch_proposal,
     )

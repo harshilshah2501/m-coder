@@ -251,6 +251,17 @@
         }
       },
       "additionalProperties": true
+    },
+    "patch_proposal": {
+      "type": "object",
+      "description": "Optional additive bounded patch proposal artifact; emitted only for explicit opt-in with valid plan/trace dependencies.",
+      "required": ["schema_version"],
+      "properties": {
+        "schema_version": {
+          "const": "patch_proposal.v1"
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": false
