@@ -139,18 +139,34 @@ Alignment with existing `LedgerEvent` (`runtime/obs/ledger.py`): use **`payload`
 - No “agent writes code” autonomous loop; **patch text** itself is **out of scope** for v1 trace (only **intent** shape).  
 - No retrieval or model changes.
 
-## 10) Lane 4 preview (fixtures only, next)
+## 10) Lane 4 — code reasoning validation fixtures (**implemented**)
 
-Lane 4 SHOULD add **`code_reasoning_trace_validate`** (or equivalent) scenarios with:
+Offline capability **`code_reasoning_trace_validate`** in `docs/validation/motadata_aiops_behavior_scenarios.v1.json`:
 
-- synthetic **`plan_contract`** + **`code_reasoning_trace`** fixtures,
-- structural + ordering + bound checks,
-- refusal/defer paths without HTTP.
+- Synthetic **`plan_contract_fixture`** + **`code_reasoning_trace_fixture`** per row.
+- **`expect.code_reasoning_category`**: `completed_valid_trace` \| `deferred_insufficient_evidence` \| `refused_forbidden_action` \| `failed_patch_bounds_violation` \| `invalid_step_ordering`.
+- Validators: `runtime/code_reasoning/v1_validate.py` — **`validate_code_reasoning_trace_v1`**, **`validate_patch_intent_v1`**, **`validate_code_reasoning_category`**.
+- **`runtime/scripts/motadata_behavior_verify.py`** runs rows without HTTP; graph preflight **`UNREACHABLE`** is ignored when the selected subset is **offline-only** (same as `plan_contract_validate`).
+
+Example:
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --scenarios-only \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id code_reasoning_trace_v1_completed_valid \
+  --scenario-id code_reasoning_trace_v1_deferred_insufficient_evidence \
+  --scenario-id code_reasoning_trace_v1_refused_forbidden_action \
+  --scenario-id code_reasoning_trace_v1_failed_patch_bounds \
+  --scenario-id code_reasoning_trace_v1_invalid_step_ordering \
+  --workspace-root /abs/path/to/Motadata \
+  --print concise
+```
 
 ## 11) Sequence reminder
 
 1. Plan contract freeze ✅  
 2. Plan validation pack (offline) ✅  
 3. **This document — Code reasoning contract design** ✅  
-4. Code reasoning validation fixtures (next)  
+4. Code reasoning validation fixtures (offline) ✅ — §10  
 5. Runtime wiring / HTTP gate (later)

@@ -9,6 +9,7 @@ Validates these capabilities through live endpoints:
   - code    (/v0/execute contract)
   - agent   (no dedicated /v0/agent route; assist metadata on ask)
   - plan_contract_validate  (offline fixture vs docs/validation/PLAN_CONTRACT_FREEZE_V1.md; no /v1/ask)
+  - code_reasoning_trace_validate  (offline plan_contract + code_reasoning_trace fixtures; no HTTP)
 
 Stdout modes:
   - concise: short pass/fail + clipped answers
@@ -42,6 +43,10 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
+from runtime.code_reasoning.v1_validate import (
+    validate_code_reasoning_category,
+    validate_code_reasoning_trace_v1,
+)
 from runtime.plan_contract.v1_validate import (
     validate_plan_contract_category,
     validate_plan_contract_v1,
@@ -2484,6 +2489,51 @@ def _run_scenario_row(
             },
         }
 
+    if cap == "code_reasoning_trace_validate":
+        pc = scenario.get("plan_contract_fixture")
+        tr = scenario.get("code_reasoning_trace_fixture")
+        if not isinstance(pc, dict):
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": ["plan_contract_fixture must be a JSON object"],
+                "expect": expect,
+                "actual_summary": None,
+                "dev_snapshot": None,
+            }
+        if not isinstance(tr, dict):
+            return {
+                "id": sid,
+                "capability": cap,
+                "description": desc,
+                "pass": False,
+                "errors": ["code_reasoning_trace_fixture must be a JSON object"],
+                "expect": expect,
+                "actual_summary": None,
+                "dev_snapshot": None,
+            }
+        cat = expect.get("code_reasoning_category")
+        if isinstance(cat, str) and cat.strip():
+            errors.extend(validate_code_reasoning_category(tr, pc, cat.strip()))
+        elif "code_reasoning_category" in expect:
+            errors.append("code_reasoning_category must be a non-empty string when present")
+        else:
+            errors.extend(validate_code_reasoning_trace_v1(tr, pc))
+        return {
+            "id": sid,
+            "capability": cap,
+            "description": desc,
+            "pass": len(errors) == 0,
+            "errors": errors,
+            "expect": expect,
+            "actual_summary": {
+                "category": cat if isinstance(cat, str) else None,
+            },
+            "dev_snapshot": {"trace_schema": tr.get("schema_version")},
+        }
+
     if cap == "plan_contract_validate":
         fixture = scenario.get("plan_contract_fixture")
         if not isinstance(fixture, dict):
@@ -2624,11 +2674,10 @@ def run_scenario_suite(
     defaults = data.get("defaults") if isinstance(data.get("defaults"), dict) else {}
     tk = int(defaults.get("top_k", top_k))
     subset = _scenarios_subset_for_preflight(data, scenario_ids)
-    only_plan_contract_validate = bool(subset) and all(
-        str(s.get("capability")) == "plan_contract_validate" for s in subset
-    )
+    offline_only_scenarios = frozenset({"plan_contract_validate", "code_reasoning_trace_validate"})
+    offline_only = bool(subset) and all(str(s.get("capability")) in offline_only_scenarios for s in subset)
     preflight = _graph_preflight()
-    if preflight.get("state") == "UNREACHABLE" and not only_plan_contract_validate:
+    if preflight.get("state") == "UNREACHABLE" and not offline_only:
         return {
             "file": str(scenarios_path),
             "all_pass": False,

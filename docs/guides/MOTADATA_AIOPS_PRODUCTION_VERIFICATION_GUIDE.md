@@ -197,7 +197,21 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --out runtime/.run/motadata_behavior_validation.plan.deep.json
 ```
 
-**Plan contract v1 (offline fixtures)** — validates `plan_contract.v1` shape and category rules from `PLAN_CONTRACT_FREEZE_V1.md` **without** calling `/v1/ask` (no `plan_contract` in live Ask responses yet). When **only** these `--scenario-id` values are selected, graph preflight may be `UNREACHABLE` and the suite still runs. **Multi-step code reasoning (design only):** `docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md` — future `code_reasoning_trace` / `patch_intent` fixtures (Lane 4), not exercised by this command block.
+**Plan contract v1 (offline fixtures)** — validates `plan_contract.v1` shape and category rules from `PLAN_CONTRACT_FREEZE_V1.md` **without** calling `/v1/ask` (no `plan_contract` in live Ask responses yet). When **only** these `--scenario-id` values are selected, graph preflight may be `UNREACHABLE` and the suite still runs. **Multi-step code reasoning (offline fixtures):** `docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md` — run `code_reasoning_trace_validate` rows (no `/v1/ask`); graph optional when **only** these IDs are selected together with `plan_contract_validate` IDs.
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id code_reasoning_trace_v1_completed_valid \
+  --scenario-id code_reasoning_trace_v1_deferred_insufficient_evidence \
+  --scenario-id code_reasoning_trace_v1_refused_forbidden_action \
+  --scenario-id code_reasoning_trace_v1_failed_patch_bounds \
+  --scenario-id code_reasoning_trace_v1_invalid_step_ordering \
+  --scenarios-only \
+  --print concise \
+  --out runtime/.run/motadata_behavior_validation.code_reasoning_trace_v1.json
+```
 
 ```bash
 python3 runtime/scripts/motadata_behavior_verify.py \

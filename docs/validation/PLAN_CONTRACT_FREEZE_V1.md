@@ -204,4 +204,5 @@ Exact JSON fixtures and verifier assertions are **in scope** for Lane 2 as above
 
 - **Lane 2 (done):** offline **`plan_contract_validate`** pack — see §6.
 - **Lane 3 (design):** multi-step code reasoning — **`docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md`** (`code_reasoning_trace.v1`, `patch_intent.v1`; no runtime).
-- **Lane 4+:** code reasoning validation fixtures, then HTTP/runtime gate.
+- **Lane 4 (done offline):** `code_reasoning_trace_validate` + `runtime/code_reasoning/v1_validate.py` — see `CODE_REASONING_CONTRACT_DESIGN_V1.md` §10.
+- **Lane 5+:** HTTP/runtime gate and `/v1/ask` wiring when schema policy allows.

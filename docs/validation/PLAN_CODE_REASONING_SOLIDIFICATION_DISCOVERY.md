@@ -119,15 +119,15 @@ Work **small PR-sized slices** on `plan-code-reasoning-solidification`; merge to
 
 3. **Lane 3 — Multi-step Code reasoning design** — **Delivered (design-only):** `docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md` (`code_reasoning_trace.v1`, step kinds, bounds, `patch_intent.v1`, terminal/refusal, ledger hook names, handoff rules from `plan_contract`). **No** runtime or HTTP changes.
 
-4. **Lane 4 — Code validation / deploy gate**  
-   - Implement HTTP gate script + `runtime/tests/test_*` with `http.server` stubs (pattern from Assist v2 gate tests).  
-   - Include: Plan shape, refusal correctness, proposal boundedness, `execution=false`, and any **ledger** fields already returned on execute/ask diagnostics.
+4. **Lane 4 — Code reasoning validation fixtures** — **Delivered (offline):** `code_reasoning_trace_validate` scenarios + `runtime/code_reasoning/v1_validate.py` + verifier wiring (see `CODE_REASONING_CONTRACT_DESIGN_V1.md` §10). **HTTP / deploy gate** for Code reasoning remains **next** (separate slice from offline fixtures).
 
-5. **Lane 5 — Docs/tracker sync**  
-   - Phase report `docs/validation/PLAN_CODE_REASONING_SOLIDIFICATION_REPORT.md` on closure.  
-   - Update `docs/LIVE_ROADMAP_TRACKER.md` rows for **Plan/Code validation expansion** and **current focus** when Lane 1–2 land.
+5. **Lane 5 — Docs/tracker / phase report**  
+   - Phase report `docs/validation/PLAN_CODE_REASONING_SOLIDIFICATION_REPORT.md` on closure (optional batch).  
+   - Tracker rows updated incrementally with Lanes 1–4.
 
-**Dependency order:** Lane 1 before 2 and 5; Lane 3 can proceed in parallel with 2 once Ask/Stage3 boundaries are written; Lane 4 last or parallel after 1–3 have frozen shapes.
+6. **Lane 6 (next engineering)** — HTTP/runtime **Plan+Code reasoning deploy gate** (separate from offline fixtures).
+
+**Dependency order:** Lanes 1–4 are sequential for contract truth; HTTP/runtime gate (Lane 6) only after offline validators stay green.
 
 ---
 
