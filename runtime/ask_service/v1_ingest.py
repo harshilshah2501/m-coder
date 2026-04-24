@@ -80,6 +80,14 @@ def validate_ask_v1_request(data: dict) -> List[str]:
     errs: List[str] = []
     for e in jsonschema.Draft7Validator(schema).iter_errors(data):
         errs.append(e.message)
+    # Extension dependency freeze:
+    # code_reasoning_trace.v1 opt-in requires plan_contract.v1 to also be requested.
+    ext = data.get("response_extensions")
+    ext_set = set(ext) if isinstance(ext, list) else set()
+    if "code_reasoning_trace.v1" in ext_set and "plan_contract.v1" not in ext_set:
+        errs.append(
+            "response_extensions dependency error: code_reasoning_trace.v1 requires plan_contract.v1"
+        )
     return errs
 
 

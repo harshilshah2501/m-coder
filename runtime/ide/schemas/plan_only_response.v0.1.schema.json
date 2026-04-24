@@ -240,6 +240,17 @@
         }
       },
       "additionalProperties": true
+    },
+    "code_reasoning_trace": {
+      "type": "object",
+      "description": "Optional additive code reasoning trace artifact; emitted only for explicit opt-in with valid plan_contract dependency.",
+      "required": ["schema_version"],
+      "properties": {
+        "schema_version": {
+          "const": "code_reasoning_trace.v1"
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": false

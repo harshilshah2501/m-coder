@@ -90,6 +90,25 @@ def test_validate_ask_v1_request_rejects_unknown_response_extensions():
     assert errs
 
 
+def test_validate_ask_v1_request_rejects_trace_extension_without_plan_contract():
+    data = _minimal_v1_ask(
+        _load_golden_evidence(),
+        response_extensions=["code_reasoning_trace.v1"],
+    )
+    errs = validate_ask_v1_request(data)
+    assert errs
+    assert any("code_reasoning_trace.v1 requires plan_contract.v1" in e for e in errs)
+
+
+def test_validate_ask_v1_request_accepts_trace_extension_with_plan_contract():
+    data = _minimal_v1_ask(
+        _load_golden_evidence(),
+        response_extensions=["plan_contract.v1", "code_reasoning_trace.v1"],
+    )
+    errs = validate_ask_v1_request(data)
+    assert not errs
+
+
 def test_handle_ask_v1_dirty_buffer_noop_invalid_entries_are_noted():
     ev = _load_golden_evidence()
     req = _minimal_v1_ask(

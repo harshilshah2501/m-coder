@@ -87,7 +87,7 @@
       "description": "Optional additive response extensions requested by client. Unsupported values are rejected for deterministic negotiation.",
       "items": {
         "type": "string",
-        "enum": ["plan_contract.v1"]
+        "enum": ["plan_contract.v1", "code_reasoning_trace.v1"]
       },
       "uniqueItems": true
     }
