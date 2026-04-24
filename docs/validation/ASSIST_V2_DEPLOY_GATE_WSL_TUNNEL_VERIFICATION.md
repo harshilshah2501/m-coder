@@ -100,7 +100,7 @@ jq '.all_pass, .errors,
   runtime/.run/assist_v2_http_deploy_gate.staging.json
 ```
 
-Note: `runtime/.run/` is typically gitignored; copy JSON to `TestRunEvals/` (or attach to CI) if you need a durable, repo-stored evidence file.
+Note: `runtime/.run/` is typically gitignored. The strict gate’s `--out` path above is the canonical **working** artifact location (you can also copy the same JSON into `runtime/.run/` if it was produced elsewhere). For a **durable, repo-stored** evidence file, duplicate into `TestRunEvals/` (or attach to CI).
 
 ## 7) Observed results (verification run)
 
