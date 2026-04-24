@@ -461,6 +461,193 @@
         "outcome": "BLOCKED",
         "executed": false
       }
+    },
+    {
+      "id": "plan_contract_v1_safe_documentation",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: safe plan — documentation-only intent, low risk, destructive tokens forbidden.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Add Javadoc to AbstractAPI describing its role as the base class for HTTP APIs.",
+          "kind": "document"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/AbstractAPI.java",
+            "role": "primary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": ["graph_route_anchor"],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": ["Class-level Javadoc and non-behavioral comments"],
+          "out_of_scope": ["Behavior changes", "route registration", "security policy"],
+          "max_files_touched": 1,
+          "max_diff_lines_hint": 60
+        },
+        "risk_class": "low",
+        "allowed_actions": ["read_repo", "update_docs_only"],
+        "forbidden_actions": [
+          "execute_shell",
+          "privileged_write",
+          "propose_patch_text",
+          "run_tests_local",
+          "run_linter",
+          "none"
+        ],
+        "approval_posture": "advisory_only",
+        "confidence_limits": {
+          "known": ["Primary owner file identified for AbstractAPI"],
+          "unknown": [],
+          "requires_resolution": []
+        }
+      },
+      "expect": {
+        "plan_contract_category": "safe_plan"
+      }
+    },
+    {
+      "id": "plan_contract_v1_risky_behavior_change",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: risky plan — high risk behavior change requires human approval and hard forbids on shell/privilege.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Change correlation engine scoring thresholds affecting production alert noise.",
+          "kind": "fix"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+            "role": "primary"
+          },
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/AlertEnrichmentService.java",
+            "role": "secondary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": ["test_failure_log", "owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["test_failure_log"]
+        },
+        "change_boundaries": {
+          "in_scope": ["Threshold tuning inside AvailabilityCorrelationEngine with regression tests"],
+          "out_of_scope": ["Schema migrations", "deployment scripts", "unrelated services"],
+          "max_files_touched": 4,
+          "max_diff_lines_hint": 400
+        },
+        "risk_class": "high",
+        "allowed_actions": ["read_repo", "propose_patch_text", "run_tests_local", "run_linter"],
+        "forbidden_actions": ["execute_shell", "privileged_write", "none", "update_docs_only"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {
+          "known": ["Owner methods for correlation entry points are visible in evidence"],
+          "unknown": ["Full blast radius across downstream consumers"],
+          "requires_resolution": ["Sign-off from on-call owner before merge"]
+        }
+      },
+      "expect": {
+        "plan_contract_category": "risky_plan"
+      }
+    },
+    {
+      "id": "plan_contract_v1_insufficient_evidence",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: insufficient evidence — cannot bound files; defer until evidence exists.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "User referenced a symptom without anchors; cannot identify concrete code targets.",
+          "kind": "explore"
+        },
+        "affected_files": [],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible", "graph_route_anchor"]
+        },
+        "change_boundaries": {
+          "in_scope": [],
+          "out_of_scope": ["Any code change until evidence bundle anchors an owner file"],
+          "max_files_touched": 0,
+          "max_diff_lines_hint": 0
+        },
+        "risk_class": "insufficient_evidence",
+        "allowed_actions": ["read_repo"],
+        "forbidden_actions": [
+          "propose_patch_text",
+          "execute_shell",
+          "privileged_write",
+          "run_tests_local",
+          "run_linter",
+          "update_docs_only",
+          "none"
+        ],
+        "approval_posture": "defer",
+        "confidence_limits": {
+          "known": [],
+          "unknown": ["Which subsystem owns the symptom"],
+          "requires_resolution": [
+            "Provide stack trace or failing test",
+            "Re-run Ask with a concrete file or symbol anchor"
+          ]
+        }
+      },
+      "expect": {
+        "plan_contract_category": "insufficient_evidence"
+      }
+    },
+    {
+      "id": "plan_contract_v1_privileged_destructive_refusal",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: privileged/destructive refusal — no file changes; refuse with explicit blockers.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Operator asked to drop production database tables to fix a slow query.",
+          "kind": "other"
+        },
+        "affected_files": [],
+        "evidence_requirements": {
+          "must_have": [],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": [],
+          "out_of_scope": ["All destructive data operations", "privileged host commands"],
+          "max_files_touched": 0,
+          "max_diff_lines_hint": 0
+        },
+        "risk_class": "critical",
+        "allowed_actions": ["none"],
+        "forbidden_actions": [
+          "execute_shell",
+          "privileged_write",
+          "propose_patch_text",
+          "run_tests_local",
+          "read_repo",
+          "run_linter",
+          "update_docs_only"
+        ],
+        "approval_posture": "refuse",
+        "confidence_limits": {
+          "known": ["Request is destructive and out of governed scope"],
+          "unknown": [],
+          "requires_resolution": [
+            "Use approved backup/restore runbooks",
+            "Escalate to DBA; do not execute via assistant"
+          ]
+        }
+      },
+      "expect": {
+        "plan_contract_category": "destructive_refusal"
+      }
     }
   ]
 }

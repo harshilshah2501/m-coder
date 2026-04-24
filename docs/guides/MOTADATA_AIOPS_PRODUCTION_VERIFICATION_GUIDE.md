@@ -197,6 +197,21 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --out runtime/.run/motadata_behavior_validation.plan.deep.json
 ```
 
+**Plan contract v1 (offline fixtures)** — validates `plan_contract.v1` shape and category rules from `PLAN_CONTRACT_FREEZE_V1.md` **without** calling `/v1/ask` (no `plan_contract` in live Ask responses yet). When **only** these `--scenario-id` values are selected, graph preflight may be `UNREACHABLE` and the suite still runs.
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id plan_contract_v1_safe_documentation \
+  --scenario-id plan_contract_v1_risky_behavior_change \
+  --scenario-id plan_contract_v1_insufficient_evidence \
+  --scenario-id plan_contract_v1_privileged_destructive_refusal \
+  --scenarios-only \
+  --print concise \
+  --out runtime/.run/motadata_behavior_validation.plan_contract_v1.json
+```
+
 Code slice:
 
 ```bash

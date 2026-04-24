@@ -162,9 +162,9 @@ These values **describe the plan artifact**. **`POST /v0/execute`** and **`PlanG
 - **`plan_summary.notes`**: optional caveats; **retained**.
 - **`plan_contract`**: machine- and reviewer-friendly **governed** view (intent, files, risk, bounds, allow/deny, approval, confidence). Future ingest may **derive** `plan_contract` from internal evidence and governance state; v1 freeze does not mandate a single producer.
 
-## 6) Validation expectations (Lane 2 — not implemented in Lane 1)
+## 6) Validation expectations (Lane 2 — implemented as offline fixtures)
 
-The **Plan validation pack** (next coding slice) SHOULD include scenarios that prove at least:
+The **Plan validation pack** proves the contract **without** wiring `plan_contract` into **`POST /v1/ask`** yet:
 
 | Scenario class | Expectation (informal) |
 |----------------|-------------------------|
@@ -173,7 +173,27 @@ The **Plan validation pack** (next coding slice) SHOULD include scenarios that p
 | **Insufficient evidence** | `risk_class: insufficient_evidence` and/or non-empty **`confidence_limits.requires_resolution`**, `affected_files` empty or reference-only, **`allowed_actions`** typically `none` or `read_repo` only. |
 | **Privileged / destructive refusal** | `approval_posture: refuse` with explicit **`requires_resolution`** and **`forbidden_actions`** covering patch/execution tokens; `max_files_touched: 0`. |
 
-Exact JSON fixtures and verifier assertions are **out of scope** for Lane 1.
+**Mechanism:**
+
+- Scenarios in `docs/validation/motadata_aiops_behavior_scenarios.v1.json` use capability **`plan_contract_validate`**, embedded **`plan_contract_fixture`**, and **`expect.plan_contract_category`** (`safe_plan` \| `risky_plan` \| `insufficient_evidence` \| `destructive_refusal`).
+- `runtime/plan_contract/v1_validate.py` implements **`validate_plan_contract_v1`** (structural) and **`validate_plan_contract_category`** (semantic).
+- `runtime/scripts/motadata_behavior_verify.py` runs these rows **without HTTP**; when **all** selected scenarios are `plan_contract_validate`, **graph preflight UNREACHABLE does not abort** the suite (offline-only runs).
+
+**Example (graph optional):**
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --scenarios-only \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id plan_contract_v1_safe_documentation \
+  --scenario-id plan_contract_v1_risky_behavior_change \
+  --scenario-id plan_contract_v1_insufficient_evidence \
+  --scenario-id plan_contract_v1_privileged_destructive_refusal \
+  --workspace-root /abs/path/to/Motadata \
+  --print concise
+```
+
+Exact JSON fixtures and verifier assertions are **in scope** for Lane 2 as above; **`/v1/ask` emission** of `plan_contract` remains a later lane gated by schema/additive policy.
 
 ## 7) Explicit execution semantics (unchanged)
 

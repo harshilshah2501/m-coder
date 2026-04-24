@@ -113,14 +113,9 @@ Conclusion: the codebase has **strong governance primitives** (Plan-Gate posture
 
 Work **small PR-sized slices** on `plan-code-reasoning-solidification`; merge to `main` only with tests + doc + optional gate artifact policy.
 
-1. **Lane 1 — Plan contract/spec (docs + schema draft)**  
-   - Author `PLAN_CONTRACT_FREEZE_V1.md`: fields for task intent, affected files, change boundaries, risk class, evidence requirements, allow/deny lists, approval posture.  
-   - Decide: **additive** `plan_summary` extension vs new top-level key (prefer additive with `schema_version` bump on response if needed).  
-   - **No** default behavior change until schema and ingest agree.
+1. **Lane 1 — Plan contract/spec (docs + schema draft)** — **Delivered:** `docs/validation/PLAN_CONTRACT_FREEZE_V1.md` (additive `plan_contract`; no `plan_only_response` bump until criteria in that doc are met).
 
-2. **Lane 2 — Plan validation scenarios**  
-   - Add scenario rows + verifier hooks for: safe doc, small patch, risky config, destructive refusal, insufficient evidence refusal.  
-   - Wire **`motadata_behavior_verify`** assertions (min fields, forbidden fields, posture).
+2. **Lane 2 — Plan validation scenarios** — **Delivered (offline):** four `plan_contract_validate` rows in `motadata_aiops_behavior_scenarios.v1.json`; structural + category checks in `runtime/plan_contract/v1_validate.py`; `motadata_behavior_verify.py` integration + graph bypass when **only** those scenarios are selected. **`/v1/ask` does not emit `plan_contract` yet.**
 
 3. **Lane 3 — Multi-step Code reasoning design**  
    - Spec only first: step enum (locate → inspect → strategy → bounded patch intent → proposal), max iterations, summarization policy, fail-closed wording.  
