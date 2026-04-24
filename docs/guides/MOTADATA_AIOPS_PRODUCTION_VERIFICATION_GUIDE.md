@@ -197,6 +197,65 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --out runtime/.run/motadata_behavior_validation.plan.deep.json
 ```
 
+**Plan contract v1 (offline fixtures)** — validates `plan_contract.v1` shape and category rules from `PLAN_CONTRACT_FREEZE_V1.md` **without** calling `/v1/ask` (no `plan_contract` in live Ask responses yet). When **only** these `--scenario-id` values are selected, graph preflight may be `UNREACHABLE` and the suite still runs. **Multi-step code reasoning (offline fixtures):** `docs/validation/CODE_REASONING_CONTRACT_DESIGN_V1.md` — run `code_reasoning_trace_validate` rows (no `/v1/ask`); graph optional when **only** these IDs are selected together with `plan_contract_validate` IDs.
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id plan_contract_v1_safe_documentation \
+  --scenario-id plan_contract_v1_risky_behavior_change \
+  --scenario-id plan_contract_v1_insufficient_evidence \
+  --scenario-id plan_contract_v1_privileged_destructive_refusal \
+  --scenario-id code_reasoning_trace_v1_completed_valid \
+  --scenario-id code_reasoning_trace_v1_deferred_insufficient_evidence \
+  --scenario-id code_reasoning_trace_v1_refused_forbidden_action \
+  --scenario-id code_reasoning_trace_v1_failed_patch_bounds \
+  --scenario-id code_reasoning_trace_v1_invalid_step_ordering \
+  --scenarios-only \
+  --print concise \
+  --out TestRunEvals/plan_code_reasoning_offline_validation.wsl.json
+```
+
+Plan+Code HTTP/runtime observational gate:
+
+```bash
+python3 runtime/scripts/plan_code_http_deploy_gate.py \
+  --plan-gate-url "${PLAN_GATE_URL}" \
+  --workspace-root "${MOTADATA_GATE_WORKSPACE_ROOT:-${MOTADATA_REPO_ROOT}}" \
+  --out TestRunEvals/plan_code_http_deploy_gate.wsl.json
+```
+
+`/v1/ask` `plan_contract.v1` opt-in emission gate artifacts (Slice 2):
+
+```bash
+python3 runtime/scripts/plan_code_http_deploy_gate.py \
+  --plan-gate-url "${PLAN_GATE_URL}" \
+  --workspace-root "${MOTADATA_GATE_WORKSPACE_ROOT:-${MOTADATA_REPO_ROOT}}" \
+  --out TestRunEvals/plan_code_http_deploy_gate.plan_contract_optin.wsl.json
+```
+
+```bash
+python3 runtime/scripts/plan_code_http_deploy_gate.py \
+  --plan-gate-url "${PLAN_GATE_URL}" \
+  --workspace-root "${MOTADATA_GATE_WORKSPACE_ROOT:-${MOTADATA_REPO_ROOT}}" \
+  --skip-graph-preflight \
+  --out TestRunEvals/plan_code_http_deploy_gate.plan_contract_optin.wsl.nograph.json
+```
+
+```bash
+python3 runtime/scripts/motadata_behavior_verify.py \
+  --workspace-root "${MOTADATA_REPO_ROOT}" \
+  --scenarios docs/validation/motadata_aiops_behavior_scenarios.v1.json \
+  --scenario-id plan_contract_v1_safe_documentation \
+  --scenario-id plan_contract_v1_risky_behavior_change \
+  --scenario-id plan_contract_v1_insufficient_evidence \
+  --scenario-id plan_contract_v1_privileged_destructive_refusal \
+  --scenarios-only \
+  --print concise \
+  --out runtime/.run/motadata_behavior_validation.plan_contract_v1.json
+```
+
 Code slice:
 
 ```bash

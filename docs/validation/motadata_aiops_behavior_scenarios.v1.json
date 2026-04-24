@@ -461,6 +461,810 @@
         "outcome": "BLOCKED",
         "executed": false
       }
+    },
+    {
+      "id": "plan_contract_v1_safe_documentation",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: safe plan — documentation-only intent, low risk, destructive tokens forbidden.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Add Javadoc to AbstractAPI describing its role as the base class for HTTP APIs.",
+          "kind": "document"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/AbstractAPI.java",
+            "role": "primary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": ["graph_route_anchor"],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": ["Class-level Javadoc and non-behavioral comments"],
+          "out_of_scope": ["Behavior changes", "route registration", "security policy"],
+          "max_files_touched": 1,
+          "max_diff_lines_hint": 60
+        },
+        "risk_class": "low",
+        "allowed_actions": ["read_repo", "update_docs_only"],
+        "forbidden_actions": [
+          "execute_shell",
+          "privileged_write",
+          "propose_patch_text",
+          "run_tests_local",
+          "run_linter",
+          "none"
+        ],
+        "approval_posture": "advisory_only",
+        "confidence_limits": {
+          "known": ["Primary owner file identified for AbstractAPI"],
+          "unknown": [],
+          "requires_resolution": []
+        }
+      },
+      "expect": {
+        "plan_contract_category": "safe_plan"
+      }
+    },
+    {
+      "id": "plan_contract_v1_risky_behavior_change",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: risky plan — high risk behavior change requires human approval and hard forbids on shell/privilege.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Change correlation engine scoring thresholds affecting production alert noise.",
+          "kind": "fix"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+            "role": "primary"
+          },
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/AlertEnrichmentService.java",
+            "role": "secondary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": ["test_failure_log", "owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["test_failure_log"]
+        },
+        "change_boundaries": {
+          "in_scope": ["Threshold tuning inside AvailabilityCorrelationEngine with regression tests"],
+          "out_of_scope": ["Schema migrations", "deployment scripts", "unrelated services"],
+          "max_files_touched": 4,
+          "max_diff_lines_hint": 400
+        },
+        "risk_class": "high",
+        "allowed_actions": ["read_repo", "propose_patch_text", "run_tests_local", "run_linter"],
+        "forbidden_actions": ["execute_shell", "privileged_write", "none", "update_docs_only"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {
+          "known": ["Owner methods for correlation entry points are visible in evidence"],
+          "unknown": ["Full blast radius across downstream consumers"],
+          "requires_resolution": ["Sign-off from on-call owner before merge"]
+        }
+      },
+      "expect": {
+        "plan_contract_category": "risky_plan"
+      }
+    },
+    {
+      "id": "plan_contract_v1_insufficient_evidence",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: insufficient evidence — cannot bound files; defer until evidence exists.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "User referenced a symptom without anchors; cannot identify concrete code targets.",
+          "kind": "explore"
+        },
+        "affected_files": [],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible", "graph_route_anchor"]
+        },
+        "change_boundaries": {
+          "in_scope": [],
+          "out_of_scope": ["Any code change until evidence bundle anchors an owner file"],
+          "max_files_touched": 0,
+          "max_diff_lines_hint": 0
+        },
+        "risk_class": "insufficient_evidence",
+        "allowed_actions": ["read_repo"],
+        "forbidden_actions": [
+          "propose_patch_text",
+          "execute_shell",
+          "privileged_write",
+          "run_tests_local",
+          "run_linter",
+          "update_docs_only",
+          "none"
+        ],
+        "approval_posture": "defer",
+        "confidence_limits": {
+          "known": [],
+          "unknown": ["Which subsystem owns the symptom"],
+          "requires_resolution": [
+            "Provide stack trace or failing test",
+            "Re-run Ask with a concrete file or symbol anchor"
+          ]
+        }
+      },
+      "expect": {
+        "plan_contract_category": "insufficient_evidence"
+      }
+    },
+    {
+      "id": "plan_contract_v1_privileged_destructive_refusal",
+      "capability": "plan_contract_validate",
+      "description": "Lane 2: privileged/destructive refusal — no file changes; refuse with explicit blockers.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Operator asked to drop production database tables to fix a slow query.",
+          "kind": "other"
+        },
+        "affected_files": [],
+        "evidence_requirements": {
+          "must_have": [],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": [],
+          "out_of_scope": ["All destructive data operations", "privileged host commands"],
+          "max_files_touched": 0,
+          "max_diff_lines_hint": 0
+        },
+        "risk_class": "critical",
+        "allowed_actions": ["none"],
+        "forbidden_actions": [
+          "execute_shell",
+          "privileged_write",
+          "propose_patch_text",
+          "run_tests_local",
+          "read_repo",
+          "run_linter",
+          "update_docs_only"
+        ],
+        "approval_posture": "refuse",
+        "confidence_limits": {
+          "known": ["Request is destructive and out of governed scope"],
+          "unknown": [],
+          "requires_resolution": [
+            "Use approved backup/restore runbooks",
+            "Escalate to DBA; do not execute via assistant"
+          ]
+        }
+      },
+      "expect": {
+        "plan_contract_category": "destructive_refusal"
+      }
+    },
+    {
+      "id": "code_reasoning_trace_v1_completed_valid",
+      "capability": "code_reasoning_trace_validate",
+      "description": "Lane 4: completed valid trace — ordered steps, patch_intent within plan bounds, terminal completed.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Adjust structured logging in AvailabilityCorrelationEngine without changing scoring behavior.",
+          "kind": "fix"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+            "role": "primary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": ["Logging statements around correlation entry"],
+          "out_of_scope": ["Scoring thresholds", "deployment"],
+          "max_files_touched": 2,
+          "max_diff_lines_hint": 120
+        },
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text", "run_linter"],
+        "forbidden_actions": ["execute_shell", "privileged_write", "none", "run_tests_local", "update_docs_only"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {
+          "known": ["Owner file anchored"],
+          "unknown": [],
+          "requires_resolution": []
+        }
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "req-lane4-completed",
+        "plan_contract_ref": "pc:lane4:completed_valid:v1",
+        "bounds": {
+          "max_iterations": 5,
+          "max_tool_calls": 3,
+          "max_evidence_refs_per_step": 8,
+          "max_step_text_chars": 4096,
+          "max_patch_intent_files": 2,
+          "max_patch_intent_lines_total": 120,
+          "summarize_between_steps": true
+        },
+        "steps": [
+          {
+            "step_index": 0,
+            "step_kind": "LOCATE_TARGET",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": ["owner_method_visible"],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:owner:AvailabilityCorrelationEngine"],
+            "rationale": "Primary owner file identified from authority.",
+            "summary": "Located AvailabilityCorrelationEngine.java"
+          },
+          {
+            "step_index": 1,
+            "step_kind": "INSPECT_CONTEXT",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:snippet:correlation-entry"],
+            "rationale": "Reviewed method body around logging hooks.",
+            "summary": "Confirmed logging insertion points"
+          },
+          {
+            "step_index": 2,
+            "step_kind": "CHANGE_STRATEGY",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:snippet:correlation-entry"],
+            "rationale": "Prefer minimal INFO logs at two branch exits.",
+            "summary": "Strategy: add bounded INFO logs only"
+          },
+          {
+            "step_index": 3,
+            "step_kind": "BOUNDED_PATCH_INTENT",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:snippet:correlation-entry"],
+            "rationale": "Single-file edit within declared line budget.",
+            "summary": "Patch intent covers logging lines only",
+            "patch_intent": {
+              "schema_version": "patch_intent.v1",
+              "files": [
+                {
+                  "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+                  "role": "edit",
+                  "line_span_hint": {
+                    "start": 120,
+                    "end": 135
+                  }
+                }
+              ],
+              "intent_description": "Insert structured INFO logs at two guarded branch exits.",
+              "rollback_summary": "Remove added log lines in the same span.",
+              "test_plan": ["mvn test -q -Dtest=AvailabilityCorrelationEngineTest"],
+              "risk_notes": ["Logging-only change; no scoring edits"]
+            }
+          },
+          {
+            "step_index": 4,
+            "step_kind": "FINAL_PROPOSAL",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:snippet:correlation-entry"],
+            "rationale": "Session complete; proposal ready for human approval.",
+            "summary": "Ready for bounded patch application after approval"
+          }
+        ],
+        "terminal": {
+          "outcome": "completed",
+          "reason_code": "session_completed_ok",
+          "human_message": "Code reasoning trace completed within plan bounds.",
+          "execution_requested": false
+        },
+        "ledger_preview": [
+          {
+            "event_type": "code_reasoning_session_start"
+          },
+          {
+            "event_type": "code_reasoning_step"
+          },
+          {
+            "event_type": "code_reasoning_patch_intent"
+          },
+          {
+            "event_type": "code_reasoning_terminal"
+          }
+        ]
+      },
+      "expect": {
+        "code_reasoning_category": "completed_valid_trace"
+      }
+    },
+    {
+      "id": "code_reasoning_trace_v1_deferred_insufficient_evidence",
+      "capability": "code_reasoning_trace_validate",
+      "description": "Lane 4: deferred — early FINAL without patch; insufficient evidence reason.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Symptom-only report; cannot anchor owner file yet.",
+          "kind": "explore"
+        },
+        "affected_files": [],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": [],
+          "out_of_scope": ["Any code edit until evidence anchors a file"],
+          "max_files_touched": 0,
+          "max_diff_lines_hint": 0
+        },
+        "risk_class": "insufficient_evidence",
+        "allowed_actions": ["read_repo"],
+        "forbidden_actions": [
+          "propose_patch_text",
+          "execute_shell",
+          "privileged_write",
+          "run_tests_local",
+          "run_linter",
+          "update_docs_only",
+          "none"
+        ],
+        "approval_posture": "defer",
+        "confidence_limits": {
+          "known": [],
+          "unknown": ["Which file owns the symptom"],
+          "requires_resolution": ["Provide stack trace or failing test"]
+        }
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "req-lane4-deferred",
+        "plan_contract_ref": "pc:lane4:deferred:v1",
+        "bounds": {
+          "max_iterations": 4,
+          "max_tool_calls": 2,
+          "max_evidence_refs_per_step": 8,
+          "max_step_text_chars": 4096,
+          "max_patch_intent_files": 0,
+          "max_patch_intent_lines_total": 0,
+          "summarize_between_steps": true
+        },
+        "steps": [
+          {
+            "step_index": 0,
+            "step_kind": "LOCATE_TARGET",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:symptom-only"],
+            "rationale": "No concrete owner anchor yet.",
+            "summary": "Locate blocked on missing anchors"
+          },
+          {
+            "step_index": 1,
+            "step_kind": "INSPECT_CONTEXT",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:symptom-only"],
+            "rationale": "Reviewed bundle; insufficient for code change.",
+            "summary": "Context insufficient for bounded patch"
+          },
+          {
+            "step_index": 2,
+            "step_kind": "FINAL_PROPOSAL",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:symptom-only"],
+            "rationale": "Terminate with defer until user supplies evidence.",
+            "summary": "Deferred pending evidence"
+          }
+        ],
+        "terminal": {
+          "outcome": "deferred",
+          "reason_code": "insufficient_evidence",
+          "human_message": "More evidence required before any patch intent.",
+          "execution_requested": false
+        }
+      },
+      "expect": {
+        "code_reasoning_category": "deferred_insufficient_evidence"
+      }
+    },
+    {
+      "id": "code_reasoning_trace_v1_refused_forbidden_action",
+      "capability": "code_reasoning_trace_validate",
+      "description": "Lane 4: refused — plan forbids patch proposal; session refuses.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Read-only audit of notification pipeline.",
+          "kind": "explore"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/NotificationEngine.java",
+            "role": "reference_only"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": [],
+          "nice_to_have": [],
+          "insufficient_without": []
+        },
+        "change_boundaries": {
+          "in_scope": ["Read and summarize"],
+          "out_of_scope": ["Code edits"],
+          "max_files_touched": 0,
+          "max_diff_lines_hint": 0
+        },
+        "risk_class": "low",
+        "allowed_actions": ["read_repo"],
+        "forbidden_actions": [
+          "propose_patch_text",
+          "execute_shell",
+          "privileged_write",
+          "run_tests_local",
+          "run_linter",
+          "update_docs_only",
+          "none"
+        ],
+        "approval_posture": "advisory_only",
+        "confidence_limits": {
+          "known": ["Read-only posture"],
+          "unknown": [],
+          "requires_resolution": []
+        }
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "req-lane4-refused",
+        "plan_contract_ref": "pc:lane4:refused:v1",
+        "bounds": {
+          "max_iterations": 4,
+          "max_tool_calls": 1,
+          "max_evidence_refs_per_step": 8,
+          "max_step_text_chars": 4096,
+          "max_patch_intent_files": 0,
+          "max_patch_intent_lines_total": 0,
+          "summarize_between_steps": false
+        },
+        "steps": [
+          {
+            "step_index": 0,
+            "step_kind": "LOCATE_TARGET",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:ref:NotificationEngine"],
+            "rationale": "Reference file identified.",
+            "summary": "Located reference file"
+          },
+          {
+            "step_index": 1,
+            "step_kind": "INSPECT_CONTEXT",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:ref:NotificationEngine"],
+            "rationale": "Read-only inspection complete.",
+            "summary": "No edit authorized by plan_contract"
+          },
+          {
+            "step_index": 2,
+            "step_kind": "FINAL_PROPOSAL",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:ref:NotificationEngine"],
+            "rationale": "Downstream attempted patch path; blocked by forbidden_actions.",
+            "summary": "Refused: patch proposal forbidden by plan"
+          }
+        ],
+        "terminal": {
+          "outcome": "refused",
+          "reason_code": "plan_contract_forbidden_action",
+          "human_message": "Patch proposal is forbidden under current plan_contract.",
+          "execution_requested": false
+        }
+      },
+      "expect": {
+        "code_reasoning_category": "refused_forbidden_action"
+      }
+    },
+    {
+      "id": "code_reasoning_trace_v1_failed_patch_bounds",
+      "capability": "code_reasoning_trace_validate",
+      "description": "Lane 4: failed — bounded patch step could not satisfy line budget; terminal failed.",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Tight line-budget logging tweak in correlation engine.",
+          "kind": "fix"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+            "role": "primary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": ["owner_method_visible"],
+          "nice_to_have": [],
+          "insufficient_without": ["owner_method_visible"]
+        },
+        "change_boundaries": {
+          "in_scope": ["Minimal logging"],
+          "out_of_scope": ["Broad refactors"],
+          "max_files_touched": 1,
+          "max_diff_lines_hint": 25
+        },
+        "risk_class": "medium",
+        "allowed_actions": ["read_repo", "propose_patch_text", "run_linter"],
+        "forbidden_actions": ["execute_shell", "privileged_write", "none", "run_tests_local", "update_docs_only"],
+        "approval_posture": "requires_human_approval",
+        "confidence_limits": {
+          "known": [],
+          "unknown": [],
+          "requires_resolution": []
+        }
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "req-lane4-failed-bounds",
+        "plan_contract_ref": "pc:lane4:failed_bounds:v1",
+        "bounds": {
+          "max_iterations": 5,
+          "max_tool_calls": 2,
+          "max_evidence_refs_per_step": 8,
+          "max_step_text_chars": 4096,
+          "max_patch_intent_files": 1,
+          "max_patch_intent_lines_total": 25,
+          "summarize_between_steps": true
+        },
+        "steps": [
+          {
+            "step_index": 0,
+            "step_kind": "LOCATE_TARGET",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:owner:ACE"],
+            "rationale": "Located owner file.",
+            "summary": "Located ACE"
+          },
+          {
+            "step_index": 1,
+            "step_kind": "INSPECT_CONTEXT",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:owner:ACE"],
+            "rationale": "Identified logging region.",
+            "summary": "Inspect complete"
+          },
+          {
+            "step_index": 2,
+            "step_kind": "CHANGE_STRATEGY",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:owner:ACE"],
+            "rationale": "Targeted log lines exceed tight budget when combined.",
+            "summary": "Strategy rejected under line cap"
+          },
+          {
+            "step_index": 3,
+            "step_kind": "BOUNDED_PATCH_INTENT",
+            "status": "failed",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": [],
+            "rationale": "Could not compress patch intent under max_diff_lines_hint.",
+            "summary": "Patch intent exceeds plan line budget",
+            "refusal": {
+              "code": "patch_intent_over_bound",
+              "detail": "Requested span exceeds plan_contract.change_boundaries.max_diff_lines_hint",
+              "recoverable": true
+            }
+          },
+          {
+            "step_index": 4,
+            "step_kind": "FINAL_PROPOSAL",
+            "status": "skipped",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": [],
+            "rationale": "",
+            "summary": "Skipped after failed bounded patch step"
+          }
+        ],
+        "terminal": {
+          "outcome": "failed",
+          "reason_code": "patch_intent_over_bound",
+          "human_message": "Patch intent could not be bounded within declared limits.",
+          "execution_requested": false
+        }
+      },
+      "expect": {
+        "code_reasoning_category": "failed_patch_bounds_violation"
+      }
+    },
+    {
+      "id": "code_reasoning_trace_v1_invalid_step_ordering",
+      "capability": "code_reasoning_trace_validate",
+      "description": "Lane 4: invalid — INSPECT_CONTEXT before LOCATE_TARGET (ordering violation).",
+      "plan_contract_fixture": {
+        "schema_version": "plan_contract.v1",
+        "task_intent": {
+          "summary": "Negative fixture for ordering validator.",
+          "kind": "explore"
+        },
+        "affected_files": [
+          {
+            "path": "motadata/src/main/java/com/mindarray/aiops/MailServerConfiguration.java",
+            "role": "primary"
+          }
+        ],
+        "evidence_requirements": {
+          "must_have": [],
+          "nice_to_have": [],
+          "insufficient_without": []
+        },
+        "change_boundaries": {
+          "in_scope": ["Read"],
+          "out_of_scope": ["Edits"],
+          "max_files_touched": 1,
+          "max_diff_lines_hint": 10
+        },
+        "risk_class": "low",
+        "allowed_actions": ["read_repo"],
+        "forbidden_actions": [
+          "propose_patch_text",
+          "execute_shell",
+          "privileged_write",
+          "run_tests_local",
+          "run_linter",
+          "update_docs_only",
+          "none"
+        ],
+        "approval_posture": "advisory_only",
+        "confidence_limits": {
+          "known": [],
+          "unknown": [],
+          "requires_resolution": []
+        }
+      },
+      "code_reasoning_trace_fixture": {
+        "schema_version": "code_reasoning_trace.v1",
+        "request_id": "req-lane4-invalid-order",
+        "plan_contract_ref": "pc:lane4:invalid_order:v1",
+        "bounds": {
+          "max_iterations": 3,
+          "max_tool_calls": 1,
+          "max_evidence_refs_per_step": 8,
+          "max_step_text_chars": 4096,
+          "max_patch_intent_files": 0,
+          "max_patch_intent_lines_total": 0,
+          "summarize_between_steps": false
+        },
+        "steps": [
+          {
+            "step_index": 0,
+            "step_kind": "INSPECT_CONTEXT",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:mail"],
+            "rationale": "Wrong order fixture: inspect before locate.",
+            "summary": "Inspect first (invalid)"
+          },
+          {
+            "step_index": 1,
+            "step_kind": "LOCATE_TARGET",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": ["ev:mail"],
+            "rationale": "Locate after inspect breaks v1 ordering rule.",
+            "summary": "Locate second (invalid)"
+          },
+          {
+            "step_index": 2,
+            "step_kind": "FINAL_PROPOSAL",
+            "status": "complete",
+            "evidence_requirements": {
+              "must_have": [],
+              "nice_to_have": [],
+              "insufficient_without": []
+            },
+            "evidence_refs_used": [],
+            "rationale": "Terminal for invalid fixture.",
+            "summary": "Early final (invalid order)"
+          }
+        ],
+        "terminal": {
+          "outcome": "refused",
+          "reason_code": "invalid_step_ordering_fixture",
+          "human_message": "Structural ordering violation expected for this negative fixture.",
+          "execution_requested": false
+        }
+      },
+      "expect": {
+        "code_reasoning_category": "invalid_step_ordering"
+      }
     }
   ]
 }

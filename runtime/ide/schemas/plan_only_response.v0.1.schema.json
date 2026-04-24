@@ -229,6 +229,17 @@
         }
       },
       "additionalProperties": false
+    },
+    "plan_contract": {
+      "type": "object",
+      "description": "Optional additive governed plan artifact; present only when explicitly requested via response_extensions and truthfully generated.",
+      "required": ["schema_version"],
+      "properties": {
+        "schema_version": {
+          "const": "plan_contract.v1"
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": false

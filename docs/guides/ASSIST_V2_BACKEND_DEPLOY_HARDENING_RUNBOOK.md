@@ -53,6 +53,17 @@ python3 runtime/scripts/assist_v2_http_deploy_gate.py \
   --out runtime/.run/assist_v2_http_deploy_gate.deploy.json
 ```
 
+### 4.1b Plan + Code HTTP gate (existing `/v0/plan`, `/v0/execute`, `/v1/ask`)
+
+Observational gate for **Plan** and **Code** paths (does **not** require `plan_contract` / `code_reasoning_trace` on Ask). See **`docs/validation/PLAN_CODE_HTTP_RUNTIME_GATE.md`**.
+
+```bash
+python3 runtime/scripts/plan_code_http_deploy_gate.py \
+  --plan-gate-url http://127.0.0.1:8089 \
+  --workspace-root "${MOTADATA_GATE_WORKSPACE_ROOT:-$PWD}" \
+  --out runtime/.run/plan_code_http_deploy_gate.json
+```
+
 Pass criteria:
 
 - process exits with code `0`
@@ -124,6 +135,7 @@ git checkout <known_good_tag_or_commit>
   - `runtime/.run/assist_v2_http_deploy_gate.deploy.json`
   - `runtime/.run/assist_v2_http_deploy_gate.local.json`
   - `runtime/.run/assist_v2_http_deploy_gate.staging.json` (example name for tunnel/remote strict runs; often gitignored — copy to `TestRunEvals/` to retain)
+  - `runtime/.run/plan_code_http_deploy_gate.json` (Plan + Code HTTP gate; see §4.1b)
 - Behavior verification outputs:
   - `runtime/.run/motadata_behavior_validation.ask.deep.json`
   - `runtime/.run/motadata_behavior_validation.debug.deep.json`
