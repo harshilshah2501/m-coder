@@ -108,7 +108,7 @@ source ~/.mcoder/venv/bin/activate
 2. Install the Context Layer wheel:
 
 ```bash
-pip install /path/to/motadata_context_layer-0.1.5-py3-none-any.whl
+pip install /path/to/motadata_context_layer-0.1.6-py3-none-any.whl
 ```
 
 3. Configure m-coder:
