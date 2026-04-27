@@ -12,7 +12,7 @@ Golden rule:
 
 ```text
 Developer IDE / terminal
-  -> mcoder CLI
+  -> HTTP client (curl / script / IDE task)
   -> WSL-local Context Layer :8091
   -> Motadata workspace
   -> shared GPU/Linux Plan-Gate :8089
@@ -25,13 +25,11 @@ Rules:
 - IDEs never send raw repository content to GPU.
 - Context Layer stays beside the developer workspace.
 - Plan-Gate remains the only model gateway.
-- CLI remains governed and API-only.
+- Local usage is API-only (HTTP contracts), with no direct vLLM access.
 
-## Supported Developer Modes
+## Developer Mode (Wheel Only)
 
-### Mode A: Wheel Install (Normal Developers)
-
-Use this mode for developers who work on Motadata and only need m-coder as an assistant.
+Use this mode for developers who work on Motadata and only need the packaged Context Layer.
 
 Expected local state:
 
@@ -43,24 +41,6 @@ Expected local state:
 ```
 
 Developers should not clone or operate the full m-coder repo in this mode.
-
-### Mode B: Repo-Local (m-coder Contributors)
-
-Use this mode only for contributors changing m-coder itself.
-
-Expected local state:
-
-```text
-~/Projects/Motadata                 # target workspace
-~/Harshil-PoCs/m-coder              # m-coder development checkout
-```
-
-Repo-local mode may use existing scripts such as:
-
-```bash
-runtime/scripts/run_local_stack.sh start-context
-runtime/scripts/run_local_stack.sh health
-```
 
 ## Canonical Configuration
 
@@ -111,37 +91,29 @@ source ~/.mcoder/venv/bin/activate
 pip install /path/to/motadata_context_layer-0.1.6-py3-none-any.whl
 ```
 
-3. Configure m-coder:
+3. Write canonical config:
 
 ```bash
-mcoder configure \
-  --workspace-root /home/user/Projects/Motadata \
-  --plan-gate-url http://gpu-host:8089
+cat > ~/.mcoder/config.yaml <<'YAML'
+workspace_root: /home/user/Projects/Motadata
+context_url: http://127.0.0.1:8091
+plan_gate_url: http://gpu-host:8089
+mode: api_only
+output: human
+YAML
 ```
 
-`mcoder configure` should write:
-
-- `~/.mcoder/config.yaml`
-- generated `~/.mcoder/context.env`
-
-## Install: Repo-Local Mode
-
-Use this only for m-coder contributors.
+4. Generate Context Layer env projection:
 
 ```bash
-export M_CODER_ROOT="$HOME/Harshil-PoCs/m-coder"
-cd "$M_CODER_ROOT"
-export PYTHONPATH="$M_CODER_ROOT"
-
-cp runtime/config/host_local.env.example runtime/config/host_local.env
-# Edit runtime/config/host_local.env for local paths/ports.
-```
-
-Start Context Layer:
-
-```bash
-runtime/scripts/run_local_stack.sh start-context
-runtime/scripts/run_local_stack.sh health
+cat > ~/.mcoder/context.env <<'ENV'
+MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1
+MOTADATA_CONTEXT_LAYER_PORT=8091
+MOTADATA_ROOT=/home/user/Projects/Motadata
+MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/home/user/Projects/Motadata
+MOTADATA_CONTEXT_LAYER_LOG_PATH=/home/user/.mcoder/context-layer.log
+MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
+ENV
 ```
 
 ## Context Layer User Service
@@ -172,15 +144,6 @@ RestartSec=2
 
 [Install]
 WantedBy=default.target
-```
-
-Expected commands:
-
-```bash
-mcoder install-context --service
-mcoder start-context
-mcoder status
-mcoder stop-context
 ```
 
 Equivalent systemd commands:
@@ -218,7 +181,7 @@ curl -fsS http://127.0.0.1:8000/v1/models
 
 ## Verification Tiers
 
-### `mcoder doctor`
+### Local Readiness Check
 
 Purpose: fast local readiness.
 
@@ -240,7 +203,7 @@ Plan-Gate: OK
 API-only mode: OK
 ```
 
-### `mcoder verify`
+### Governed Smoke Check
 
 Purpose: governed smoke test.
 
@@ -263,7 +226,7 @@ Execution: false
 Mutation: false
 ```
 
-### `mcoder verify --full`
+### Acceptance-Grade Validation
 
 Purpose: acceptance-grade validation.
 
@@ -289,7 +252,7 @@ Use `--full` for release validation or admin confidence checks, not for every de
 
 ### VSCode / Cursor
 
-Use terminal tasks that call `mcoder`.
+Use terminal tasks that call the API endpoints directly.
 
 Example:
 
@@ -298,27 +261,21 @@ Example:
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "m-coder Ask",
+      "label": "Context Layer Health",
       "type": "shell",
-      "command": "wsl mcoder ask \"${input:query}\""
+      "command": "wsl curl -fsS http://127.0.0.1:8091/healthz"
     },
     {
-      "label": "m-coder Debug Current File",
+      "label": "Context Layer Version",
       "type": "shell",
-      "command": "wsl mcoder debug --file \"${file}\""
+      "command": "wsl curl -fsS http://127.0.0.1:8091/version"
     }
   ],
-  "inputs": [
-    {
-      "id": "query",
-      "type": "promptString",
-      "description": "Ask m-coder"
-    }
-  ]
+  "inputs": []
 }
 ```
 
-Cursor can also call `mcoder` from its integrated terminal or project instructions.
+Cursor can call these endpoints from the integrated terminal.
 
 ### IntelliJ
 
@@ -333,21 +290,20 @@ wsl
 Arguments:
 
 ```bash
-mcoder ask "$Prompt$"
+curl -fsS http://127.0.0.1:8091/healthz
 ```
 
-Current file debug:
+Version check:
 
 ```bash
-mcoder debug --file "$FilePath$"
+curl -fsS http://127.0.0.1:8091/version
 ```
 
 ## Safety Rules
 
 - No direct vLLM calls from developer machines.
 - No raw repository upload to GPU.
-- No `execute`, `apply`, `run`, `retry`, `fix`, `auto`, or `agent` commands in V1.
-- `mcoder propose` returns `patch_proposal.v1` metadata only.
+- No execution/apply/retry loops in the developer path.
 - Context Layer reads local workspace; Plan-Gate receives evidence bundle, not raw repo.
 - `~/.mcoder/config.yaml` is the only user-edited config.
 
@@ -356,8 +312,8 @@ mcoder debug --file "$FilePath$"
 ### Context Layer is down
 
 ```bash
-mcoder status
-mcoder start-context
+systemctl --user status mcoder-context
+systemctl --user restart mcoder-context
 curl -fsS http://127.0.0.1:8091/healthz
 ```
 
@@ -384,7 +340,10 @@ ls /home/user/Projects/Motadata
 Then regenerate service projection:
 
 ```bash
-mcoder configure --workspace-root /home/user/Projects/Motadata
+sed -i 's|^workspace_root:.*|workspace_root: /home/user/Projects/Motadata|' ~/.mcoder/config.yaml
+sed -i 's|^MOTADATA_ROOT=.*|MOTADATA_ROOT=/home/user/Projects/Motadata|' ~/.mcoder/context.env
+sed -i 's|^MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=.*|MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/home/user/Projects/Motadata|' ~/.mcoder/context.env
+systemctl --user restart mcoder-context
 ```
 
 ### Plan-Gate unreachable
@@ -402,7 +361,9 @@ If unreachable, the problem is shared GPU/Linux service or network routing, not 
 Run:
 
 ```bash
-mcoder verify
+curl -fsS -X POST http://127.0.0.1:8091/v1/export_evidence \
+  -H 'Content-Type: application/json' \
+  -d '{"workspace_root":"/home/user/Projects/Motadata","query":"health smoke","top_k":4}'
 ```
 
 If only evidence export fails:
@@ -415,9 +376,6 @@ If only evidence export fails:
 ## Rollout Order
 
 1. Freeze this setup guide.
-2. Implement repo-local `scripts/mcoder`.
-3. Package Context Layer wheel for normal developers.
-4. Add `mcoder install-context --service`.
-5. Add IDE examples.
-6. Dry run with 2-3 internal developers.
-7. Promote installable CLI after command semantics stabilize.
+2. Package Context Layer wheel for normal developers.
+3. Validate wheel-only setup with 2-3 internal developers.
+4. Keep CLI contract work separate from this wheel-only path.
