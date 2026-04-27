@@ -129,6 +129,22 @@ source ~/.bashrc
 mcoder version
 ```
 
+6. Initialize project-local config in one step:
+
+```bash
+cd /home/user/Projects/Motadata
+mcoder init \
+  --workspace-root /home/user/Projects/Motadata \
+  --plan-gate-url http://gpu-host:8089
+```
+
+This creates:
+
+```text
+<project-root>/.mcoder/config.yaml
+<project-root>/.mcoder/context.env
+```
+
 Verbose mode for debugging:
 
 ```bash
@@ -140,6 +156,12 @@ Explicit config file override (if needed):
 
 ```bash
 mcoder --config /abs/path/to/config.yaml health
+```
+
+Reinitialize generated files:
+
+```bash
+mcoder init --force --plan-gate-url http://gpu-host:8089
 ```
 
 ## Context Layer User Service

@@ -14,6 +14,7 @@ mcoder helper wrapper (API-only)
 
 Usage:
   mcoder [--verbose] [--config PATH] <command> ...
+  mcoder init [--workspace-root PATH] [--context-url URL] [--plan-gate-url URL] [--force]
   mcoder prompt "How does alert correlation work?" [--json] [--top-k N] [--out FILE]
   mcoder debug --file path/to/file.py --query "What is wrong here?" [--symbol NAME] [--json] [--top-k N] [--out FILE]
   mcoder plan "Refactor this handler safely" [--json] [--top-k N] [--out FILE]
@@ -75,7 +76,13 @@ resolve_config_file() {
 
 http_code() {
   local url="$1"
-  curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+  local code
+  code="$(curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || true)"
+  if [[ -z "$code" || ! "$code" =~ ^[0-9]{3}$ ]]; then
+    echo "000"
+  else
+    echo "$code"
+  fi
 }
 
 cfg_get() {
@@ -188,6 +195,71 @@ cmd_prompt() {
   fi
 
   python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_init() {
+  resolve_defaults
+  local force=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      --force)
+        force=1
+        shift
+        ;;
+      *)
+        echo "unknown arg for init: $1" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  mkdir -p "$GLOBAL_STATE_DIR"
+  local cfg="$GLOBAL_STATE_DIR/config.yaml"
+  local envf="$GLOBAL_STATE_DIR/context.env"
+
+  if [[ "$force" -ne 1 ]]; then
+    [[ ! -e "$cfg" ]] || { echo "config exists: $cfg (use --force to overwrite)" >&2; exit 2; }
+    [[ ! -e "$envf" ]] || { echo "context env exists: $envf (use --force to overwrite)" >&2; exit 2; }
+  fi
+
+  cat >"$cfg" <<EOF
+workspace_root: $WORKSPACE_ROOT
+context_url: $CONTEXT_URL
+plan_gate_url: $PLAN_GATE_URL
+mode: api_only
+output: human
+EOF
+
+  cat >"$envf" <<EOF
+MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1
+MOTADATA_CONTEXT_LAYER_PORT=$(python3 - "$CONTEXT_URL" <<'PY'
+from urllib.parse import urlparse
+import sys
+u = urlparse(sys.argv[1])
+print(u.port or (443 if u.scheme == "https" else 80))
+PY
+)
+MOTADATA_ROOT=$WORKSPACE_ROOT
+MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=$WORKSPACE_ROOT
+MOTADATA_CONTEXT_LAYER_LOG_PATH=$GLOBAL_STATE_DIR/context-layer.log
+MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
+EOF
+
+  echo "Initialized mcoder project config:"
+  echo "  $cfg"
+  echo "  $envf"
 }
 
 cmd_debug() {
@@ -582,6 +654,7 @@ main() {
   fi
   shift || true
   case "$cmd" in
+    init) cmd_init "$@" ;;
     prompt) cmd_prompt "$@" ;;
     debug) cmd_debug "$@" ;;
     plan) cmd_plan "$@" ;;
