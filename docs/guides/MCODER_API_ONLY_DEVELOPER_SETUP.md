@@ -266,6 +266,7 @@ API-only mode: OK
 - attempts `systemctl --user restart mcoder-context`
 - re-checks health after remediation
 - records health HTTP status codes before/after remediation
+- if configured Plan-Gate URL is unreachable but local `127.0.0.1:8089` is healthy, auto-fixes `plan_gate_url` in config
 - records diagnosis/remediation journal at:
 
 ```text

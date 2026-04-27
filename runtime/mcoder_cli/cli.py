@@ -198,6 +198,32 @@ def _health_core(cfg: Cfg, auto_fix: bool) -> int:
             f.write(f"plan_gate_health_code_after_diagnosis={pg_code2}\n")
         pg_ok = pg_code2 == "200"
 
+        # Auto-remediate common WSL tunnel mismatch:
+        # config points to remote host, but local tunneled Plan-Gate is healthy.
+        parsed = urllib.parse.urlparse(cfg.plan_gate_url)
+        current_host = parsed.hostname or ""
+        local_fallback = "http://127.0.0.1:8089"
+        local_code = _http_code(f"{local_fallback}/healthz", cfg.timeout_sec)
+        with journal.open("a", encoding="utf-8") as f:
+            f.write(f"plan_gate_local_fallback_code={local_code}\n")
+        if not pg_ok and current_host not in ("127.0.0.1", "localhost") and local_code == "200":
+            print("[STEP] Plan-Gate fallback detected at 127.0.0.1:8089; updating config")
+            with journal.open("a", encoding="utf-8") as f:
+                f.write("action: apply local Plan-Gate fallback url http://127.0.0.1:8089\n")
+            cfg_map = _read_simple_yaml(cfg.config_path)
+            cfg_map["plan_gate_url"] = local_fallback
+            lines = []
+            for k in ("workspace_root", "context_url", "plan_gate_url", "mode", "output"):
+                v = cfg_map.get(k, "")
+                if v:
+                    lines.append(f"{k}: {v}")
+            cfg.config_path.parent.mkdir(parents=True, exist_ok=True)
+            cfg.config_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            cfg.plan_gate_url = local_fallback
+            pg_ok = True
+            with journal.open("a", encoding="utf-8") as f:
+                f.write("result: config updated with local Plan-Gate fallback\n")
+
     if ctx_ok and pg_ok:
         print("Context Layer + Plan-Gate health: OK")
         print(f"health journal: {journal}")
@@ -379,53 +405,104 @@ def _cmd_version(_args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="mcoder")
+    p = argparse.ArgumentParser(
+        prog="mcoder",
+        description=(
+            "mcoder unified developer CLI for Motadata on WSL/Linux. "
+            "Supports setup, diagnostics, and governed ask/debug/plan flows."
+        ),
+        epilog=(
+            "Examples:\n"
+            "  mcoder init --workspace-root /root/Harshil-PoCs/Motadata --plan-gate-url http://127.0.0.1:8089\n"
+            "  mcoder doctor\n"
+            "  mcoder --timeout-sec 10 health --auto-fix\n"
+            "  mcoder --timeout-sec 20 prompt \"Which class is the base class for all APIs?\""
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     p.add_argument("--verbose", action="store_true")
     p.add_argument("--config", default="")
     p.add_argument("--timeout-sec", type=int, default=int(os.environ.get("MCODER_TIMEOUT_SEC", "15")))
     p.add_argument("--workspace-root", default="")
     p.add_argument("--context-url", default="")
     p.add_argument("--plan-gate-url", default="")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(
+        dest="cmd",
+        required=True,
+        title="commands",
+        description="Run `mcoder <command> --help` for command-specific options.",
+    )
 
-    s = sub.add_parser("init")
+    s = sub.add_parser(
+        "init",
+        help="Create/refresh project-local .mcoder config files",
+        description="Initialize .mcoder/config.yaml and .mcoder/context.env for current project.",
+    )
     s.add_argument("--workspace-root", default="")
     s.add_argument("--context-url", default="")
     s.add_argument("--plan-gate-url", default="")
     s.add_argument("--force", action="store_true")
     s.set_defaults(func=_cmd_init)
 
-    s = sub.add_parser("health")
+    s = sub.add_parser(
+        "health",
+        help="Check Context Layer and Plan-Gate health",
+        description="Run bounded health checks and optional auto-remediation with journaling.",
+    )
     s.add_argument("--auto-fix", action="store_true")
     s.set_defaults(func=_cmd_health)
 
-    s = sub.add_parser("doctor")
+    s = sub.add_parser(
+        "doctor",
+        help="Run readiness diagnostics",
+        description="Validate config, workspace, service reachability, API mode, and Neo4j availability.",
+    )
     s.set_defaults(func=_cmd_doctor)
 
-    s = sub.add_parser("prompt")
+    s = sub.add_parser(
+        "prompt",
+        help="Run one governed ask query",
+        description="Implicitly exports evidence then calls Plan-Gate /v1/ask.",
+    )
     s.add_argument("query")
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=_cmd_prompt)
 
-    s = sub.add_parser("plan")
+    s = sub.add_parser(
+        "plan",
+        help="Run one plan-focused query",
+        description="Ask path with plan_contract.v1 response extension enabled.",
+    )
     s.add_argument("query")
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=_cmd_plan)
 
-    s = sub.add_parser("debug")
+    s = sub.add_parser(
+        "debug",
+        help="Run one debug-focused query for selected file",
+        description="Ask path with task_type=EXPLAIN_DEBUG and selected file anchoring.",
+    )
     s.add_argument("--file", required=True)
     s.add_argument("--query", default="")
     s.add_argument("--symbol", default="")
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=_cmd_debug)
 
-    s = sub.add_parser("scenario")
+    s = sub.add_parser(
+        "scenario",
+        help="Run batch scenario file",
+        description="Execute ask/plan/debug scenario lists from a file.",
+    )
     s.add_argument("--type", choices=["ask", "plan", "debug"], required=True)
     s.add_argument("--file", required=True)
     s.add_argument("--out-dir", default="")
     s.set_defaults(func=_cmd_scenario)
 
-    s = sub.add_parser("version")
+    s = sub.add_parser(
+        "version",
+        help="Show mcoder package version",
+        description="Print unified CLI identity and installed package version.",
+    )
     s.set_defaults(func=_cmd_version)
     return p
 
