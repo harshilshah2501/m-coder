@@ -347,7 +347,14 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
         if len(steps) > 1:
             second = str(steps[1]).strip()
             # Avoid misleading "owner" suggestion when user asked explicit base-class style questions.
-            if not ("base class" in query.lower() and second.lower().startswith("primary implementation owner:")):
+            second_l = second.lower()
+            if not (
+                "base class" in query.lower()
+                and (
+                    second_l.startswith("primary implementation owner:")
+                    or second_l.startswith("execution owner anchor (supporting context, not base-class answer):")
+                )
+            ):
                 print(f"next_step: {second}")
         print("")
     return 0

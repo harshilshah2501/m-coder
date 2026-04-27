@@ -76,7 +76,11 @@ def _print_summary(resp: dict[str, Any]) -> None:
         print(f"answer_1: {steps[0]}")
     if len(steps) > 1:
         second = str(steps[1]).strip()
-        if not second.lower().startswith("primary implementation owner:"):
+        second_l = second.lower()
+        if not (
+            second_l.startswith("primary implementation owner:")
+            or second_l.startswith("execution owner anchor (supporting context, not base-class answer):")
+        ):
             print(f"next_step: {second}")
     print("")
 
