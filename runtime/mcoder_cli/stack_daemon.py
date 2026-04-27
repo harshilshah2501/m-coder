@@ -97,7 +97,7 @@ def _pid_alive(pid: int) -> bool:
         return True
 
 
-def maybe_start_ssh_tunnel(cfg: StackMonitorConfig) -> tuple[bool, str]:
+def maybe_start_ssh_tunnel(cfg: StackMonitorConfig, *, replace_stale_tunnel: bool = False) -> tuple[bool, str]:
     """If Plan-Gate URL is loopback and ssh target is set, start ssh -L or report why not."""
     is_lo, local_port = plan_gate_loopback_info(cfg.plan_gate_url)
     if not is_lo:
@@ -112,7 +112,18 @@ def maybe_start_ssh_tunnel(cfg: StackMonitorConfig) -> tuple[bool, str]:
     pid_file = _tunnel_pid_file(cfg.state_dir)
     old = _read_tunnel_pid(pid_file)
     if old is not None and _pid_alive(old):
-        return False, f"tunnel pid {old} present but health still failing; see {_tunnel_log(cfg.state_dir)}"
+        if replace_stale_tunnel:
+            try:
+                os.kill(old, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            time.sleep(0.5)
+            try:
+                pid_file.unlink(missing_ok=True)
+            except OSError:
+                pass
+        else:
+            return False, f"tunnel pid {old} present but health still failing; see {_tunnel_log(cfg.state_dir)}"
 
     log_f = _tunnel_log(cfg.state_dir)
     bind = f"{local_port}:127.0.0.1:{remote_port}"
@@ -221,6 +232,115 @@ def run_check(cfg: StackMonitorConfig, *, json_out: bool = False, try_tunnel: bo
             print("  hint: for SSH tunnel automation, set plan_gate_ssh_target or MCODER_PLAN_GATE_SSH")
 
     return 0 if fails == 0 else 1
+
+
+def run_bootstrap(cfg: StackMonitorConfig, *, fix: bool = True, json_out: bool = False) -> int:
+    """Ordered checklist: wheel → Context Layer → Plan-Gate (optional SSH tunnel) → final health.
+
+    When ``fix`` is True (default), attempts ``systemctl --user restart mcoder-context`` if Context Layer
+    is down, and brings up ``ssh -L`` when ``plan_gate_url`` is loopback and ``plan_gate_ssh_target`` is set.
+    Use ``fix=False`` (--check-only) for a read-only diagnostic pass.
+    """
+    lines: list[dict[str, Any]] = []
+    _out = print if not json_out else lambda *_a, **_k: None
+
+    _out("=== mcoder bootstrap (session checklist) ===")
+    _out(f"config: context={cfg.context_url} plan_gate={cfg.plan_gate_url}")
+    ssh_hint = cfg.plan_gate_ssh_target.strip() or "(unset — add plan_gate_ssh_target for auto tunnel)"
+    _out(f"ssh target: {ssh_hint}")
+    _out()
+
+    ok_w, wheel_msg = check_wheel()
+    lines.append({"step": 1, "name": "mcoder-suite", "ok": ok_w, "detail": wheel_msg})
+    _out(f"[1/5] Installation: mcoder-suite {'OK — ' + wheel_msg if ok_w else 'FAIL — ' + wheel_msg}")
+
+    ctx_url = f"{cfg.context_url.rstrip('/')}/healthz"
+    pg_url = f"{cfg.plan_gate_url.rstrip('/')}/healthz"
+
+    ctx_code = _http_code(ctx_url, cfg.timeout_sec)
+    ctx_ok = ctx_code == "200"
+    lines.append({"step": 2, "name": "context_layer", "ok": ctx_ok, "http": ctx_code, "url": ctx_url})
+    _out(f"[2/5] Context Layer: GET {ctx_url} → http={ctx_code} {'OK' if ctx_ok else 'FAIL'}")
+
+    if not ctx_ok and fix:
+        ok_r, msg = maybe_restart_context_layer(cfg)
+        lines.append({"step": "2b", "name": "context_remediation", "ok": ok_r, "detail": msg})
+        _out(f"       remediation (systemctl): {msg}")
+        time.sleep(2.0)
+        ctx_code = _http_code(ctx_url, cfg.timeout_sec)
+        ctx_ok = ctx_code == "200"
+        lines.append({"step": "2c", "name": "context_layer_recheck", "ok": ctx_ok, "http": ctx_code})
+        _out(f"       re-check Context Layer → http={ctx_code} {'OK' if ctx_ok else 'FAIL'}")
+    elif not ctx_ok:
+        _out("       (--check-only: not restarting Context Layer service)")
+
+    pg_code = _http_code(pg_url, cfg.timeout_sec)
+    pg_ok = pg_code == "200"
+    lines.append({"step": 3, "name": "plan_gate_initial", "ok": pg_ok, "http": pg_code, "url": pg_url})
+    _out(f"[3/5] Plan-Gate: GET {pg_url} → http={pg_code} {'OK' if pg_ok else 'FAIL'}")
+
+    is_lo, _lp = plan_gate_loopback_info(cfg.plan_gate_url)
+    if pg_ok:
+        lines.append({"step": 4, "name": "ssh_tunnel", "ok": None, "detail": "not_needed"})
+        _out("[4/5] SSH tunnel: not needed (Plan-Gate already healthy)")
+    elif not fix:
+        lines.append({"step": 4, "name": "ssh_tunnel", "ok": None, "detail": "skipped_check_only"})
+        _out("[4/5] SSH tunnel: SKIP (--check-only)")
+    elif not is_lo:
+        lines.append({"step": 4, "name": "ssh_tunnel", "ok": None, "detail": "skipped_remote_url"})
+        _out("[4/5] SSH tunnel: SKIP — plan_gate_url is not loopback (use reachable URL or switch to http://127.0.0.1:8089)")
+    elif not cfg.plan_gate_ssh_target.strip():
+        lines.append({"step": 4, "name": "ssh_tunnel", "ok": False, "detail": "skipped_no_ssh_target"})
+        _out("[4/5] SSH tunnel: SKIP — set plan_gate_ssh_target (or MCODER_PLAN_GATE_SSH) for auto-forward")
+    else:
+        ok_t, msg = maybe_start_ssh_tunnel(cfg, replace_stale_tunnel=True)
+        lines.append({"step": 4, "name": "ssh_tunnel", "ok": ok_t, "detail": msg})
+        _out(f"[4/5] SSH tunnel to GPU Plan-Gate: {msg}")
+        time.sleep(1.5)
+        pg_code = _http_code(pg_url, cfg.timeout_sec)
+        pg_ok = pg_code == "200"
+        lines.append({"step": "4b", "name": "plan_gate_after_tunnel", "ok": pg_ok, "http": pg_code})
+        _out(f"       re-check Plan-Gate → http={pg_code} {'OK' if pg_ok else 'FAIL'}")
+
+    ctx_final = _http_code(ctx_url, cfg.timeout_sec)
+    pg_final = _http_code(pg_url, cfg.timeout_sec)
+    all_ok = ctx_final == "200" and pg_final == "200"
+    lines.append(
+        {
+            "step": 5,
+            "name": "final_health",
+            "ok": all_ok,
+            "context_http": ctx_final,
+            "plan_gate_http": pg_final,
+        }
+    )
+
+    if json_out:
+        print(
+            json.dumps(
+                {
+                    "timestamp_utc": _now_utc(),
+                    "fix": fix,
+                    "context_url": cfg.context_url,
+                    "plan_gate_url": cfg.plan_gate_url,
+                    "plan_gate_ssh_target": cfg.plan_gate_ssh_target,
+                    "steps": lines,
+                    "success": all_ok,
+                },
+                indent=2,
+            )
+        )
+    else:
+        _out()
+        _out(f"[5/5] Final health: Context Layer http={ctx_final}, Plan-Gate http={pg_final}")
+        if all_ok:
+            _out()
+            _out('Bootstrap complete — both endpoints healthy. Next: mcoder prompt "…"')
+        else:
+            _out()
+            _out("Bootstrap incomplete — fix errors above or see docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md")
+
+    return 0 if all_ok else 1
 
 
 def run_watch(

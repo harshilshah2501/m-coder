@@ -116,10 +116,15 @@ curl -fsS http://127.0.0.1:8089/healthz   # Plan-Gate (local tunnel or same mach
 
 **Minimal order after install:**
 
-1. Start Context Layer — see [Context Layer User Service](#context-layer-user-service) (`systemctl --user enable --now mcoder-context` or run `motadata-context-layer` with `context.env`).
-2. Ensure Plan-Gate is reachable at `plan_gate_url` in `.mcoder/config.yaml` — typically the shared GPU host URL, **or** `http://127.0.0.1:8089` after you open an SSH tunnel from WSL to the GPU (`ssh -L 8089:127.0.0.1:8089 ...`). Installing the wheel does not open that tunnel.
-3. Run `mcoder doctor` then `mcoder health --auto-fix` (optional auto-fix for common Plan-Gate URL mismatches).
-4. Verify binaries: `mcoder version` and `motadata-context-layer --help`.
+1. **One-time / first machine setup:** install the venv, `mcoder init`, and create the Context Layer user service (see [Context Layer User Service](#context-layer-user-service)) so `motadata-context-layer` is available and can be started with `systemctl --user enable --now mcoder-context`.
+2. **Config for loopback Plan-Gate (so you are not typing `ssh -L` every session):** in `.mcoder/config.yaml` set `plan_gate_url: http://127.0.0.1:8089` and add `plan_gate_ssh_target: <user>@<gpu-host>` (or set `MCODER_PLAN_GATE_SSH`). If the GPU is directly reachable, you can use `plan_gate_url: http://<gpu-ip>:8089` instead and skip SSH.
+3. **Each work session (or after reboot):** run the **checklist** — it probes both endpoints, restarts Context Layer if needed, and **creates the SSH tunnel** when loopback + `plan_gate_ssh_target` are set (no separate `ssh` step):
+   ```bash
+   mcoder bootstrap
+   ```
+   Read-only probes only: `mcoder bootstrap --check-only`. JSON for scripts: `mcoder bootstrap --json`.
+4. Optional: `mcoder doctor` and `mcoder health --auto-fix` for the older health/journal path.
+5. Verify binaries if you like: `mcoder version` and `motadata-context-layer --help`.
 
 **Continue with optional customization:**
 
@@ -345,9 +350,13 @@ curl -fsS http://127.0.0.1:8089/version
 curl -fsS http://127.0.0.1:8000/v1/models
 ```
 
+## Session bootstrap (`mcoder bootstrap`) — primary start path
+
+Use **`mcoder bootstrap`** when you start a session: it runs a **fixed-order checklist** (package → Context Layer health + optional `systemctl` restart → Plan-Gate health + **automatic `ssh -L`** when `plan_gate_url` is loopback and `plan_gate_ssh_target` is set) and a final **dual /healthz** check. You do not need to run a separate `ssh` for Plan-Gate in that configuration.
+
 ## Stack diagnostic daemon (`mcoder stack`)
 
-Use this when you want **one place** that understands the full local stack: **wheel install**, **Context Layer**, **Plan-Gate**, and an optional **SSH tunnel** when `plan_gate_url` points at loopback.
+**Ongoing** or **background** use: `stack` is for **lightweight** check / log-only watch. For “turn key and go” at session start, use **`mcoder bootstrap`** first; use `stack` for non-intrusive monitoring.
 
 **Non-intrusive by default:** `stack check` is read-only unless you pass **`--try-tunnel`**. **`stack watch`** only appends JSON to **`.mcoder/logs/stack-watch.log`** — it does **not** run `ssh`, restart `systemd`, or spam the terminal unless you explicitly add **`--auto-tunnel`**, **`--auto-context`**, or **`--verbose`**.
 

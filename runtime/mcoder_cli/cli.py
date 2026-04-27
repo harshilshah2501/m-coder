@@ -203,6 +203,8 @@ def _cmd_init(args: argparse.Namespace) -> int:
     print("Next: start Context Layer (listening on context_url, often :8091) and ensure Plan-Gate")
     print("      is reachable at plan_gate_url (tunnel or GPU host). Then: mcoder health")
     print("Docs: docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md (after mcoder init)")
+    print()
+    print("Then run: mcoder bootstrap   # checklist: wheel, context, Plan-Gate, optional SSH tunnel")
     return 0
 
 
@@ -503,6 +505,13 @@ def _stack_monitor_cfg(cfg: Cfg) -> stack_daemon.StackMonitorConfig:
     )
 
 
+def _cmd_bootstrap(args: argparse.Namespace) -> int:
+    cfg = Cfg(args)
+    sm = _stack_monitor_cfg(cfg)
+    fix = not bool(getattr(args, "check_only", False))
+    return stack_daemon.run_bootstrap(sm, fix=fix, json_out=bool(getattr(args, "json", False)))
+
+
 def _cmd_stack(args: argparse.Namespace) -> int:
     cfg = Cfg(args)
     sm = _stack_monitor_cfg(cfg)
@@ -545,6 +554,7 @@ def build_parser() -> argparse.ArgumentParser:
         epilog=(
             "Examples:\n"
             "  mcoder init --workspace-root /root/Harshil-PoCs/Motadata --plan-gate-url http://127.0.0.1:8089\n"
+            "  mcoder bootstrap\n"
             "  mcoder doctor\n"
             "  mcoder --timeout-sec 10 health --auto-fix\n"
             "  mcoder stack check\n"
@@ -576,6 +586,27 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--plan-gate-url", default="")
     s.add_argument("--force", action="store_true", help="Overwrite existing config/context files")
     s.set_defaults(func=_cmd_init)
+
+    boot = sub.add_parser(
+        "bootstrap",
+        help="Session checklist: package, Context Layer & Plan-Gate health, SSH tunnel when configured",
+        description=(
+            "Runs ordered steps after install/init: verify mcoder-suite, probe both /healthz endpoints,\n"
+            "optionally restart mcoder-context (systemd user) if Context Layer is down, then create SSH -L\n"
+            "forward to Plan-Gate when plan_gate_url is loopback and plan_gate_ssh_target / MCODER_PLAN_GATE_SSH is set.\n"
+            "Use --check-only to skip remediation (inspect only)."
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    boot.add_argument("--plan-gate-ssh", default="", dest="plan_gate_ssh", metavar="USER@HOST", help="SSH target for Plan-Gate forward")
+    boot.add_argument("--ssh-remote-port", type=int, default=None, dest="ssh_remote_port", metavar="PORT", help="Remote GPU Plan-Gate port")
+    boot.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Do not restart Context Layer or create SSH tunnel (health probes only)",
+    )
+    boot.add_argument("--json", action="store_true", help="Machine-readable checklist on stdout")
+    boot.set_defaults(func=_cmd_bootstrap)
 
     s = sub.add_parser(
         "health",
