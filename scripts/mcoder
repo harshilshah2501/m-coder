@@ -4,21 +4,33 @@ set -euo pipefail
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG_FILE="${MCODER_CONFIG_PATH:-$HOME/.mcoder/config.yaml}"
+VERBOSE="${MCODER_VERBOSE:-0}"
+GLOBAL_STATE_DIR=""
+CONFIG_FILE=""
 
 usage() {
   cat <<'EOF'
 mcoder helper wrapper (API-only)
 
 Usage:
+  mcoder [--verbose] [--config PATH] <command> ...
   mcoder prompt "How does alert correlation work?" [--json] [--top-k N] [--out FILE]
   mcoder debug --file path/to/file.py --query "What is wrong here?" [--symbol NAME] [--json] [--top-k N] [--out FILE]
   mcoder plan "Refactor this handler safely" [--json] [--top-k N] [--out FILE]
   mcoder scenario --type ask|debug|plan --file scenarios.txt [--out-dir DIR] [--top-k N]
-  mcoder health
+  mcoder health [--auto-fix]
   mcoder version
 
-Config defaults are read from ~/.mcoder/config.yaml:
+Config discovery order:
+  1) MCODER_CONFIG_PATH
+  2) <project-root>/.mcoder/config.yaml (if running inside a git repo)
+  3) ~/.mcoder/config.yaml
+
+State/log directory:
+  - <project-root>/.mcoder when in a git repo
+  - ~/.mcoder otherwise
+
+Config keys:
   workspace_root, context_url, plan_gate_url
 
 Env overrides:
@@ -26,8 +38,49 @@ Env overrides:
 EOF
 }
 
+log_debug() {
+  if [[ "$VERBOSE" == "1" ]]; then
+    echo "[DEBUG] $*" >&2
+  fi
+}
+
+detect_project_root() {
+  git rev-parse --show-toplevel 2>/dev/null || true
+}
+
+choose_state_dir() {
+  local project_root
+  project_root="$(detect_project_root)"
+  if [[ -n "$project_root" ]]; then
+    GLOBAL_STATE_DIR="$project_root/.mcoder"
+  else
+    GLOBAL_STATE_DIR="$HOME/.mcoder"
+  fi
+  mkdir -p "$GLOBAL_STATE_DIR"
+}
+
+resolve_config_file() {
+  choose_state_dir
+  if [[ -n "${MCODER_CONFIG_PATH:-}" ]]; then
+    CONFIG_FILE="$MCODER_CONFIG_PATH"
+    return 0
+  fi
+  local local_cfg="$GLOBAL_STATE_DIR/config.yaml"
+  if [[ -f "$local_cfg" ]]; then
+    CONFIG_FILE="$local_cfg"
+    return 0
+  fi
+  CONFIG_FILE="$HOME/.mcoder/config.yaml"
+}
+
+http_code() {
+  local url="$1"
+  curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000"
+}
+
 cfg_get() {
   local key="$1"
+  resolve_config_file
   python3 - "$CONFIG_FILE" "$key" <<'PY'
 import pathlib
 import re
@@ -51,13 +104,19 @@ PY
 }
 
 resolve_defaults() {
+  resolve_config_file
   WORKSPACE_ROOT="${MCODER_WORKSPACE_ROOT:-$(cfg_get workspace_root)}"
   CONTEXT_URL="${MCODER_CONTEXT_URL:-$(cfg_get context_url)}"
   PLAN_GATE_URL="${MCODER_PLAN_GATE_URL:-$(cfg_get plan_gate_url)}"
 
-  WORKSPACE_ROOT="${WORKSPACE_ROOT:-$HOME/Projects/Motadata}"
+  if [[ -z "$WORKSPACE_ROOT" ]]; then
+    local project_root
+    project_root="$(detect_project_root)"
+    WORKSPACE_ROOT="${project_root:-$HOME/Projects/Motadata}"
+  fi
   CONTEXT_URL="${CONTEXT_URL:-http://127.0.0.1:8091}"
   PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
+  log_debug "config_file=$CONFIG_FILE state_dir=$GLOBAL_STATE_DIR workspace_root=$WORKSPACE_ROOT context_url=$CONTEXT_URL plan_gate_url=$PLAN_GATE_URL"
 }
 
 cmd_prompt() {
@@ -332,7 +391,7 @@ cmd_scenario() {
   fi
 
   if [[ -z "$out_dir" ]]; then
-    out_dir="$HOME/.mcoder/scenario-runs/$(date +%Y%m%d-%H%M%S)"
+    out_dir="$GLOBAL_STATE_DIR/scenario-runs/$(date +%Y%m%d-%H%M%S)"
   fi
   mkdir -p "$out_dir"
 
@@ -413,11 +472,85 @@ cmd_scenario() {
 
 cmd_health() {
   resolve_defaults
-  curl -fsS "$CONTEXT_URL/healthz" >/dev/null
-  curl -fsS "$CONTEXT_URL/version" >/dev/null
-  curl -fsS "$PLAN_GATE_URL/healthz" >/dev/null
-  curl -fsS "$PLAN_GATE_URL/version" >/dev/null
-  echo "Context Layer + Plan-Gate health: OK"
+  local auto_fix=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --auto-fix) auto_fix=1; shift ;;
+      *) echo "unknown arg for health: $1" >&2; exit 2 ;;
+    esac
+  done
+  local log_dir="$GLOBAL_STATE_DIR/logs"
+  mkdir -p "$log_dir"
+  local journal="$log_dir/mcoder-health-$(date +%Y%m%d-%H%M%S).log"
+  {
+    echo "timestamp_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "config_file=$CONFIG_FILE"
+    echo "workspace_root=$WORKSPACE_ROOT"
+    echo "context_url=$CONTEXT_URL"
+    echo "plan_gate_url=$PLAN_GATE_URL"
+    echo "auto_fix=$auto_fix"
+  } >"$journal"
+
+  local context_ok=0
+  local plan_ok=0
+  local ctx_code
+  local pg_code
+  ctx_code="$(http_code "$CONTEXT_URL/healthz")"
+  pg_code="$(http_code "$PLAN_GATE_URL/healthz")"
+  echo "context_health_code=$ctx_code" >>"$journal"
+  echo "plan_gate_health_code=$pg_code" >>"$journal"
+  if [[ "$ctx_code" == "200" ]]; then context_ok=1; fi
+  if [[ "$pg_code" == "200" ]]; then plan_ok=1; fi
+
+  if [[ "$context_ok" -eq 0 ]]; then
+    echo "diagnosis: context health check failed" >>"$journal"
+    if [[ "$auto_fix" -eq 1 ]]; then
+      if command -v systemctl >/dev/null 2>&1; then
+        echo "action: attempting systemctl --user restart mcoder-context" >>"$journal"
+        systemctl --user restart mcoder-context >>"$journal" 2>&1 || true
+      else
+        echo "action_skipped: systemctl unavailable" >>"$journal"
+      fi
+      sleep 2
+      ctx_code="$(http_code "$CONTEXT_URL/healthz")"
+      echo "context_health_code_after_fix=$ctx_code" >>"$journal"
+      if [[ "$ctx_code" == "200" ]]; then
+        context_ok=1
+        echo "result: context recovered after restart" >>"$journal"
+      else
+        echo "result: context still failing after restart" >>"$journal"
+      fi
+    fi
+  fi
+
+  if [[ "$plan_ok" -eq 0 ]]; then
+    echo "diagnosis: plan-gate health check failed" >>"$journal"
+    if [[ "$auto_fix" -eq 1 && -x "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" ]]; then
+      echo "action: attempting stack compatibility check for diagnosis" >>"$journal"
+      bash "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" check >>"$journal" 2>&1 || true
+      pg_code="$(http_code "$PLAN_GATE_URL/healthz")"
+      echo "plan_gate_health_code_after_diagnosis=$pg_code" >>"$journal"
+      if [[ "$pg_code" == "200" ]]; then
+        plan_ok=1
+      fi
+    fi
+  fi
+
+  if [[ "$context_ok" -eq 1 ]]; then
+    curl -fsS "$CONTEXT_URL/version" >/dev/null 2>>"$journal" || true
+  fi
+  if [[ "$plan_ok" -eq 1 ]]; then
+    curl -fsS "$PLAN_GATE_URL/version" >/dev/null 2>>"$journal" || true
+  fi
+
+  if [[ "$context_ok" -eq 1 && "$plan_ok" -eq 1 ]]; then
+    echo "Context Layer + Plan-Gate health: OK"
+    echo "health journal: $journal"
+    return 0
+  fi
+  echo "Context Layer + Plan-Gate health: FAILED"
+  echo "health journal: $journal"
+  return 1
 }
 
 cmd_version() {
@@ -427,6 +560,21 @@ cmd_version() {
 }
 
 main() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --verbose)
+        VERBOSE=1
+        shift
+        ;;
+      --config)
+        MCODER_CONFIG_PATH="${2:-}"
+        shift 2
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
   local cmd="${1:-}"
   if [[ -z "$cmd" ]]; then
     usage

@@ -31,20 +31,20 @@ Rules:
 
 Use this mode for developers who work on Motadata and only need the packaged Context Layer.
 
-Expected local state:
+Expected local state (project-first):
 
 ```text
-~/Projects/Motadata                 # developer's actual repo
-~/.mcoder/config.yaml               # canonical user config
-~/.mcoder/context.env               # generated service env projection
-~/.mcoder/venv                      # m-coder client/runtime venv
+~/Projects/Motadata                 # developer's actual repo (run mcoder here)
+~/Projects/Motadata/.mcoder/config.yaml   # preferred project-local config
+~/Projects/Motadata/.mcoder/logs/         # health/smoke journals
+~/.mcoder/venv                            # optional shared runtime venv
 ```
 
 Developers should not clone or operate the full m-coder repo in this mode.
 
 ## Canonical Configuration
 
-`~/.mcoder/config.yaml` is the source of truth.
+Project-local `.mcoder/config.yaml` is preferred source of truth.
 
 Example:
 
@@ -56,12 +56,14 @@ mode: api_only
 output: human
 ```
 
-`~/.mcoder/context.env` is generated from this YAML for service runtime use.
+`context.env` can be generated from this YAML for service runtime use.
 
-Users should edit only:
+Config discovery order used by `mcoder`:
 
 ```text
-~/.mcoder/config.yaml
+1) MCODER_CONFIG_PATH
+2) <project-root>/.mcoder/config.yaml
+3) ~/.mcoder/config.yaml
 ```
 
 Generated projection example:
@@ -91,10 +93,11 @@ source ~/.mcoder/venv/bin/activate
 pip install /path/to/motadata_context_layer-0.1.6-py3-none-any.whl
 ```
 
-3. Write canonical config:
+3. Write canonical project config:
 
 ```bash
-cat > ~/.mcoder/config.yaml <<'YAML'
+mkdir -p ./.mcoder
+cat > ./.mcoder/config.yaml <<'YAML'
 workspace_root: /home/user/Projects/Motadata
 context_url: http://127.0.0.1:8091
 plan_gate_url: http://gpu-host:8089
@@ -124,6 +127,19 @@ ln -sf /root/Harshil-PoCs/m-coder/scripts/mcoder ~/.local/bin/mcoder
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 mcoder version
+```
+
+Verbose mode for debugging:
+
+```bash
+mcoder --verbose health --auto-fix
+mcoder --verbose prompt "How does alert correlation work?"
+```
+
+Explicit config file override (if needed):
+
+```bash
+mcoder --config /abs/path/to/config.yaml health
 ```
 
 ## Context Layer User Service
@@ -191,13 +207,13 @@ curl -fsS http://127.0.0.1:8000/v1/models
 
 ## Verification Tiers
 
-### Local Readiness Check
+### Local Readiness Check (`mcoder health`)
 
 Purpose: fast local readiness.
 
 Checks:
 
-- config exists and parses
+- config exists and parses (project-local preferred)
 - `mode=api_only`
 - workspace root exists
 - Context Layer reachable
@@ -211,6 +227,18 @@ Workspace root: OK
 Context Layer: OK
 Plan-Gate: OK
 API-only mode: OK
+```
+
+`mcoder health --auto-fix` includes smart auto-diagnosis:
+
+- detects Context Layer health failure
+- attempts `systemctl --user restart mcoder-context`
+- re-checks health after remediation
+- records health HTTP status codes before/after remediation
+- records diagnosis/remediation journal at:
+
+```text
+<project-root>/.mcoder/logs/mcoder-health-<timestamp>.log
 ```
 
 ### Governed Smoke Check
@@ -388,7 +416,7 @@ mcoder debug --file "$FilePath$" --query "Explain likely bug path"
 - No raw repository upload to GPU.
 - No execution/apply/retry loops in the developer path.
 - Context Layer reads local workspace; Plan-Gate receives evidence bundle, not raw repo.
-- `~/.mcoder/config.yaml` is the only user-edited config.
+- preferred user-edited config is `<project-root>/.mcoder/config.yaml`.
 
 ## Troubleshooting
 
@@ -408,10 +436,10 @@ less ~/.mcoder/context-layer.log
 
 ### Workspace root not found
 
-Edit:
+Edit project config:
 
 ```text
-~/.mcoder/config.yaml
+<project-root>/.mcoder/config.yaml
 ```
 
 Confirm:
@@ -423,7 +451,7 @@ ls /home/user/Projects/Motadata
 Then regenerate service projection:
 
 ```bash
-sed -i 's|^workspace_root:.*|workspace_root: /home/user/Projects/Motadata|' ~/.mcoder/config.yaml
+sed -i 's|^workspace_root:.*|workspace_root: /home/user/Projects/Motadata|' ./.mcoder/config.yaml
 sed -i 's|^MOTADATA_ROOT=.*|MOTADATA_ROOT=/home/user/Projects/Motadata|' ~/.mcoder/context.env
 sed -i 's|^MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=.*|MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/home/user/Projects/Motadata|' ~/.mcoder/context.env
 systemctl --user restart mcoder-context
