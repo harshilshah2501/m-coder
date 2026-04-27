@@ -529,7 +529,7 @@ def test_planner_preserves_structural_direct_answer_when_authority_exists():
     assert ps.steps
     first = ps.steps[0]
     assert "AbstractAPI" in first
-    assert any("Primary implementation owner" in s for s in ps.steps)
+    assert any("Execution owner anchor (supporting context, not base-class answer)" in s for s in ps.steps)
 
 
 def test_alert_correlation_owner_method_is_schema_valid_when_present():

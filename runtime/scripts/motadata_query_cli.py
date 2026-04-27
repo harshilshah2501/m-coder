@@ -50,16 +50,38 @@ def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, d
 def _print_summary(resp: dict[str, Any]) -> None:
     md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
     steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+    explain_debug = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+    routing_mode = str(resp.get("routing_mode") or "")
     print("")
     print("=== Motadata Ask Summary ===")
     print(f"request_id: {resp.get('request_id')}")
     print(f"posture: {resp.get('governance_posture')}  executed: {resp.get('execution')}")
     print(f"ask_path: {(resp.get('evidence_first_meta') or {}).get('ask_path')}")
     print(f"quality: {md.get('evidence_quality')}  reasons: {md.get('quality_reasons')}")
+    if routing_mode == "explain_debug":
+        dbg_summary = str(explain_debug.get("summary") or "").strip()
+        dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
+        dbg_quality = str(md.get("debug_narration_quality") or "").strip().upper()
+        dbg_issues = md.get("debug_narration_issues") if isinstance(md.get("debug_narration_issues"), list) else []
+        if dbg_summary:
+            print(f"debug_summary: {dbg_summary}")
+        if dbg_logic:
+            first_logic = dbg_logic.splitlines()[0].strip()
+            if first_logic:
+                print(f"debug_logic_head: {first_logic}")
+        if dbg_quality == "CURATED":
+            issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
+            print(f"debug_note: narration curated by governance for precision{issue_note}")
     if steps:
         print(f"answer_1: {steps[0]}")
     if len(steps) > 1:
-        print(f"next_step: {steps[1]}")
+        second = str(steps[1]).strip()
+        second_l = second.lower()
+        if not (
+            second_l.startswith("primary implementation owner:")
+            or second_l.startswith("execution owner anchor (supporting context, not base-class answer):")
+        ):
+            print(f"next_step: {second}")
     print("")
 
 
@@ -99,16 +121,27 @@ def _tokenize_query(query: str) -> list[str]:
     return tokens
 
 
-def _export_evidence_bundle(context_url: str, workspace_root: str, query: str, top_k: int) -> dict[str, Any]:
-    status, evidence = _post(
-        f"{context_url}/v1/export_evidence",
-        {
-            "workspace_root": workspace_root,
-            "query": query,
-            "top_k": top_k,
-        },
-        timeout=300,
-    )
+def _export_evidence_bundle(
+    context_url: str,
+    workspace_root: str,
+    query: str,
+    top_k: int,
+    *,
+    task_type: str = "general",
+    selected_file: str = "",
+    timeout_sec: int = 300,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "workspace_root": workspace_root,
+        "query": query,
+        "top_k": top_k,
+    }
+    if task_type:
+        payload["task_type"] = task_type
+    if selected_file:
+        payload["selected_file"] = selected_file
+        payload["active_file"] = selected_file
+    status, evidence = _post(f"{context_url}/v1/export_evidence", payload, timeout=timeout_sec)
     if status != 200:
         raise RuntimeError(f"export_evidence failed http={status}")
     return evidence
@@ -348,6 +381,16 @@ def main() -> int:
     p.add_argument("--context-url", default="http://127.0.0.1:8091")
     p.add_argument("--plan-gate-url", default="http://127.0.0.1:8089")
     p.add_argument("--top-k", type=int, default=8)
+    p.add_argument("--timeout-sec", type=int, default=180, help="HTTP timeout seconds for export/ask requests")
+    p.add_argument("--task-type", default="general", help="ask task type (e.g. general, EXPLAIN_DEBUG)")
+    p.add_argument("--selected-file", default="", help="Optional selected file path for debug-focused asks")
+    p.add_argument(
+        "--response-extension",
+        dest="response_extensions",
+        action="append",
+        default=[],
+        help="Optional response extension (repeatable), e.g. plan_contract.v1",
+    )
     p.add_argument("--out", default="", help="Optional: write full response JSON to this path")
     p.add_argument("--print", dest="print_mode", choices=["summary", "json"], default="summary")
     p.add_argument("--with-reward", action="store_true", help="Print deterministic governed reward summary for this response")
@@ -420,7 +463,15 @@ def main() -> int:
             ask_query = args.query
             if router_result and router_result.intent == QueryIntent.DECOMPOSE and router_result.sub_queries:
                 bundles = [
-                    _export_evidence_bundle(context_url, args.workspace_root, sub_query, args.top_k)
+                    _export_evidence_bundle(
+                        context_url,
+                        args.workspace_root,
+                        sub_query,
+                        args.top_k,
+                        task_type=args.task_type,
+                        selected_file=args.selected_file,
+                        timeout_sec=args.timeout_sec,
+                    )
                     for sub_query in router_result.sub_queries
                 ]
                 evidence = _merge_evidence_bundles(args.query, bundles, args.top_k, router_result.sub_queries)
@@ -430,7 +481,15 @@ def main() -> int:
                 if isinstance(router_meta, dict):
                     router_meta["ask_query"] = ask_query
             else:
-                evidence = _export_evidence_bundle(context_url, args.workspace_root, args.query, args.top_k)
+                evidence = _export_evidence_bundle(
+                    context_url,
+                    args.workspace_root,
+                    args.query,
+                    args.top_k,
+                    task_type=args.task_type,
+                    selected_file=args.selected_file,
+                    timeout_sec=args.timeout_sec,
+                )
 
             ask_req: dict[str, Any] = {
                 "schema_version": "ask_request.v1.0",
@@ -438,12 +497,17 @@ def main() -> int:
                 "timestamp_utc": _now_utc(),
                 "query": ask_query,
                 "evidence_bundle": evidence,
+                "task_type": args.task_type,
             }
+            if args.selected_file:
+                ask_req["selected_file"] = args.selected_file
+            if args.response_extensions:
+                ask_req["response_extensions"] = args.response_extensions
             ws_hash = evidence.get("workspace_identity_hash")
             if ws_hash:
                 ask_req["expected_workspace_identity_hash"] = ws_hash
 
-            ac, resp = _post(f"{plan_gate_url}/v1/ask", ask_req, timeout=300)
+            ac, resp = _post(f"{plan_gate_url}/v1/ask", ask_req, timeout=args.timeout_sec)
             if ac != 200:
                 print(f"/v1/ask failed http={ac}", file=sys.stderr)
                 return 1

@@ -15,9 +15,19 @@ To avoid multiple competing sources of truth, use this authority model:
 
 **Tooling / process meta (not product behavior):** [archive/tooling/CODERABBIT_AUDIT_COVERAGE_MATRIX.md](archive/tooling/CODERABBIT_AUDIT_COVERAGE_MATRIX.md) — optional audit matrix for CodeRabbit-style reviews.
 
+### Golden Path (Developer API-Only)
+
+For developer onboarding without IDE/plugin coupling, use:
+
+1. [guides/MCODER_API_ONLY_DEVELOPER_SETUP.md](guides/MCODER_API_ONLY_DEVELOPER_SETUP.md) - WSL-local Context Layer package + shared Plan-Gate setup
+2. [guides/MCODER_CLI_UX_CONTRACT_V1.md](guides/MCODER_CLI_UX_CONTRACT_V1.md) - `mcoder` CLI command/output/error contract
+3. [packaging/motadata-context-layer/README.md](../packaging/motadata-context-layer/README.md) - installable Context Layer wheel details
+
+Golden rule: developers install the m-coder client/runtime; their development repo is Motadata.
+
 ### Golden Path (Operator + Demo)
 
-Use only these in sequence for setup and usage:
+Use these for operator/demo flows:
 
 1. [MOTADATA_DEMO_SETUP_RUNBOOK.md](MOTADATA_DEMO_SETUP_RUNBOOK.md) - setup/configure (GPU -> WSL -> Windows)
 2. [runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md](runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md) - plugin-mediated usage and checks
@@ -34,6 +44,8 @@ Use only these in sequence for setup and usage:
 - Stage 2.5 Assist Layer v1 implemented and evaluated as advisory-only (no runtime query authority)
 - Assist v2 evaluation artifacts and policy published under [validation/artifacts/assist_layer_v2_eval/](validation/artifacts/assist_layer_v2_eval/)
 - MVP closure evidence index maintained in [mvp_declaration/MVP_EVIDENCE_INDEX.md](mvp_declaration/MVP_EVIDENCE_INDEX.md)
+- Stage 3 readiness freeze complete; acting-system implementation remains blocked pending explicit approval
+- API-only developer setup and CLI UX contract added for WSL-local Context Layer + shared Plan-Gate onboarding
 
 ### Historical / Supporting Docs
 
@@ -48,6 +60,7 @@ Obsolete or non-canonical material: **[archive/README.md](archive/README.md)** (
 **Current Program Status:** ✅ **Production closure baseline achieved**
 - Governed production vertical slice closed and accepted (see [LIVE_ROADMAP_TRACKER.md](LIVE_ROADMAP_TRACKER.md) and [mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md](mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md)).
 - Stage 2.5 Assist Layer v1: implemented + evaluated, advisory-only (no runtime query authority).
+- Current productization lane: API-only `mcoder` developer interface and WSL-local Context Layer setup; no Stage 3 execution enablement.
 
 **Parallel ML Stream Status (separate from closure baseline):**
 - V16.1 model training and dataset iteration documents remain available under `docs/training/`, `docs/evaluation/`, and `docs/datasets/`.
@@ -127,6 +140,8 @@ Some subtrees under `ml/` or `scripts/` may not collect cleanly without extra de
 
 ### 🚀 Getting Started & Guides
 - **[guides/](guides/)** - How-to guides for all components
+  - API-only developer setup: [guides/MCODER_API_ONLY_DEVELOPER_SETUP.md](guides/MCODER_API_ONLY_DEVELOPER_SETUP.md)
+  - CLI UX contract: [guides/MCODER_CLI_UX_CONTRACT_V1.md](guides/MCODER_CLI_UX_CONTRACT_V1.md)
   - Setup instructions
   - Training guides
   - RAG guides
@@ -180,6 +195,19 @@ Some subtrees under `ml/` or `scripts/` may not collect cleanly without extra de
 - Model Location: `training/artifacts/results/v16_merged/`
 
 ## Quick Start
+
+### Developer API-only path
+
+Normal developers should install the m-coder client/runtime in WSL and point it at their Motadata workspace plus shared Plan-Gate:
+
+```bash
+mcoder configure --workspace-root /home/user/Projects/Motadata --plan-gate-url http://gpu-host:8089
+mcoder doctor
+mcoder start-context
+mcoder verify
+```
+
+See **`docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`**. The m-coder development repo is only required for m-coder contributors.
 
 ### m-coder governed stack (vLLM + Plan-Gate)
 

@@ -123,6 +123,7 @@ packaging/motadata-context-layer/.venv-build/
 packaging/motadata-context-layer/.venv-build-packaging/
 packaging/motadata-context-layer/.venv-build-pipeline/
 packaging/motadata-context-layer/.venv-smoke-pipeline/
+packaging/motadata-context-layer/context-layer-smoke.stderr.log
 
 # Local validation artifacts (untracked working outputs)
 docs/validation/artifacts/aiops_mvp/

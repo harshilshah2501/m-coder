@@ -38,6 +38,7 @@ from .context_budget import (
 )
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
+from .debug_narration_gate import apply_debug_narration_gate
 
 
 REPO = Path(__file__).resolve().parents[1]  # runtime/
@@ -367,6 +368,19 @@ def handle_ask_request(ask_request: dict) -> dict:
         if result.error:
             plan_steps = [_explain_debug_failure_step(result.error)]
         else:
+            gate = apply_debug_narration_gate(
+                result,
+                selected_file=str(selected_file),
+                bundle=bundle,
+            )
+            explain_debug_result = gate.curated
+            metadata["debug_narration_quality"] = gate.quality
+            if gate.issues:
+                metadata["debug_narration_issues"] = gate.issues
+                qrs = metadata.get("quality_reasons") if isinstance(metadata.get("quality_reasons"), list) else []
+                if "DEBUG_NARRATION_CURATED" not in qrs:
+                    qrs.append("DEBUG_NARRATION_CURATED")
+                metadata["quality_reasons"] = qrs
             plan_steps = ["Explain/debug analysis completed; see structured output above."]
     else:
         planner = PlanOnlyPlanner()

@@ -1,0 +1,729 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+VERBOSE="${MCODER_VERBOSE:-0}"
+TIMEOUT_SEC="${MCODER_TIMEOUT_SEC:-15}"
+GLOBAL_STATE_DIR=""
+CONFIG_FILE=""
+
+usage() {
+  cat <<'EOF'
+mcoder helper wrapper (API-only)
+
+Usage:
+  mcoder [--verbose] [--config PATH] [--timeout-sec N] <command> ...
+  mcoder init [--workspace-root PATH] [--context-url URL] [--plan-gate-url URL] [--force]
+  mcoder prompt "How does alert correlation work?" [--json] [--top-k N] [--out FILE]
+  mcoder debug --file path/to/file.py --query "What is wrong here?" [--symbol NAME] [--json] [--top-k N] [--out FILE]
+  mcoder plan "Refactor this handler safely" [--json] [--top-k N] [--out FILE]
+  mcoder scenario --type ask|debug|plan --file scenarios.txt [--out-dir DIR] [--top-k N]
+  mcoder health [--auto-fix]
+  mcoder doctor
+  mcoder version
+
+Config discovery order:
+  1) MCODER_CONFIG_PATH
+  2) <project-root>/.mcoder/config.yaml (if running inside a git repo)
+  3) ~/.mcoder/config.yaml
+
+State/log directory:
+  - <project-root>/.mcoder when in a git repo
+  - ~/.mcoder otherwise
+
+Config keys:
+  workspace_root, context_url, plan_gate_url
+
+Env overrides:
+  MCODER_WORKSPACE_ROOT, MCODER_CONTEXT_URL, MCODER_PLAN_GATE_URL, MCODER_TIMEOUT_SEC
+EOF
+}
+
+log_debug() {
+  if [[ "$VERBOSE" == "1" ]]; then
+    echo "[DEBUG] $*" >&2
+  fi
+}
+
+detect_project_root() {
+  git rev-parse --show-toplevel 2>/dev/null || true
+}
+
+choose_state_dir() {
+  local project_root
+  project_root="$(detect_project_root)"
+  if [[ -n "$project_root" ]]; then
+    GLOBAL_STATE_DIR="$project_root/.mcoder"
+  else
+    GLOBAL_STATE_DIR="$HOME/.mcoder"
+  fi
+  mkdir -p "$GLOBAL_STATE_DIR"
+}
+
+resolve_config_file() {
+  choose_state_dir
+  if [[ -n "${MCODER_CONFIG_PATH:-}" ]]; then
+    CONFIG_FILE="$MCODER_CONFIG_PATH"
+    return 0
+  fi
+  local local_cfg="$GLOBAL_STATE_DIR/config.yaml"
+  if [[ -f "$local_cfg" ]]; then
+    CONFIG_FILE="$local_cfg"
+    return 0
+  fi
+  CONFIG_FILE="$HOME/.mcoder/config.yaml"
+}
+
+http_code() {
+  local url="$1"
+  local code
+  code="$(curl -sS --connect-timeout "$TIMEOUT_SEC" --max-time "$TIMEOUT_SEC" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || true)"
+  if [[ -z "$code" || ! "$code" =~ ^[0-9]{3}$ ]]; then
+    echo "000"
+  else
+    echo "$code"
+  fi
+}
+
+print_progress() {
+  echo "[STEP] $*"
+}
+
+cfg_get() {
+  local key="$1"
+  resolve_config_file
+  python3 - "$CONFIG_FILE" "$key" <<'PY'
+import pathlib
+import re
+import sys
+
+cfg = pathlib.Path(sys.argv[1])
+key = sys.argv[2]
+if not cfg.is_file():
+    raise SystemExit(0)
+pat = re.compile(rf"^\s*{re.escape(key)}\s*:\s*(.+?)\s*$")
+for raw in cfg.read_text(encoding="utf-8").splitlines():
+    line = raw.strip()
+    if not line or line.startswith("#"):
+        continue
+    m = pat.match(raw)
+    if m:
+        v = m.group(1).strip().strip("'").strip('"')
+        print(v)
+        break
+PY
+}
+
+resolve_defaults() {
+  resolve_config_file
+  WORKSPACE_ROOT="${MCODER_WORKSPACE_ROOT:-$(cfg_get workspace_root)}"
+  CONTEXT_URL="${MCODER_CONTEXT_URL:-$(cfg_get context_url)}"
+  PLAN_GATE_URL="${MCODER_PLAN_GATE_URL:-$(cfg_get plan_gate_url)}"
+
+  if [[ -z "$WORKSPACE_ROOT" ]]; then
+    local project_root
+    project_root="$(detect_project_root)"
+    WORKSPACE_ROOT="${project_root:-$HOME/Projects/Motadata}"
+  fi
+  CONTEXT_URL="${CONTEXT_URL:-http://127.0.0.1:8091}"
+  PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
+  log_debug "config_file=$CONFIG_FILE state_dir=$GLOBAL_STATE_DIR workspace_root=$WORKSPACE_ROOT context_url=$CONTEXT_URL plan_gate_url=$PLAN_GATE_URL"
+}
+
+cmd_prompt() {
+  resolve_defaults
+
+  local query=""
+  local print_mode="summary"
+  local top_k="8"
+  local out_file=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json)
+        print_mode="json"
+        shift
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --out)
+        out_file="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      -*)
+        echo "unknown flag: $1" >&2
+        exit 2
+        ;;
+      *)
+        if [[ -z "$query" ]]; then
+          query="$1"
+        else
+          query="$query $1"
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$query" ]]; then
+    echo "prompt requires a query string" >&2
+    usage
+    exit 2
+  fi
+
+  local args=(
+    --workspace-root "$WORKSPACE_ROOT"
+    --query "$query"
+    --context-url "$CONTEXT_URL"
+    --plan-gate-url "$PLAN_GATE_URL"
+    --top-k "$top_k"
+    --print "$print_mode"
+    --task-type "general"
+    --timeout-sec "$TIMEOUT_SEC"
+  )
+  if [[ -n "$out_file" ]]; then
+    args+=(--out "$out_file")
+  fi
+
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_init() {
+  resolve_defaults
+  local force=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      --force)
+        force=1
+        shift
+        ;;
+      *)
+        echo "unknown arg for init: $1" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  mkdir -p "$GLOBAL_STATE_DIR"
+  local cfg="$GLOBAL_STATE_DIR/config.yaml"
+  local envf="$GLOBAL_STATE_DIR/context.env"
+
+  if [[ "$force" -ne 1 ]]; then
+    [[ ! -e "$cfg" ]] || { echo "config exists: $cfg (use --force to overwrite)" >&2; exit 2; }
+    [[ ! -e "$envf" ]] || { echo "context env exists: $envf (use --force to overwrite)" >&2; exit 2; }
+  fi
+
+  cat >"$cfg" <<EOF
+workspace_root: $WORKSPACE_ROOT
+context_url: $CONTEXT_URL
+plan_gate_url: $PLAN_GATE_URL
+mode: api_only
+output: human
+EOF
+
+  cat >"$envf" <<EOF
+MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1
+MOTADATA_CONTEXT_LAYER_PORT=$(python3 - "$CONTEXT_URL" <<'PY'
+from urllib.parse import urlparse
+import sys
+u = urlparse(sys.argv[1])
+print(u.port or (443 if u.scheme == "https" else 80))
+PY
+)
+MOTADATA_ROOT=$WORKSPACE_ROOT
+MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=$WORKSPACE_ROOT
+MOTADATA_CONTEXT_LAYER_LOG_PATH=$GLOBAL_STATE_DIR/context-layer.log
+MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
+EOF
+
+  echo "Initialized mcoder project config:"
+  echo "  $cfg"
+  echo "  $envf"
+}
+
+cmd_debug() {
+  resolve_defaults
+
+  local query=""
+  local selected_file=""
+  local symbol=""
+  local print_mode="summary"
+  local top_k="8"
+  local out_file=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --file)
+        selected_file="${2:-}"
+        shift 2
+        ;;
+      --query)
+        query="${2:-}"
+        shift 2
+        ;;
+      --symbol)
+        symbol="${2:-}"
+        shift 2
+        ;;
+      --json)
+        print_mode="json"
+        shift
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --out)
+        out_file="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      *)
+        echo "unknown arg for debug: $1" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  [[ -n "$selected_file" ]] || { echo "debug requires --file <path>" >&2; exit 2; }
+  if [[ -z "$query" ]]; then
+    query="Explain/debug this file"
+  fi
+  if [[ -n "$symbol" ]]; then
+    query="$query (symbol: $symbol)"
+  fi
+
+  local args=(
+    --workspace-root "$WORKSPACE_ROOT"
+    --query "$query"
+    --context-url "$CONTEXT_URL"
+    --plan-gate-url "$PLAN_GATE_URL"
+    --top-k "$top_k"
+    --print "$print_mode"
+    --task-type "EXPLAIN_DEBUG"
+    --selected-file "$selected_file"
+    --timeout-sec "$TIMEOUT_SEC"
+  )
+  if [[ -n "$out_file" ]]; then
+    args+=(--out "$out_file")
+  fi
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_plan() {
+  resolve_defaults
+
+  local query=""
+  local print_mode="summary"
+  local top_k="8"
+  local out_file=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json)
+        print_mode="json"
+        shift
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --out)
+        out_file="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      -*)
+        echo "unknown flag: $1" >&2
+        exit 2
+        ;;
+      *)
+        if [[ -z "$query" ]]; then
+          query="$1"
+        else
+          query="$query $1"
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  [[ -n "$query" ]] || { echo "plan requires a query string" >&2; exit 2; }
+
+  local args=(
+    --workspace-root "$WORKSPACE_ROOT"
+    --query "$query"
+    --context-url "$CONTEXT_URL"
+    --plan-gate-url "$PLAN_GATE_URL"
+    --top-k "$top_k"
+    --print "$print_mode"
+    --task-type "general"
+    --response-extension "plan_contract.v1"
+    --timeout-sec "$TIMEOUT_SEC"
+  )
+  if [[ -n "$out_file" ]]; then
+    args+=(--out "$out_file")
+  fi
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_scenario() {
+  resolve_defaults
+
+  local scenario_file=""
+  local out_dir=""
+  local top_k="8"
+  local scenario_type="ask"
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --file)
+        scenario_file="${2:-}"
+        shift 2
+        ;;
+      --out-dir)
+        out_dir="${2:-}"
+        shift 2
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --type)
+        scenario_type="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      *)
+        echo "unknown arg for scenario: $1" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  if [[ -z "$scenario_file" ]]; then
+    echo "scenario requires --file <path>" >&2
+    exit 2
+  fi
+  if [[ ! -f "$scenario_file" ]]; then
+    echo "scenario file not found: $scenario_file" >&2
+    exit 2
+  fi
+
+  if [[ -z "$out_dir" ]]; then
+    out_dir="$GLOBAL_STATE_DIR/scenario-runs/$(date +%Y%m%d-%H%M%S)"
+  fi
+  mkdir -p "$out_dir"
+
+  local idx=0
+  local fail=0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+    idx=$((idx + 1))
+    local out_json="$out_dir/$(printf "%03d" "$idx").json"
+    echo ""
+    echo "=== Scenario $idx ($scenario_type) ==="
+    echo "query: $line"
+    local status=0
+    case "$scenario_type" in
+      ask)
+        python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" \
+          --workspace-root "$WORKSPACE_ROOT" \
+          --query "$line" \
+          --context-url "$CONTEXT_URL" \
+          --plan-gate-url "$PLAN_GATE_URL" \
+          --top-k "$top_k" \
+          --task-type general \
+          --timeout-sec "$TIMEOUT_SEC" \
+          --out "$out_json" \
+          --print summary || status=$?
+        ;;
+      plan)
+        python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" \
+          --workspace-root "$WORKSPACE_ROOT" \
+          --query "$line" \
+          --context-url "$CONTEXT_URL" \
+          --plan-gate-url "$PLAN_GATE_URL" \
+          --top-k "$top_k" \
+          --task-type general \
+          --response-extension plan_contract.v1 \
+          --timeout-sec "$TIMEOUT_SEC" \
+          --out "$out_json" \
+          --print summary || status=$?
+        ;;
+      debug)
+        # debug scenario format: selected_file|query
+        local sel_file="${line%%|*}"
+        local dbg_query="${line#*|}"
+        if [[ "$sel_file" == "$line" || -z "$sel_file" || -z "$dbg_query" ]]; then
+          echo "[FAIL] debug scenario must be: selected_file|query" >&2
+          status=2
+        else
+          python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" \
+            --workspace-root "$WORKSPACE_ROOT" \
+            --query "$dbg_query" \
+            --context-url "$CONTEXT_URL" \
+            --plan-gate-url "$PLAN_GATE_URL" \
+            --top-k "$top_k" \
+            --task-type EXPLAIN_DEBUG \
+            --selected-file "$sel_file" \
+            --timeout-sec "$TIMEOUT_SEC" \
+            --out "$out_json" \
+            --print summary || status=$?
+        fi
+        ;;
+      *)
+        echo "unsupported scenario type: $scenario_type (use ask|debug|plan)" >&2
+        exit 2
+        ;;
+    esac
+    if [[ "$status" -ne 0 ]]; then
+      fail=$((fail + 1))
+      echo "[FAIL] scenario $idx"
+    else
+      echo "[OK] saved: $out_json"
+    fi
+  done < "$scenario_file"
+
+  echo ""
+  echo "Scenario run complete: total=$idx failed=$fail out_dir=$out_dir"
+  [[ "$idx" -gt 0 ]] || { echo "No runnable queries found in $scenario_file" >&2; exit 2; }
+  [[ "$fail" -eq 0 ]]
+}
+
+cmd_health() {
+  resolve_defaults
+  local auto_fix=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --auto-fix) auto_fix=1; shift ;;
+      *) echo "unknown arg for health: $1" >&2; exit 2 ;;
+    esac
+  done
+  local log_dir="$GLOBAL_STATE_DIR/logs"
+  mkdir -p "$log_dir"
+  local journal="$log_dir/mcoder-health-$(date +%Y%m%d-%H%M%S).log"
+  {
+    echo "timestamp_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "config_file=$CONFIG_FILE"
+    echo "workspace_root=$WORKSPACE_ROOT"
+    echo "context_url=$CONTEXT_URL"
+    echo "plan_gate_url=$PLAN_GATE_URL"
+    echo "auto_fix=$auto_fix"
+  } >"$journal"
+
+  local context_ok=0
+  local plan_ok=0
+  local ctx_code
+  local pg_code
+  print_progress "Checking Context Layer health: $CONTEXT_URL/healthz (timeout ${TIMEOUT_SEC}s)"
+  ctx_code="$(http_code "$CONTEXT_URL/healthz")"
+  print_progress "Checking Plan-Gate health: $PLAN_GATE_URL/healthz (timeout ${TIMEOUT_SEC}s)"
+  pg_code="$(http_code "$PLAN_GATE_URL/healthz")"
+  echo "context_health_code=$ctx_code" >>"$journal"
+  echo "plan_gate_health_code=$pg_code" >>"$journal"
+  if [[ "$ctx_code" == "200" ]]; then context_ok=1; fi
+  if [[ "$pg_code" == "200" ]]; then plan_ok=1; fi
+
+  if [[ "$context_ok" -eq 0 ]]; then
+    echo "diagnosis: context health check failed" >>"$journal"
+    if [[ "$auto_fix" -eq 1 ]]; then
+      if command -v systemctl >/dev/null 2>&1; then
+        print_progress "Context unhealthy; attempting service restart"
+        echo "action: attempting systemctl --user restart mcoder-context" >>"$journal"
+        systemctl --user restart mcoder-context >>"$journal" 2>&1 || true
+      else
+        echo "action_skipped: systemctl unavailable" >>"$journal"
+      fi
+      sleep 2
+      ctx_code="$(http_code "$CONTEXT_URL/healthz")"
+      echo "context_health_code_after_fix=$ctx_code" >>"$journal"
+      if [[ "$ctx_code" == "200" ]]; then
+        context_ok=1
+        echo "result: context recovered after restart" >>"$journal"
+      else
+        echo "result: context still failing after restart" >>"$journal"
+      fi
+    fi
+  fi
+
+  if [[ "$plan_ok" -eq 0 ]]; then
+    echo "diagnosis: plan-gate health check failed" >>"$journal"
+    if [[ "$auto_fix" -eq 1 && -x "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" ]]; then
+      echo "action: attempting stack compatibility check for diagnosis" >>"$journal"
+      print_progress "Plan-Gate unhealthy; running stack diagnostics"
+      bash "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" check >>"$journal" 2>&1 || true
+      pg_code="$(http_code "$PLAN_GATE_URL/healthz")"
+      echo "plan_gate_health_code_after_diagnosis=$pg_code" >>"$journal"
+      if [[ "$pg_code" == "200" ]]; then
+        plan_ok=1
+      fi
+    fi
+  fi
+
+  if [[ "$context_ok" -eq 1 ]]; then
+    curl -fsS "$CONTEXT_URL/version" >/dev/null 2>>"$journal" || true
+  fi
+  if [[ "$plan_ok" -eq 1 ]]; then
+    curl -fsS "$PLAN_GATE_URL/version" >/dev/null 2>>"$journal" || true
+  fi
+
+  if [[ "$context_ok" -eq 1 && "$plan_ok" -eq 1 ]]; then
+    echo "Context Layer + Plan-Gate health: OK"
+    echo "health journal: $journal"
+    return 0
+  fi
+  echo "Context Layer + Plan-Gate health: FAILED"
+  echo "health journal: $journal"
+  return 1
+}
+
+cmd_doctor() {
+  resolve_defaults
+  local fail_count=0
+  local cfg_ok=0
+  local ws_ok=0
+  local context_ok=0
+  local plan_ok=0
+  local mode_ok=0
+  local neo4j_ok=0
+
+  [[ -f "$CONFIG_FILE" ]] && cfg_ok=1
+  [[ -d "$WORKSPACE_ROOT" ]] && ws_ok=1
+  [[ "$(http_code "$CONTEXT_URL/healthz")" == "200" ]] && context_ok=1
+  [[ "$(http_code "$PLAN_GATE_URL/healthz")" == "200" ]] && plan_ok=1
+  [[ "$(cfg_get mode)" == "api_only" ]] && mode_ok=1
+
+  if python3 - <<'PY' >/dev/null 2>&1
+import importlib
+importlib.import_module("neo4j")
+print("ok")
+PY
+  then
+    neo4j_ok=1
+  fi
+
+  [[ "$cfg_ok" -eq 1 ]] && echo "Config: OK ($CONFIG_FILE)" || { echo "Config: FAIL ($CONFIG_FILE)"; fail_count=$((fail_count + 1)); }
+  [[ "$ws_ok" -eq 1 ]] && echo "Workspace root: OK ($WORKSPACE_ROOT)" || { echo "Workspace root: FAIL ($WORKSPACE_ROOT)"; fail_count=$((fail_count + 1)); }
+  [[ "$context_ok" -eq 1 ]] && echo "Context Layer: OK ($CONTEXT_URL)" || { echo "Context Layer: FAIL ($CONTEXT_URL)"; fail_count=$((fail_count + 1)); }
+  [[ "$plan_ok" -eq 1 ]] && echo "Plan-Gate: OK ($PLAN_GATE_URL)" || { echo "Plan-Gate: FAIL ($PLAN_GATE_URL)"; fail_count=$((fail_count + 1)); }
+  [[ "$mode_ok" -eq 1 ]] && echo "API-only mode: OK" || { echo "API-only mode: FAIL (mode=$(cfg_get mode))"; fail_count=$((fail_count + 1)); }
+  [[ "$neo4j_ok" -eq 1 ]] && echo "Neo4j driver: OK (structural queries enabled)" || echo "Neo4j driver: WARN (structural graph queries may return GRAPH_UNAVAILABLE)"
+
+  [[ "$fail_count" -eq 0 ]]
+}
+
+cmd_version() {
+  echo "mcoder wrapper: scripts/mcoder"
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" --help >/dev/null
+  echo "query cli backend: runtime/scripts/motadata_query_cli.py"
+}
+
+main() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --verbose)
+        VERBOSE=1
+        shift
+        ;;
+      --config)
+        MCODER_CONFIG_PATH="${2:-}"
+        shift 2
+        ;;
+      --timeout-sec)
+        TIMEOUT_SEC="${2:-15}"
+        shift 2
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+  local cmd="${1:-}"
+  if [[ -z "$cmd" ]]; then
+    usage
+    exit 2
+  fi
+  shift || true
+  case "$cmd" in
+    init) cmd_init "$@" ;;
+    prompt) cmd_prompt "$@" ;;
+    debug) cmd_debug "$@" ;;
+    plan) cmd_plan "$@" ;;
+    scenario) cmd_scenario "$@" ;;
+    health) cmd_health "$@" ;;
+    doctor) cmd_doctor "$@" ;;
+    version) cmd_version ;;
+    -h|--help|help) usage ;;
+    *)
+      echo "unknown command: $cmd" >&2
+      usage
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"
