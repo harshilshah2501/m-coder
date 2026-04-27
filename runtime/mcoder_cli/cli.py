@@ -330,15 +330,15 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
         print(f"quality: {md.get('evidence_quality')}  reasons: {md.get('quality_reasons')}")
         if task_type == "EXPLAIN_DEBUG":
             dbg_summary = str(explain_debug.get("summary") or "").strip()
-            dbg_analysis = str(explain_debug.get("analysis") or "").strip()
+            dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
             dbg_quality = str(md.get("debug_narration_quality") or "").strip().upper()
             dbg_issues = md.get("debug_narration_issues") if isinstance(md.get("debug_narration_issues"), list) else []
             if dbg_summary:
                 print(f"debug_summary: {dbg_summary}")
-            if dbg_analysis:
-                first = dbg_analysis.splitlines()[0].strip()
+            if dbg_logic:
+                first = dbg_logic.splitlines()[0].strip()
                 if first:
-                    print(f"debug_analysis_head: {first}")
+                    print(f"debug_logic_head: {first}")
             if dbg_quality == "CURATED":
                 issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
                 print(f"debug_note: narration curated by governance for precision{issue_note}")
