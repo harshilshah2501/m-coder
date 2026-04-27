@@ -5,6 +5,8 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 ## Fast Start Routes
 
 - **Simple path (pick automated vs manual API vs setup — read this first if docs feel fragmented):** [`../MOTADATA_SIMPLE_PATH.md`](../MOTADATA_SIMPLE_PATH.md)
+- **API-only developer setup (current onboarding path):** [`guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`](guides/MCODER_API_ONLY_DEVELOPER_SETUP.md)
+- **`mcoder` CLI UX contract:** [`guides/MCODER_CLI_UX_CONTRACT_V1.md`](guides/MCODER_CLI_UX_CONTRACT_V1.md)
 - **All user scenarios (Ask / Debug / Plan / Code / Agent) — root guide:** [`../MCODER_USER_SCENARIOS_GUIDE.md`](../MCODER_USER_SCENARIOS_GUIDE.md)
 - **Current system truth:** [`LIVE_ROADMAP_TRACKER.md`](LIVE_ROADMAP_TRACKER.md)
 - **Canonical doctrine/spec spine:** [`MASTER_SYSTEM_SPEC.md`](MASTER_SYSTEM_SPEC.md)
@@ -15,6 +17,8 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 
 ## Operator Navigation
 
+- **Developer API-only onboarding:** [`guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`](guides/MCODER_API_ONLY_DEVELOPER_SETUP.md)
+- **CLI command/output/error contract:** [`guides/MCODER_CLI_UX_CONTRACT_V1.md`](guides/MCODER_CLI_UX_CONTRACT_V1.md)
 - **Bring services up/down (governed path):** [`guides/ORCHESTRATOR_GUIDE.md`](guides/ORCHESTRATOR_GUIDE.md)
 - **Optional local systemd wrapper:** [`guides/ORCHESTRATOR_SERVICE_GUIDE.md`](guides/ORCHESTRATOR_SERVICE_GUIDE.md)
 - **Production verification flow (Motadata workspace):** [`guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md)
@@ -34,6 +38,7 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 
 - **Plan-Gate API surface:** [`runtime/README.md`](runtime/README.md), [`api/README.md`](api/README.md)
 - **Runtime state transitions:** [`runtime/RUNTIME_STATE_TRANSITIONS.md`](runtime/RUNTIME_STATE_TRANSITIONS.md)
+- **Developer CLI/API setup contract:** [`guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`](guides/MCODER_API_ONLY_DEVELOPER_SETUP.md), [`guides/MCODER_CLI_UX_CONTRACT_V1.md`](guides/MCODER_CLI_UX_CONTRACT_V1.md)
 - **Context Layer package/runtime contract:** [`packaging/motadata-context-layer/README.md`](../packaging/motadata-context-layer/README.md)
 - **Observability references:** [`OBSERVATION/README.md`](OBSERVATION/README.md), [`../observation/README.md`](../observation/README.md)
 

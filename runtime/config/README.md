@@ -2,10 +2,20 @@
 
 **Topology:** one **distributed** setup — workspace-side **Context Layer** (WSL or native Linux); **Plan-Gate + vLLM** on the **GPU** host. Not separate deployment “profiles.” See **`docs/validation/B5_HOST_READINESS.md`** (Canonical Host Model).
 
+## Developer vs contributor config
+
+Normal Motadata developers should use the API-only developer setup:
+
+- Canonical user config: `~/.mcoder/config.yaml`
+- Generated service env projection: `~/.mcoder/context.env`
+- Setup guide: `../../docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`
+
+The files in this directory are primarily for m-coder contributors, operators, validation runs, and repo-local development.
+
 | File | Purpose |
 |------|---------|
 | `demo_stack.env.example` | Copy to `demo_stack.env` for **`governed_services.sh`** (vLLM + Plan-Gate). Requires `VLLM_BASE_MODEL`. |
-| `host_local.env.example` | Copy to `host_local.env` for **ports + URLs + `WORKSPACE_ROOT`** (Context Layer, plugin, validation sheet). |
+| `host_local.env.example` | Copy to `host_local.env` for **ports + URLs + `WORKSPACE_ROOT`** in repo-local contributor/operator workflows. Normal developers should prefer `~/.mcoder/config.yaml`. |
 
 Both `demo_stack.env` and `host_local.env` are gitignored.
 

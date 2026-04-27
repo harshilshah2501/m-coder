@@ -1,7 +1,7 @@
 # SYSTEM_TRUTH — m-coder / Motadata AI Coding Assistant
 
 **Status tags:** `CANONICAL` · `IN_PRODUCT_SLICE` (governed HTTP + workspace backend + GPU stack)  
-**Last reconciled:** 2026-04-18 (against `docs/LIVE_ROADMAP_TRACKER.md`, `docs/LAYER1_GOVERNANCE_SPEC.md`–`docs/LAYER4_OBSERVATION_SPEC.md`, `docs/PROGRAM_STATE_SNAPSHOT.md`, `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md`)
+**Last reconciled:** 2026-04-25 (against `docs/LIVE_ROADMAP_TRACKER.md`, Stage 3 readiness freeze docs, CLI UX contract, API-only developer setup, and Context Layer packaging docs)
 
 This file is the **single navigation anchor** for “what the repo actually is right now.” Detailed doctrine remains in linked specs; **live closure and milestone truth** are owned by the tracker.
 
@@ -16,6 +16,7 @@ This file is the **single navigation anchor** for “what the repo actually is r
 | 3 | `docs/mvp_declaration/GOVERNED_SYSTEM_V1_PRODUCTION_CLOSURE_DECLARATION.md` | Formal production closure sign-off (with tracker) |
 | 4 | `docs/ARCHITECTURE_4_LAYER.md` | Directory ↔ layer mapping, allowed/forbidden per layer |
 | 5 | `docs/PRODUCT_SLICE_CHARTER.md` | Product-grade vertical slice contracts and host topology (JetBrains listed as client there; **active validation stance for this pass is CLI/HTTP-first** — see `docs/PRODUCT_SLICE.md`) |
+| 6 | `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md` + `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` | Current developer-facing API-only CLI/setup contract; supporting productization docs, not runtime authority |
 
 **Supporting (not competing) narrative:** `docs/production_closure_handbook_corrected_canonical_version.md` — **PARTIALLY_STALE:** its “gates OPEN / blocking closure” tables predate tracker-recorded closure; treat tracker + Action 14 artifacts as **CANONICAL** for closure state.
 
@@ -57,11 +58,22 @@ This file is the **single navigation anchor** for “what the repo actually is r
 - **Compatibility / default IDE path:** `POST /v0/ask` when evidence-first is off.
 - **Primary evidence-first path (CLI and opt-in IDE):** export → `POST /v1/ask` (see `runtime/scripts/verify_ask_path.sh`, `motadata_behavior_verify.py`).
 
-**Stage 3 controlled loop:** Implemented under `runtime/loop/`; burn-in closure recorded in tracker (**B7**) and `docs/validation/STAGE3_BURN_IN_REPORT.md`. **IDE → `Stage3LoopController` live E2E** called out in tracker as **follow-on**, not identical to burn-in closure.
+**Stage 3 controlled loop:** Implemented under `runtime/loop/`; burn-in closure recorded in tracker (**B7**) and `docs/validation/STAGE3_BURN_IN_REPORT.md`. Acting-system discovery and readiness freeze are documented, but **Stage 3 execution integration remains blocked** until explicit implementation approval and Mode A conformance approval. **IDE → `Stage3LoopController` live E2E** remains follow-on, not product-enabled behavior.
 
 ---
 
-## 4. CLI-first validation stance (this documentation pass)
+## 4. API-only developer stance (current productization lane)
+
+**Current developer-facing direction:** one governed `mcoder` CLI/API client, WSL-local Context Layer, Motadata workspace beside the developer, and shared GPU/Linux Plan-Gate. Normal developers should install the m-coder client/runtime; they should not operate the m-coder development repo unless contributing to m-coder.
+
+Canonical setup/UX docs:
+
+- `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`
+- `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`
+
+The CLI is a governed client: no direct vLLM, no raw repo upload to GPU, no execution/apply/run/retry/fix/auto/agent commands in V1.
+
+## 4.1 CLI-first validation stance
 
 **Active closure / regression surfaces for ongoing work:**
 
@@ -85,6 +97,8 @@ Operational runbooks that are IDE-centric remain **ARCHIVE / COMPATIBILITY** for
 | PR-6 retrieval baseline **LOCKED**; changes require re-validation on real repo | Tracker B1 / PR-6 language |
 | Assist Layer (Stage 2.5) **advisory-only**; does not drive retrieval/runtime query inputs | Tracker §1.5 |
 | Model outputs **untrusted** until runtime validation | `docs/PROGRAM_STATE_SNAPSHOT.md` |
+| `mcoder` CLI V1 is **thinking/proposal only**; `propose` returns `patch_proposal.v1` metadata only and no raw patch diffs | `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md` |
+| Normal developer deployment is **WSL-local Context Layer + shared Plan-Gate**, with `~/.mcoder/config.yaml` as canonical user config | `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` |
 
 ---
 
@@ -96,6 +110,8 @@ Operational runbooks that are IDE-centric remain **ARCHIVE / COMPATIBILITY** for
 | `plan_request` / `decision_response` v0.1 | `runtime/ide/schemas/`, `runtime/schemas/` |
 | `layer5.evidence_bundle.v1` | Packaged schema + runtime validation |
 | Plan/ledger v0.1 | `docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md`, `runtime/schemas/` |
+| `mcoder` CLI UX V1 | `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md` |
+| API-only developer setup | `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` |
 
 IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED_INTEGRATION** for validation priority, **COMPATIBILITY** for API behavior).
 
@@ -105,6 +121,7 @@ IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED
 
 - Redefining constitutional phase semantics or dominance outside GREG process (`MASTER_SYSTEM_SPEC` immutability clause).
 - **Uncontrolled agent loops**; LLM-owned control flow for governed execution.
+- Developer-facing CLI commands that imply acting authority in V1: `execute`, `apply`, `run`, `retry`, `fix`, `auto`, `agent`.
 - Treating `archive/legacy_runtime_rag/` orchestration tooling as the governed execution path.
 - **Embeddings / Neo4j / LangGraph / LLM reranking** as debt work — listed **DEFERRED** in `docs/PROGRAM_STATE_SNAPSHOT.md` (not “next sprint” unless tracker reopens).
 
@@ -116,6 +133,7 @@ IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED
 |------|-----|
 | JetBrains UI/plugin as primary **weekly** validation surface | `DEFERRED_INTEGRATION` |
 | `Stage3LoopController` **live IDE** E2E | Follow-on per tracker / `docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md` §7 |
+| Stage 3 execution/mutation enablement | Blocked until system-owner approval + Mode A conformance approval |
 | Semantic embedding retrieval **as a gate** | Charter Track C; lexical MVP baseline locked |
 | Full product SaaS, multi-tenant RBAC | Out of charter slice |
 
@@ -136,6 +154,8 @@ IDE/plugin flow rules remain in `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` (**DEFERRED
 
 - `docs/validation/MOTADATA_BEHAVIOR_VERIFICATION_CLOSURE.md` — Motadata CLI verification closure (baseline pointers; team handoff)
 - `docs/validation/POST_CLOSURE_MAINTENANCE.md` — ongoing operational lock + optional charters (not open closure todos)
+- `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md` — current API-only CLI UX contract
+- `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` — current developer setup path
 - `docs/PRODUCT_SLICE.md` — in/out of scope for *this* pass  
 - `docs/REPO_REALITY_MAP.md` — directory map  
 - `docs/CLI_VALIDATION_MATRIX.md` — proof commands  
