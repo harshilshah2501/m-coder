@@ -352,6 +352,36 @@ def test_handle_ask_v1_dirty_buffer_overlay_reaches_reasoner_bundle():
     assert "V1_DIRTY_OVERLAY_TOKEN" in item.content
 
 
+def test_handle_ask_v1_curates_generic_debug_narration():
+    ev = _load_golden_evidence()
+    first_path = str((ev.get("entries") or [])[0].get("relative_path") or "")
+    req = _minimal_v1_ask(
+        ev,
+        request_id="req-v1-debug-curation-1",
+        query="Debug why this flow can fail",
+        task_type="EXPLAIN_DEBUG",
+        selected_file=first_path,
+        client_context={"selection": "return item;"},
+    )
+    with patch("runtime.ask_service.v1_ingest.explain_debug") as mock_explain:
+        mock_explain.return_value = ExplainDebugResult(
+            summary="The snippet does not provide enough context and we can infer some potential reasons.",
+            logic_flow="",
+            likely_bug_risk="",
+            evidence=[],
+            confidence_limits="",
+        )
+        resp = handle_ask_v1_request(req)
+
+    md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
+    ed = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+    assert md.get("debug_narration_quality") == "CURATED"
+    assert "DEBUG_NARRATION_CURATED" in (md.get("quality_reasons") or [])
+    assert md.get("debug_narration_issues")
+    assert str(ed.get("summary") or "").startswith("Governance-curated debug summary")
+    assert ed.get("evidence")
+
+
 def test_handle_ask_v1_evidence_schema_invalid():
     ev = deepcopy(_load_golden_evidence())
     ev["schema_hint"] = "wrong.hint"
