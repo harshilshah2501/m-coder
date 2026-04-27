@@ -102,12 +102,26 @@ mcoder init \
   --plan-gate-url http://45.195.82.10:8089
 ```
 
-4. Verify CLI and service commands are installed:
+**Important:** `mcoder init` and `pip install mcoder-suite` **only** write config (`config.yaml`, `context.env`) and install CLI binaries. They **do not**:
+
+- start the Context Layer HTTP process on `:8091`
+- start Plan-Gate on the GPU host or create an SSH tunnel to `127.0.0.1:8089`
+
+You must bring those endpoints up separately, then verify:
 
 ```bash
-mcoder version
-motadata-context-layer --help
+curl -fsS http://127.0.0.1:8091/healthz   # Context Layer (local)
+curl -fsS http://127.0.0.1:8089/healthz   # Plan-Gate (local tunnel or same machine only)
 ```
+
+**Minimal order after install:**
+
+1. Start Context Layer — see [Context Layer User Service](#context-layer-user-service) (`systemctl --user enable --now mcoder-context` or run `motadata-context-layer` with `context.env`).
+2. Ensure Plan-Gate is reachable at `plan_gate_url` in `.mcoder/config.yaml` — typically the shared GPU host URL, **or** `http://127.0.0.1:8089` after you open an SSH tunnel from WSL to the GPU (`ssh -L 8089:127.0.0.1:8089 ...`). Installing the wheel does not open that tunnel.
+3. Run `mcoder doctor` then `mcoder health --auto-fix` (optional auto-fix for common Plan-Gate URL mismatches).
+4. Verify binaries: `mcoder version` and `motadata-context-layer --help`.
+
+**Continue with optional customization:**
 
 5. (Optional) manually edit canonical project config:
 
@@ -238,6 +252,69 @@ journalctl --user -u mcoder-context -n 100 --no-pager
 tail -f /root/Harshil-PoCs/Motadata/.mcoder/context-layer.log
 ```
 
+## WSL: bring up Context Layer and Plan-Gate (SSH tunnel)
+
+Everything below runs **inside your WSL distro** (not Windows `cmd`). Replace paths and hostnames with yours.
+
+### 1) systemd on WSL2 (needed for `systemctl --user`)
+
+Recent WSL2 supports **user** units. Ensure the distro boots with systemd: in `/etc/wsl.conf` add:
+
+```ini
+[boot]
+systemd=true
+```
+
+Then from **Windows**: `wsl --shutdown`, reopen the distro, and retry `systemctl --user status`.
+
+If `systemctl --user` still fails, run Context Layer in the foreground (`source .mcoder/venv/bin/activate`, load `.mcoder/context.env`, run `motadata-context-layer`), or keep it in `tmux`/`screen` with the same env as the unit file.
+
+### 2) Context Layer on `127.0.0.1:8091` (local to WSL)
+
+After `mcoder init` and a venv with `motadata-context-layer` on `PATH`:
+
+1. Edit `~/.config/systemd/user/mcoder-context.service` so **`EnvironmentFile`** and **`ExecStart`** point at **your** project — e.g. `$HOME/Harshil-PoCs/Motadata/.mcoder/context.env` and `$HOME/.../.mcoder/venv/bin/motadata-context-layer` (see [Context Layer User Service](#context-layer-user-service)).
+2. `systemctl --user daemon-reload && systemctl --user enable --now mcoder-context`
+3. `curl -fsS http://127.0.0.1:8091/healthz`
+
+### 3) Plan-Gate: either public URL or SSH tunnel to `127.0.0.1:8089`
+
+**Option A — no tunnel:** if the GPU host’s Plan-Gate is reachable from WSL on the network, set:
+
+```yaml
+plan_gate_url: http://<GPU_PUBLIC_IP>:8089
+```
+
+(e.g. the same URL you pass to `mcoder init --plan-gate-url ...`.) Verify: `curl -fsS http://<GPU_PUBLIC_IP>:8089/healthz`.
+
+**Option B — tunnel (Plan-Gate only bound on the GPU’s loopback):** from WSL, forward local `8089` to the remote service:
+
+```bash
+# Long form: forward WSL localhost:8089 -> GPU localhost:8089 (where Plan-Gate listens)
+ssh -N -L 8089:127.0.0.1:8089 <user>@<GPU_HOST>
+```
+
+Leave that terminal open (or use `autossh` with the same `-L`). In **another** terminal:
+
+```bash
+curl -fsS http://127.0.0.1:8089/healthz
+```
+
+Point mcoder at the tunnel:
+
+```bash
+mcoder init --workspace-root "$HOME/Harshil-PoCs/Motadata" \
+  --plan-gate-url http://127.0.0.1:8089 --force
+```
+
+### 4) Sanity check
+
+```bash
+mcoder health
+```
+
+Both checks need **TCP success**: Context Layer is always your WSL box; Plan-Gate is either the public GPU URL or `127.0.0.1:8089` **only while the SSH tunnel is connected**.
+
 ## Shared GPU/Linux Server
 
 The GPU/Linux server runs shared governed services:
@@ -268,6 +345,69 @@ curl -fsS http://127.0.0.1:8089/version
 curl -fsS http://127.0.0.1:8000/v1/models
 ```
 
+## Stack diagnostic daemon (`mcoder stack`)
+
+Use this when you want **one place** that understands the full local stack: **wheel install**, **Context Layer**, **Plan-Gate**, and an optional **SSH tunnel** when `plan_gate_url` points at loopback.
+
+**Non-intrusive by default:** `stack check` is read-only unless you pass **`--try-tunnel`**. **`stack watch`** only appends JSON to **`.mcoder/logs/stack-watch.log`** — it does **not** run `ssh`, restart `systemd`, or spam the terminal unless you explicitly add **`--auto-tunnel`**, **`--auto-context`**, or **`--verbose`**.
+
+Add optional tunnel metadata to `.mcoder/config.yaml` (or use environment variables):
+
+```yaml
+plan_gate_ssh_target: harshil@45.195.82.10
+plan_gate_ssh_remote_port: 8089
+```
+
+Same via env: `MCODER_PLAN_GATE_SSH`, `MCODER_PLAN_GATE_SSH_REMOTE_PORT`.
+
+**One-shot check** (wheel + `/healthz` on both services):
+
+```bash
+mcoder stack check
+mcoder stack check --try-tunnel
+```
+
+`--try-tunnel` attempts a single `ssh -L` forward when `plan_gate_url` is `http://127.0.0.1:8089` (or localhost) and Plan-Gate is down. Unattended tunneling uses **`BatchMode=yes`**; configure **SSH key auth** to the GPU host (`ssh harshil@45.195.82.10` should work non-interactively).
+
+**Watch loop** (observe-only unless you opt in):
+
+```bash
+# Log-only: no ssh, no systemctl, one startup line (use --quiet to hide that too)
+mcoder stack watch --interval 60
+```
+
+Optional **remediation** (only if you want the daemon to act):
+
+```bash
+mcoder stack watch --interval 60 --auto-tunnel --auto-context
+```
+
+- **`--auto-tunnel`**: if Plan-Gate on loopback is unhealthy, run `ssh -L` (writes `.mcoder/stack/tunnel.log` and `tunnel.pid`).
+- **`--auto-context`**: if Context Layer is unhealthy, run `systemctl --user restart mcoder-context`.
+- **`--verbose`**: mirror each JSON log line to stdout (otherwise console stays quiet).
+- **`--quiet`**: no startup banner (still only writes the log file by default).
+
+Run under **systemd --user** or **`tmux`** on WSL. Example — **observe-only** service:
+
+```ini
+[Unit]
+Description=m-coder stack watch (observe-only)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/Harshil-PoCs/Motadata
+ExecStart=/root/Harshil-PoCs/Motadata/.mcoder/venv/bin/mcoder stack watch --interval 120 --quiet
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+```
+
+Add **`--auto-tunnel --auto-context`** to `ExecStart` only when you intentionally want remediation.
+
+This does **not** replace installing the wheel or starting long-lived GPU services; it **records** status and can **optionally repair** the local path when those flags are set.
+
 ## Validation Sequence (Run in Order)
 
 ### 1) Doctor (readiness diagnosis)
@@ -292,8 +432,10 @@ Auto-fix behavior:
 
 ### 3) Smoke prompt
 
+Each `prompt` waits on **two** HTTP calls (`export_evidence` on Context Layer, then `/v1/ask` on Plan-Gate); **both** use `--timeout-sec`. Default `15s` often fails on large workspaces or slow GPU—use **`120`** or **`300`** when you see timeouts.
+
 ```bash
-mcoder --timeout-sec 20 prompt "How does alert correlation work?"
+mcoder --timeout-sec 120 prompt "How does alert correlation work?"
 ```
 
 Expected posture:
@@ -514,3 +656,22 @@ If only evidence export fails:
 2. Install in project-local venv on WSL/Linux developer host.
 3. Run `mcoder init`, `mcoder doctor`, and `mcoder health --auto-fix`.
 4. Validate ask/debug/plan scenario flows.
+
+---
+
+# readiness
+mcoder doctor
+mcoder --timeout-sec 10 health --auto-fix
+
+# ask
+mcoder --timeout-sec 20 prompt "Which class is the base class for all APIs?"
+mcoder --timeout-sec 20 prompt "How does mail server configuration work?"
+mcoder --timeout-sec 20 prompt "How are config stores organized?"
+mcoder --timeout-sec 20 prompt "Explain the API layer architecture."
+mcoder --timeout-sec 20 prompt "Find all classes that handle notifications."
+
+# debug
+mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java --query "Debug why availability correlation might skip enrichment branches."
+mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java --query "Debug why mail server updates are not reflected after API update."
+mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/store/AbstractConfigStore.java --query "Debug null-return paths in AbstractConfigStore.getItem and related callers."
+mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java --query "Debug where SNMP trap parsing can fail before alert generation."

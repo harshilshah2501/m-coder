@@ -13,6 +13,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 from runtime.mcoder_cli.answer_shaping import shape_prompt_summary
+from runtime.mcoder_cli import stack_daemon
 
 
 def _now_utc() -> str:
@@ -82,6 +83,42 @@ def _post_json(url: str, payload: dict[str, Any], timeout_sec: int) -> tuple[int
         return r.status, json.loads(r.read().decode("utf-8"))
 
 
+def _post_json_or_fail(
+    phase: str,
+    url: str,
+    payload: dict[str, Any],
+    timeout_sec: int,
+) -> tuple[int, dict[str, Any]] | tuple[None, None]:
+    """POST JSON; on timeout/network failure print phase-specific help and return (None, None)."""
+    try:
+        return _post_json(url, payload, timeout_sec)
+    except TimeoutError:
+        print(
+            f"{phase}: timed out after {timeout_sec}s ({url}). "
+            "Large workspaces or cold Context Layer indexing often need >15s.",
+            file=sys.stderr,
+        )
+        print(
+            "Try: mcoder --timeout-sec 120 prompt \"...\"   (or 300 for very large trees)",
+            file=sys.stderr,
+        )
+        return None, None
+    except urllib.error.URLError as e:
+        reason = getattr(e, "reason", e)
+        if isinstance(reason, TimeoutError):
+            print(
+                f"{phase}: timed out after {timeout_sec}s ({url}).",
+                file=sys.stderr,
+            )
+            print("Try: mcoder --timeout-sec 120 prompt \"...\"", file=sys.stderr)
+            return None, None
+        print(f"{phase}: request failed ({url}): {e}", file=sys.stderr)
+        return None, None
+    except OSError as e:
+        print(f"{phase}: network error ({url}): {e}", file=sys.stderr)
+        return None, None
+
+
 class Cfg:
     def __init__(self, args: argparse.Namespace):
         self.verbose = bool(args.verbose)
@@ -93,6 +130,21 @@ class Cfg:
         self.context_url = args.context_url or os.environ.get("MCODER_CONTEXT_URL") or env.get("context_url") or "http://127.0.0.1:8091"
         self.plan_gate_url = args.plan_gate_url or os.environ.get("MCODER_PLAN_GATE_URL") or env.get("plan_gate_url") or "http://127.0.0.1:8089"
         self.mode = env.get("mode", "")
+        ssh_cli = getattr(args, "plan_gate_ssh", None)
+        if ssh_cli is None:
+            ssh_cli = ""
+        self.plan_gate_ssh_target = (
+            str(ssh_cli).strip()
+            or os.environ.get("MCODER_PLAN_GATE_SSH", "").strip()
+            or env.get("plan_gate_ssh_target", "").strip()
+        )
+        rp_cli = getattr(args, "ssh_remote_port", None)
+        if rp_cli is not None:
+            self.plan_gate_ssh_remote_port = int(rp_cli)
+        else:
+            self.plan_gate_ssh_remote_port = int(
+                os.environ.get("MCODER_PLAN_GATE_SSH_REMOTE_PORT", env.get("plan_gate_ssh_remote_port", "8089"))
+            )
         if self.verbose:
             print(
                 f"[DEBUG] config_file={self.config_path} state_dir={self.state_dir} "
@@ -147,7 +199,23 @@ def _cmd_init(args: argparse.Namespace) -> int:
     print("Initialized mcoder project config:")
     print(f"  {cfg_file}")
     print(f"  {env_file}")
+    print()
+    print("Next: start Context Layer (listening on context_url, often :8091) and ensure Plan-Gate")
+    print("      is reachable at plan_gate_url (tunnel or GPU host). Then: mcoder health")
+    print("Docs: docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md (after mcoder init)")
     return 0
+
+
+def _print_health_failure_hint(cfg: Cfg, ctx_ok: bool, pg_ok: bool) -> None:
+    print()
+    print("Health checks failed. Typical fixes:")
+    if not ctx_ok:
+        print(f"  • Context Layer ({cfg.context_url}): start the service or run motadata-context-layer")
+        print("    with .mcoder/context.env — see systemd unit mcoder-context in the setup guide.")
+    if not pg_ok:
+        print(f"  • Plan-Gate ({cfg.plan_gate_url}): ensure the server is up or SSH-tunnel :8089")
+        print("    if using http://127.0.0.1:8089 (pip/init do not open tunnels).")
+    print("  • Full steps: docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md")
 
 
 def _health_core(cfg: Cfg, auto_fix: bool) -> int:
@@ -231,6 +299,7 @@ def _health_core(cfg: Cfg, auto_fix: bool) -> int:
         return 0
     print("Context Layer + Plan-Gate health: FAILED")
     print(f"health journal: {journal}")
+    _print_health_failure_hint(cfg, ctx_ok, pg_ok)
     return 1
 
 
@@ -287,8 +356,11 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = "", response_extensions: list[str] | None = None, print_json: bool = False) -> int:
     rid = str(uuid.uuid4())
-    status, evidence = _post_json(
-        f"{cfg.context_url.rstrip('/')}/v1/export_evidence",
+    export_url = f"{cfg.context_url.rstrip('/')}/v1/export_evidence"
+    ask_url = f"{cfg.plan_gate_url.rstrip('/')}/v1/ask"
+    status, evidence = _post_json_or_fail(
+        "Context Layer export_evidence",
+        export_url,
         {
             "workspace_root": cfg.workspace_root,
             "query": query,
@@ -299,6 +371,8 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
         },
         cfg.timeout_sec,
     )
+    if status is None or evidence is None:
+        return 1
     if status != 200:
         print(f"export_evidence failed http={status}", file=sys.stderr)
         return 1
@@ -313,7 +387,9 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
     }
     if response_extensions:
         ask_req["response_extensions"] = response_extensions
-    ac, resp = _post_json(f"{cfg.plan_gate_url.rstrip('/')}/v1/ask", ask_req, cfg.timeout_sec)
+    ac, resp = _post_json_or_fail("Plan-Gate /v1/ask", ask_url, ask_req, cfg.timeout_sec)
+    if ac is None or resp is None:
+        return 1
     if ac != 200:
         print(f"/v1/ask failed http={ac}", file=sys.stderr)
         return 1
@@ -414,6 +490,41 @@ def _cmd_scenario(args: argparse.Namespace) -> int:
     return 0 if failed == 0 else 1
 
 
+def _stack_monitor_cfg(cfg: Cfg) -> stack_daemon.StackMonitorConfig:
+    return stack_daemon.StackMonitorConfig(
+        context_url=cfg.context_url,
+        plan_gate_url=cfg.plan_gate_url,
+        timeout_sec=cfg.timeout_sec,
+        state_dir=cfg.state_dir,
+        workspace_root=cfg.workspace_root,
+        plan_gate_ssh_target=cfg.plan_gate_ssh_target,
+        plan_gate_ssh_remote_port=cfg.plan_gate_ssh_remote_port,
+        verbose=cfg.verbose,
+    )
+
+
+def _cmd_stack(args: argparse.Namespace) -> int:
+    cfg = Cfg(args)
+    sm = _stack_monitor_cfg(cfg)
+    cmd = getattr(args, "stack_cmd", "") or ""
+    if cmd == "check":
+        return stack_daemon.run_check(
+            sm,
+            json_out=bool(getattr(args, "json", False)),
+            try_tunnel=bool(getattr(args, "try_tunnel", False)),
+        )
+    if cmd == "watch":
+        return stack_daemon.run_watch(
+            sm,
+            interval_sec=int(getattr(args, "interval", 30)),
+            auto_tunnel=bool(getattr(args, "auto_tunnel", False)),
+            auto_context=bool(getattr(args, "auto_context", False)),
+            quiet=bool(getattr(args, "quiet", False)),
+        )
+    print(f"unknown stack subcommand: {cmd}", file=sys.stderr)
+    return 2
+
+
 def _cmd_version(_args: argparse.Namespace) -> int:
     print("mcoder unified package CLI")
     try:
@@ -436,6 +547,8 @@ def build_parser() -> argparse.ArgumentParser:
             "  mcoder init --workspace-root /root/Harshil-PoCs/Motadata --plan-gate-url http://127.0.0.1:8089\n"
             "  mcoder doctor\n"
             "  mcoder --timeout-sec 10 health --auto-fix\n"
+            "  mcoder stack check\n"
+            "  mcoder stack watch --interval 60 --auto-tunnel --auto-context\n"
             "  mcoder --timeout-sec 20 prompt \"Which class is the base class for all APIs?\""
         ),
         formatter_class=argparse.RawTextHelpFormatter,
@@ -478,6 +591,73 @@ def build_parser() -> argparse.ArgumentParser:
         description="Validate config, workspace, service reachability, API mode, and Neo4j availability.",
     )
     s.set_defaults(func=_cmd_doctor)
+
+    stack_p = sub.add_parser(
+        "stack",
+        help="Stack diagnostics (non-intrusive by default; optional remediation flags)",
+        description=(
+            "check: read-only except optional --try-tunnel (explicit opt-in).\n"
+            "watch: by default only appends JSON to .mcoder/logs/stack-watch.log — no ssh, no systemctl, no terminal spam.\n"
+            "Use --auto-tunnel / --auto-context only when you want remediation; --verbose for console lines.\n"
+            "Config: plan_gate_ssh_target in .mcoder/config.yaml or MCODER_PLAN_GATE_SSH."
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    stack_p.add_argument(
+        "--plan-gate-ssh",
+        default="",
+        dest="plan_gate_ssh",
+        metavar="USER@HOST",
+        help="Override SSH destination for Plan-Gate port forward (same as MCODER_PLAN_GATE_SSH)",
+    )
+    stack_p.add_argument(
+        "--ssh-remote-port",
+        type=int,
+        default=None,
+        dest="ssh_remote_port",
+        metavar="PORT",
+        help="Remote Plan-Gate port on GPU host (default 8089 or plan_gate_ssh_remote_port in config)",
+    )
+    stack_sub = stack_p.add_subparsers(dest="stack_cmd", required=True, title="stack commands")
+    sc = stack_sub.add_parser(
+        "check",
+        help="One-shot wheel + Context Layer + Plan-Gate diagnostics",
+    )
+    sc.add_argument("--json", action="store_true", help="Emit JSON for automation")
+    sc.add_argument(
+        "--try-tunnel",
+        action="store_true",
+        help="If Plan-Gate URL is loopback and unhealthy, try starting ssh -L once",
+    )
+    sc.set_defaults(func=_cmd_stack)
+    sw = stack_sub.add_parser(
+        "watch",
+        help="Periodic observe-only logging (optional remediation flags)",
+        description=(
+            "Runs until SIGTERM/SIGINT.\n"
+            "Default: append JSON lines to .mcoder/logs/stack-watch.log only — no ssh, no systemctl, no per-tick stdout.\n"
+            "Use --verbose for JSON on stdout; --quiet for zero console output.\n"
+            "Run under systemd --user or tmux on WSL."
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    sw.add_argument("--interval", type=int, default=30, help="Seconds between iterations (minimum 5)")
+    sw.add_argument(
+        "--auto-tunnel",
+        action="store_true",
+        help="When Plan-Gate fails on loopback, call ssh -L using plan_gate_ssh_target",
+    )
+    sw.add_argument(
+        "--auto-context",
+        action="store_true",
+        help="When Context Layer fails, run systemctl --user restart mcoder-context",
+    )
+    sw.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress startup banner (still logs to stack-watch.log only)",
+    )
+    sw.set_defaults(func=_cmd_stack)
 
     s = sub.add_parser(
         "prompt",
