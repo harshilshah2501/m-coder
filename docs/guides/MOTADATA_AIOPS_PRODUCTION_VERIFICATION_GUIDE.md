@@ -1,3 +1,37 @@
+## Single Command Bootstrap (WSL)
+
+For production-style WSL bring-up, use the orchestrator script:
+
+```bash
+bash scripts/mcoder_wsl_e2e_bootstrap.sh \
+  --repo-root /root/Harshil-PoCs/m-coder \
+  --motadata-root /root/Harshil-PoCs/Motadata \
+  --branch mcoder-cli-ux-contract-v1-audit \
+  --verbose
+```
+
+What it does (in order):
+
+1. validates prerequisites and inputs
+2. checks current git branch
+3. runs `git fetch` + `git pull`
+4. starts/restarts MVP stack (`wsl_plugin_mvp_stack.sh`)
+5. runs integration preflight verification
+6. builds authority code index
+
+Useful flags:
+
+- `--dry-run` (print commands without executing)
+- `--verbose` (debug trace)
+- `--skip-pull`, `--skip-preflight`, `--skip-authority-index`
+- `--allow-dirty` (continue even with local changes)
+
+Logs are written to:
+
+```text
+runtime/.run/mcoder_wsl_e2e_bootstrap_<UTC>.log
+```
+
 # Motadata AIOps Production Verification Guide
 
 Single-source production runbook for verifying Motadata behavior through the governed HTTP stack.
