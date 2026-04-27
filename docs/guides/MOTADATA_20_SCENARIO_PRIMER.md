@@ -52,7 +52,7 @@ Common expected fields for all Ask scenarios:
 ### `ask_base_api_class`
 - **Query:** `Which class is the base class for all APIs?`
 - **Why:** Structural ownership check for API inheritance baseline.
-- **Expected:** response includes `AbstractAPI`; anchor-grounded (non-generic).
+- **Expected:** response includes `AbstractAPI`; anchor-grounded (non-generic). Do **not** present runtime owner class (for example `APIServer`) as the primary answer to this structural inheritance question.
 
 ### `ask_mail_server_configuration`
 - **Query:** `How does mail server configuration work?`
@@ -112,7 +112,7 @@ Common expected fields for all Debug scenarios:
 - **Debug query:** `Debug where SNMP trap parsing can fail before alert generation.`
 - **Selected file:** `motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java`
 - **Selection:** `Trace parse and dispatch logic and identify concrete failure points.`
-- **Why:** Parsing/dispath debugging in SNMP path.
+- **Why:** Parsing/dispatch debugging in SNMP path.
 - **Expected:** includes `SNMPTrapProcessor`, `parse`, `method`.
 
 ### `debug_missing_selected_file`
@@ -197,7 +197,7 @@ Common expected field for all Code scenarios:
 ```bash
 cd ~/Harshil-PoCs/m-coder
 export PYTHONPATH="$(pwd)"
-export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
+export MOTADATA_REPO_ROOT="/root/Harshil-PoCs/Motadata"
 ```
 
 Ask deep:

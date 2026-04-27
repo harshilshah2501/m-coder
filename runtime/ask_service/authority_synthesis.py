@@ -75,6 +75,22 @@ def _is_how_it_works_query(query: str) -> bool:
     return "how" in q and ("work" in q or "flow" in q or "architecture" in q)
 
 
+def _is_structural_inheritance_query(query: str) -> bool:
+    q = (query or "").lower()
+    structural_phrases = (
+        "base class",
+        "api base-class",
+        "common api base class",
+        "extends",
+        "implements",
+        "inherits",
+        "inheritance",
+        "superclass",
+        "parent class",
+    )
+    return any(tok in q for tok in structural_phrases)
+
+
 def _primary_owner_snippet(bundle: ContextBundle, owner_file: str) -> str:
     """
     Best-effort snippet lookup for the authority owner in a ContextBundle.
@@ -322,9 +338,14 @@ def synthesize_authority_plan_steps(
     meta["call_site_candidate_count"] = 0
     meta["call_site_resolution_state"] = "none"
     method_bit = f", method `{p_method}`" if p_method and method_supported else ""
-    steps.append(
-        f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
-    )
+    if _is_structural_inheritance_query(query):
+        steps.append(
+            f"Execution owner anchor (supporting context, not base-class answer): `{p_class}` in `{p_file}`{method_bit}.{role_line}"
+        )
+    else:
+        steps.append(
+            f"Primary implementation owner: `{p_class}` in `{p_file}`{method_bit}.{role_line}"
+        )
     if p_method and not method_supported:
         steps.append(
             f"Method-level owner hook `{p_method}` is authority-derived; current owner snippet window does not expose that method body."

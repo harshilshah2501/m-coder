@@ -50,16 +50,29 @@ def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, d
 def _print_summary(resp: dict[str, Any]) -> None:
     md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
     steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+    explain_debug = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
+    routing_mode = str(resp.get("routing_mode") or "")
     print("")
     print("=== Motadata Ask Summary ===")
     print(f"request_id: {resp.get('request_id')}")
     print(f"posture: {resp.get('governance_posture')}  executed: {resp.get('execution')}")
     print(f"ask_path: {(resp.get('evidence_first_meta') or {}).get('ask_path')}")
     print(f"quality: {md.get('evidence_quality')}  reasons: {md.get('quality_reasons')}")
+    if routing_mode == "explain_debug":
+        dbg_summary = str(explain_debug.get("summary") or "").strip()
+        dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
+        if dbg_summary:
+            print(f"debug_summary: {dbg_summary}")
+        if dbg_logic:
+            first_logic = dbg_logic.splitlines()[0].strip()
+            if first_logic:
+                print(f"debug_logic_head: {first_logic}")
     if steps:
         print(f"answer_1: {steps[0]}")
     if len(steps) > 1:
-        print(f"next_step: {steps[1]}")
+        second = str(steps[1]).strip()
+        if not second.lower().startswith("primary implementation owner:"):
+            print(f"next_step: {second}")
     print("")
 
 
