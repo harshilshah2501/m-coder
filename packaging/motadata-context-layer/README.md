@@ -2,7 +2,9 @@
 
 Installable **Context Layer** for WSL: `runtime.layer5` + HTTP service (`runtime.context_layer_service`). No Plan-Gate, no vLLM, no full monorepo layout required on the host.
 
-Current package version: `0.1.5`.
+Current package version: `0.1.6`.
+
+The wheel declares **PyYAML** (import name `yaml`). If you see `ModuleNotFoundError: No module named 'yaml'`, install the wheel with a network-enabled `pip` so dependencies resolve, or run `pip install pyyaml` in that environment. The PyPI project is `PyYAML`, not `yaml`.
 
 For normal Motadata developers, this wheel is part of the API-only developer setup:
 
@@ -80,7 +82,7 @@ bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
 Install:
 
 ```bash
-pip install dist/motadata_context_layer-0.1.5-py3-none-any.whl
+pip install dist/motadata_context_layer-0.1.6-py3-none-any.whl
 ```
 
 ## Run
