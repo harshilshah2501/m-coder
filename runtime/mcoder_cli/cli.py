@@ -321,16 +321,29 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
     else:
         md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
         steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
+        explain_debug = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
         print("")
         print("=== Motadata Ask Summary ===")
         print(f"request_id: {resp.get('request_id')}")
         print(f"posture: {resp.get('governance_posture')}  executed: {resp.get('execution')}")
         print(f"ask_path: {(resp.get('evidence_first_meta') or {}).get('ask_path')}")
         print(f"quality: {md.get('evidence_quality')}  reasons: {md.get('quality_reasons')}")
+        if task_type == "EXPLAIN_DEBUG":
+            dbg_summary = str(explain_debug.get("summary") or "").strip()
+            dbg_analysis = str(explain_debug.get("analysis") or "").strip()
+            if dbg_summary:
+                print(f"debug_summary: {dbg_summary}")
+            if dbg_analysis:
+                first = dbg_analysis.splitlines()[0].strip()
+                if first:
+                    print(f"debug_analysis_head: {first}")
         if steps:
             print(f"answer_1: {steps[0]}")
         if len(steps) > 1:
-            print(f"next_step: {steps[1]}")
+            second = str(steps[1]).strip()
+            # Avoid misleading "owner" suggestion when user asked explicit base-class style questions.
+            if not ("base class" in query.lower() and second.lower().startswith("primary implementation owner:")):
+                print(f"next_step: {second}")
         print("")
     return 0
 
@@ -420,12 +433,12 @@ def build_parser() -> argparse.ArgumentParser:
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    p.add_argument("--verbose", action="store_true")
-    p.add_argument("--config", default="")
-    p.add_argument("--timeout-sec", type=int, default=int(os.environ.get("MCODER_TIMEOUT_SEC", "15")))
-    p.add_argument("--workspace-root", default="")
-    p.add_argument("--context-url", default="")
-    p.add_argument("--plan-gate-url", default="")
+    p.add_argument("--verbose", action="store_true", help="Enable detailed diagnostic output")
+    p.add_argument("--config", default="", help="Path to explicit mcoder config.yaml")
+    p.add_argument("--timeout-sec", type=int, default=int(os.environ.get("MCODER_TIMEOUT_SEC", "15")), help="HTTP timeout in seconds for health/export/ask calls")
+    p.add_argument("--workspace-root", default="", help="Override workspace root path")
+    p.add_argument("--context-url", default="", help="Override Context Layer base URL")
+    p.add_argument("--plan-gate-url", default="", help="Override Plan-Gate base URL")
     sub = p.add_subparsers(
         dest="cmd",
         required=True,
@@ -441,7 +454,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--workspace-root", default="")
     s.add_argument("--context-url", default="")
     s.add_argument("--plan-gate-url", default="")
-    s.add_argument("--force", action="store_true")
+    s.add_argument("--force", action="store_true", help="Overwrite existing config/context files")
     s.set_defaults(func=_cmd_init)
 
     s = sub.add_parser(
@@ -449,7 +462,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Check Context Layer and Plan-Gate health",
         description="Run bounded health checks and optional auto-remediation with journaling.",
     )
-    s.add_argument("--auto-fix", action="store_true")
+    s.add_argument("--auto-fix", action="store_true", help="Attempt safe local remediations and config fallback updates")
     s.set_defaults(func=_cmd_health)
 
     s = sub.add_parser(
@@ -464,8 +477,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run one governed ask query",
         description="Implicitly exports evidence then calls Plan-Gate /v1/ask.",
     )
-    s.add_argument("query")
-    s.add_argument("--json", action="store_true")
+    s.add_argument("query", help="Question to ask")
+    s.add_argument("--json", action="store_true", help="Print full JSON response instead of concise summary")
     s.set_defaults(func=_cmd_prompt)
 
     s = sub.add_parser(
@@ -473,8 +486,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run one plan-focused query",
         description="Ask path with plan_contract.v1 response extension enabled.",
     )
-    s.add_argument("query")
-    s.add_argument("--json", action="store_true")
+    s.add_argument("query", help="Planning prompt")
+    s.add_argument("--json", action="store_true", help="Print full JSON response instead of concise summary")
     s.set_defaults(func=_cmd_plan)
 
     s = sub.add_parser(
@@ -482,10 +495,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run one debug-focused query for selected file",
         description="Ask path with task_type=EXPLAIN_DEBUG and selected file anchoring.",
     )
-    s.add_argument("--file", required=True)
-    s.add_argument("--query", default="")
-    s.add_argument("--symbol", default="")
-    s.add_argument("--json", action="store_true")
+    s.add_argument("--file", required=True, help="File path to anchor debug analysis")
+    s.add_argument("--query", default="", help="Debug question")
+    s.add_argument("--symbol", default="", help="Optional symbol/method hint")
+    s.add_argument("--json", action="store_true", help="Print full JSON response instead of concise summary")
     s.set_defaults(func=_cmd_debug)
 
     s = sub.add_parser(
@@ -493,9 +506,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run batch scenario file",
         description="Execute ask/plan/debug scenario lists from a file.",
     )
-    s.add_argument("--type", choices=["ask", "plan", "debug"], required=True)
-    s.add_argument("--file", required=True)
-    s.add_argument("--out-dir", default="")
+    s.add_argument("--type", choices=["ask", "plan", "debug"], required=True, help="Scenario mode")
+    s.add_argument("--file", required=True, help="Scenario list file path")
+    s.add_argument("--out-dir", default="", help="Optional output directory for saved responses")
     s.set_defaults(func=_cmd_scenario)
 
     s = sub.add_parser(

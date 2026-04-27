@@ -198,12 +198,44 @@ RestartSec=2
 WantedBy=default.target
 ```
 
-Equivalent systemd commands:
+Detailed setup sequence (copy-paste):
 
 ```bash
+# 1) Write service unit
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/mcoder-context.service <<'UNIT'
+[Unit]
+Description=m-coder Context Layer
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/root/Harshil-PoCs/Motadata/.mcoder/context.env
+ExecStart=/root/Harshil-PoCs/Motadata/.mcoder/venv/bin/motadata-context-layer
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
+UNIT
+
+# 2) Reload + enable + start
 systemctl --user daemon-reload
 systemctl --user enable --now mcoder-context
-systemctl --user status mcoder-context
+
+# 3) Verify service status
+systemctl --user status mcoder-context --no-pager
+
+# 4) Verify API
+curl -fsS http://127.0.0.1:8091/healthz
+curl -fsS http://127.0.0.1:8091/version
+```
+
+Logs:
+
+```bash
+journalctl --user -u mcoder-context -n 100 --no-pager
+tail -f /root/Harshil-PoCs/Motadata/.mcoder/context-layer.log
 ```
 
 ## Shared GPU/Linux Server
@@ -236,106 +268,47 @@ curl -fsS http://127.0.0.1:8089/version
 curl -fsS http://127.0.0.1:8000/v1/models
 ```
 
-## Verification Tiers
+## Validation Sequence (Run in Order)
 
-### Local Readiness Check (`mcoder health`)
-
-Purpose: fast local readiness.
-
-Checks:
-
-- config exists and parses (project-local preferred)
-- `mode=api_only`
-- workspace root exists
-- Context Layer reachable
-- Plan-Gate reachable
-
-Expected output:
-
-```text
-Config: OK
-Workspace root: OK
-Context Layer: OK
-Plan-Gate: OK
-API-only mode: OK
-```
-
-`mcoder health --auto-fix` includes smart auto-diagnosis:
-
-- detects Context Layer health failure
-- attempts `systemctl --user restart mcoder-context`
-- re-checks health after remediation
-- records health HTTP status codes before/after remediation
-- if configured Plan-Gate URL is unreachable but local `127.0.0.1:8089` is healthy, auto-fixes `plan_gate_url` in config
-- records diagnosis/remediation journal at:
-
-```text
-<project-root>/.mcoder/logs/mcoder-health-<timestamp>.log
-```
-
-### Doctor Check (`mcoder doctor`)
-
-Purpose: explicit readiness diagnosis before running prompts.
-
-Checks:
-
-- config file exists
-- workspace root exists
-- Context Layer health
-- Plan-Gate health
-- `mode=api_only`
-- Neo4j driver presence (warns if missing; structural graph queries may be unavailable)
-
-Usage:
+### 1) Doctor (readiness diagnosis)
 
 ```bash
 mcoder doctor
 ```
 
-### Governed Smoke Check
+Checks config/workspace/service reachability plus Neo4j driver warning.
 
-Purpose: governed smoke test.
+### 2) Health with auto-fix
 
-Checks:
-
-- all `doctor` checks
-- evidence export works
-- Plan-Gate `/v1/ask` works
-- response is non-executing
-- governance posture is surfaced
-
-Expected output:
-
-```text
-Context Layer: OK
-Plan-Gate: OK
-Evidence export: OK
-Ask v1: PASS
-Execution: false
-Mutation: false
+```bash
+mcoder --timeout-sec 10 health --auto-fix
 ```
 
-### Acceptance-Grade Validation
+Auto-fix behavior:
 
-Purpose: acceptance-grade validation.
+- restarts context service when needed
+- if configured Plan-Gate URL fails but local `127.0.0.1:8089` is healthy, updates config fallback automatically
+- writes journal: `<project-root>/.mcoder/logs/mcoder-health-<timestamp>.log`
 
-Additional checks:
+### 3) Smoke prompt
 
-- graph preflight
-- Assist v2 API gate
-- Plan/Code HTTP gate
-- scenario regression slice when configured
-
-Expected output:
-
-```text
-Graph preflight: COMPLETE
-Assist v2 API gate: PASS
-Plan/Code gate: PASS
-Scenario slice: PASS
+```bash
+mcoder --timeout-sec 20 prompt "How does alert correlation work?"
 ```
 
-Use `--full` for release validation or admin confidence checks, not for every developer's first ask.
+Expected posture:
+
+```text
+posture: PLAN_ONLY
+executed: False
+```
+
+### 4) Optional debug/plan checks
+
+```bash
+mcoder --timeout-sec 20 debug --file src/main/java/com/motadata/alerts/AlertCorrelator.java --query "Why can this correlator miss duplicate suppression?"
+mcoder --timeout-sec 20 plan "Plan a safe refactor for alert enrichment flow"
+```
 
 ## One-Step Scenario Execution
 
