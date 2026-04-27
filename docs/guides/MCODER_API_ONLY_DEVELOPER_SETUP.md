@@ -77,9 +77,9 @@ MOTADATA_CONTEXT_LAYER_LOG_PATH=/root/Harshil-PoCs/Motadata/.mcoder/context-laye
 MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 ```
 
-## Install: Wheel Mode
+## Install: Single Package (Recommended)
 
-1. Create the runtime directory:
+1. Create project-local runtime directory and venv:
 
 ```bash
 cd /root/Harshil-PoCs/Motadata
@@ -88,13 +88,28 @@ python3 -m venv ./.mcoder/venv
 source ./.mcoder/venv/bin/activate
 ```
 
-2. Install the Context Layer wheel:
+2. Install one unified wheel (`mcoder-suite`) that contains both `mcoder` and `motadata-context-layer`:
 
 ```bash
-pip install /path/to/motadata_context_layer-0.1.6-py3-none-any.whl
+pip install /path/to/mcoder_suite-0.1.0-py3-none-any.whl
 ```
 
-3. Write canonical project config:
+3. Bootstrap project config in one command:
+
+```bash
+mcoder init \
+  --workspace-root /root/Harshil-PoCs/Motadata \
+  --plan-gate-url http://45.195.82.10:8089
+```
+
+4. Verify CLI and service commands are installed:
+
+```bash
+mcoder version
+motadata-context-layer --help
+```
+
+5. (Optional) manually edit canonical project config:
 
 ```bash
 mkdir -p ./.mcoder
@@ -107,7 +122,7 @@ output: human
 YAML
 ```
 
-4. Generate Context Layer env projection:
+6. (Optional) regenerate Context Layer env projection manually:
 
 ```bash
 cat > ./.mcoder/context.env <<'ENV'
@@ -120,26 +135,7 @@ MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 ENV
 ```
 
-5. Install the local helper CLI wrapper (single-step prompt/scenario):
-
-```bash
-mkdir -p ~/.local/bin
-ln -sf /root/Harshil-PoCs/m-coder/scripts/mcoder ~/.local/bin/mcoder
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-mcoder version
-```
-
-6. Initialize project-local config in one step:
-
-```bash
-cd /root/Harshil-PoCs/Motadata
-mcoder init \
-  --workspace-root /root/Harshil-PoCs/Motadata \
-  --plan-gate-url http://45.195.82.10:8089
-```
-
-This creates:
+This generates:
 
 ```text
 <project-root>/.mcoder/config.yaml
@@ -226,6 +222,11 @@ plan_gate_url: http://45.195.82.10:8089
 ```
 
 Developers must not configure direct vLLM access.
+
+Do we need to restart GPU `governed_services` when updating this local package?
+
+- No, not for local CLI/context-layer-only package updates.
+- Restart GPU services only when Plan-Gate/vLLM code or server-side config changed on GPU host.
 
 Health checks on GPU host:
 
@@ -535,7 +536,7 @@ If only evidence export fails:
 
 ## Rollout Order
 
-1. Freeze this setup guide.
-2. Package Context Layer wheel for normal developers.
-3. Validate wheel-only setup with 2-3 internal developers.
-4. Keep CLI contract work separate from this wheel-only path.
+1. Build and publish `mcoder-suite` wheel.
+2. Install in project-local venv on WSL/Linux developer host.
+3. Run `mcoder init`, `mcoder doctor`, and `mcoder health --auto-fix`.
+4. Validate ask/debug/plan scenario flows.
