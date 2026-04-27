@@ -31,6 +31,8 @@
 | **M4.1–M4.6** | **COMPLETE on main** — §4.4 |
 | **L5.0–L5.6, L5.8 harness, L5.9** | Per §4.5 table (harness closure + Action 11) |
 | **Action 9 (WSL + audit pack MVP scope)** | **CLOSED** — §1 Action 9 table |
+| **Stage 3 readiness freeze** | **COMPLETE / IMPLEMENTATION BLOCKED** — discovery + readiness specs locked; tag `stage3-readiness-freeze-complete`; execution/mutation still blocked pending explicit approval |
+| **API-only developer interface design** | **FROZEN on current productization branch** — `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`; setup guide `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` defines WSL-local Context Layer + shared Plan-Gate onboarding |
 
 ### **Remaining / follow-on (not done — evaluate before staffing)**
 
@@ -44,6 +46,8 @@
 | **Plan/Code validation pack expansion** | **IN_PROGRESS (next-surface readiness)** | governed validation lane with expanded scenario coverage/artifacts |
 | **Assist v2 API freeze + deploy gate hardening** | **COMPLETE** | same pack as row above; plugin remains out of scope for this hardening phase |
 | **IDE → Stage3LoopController E2E** | **Follow-on** (not burn-in closure) | §B7, §6.20, runbook §7 |
+| **API-only CLI implementation** | **NEXT PRODUCTIZATION STEP** | `scripts/mcoder` repo-local first, then installable CLI; see `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md` |
+| **Developer Context Layer service packaging rollout** | **NEXT PRODUCTIZATION STEP** | wheel install + `~/.mcoder/config.yaml` + generated service env; see `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` |
 | **§B3 residual** | e.g. `plan_summary.notes` on all surfaces | §B3 bullets |
 | **Assist influence** | **NOT ENABLED** (advisory-only by design) | §1.5 |
 | **Caveat F1 / F2** | Resolver layout; A3 latency vs spine | Backlog § under Layer-5 |
@@ -55,7 +59,7 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 
 - **Do not default to M3.13 next.** **M3.13–M3.16 / M3.18** are follow-on ingestion and evaluation work; they stay in the **Remaining** bucket until there is a **clear product use case** and staffing. They are not the sharpest next move just because they follow M3.12 in the §4.3.1 table.
 - **Do not pick L5.7 only because it is “next” in the L5 table.** **L5.7** (dirty buffer / live overlay) matters when the dominant pain is **editor buffer vs on-disk index** (unsaved edits missing from Ask/Debug). If that is not the pain, L5.7 is not automatically the next engineering bet.
-- **Recommended primary focus:** execute the **L5.7 dirty buffer / live overlay** charter (**§1.4**, `docs/L5_7_DIRTY_BUFFER_CHARTER.md`) to close unsaved-buffer vs on-disk mismatches for Ask/Debug, while preserving **`MOTADATA_BASELINE_ARTIFACT_POLICY.md` §5** guardrails.
+- **Recommended primary focus now:** productize the **API-only developer path** before new capability work: `mcoder` CLI contract -> `MCODER_API_ONLY_DEVELOPER_SETUP.md` -> repo-local `scripts/mcoder` -> internal dry run. **L5.7** remains a valid follow-on when unsaved-buffer mismatch becomes the dominant pain.
 - **If the only choice is L5.7 vs M3.13:** prefer **L5.7** for **current developer UX** on the existing workspace path; **M3.13** (Jira ingestion) **expands upstream surface area** and is noisier unless Jira-backed workflows are explicitly queued.
 
 ### Assist v2 phase scope freeze (2026-04-23)
@@ -63,12 +67,20 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Out of scope for Assist v2 Ask/Debug/Investigate Bridge completion:** model upgrades (Qwen3 or similar), retrieval redesign, multi-hop tracing, auto-debug/auto-fix, and Plan/Code productization.
 - Treat these as follow-on phases only; current Assist v2 completion is closure-scoped and invariant-safe.
 
-### Acting System (Stage 3) status clarification (discovery lane)
+### Acting System (Stage 3) status clarification (readiness frozen, implementation blocked)
 
-- **Status:** **Discovery Only** for future acting-system expansion.
+- **Status:** **Design/readiness frozen; implementation blocked.**
 - **Current system remains:** governed **thinking/proposal** system (planning artifacts, bounded contracts, policy-first posture).
-- **Explicit boundary:** Stage 3 execution integration and mutation-capable behavior remain **out of scope** until explicit approval.
-- **No-go baseline during discovery:** no runtime behavior changes, no schema rewires, no execution-path authority expansion.
+- **Explicit boundary:** Stage 3 execution integration and mutation-capable behavior remain **out of scope** until explicit system-owner approval and Mode A conformance approval.
+- **No-go baseline:** no runtime behavior changes, no schema rewires, no execution-path authority expansion.
+- **Closure docs:** `docs/validation/STAGE3_INTEGRATION_DISCOVERY.md`, `docs/validation/STAGE3_READINESS_SPEC_FREEZE_V1.md`, `docs/validation/STAGE3_MODE_A_CONFORMANCE_MATRIX.md`, `docs/validation/STAGE3_EXECUTION_POLICY_SNAPSHOT_SCHEMA_V1.md`.
+
+### API-only developer interface status (current productization lane)
+
+- **Status:** UX/setup docs frozen on current branch; implementation not yet started.
+- **Golden rule:** developers install the m-coder client/runtime; their development repo is Motadata.
+- **Target:** WSL-local Context Layer package + user service + shared GPU/Linux Plan-Gate.
+- **Docs:** `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`, `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`.
 
 ---
 
@@ -80,7 +92,7 @@ Program stance is **controlled expansion from a closed baseline** (§1 Header), 
 - **Current active layer**: **Program closure baseline (all core layers validated)**  
 - **Update (2026-04):** Motadata **behavior verification + Ask v1 quality** work is merged to **`main`**. **M3.12** narrow doc-manifest slice is **on `main`** (see §6.16.1).  
 - **Program objective (next):** **Controlled expansion from a closed baseline** — preserve governed execution honesty, observability, and reproducibility while adding non-MVP capabilities intentionally.  
-- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization; debug depth charter (`DEBUG-DEPTH-CHARTER-V1`). **Current focus:** post-closure controlled expansion with **Assist v2 backend phase closed (Ask + Debug + Investigate Bridge)** and **Assist v2 API contract freeze + deploy gate pack complete** (canonical spec, HTTP regression gate, deployment runbook, WSL strict gate evidence), plus standing lanes for **Plan/Code validation expansion** and **context-budget policy enforcement**. Plugin work remains explicitly out of scope for this backend hardening phase.
+- **Previous focus (done):** Authority Expansion Hardening v1 + baseline stabilization; debug depth charter (`DEBUG-DEPTH-CHARTER-V1`). **Current focus:** API-only developer productization from the closed baseline: `mcoder` CLI contract + WSL-local Context Layer setup + shared Plan-Gate onboarding. Assist v2 backend phase and API freeze/deploy gate are complete; Stage 3 readiness is frozen but execution remains blocked.
 - **Overall status summary**:  
   - **Layer-1** — **LOCKED** (governance doctrine).  
   - **Layer-2** — **LOCKED** (ML compilation: Stage-6C cure, deterministic CONF, release verification PASS).  

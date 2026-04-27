@@ -13,6 +13,8 @@ This repository contains a **production-grade validated vertical slice** of the 
 - Observability and trace reconstruction closure (B4)
 - Host reproducibility on WSL and native Linux backend placements (B5)
 - Stage 3 burn-in closure (B7)
+- Stage 3 readiness freeze complete; acting-system implementation remains blocked
+- API-only developer CLI/setup contract for WSL-local Context Layer + shared Plan-Gate onboarding
 - Final acceptance run PASS (Action 14)
 
 ### What is not yet included
@@ -20,6 +22,7 @@ This repository contains a **production-grade validated vertical slice** of the 
 - **Stage 2.5 proactive / influence-enabled** Assist in production (Assist Layer v1 is **implemented** and **advisory-only**; see `docs/LIVE_ROADMAP_TRACKER.md` §1 and §1.5)
 - Background sync
 - Active-file UX improvements
+- Stage 3 execution/mutation enablement (design/readiness frozen, implementation blocked)
 
 ### Primary evidence
 
@@ -27,6 +30,9 @@ This repository contains a **production-grade validated vertical slice** of the 
 - Live canonical program state: `docs/LIVE_ROADMAP_TRACKER.md`
 - B5 host readiness closure: `docs/validation/B5_HOST_READINESS.md`
 - Stage 3 burn-in closure: `docs/validation/STAGE3_BURN_IN_REPORT.md`
+- Stage 3 readiness freeze: `docs/validation/STAGE3_READINESS_SPEC_FREEZE_V1.md`
+- API-only developer setup: `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`
+- CLI UX contract: `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`
 - MVP validation rollup: `docs/validation/AIOPS_MVP_FINAL_REPORT_TEMPLATE.md`
 
 Production-ready AI services deployment with version-agnostic model naming and systemd service management.
@@ -59,12 +65,27 @@ The **four constitutional layers** (L1–L4) are the doctrine and enforcement co
   - Archived (historical): `docs/archive/ROADMAP_L2_L3_L4.md` — entry/exit/failure tables; do not use for current status
 - **Master System Guide v1.7** (`MOTADATA_MASTER_SYSTEM_GUIDE_v1.7.md`): long-form narrative, demos, Appendix H — **supporting**; **canonical spec entry and gates:** `docs/MASTER_SYSTEM_SPEC.md` + `docs/LIVE_ROADMAP_TRACKER.md`
 - **Documentation click-navigation:** `docs/NAVIGATION_HUB.md`
+- **API-only developer setup:** `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`
+- **`mcoder` CLI UX contract:** `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`
 - **Definitive capability demobook:** `docs/MOTADATA_DEMOBOOK.md`
 - **User scenarios (Ask / Debug / Plan / Code / Agent) — root entry:** [`MCODER_USER_SCENARIOS_GUIDE.md`](MCODER_USER_SCENARIOS_GUIDE.md)
 
 ## 🚀 Quick Start
 
-### Start Services (Current Flow)
+### Developer API-only path
+
+Normal developers should install the m-coder client/runtime in WSL and point it at their Motadata workspace plus shared Plan-Gate. They do not need to operate the m-coder development repo.
+
+```bash
+mcoder configure --workspace-root /home/user/Projects/Motadata --plan-gate-url http://gpu-host:8089
+mcoder doctor
+mcoder start-context
+mcoder verify
+```
+
+See `docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md` and `docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`.
+
+### Start Services (m-coder contributor/operator flow)
 ```bash
 bash runtime/scripts/governed_services.sh start
 ```

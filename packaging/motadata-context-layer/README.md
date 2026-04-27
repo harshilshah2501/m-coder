@@ -2,6 +2,15 @@
 
 Installable **Context Layer** for WSL: `runtime.layer5` + HTTP service (`runtime.context_layer_service`). No Plan-Gate, no vLLM, no full monorepo layout required on the host.
 
+Current package version: `0.1.5`.
+
+For normal Motadata developers, this wheel is part of the API-only developer setup:
+
+- Setup guide: `../../docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md`
+- CLI contract: `../../docs/guides/MCODER_CLI_UX_CONTRACT_V1.md`
+
+Golden rule: developers install the m-coder client/runtime; their development repo is Motadata. They should not operate the full m-coder development checkout unless contributing to m-coder.
+
 ## Install (WSL)
 
 From repo root (development):
@@ -71,7 +80,7 @@ bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
 Install:
 
 ```bash
-pip install dist/motadata_context_layer-0.1.4-py3-none-any.whl
+pip install dist/motadata_context_layer-0.1.5-py3-none-any.whl
 ```
 
 ## Run
@@ -85,6 +94,8 @@ python -m runtime.context_layer_service
 Logs go to **stderr** of that process unless `MOTADATA_CONTEXT_LAYER_LOG_PATH` is set. Every `POST /v1/export_evidence` emits **`CONTEXT_LAYER export_evidence begin`** at INFO so you can confirm Ask traffic hits this instance (if you see no such line, another process owns port 8091 or the client is not reaching this server).
 
 ## Configuration (environment)
+
+For the developer-facing flow, `~/.mcoder/config.yaml` is the canonical user-edited config and `~/.mcoder/context.env` is generated from it for service runtime use. The environment variables below are the runtime projection consumed by the Context Layer process.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
