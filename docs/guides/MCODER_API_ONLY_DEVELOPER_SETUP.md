@@ -34,10 +34,10 @@ Use this mode for developers who work on Motadata and only need the packaged Con
 Expected local state (project-first):
 
 ```text
-~/Projects/Motadata                 # developer's actual repo (run mcoder here)
-~/Projects/Motadata/.mcoder/config.yaml   # preferred project-local config
-~/Projects/Motadata/.mcoder/logs/         # health/smoke journals
-~/.mcoder/venv                            # optional shared runtime venv
+/root/Harshil-PoCs/Motadata                 # developer repo (run mcoder here)
+/root/Harshil-PoCs/Motadata/.mcoder/config.yaml   # preferred project-local config
+/root/Harshil-PoCs/Motadata/.mcoder/logs/         # health/smoke journals
+/root/Harshil-PoCs/Motadata/.mcoder/venv          # project-local runtime venv
 ```
 
 Developers should not clone or operate the full m-coder repo in this mode.
@@ -49,9 +49,9 @@ Project-local `.mcoder/config.yaml` is preferred source of truth.
 Example:
 
 ```yaml
-workspace_root: /home/user/Projects/Motadata
+workspace_root: /root/Harshil-PoCs/Motadata
 context_url: http://127.0.0.1:8091
-plan_gate_url: http://gpu-host:8089
+plan_gate_url: http://45.195.82.10:8089
 mode: api_only
 output: human
 ```
@@ -71,9 +71,9 @@ Generated projection example:
 ```bash
 MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1
 MOTADATA_CONTEXT_LAYER_PORT=8091
-MOTADATA_ROOT=/home/user/Projects/Motadata
-MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/home/user/Projects/Motadata
-MOTADATA_CONTEXT_LAYER_LOG_PATH=/home/user/.mcoder/context-layer.log
+MOTADATA_ROOT=/root/Harshil-PoCs/Motadata
+MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/root/Harshil-PoCs/Motadata
+MOTADATA_CONTEXT_LAYER_LOG_PATH=/root/Harshil-PoCs/Motadata/.mcoder/context-layer.log
 MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 ```
 
@@ -82,9 +82,10 @@ MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 1. Create the runtime directory:
 
 ```bash
-mkdir -p ~/.mcoder
-python3 -m venv ~/.mcoder/venv
-source ~/.mcoder/venv/bin/activate
+cd /root/Harshil-PoCs/Motadata
+mkdir -p ./.mcoder
+python3 -m venv ./.mcoder/venv
+source ./.mcoder/venv/bin/activate
 ```
 
 2. Install the Context Layer wheel:
@@ -98,9 +99,9 @@ pip install /path/to/motadata_context_layer-0.1.6-py3-none-any.whl
 ```bash
 mkdir -p ./.mcoder
 cat > ./.mcoder/config.yaml <<'YAML'
-workspace_root: /home/user/Projects/Motadata
+workspace_root: /root/Harshil-PoCs/Motadata
 context_url: http://127.0.0.1:8091
-plan_gate_url: http://gpu-host:8089
+plan_gate_url: http://45.195.82.10:8089
 mode: api_only
 output: human
 YAML
@@ -109,12 +110,12 @@ YAML
 4. Generate Context Layer env projection:
 
 ```bash
-cat > ~/.mcoder/context.env <<'ENV'
+cat > ./.mcoder/context.env <<'ENV'
 MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1
 MOTADATA_CONTEXT_LAYER_PORT=8091
-MOTADATA_ROOT=/home/user/Projects/Motadata
-MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/home/user/Projects/Motadata
-MOTADATA_CONTEXT_LAYER_LOG_PATH=/home/user/.mcoder/context-layer.log
+MOTADATA_ROOT=/root/Harshil-PoCs/Motadata
+MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/root/Harshil-PoCs/Motadata
+MOTADATA_CONTEXT_LAYER_LOG_PATH=/root/Harshil-PoCs/Motadata/.mcoder/context-layer.log
 MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 ENV
 ```
@@ -132,10 +133,10 @@ mcoder version
 6. Initialize project-local config in one step:
 
 ```bash
-cd /home/user/Projects/Motadata
+cd /root/Harshil-PoCs/Motadata
 mcoder init \
-  --workspace-root /home/user/Projects/Motadata \
-  --plan-gate-url http://gpu-host:8089
+  --workspace-root /root/Harshil-PoCs/Motadata \
+  --plan-gate-url http://45.195.82.10:8089
 ```
 
 This creates:
@@ -161,7 +162,7 @@ mcoder --config /abs/path/to/config.yaml health
 Reinitialize generated files:
 
 ```bash
-mcoder init --force --plan-gate-url http://gpu-host:8089
+mcoder init --force --plan-gate-url http://45.195.82.10:8089
 ```
 
 ## Context Layer User Service
@@ -185,8 +186,8 @@ Unit shape:
 Description=m-coder Context Layer
 
 [Service]
-EnvironmentFile=%h/.mcoder/context.env
-ExecStart=%h/.mcoder/venv/bin/motadata-context-layer
+EnvironmentFile=/root/Harshil-PoCs/Motadata/.mcoder/context.env
+ExecStart=/root/Harshil-PoCs/Motadata/.mcoder/venv/bin/motadata-context-layer
 Restart=on-failure
 RestartSec=2
 
@@ -214,7 +215,7 @@ vLLM      :8000
 Developers configure only:
 
 ```yaml
-plan_gate_url: http://gpu-host:8089
+plan_gate_url: http://45.195.82.10:8089
 ```
 
 Developers must not configure direct vLLM access.
@@ -453,7 +454,7 @@ curl -fsS http://127.0.0.1:8091/healthz
 Check logs:
 
 ```bash
-less ~/.mcoder/context-layer.log
+less /root/Harshil-PoCs/Motadata/.mcoder/context-layer.log
 ```
 
 ### Workspace root not found
@@ -467,15 +468,15 @@ Edit project config:
 Confirm:
 
 ```bash
-ls /home/user/Projects/Motadata
+ls /root/Harshil-PoCs/Motadata
 ```
 
 Then regenerate service projection:
 
 ```bash
-sed -i 's|^workspace_root:.*|workspace_root: /home/user/Projects/Motadata|' ./.mcoder/config.yaml
-sed -i 's|^MOTADATA_ROOT=.*|MOTADATA_ROOT=/home/user/Projects/Motadata|' ~/.mcoder/context.env
-sed -i 's|^MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=.*|MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/home/user/Projects/Motadata|' ~/.mcoder/context.env
+sed -i 's|^workspace_root:.*|workspace_root: /root/Harshil-PoCs/Motadata|' ./.mcoder/config.yaml
+sed -i 's|^MOTADATA_ROOT=.*|MOTADATA_ROOT=/root/Harshil-PoCs/Motadata|' ./.mcoder/context.env
+sed -i 's|^MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=.*|MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/root/Harshil-PoCs/Motadata|' ./.mcoder/context.env
 systemctl --user restart mcoder-context
 ```
 
@@ -484,7 +485,7 @@ systemctl --user restart mcoder-context
 Check:
 
 ```bash
-curl -fsS http://gpu-host:8089/healthz
+curl -fsS http://45.195.82.10:8089/healthz
 ```
 
 If unreachable, the problem is shared GPU/Linux service or network routing, not the local Context Layer.
@@ -496,7 +497,7 @@ Run:
 ```bash
 curl -fsS -X POST http://127.0.0.1:8091/v1/export_evidence \
   -H 'Content-Type: application/json' \
-  -d '{"workspace_root":"/home/user/Projects/Motadata","query":"health smoke","top_k":4}'
+  -d '{"workspace_root":"/root/Harshil-PoCs/Motadata","query":"health smoke","top_k":4}'
 ```
 
 If only evidence export fails:
@@ -504,7 +505,7 @@ If only evidence export fails:
 - confirm workspace path
 - confirm repo is readable in WSL
 - restart Context Layer
-- check `~/.mcoder/context-layer.log`
+- check `/root/Harshil-PoCs/Motadata/.mcoder/context-layer.log`
 
 ## Rollout Order
 
