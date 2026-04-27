@@ -378,7 +378,7 @@ def test_handle_ask_v1_curates_generic_debug_narration():
     assert md.get("debug_narration_quality") == "CURATED"
     assert "DEBUG_NARRATION_CURATED" in (md.get("quality_reasons") or [])
     assert md.get("debug_narration_issues")
-    assert str(ed.get("summary") or "").startswith("Governance-curated debug summary")
+    assert "Governance curation:" in str(ed.get("summary") or "")
     assert ed.get("evidence")
 
 

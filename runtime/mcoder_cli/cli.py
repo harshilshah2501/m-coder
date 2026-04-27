@@ -12,6 +12,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 from typing import Any
+from runtime.mcoder_cli.answer_shaping import shape_prompt_summary
 
 
 def _now_utc() -> str:
@@ -343,19 +344,13 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
                 issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
                 print(f"debug_note: narration curated by governance for precision{issue_note}")
         if steps:
-            print(f"answer_1: {steps[0]}")
-        if len(steps) > 1:
-            second = str(steps[1]).strip()
-            # Avoid misleading "owner" suggestion when user asked explicit base-class style questions.
-            second_l = second.lower()
-            if not (
-                "base class" in query.lower()
-                and (
-                    second_l.startswith("primary implementation owner:")
-                    or second_l.startswith("execution owner anchor (supporting context, not base-class answer):")
-                )
-            ):
-                print(f"next_step: {second}")
+            shaped = shape_prompt_summary(query, resp)
+            answer_1 = str(shaped.get("answer_1") or "").strip()
+            next_step = str(shaped.get("next_step") or "").strip()
+            if answer_1:
+                print(f"answer_1: {answer_1}")
+            if next_step:
+                print(f"next_step: {next_step}")
         print("")
     return 0
 

@@ -29,6 +29,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from runtime.core.query_router import IDENTITY_ANSWER, QueryIntent, QueryRouter
+from runtime.mcoder_cli.answer_shaping import shape_prompt_summary
 
 
 def _now_utc() -> str:
@@ -47,7 +48,7 @@ def _post(url: str, payload: dict[str, Any], timeout: int = 180) -> tuple[int, d
         return resp.getcode(), json.loads(resp.read().decode("utf-8"))
 
 
-def _print_summary(resp: dict[str, Any]) -> None:
+def _print_summary(resp: dict[str, Any], query: str) -> None:
     md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
     steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
     explain_debug = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
@@ -73,15 +74,13 @@ def _print_summary(resp: dict[str, Any]) -> None:
             issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
             print(f"debug_note: narration curated by governance for precision{issue_note}")
     if steps:
-        print(f"answer_1: {steps[0]}")
-    if len(steps) > 1:
-        second = str(steps[1]).strip()
-        second_l = second.lower()
-        if not (
-            second_l.startswith("primary implementation owner:")
-            or second_l.startswith("execution owner anchor (supporting context, not base-class answer):")
-        ):
-            print(f"next_step: {second}")
+        shaped = shape_prompt_summary(query, resp)
+        answer_1 = str(shaped.get("answer_1") or "").strip()
+        next_step = str(shaped.get("next_step") or "").strip()
+        if answer_1:
+            print(f"answer_1: {answer_1}")
+        if next_step:
+            print(f"next_step: {next_step}")
     print("")
 
 
@@ -530,7 +529,7 @@ def main() -> int:
     if args.print_mode == "json":
         print(json.dumps(resp, indent=2))
     else:
-        _print_summary(resp)
+        _print_summary(resp, args.query)
     reward_payload: dict[str, Any] | None = None
     if args.with_reward:
         if routed_reward_stub:
