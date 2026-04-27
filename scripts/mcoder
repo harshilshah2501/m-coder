@@ -1,0 +1,451 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONFIG_FILE="${MCODER_CONFIG_PATH:-$HOME/.mcoder/config.yaml}"
+
+usage() {
+  cat <<'EOF'
+mcoder helper wrapper (API-only)
+
+Usage:
+  mcoder prompt "How does alert correlation work?" [--json] [--top-k N] [--out FILE]
+  mcoder debug --file path/to/file.py --query "What is wrong here?" [--symbol NAME] [--json] [--top-k N] [--out FILE]
+  mcoder plan "Refactor this handler safely" [--json] [--top-k N] [--out FILE]
+  mcoder scenario --type ask|debug|plan --file scenarios.txt [--out-dir DIR] [--top-k N]
+  mcoder health
+  mcoder version
+
+Config defaults are read from ~/.mcoder/config.yaml:
+  workspace_root, context_url, plan_gate_url
+
+Env overrides:
+  MCODER_WORKSPACE_ROOT, MCODER_CONTEXT_URL, MCODER_PLAN_GATE_URL
+EOF
+}
+
+cfg_get() {
+  local key="$1"
+  python3 - "$CONFIG_FILE" "$key" <<'PY'
+import pathlib
+import re
+import sys
+
+cfg = pathlib.Path(sys.argv[1])
+key = sys.argv[2]
+if not cfg.is_file():
+    raise SystemExit(0)
+pat = re.compile(rf"^\s*{re.escape(key)}\s*:\s*(.+?)\s*$")
+for raw in cfg.read_text(encoding="utf-8").splitlines():
+    line = raw.strip()
+    if not line or line.startswith("#"):
+        continue
+    m = pat.match(raw)
+    if m:
+        v = m.group(1).strip().strip("'").strip('"')
+        print(v)
+        break
+PY
+}
+
+resolve_defaults() {
+  WORKSPACE_ROOT="${MCODER_WORKSPACE_ROOT:-$(cfg_get workspace_root)}"
+  CONTEXT_URL="${MCODER_CONTEXT_URL:-$(cfg_get context_url)}"
+  PLAN_GATE_URL="${MCODER_PLAN_GATE_URL:-$(cfg_get plan_gate_url)}"
+
+  WORKSPACE_ROOT="${WORKSPACE_ROOT:-$HOME/Projects/Motadata}"
+  CONTEXT_URL="${CONTEXT_URL:-http://127.0.0.1:8091}"
+  PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"
+}
+
+cmd_prompt() {
+  resolve_defaults
+
+  local query=""
+  local print_mode="summary"
+  local top_k="8"
+  local out_file=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json)
+        print_mode="json"
+        shift
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --out)
+        out_file="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      -*)
+        echo "unknown flag: $1" >&2
+        exit 2
+        ;;
+      *)
+        if [[ -z "$query" ]]; then
+          query="$1"
+        else
+          query="$query $1"
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$query" ]]; then
+    echo "prompt requires a query string" >&2
+    usage
+    exit 2
+  fi
+
+  local args=(
+    --workspace-root "$WORKSPACE_ROOT"
+    --query "$query"
+    --context-url "$CONTEXT_URL"
+    --plan-gate-url "$PLAN_GATE_URL"
+    --top-k "$top_k"
+    --print "$print_mode"
+    --task-type "general"
+  )
+  if [[ -n "$out_file" ]]; then
+    args+=(--out "$out_file")
+  fi
+
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_debug() {
+  resolve_defaults
+
+  local query=""
+  local selected_file=""
+  local symbol=""
+  local print_mode="summary"
+  local top_k="8"
+  local out_file=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --file)
+        selected_file="${2:-}"
+        shift 2
+        ;;
+      --query)
+        query="${2:-}"
+        shift 2
+        ;;
+      --symbol)
+        symbol="${2:-}"
+        shift 2
+        ;;
+      --json)
+        print_mode="json"
+        shift
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --out)
+        out_file="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      *)
+        echo "unknown arg for debug: $1" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  [[ -n "$selected_file" ]] || { echo "debug requires --file <path>" >&2; exit 2; }
+  if [[ -z "$query" ]]; then
+    query="Explain/debug this file"
+  fi
+  if [[ -n "$symbol" ]]; then
+    query="$query (symbol: $symbol)"
+  fi
+
+  local args=(
+    --workspace-root "$WORKSPACE_ROOT"
+    --query "$query"
+    --context-url "$CONTEXT_URL"
+    --plan-gate-url "$PLAN_GATE_URL"
+    --top-k "$top_k"
+    --print "$print_mode"
+    --task-type "EXPLAIN_DEBUG"
+    --selected-file "$selected_file"
+  )
+  if [[ -n "$out_file" ]]; then
+    args+=(--out "$out_file")
+  fi
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_plan() {
+  resolve_defaults
+
+  local query=""
+  local print_mode="summary"
+  local top_k="8"
+  local out_file=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json)
+        print_mode="json"
+        shift
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --out)
+        out_file="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      -*)
+        echo "unknown flag: $1" >&2
+        exit 2
+        ;;
+      *)
+        if [[ -z "$query" ]]; then
+          query="$1"
+        else
+          query="$query $1"
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  [[ -n "$query" ]] || { echo "plan requires a query string" >&2; exit 2; }
+
+  local args=(
+    --workspace-root "$WORKSPACE_ROOT"
+    --query "$query"
+    --context-url "$CONTEXT_URL"
+    --plan-gate-url "$PLAN_GATE_URL"
+    --top-k "$top_k"
+    --print "$print_mode"
+    --task-type "general"
+    --response-extension "plan_contract.v1"
+  )
+  if [[ -n "$out_file" ]]; then
+    args+=(--out "$out_file")
+  fi
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" "${args[@]}"
+}
+
+cmd_scenario() {
+  resolve_defaults
+
+  local scenario_file=""
+  local out_dir=""
+  local top_k="8"
+  local scenario_type="ask"
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --file)
+        scenario_file="${2:-}"
+        shift 2
+        ;;
+      --out-dir)
+        out_dir="${2:-}"
+        shift 2
+        ;;
+      --top-k)
+        top_k="${2:-}"
+        shift 2
+        ;;
+      --type)
+        scenario_type="${2:-}"
+        shift 2
+        ;;
+      --workspace-root)
+        WORKSPACE_ROOT="${2:-}"
+        shift 2
+        ;;
+      --context-url)
+        CONTEXT_URL="${2:-}"
+        shift 2
+        ;;
+      --plan-gate-url)
+        PLAN_GATE_URL="${2:-}"
+        shift 2
+        ;;
+      *)
+        echo "unknown arg for scenario: $1" >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  if [[ -z "$scenario_file" ]]; then
+    echo "scenario requires --file <path>" >&2
+    exit 2
+  fi
+  if [[ ! -f "$scenario_file" ]]; then
+    echo "scenario file not found: $scenario_file" >&2
+    exit 2
+  fi
+
+  if [[ -z "$out_dir" ]]; then
+    out_dir="$HOME/.mcoder/scenario-runs/$(date +%Y%m%d-%H%M%S)"
+  fi
+  mkdir -p "$out_dir"
+
+  local idx=0
+  local fail=0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+    idx=$((idx + 1))
+    local out_json="$out_dir/$(printf "%03d" "$idx").json"
+    echo ""
+    echo "=== Scenario $idx ($scenario_type) ==="
+    echo "query: $line"
+    local status=0
+    case "$scenario_type" in
+      ask)
+        python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" \
+          --workspace-root "$WORKSPACE_ROOT" \
+          --query "$line" \
+          --context-url "$CONTEXT_URL" \
+          --plan-gate-url "$PLAN_GATE_URL" \
+          --top-k "$top_k" \
+          --task-type general \
+          --out "$out_json" \
+          --print summary || status=$?
+        ;;
+      plan)
+        python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" \
+          --workspace-root "$WORKSPACE_ROOT" \
+          --query "$line" \
+          --context-url "$CONTEXT_URL" \
+          --plan-gate-url "$PLAN_GATE_URL" \
+          --top-k "$top_k" \
+          --task-type general \
+          --response-extension plan_contract.v1 \
+          --out "$out_json" \
+          --print summary || status=$?
+        ;;
+      debug)
+        # debug scenario format: selected_file|query
+        local sel_file="${line%%|*}"
+        local dbg_query="${line#*|}"
+        if [[ "$sel_file" == "$line" || -z "$sel_file" || -z "$dbg_query" ]]; then
+          echo "[FAIL] debug scenario must be: selected_file|query" >&2
+          status=2
+        else
+          python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" \
+            --workspace-root "$WORKSPACE_ROOT" \
+            --query "$dbg_query" \
+            --context-url "$CONTEXT_URL" \
+            --plan-gate-url "$PLAN_GATE_URL" \
+            --top-k "$top_k" \
+            --task-type EXPLAIN_DEBUG \
+            --selected-file "$sel_file" \
+            --out "$out_json" \
+            --print summary || status=$?
+        fi
+        ;;
+      *)
+        echo "unsupported scenario type: $scenario_type (use ask|debug|plan)" >&2
+        exit 2
+        ;;
+    esac
+    if [[ "$status" -ne 0 ]]; then
+      fail=$((fail + 1))
+      echo "[FAIL] scenario $idx"
+    else
+      echo "[OK] saved: $out_json"
+    fi
+  done < "$scenario_file"
+
+  echo ""
+  echo "Scenario run complete: total=$idx failed=$fail out_dir=$out_dir"
+  [[ "$idx" -gt 0 ]] || { echo "No runnable queries found in $scenario_file" >&2; exit 2; }
+  [[ "$fail" -eq 0 ]]
+}
+
+cmd_health() {
+  resolve_defaults
+  curl -fsS "$CONTEXT_URL/healthz" >/dev/null
+  curl -fsS "$CONTEXT_URL/version" >/dev/null
+  curl -fsS "$PLAN_GATE_URL/healthz" >/dev/null
+  curl -fsS "$PLAN_GATE_URL/version" >/dev/null
+  echo "Context Layer + Plan-Gate health: OK"
+}
+
+cmd_version() {
+  echo "mcoder wrapper: scripts/mcoder"
+  python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" --help >/dev/null
+  echo "query cli backend: runtime/scripts/motadata_query_cli.py"
+}
+
+main() {
+  local cmd="${1:-}"
+  if [[ -z "$cmd" ]]; then
+    usage
+    exit 2
+  fi
+  shift || true
+  case "$cmd" in
+    prompt) cmd_prompt "$@" ;;
+    debug) cmd_debug "$@" ;;
+    plan) cmd_plan "$@" ;;
+    scenario) cmd_scenario "$@" ;;
+    health) cmd_health "$@" ;;
+    version) cmd_version ;;
+    -h|--help|help) usage ;;
+    *)
+      echo "unknown command: $cmd" >&2
+      usage
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"

@@ -116,6 +116,16 @@ MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 ENV
 ```
 
+5. Install the local helper CLI wrapper (single-step prompt/scenario):
+
+```bash
+mkdir -p ~/.local/bin
+ln -sf /root/Harshil-PoCs/m-coder/scripts/mcoder ~/.local/bin/mcoder
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+mcoder version
+```
+
 ## Context Layer User Service
 
 Recommended WSL service model:
@@ -248,11 +258,78 @@ Scenario slice: PASS
 
 Use `--full` for release validation or admin confidence checks, not for every developer's first ask.
 
+## One-Step Scenario Execution
+
+`mcoder prompt` implicitly does both prerequisites in one command:
+
+1. `POST /v1/export_evidence`
+2. `POST /v1/ask`
+
+Example:
+
+```bash
+mcoder prompt "How does alert correlation work?"
+```
+
+Single-step debug (implicit evidence export + ask with `task_type=EXPLAIN_DEBUG`):
+
+```bash
+mcoder debug \
+  --file src/main/java/com/motadata/alerts/AlertCorrelator.java \
+  --query "Why can this correlator miss duplicate suppression?"
+```
+
+Single-step plan (implicit evidence export + ask with `plan_contract.v1` response extension):
+
+```bash
+mcoder plan "Plan a safe refactor for alert enrichment flow with rollback notes"
+```
+
+Batch ask scenarios (one query per line, `#` comments allowed):
+
+```bash
+cat > /tmp/mcoder_scenarios.txt <<'EOF'
+How does alert correlation work?
+Where is alert deduplication implemented?
+What is the entry point for incident enrichment?
+EOF
+
+mcoder scenario --type ask --file /tmp/mcoder_scenarios.txt
+```
+
+Batch debug scenarios use this format per line:
+
+```text
+selected_file|query
+```
+
+Example:
+
+```bash
+cat > /tmp/mcoder_debug_scenarios.txt <<'EOF'
+src/main/java/com/motadata/alerts/AlertCorrelator.java|Trace duplicate suppression logic and failure path.
+src/main/java/com/motadata/enrichment/IncidentEnricher.java|Explain null handling and retry branch behavior.
+EOF
+
+mcoder scenario --type debug --file /tmp/mcoder_debug_scenarios.txt
+```
+
+Batch plan scenarios (one planning prompt per line):
+
+```bash
+cat > /tmp/mcoder_plan_scenarios.txt <<'EOF'
+Plan a bounded refactor of alert deduplication service.
+Plan safe migration of enrichment config parsing with tests.
+EOF
+
+mcoder scenario --type plan --file /tmp/mcoder_plan_scenarios.txt
+```
+
 ## IDE Usage
 
 ### VSCode / Cursor
 
-Use terminal tasks that call the API endpoints directly.
+Use terminal tasks that call `mcoder` helper commands.
 
 Example:
 
@@ -261,21 +338,27 @@ Example:
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Context Layer Health",
+      "label": "m-coder Ask Prompt",
       "type": "shell",
-      "command": "wsl curl -fsS http://127.0.0.1:8091/healthz"
+      "command": "wsl mcoder prompt \"${input:query}\""
     },
     {
-      "label": "Context Layer Version",
+      "label": "m-coder Debug Current File",
       "type": "shell",
-      "command": "wsl curl -fsS http://127.0.0.1:8091/version"
+      "command": "wsl mcoder debug --file \"${file}\" --query \"Explain control flow and likely failure points\""
     }
   ],
-  "inputs": []
+  "inputs": [
+    {
+      "id": "query",
+      "type": "promptString",
+      "description": "Ask m-coder"
+    }
+  ]
 }
 ```
 
-Cursor can call these endpoints from the integrated terminal.
+Cursor can call `mcoder` from its integrated terminal.
 
 ### IntelliJ
 
@@ -287,16 +370,16 @@ Program:
 wsl
 ```
 
-Arguments:
+Arguments (ask):
 
 ```bash
-curl -fsS http://127.0.0.1:8091/healthz
+mcoder prompt "$Prompt$"
 ```
 
-Version check:
+Debug current file:
 
 ```bash
-curl -fsS http://127.0.0.1:8091/version
+mcoder debug --file "$FilePath$" --query "Explain likely bug path"
 ```
 
 ## Safety Rules
