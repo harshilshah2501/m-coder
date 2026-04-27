@@ -107,6 +107,7 @@ def _export_evidence_bundle(
     *,
     task_type: str = "general",
     selected_file: str = "",
+    timeout_sec: int = 300,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "workspace_root": workspace_root,
@@ -118,7 +119,7 @@ def _export_evidence_bundle(
     if selected_file:
         payload["selected_file"] = selected_file
         payload["active_file"] = selected_file
-    status, evidence = _post(f"{context_url}/v1/export_evidence", payload, timeout=300)
+    status, evidence = _post(f"{context_url}/v1/export_evidence", payload, timeout=timeout_sec)
     if status != 200:
         raise RuntimeError(f"export_evidence failed http={status}")
     return evidence
@@ -358,6 +359,7 @@ def main() -> int:
     p.add_argument("--context-url", default="http://127.0.0.1:8091")
     p.add_argument("--plan-gate-url", default="http://127.0.0.1:8089")
     p.add_argument("--top-k", type=int, default=8)
+    p.add_argument("--timeout-sec", type=int, default=180, help="HTTP timeout seconds for export/ask requests")
     p.add_argument("--task-type", default="general", help="ask task type (e.g. general, EXPLAIN_DEBUG)")
     p.add_argument("--selected-file", default="", help="Optional selected file path for debug-focused asks")
     p.add_argument(
@@ -446,6 +448,7 @@ def main() -> int:
                         args.top_k,
                         task_type=args.task_type,
                         selected_file=args.selected_file,
+                        timeout_sec=args.timeout_sec,
                     )
                     for sub_query in router_result.sub_queries
                 ]
@@ -463,6 +466,7 @@ def main() -> int:
                     args.top_k,
                     task_type=args.task_type,
                     selected_file=args.selected_file,
+                    timeout_sec=args.timeout_sec,
                 )
 
             ask_req: dict[str, Any] = {
@@ -481,7 +485,7 @@ def main() -> int:
             if ws_hash:
                 ask_req["expected_workspace_identity_hash"] = ws_hash
 
-            ac, resp = _post(f"{plan_gate_url}/v1/ask", ask_req, timeout=300)
+            ac, resp = _post(f"{plan_gate_url}/v1/ask", ask_req, timeout=args.timeout_sec)
             if ac != 200:
                 print(f"/v1/ask failed http={ac}", file=sys.stderr)
                 return 1

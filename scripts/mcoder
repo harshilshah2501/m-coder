@@ -5,6 +5,7 @@ SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERBOSE="${MCODER_VERBOSE:-0}"
+TIMEOUT_SEC="${MCODER_TIMEOUT_SEC:-15}"
 GLOBAL_STATE_DIR=""
 CONFIG_FILE=""
 
@@ -13,13 +14,14 @@ usage() {
 mcoder helper wrapper (API-only)
 
 Usage:
-  mcoder [--verbose] [--config PATH] <command> ...
+  mcoder [--verbose] [--config PATH] [--timeout-sec N] <command> ...
   mcoder init [--workspace-root PATH] [--context-url URL] [--plan-gate-url URL] [--force]
   mcoder prompt "How does alert correlation work?" [--json] [--top-k N] [--out FILE]
   mcoder debug --file path/to/file.py --query "What is wrong here?" [--symbol NAME] [--json] [--top-k N] [--out FILE]
   mcoder plan "Refactor this handler safely" [--json] [--top-k N] [--out FILE]
   mcoder scenario --type ask|debug|plan --file scenarios.txt [--out-dir DIR] [--top-k N]
   mcoder health [--auto-fix]
+  mcoder doctor
   mcoder version
 
 Config discovery order:
@@ -35,7 +37,7 @@ Config keys:
   workspace_root, context_url, plan_gate_url
 
 Env overrides:
-  MCODER_WORKSPACE_ROOT, MCODER_CONTEXT_URL, MCODER_PLAN_GATE_URL
+  MCODER_WORKSPACE_ROOT, MCODER_CONTEXT_URL, MCODER_PLAN_GATE_URL, MCODER_TIMEOUT_SEC
 EOF
 }
 
@@ -77,12 +79,16 @@ resolve_config_file() {
 http_code() {
   local url="$1"
   local code
-  code="$(curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || true)"
+  code="$(curl -sS --connect-timeout "$TIMEOUT_SEC" --max-time "$TIMEOUT_SEC" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || true)"
   if [[ -z "$code" || ! "$code" =~ ^[0-9]{3}$ ]]; then
     echo "000"
   else
     echo "$code"
   fi
+}
+
+print_progress() {
+  echo "[STEP] $*"
 }
 
 cfg_get() {
@@ -189,6 +195,7 @@ cmd_prompt() {
     --top-k "$top_k"
     --print "$print_mode"
     --task-type "general"
+    --timeout-sec "$TIMEOUT_SEC"
   )
   if [[ -n "$out_file" ]]; then
     args+=(--out "$out_file")
@@ -334,6 +341,7 @@ cmd_debug() {
     --print "$print_mode"
     --task-type "EXPLAIN_DEBUG"
     --selected-file "$selected_file"
+    --timeout-sec "$TIMEOUT_SEC"
   )
   if [[ -n "$out_file" ]]; then
     args+=(--out "$out_file")
@@ -401,6 +409,7 @@ cmd_plan() {
     --print "$print_mode"
     --task-type "general"
     --response-extension "plan_contract.v1"
+    --timeout-sec "$TIMEOUT_SEC"
   )
   if [[ -n "$out_file" ]]; then
     args+=(--out "$out_file")
@@ -488,6 +497,7 @@ cmd_scenario() {
           --plan-gate-url "$PLAN_GATE_URL" \
           --top-k "$top_k" \
           --task-type general \
+          --timeout-sec "$TIMEOUT_SEC" \
           --out "$out_json" \
           --print summary || status=$?
         ;;
@@ -500,6 +510,7 @@ cmd_scenario() {
           --top-k "$top_k" \
           --task-type general \
           --response-extension plan_contract.v1 \
+          --timeout-sec "$TIMEOUT_SEC" \
           --out "$out_json" \
           --print summary || status=$?
         ;;
@@ -519,6 +530,7 @@ cmd_scenario() {
             --top-k "$top_k" \
             --task-type EXPLAIN_DEBUG \
             --selected-file "$sel_file" \
+            --timeout-sec "$TIMEOUT_SEC" \
             --out "$out_json" \
             --print summary || status=$?
         fi
@@ -567,7 +579,9 @@ cmd_health() {
   local plan_ok=0
   local ctx_code
   local pg_code
+  print_progress "Checking Context Layer health: $CONTEXT_URL/healthz (timeout ${TIMEOUT_SEC}s)"
   ctx_code="$(http_code "$CONTEXT_URL/healthz")"
+  print_progress "Checking Plan-Gate health: $PLAN_GATE_URL/healthz (timeout ${TIMEOUT_SEC}s)"
   pg_code="$(http_code "$PLAN_GATE_URL/healthz")"
   echo "context_health_code=$ctx_code" >>"$journal"
   echo "plan_gate_health_code=$pg_code" >>"$journal"
@@ -578,6 +592,7 @@ cmd_health() {
     echo "diagnosis: context health check failed" >>"$journal"
     if [[ "$auto_fix" -eq 1 ]]; then
       if command -v systemctl >/dev/null 2>&1; then
+        print_progress "Context unhealthy; attempting service restart"
         echo "action: attempting systemctl --user restart mcoder-context" >>"$journal"
         systemctl --user restart mcoder-context >>"$journal" 2>&1 || true
       else
@@ -599,6 +614,7 @@ cmd_health() {
     echo "diagnosis: plan-gate health check failed" >>"$journal"
     if [[ "$auto_fix" -eq 1 && -x "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" ]]; then
       echo "action: attempting stack compatibility check for diagnosis" >>"$journal"
+      print_progress "Plan-Gate unhealthy; running stack diagnostics"
       bash "$REPO_ROOT/scripts/wsl_plugin_mvp_stack.sh" check >>"$journal" 2>&1 || true
       pg_code="$(http_code "$PLAN_GATE_URL/healthz")"
       echo "plan_gate_health_code_after_diagnosis=$pg_code" >>"$journal"
@@ -625,6 +641,41 @@ cmd_health() {
   return 1
 }
 
+cmd_doctor() {
+  resolve_defaults
+  local fail_count=0
+  local cfg_ok=0
+  local ws_ok=0
+  local context_ok=0
+  local plan_ok=0
+  local mode_ok=0
+  local neo4j_ok=0
+
+  [[ -f "$CONFIG_FILE" ]] && cfg_ok=1
+  [[ -d "$WORKSPACE_ROOT" ]] && ws_ok=1
+  [[ "$(http_code "$CONTEXT_URL/healthz")" == "200" ]] && context_ok=1
+  [[ "$(http_code "$PLAN_GATE_URL/healthz")" == "200" ]] && plan_ok=1
+  [[ "$(cfg_get mode)" == "api_only" ]] && mode_ok=1
+
+  if python3 - <<'PY' >/dev/null 2>&1
+import importlib
+importlib.import_module("neo4j")
+print("ok")
+PY
+  then
+    neo4j_ok=1
+  fi
+
+  [[ "$cfg_ok" -eq 1 ]] && echo "Config: OK ($CONFIG_FILE)" || { echo "Config: FAIL ($CONFIG_FILE)"; fail_count=$((fail_count + 1)); }
+  [[ "$ws_ok" -eq 1 ]] && echo "Workspace root: OK ($WORKSPACE_ROOT)" || { echo "Workspace root: FAIL ($WORKSPACE_ROOT)"; fail_count=$((fail_count + 1)); }
+  [[ "$context_ok" -eq 1 ]] && echo "Context Layer: OK ($CONTEXT_URL)" || { echo "Context Layer: FAIL ($CONTEXT_URL)"; fail_count=$((fail_count + 1)); }
+  [[ "$plan_ok" -eq 1 ]] && echo "Plan-Gate: OK ($PLAN_GATE_URL)" || { echo "Plan-Gate: FAIL ($PLAN_GATE_URL)"; fail_count=$((fail_count + 1)); }
+  [[ "$mode_ok" -eq 1 ]] && echo "API-only mode: OK" || { echo "API-only mode: FAIL (mode=$(cfg_get mode))"; fail_count=$((fail_count + 1)); }
+  [[ "$neo4j_ok" -eq 1 ]] && echo "Neo4j driver: OK (structural queries enabled)" || echo "Neo4j driver: WARN (structural graph queries may return GRAPH_UNAVAILABLE)"
+
+  [[ "$fail_count" -eq 0 ]]
+}
+
 cmd_version() {
   echo "mcoder wrapper: scripts/mcoder"
   python3 "$REPO_ROOT/runtime/scripts/motadata_query_cli.py" --help >/dev/null
@@ -640,6 +691,10 @@ main() {
         ;;
       --config)
         MCODER_CONFIG_PATH="${2:-}"
+        shift 2
+        ;;
+      --timeout-sec)
+        TIMEOUT_SEC="${2:-15}"
         shift 2
         ;;
       *)
@@ -660,6 +715,7 @@ main() {
     plan) cmd_plan "$@" ;;
     scenario) cmd_scenario "$@" ;;
     health) cmd_health "$@" ;;
+    doctor) cmd_doctor "$@" ;;
     version) cmd_version ;;
     -h|--help|help) usage ;;
     *)

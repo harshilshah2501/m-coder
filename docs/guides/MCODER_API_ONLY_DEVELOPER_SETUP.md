@@ -153,6 +153,13 @@ mcoder --verbose health --auto-fix
 mcoder --verbose prompt "How does alert correlation work?"
 ```
 
+Bounded network wait timeout (seconds):
+
+```bash
+mcoder --timeout-sec 10 health --auto-fix
+mcoder --timeout-sec 20 prompt "Which class is the base class for all APIs?"
+```
+
 Explicit config file override (if needed):
 
 ```bash
@@ -262,6 +269,25 @@ API-only mode: OK
 
 ```text
 <project-root>/.mcoder/logs/mcoder-health-<timestamp>.log
+```
+
+### Doctor Check (`mcoder doctor`)
+
+Purpose: explicit readiness diagnosis before running prompts.
+
+Checks:
+
+- config file exists
+- workspace root exists
+- Context Layer health
+- Plan-Gate health
+- `mode=api_only`
+- Neo4j driver presence (warns if missing; structural graph queries may be unavailable)
+
+Usage:
+
+```bash
+mcoder doctor
 ```
 
 ### Governed Smoke Check
