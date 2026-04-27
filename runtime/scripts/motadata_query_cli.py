@@ -61,12 +61,17 @@ def _print_summary(resp: dict[str, Any]) -> None:
     if routing_mode == "explain_debug":
         dbg_summary = str(explain_debug.get("summary") or "").strip()
         dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
+        dbg_quality = str(md.get("debug_narration_quality") or "").strip().upper()
+        dbg_issues = md.get("debug_narration_issues") if isinstance(md.get("debug_narration_issues"), list) else []
         if dbg_summary:
             print(f"debug_summary: {dbg_summary}")
         if dbg_logic:
             first_logic = dbg_logic.splitlines()[0].strip()
             if first_logic:
                 print(f"debug_logic_head: {first_logic}")
+        if dbg_quality == "CURATED":
+            issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
+            print(f"debug_note: narration curated by governance for precision{issue_note}")
     if steps:
         print(f"answer_1: {steps[0]}")
     if len(steps) > 1:
