@@ -389,6 +389,9 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("init")
+    s.add_argument("--workspace-root", default="")
+    s.add_argument("--context-url", default="")
+    s.add_argument("--plan-gate-url", default="")
     s.add_argument("--force", action="store_true")
     s.set_defaults(func=_cmd_init)
 
