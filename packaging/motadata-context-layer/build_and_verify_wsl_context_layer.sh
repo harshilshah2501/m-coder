@@ -43,6 +43,7 @@ SMOKE_PORT="${CONTEXT_LAYER_SMOKE_PORT:-18091}"
 PLAN_GATE_URL="${PLAN_GATE_URL:-}"
 SMOKE_BASE_URL="http://127.0.0.1:${SMOKE_PORT}"
 SMOKE_LOG="$PKG_DIR/context-layer-smoke.log"
+SMOKE_STDERR="$PKG_DIR/context-layer-smoke.stderr.log"
 DEPLOY_TARGET="${DEPLOY_TARGET:-}"
 DEPLOY_PATH="${DEPLOY_PATH:-/root/Harshil-PoCs/Motadata}"
 DEPLOY_METHOD="${DEPLOY_METHOD:-scp}"
@@ -140,18 +141,39 @@ python3 -m venv "$SMOKE_VENV"
 "$SMOKE_VENV/bin/pip" install "$WHEEL_PATH" >/dev/null
 ok "Wheel installed into smoke venv"
 
+step "Preflight: bind ${SMOKE_PORT} on 127.0.0.1 (must be free)"
+if ! python3 - "$SMOKE_PORT" <<'PY'
+import socket
+import sys
+port = int(sys.argv[1])
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    s.bind(("127.0.0.1", port))
+finally:
+    s.close()
+PY
+then
+    warn "Port ${SMOKE_PORT} is not available (often: a previous Context Layer smoke is still bound)."
+    warn "Free it: ss -tlnp | grep :${SMOKE_PORT}  — or use CONTEXT_LAYER_SMOKE_PORT=<other> for this script."
+    fail "Preflight bind failed for 127.0.0.1:${SMOKE_PORT}"
+fi
+ok "Port ${SMOKE_PORT} is free"
+
 step "Start Context Layer smoke service on ${SMOKE_BASE_URL}"
+: > "$SMOKE_STDERR"
 MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1 \
 MOTADATA_CONTEXT_LAYER_PORT="$SMOKE_PORT" \
 MOTADATA_CONTEXT_LAYER_LOG_LEVEL=DEBUG \
 MOTADATA_CONTEXT_LAYER_LOG_PATH="$SMOKE_LOG" \
-"$SMOKE_VENV/bin/motadata-context-layer" > /dev/null 2>&1 &
+"$SMOKE_VENV/bin/motadata-context-layer" > /dev/null 2>>"$SMOKE_STDERR" &
 SMOKE_PID=$!
 sleep 1
 if ! kill -0 "$SMOKE_PID" >/dev/null 2>&1; then
-    warn "Smoke process not running; tail of $SMOKE_LOG:"
+    warn "Smoke process not running; stderr from this run ($SMOKE_STDERR):"
+    tail -n 80 "$SMOKE_STDERR" 2>/dev/null || true
+    warn "Smoke file log tail ($SMOKE_LOG) may be from older runs:"
     tail -n 80 "$SMOKE_LOG" 2>/dev/null || true
-    fail "Smoke service exited immediately. Check log: $SMOKE_LOG"
+    fail "Smoke service exited immediately. See $SMOKE_STDERR (traceback / bind errors) and $SMOKE_LOG"
 fi
 
 step "Validate /healthz and /version"
