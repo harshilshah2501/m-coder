@@ -514,7 +514,7 @@ def _cmd_scenario(args: argparse.Namespace) -> int:
 
 
 def _stack_monitor_cfg(cfg: Cfg) -> stack_daemon.StackMonitorConfig:
-    return stack_daemon.StackMonitorConfig(
+    base = dict(
         context_url=cfg.context_url,
         plan_gate_url=cfg.plan_gate_url,
         timeout_sec=cfg.timeout_sec,
@@ -523,9 +523,16 @@ def _stack_monitor_cfg(cfg: Cfg) -> stack_daemon.StackMonitorConfig:
         plan_gate_ssh_target=cfg.plan_gate_ssh_target,
         plan_gate_ssh_remote_port=cfg.plan_gate_ssh_remote_port,
         verbose=cfg.verbose,
-        verify_authority_index=False,
-        authority_max_files=500,
     )
+    # Compatibility fallback: older installed stack_daemon may not accept new fields.
+    try:
+        return stack_daemon.StackMonitorConfig(
+            **base,
+            verify_authority_index=False,
+            authority_max_files=500,
+        )
+    except TypeError:
+        return stack_daemon.StackMonitorConfig(**base)
 
 
 def _cmd_bootstrap(args: argparse.Namespace) -> int:
