@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import subprocess
 import time
 from pathlib import Path
@@ -13,6 +14,10 @@ from runtime.layer5.graph import (
     write_graph_artifacts,
 )
 from runtime.scripts.build_authority_code_index import build_index_with_progress
+from runtime.scripts.build_authority_code_index import _discover_java_files
+from runtime.scripts.build_authority_code_index import _meta_path_for_index
+from runtime.scripts.build_authority_code_index import _write_meta
+from runtime.scripts.build_authority_code_index import refresh_index_incremental
 
 
 def _project_root() -> Path:
@@ -67,6 +72,11 @@ def _discover_source_dirs(workspace_root: Path) -> list[str]:
     return found or ["."]
 
 
+def _default_index_cache_path(workspace_root: Path) -> Path:
+    key = hashlib.sha256(str(workspace_root).lower().encode("utf-8")).hexdigest()[:12]
+    return (_project_root() / "runtime/.cache" / f"authority_code_index.{key}.json").resolve()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build deterministic Code Intelligence Graph v1")
     ap.add_argument("--workspace-root", required=True, help="Workspace root path")
@@ -93,6 +103,17 @@ def main() -> int:
         default=100,
         help="Progress update granularity for index extraction",
     )
+    ap.add_argument(
+        "--refresh-mode",
+        choices=("auto", "full", "incremental"),
+        default="auto",
+        help="Index refresh mode: auto (default), full, incremental",
+    )
+    ap.add_argument(
+        "--index-cache-out",
+        default="",
+        help="Optional authority index cache JSON path (default runtime/.cache/authority_code_index.<workspace-hash>.json)",
+    )
     args = ap.parse_args()
 
     workspace_root = Path(args.workspace_root).expanduser().resolve()
@@ -106,13 +127,50 @@ def main() -> int:
     source_dirs = _discover_source_dirs(workspace_root)
     print(f"[cig] source_dirs={source_dirs}")
     print("[cig] building code index (live progress below)")
-    index = build_index_with_progress(
-        workspace_root=workspace_root,
-        source_dirs=source_dirs,
-        include_tests=bool(args.include_tests),
-        max_files=max(1, int(args.max_files)),
-        progress_every=max(0, int(args.progress_every)),
+    index_cache_path = (
+        Path(args.index_cache_out).expanduser().resolve()
+        if str(args.index_cache_out or "").strip()
+        else _default_index_cache_path(workspace_root)
     )
+    index_cache_path.parent.mkdir(parents=True, exist_ok=True)
+    mode = str(args.refresh_mode or "auto")
+    if mode == "auto":
+        mode = "incremental" if index_cache_path.exists() else "full"
+        print(f"[cig] refresh_mode auto -> {mode}")
+    if mode == "incremental":
+        index = refresh_index_incremental(
+            workspace_root=workspace_root,
+            source_dirs=source_dirs,
+            include_tests=bool(args.include_tests),
+            max_files=max(1, int(args.max_files)),
+            progress_every=max(0, int(args.progress_every)),
+            out_path=index_cache_path,
+        )
+    else:
+        index = build_index_with_progress(
+            workspace_root=workspace_root,
+            source_dirs=source_dirs,
+            include_tests=bool(args.include_tests),
+            max_files=max(1, int(args.max_files)),
+            progress_every=max(0, int(args.progress_every)),
+        )
+        _, _, sigs = _discover_java_files(
+            workspace_root=workspace_root,
+            source_dirs=source_dirs,
+            include_tests=bool(args.include_tests),
+            max_files=max(1, int(args.max_files)),
+        )
+        _write_meta(
+            _meta_path_for_index(index_cache_path),
+            workspace_root=workspace_root,
+            source_dirs=source_dirs,
+            include_tests=bool(args.include_tests),
+            max_files=max(1, int(args.max_files)),
+            signatures=sigs,
+        )
+    # Persist refreshed index so subsequent runs can be incremental.
+    index.save(index_cache_path)
+    print(f"[cig] index_cache={index_cache_path}")
     print(f"[cig] code index built in {(time.perf_counter() - t0):.2f}s; stats={index.stats}")
 
     print("[cig] loading authority registry")
