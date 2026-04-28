@@ -41,6 +41,7 @@ from .plan_contract_builder import build_plan_contract_v1
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
+from .graph_traversal_payload import build_graph_traversal_payload
 
 LOG = logging.getLogger(__name__)
 
@@ -370,6 +371,12 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             plan_contract=plan_contract,
             code_reasoning_trace=code_reasoning_trace,
             patch_proposal=patch_proposal,
+            graph_traversal=build_graph_traversal_payload(
+                query=query,
+                task_type=str(task_type or "general"),
+                authority_resolution=authority_resolution,
+                selected_file=str(selected_file or ""),
+            ),
         )
 
     if quality.blocked and skip_grounding_block_for_explain_debug:
@@ -515,4 +522,10 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         plan_contract=plan_contract,
         code_reasoning_trace=code_reasoning_trace,
         patch_proposal=patch_proposal,
+        graph_traversal=build_graph_traversal_payload(
+            query=query,
+            task_type=str(task_type or "general"),
+            authority_resolution=authority_resolution,
+            selected_file=str(selected_file or ""),
+        ),
     )

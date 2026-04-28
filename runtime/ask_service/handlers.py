@@ -39,6 +39,7 @@ from .context_budget import (
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
+from .graph_traversal_payload import build_graph_traversal_payload
 
 
 REPO = Path(__file__).resolve().parents[1]  # runtime/
@@ -443,6 +444,12 @@ def handle_ask_request(ask_request: dict) -> dict:
         metadata=metadata,
         routing_mode=routing_mode,
         trace_id=trace_id or None,
+        graph_traversal=build_graph_traversal_payload(
+            query=query,
+            task_type=str(task_type or "general"),
+            authority_resolution=authority_resolution,
+            selected_file=str(selected_file or ""),
+        ),
     )
 
 
@@ -493,6 +500,7 @@ def _build_plan_only_response(
     plan_contract: Dict[str, Any] | None = None,
     code_reasoning_trace: Dict[str, Any] | None = None,
     patch_proposal: Dict[str, Any] | None = None,
+    graph_traversal: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -562,6 +570,8 @@ def _build_plan_only_response(
         payload["code_reasoning_trace"] = code_reasoning_trace
     if patch_proposal is not None:
         payload["patch_proposal"] = patch_proposal
+    if graph_traversal is not None:
+        payload["graph_traversal"] = graph_traversal
     return payload
 
 

@@ -190,6 +190,35 @@ def test_handle_ask_v1_happy_path_plan_only():
     assert "patch_proposal" not in resp
 
 
+def test_handle_ask_v1_attaches_optional_graph_traversal_payload(monkeypatch: pytest.MonkeyPatch):
+    ev = _load_golden_evidence()
+    req = _minimal_v1_ask(ev, revision="client-sha-graph")
+    monkeypatch.setattr(
+        "runtime.ask_service.v1_ingest.build_graph_traversal_payload",
+        lambda **_k: {
+            "flow_paths": ["APIServer.start -> MailServerConfiguration.beforeUpdate"],
+            "owners": ["APIServer"],
+            "collaborators": ["MailServerConfiguration"],
+        },
+    )
+    resp = handle_ask_v1_request(req)
+    gt = resp.get("graph_traversal")
+    assert isinstance(gt, dict)
+    assert gt.get("flow_paths")
+    assert "APIServer" in ",".join(gt.get("owners") or [])
+
+
+def test_handle_ask_v1_omits_graph_traversal_when_unavailable(monkeypatch: pytest.MonkeyPatch):
+    ev = _load_golden_evidence()
+    req = _minimal_v1_ask(ev, revision="client-sha-graph-none")
+    monkeypatch.setattr(
+        "runtime.ask_service.v1_ingest.build_graph_traversal_payload",
+        lambda **_k: None,
+    )
+    resp = handle_ask_v1_request(req)
+    assert "graph_traversal" not in resp
+
+
 def test_handle_ask_v1_optin_emits_plan_contract_when_valid():
     ev = _load_golden_evidence()
     req = _minimal_v1_ask(

@@ -131,11 +131,14 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
     if not g:
         return None
 
-    inheritance = [str(x) for x in (g.get("inheritance_chain") or []) if str(x).strip()]
-    flow = [str(x) for x in (g.get("entrypoint_flow") or []) if str(x).strip()]
-    owners = [str(x) for x in (g.get("owners") or []) if str(x).strip()]
-    collaborators = [str(x) for x in (g.get("collaborators") or []) if str(x).strip()]
-    call_chain = [str(x) for x in (g.get("call_chain") or []) if str(x).strip()]
+    inheritance = [str(x) for x in (g.get("inheritance_chain") or g.get("inheritance") or []) if str(x).strip()]
+    flow = [str(x) for x in (g.get("entrypoint_flow") or g.get("flow_paths") or []) if str(x).strip()]
+    call_chain = [str(x) for x in (g.get("call_chain") or g.get("call_paths") or []) if str(x).strip()]
+    concepts = g.get("concepts") if isinstance(g.get("concepts"), dict) else {}
+    owners = [str(x) for x in ((g.get("owners") or concepts.get("owners") or [])) if str(x).strip()]
+    collaborators = [
+        str(x) for x in ((g.get("collaborators") or concepts.get("collaborators") or [])) if str(x).strip()
+    ]
 
     # Anti-collapse rule: avoid single-anchor output when graph resolves multiple meaningful nodes.
     meaningful_nodes = len(set(inheritance + flow + owners + collaborators + call_chain))
