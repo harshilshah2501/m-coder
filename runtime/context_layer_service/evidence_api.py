@@ -17,6 +17,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING, Tuple
 
 from runtime.layer5.evidence.executable_snippet_signals import text_has_executable_control_flow
 from runtime.layer5.retrieval.path_resolve import paths_match_workspace
+from runtime.context_layer_service import config
 
 # Forward type for callers that already built a lexical index (e.g. Stage 2 runner).
 _FileIndex = Any
@@ -478,7 +479,10 @@ def export_evidence_bundle_dict(
                 WorkspaceIndexCache,
             )
 
-            cacheable = WorkspaceIndexCache.is_cacheable(identity)
+            cacheable = WorkspaceIndexCache.is_cacheable(
+                identity,
+                allow_dirty=config.allow_dirty_cache(),
+            )
             if cacheable:
                 key = WorkspaceIndexCache.key_from_identity(identity)
 

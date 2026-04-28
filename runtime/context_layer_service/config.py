@@ -60,3 +60,8 @@ def index_cache_ttl_sec() -> float:
         return float(os.environ.get("MOTADATA_CONTEXT_LAYER_INDEX_CACHE_TTL_SEC", "0"))
     except ValueError:
         return 0.0
+
+
+def allow_dirty_cache() -> bool:
+    """Default off. Set MOTADATA_CONTEXT_LAYER_ALLOW_DIRTY_CACHE=1 for dev speed."""
+    return _env_truthy("MOTADATA_CONTEXT_LAYER_ALLOW_DIRTY_CACHE", False)

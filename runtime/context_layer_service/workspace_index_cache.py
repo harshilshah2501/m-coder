@@ -60,13 +60,13 @@ class WorkspaceIndexCache:
         )
 
     @staticmethod
-    def is_cacheable(identity: WorkspaceIdentity) -> bool:
-        """False when git reports dirty — safest default."""
+    def is_cacheable(identity: WorkspaceIdentity, *, allow_dirty: bool = False) -> bool:
+        """False when git reports dirty unless explicitly opted in."""
         rev = identity.revision
         if rev is None:
             return True
         if rev.is_dirty:
-            return False
+            return bool(allow_dirty)
         return True
 
     def _key_str(self, key: IndexCacheKey) -> str:

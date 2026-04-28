@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -189,6 +190,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
                 f"MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE={cfg.workspace_root}",
                 f"MOTADATA_CONTEXT_LAYER_LOG_PATH={d / 'context-layer.log'}",
                 "MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1",
+                "MOTADATA_CONTEXT_LAYER_ALLOW_DIRTY_CACHE=0",
             ]
         )
         + "\n",
@@ -358,6 +360,14 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         print("Neo4j driver: WARN (structural graph queries may return GRAPH_UNAVAILABLE)")
     print()
     venv_diagnose.print_venv_report()
+    if bool(getattr(args, "verify_authority_index", False)):
+        print()
+        authority_ok = venv_diagnose.print_authority_index_report(
+            cfg.workspace_root,
+            max_files=int(getattr(args, "authority_max_files", 500)),
+        )
+        if not authority_ok:
+            fails += 1
     return 0 if fails == 0 else 1
 
 
@@ -365,6 +375,7 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
     rid = str(uuid.uuid4())
     export_url = f"{cfg.context_url.rstrip('/')}/v1/export_evidence"
     ask_url = f"{cfg.plan_gate_url.rstrip('/')}/v1/ask"
+    t_export_0 = time.perf_counter()
     status, evidence = _post_json_or_fail(
         "Context Layer export_evidence",
         export_url,
@@ -378,6 +389,7 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
         },
         cfg.timeout_sec,
     )
+    export_ms = (time.perf_counter() - t_export_0) * 1000.0
     if status is None or evidence is None:
         return 1
     if status != 200:
@@ -394,7 +406,9 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
     }
     if response_extensions:
         ask_req["response_extensions"] = response_extensions
+    t_ask_0 = time.perf_counter()
     ac, resp = _post_json_or_fail("Plan-Gate /v1/ask", ask_url, ask_req, cfg.timeout_sec)
+    ask_ms = (time.perf_counter() - t_ask_0) * 1000.0
     if ac is None or resp is None:
         return 1
     if ac != 200:
@@ -434,6 +448,8 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
                 print(f"answer_1: {answer_1}")
             if next_step:
                 print(f"next_step: {next_step}")
+        if cfg.verbose:
+            print(f"timing: export_evidence_ms={export_ms:.1f} ask_ms={ask_ms:.1f}")
         print("")
     return 0
 
@@ -507,12 +523,16 @@ def _stack_monitor_cfg(cfg: Cfg) -> stack_daemon.StackMonitorConfig:
         plan_gate_ssh_target=cfg.plan_gate_ssh_target,
         plan_gate_ssh_remote_port=cfg.plan_gate_ssh_remote_port,
         verbose=cfg.verbose,
+        verify_authority_index=False,
+        authority_max_files=500,
     )
 
 
 def _cmd_bootstrap(args: argparse.Namespace) -> int:
     cfg = Cfg(args)
     sm = _stack_monitor_cfg(cfg)
+    sm.verify_authority_index = bool(getattr(args, "verify_authority_index", False))
+    sm.authority_max_files = int(getattr(args, "authority_max_files", 500))
     fix = not bool(getattr(args, "check_only", False))
     return stack_daemon.run_bootstrap(sm, fix=fix, json_out=bool(getattr(args, "json", False)))
 
@@ -684,6 +704,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not restart Context Layer or create SSH tunnel (health probes only)",
     )
+    boot.add_argument(
+        "--verify-authority-index",
+        action="store_true",
+        help="Run active authority index readiness probe (registry load + small index build).",
+    )
+    boot.add_argument(
+        "--authority-max-files",
+        type=int,
+        default=500,
+        metavar="N",
+        help="Max Java files for authority readiness probe (default 500).",
+    )
     boot.add_argument("--json", action="store_true", help="Machine-readable checklist on stdout")
     boot.set_defaults(func=_cmd_bootstrap)
 
@@ -699,6 +731,18 @@ def build_parser() -> argparse.ArgumentParser:
         "doctor",
         help="Run readiness diagnostics",
         description="Validate config, workspace, service reachability, API mode, and Neo4j availability.",
+    )
+    s.add_argument(
+        "--verify-authority-index",
+        action="store_true",
+        help="Run active authority index readiness probe (registry load + small index build).",
+    )
+    s.add_argument(
+        "--authority-max-files",
+        type=int,
+        default=500,
+        metavar="N",
+        help="Max Java files for authority readiness probe (default 500).",
     )
     s.set_defaults(func=_cmd_doctor)
 
