@@ -172,7 +172,8 @@ def test_graph_mail_explain_does_not_collapse_to_single_method():
             }
         ),
     )
-    assert "Entry point:" in shaped["answer_1"]
+    assert "workflow" in shaped["answer_1"].lower()
+    assert "Workflow anchors:" in shaped["answer_1"]
     assert "MailServerConfiguration.beforeUpdate" in shaped["answer_1"]
     assert "AbstractConfigStore" in shaped["answer_1"]
     assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `MailServerConfiguration.beforeUpdate`."
@@ -191,7 +192,8 @@ def test_graph_config_store_chain_is_compressed_and_labeled():
             }
         ),
     )
-    assert "Persistence/event/store path:" in shaped["answer_1"]
+    assert "shared abstraction" in shaped["answer_1"].lower()
+    assert "Read/write path:" in shaped["answer_1"]
     assert "exposes lookup/helpers" in shaped["answer_1"]
     # avoid dumping long unlabeled raw chain
     assert "getItemByMapMultiValueField ->" not in shaped["answer_1"]

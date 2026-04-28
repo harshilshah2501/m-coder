@@ -168,6 +168,17 @@ def _infer_anchor_role(anchor: str) -> str:
     return "core implementation anchor"
 
 
+def _explain_intent(query: str) -> str:
+    ql = _norm_query(query)
+    if "mail" in ql:
+        return "mail"
+    if "config store" in ql or "config stores" in ql:
+        return "config_store"
+    if "api" in ql or "architecture" in ql:
+        return "api"
+    return "general"
+
+
 def _select_anchor_for_explain(flow_paths: list[str], owner: dict[str, str], owners: list[str]) -> str:
     if flow_paths:
         first_nodes = _path_nodes(flow_paths[0])
@@ -190,29 +201,36 @@ def _bounded_inference_explain(
 ) -> str:
     role = _infer_anchor_role(anchor)
     ql = _norm_query(query)
+    intent = _explain_intent(query)
     abstraction = inheritance[1] if len(inheritance) >= 2 else ("AbstractAPI" if "api" in ql else "")
     collab = collaborators[:3] if collaborators else classes_from_context[:3]
     collab_line = ", ".join(f"`{c}`" for c in collab) if collab else "related handlers/stores in nearby context"
 
-    if "mail" in ql and "beforeupdate" in anchor.lower():
+    if intent == "mail" and "beforeupdate" in anchor.lower():
         summary = (
-            "Mail configuration is likely processed through an update lifecycle path where configuration is validated and persisted before downstream use."
+            "Mail server configuration likely flows through an update lifecycle that validates changes, persists config state, and then enables downstream notification delivery behavior."
         )
-    elif "config store" in ql or "config stores" in ql:
+        flow_line = (
+            f"Workflow anchor `{anchor}` maps to `{role}`; this typically coordinates store updates and collaborators such as {collab_line}."
+        )
+    elif intent == "config_store":
         summary = (
-            "Config-store behavior likely centers on a shared storage abstraction that exposes lookup helpers consumed by specialized store implementations."
+            "Config stores likely use a shared storage abstraction for read/write lookups, with concrete stores layering domain-specific retrieval/update behavior."
         )
-    elif "api" in ql or "architecture" in ql:
+        flow_line = (
+            f"Anchor `{anchor}` indicates `{role}`; collaborators include {collab_line}, which suggests shared store usage rather than isolated per-store logic."
+        )
+    elif intent == "api":
         summary = (
-            "The API layer likely starts at server/bootstrap entry and fans into API abstractions and concrete handlers for domain operations."
+            "The API architecture likely starts at server bootstrap, passes through a base abstraction, and delegates request behavior to concrete handlers/extensions."
         )
+        flow_line = f"Anchor `{anchor}` indicates `{role}`"
+        if abstraction:
+            flow_line += f", aligned with abstraction `{abstraction}`"
+        flow_line += f"; collaborators include {collab_line}."
     else:
         summary = "The system likely routes through a core implementation anchor and related collaborators to complete this behavior."
-
-    flow_line = f"Anchor `{anchor}` indicates `{role}`"
-    if abstraction:
-        flow_line += f", aligned with abstraction `{abstraction}`"
-    flow_line += f"; collaborators include {collab_line}."
+        flow_line = f"Anchor `{anchor}` indicates `{role}`; collaborators include {collab_line}."
 
     return (
         summary
@@ -288,6 +306,7 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
         return {"answer_1": answer, "next_step": "", "answer_shape": "structural"}
 
     if _is_explain_query(query) and (flow or inheritance or owners or collaborators or call_chain):
+        intent = _explain_intent(query)
         selected_flow = _select_paths(flow, owners, collaborators, limit=3)
         selected_calls = _select_paths(call_chain, owners, collaborators, limit=2)
         bundle_score = _explain_bundle_score(selected_flow, inheritance, owners, collaborators, selected_calls)
@@ -331,20 +350,51 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
             limits.append("store/event path shallow")
         limit_line = ", ".join(limits) if limits else "graph evidence is coherent for current query scope"
 
-        summary_line = (
-            "The system likely follows an entry-to-abstraction-to-collaborator path for this behavior."
-        )
-        anchor_line = (
-            "Entry point: "
-            + entry_line
-            + " Core abstraction: "
-            + abstraction_line
-            + " Concrete handlers/collaborators: "
-            + collab_line
-            + " Persistence/event/store path: "
-            + store_line
-            + "."
-        )
+        if intent == "mail":
+            summary_line = (
+                "Mail server configuration likely follows a lifecycle workflow: update hook -> validation/persistence path -> collaborators that apply runtime delivery behavior."
+            )
+            anchor_line = (
+                "Workflow anchors: "
+                + entry_line
+                + " Core abstraction: "
+                + abstraction_line
+                + " Collaborators: "
+                + collab_line
+                + " Store/persistence path: "
+                + store_line
+                + "."
+            )
+        elif intent == "config_store":
+            summary_line = (
+                "Config-store behavior likely centers on a shared abstraction and concrete stores that perform read/write retrieval workflows."
+            )
+            anchor_line = (
+                "Shared abstraction: "
+                + abstraction_line
+                + " Flow anchors: "
+                + entry_line
+                + " Concrete stores/collaborators: "
+                + collab_line
+                + " Read/write path: "
+                + store_line
+                + "."
+            )
+        else:
+            summary_line = (
+                "The system likely follows an entry-to-abstraction-to-collaborator path for this behavior."
+            )
+            anchor_line = (
+                "Entry point: "
+                + entry_line
+                + " Core abstraction: "
+                + abstraction_line
+                + " Concrete handlers/collaborators: "
+                + collab_line
+                + " Persistence/event/store path: "
+                + store_line
+                + "."
+            )
         confidence_line = f"Confidence: This is based on current evidence and partial graph coverage ({limit_line})."
         answer = summary_line + "\n" + anchor_line + "\n" + confidence_line
         return {"answer_1": answer, "next_step": "", "answer_shape": "explain"}
