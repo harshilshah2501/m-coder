@@ -179,6 +179,88 @@ def _explain_intent(query: str) -> str:
     return "general"
 
 
+def _dedupe_keep_order(items: list[str]) -> list[str]:
+    out: list[str] = []
+    for item in items:
+        if item and item not in out:
+            out.append(item)
+    return out
+
+
+def _remove_anchor_duplicates(anchor: str, items: list[str]) -> list[str]:
+    anchor_cls = anchor.rsplit(".", 1)[0] if "." in anchor else anchor
+    filtered: list[str] = []
+    for item in items:
+        if item == anchor or item == anchor_cls:
+            continue
+        filtered.append(item)
+    return filtered
+
+
+def _render_anchor_list(items: list[str], limit: int = 3) -> str:
+    uniq = _dedupe_keep_order(items)[:limit]
+    if not uniq:
+        return ""
+    wrapped = [f"`{x}`" for x in uniq]
+    if len(wrapped) == 1:
+        return wrapped[0]
+    if len(wrapped) == 2:
+        return f"{wrapped[0]} and {wrapped[1]}"
+    return ", ".join(wrapped[:-1]) + f", and {wrapped[-1]}"
+
+
+def _narrative_explain(
+    query: str,
+    entry_line: str,
+    abstraction_line: str,
+    collaborators: list[str],
+    store_line: str,
+    limit_line: str,
+) -> str:
+    intent = _explain_intent(query)
+    collab_text = _render_anchor_list(collaborators, limit=3)
+
+    if intent == "mail":
+        first = (
+            f"Mail server configuration appears to flow through an update lifecycle anchored by {entry_line}, "
+            "where changes are validated and persisted before downstream delivery behavior is applied."
+        )
+        second = (
+            f"This path connects lifecycle logic to abstraction {abstraction_line}"
+            + (f" and collaborators such as {collab_text}" if collab_text else "")
+            + (f", with store flow {store_line}." if store_line else ".")
+        )
+    elif intent == "config_store":
+        first = (
+            f"Config stores appear to be organized around shared abstraction {abstraction_line}, "
+            "which centralizes common read/write lookup behavior."
+        )
+        second = (
+            f"Flow anchored by {entry_line}"
+            + (f" likely fans into concrete components such as {collab_text}" if collab_text else "")
+            + (f", with read/write path {store_line}." if store_line else ".")
+        )
+    elif intent == "api":
+        first = (
+            f"The API layer appears to start from entrypoint flow {entry_line}, "
+            f"then route through base abstraction {abstraction_line} before delegating to concrete handlers/extensions."
+        )
+        second = (
+            ("Collaborators include " + collab_text) if collab_text else "Collaborator resolution is currently sparse"
+        ) + (f", with persistence/event path {store_line}." if store_line else ".")
+    else:
+        first = (
+            f"The system appears to follow entrypoint flow {entry_line}, "
+            f"move through abstraction {abstraction_line}, and delegate to implementation collaborators."
+        )
+        second = (
+            ("Collaborators include " + collab_text) if collab_text else "Collaborator resolution is currently sparse"
+        ) + (f", with supporting path {store_line}." if store_line else ".")
+
+    confidence = f"This interpretation is based on current evidence and partial graph coverage ({limit_line})."
+    return first + " " + second + "\n" + confidence
+
+
 def _select_anchor_for_explain(flow_paths: list[str], owner: dict[str, str], owners: list[str]) -> str:
     if flow_paths:
         first_nodes = _path_nodes(flow_paths[0])
@@ -204,41 +286,30 @@ def _bounded_inference_explain(
     intent = _explain_intent(query)
     abstraction = inheritance[1] if len(inheritance) >= 2 else ("AbstractAPI" if "api" in ql else "")
     collab = collaborators[:3] if collaborators else classes_from_context[:3]
-    collab_line = ", ".join(f"`{c}`" for c in collab) if collab else "related handlers/stores in nearby context"
+    collab = _remove_anchor_duplicates(anchor, _dedupe_keep_order(collab))
+    collab_line = _render_anchor_list(collab, limit=3) or "related handlers/stores in nearby context"
 
     if intent == "mail" and "beforeupdate" in anchor.lower():
-        summary = (
-            "Mail server configuration likely flows through an update lifecycle that validates changes, persists config state, and then enables downstream notification delivery behavior."
-        )
-        flow_line = (
-            f"Workflow anchor `{anchor}` maps to `{role}`; this typically coordinates store updates and collaborators such as {collab_line}."
+        body = (
+            f"Mail server configuration appears to run through an update lifecycle where `{anchor}` acts as the control hook, "
+            f"validates/persists configuration state, and coordinates collaborators such as {collab_line}."
         )
     elif intent == "config_store":
-        summary = (
-            "Config stores likely use a shared storage abstraction for read/write lookups, with concrete stores layering domain-specific retrieval/update behavior."
-        )
-        flow_line = (
-            f"Anchor `{anchor}` indicates `{role}`; collaborators include {collab_line}, which suggests shared store usage rather than isolated per-store logic."
+        body = (
+            f"Config stores appear to center on a shared abstraction where `{anchor}` indicates {role}, "
+            f"while collaborators such as {collab_line} layer domain-specific read/write behavior."
         )
     elif intent == "api":
-        summary = (
-            "The API architecture likely starts at server bootstrap, passes through a base abstraction, and delegates request behavior to concrete handlers/extensions."
+        body = (
+            f"The API architecture appears to bootstrap at `{anchor}` ({role}), "
+            + (f"route through `{abstraction}`, " if abstraction else "")
+            + f"and delegate behavior to collaborators such as {collab_line}."
         )
-        flow_line = f"Anchor `{anchor}` indicates `{role}`"
-        if abstraction:
-            flow_line += f", aligned with abstraction `{abstraction}`"
-        flow_line += f"; collaborators include {collab_line}."
     else:
-        summary = "The system likely routes through a core implementation anchor and related collaborators to complete this behavior."
-        flow_line = f"Anchor `{anchor}` indicates `{role}`; collaborators include {collab_line}."
-
-    return (
-        summary
-        + "\n"
-        + flow_line
-        + "\n"
-        + "Confidence: This is based on current evidence and partial graph coverage."
-    )
+        body = (
+            f"The system appears to route through anchor `{anchor}` ({role}) with collaborators such as {collab_line}."
+        )
+    return body + "\n" + "This interpretation is based on current evidence and partial graph coverage."
 
 
 def _select_paths(paths: list[str], owners: list[str], collaborators: list[str], limit: int = 3) -> list[str]:
@@ -335,11 +406,11 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
             " -> ".join(f"`{x}`" for x in inheritance[:3]) if len(inheritance) >= 2 else "Not fully resolved."
         )
         collab_items = collaborators[:5]
-        collab_line = ", ".join(f"`{c}`" for c in collab_items) if collab_items else "None confidently resolved."
+        collab_items = _remove_anchor_duplicates(selected_flow[0].split("->")[0].strip() if selected_flow else "", collab_items)
         store_line = (
             "; ".join(_compress_path(p) for p in selected_calls)
             if selected_calls
-            else "No deep call/store chain resolved from current graph slice."
+            else ""
         )
         limits = []
         if len(inheritance) < 2:
@@ -347,56 +418,16 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
         if not collaborators:
             limits.append("collaborator set sparse")
         if not selected_calls:
-            limits.append("store/event path shallow")
+            limits.append("store/event path unresolved")
         limit_line = ", ".join(limits) if limits else "graph evidence is coherent for current query scope"
-
-        if intent == "mail":
-            summary_line = (
-                "Mail server configuration likely follows a lifecycle workflow: update hook -> validation/persistence path -> collaborators that apply runtime delivery behavior."
-            )
-            anchor_line = (
-                "Workflow anchors: "
-                + entry_line
-                + " Core abstraction: "
-                + abstraction_line
-                + " Collaborators: "
-                + collab_line
-                + " Store/persistence path: "
-                + store_line
-                + "."
-            )
-        elif intent == "config_store":
-            summary_line = (
-                "Config-store behavior likely centers on a shared abstraction and concrete stores that perform read/write retrieval workflows."
-            )
-            anchor_line = (
-                "Shared abstraction: "
-                + abstraction_line
-                + " Flow anchors: "
-                + entry_line
-                + " Concrete stores/collaborators: "
-                + collab_line
-                + " Read/write path: "
-                + store_line
-                + "."
-            )
-        else:
-            summary_line = (
-                "The system likely follows an entry-to-abstraction-to-collaborator path for this behavior."
-            )
-            anchor_line = (
-                "Entry point: "
-                + entry_line
-                + " Core abstraction: "
-                + abstraction_line
-                + " Concrete handlers/collaborators: "
-                + collab_line
-                + " Persistence/event/store path: "
-                + store_line
-                + "."
-            )
-        confidence_line = f"Confidence: This is based on current evidence and partial graph coverage ({limit_line})."
-        answer = summary_line + "\n" + anchor_line + "\n" + confidence_line
+        answer = _narrative_explain(
+            query=query,
+            entry_line=entry_line,
+            abstraction_line=abstraction_line,
+            collaborators=collab_items,
+            store_line=store_line,
+            limit_line=limit_line,
+        )
         return {"answer_1": answer, "next_step": "", "answer_shape": "explain"}
 
     if _is_debug_why_query(query) and (call_chain or flow):

@@ -137,11 +137,9 @@ def test_graph_explain_composer_avoids_single_anchor_collapse():
             }
         ),
     )
-    assert "Entry point:" in shaped["answer_1"]
-    assert "Core abstraction:" in shaped["answer_1"]
-    assert "Concrete handlers/collaborators:" in shaped["answer_1"]
-    assert "Persistence/event/store path:" in shaped["answer_1"]
-    assert "Confidence:" in shaped["answer_1"]
+    assert "entrypoint flow" in shaped["answer_1"].lower()
+    assert "base abstraction" in shaped["answer_1"].lower()
+    assert "This interpretation is based on current evidence and partial graph coverage" in shaped["answer_1"]
     assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `APIServer.start`."
 
 
@@ -172,8 +170,7 @@ def test_graph_mail_explain_does_not_collapse_to_single_method():
             }
         ),
     )
-    assert "workflow" in shaped["answer_1"].lower()
-    assert "Workflow anchors:" in shaped["answer_1"]
+    assert "workflow" in shaped["answer_1"].lower() or "lifecycle" in shaped["answer_1"].lower()
     assert "MailServerConfiguration.beforeUpdate" in shaped["answer_1"]
     assert "AbstractConfigStore" in shaped["answer_1"]
     assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `MailServerConfiguration.beforeUpdate`."
@@ -193,7 +190,7 @@ def test_graph_config_store_chain_is_compressed_and_labeled():
         ),
     )
     assert "shared abstraction" in shaped["answer_1"].lower()
-    assert "Read/write path:" in shaped["answer_1"]
+    assert "read/write" in shaped["answer_1"].lower()
     assert "exposes lookup/helpers" in shaped["answer_1"]
     # avoid dumping long unlabeled raw chain
     assert "getItemByMapMultiValueField ->" not in shaped["answer_1"]
@@ -212,8 +209,24 @@ def test_graph_explain_shallow_avoids_diagnostic_leakage():
     low = shaped["answer_1"].lower()
     assert "reasoning is shallow" not in low
     assert "partial graph evidence" not in low
-    assert "confidence:" in low
+    assert "this interpretation is based on current evidence and partial graph coverage." in low
     assert "apiserver.start" in low
+
+
+def test_graph_explain_uses_single_hedge_in_main_body():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_graph(
+            {
+                "flow_paths": ["APIServer.start -> AbstractAPI.getItem"],
+                "inheritance_chain": ["MailServerConfiguration", "AbstractAPI"],
+                "collaborators": ["MailServerConfiguration", "ObjectManager"],
+            }
+        ),
+    )
+    main_body = shaped["answer_1"].split("\n", 1)[0].lower()
+    assert main_body.count("appears") <= 1
+    assert main_body.count("likely") <= 1
 
 
 def test_graph_api_architecture_not_single_anchor_only():
