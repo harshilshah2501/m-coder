@@ -32,4 +32,5 @@ exclude = [
 [tool.setuptools.package-data]
 "runtime.layer5.evidence" = ["evidence_bundle.v1.schema.json", "evidence_bundle.v1.md"]
 "runtime.layer5.retrieval" = ["domain_priors.yaml"]
+"runtime.layer5.authority" = ["product_authority_registry.yaml"]
 

@@ -50,6 +50,11 @@ def _egg_links_pointing_at_repo(site_packages: Path) -> list[str]:
     return out
 
 
+def _authority_registry_exists(site_packages: Path) -> bool:
+    reg = site_packages / "runtime" / "layer5" / "authority" / "product_authority_registry.yaml"
+    return reg.is_file()
+
+
 def build_venv_report(executable: str | None = None) -> list[str]:
     """Human-readable lines for doctor / bootstrap (warnings only when needed)."""
     exe = executable or sys.executable
@@ -90,6 +95,13 @@ def build_venv_report(executable: str | None = None) -> list[str]:
 
     sp = _site_packages(prefix)
     if sp:
+        if not _authority_registry_exists(sp):
+            lines.append(
+                "ERROR: missing runtime/layer5/authority/product_authority_registry.yaml in this venv install."
+            )
+            lines.append(
+                "Fix: rebuild/reinstall wheel that includes runtime.layer5.authority package-data."
+            )
         egg = _egg_links_pointing_at_repo(sp)
         if egg:
             lines.append("WARN: egg-link(s) referencing a dev checkout:")
