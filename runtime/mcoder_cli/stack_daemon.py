@@ -291,7 +291,14 @@ def run_bootstrap(cfg: StackMonitorConfig, *, fix: bool = True, json_out: bool =
         _out("[4/5] SSH tunnel: SKIP — plan_gate_url is not loopback (use reachable URL or switch to http://127.0.0.1:8089)")
     elif not cfg.plan_gate_ssh_target.strip():
         lines.append({"step": 4, "name": "ssh_tunnel", "ok": False, "detail": "skipped_no_ssh_target"})
-        _out("[4/5] SSH tunnel: SKIP — set plan_gate_ssh_target (or MCODER_PLAN_GATE_SSH) for auto-forward")
+        _out("[4/5] SSH tunnel: SKIP — no plan_gate_ssh_target (cannot forward to GPU)")
+        _out("")
+        _out("  Fix: add to .mcoder/config.yaml (adjust user@host), then run mcoder bootstrap:")
+        _out("    plan_gate_ssh_target: harshil@45.195.82.10")
+        _out("    plan_gate_ssh_remote_port: 8089")
+        _out("  Or once: MCODER_PLAN_GATE_SSH=harshil@45.195.82.10 mcoder bootstrap")
+        _out("  Or: mcoder init --force --workspace-root … --plan-gate-url http://127.0.0.1:8089 \\")
+        _out("           --plan-gate-ssh harshil@45.195.82.10")
     else:
         ok_t, msg = maybe_start_ssh_tunnel(cfg, replace_stale_tunnel=True)
         lines.append({"step": 4, "name": "ssh_tunnel", "ok": ok_t, "detail": msg})

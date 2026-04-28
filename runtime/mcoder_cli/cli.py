@@ -169,19 +169,16 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
     parsed = urllib.parse.urlparse(cfg.context_url)
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
-    cfg_file.write_text(
-        "\n".join(
-            [
-                f"workspace_root: {cfg.workspace_root}",
-                f"context_url: {cfg.context_url}",
-                f"plan_gate_url: {cfg.plan_gate_url}",
-                "mode: api_only",
-                "output: human",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    yaml_lines = [
+        f"workspace_root: {cfg.workspace_root}",
+        f"context_url: {cfg.context_url}",
+        f"plan_gate_url: {cfg.plan_gate_url}",
+    ]
+    if cfg.plan_gate_ssh_target:
+        yaml_lines.append(f"plan_gate_ssh_target: {cfg.plan_gate_ssh_target}")
+        yaml_lines.append(f"plan_gate_ssh_remote_port: {cfg.plan_gate_ssh_remote_port}")
+    yaml_lines += ["mode: api_only", "output: human"]
+    cfg_file.write_text("\n".join(yaml_lines) + "\n", encoding="utf-8")
     env_file.write_text(
         "\n".join(
             [
@@ -200,11 +197,16 @@ def _cmd_init(args: argparse.Namespace) -> int:
     print(f"  {cfg_file}")
     print(f"  {env_file}")
     print()
-    print("Next: start Context Layer (listening on context_url, often :8091) and ensure Plan-Gate")
-    print("      is reachable at plan_gate_url (tunnel or GPU host). Then: mcoder health")
-    print("Docs: docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md (after mcoder init)")
-    print()
-    print("Then run: mcoder bootstrap   # checklist: wheel, context, Plan-Gate, optional SSH tunnel")
+    print("Next:")
+    print("  • Start Context Layer (e.g. systemctl --user start mcoder-context; see setup guide).")
+    if "127.0.0.1" in cfg.plan_gate_url or "localhost" in cfg.plan_gate_url:
+        if not cfg.plan_gate_ssh_target:
+            print("  • plan_gate_url is loopback — add plan_gate_ssh_target (or: mcoder init --force ... --plan-gate-ssh USER@GPU)")
+            print("    so mcoder bootstrap can create the SSH tunnel to Plan-Gate automatically.")
+        else:
+            print("  • plan_gate_ssh_target is set — mcoder bootstrap will try ssh -L when Plan-Gate is down.")
+    print("  • Run: mcoder bootstrap")
+    print("Docs: docs/guides/MCODER_API_ONLY_DEVELOPER_SETUP.md")
     return 0
 
 
@@ -584,6 +586,21 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--workspace-root", default="")
     s.add_argument("--context-url", default="")
     s.add_argument("--plan-gate-url", default="")
+    s.add_argument(
+        "--plan-gate-ssh",
+        default="",
+        dest="plan_gate_ssh",
+        metavar="USER@HOST",
+        help="Write plan_gate_ssh_target for mcoder bootstrap SSH tunnel (loopback plan_gate_url)",
+    )
+    s.add_argument(
+        "--ssh-remote-port",
+        type=int,
+        default=None,
+        dest="ssh_remote_port",
+        metavar="PORT",
+        help="Remote Plan-Gate port on GPU (written when --plan-gate-ssh is set; default 8089)",
+    )
     s.add_argument("--force", action="store_true", help="Overwrite existing config/context files")
     s.set_defaults(func=_cmd_init)
 

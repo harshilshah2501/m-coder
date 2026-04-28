@@ -117,7 +117,7 @@ curl -fsS http://127.0.0.1:8089/healthz   # Plan-Gate (local tunnel or same mach
 **Minimal order after install:**
 
 1. **One-time / first machine setup:** install the venv, `mcoder init`, and create the Context Layer user service (see [Context Layer User Service](#context-layer-user-service)) so `motadata-context-layer` is available and can be started with `systemctl --user enable --now mcoder-context`.
-2. **Config for loopback Plan-Gate (so you are not typing `ssh -L` every session):** in `.mcoder/config.yaml` set `plan_gate_url: http://127.0.0.1:8089` and add `plan_gate_ssh_target: <user>@<gpu-host>` (or set `MCODER_PLAN_GATE_SSH`). If the GPU is directly reachable, you can use `plan_gate_url: http://<gpu-ip>:8089` instead and skip SSH.
+2. **Config for loopback Plan-Gate (so you are not typing `ssh -L` every session):** in `.mcoder/config.yaml` set `plan_gate_url: http://127.0.0.1:8089` and add `plan_gate_ssh_target: <user>@<gpu-host>` (or set `MCODER_PLAN_GATE_SSH`). You can bake this into **`mcoder init --plan-gate-ssh user@gpu-host`** so `config.yaml` includes those keys. If the GPU is directly reachable, use `plan_gate_url: http://<gpu-ip>:8089` instead and skip SSH.
 3. **Each work session (or after reboot):** run the **checklist** — it probes both endpoints, restarts Context Layer if needed, and **creates the SSH tunnel** when loopback + `plan_gate_ssh_target` are set (no separate `ssh` step):
    ```bash
    mcoder bootstrap
