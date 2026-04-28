@@ -94,6 +94,21 @@ source ./.mcoder/venv/bin/activate
 pip install /path/to/mcoder_suite-0.1.0-py3-none-any.whl
 ```
 
+### Venv hygiene (pip “outside environment” / dual installs)
+
+Golden-path **wheel-only** installs **only** into **`Motadata/.mcoder/venv`**. If you also have an editable install or an old registration under **`m-coder`** (another clone), `pip install --force-reinstall …` into the Motadata venv may warn:
+
+```text
+Not uninstalling mcoder-suite at …/m-coder, outside environment …/Motadata/.mcoder/venv
+```
+
+That means pip still sees **`mcoder-suite` metadata** tied to the repo tree—not that the Motadata install failed alone. **`mcoder` does not auto-remove** that other registration; fix the environment deliberately:
+
+- **`unset PYTHONPATH`** (and shell profiles that export `PYTHONPATH` to **`m-coder`** for motadata workflows).
+- Remove **editable / egg-link** installs from the repo venv / global user site if you no longer want them (`pip uninstall mcoder-suite` **from that same interpreter**, or delete stray **`*.egg-link`** files under **`site-packages`** pointing at **`m-coder`**).
+- Activate **only** `Motadata/.mcoder/venv`, then reinstall the wheel once.
+- Run **`mcoder doctor`** or **`mcoder bootstrap`** — both print **Wheel / venv hygiene**: `pip Location:` should live **under** the active venv prefix.
+
 3. Bootstrap project config in one command:
 
 ```bash

@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from runtime.mcoder_cli import venv_diagnose
+
 
 @dataclass
 class StackMonitorConfig:
@@ -245,6 +247,9 @@ def run_bootstrap(cfg: StackMonitorConfig, *, fix: bool = True, json_out: bool =
     _out = print if not json_out else lambda *_a, **_k: None
 
     _out("=== mcoder bootstrap (session checklist) ===")
+    if not json_out:
+        venv_diagnose.print_venv_report()
+        _out("")
     _out(f"config: context={cfg.context_url} plan_gate={cfg.plan_gate_url}")
     ssh_hint = cfg.plan_gate_ssh_target.strip() or "(unset — add plan_gate_ssh_target for auto tunnel)"
     _out(f"ssh target: {ssh_hint}")

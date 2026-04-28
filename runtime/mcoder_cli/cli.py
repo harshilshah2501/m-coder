@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 from runtime.mcoder_cli.answer_shaping import shape_prompt_summary
 from runtime.mcoder_cli import stack_daemon
+from runtime.mcoder_cli import venv_diagnose
 
 
 def _now_utc() -> str:
@@ -355,6 +356,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         print("Neo4j driver: OK (structural queries enabled)")
     else:
         print("Neo4j driver: WARN (structural graph queries may return GRAPH_UNAVAILABLE)")
+    print()
+    venv_diagnose.print_venv_report()
     return 0 if fails == 0 else 1
 
 
