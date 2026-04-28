@@ -58,6 +58,10 @@ def _is_raw_snippet_step(step: str) -> bool:
 def _sanitize_step(step: str, owner: dict[str, str]) -> str:
     if not _is_raw_snippet_step(step):
         return step.strip()
+    cls = owner.get("cls") or "owner class"
+    method = owner.get("method") or "target method"
+    file = owner.get("file") or "selected file"
+    return f"Inspect `{cls}.{method}` in `{file}` to validate control-flow and persistence behavior."
 
 
 def _is_status_preamble(step: str) -> bool:
@@ -77,10 +81,19 @@ def _first_meaningful_step(steps: list[str]) -> str:
             continue
         return s
     return steps[0] if steps else ""
-    cls = owner.get("cls") or "owner class"
-    method = owner.get("method") or "target method"
-    file = owner.get("file") or "selected file"
-    return f"Inspect `{cls}.{method}` in `{file}` to validate control-flow and persistence behavior."
+
+
+def _extract_grounded_explain_step(steps: list[str], owner: dict[str, str]) -> str:
+    for s in steps:
+        sl = s.lower()
+        if sl.startswith("how it works (grounded):") or sl.startswith("architecture (grounded):"):
+            _, _, tail = s.partition(":")
+            text = tail.strip()
+            for marker in ("Method-window excerpt:", "Visible method-window evidence:", "Evidence excerpt:"):
+                if marker in text:
+                    text = text.split(marker, 1)[0].strip()
+            return _sanitize_step(text, owner)
+    return ""
 
 
 def _extract_classes_from_context(resp: dict[str, Any], query: str) -> list[str]:
@@ -142,6 +155,16 @@ def shape_prompt_summary(query: str, resp: dict[str, Any]) -> dict[str, str]:
 
     # Explain/how/architecture: concise explanation + anchors.
     if _is_explain_query(query):
+        grounded = _extract_grounded_explain_step(steps, owner)
+        if grounded:
+            next_step = ""
+            if owner.get("cls"):
+                method_part = f".{owner['method']}" if owner.get("method") else ""
+                if owner.get("file"):
+                    next_step = (
+                        f"Inspect `{owner['cls']}{method_part}` in `{owner['file']}` and verify collaborators/branch handling."
+                    )
+            return {"answer_1": grounded, "next_step": next_step, "answer_shape": "explain"}
         if owner.get("cls"):
             method_part = f".{owner['method']}" if owner.get("method") else ""
             answer = (

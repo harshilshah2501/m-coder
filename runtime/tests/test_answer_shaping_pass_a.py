@@ -34,8 +34,8 @@ def test_mail_server_configuration_shapes_explanation_without_blob():
             ]
         ),
     )
-    assert "MailServerConfiguration.beforeUpdate" in shaped["answer_1"]
-    assert "Method-window excerpt:" not in shaped["next_step"]
+    assert "main execution path for this behavior" in shaped["answer_1"]
+    assert "Method-window excerpt:" not in shaped["answer_1"]
     assert "Inspect `MailServerConfiguration.beforeUpdate`" in shaped["next_step"]
 
 
