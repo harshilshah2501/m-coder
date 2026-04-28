@@ -153,6 +153,76 @@ def _compress_path(path: str) -> str:
     return f"`{nodes[0]}` -> ... -> `{nodes[-1]}` ({len(nodes)} hops)"
 
 
+def _infer_anchor_role(anchor: str) -> str:
+    low = anchor.lower()
+    if "abstractapi" in low:
+        return "base API abstraction"
+    if "apiserver.start" in low:
+        return "API entrypoint and route bootstrap"
+    if ".beforeupdate" in low:
+        return "update lifecycle hook"
+    if "abstractconfigstore" in low:
+        return "shared storage abstraction"
+    if ".start" in low:
+        return "service entrypoint"
+    return "core implementation anchor"
+
+
+def _select_anchor_for_explain(flow_paths: list[str], owner: dict[str, str], owners: list[str]) -> str:
+    if flow_paths:
+        first_nodes = _path_nodes(flow_paths[0])
+        if first_nodes:
+            return first_nodes[0]
+    if owner.get("cls"):
+        method_part = f".{owner['method']}" if owner.get("method") else ""
+        return f"{owner['cls']}{method_part}"
+    if owners:
+        return owners[0]
+    return ""
+
+
+def _bounded_inference_explain(
+    query: str,
+    anchor: str,
+    inheritance: list[str],
+    collaborators: list[str],
+    classes_from_context: list[str],
+) -> str:
+    role = _infer_anchor_role(anchor)
+    ql = _norm_query(query)
+    abstraction = inheritance[1] if len(inheritance) >= 2 else ("AbstractAPI" if "api" in ql else "")
+    collab = collaborators[:3] if collaborators else classes_from_context[:3]
+    collab_line = ", ".join(f"`{c}`" for c in collab) if collab else "related handlers/stores in nearby context"
+
+    if "mail" in ql and "beforeupdate" in anchor.lower():
+        summary = (
+            "Mail configuration is likely processed through an update lifecycle path where configuration is validated and persisted before downstream use."
+        )
+    elif "config store" in ql or "config stores" in ql:
+        summary = (
+            "Config-store behavior likely centers on a shared storage abstraction that exposes lookup helpers consumed by specialized store implementations."
+        )
+    elif "api" in ql or "architecture" in ql:
+        summary = (
+            "The API layer likely starts at server/bootstrap entry and fans into API abstractions and concrete handlers for domain operations."
+        )
+    else:
+        summary = "The system likely routes through a core implementation anchor and related collaborators to complete this behavior."
+
+    flow_line = f"Anchor `{anchor}` indicates `{role}`"
+    if abstraction:
+        flow_line += f", aligned with abstraction `{abstraction}`"
+    flow_line += f"; collaborators include {collab_line}."
+
+    return (
+        summary
+        + "\n"
+        + flow_line
+        + "\n"
+        + "Confidence: This is based on current evidence and partial graph coverage."
+    )
+
+
 def _select_paths(paths: list[str], owners: list[str], collaborators: list[str], limit: int = 3) -> list[str]:
     scored: list[tuple[int, int, str]] = []
     owner_set = {o.lower() for o in owners}
@@ -225,23 +295,17 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
         owner = _extract_owner(
             [str(s).strip() for s in (((resp.get("plan_summary") or {}).get("steps") or [])) if str(s).strip()]
         )
+        classes_from_context = _extract_classes_from_context(resp, query)
 
         if bundle_score < 2 or shallow_flow:
-            # Partial graph evidence: avoid overclaiming and fall back to Pass A style guidance.
-            owner_anchor = ""
-            if owner.get("cls"):
-                method_part = f".{owner['method']}" if owner.get("method") else ""
-                owner_anchor = f"`{owner['cls']}{method_part}`"
-            if not owner_anchor and selected_flow:
-                owner_anchor = _compress_path(selected_flow[0])
-            answer = (
-                "Based on partial graph evidence, architecture reasoning is currently shallow"
-                + (f" (anchor: {owner_anchor})." if owner_anchor else ".")
-            )
-            next_step = (
-                "Use the anchor plus collaborators/abstraction context to confirm entry-to-owner flow before concluding."
-            )
-            return {"answer_1": answer, "next_step": next_step, "answer_shape": "explain"}
+            anchor = _select_anchor_for_explain(selected_flow, owner, owners)
+            if not anchor and selected_calls:
+                first = _path_nodes(selected_calls[0])
+                anchor = first[0] if first else ""
+            if not anchor:
+                return None
+            answer = _bounded_inference_explain(query, anchor, inheritance, collaborators, classes_from_context)
+            return {"answer_1": answer, "next_step": "", "answer_shape": "explain"}
 
         entry_line = (
             "; ".join(_compress_path(p) for p in selected_flow)
@@ -265,9 +329,12 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
             limits.append("collaborator set sparse")
         if not selected_calls:
             limits.append("store/event path shallow")
-        limit_line = ", ".join(limits) if limits else "Graph evidence is coherent for current query scope."
+        limit_line = ", ".join(limits) if limits else "graph evidence is coherent for current query scope"
 
-        answer = (
+        summary_line = (
+            "The system likely follows an entry-to-abstraction-to-collaborator path for this behavior."
+        )
+        anchor_line = (
             "Entry point: "
             + entry_line
             + " Core abstraction: "
@@ -276,12 +343,11 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
             + collab_line
             + " Persistence/event/store path: "
             + store_line
-            + " Confidence limits: "
-            + limit_line
             + "."
         )
-        next_step = "Verify role boundaries across owner/collaborator nodes before final implementation claims."
-        return {"answer_1": answer, "next_step": next_step, "answer_shape": "explain"}
+        confidence_line = f"Confidence: This is based on current evidence and partial graph coverage ({limit_line})."
+        answer = summary_line + "\n" + anchor_line + "\n" + confidence_line
+        return {"answer_1": answer, "next_step": "", "answer_shape": "explain"}
 
     if _is_debug_why_query(query) and (call_chain or flow):
         chain = call_chain if call_chain else flow

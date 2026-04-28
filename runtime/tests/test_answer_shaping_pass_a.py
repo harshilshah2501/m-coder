@@ -141,7 +141,7 @@ def test_graph_explain_composer_avoids_single_anchor_collapse():
     assert "Core abstraction:" in shaped["answer_1"]
     assert "Concrete handlers/collaborators:" in shaped["answer_1"]
     assert "Persistence/event/store path:" in shaped["answer_1"]
-    assert "Confidence limits:" in shaped["answer_1"]
+    assert "Confidence:" in shaped["answer_1"]
     assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `APIServer.start`."
 
 
@@ -195,4 +195,52 @@ def test_graph_config_store_chain_is_compressed_and_labeled():
     assert "exposes lookup/helpers" in shaped["answer_1"]
     # avoid dumping long unlabeled raw chain
     assert "getItemByMapMultiValueField ->" not in shaped["answer_1"]
+
+
+def test_graph_explain_shallow_avoids_diagnostic_leakage():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_graph(
+            {
+                "flow_paths": ["APIServer.start"],
+                "owners": ["APIServer"],
+            }
+        ),
+    )
+    low = shaped["answer_1"].lower()
+    assert "reasoning is shallow" not in low
+    assert "partial graph evidence" not in low
+    assert "confidence:" in low
+    assert "apiserver.start" in low
+
+
+def test_graph_api_architecture_not_single_anchor_only():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_graph(
+            {
+                "flow_paths": ["APIServer.start"],
+                "inheritance_chain": ["MailServerConfiguration", "AbstractAPI"],
+                "collaborators": ["MailServerConfiguration"],
+            }
+        ),
+    )
+    text = shaped["answer_1"]
+    assert "APIServer.start" in text
+    assert "AbstractAPI" in text
+    assert "MailServerConfiguration" in text
+
+
+def test_graph_notifications_owner_collaborators_preserved():
+    shaped = shape_prompt_summary(
+        "Find all classes that handle notifications.",
+        _resp_with_graph(
+            {
+                "owners": ["NotificationEngine"],
+                "collaborators": ["EmailNotification", "SMSNotification"],
+            }
+        ),
+    )
+    assert "primary owners:" in shaped["answer_1"]
+    assert "collaborators:" in shaped["answer_1"]
 
