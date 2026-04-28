@@ -549,6 +549,46 @@ def _cmd_version(_args: argparse.Namespace) -> int:
     return 0
 
 
+_CMD_GROUPS: dict[str, list[str]] = {
+    "setup": ["init", "bootstrap"],
+    "diagnostics": ["health", "doctor", "stack"],
+    "query": ["prompt", "plan", "debug", "scenario"],
+    "misc": ["version", "help"],
+}
+
+
+def _print_help_groups() -> None:
+    print("Command groups:")
+    print("  setup       init, bootstrap")
+    print("  diagnostics health, doctor, stack")
+    print("  query       prompt, plan, debug, scenario")
+    print("  misc        version, help")
+
+
+def _cmd_help(args: argparse.Namespace) -> int:
+    topic = (getattr(args, "topic", "") or "all").strip().lower()
+    all_cmds = {c for lst in _CMD_GROUPS.values() for c in lst}
+    if topic in ("all", ""):
+        _print_help_groups()
+        print("")
+        print("Examples:")
+        print("  mcoder help setup")
+        print("  mcoder help diagnostics")
+        print("  mcoder help prompt")
+        return 0
+    if topic in _CMD_GROUPS:
+        names = ", ".join(_CMD_GROUPS[topic])
+        print(f"{topic} commands: {names}")
+        print(f"Run command help with: mcoder <command> --help")
+        return 0
+    if topic in all_cmds:
+        print(f"Detailed help: mcoder {topic} --help")
+        return 0
+    print(f"Unknown help topic: {topic}", file=sys.stderr)
+    print("Use: mcoder help [setup|diagnostics|query|misc|all|<command>]", file=sys.stderr)
+    return 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mcoder",
@@ -557,7 +597,13 @@ def build_parser() -> argparse.ArgumentParser:
             "Supports setup, diagnostics, and governed ask/debug/plan flows."
         ),
         epilog=(
+            "Groups:\n"
+            "  setup:       init, bootstrap\n"
+            "  diagnostics: health, doctor, stack\n"
+            "  query:       prompt, plan, debug, scenario\n"
+            "  misc:        version, help\n\n"
             "Examples:\n"
+            "  mcoder help diagnostics\n"
             "  mcoder init --workspace-root /root/Harshil-PoCs/Motadata --plan-gate-url http://127.0.0.1:8089\n"
             "  mcoder bootstrap\n"
             "  mcoder doctor\n"
@@ -578,8 +624,21 @@ def build_parser() -> argparse.ArgumentParser:
         dest="cmd",
         required=True,
         title="commands",
-        description="Run `mcoder <command> --help` for command-specific options.",
+        description="Run `mcoder help` for grouped overview, or `mcoder <command> --help` for details.",
     )
+
+    h = sub.add_parser(
+        "help",
+        help="Grouped help and command navigation",
+        description="Show grouped commands, or route to a specific command's help.",
+    )
+    h.add_argument(
+        "topic",
+        nargs="?",
+        default="all",
+        help="one of: setup, diagnostics, query, misc, all, or a command name",
+    )
+    h.set_defaults(func=_cmd_help)
 
     s = sub.add_parser(
         "init",
