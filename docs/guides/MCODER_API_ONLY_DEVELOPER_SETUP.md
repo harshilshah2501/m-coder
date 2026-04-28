@@ -94,20 +94,53 @@ source ./.mcoder/venv/bin/activate
 pip install /path/to/mcoder_suite-0.1.0-py3-none-any.whl
 ```
 
-### Venv hygiene (pip “outside environment” / dual installs)
+### Venv hygiene (short path)
 
-Golden-path **wheel-only** installs **only** into **`Motadata/.mcoder/venv`**. If you also have an editable install or an old registration under **`m-coder`** (another clone), `pip install --force-reinstall …` into the Motadata venv may warn:
+If pip shows this warning:
 
 ```text
 Not uninstalling mcoder-suite at …/m-coder, outside environment …/Motadata/.mcoder/venv
 ```
 
-That means pip still sees **`mcoder-suite` metadata** tied to the repo tree—not that the Motadata install failed alone. **`mcoder` does not auto-remove** that other registration; fix the environment deliberately:
+your active Motadata venv can still see metadata from another interpreter or editable install. Use this minimal cleanup:
 
-- **`unset PYTHONPATH`** (and shell profiles that export `PYTHONPATH` to **`m-coder`** for motadata workflows).
-- Remove **editable / egg-link** installs from the repo venv / global user site if you no longer want them (`pip uninstall mcoder-suite` **from that same interpreter**, or delete stray **`*.egg-link`** files under **`site-packages`** pointing at **`m-coder`**).
-- Activate **only** `Motadata/.mcoder/venv`, then reinstall the wheel once.
-- Run **`mcoder doctor`** or **`mcoder bootstrap`** — both print **Wheel / venv hygiene**: `pip Location:` should live **under** the active venv prefix.
+```bash
+cd /root/Harshil-PoCs/Motadata
+unset PYTHONPATH
+source ./.mcoder/venv/bin/activate
+python -m pip uninstall -y mcoder-suite || true
+
+SITE_PKGS="$(python - <<'PY'
+import sysconfig
+print(sysconfig.get_paths().get("purelib", ""))
+PY
+)"
+for f in "$SITE_PKGS"/*.pth "$SITE_PKGS"/*.egg-link; do
+  [ -e "$f" ] || continue
+  if rg -qi "m-coder|mcoder" "$f"; then rm -f "$f"; fi
+done
+
+python -m pip install --no-deps --force-reinstall /path/to/mcoder_suite-0.1.0-py3-none-any.whl
+mcoder doctor   # or: mcoder bootstrap
+```
+
+Expected result: in **Wheel / venv hygiene**, `pip Location:` is under `Motadata/.mcoder/venv`.
+
+### Update path (no m-coder repo on developer machine)
+
+API-only developers do not need an `m-coder` clone. They only need:
+
+- Motadata repo
+- `Motadata/.mcoder/venv`
+- released `mcoder-suite` wheel (artifact URL/share)
+
+```bash
+cd /root/Harshil-PoCs/Motadata
+source ./.mcoder/venv/bin/activate
+python -m pip install --no-deps --force-reinstall <WHEEL_PATH_OR_URL>
+mcoder version
+mcoder bootstrap
+```
 
 3. Bootstrap project config in one command:
 
