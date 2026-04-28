@@ -246,6 +246,22 @@ def test_graph_api_architecture_not_single_anchor_only():
     assert "MailServerConfiguration" in text
 
 
+def test_graph_explain_uses_expanded_nodes_for_better_collaborators():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_graph(
+            {
+                "flow_paths": ["APIServer.start -> AbstractAPI.getItem"],
+                "inheritance_chain": ["MailServerConfiguration", "AbstractAPI"],
+                "collaborators": ["ObjectConfigStore"],
+                "expanded_nodes": ["AlarmAPI", "NotificationHandler", "DiscoveryEngine.start"],
+            }
+        ),
+    )
+    text = shaped["answer_1"]
+    assert "AlarmAPI" in text or "NotificationHandler" in text
+
+
 def test_graph_notifications_owner_collaborators_preserved():
     shaped = shape_prompt_summary(
         "Find all classes that handle notifications.",

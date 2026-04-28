@@ -209,6 +209,42 @@ def _render_anchor_list(items: list[str], limit: int = 3) -> str:
     return ", ".join(wrapped[:-1]) + f", and {wrapped[-1]}"
 
 
+def _merge_expanded_collaborators(query: str, collaborators: list[str], expanded_nodes: list[str], limit: int = 5) -> list[str]:
+    if not expanded_nodes:
+        return _dedupe_keep_order(collaborators)[:limit]
+    ql = _norm_query(query)
+    preferred_tokens = ["api", "handler"] if "api" in ql else []
+    if "mail" in ql:
+        preferred_tokens = ["mail", "config", "store", "notification"]
+    elif "config" in ql:
+        preferred_tokens = ["config", "store", "manager"]
+    elif "notification" in ql:
+        preferred_tokens = ["notification", "engine", "handler"]
+
+    merged = _dedupe_keep_order(collaborators)
+    candidates = []
+    for node in expanded_nodes:
+        label = str(node).strip()
+        if not label:
+            continue
+        base = label.split(".", 1)[0]
+        low = base.lower()
+        score = 0
+        if any(tok in low for tok in preferred_tokens):
+            score += 3
+        if base.endswith(("API", "Handler", "Store", "Manager", "Engine")):
+            score += 2
+        if "." not in base:
+            score += 1
+        candidates.append((score, base))
+    for _, item in sorted(candidates, key=lambda x: (-x[0], x[1])):
+        if item not in merged:
+            merged.append(item)
+        if len(merged) >= limit:
+            break
+    return merged[:limit]
+
+
 def _narrative_explain(
     query: str,
     entry_line: str,
@@ -368,6 +404,8 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
     collaborators = [
         str(x) for x in ((g.get("collaborators") or concepts.get("collaborators") or [])) if str(x).strip()
     ]
+    expanded_nodes = [str(x) for x in (g.get("expanded_nodes") or []) if str(x).strip()]
+    collaborators = _merge_expanded_collaborators(query, collaborators, expanded_nodes, limit=5)
 
     # Anti-collapse rule: avoid single-anchor output when graph resolves multiple meaningful nodes.
     meaningful_nodes = len(set(inheritance + flow + owners + collaborators + call_chain))

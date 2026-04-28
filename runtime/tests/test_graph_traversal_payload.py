@@ -84,6 +84,9 @@ def test_build_graph_traversal_payload_optional_and_additive(tmp_path: Path):
     )
     assert payload is not None
     assert payload.get("flow_paths")
+    assert isinstance(payload.get("expanded_nodes"), list)
+    assert isinstance(payload.get("expanded_edges"), list)
+    assert len(payload.get("expanded_nodes") or []) <= 8
     assert payload.get("graph_schema_version") == "code_intelligence_graph.v1"
 
     missing = build_graph_traversal_payload(

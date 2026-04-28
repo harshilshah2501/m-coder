@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+from collections import deque
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -84,6 +86,124 @@ def _select_concept_id(query: str, authority_resolution: Optional[Dict[str, Any]
     return ""
 
 
+def _node_maps(graph: Any) -> tuple[dict[str, Any], dict[str, str]]:
+    nodes_by_id = {n.id: n for n in graph.nodes}
+    labels_by_id = {n.id: n.label for n in graph.nodes}
+    return nodes_by_id, labels_by_id
+
+
+def _query_tokens(query: str) -> set[str]:
+    return {t for t in re.findall(r"[a-z0-9]+", (query or "").lower()) if len(t) >= 3}
+
+
+def _extract_class_label(label: str) -> str:
+    if "." in label:
+        return label.split(".", 1)[0]
+    return label
+
+
+def _score_expanded_label(label: str, query_tokens: set[str]) -> int:
+    low = label.lower()
+    score = 0
+    if any(tok in low for tok in query_tokens):
+        score += 3
+    for pattern in ("api", "config", "notification", "manager", "store", "handler"):
+        if pattern in low:
+            score += 1
+    return score
+
+
+def _expand_graph_context(
+    graph: Any,
+    *,
+    query: str,
+    seed_labels: list[str],
+    max_nodes: int = 8,
+    max_hops: int = 2,
+) -> tuple[list[str], list[str]]:
+    if not seed_labels:
+        return [], []
+
+    nodes_by_id, labels_by_id = _node_maps(graph)
+    forward = graph.adjacency.get("forward", {})
+    reverse = graph.adjacency.get("reverse", {})
+    qtokens = _query_tokens(query)
+    allowed = {
+        "EXTENDS",
+        "CALLS",
+        "ENTRYPOINT_INVOKES",
+        "REGISTERS_ROUTE",
+        "CONCEPT_OWNS",
+        "CONCEPT_COLLABORATES_WITH",
+    }
+
+    seed_ids: list[str] = []
+    seed_labels_set = {s for s in seed_labels if s}
+    for nid, label in labels_by_id.items():
+        if label in seed_labels_set:
+            seed_ids.append(nid)
+            continue
+        if any(seed and seed.lower() in label.lower() for seed in seed_labels_set):
+            seed_ids.append(nid)
+    if not seed_ids:
+        return [], []
+
+    visited: set[str] = set(seed_ids)
+    queue: deque[tuple[str, int]] = deque((sid, 0) for sid in sorted(set(seed_ids)))
+    candidate_edges: set[tuple[str, str, str]] = set()
+
+    while queue:
+        current, hops = queue.popleft()
+        if hops >= max_hops:
+            continue
+        next_nodes: list[str] = []
+        for etype in sorted(allowed):
+            for dst in sorted(set(forward.get(current, {}).get(etype, []))):
+                candidate_edges.add((current, etype, dst))
+                next_nodes.append(dst)
+            for src in sorted(set(reverse.get(current, {}).get(etype, []))):
+                candidate_edges.add((src, etype, current))
+                next_nodes.append(src)
+        for nxt in sorted(set(next_nodes)):
+            if nxt in visited:
+                continue
+            visited.add(nxt)
+            queue.append((nxt, hops + 1))
+
+    seed_class_labels = {_extract_class_label(labels_by_id[sid]) for sid in seed_ids if sid in labels_by_id}
+    scored: list[tuple[int, str]] = []
+    for nid in visited:
+        node = nodes_by_id.get(nid)
+        if node is None:
+            continue
+        if getattr(node, "kind", "") not in ("class", "method", "entrypoint", "concept"):
+            continue
+        label = labels_by_id.get(nid, nid)
+        cls_label = _extract_class_label(label)
+        score = _score_expanded_label(label, qtokens)
+        if cls_label in seed_class_labels:
+            score -= 2
+        scored.append((score, label))
+
+    selected: list[str] = []
+    for _, label in sorted(scored, key=lambda x: (-x[0], x[1])):
+        if label in seed_labels_set or label in selected:
+            continue
+        selected.append(label)
+        if len(selected) >= max_nodes:
+            break
+
+    selected_set = set(selected) | seed_labels_set
+    rendered_edges = sorted(
+        {
+            f"{labels_by_id.get(src, src)} -> {etype} -> {labels_by_id.get(dst, dst)}"
+            for src, etype, dst in candidate_edges
+            if labels_by_id.get(src, src) in selected_set and labels_by_id.get(dst, dst) in selected_set
+        }
+    )
+    return selected, rendered_edges[: max_nodes * 2]
+
+
 def build_graph_traversal_payload(
     *,
     query: str,
@@ -117,6 +237,8 @@ def build_graph_traversal_payload(
     flow_paths: list[str] = []
     call_paths: list[str] = []
     concepts: Dict[str, Any] = {}
+    expanded_nodes: list[str] = []
+    expanded_edges: list[str] = []
 
     if _is_structural_query(query) and owner_class:
         inheritance = get_inheritance_chain(graph, owner_class)
@@ -130,8 +252,19 @@ def build_graph_traversal_payload(
             concepts = get_concept_owners(graph, concept_id)
             concepts["concept_id"] = concept_id
 
+    seed_labels = []
+    if owner_class:
+        seed_labels.append(owner_class)
+    if method_key:
+        seed_labels.append(method_key)
+    seed_labels.extend(inheritance[:2])
+    seed_labels.extend([p.split("->")[0].strip() for p in flow_paths[:2] if p])
+    seed_labels.extend(list(concepts.get("owners") or [])[:2])
+    seed_labels.extend(list(concepts.get("collaborators") or [])[:2])
+    expanded_nodes, expanded_edges = _expand_graph_context(graph, query=query, seed_labels=seed_labels)
+
     # Minimal additive signal only; avoid noisy empty payloads.
-    if not any([inheritance, flow_paths, call_paths, concepts]):
+    if not any([inheritance, flow_paths, call_paths, concepts, expanded_nodes]):
         return None
 
     return {
@@ -145,6 +278,8 @@ def build_graph_traversal_payload(
         "call_chain": call_paths,
         "owners": list(concepts.get("owners") or []),
         "collaborators": list(concepts.get("collaborators") or []),
+        "expanded_nodes": expanded_nodes,
+        "expanded_edges": expanded_edges,
         "graph_schema_version": str(manifest.get("schema_version") or ""),
         "graph_content_hash": str(manifest.get("content_hash") or ""),
     }
