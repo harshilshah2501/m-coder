@@ -127,16 +127,22 @@ def test_graph_explain_composer_avoids_single_anchor_collapse():
         "Explain the API layer architecture.",
         _resp_with_graph(
             {
-                "entrypoint_flow": ["APIServer.start", "MailServerConfiguration.beforeUpdate"],
+                "flow_paths": [
+                    "APIServer.start -> MailServerConfiguration.beforeUpdate",
+                    "APIServer.start -> AbstractAPI.getItem",
+                ],
                 "inheritance_chain": ["MailServerConfiguration", "AbstractAPI"],
                 "owners": ["APIServer", "AbstractAPI"],
                 "collaborators": ["MailServerConfiguration"],
             }
         ),
     )
-    assert "flow:" in shaped["answer_1"]
-    assert "abstraction:" in shaped["answer_1"]
-    assert "single method anchor" in shaped["next_step"]
+    assert "Entry point:" in shaped["answer_1"]
+    assert "Core abstraction:" in shaped["answer_1"]
+    assert "Concrete handlers/collaborators:" in shaped["answer_1"]
+    assert "Persistence/event/store path:" in shaped["answer_1"]
+    assert "Confidence limits:" in shaped["answer_1"]
+    assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `APIServer.start`."
 
 
 def test_graph_discovery_composer_separates_owner_and_collaborator():
@@ -151,4 +157,42 @@ def test_graph_discovery_composer_separates_owner_and_collaborator():
     )
     assert "primary owners:" in shaped["answer_1"]
     assert "collaborators:" in shaped["answer_1"]
+
+
+def test_graph_mail_explain_does_not_collapse_to_single_method():
+    shaped = shape_prompt_summary(
+        "How does mail server configuration work?",
+        _resp_with_graph(
+            {
+                "flow_paths": ["MailServerConfiguration.beforeUpdate -> AbstractConfigStore.getItem"],
+                "call_paths": ["MailServerConfiguration.beforeUpdate -> AbstractConfigStore.getItem"],
+                "inheritance_chain": ["MailServerConfiguration", "AbstractAPI"],
+                "owners": ["MailServerConfiguration"],
+                "collaborators": ["AbstractConfigStore"],
+            }
+        ),
+    )
+    assert "Entry point:" in shaped["answer_1"]
+    assert "MailServerConfiguration.beforeUpdate" in shaped["answer_1"]
+    assert "AbstractConfigStore" in shaped["answer_1"]
+    assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `MailServerConfiguration.beforeUpdate`."
+
+
+def test_graph_config_store_chain_is_compressed_and_labeled():
+    shaped = shape_prompt_summary(
+        "How are config stores organized?",
+        _resp_with_graph(
+            {
+                "flow_paths": [
+                    "AbstractConfigStore.getItem -> AbstractConfigStore.getItemByValue -> AbstractConfigStore.getItems -> AbstractConfigStore.getItemsByMapMultiValueField -> AbstractConfigStore.getItemsByMapValueField -> AbstractConfigStore.getItemsByMultiValueField"
+                ],
+                "owners": ["AbstractConfigStore"],
+                "collaborators": ["ObjectConfigStore", "ProtocolMapperConfigStore"],
+            }
+        ),
+    )
+    assert "Persistence/event/store path:" in shaped["answer_1"]
+    assert "exposes lookup/helpers" in shaped["answer_1"]
+    # avoid dumping long unlabeled raw chain
+    assert "getItemByMapMultiValueField ->" not in shaped["answer_1"]
 

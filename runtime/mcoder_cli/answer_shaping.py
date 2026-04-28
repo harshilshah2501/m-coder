@@ -126,6 +126,76 @@ def _graph_block(resp: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def _path_nodes(path: str) -> list[str]:
+    return [p.strip() for p in str(path).split("->") if p.strip()]
+
+
+def _chain_methods(path: str) -> list[str]:
+    methods: list[str] = []
+    for node in _path_nodes(path):
+        if "." in node:
+            methods.append(node.rsplit(".", 1)[-1])
+    return methods
+
+
+def _compress_path(path: str) -> str:
+    nodes = _path_nodes(path)
+    if len(nodes) <= 4:
+        return " -> ".join(f"`{n}`" for n in nodes)
+    methods = _chain_methods(path)
+    if methods:
+        uniq: list[str] = []
+        for m in methods:
+            if m not in uniq:
+                uniq.append(m)
+        shown = "/".join(uniq[:5])
+        return f"`{nodes[0]}` exposes lookup/helpers such as `{shown}` (plus additional hops)."
+    return f"`{nodes[0]}` -> ... -> `{nodes[-1]}` ({len(nodes)} hops)"
+
+
+def _select_paths(paths: list[str], owners: list[str], collaborators: list[str], limit: int = 3) -> list[str]:
+    scored: list[tuple[int, int, str]] = []
+    owner_set = {o.lower() for o in owners}
+    collab_set = {c.lower() for c in collaborators}
+    for path in paths:
+        p = path.lower()
+        score = 0
+        if any(o.lower() in p for o in owner_set):
+            score += 2
+        if any(c.lower() in p for c in collab_set):
+            score += 1
+        # prefer richer paths
+        score += min(3, len(_path_nodes(path)) - 1)
+        scored.append((score, -len(path), path))
+    scored.sort(reverse=True)
+    out: list[str] = []
+    for _, _, p in scored:
+        if p not in out:
+            out.append(p)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _explain_bundle_score(
+    flow_paths: list[str],
+    inheritance: list[str],
+    owners: list[str],
+    collaborators: list[str],
+    call_paths: list[str],
+) -> int:
+    score = 0
+    if any(len(_path_nodes(p)) >= 2 for p in flow_paths):
+        score += 1
+    if len(inheritance) >= 2:
+        score += 1
+    if owners and collaborators:
+        score += 1
+    if any(len(_path_nodes(p)) >= 2 for p in call_paths):
+        score += 1
+    return score
+
+
 def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | None:
     g = _graph_block(resp)
     if not g:
@@ -147,20 +217,70 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
         answer = "Based on graph-backed evidence, inheritance chain: " + " -> ".join(f"`{c}`" for c in inheritance) + "."
         return {"answer_1": answer, "next_step": "", "answer_shape": "structural"}
 
-    if _is_explain_query(query) and (flow or inheritance or owners):
-        parts: list[str] = []
-        if flow:
-            parts.append("flow: " + " -> ".join(f"`{n}`" for n in flow))
-        if inheritance:
-            parts.append("abstraction: " + " -> ".join(f"`{n}`" for n in inheritance))
-        if owners:
-            parts.append("owners: " + ", ".join(f"`{n}`" for n in owners))
-        if collaborators:
-            parts.append("collaborators: " + ", ".join(f"`{n}`" for n in collaborators[:5]))
-        answer = "Based on deterministic graph evidence, " + "; ".join(parts) + "."
-        next_step = ""
-        if meaningful_nodes > 1:
-            next_step = "Verify the full path above rather than a single method anchor."
+    if _is_explain_query(query) and (flow or inheritance or owners or collaborators or call_chain):
+        selected_flow = _select_paths(flow, owners, collaborators, limit=3)
+        selected_calls = _select_paths(call_chain, owners, collaborators, limit=2)
+        bundle_score = _explain_bundle_score(selected_flow, inheritance, owners, collaborators, selected_calls)
+        shallow_flow = bool(selected_flow) and all(len(_path_nodes(p)) <= 1 for p in selected_flow)
+        owner = _extract_owner(
+            [str(s).strip() for s in (((resp.get("plan_summary") or {}).get("steps") or [])) if str(s).strip()]
+        )
+
+        if bundle_score < 2 or shallow_flow:
+            # Partial graph evidence: avoid overclaiming and fall back to Pass A style guidance.
+            owner_anchor = ""
+            if owner.get("cls"):
+                method_part = f".{owner['method']}" if owner.get("method") else ""
+                owner_anchor = f"`{owner['cls']}{method_part}`"
+            if not owner_anchor and selected_flow:
+                owner_anchor = _compress_path(selected_flow[0])
+            answer = (
+                "Based on partial graph evidence, architecture reasoning is currently shallow"
+                + (f" (anchor: {owner_anchor})." if owner_anchor else ".")
+            )
+            next_step = (
+                "Use the anchor plus collaborators/abstraction context to confirm entry-to-owner flow before concluding."
+            )
+            return {"answer_1": answer, "next_step": next_step, "answer_shape": "explain"}
+
+        entry_line = (
+            "; ".join(_compress_path(p) for p in selected_flow)
+            if selected_flow
+            else "No strong entry flow resolved."
+        )
+        abstraction_line = (
+            " -> ".join(f"`{x}`" for x in inheritance[:3]) if len(inheritance) >= 2 else "Not fully resolved."
+        )
+        collab_items = collaborators[:5]
+        collab_line = ", ".join(f"`{c}`" for c in collab_items) if collab_items else "None confidently resolved."
+        store_line = (
+            "; ".join(_compress_path(p) for p in selected_calls)
+            if selected_calls
+            else "No deep call/store chain resolved from current graph slice."
+        )
+        limits = []
+        if len(inheritance) < 2:
+            limits.append("abstraction chain incomplete")
+        if not collaborators:
+            limits.append("collaborator set sparse")
+        if not selected_calls:
+            limits.append("store/event path shallow")
+        limit_line = ", ".join(limits) if limits else "Graph evidence is coherent for current query scope."
+
+        answer = (
+            "Entry point: "
+            + entry_line
+            + " Core abstraction: "
+            + abstraction_line
+            + " Concrete handlers/collaborators: "
+            + collab_line
+            + " Persistence/event/store path: "
+            + store_line
+            + " Confidence limits: "
+            + limit_line
+            + "."
+        )
+        next_step = "Verify role boundaries across owner/collaborator nodes before final implementation claims."
         return {"answer_1": answer, "next_step": next_step, "answer_shape": "explain"}
 
     if _is_debug_why_query(query) and (call_chain or flow):
