@@ -157,7 +157,7 @@ class GraphBuilder:
                 "call_edge_extractor",
                 attrs={"confidence": ce.confidence.value},
             )
-            self._add_config_store_edges(edges, src_id, ce.target_class, ce.target_method)
+            self._add_config_store_edges(nodes, edges, src_id, ce.target_class, ce.target_method)
 
         # Entrypoints and entrypoint invokes.
         for ep in code_index.entry_points:
@@ -238,6 +238,7 @@ class GraphBuilder:
 
     def _add_config_store_edges(
         self,
+        nodes: Dict[str, GraphNode],
         edges: Dict[str, GraphEdge],
         src_method_id: str,
         target_class: str,
@@ -246,6 +247,7 @@ class GraphBuilder:
         if "configstore" not in target_class.lower():
             return
         dst = _class_node_id(target_class)
+        nodes.setdefault(dst, GraphNode(id=dst, kind="class", label=target_class, attrs={}))
         t = target_method.lower()
         if any(m in t for m in _READ_METHOD_MARKERS):
             self._add_edge(edges, src_method_id, "READS_FROM", dst, "motadata_overlay")

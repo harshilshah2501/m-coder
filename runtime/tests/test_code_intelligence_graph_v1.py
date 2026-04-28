@@ -155,3 +155,31 @@ def test_eventbus_edges_are_bounded_regex_provenance(tmp_path: Path):
         assert edge.attrs.get("confidence") == "bounded"
         assert edge.attrs.get("provenance.detail") == "regex_derived_eventbus_edge"
 
+
+def test_config_store_edges_do_not_create_dangling_class_nodes():
+    workspace = Path("/home/harshil/Harshil-PoCs/m-coder")
+    index = CodeIndex()
+    rel = "src/main/java/com/mindarray/service/ConfigService.java"
+    index.files[rel] = FileRecord(
+        relative_path=rel,
+        package="com.mindarray.service",
+        module="service",
+        classes=(ClassRecord(name="ConfigService", file_path=rel, methods=("sync",)),),
+    )
+    # target_class resembles variable name, not declared class in index
+    index.call_edges.append(
+        CallEdge(
+            source_file=rel,
+            source_class="ConfigService",
+            source_method="sync",
+            target_class="configStore",
+            target_method="getItem",
+            confidence=CallConfidence.LOW,
+        )
+    )
+    index.build_indices()
+
+    graph = GraphBuilder(workspace).build(index, registry=None)
+    integrity = validate_graph_integrity(graph)
+    assert integrity.passed, integrity.errors
+

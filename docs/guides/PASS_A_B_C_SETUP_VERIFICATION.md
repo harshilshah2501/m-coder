@@ -1,149 +1,186 @@
-# Pass A / Pass B / Pass C Setup Verification
+# Pass A / Pass B / Pass C Verification (Split Setup)
 
-**Purpose:** Verify the full setup and behavior for:
-- Pass A (answer shaping hygiene)
-- Pass B (deterministic CIG v1 graph build + CI smoke)
-- Pass C (optional graph-to-answer wiring with safe fallback)
+This guide is for your real topology:
 
-This runbook is command-first and WSL-oriented.
+- **WSL:** has `Motadata` repo, runs `mcoder` CLI and Context Layer
+- **GPU:** has `m-coder` repo, runs Plan-Gate
+- **WSL <-> GPU:** connected by SSH tunnel (`127.0.0.1:8089`)
 
----
+Core invariant:
 
-## 1) Preconditions
-
-Run from `m-coder` repo root:
-
-```bash
-cd /home/harshil/Harshil-PoCs/m-coder
-```
-
-Set Motadata workspace root (update path if yours differs):
-
-```bash
-export MOTADATA_REPO_ROOT="/home/harshil/Harshil-PoCs/Motadata"
-```
-
-Sanity checks:
-
-```bash
-test -d "$MOTADATA_REPO_ROOT" && echo "OK: Motadata workspace found"
-test -f "runtime/scripts/build_code_intelligence_graph.py" && echo "OK: CIG builder present"
-```
-
-If `mcoder` is not on PATH, use python entrypoint:
-
-```bash
-alias mcoder-local='PYTHONPATH=. python3 runtime/mcoder_cli/cli.py'
-```
+`Repo is truth. Graph is map. LLM is narrator. Runtime is judge.`
 
 ---
 
-## 2) Service Health Verification
+## 1) Topology and Where Commands Run
 
-Check Context Layer and Plan-Gate:
+Use this legend in the rest of the guide:
 
-```bash
-mcoder health --auto-fix
-```
+- **[WSL]** run inside WSL shell
+- **[GPU]** run on GPU host shell
+- **[WSL->GPU]** run from WSL but executes on GPU via `ssh ...`
 
-If `mcoder` command is unavailable:
-
-```bash
-PYTHONPATH=. python3 runtime/mcoder_cli/cli.py health --auto-fix
-```
-
-Expected:
-- Context Layer health = OK
-- Plan-Gate health = OK
-
-Hard stop if either remains down.
+Do not run `m-coder` source-path commands on WSL if WSL does not have the `m-coder` repo checkout.
 
 ---
 
-## 3) Pass A Verification (Formatting + Fallback Baseline)
+## 2) Executable Generation and Installation
 
-Run baseline prompts (pre-graph expectation is cleaner wording, may still be anchor-heavy):
+### 2.1 Build wheel (from m-coder repo)
 
-```bash
-mcoder prompt "Explain the API layer architecture."
-mcoder prompt "How does mail server configuration work?"
-mcoder prompt "Find all classes that handle notifications."
-mcoder prompt "How are config stores organized?"
-```
-
-Fallback command variant:
+**[m-coder host]**
 
 ```bash
-PYTHONPATH=. python3 runtime/mcoder_cli/cli.py --timeout-sec 20 prompt "Explain the API layer architecture."
-PYTHONPATH=. python3 runtime/mcoder_cli/cli.py --timeout-sec 20 prompt "How does mail server configuration work?"
-PYTHONPATH=. python3 runtime/mcoder_cli/cli.py --timeout-sec 20 prompt "Find all classes that handle notifications."
-PYTHONPATH=. python3 runtime/mcoder_cli/cli.py --timeout-sec 20 prompt "How are config stores organized?"
+cd ~/Harshil-PoCs/m-coder/packaging/mcoder-suite
+python3 -m build --wheel -o dist
+ls -1 dist/mcoder_suite-*.whl
 ```
 
-Pass A check:
-- Output is readable and concise
-- No raw snippet blobs in default human output
-- If graph payload absent, behavior remains stable (fallback path)
+### 2.2 Install wheel on WSL (CLI runtime env)
 
----
+Copy wheel from GPU to WSL (example):
 
-## 4) Pass B Verification (Deterministic CIG v1)
-
-### 4.1 Build graph artifacts
+**[WSL]**
 
 ```bash
-PYTHONPATH=. python3 runtime/scripts/build_code_intelligence_graph.py \
-  --workspace-root "$MOTADATA_REPO_ROOT" \
-  --out-dir runtime/.cache/code_intelligence_graph
+mkdir -p ~/tmp/mcoder-wheel
+scp harshil@45.195.82.10:~/Harshil-PoCs/m-coder/packaging/mcoder-suite/dist/mcoder_suite-*.whl ~/tmp/mcoder-wheel/
+pip install --force-reinstall ~/tmp/mcoder-wheel/mcoder_suite-*.whl
+which mcoder
+mcoder version
 ```
 
-Expected printed lines include:
-- `graph_jsonl: .../code_intelligence_graph.v1.jsonl`
-- `graph_manifest: .../code_intelligence_graph.v1.manifest.json`
-- `graph_adjacency: .../code_intelligence_graph.v1.adjacency.json`
-- `graph_stats: {...}`
+### 2.3 Split topology deployment rule (WSL + GPU)
 
-### 4.2 Validate artifacts exist
+If WSL has Motadata and GPU runs Plan-Gate:
+
+1) Install/reinstall wheel on WSL (CLI/Context side).
+2) Use `governed_services.sh` on GPU as the primary deployment/restart path.
+3) Do not make ad-hoc GPU `pip install` part of normal verification flow.
+
+### 2.4 GPU governed deployment (primary path)
+
+**[GPU]**
 
 ```bash
-test -f runtime/.cache/code_intelligence_graph/code_intelligence_graph.v1.jsonl && echo "OK: jsonl"
-test -f runtime/.cache/code_intelligence_graph/code_intelligence_graph.v1.manifest.json && echo "OK: manifest"
-test -f runtime/.cache/code_intelligence_graph/code_intelligence_graph.v1.adjacency.json && echo "OK: adjacency"
+cd ~/Harshil-PoCs/m-coder
+./scripts/governed_services.sh status
+./scripts/governed_services.sh restart
 ```
 
-### 4.3 Validate manifest schema and counts
+If your script uses different verbs, run the equivalent status/restart actions.
+
+### 2.5 Break-glass GPU module check (debug only)
+
+Use only for incident debugging (not normal flow):
+
+**[GPU]**
 
 ```bash
 python3 - <<'PY'
-import json
-p="runtime/.cache/code_intelligence_graph/code_intelligence_graph.v1.manifest.json"
-m=json.load(open(p))
-print("schema_version:", m.get("schema_version"))
-print("node_count:", m.get("stats",{}).get("node_count"))
-print("edge_count:", m.get("stats",{}).get("edge_count"))
-assert m.get("schema_version")=="code_intelligence_graph.v1"
-assert int(m.get("stats",{}).get("node_count",0))>0
-assert int(m.get("stats",{}).get("edge_count",0))>0
-print("OK: manifest checks passed")
+import runtime.ask_service.graph_traversal_payload as m
+print("OK:", m.__file__)
 PY
 ```
 
-### 4.4 Determinism check (build twice, same hash)
+---
+
+## 3) Service Bring-up (Split)
+
+### 3.1 Context Layer on WSL
+
+**[WSL]**
+
+```bash
+mcoder --verbose health --auto-fix
+```
+
+Expected: Context Layer health OK.
+
+### 3.2 Plan-Gate on GPU
+
+Ensure Plan-Gate is running via `governed_services.sh` on GPU.
+
+### 3.3 SSH tunnel from WSL
+
+Primary path: let `mcoder` manage tunnel/bootstrap.
+
+**[WSL]**
+
+```bash
+mcoder bootstrap
+mcoder stack check --json
+```
+
+If tunnel is still missing, use manual fallback.
+
+Manual fallback:
+
+**[WSL]** (keep this terminal open):
+
+```bash
+ssh -N -L 8089:127.0.0.1:8089 harshil@45.195.82.10
+```
+
+In another WSL terminal:
+
+```bash
+ss -ltnp | rg 8089
+curl -sS -i http://127.0.0.1:8089/healthz
+```
+
+Expected:
+- listener owned by `ssh`
+- `/healthz` returns `200`
+
+---
+
+## 4) Pass B Build (Where Motadata Exists)
+
+Because WSL has Motadata and GPU hosts Plan-Gate, build CIG where Motadata is readable, then sync artifacts to GPU.
+
+### 4.1 Build CIG artifacts from Motadata
+
+If WSL has runtime module available:
+
+**[WSL]**
+
+```bash
+python3 -m runtime.scripts.build_code_intelligence_graph \
+  --workspace-root /root/Harshil-PoCs/Motadata \
+  --out-dir /tmp/code_intelligence_graph
+```
+
+If WSL does not have runtime module, run build on host that has both builder code and Motadata access.
+
+### 4.2 Validate artifact set
+
+**[WSL]**
+
+```bash
+test -f /tmp/code_intelligence_graph/code_intelligence_graph.v1.jsonl && echo "OK: jsonl"
+test -f /tmp/code_intelligence_graph/code_intelligence_graph.v1.manifest.json && echo "OK: manifest"
+test -f /tmp/code_intelligence_graph/code_intelligence_graph.v1.adjacency.json && echo "OK: adjacency"
+```
+
+### 4.3 Determinism check (same input -> same content_hash)
+
+**[WSL]**
 
 ```bash
 HASH1=$(python3 - <<'PY'
 import json
-print(json.load(open("runtime/.cache/code_intelligence_graph/code_intelligence_graph.v1.manifest.json")).get("content_hash",""))
+print(json.load(open("/tmp/code_intelligence_graph/code_intelligence_graph.v1.manifest.json")).get("content_hash",""))
 PY
 )
 
-PYTHONPATH=. python3 runtime/scripts/build_code_intelligence_graph.py \
-  --workspace-root "$MOTADATA_REPO_ROOT" \
-  --out-dir runtime/.cache/code_intelligence_graph >/tmp/cig_build_2.log
+python3 -m runtime.scripts.build_code_intelligence_graph \
+  --workspace-root /root/Harshil-PoCs/Motadata \
+  --out-dir /tmp/code_intelligence_graph >/tmp/cig_rebuild.log
 
 HASH2=$(python3 - <<'PY'
 import json
-print(json.load(open("runtime/.cache/code_intelligence_graph/code_intelligence_graph.v1.manifest.json")).get("content_hash",""))
+print(json.load(open("/tmp/code_intelligence_graph/code_intelligence_graph.v1.manifest.json")).get("content_hash",""))
 PY
 )
 
@@ -152,27 +189,60 @@ echo "HASH2=$HASH2"
 test "$HASH1" = "$HASH2" && echo "OK: deterministic content_hash"
 ```
 
-### 4.5 CI smoke target
+### 4.4 Sync artifacts to GPU Plan-Gate cache
+
+**[WSL]**
 
 ```bash
-make cig-smoke
+tar -C /tmp -czf /tmp/code_intelligence_graph.tgz code_intelligence_graph
+scp /tmp/code_intelligence_graph.tgz harshil@45.195.82.10:/tmp/
+ssh harshil@45.195.82.10 '
+  mkdir -p ~/Harshil-PoCs/m-coder/runtime/.cache &&
+  rm -rf ~/Harshil-PoCs/m-coder/runtime/.cache/code_intelligence_graph &&
+  tar -xzf /tmp/code_intelligence_graph.tgz -C ~/Harshil-PoCs/m-coder/runtime/.cache
+'
 ```
 
-Expected:
-- smoke test passes
-- no-collapse traversal invariant covered
+### 4.5 Restart Plan-Gate on GPU
+
+Use your existing Plan-Gate service/process restart procedure on GPU.
 
 ---
 
-## 5) Pass C Verification (Optional Graph Wiring)
+## 5) Pass C Runtime Verification (Real CLI Feel)
 
-Pass C must be optional/additive:
-- graph present -> enriched response composition
-- graph missing/invalid -> Pass A fallback
+### 5.1 Direct probe first (WSL through tunnel)
 
-### 5.1 Graph-present product checks
+**[WSL]**
 
-Run:
+```bash
+python3 - <<'PY'
+import json, urllib.request, uuid, datetime
+CTX="http://127.0.0.1:8091"; ASK="http://127.0.0.1:8089"; WS="/root/Harshil-PoCs/Motadata"
+Q="How are config stores organized?"
+def post(url, body):
+    req=urllib.request.Request(url,data=json.dumps(body).encode(),headers={"Content-Type":"application/json"},method="POST")
+    with urllib.request.urlopen(req, timeout=60) as r: return json.loads(r.read().decode())
+ev = post(f"{CTX}/v1/export_evidence", {"workspace_root":WS,"query":Q,"top_k":8,"task_type":"general"})
+resp = post(f"{ASK}/v1/ask", {"schema_version":"ask_request.v1.0","request_id":str(uuid.uuid4()),"timestamp_utc":datetime.datetime.now(datetime.UTC).isoformat(),"query":Q,"task_type":"general","evidence_bundle":ev})
+gt = resp.get("graph_traversal")
+print("graph_traversal_present:", isinstance(gt, dict))
+if isinstance(gt, dict):
+    print("keys:", sorted(gt.keys()))
+    print("flow_paths_count:", len(gt.get("flow_paths") or []))
+    print("call_paths_count:", len(gt.get("call_paths") or []))
+    print("inheritance_count:", len(gt.get("inheritance") or []))
+    print("owners:", gt.get("owners"))
+    print("collaborators:", gt.get("collaborators"))
+PY
+```
+
+Expected:
+- `graph_traversal_present: True`
+
+### 5.2 CLI prompt verification
+
+**[WSL]**
 
 ```bash
 mcoder prompt "Explain the API layer architecture."
@@ -183,101 +253,53 @@ mcoder prompt "How are config stores organized?"
 
 Acceptance bar:
 
-`Explain the API layer architecture.`
-- mentions `APIServer`
-- mentions `AbstractAPI`
-- mentions concrete API handlers/extensions
-- not only `APIServer.start`
-
-`How does mail server configuration work?`
-- mentions `MailServerConfiguration.beforeUpdate`
-- includes lifecycle/store/collaborator flow when graph evidence exists
-
-`Find all classes that handle notifications.`
-- shows primary owner + collaborators when graph resolves them
-- not single-owner collapse unless only one node is available
-
-`How are config stores organized?`
-- explains `AbstractConfigStore`
-- includes read/write/store relationship when present in graph evidence
-
-### 5.2 Fallback behavior check (graph disabled)
-
-Temporarily move graph cache:
-
-```bash
-mv runtime/.cache/code_intelligence_graph runtime/.cache/code_intelligence_graph.bak
-```
-
-Run one prompt:
-
-```bash
-mcoder prompt "Explain the API layer architecture."
-```
-
-Expected:
-- command still succeeds
-- response falls back to Pass A logic (no crash, no schema break)
-
-Restore cache:
-
-```bash
-mv runtime/.cache/code_intelligence_graph.bak runtime/.cache/code_intelligence_graph
-```
+- API architecture: includes `APIServer`, `AbstractAPI`, concrete handlers/extensions; not only `APIServer.start`
+- Mail config: includes `MailServerConfiguration.beforeUpdate`, lifecycle/store/collaborator flow when present
+- Notifications: includes owner + collaborators when graph resolves them
+- Config stores: explains `AbstractConfigStore` + read/write/store relationships when present
 
 ---
 
-## 6) Focused Test Suite Commands
+## 6) CI / Smoke Tests (m-coder repo host)
 
-Run all relevant tests:
+Run where `m-coder` repo exists:
 
 ```bash
+cd ~/Harshil-PoCs/m-coder
 PYTHONPATH=. pytest -q \
-  runtime/tests/test_answer_shaping_pass_a.py \
-  runtime/tests/test_code_intelligence_graph_v1.py \
   runtime/tests/test_code_intelligence_graph_smoke.py \
+  runtime/tests/test_code_intelligence_graph_v1.py \
   runtime/tests/test_graph_traversal_payload.py \
-  runtime/tests/test_ask_v1_ingest.py
+  runtime/tests/test_ask_v1_ingest.py \
+  runtime/tests/test_answer_shaping_pass_a.py
+make cig-smoke
 ```
-
-Expected:
-- all pass
-- no regressions to contract behavior
 
 ---
 
 ## 7) Failure Triage
 
-If output is still mostly:
-- `main anchor for this behavior`
+If responses regress to anchor-only phrasing:
 
-check in order:
-1. Graph artifacts exist and manifest counts > 0
-2. `content_hash` stable across rebuild
-3. Ask response contains optional `graph_traversal` field
-4. CLI shaping receives and prefers graph payload when present
-5. Services are healthy (`mcoder health`)
+1. Verify tunnel and `/healthz` on `127.0.0.1:8089`
+2. Verify `graph_traversal_payload.py` exists in GPU runtime
+3. Verify CIG artifacts exist in GPU `runtime/.cache/code_intelligence_graph`
+4. Verify probe shows `graph_traversal_present: True`
+5. Restart GPU Plan-Gate and retry
 
-Quick inspect command for Ask JSON:
-
-```bash
-python3 runtime/scripts/motadata_query_cli.py \
-  --workspace-root "$MOTADATA_REPO_ROOT" \
-  --query "Explain the API layer architecture." \
-  --print json | python3 -m json.tool | rg "graph_traversal|flow_paths|inheritance|owners|collaborators"
-```
+If `/v1/ask` returns `500`:
+- run direct probe script from section 5.1
+- collect GPU Plan-Gate traceback/logs at that timestamp
 
 ---
 
-## 8) Non-Negotiables
+## 8) What Was Validated In Sandbox
 
-During verification:
-- Do not change retrieval/ranking logic.
-- Do not change Plan-Gate contracts or schemas.
-- Do not change governance posture.
-- Keep graph integration optional and additive.
+Validated in this development sandbox:
+- CIG build script and tests execute (`cig-smoke`, script unit tests)
+- Ask response wiring compiles and tests pass
+- guide command syntax verified for local portions
 
-Invariant:
-
-`Repo is truth. Graph is map. LLM is narrator. Runtime is judge.`
+Not executable in this sandbox:
+- your remote GPU service management and WSL-to-GPU tunnel environment specifics
 
