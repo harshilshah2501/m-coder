@@ -10,6 +10,10 @@ def _resp(steps: list[str], files: list[str] | None = None) -> dict:
     return payload
 
 
+def _resp_with_graph(graph_traversal: dict) -> dict:
+    return {"plan_summary": {"steps": []}, "graph_traversal": graph_traversal}
+
+
 def test_base_api_class_prefers_direct_answer_and_hides_owner_boilerplate():
     shaped = shape_prompt_summary(
         "Which class is the base class for all APIs?",
@@ -116,4 +120,35 @@ def test_discovery_fallback_suppresses_owner_only_next_step():
     )
     assert "complete class list could not be confidently enumerated" in shaped["answer_1"]
     assert shaped["next_step"] == ""
+
+
+def test_graph_explain_composer_avoids_single_anchor_collapse():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_graph(
+            {
+                "entrypoint_flow": ["APIServer.start", "MailServerConfiguration.beforeUpdate"],
+                "inheritance_chain": ["MailServerConfiguration", "AbstractAPI"],
+                "owners": ["APIServer", "AbstractAPI"],
+                "collaborators": ["MailServerConfiguration"],
+            }
+        ),
+    )
+    assert "flow:" in shaped["answer_1"]
+    assert "abstraction:" in shaped["answer_1"]
+    assert "single method anchor" in shaped["next_step"]
+
+
+def test_graph_discovery_composer_separates_owner_and_collaborator():
+    shaped = shape_prompt_summary(
+        "Find all classes that handle notifications.",
+        _resp_with_graph(
+            {
+                "owners": ["NotificationEngine"],
+                "collaborators": ["EmailNotification", "SMSNotification"],
+            }
+        ),
+    )
+    assert "primary owners:" in shaped["answer_1"]
+    assert "collaborators:" in shaped["answer_1"]
 

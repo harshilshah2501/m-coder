@@ -119,7 +119,77 @@ def _extract_classes_from_context(resp: dict[str, Any], query: str) -> list[str]
     return classes[:5]
 
 
+def _graph_block(resp: dict[str, Any]) -> dict[str, Any]:
+    raw = resp.get("graph_traversal")
+    if isinstance(raw, dict):
+        return raw
+    return {}
+
+
+def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | None:
+    g = _graph_block(resp)
+    if not g:
+        return None
+
+    inheritance = [str(x) for x in (g.get("inheritance_chain") or []) if str(x).strip()]
+    flow = [str(x) for x in (g.get("entrypoint_flow") or []) if str(x).strip()]
+    owners = [str(x) for x in (g.get("owners") or []) if str(x).strip()]
+    collaborators = [str(x) for x in (g.get("collaborators") or []) if str(x).strip()]
+    call_chain = [str(x) for x in (g.get("call_chain") or []) if str(x).strip()]
+
+    # Anti-collapse rule: avoid single-anchor output when graph resolves multiple meaningful nodes.
+    meaningful_nodes = len(set(inheritance + flow + owners + collaborators + call_chain))
+
+    if _is_structural_query(query) and inheritance:
+        answer = "Based on graph-backed evidence, inheritance chain: " + " -> ".join(f"`{c}`" for c in inheritance) + "."
+        return {"answer_1": answer, "next_step": "", "answer_shape": "structural"}
+
+    if _is_explain_query(query) and (flow or inheritance or owners):
+        parts: list[str] = []
+        if flow:
+            parts.append("flow: " + " -> ".join(f"`{n}`" for n in flow))
+        if inheritance:
+            parts.append("abstraction: " + " -> ".join(f"`{n}`" for n in inheritance))
+        if owners:
+            parts.append("owners: " + ", ".join(f"`{n}`" for n in owners))
+        if collaborators:
+            parts.append("collaborators: " + ", ".join(f"`{n}`" for n in collaborators[:5]))
+        answer = "Based on deterministic graph evidence, " + "; ".join(parts) + "."
+        next_step = ""
+        if meaningful_nodes > 1:
+            next_step = "Verify the full path above rather than a single method anchor."
+        return {"answer_1": answer, "next_step": next_step, "answer_shape": "explain"}
+
+    if _is_debug_why_query(query) and (call_chain or flow):
+        chain = call_chain if call_chain else flow
+        answer = (
+            "Hypothesis (graph-backed): behavior follows "
+            + " -> ".join(f"`{n}`" for n in chain)
+            + "."
+        )
+        next_step = "Check for missing edge/branch at the first unexpected hop in this chain."
+        return {"answer_1": answer, "next_step": next_step, "answer_shape": "debug"}
+
+    if _is_discovery_query(query) and (owners or collaborators):
+        owner_text = ", ".join(f"`{o}`" for o in owners) if owners else "none resolved"
+        collab_text = ", ".join(f"`{c}`" for c in collaborators[:6]) if collaborators else "none resolved"
+        answer = (
+            "Based on deterministic graph evidence, primary owners: "
+            + owner_text
+            + "; collaborators: "
+            + collab_text
+            + "."
+        )
+        return {"answer_1": answer, "next_step": "", "answer_shape": "discovery"}
+
+    return None
+
+
 def shape_prompt_summary(query: str, resp: dict[str, Any]) -> dict[str, str]:
+    graph_shaped = _compose_with_graph(query, resp)
+    if graph_shaped:
+        return graph_shaped
+
     steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
     steps = [str(s).strip() for s in steps if str(s).strip()]
     if not steps:

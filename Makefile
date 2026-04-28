@@ -7,7 +7,7 @@ ARTIFACTS := $(REPO_ROOT)/ml/artifacts
 CHECKPOINTS_DIR := $(ARTIFACTS)/checkpoints
 DATASETS_DIR := $(ARTIFACTS)/datasets
 
-.PHONY: dvc-push-checkpoints dvc-pull-checkpoints dvc-push-dataset dvc-pull-dataset dvc-init graph-up graph-refresh graph-status graph-logs graph-down
+.PHONY: dvc-push-checkpoints dvc-pull-checkpoints dvc-push-dataset dvc-pull-dataset dvc-init graph-up graph-refresh graph-status graph-logs graph-down cig-smoke
 
 # Ensure DVC is initialized with localstore (local disk) as default
 dvc-init:
@@ -73,3 +73,6 @@ graph-logs:
 
 graph-down:
 	@cd "$(REPO_ROOT)" && ./scripts/graph_stack.sh down
+
+cig-smoke:
+	@cd "$(REPO_ROOT)" && PYTHONPATH=. pytest -q runtime/tests/test_code_intelligence_graph_smoke.py
