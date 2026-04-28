@@ -362,12 +362,18 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     venv_diagnose.print_venv_report()
     if bool(getattr(args, "verify_authority_index", False)):
         print()
-        authority_ok = venv_diagnose.print_authority_index_report(
-            cfg.workspace_root,
-            max_files=int(getattr(args, "authority_max_files", 500)),
-        )
-        if not authority_ok:
-            fails += 1
+        reporter = getattr(venv_diagnose, "print_authority_index_report", None)
+        if callable(reporter):
+            authority_ok = reporter(
+                cfg.workspace_root,
+                max_files=int(getattr(args, "authority_max_files", 500)),
+            )
+            if not authority_ok:
+                fails += 1
+        else:
+            print("Authority index readiness")
+            print("  WARN: installed runtime is older and lacks authority readiness reporter.")
+            print("  Reinstall latest mcoder-suite wheel, then rerun with --verify-authority-index.")
     return 0 if fails == 0 else 1
 
 
