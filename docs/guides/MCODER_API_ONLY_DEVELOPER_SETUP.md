@@ -7,6 +7,10 @@ This guide describes how developers should use m-coder as an API-only developer 
 Golden rule:
 
 > Developers install the m-coder client/runtime. Their development repo is Motadata.
+>
+> - **Start/use:** `bootstrap`
+> - **Recover health issues:** `health --auto-fix`
+> - **Reset broken config file:** `init --force`
 
 ## Target Architecture
 
@@ -79,7 +83,9 @@ MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
 
 ## Install: Single Package (Recommended)
 
-1. Create project-local runtime directory and venv:
+### One-time setup on a machine
+
+1. Create project-local runtime venv:
 
 ```bash
 cd /root/Harshil-PoCs/Motadata
@@ -88,21 +94,70 @@ python3 -m venv ./.mcoder/venv
 source ./.mcoder/venv/bin/activate
 ```
 
-2. Install one unified wheel (`mcoder-suite`) that contains both `mcoder` and `motadata-context-layer`:
+2. Install unified wheel (`mcoder-suite` includes both `mcoder` and `motadata-context-layer`):
 
 ```bash
-pip install /path/to/mcoder_suite-0.1.0-py3-none-any.whl
+python -m pip install --no-deps /path/to/mcoder_suite-0.1.0-py3-none-any.whl
 ```
 
-### Venv hygiene (short path)
+3. Initialize project config once:
 
-If pip shows this warning:
+```bash
+mcoder init \
+  --workspace-root /root/Harshil-PoCs/Motadata \
+  --plan-gate-url http://127.0.0.1:8089 \
+  --plan-gate-ssh <user>@<gpu-host> \
+  --force
+```
+
+`mcoder init` writes `.mcoder/config.yaml` and `.mcoder/context.env`; it does **not** start services.
+
+4. Set up Context Layer user service once (see [Context Layer User Service](#context-layer-user-service)):
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now mcoder-context
+```
+
+### Every work session
+
+Run one command:
+
+```bash
+mcoder bootstrap
+```
+
+Useful variants:
+
+- Read-only checks: `mcoder bootstrap --check-only`
+- Include authority-index readiness gate: `mcoder bootstrap --verify-authority-index --authority-max-files 500`
+- JSON output for scripts: `mcoder bootstrap --json`
+
+### Update path (developer machine without m-coder repo)
+
+API-only developers do not need an `m-coder` clone. They only need:
+
+- Motadata repo
+- `Motadata/.mcoder/venv`
+- released `mcoder-suite` wheel artifact (URL/share/CI artifact)
+
+```bash
+cd /root/Harshil-PoCs/Motadata
+source ./.mcoder/venv/bin/activate
+python -m pip install --no-deps --force-reinstall <WHEEL_PATH_OR_URL>
+mcoder version
+mcoder bootstrap
+```
+
+### Venv hygiene (only if pip warns "outside environment")
+
+If pip shows:
 
 ```text
 Not uninstalling mcoder-suite at …/m-coder, outside environment …/Motadata/.mcoder/venv
 ```
 
-your active Motadata venv can still see metadata from another interpreter or editable install. Use this minimal cleanup:
+run:
 
 ```bash
 cd /root/Harshil-PoCs/Motadata
@@ -121,119 +176,17 @@ for f in "$SITE_PKGS"/*.pth "$SITE_PKGS"/*.egg-link; do
 done
 
 python -m pip install --no-deps --force-reinstall /path/to/mcoder_suite-0.1.0-py3-none-any.whl
-mcoder doctor   # or: mcoder bootstrap
+mcoder doctor
 ```
 
-Expected result: in **Wheel / venv hygiene**, `pip Location:` is under `Motadata/.mcoder/venv`.
+Expected: in `Wheel / venv hygiene`, `pip Location:` is under `Motadata/.mcoder/venv`.
 
-### Update path (no m-coder repo on developer machine)
+### Runtime/performance knobs
 
-API-only developers do not need an `m-coder` clone. They only need:
-
-- Motadata repo
-- `Motadata/.mcoder/venv`
-- released `mcoder-suite` wheel (artifact URL/share)
-
-```bash
-cd /root/Harshil-PoCs/Motadata
-source ./.mcoder/venv/bin/activate
-python -m pip install --no-deps --force-reinstall <WHEEL_PATH_OR_URL>
-mcoder version
-mcoder bootstrap
-```
-
-3. Bootstrap project config in one command:
-
-```bash
-mcoder init \
-  --workspace-root /root/Harshil-PoCs/Motadata \
-  --plan-gate-url http://45.195.82.10:8089
-```
-
-**Important:** `mcoder init` and `pip install mcoder-suite` **only** write config (`config.yaml`, `context.env`) and install CLI binaries. They **do not**:
-
-- start the Context Layer HTTP process on `:8091`
-- start Plan-Gate on the GPU host or create an SSH tunnel to `127.0.0.1:8089`
-
-You must bring those endpoints up separately, then verify:
-
-```bash
-curl -fsS http://127.0.0.1:8091/healthz   # Context Layer (local)
-curl -fsS http://127.0.0.1:8089/healthz   # Plan-Gate (local tunnel or same machine only)
-```
-
-**Minimal order after install:**
-
-1. **One-time / first machine setup:** install the venv, `mcoder init`, and create the Context Layer user service (see [Context Layer User Service](#context-layer-user-service)) so `motadata-context-layer` is available and can be started with `systemctl --user enable --now mcoder-context`.
-2. **Config for loopback Plan-Gate (so you are not typing `ssh -L` every session):** in `.mcoder/config.yaml` set `plan_gate_url: http://127.0.0.1:8089` and add `plan_gate_ssh_target: <user>@<gpu-host>` (or set `MCODER_PLAN_GATE_SSH`). You can bake this into **`mcoder init --plan-gate-ssh user@gpu-host`** so `config.yaml` includes those keys. If the GPU is directly reachable, use `plan_gate_url: http://<gpu-ip>:8089` instead and skip SSH.
-3. **Each work session (or after reboot):** run the **checklist** — it probes both endpoints, restarts Context Layer if needed, and **creates the SSH tunnel** when loopback + `plan_gate_ssh_target` are set (no separate `ssh` step):
-   ```bash
-   mcoder bootstrap
-   ```
-   Read-only probes only: `mcoder bootstrap --check-only`. JSON for scripts: `mcoder bootstrap --json`.
-4. Optional: `mcoder doctor` and `mcoder health --auto-fix` for the older health/journal path.
-5. Verify binaries if you like: `mcoder version` and `motadata-context-layer --help`.
-
-**Continue with optional customization:**
-
-5. (Optional) manually edit canonical project config:
-
-```bash
-mkdir -p ./.mcoder
-cat > ./.mcoder/config.yaml <<'YAML'
-workspace_root: /root/Harshil-PoCs/Motadata
-context_url: http://127.0.0.1:8091
-plan_gate_url: http://45.195.82.10:8089
-mode: api_only
-output: human
-YAML
-```
-
-6. (Optional) regenerate Context Layer env projection manually:
-
-```bash
-cat > ./.mcoder/context.env <<'ENV'
-MOTADATA_CONTEXT_LAYER_HOST=127.0.0.1
-MOTADATA_CONTEXT_LAYER_PORT=8091
-MOTADATA_ROOT=/root/Harshil-PoCs/Motadata
-MOTADATA_CONTEXT_LAYER_DEFAULT_WORKSPACE=/root/Harshil-PoCs/Motadata
-MOTADATA_CONTEXT_LAYER_LOG_PATH=/root/Harshil-PoCs/Motadata/.mcoder/context-layer.log
-MOTADATA_CONTEXT_LAYER_INDEX_CACHE=1
-ENV
-```
-
-This generates:
-
-```text
-<project-root>/.mcoder/config.yaml
-<project-root>/.mcoder/context.env
-```
-
-Verbose mode for debugging:
-
-```bash
-mcoder --verbose health --auto-fix
-mcoder --verbose prompt "How does alert correlation work?"
-```
-
-Bounded network wait timeout (seconds):
-
-```bash
-mcoder --timeout-sec 10 health --auto-fix
-mcoder --timeout-sec 20 prompt "Which class is the base class for all APIs?"
-```
-
-Explicit config file override (if needed):
-
-```bash
-mcoder --config /abs/path/to/config.yaml health
-```
-
-Reinitialize generated files:
-
-```bash
-mcoder init --force --plan-gate-url http://45.195.82.10:8089
-```
+- Prompt timings: `mcoder --verbose --timeout-sec 120 prompt "How does alert correlation work?"`
+  - prints `export_evidence_ms` and `ask_ms`
+- Dirty-cache opt-in (dev speed): set `MOTADATA_CONTEXT_LAYER_ALLOW_DIRTY_CACHE=1` in `.mcoder/context.env`
+  - default is `0` (safe mode)
 
 ## Context Layer User Service
 
@@ -326,7 +279,7 @@ If `systemctl --user` still fails, run Context Layer in the foreground (`source 
 
 After `mcoder init` and a venv with `motadata-context-layer` on `PATH`:
 
-1. Edit `~/.config/systemd/user/mcoder-context.service` so **`EnvironmentFile`** and **`ExecStart`** point at **your** project — e.g. `$HOME/Harshil-PoCs/Motadata/.mcoder/context.env` and `$HOME/.../.mcoder/venv/bin/motadata-context-layer` (see [Context Layer User Service](#context-layer-user-service)).
+1. Edit `~/.config/systemd/user/mcoder-context.service` so `EnvironmentFile` and `ExecStart` point at **your** project — e.g. `$HOME/Harshil-PoCs/Motadata/.mcoder/context.env` and `$HOME/.../.mcoder/venv/bin/motadata-context-layer` (see [Context Layer User Service](#context-layer-user-service)).
 2. `systemctl --user daemon-reload && systemctl --user enable --now mcoder-context`
 3. `curl -fsS http://127.0.0.1:8091/healthz`
 
@@ -400,13 +353,13 @@ curl -fsS http://127.0.0.1:8000/v1/models
 
 ## Session bootstrap (`mcoder bootstrap`) — primary start path
 
-Use **`mcoder bootstrap`** when you start a session: it runs a **fixed-order checklist** (package → Context Layer health + optional `systemctl` restart → Plan-Gate health + **automatic `ssh -L`** when `plan_gate_url` is loopback and `plan_gate_ssh_target` is set) and a final **dual /healthz** check. You do not need to run a separate `ssh` for Plan-Gate in that configuration.
+Use `mcoder bootstrap` when you start a session: it runs a **fixed-order checklist** (package -> Context Layer health + optional `systemctl` restart -> Plan-Gate health + **automatic `ssh -L`** when `plan_gate_url` is loopback and `plan_gate_ssh_target` is set) and a final **dual /healthz** check. You do not need to run a separate `ssh` for Plan-Gate in that configuration.
 
 ## Stack diagnostic daemon (`mcoder stack`)
 
-**Ongoing** or **background** use: `stack` is for **lightweight** check / log-only watch. For “turn key and go” at session start, use **`mcoder bootstrap`** first; use `stack` for non-intrusive monitoring.
+**Ongoing** or **background** use: `stack` is for **lightweight** check / log-only watch. For "turn key and go" at session start, use `mcoder bootstrap` first; use `stack` for non-intrusive monitoring.
 
-**Non-intrusive by default:** `stack check` is read-only unless you pass **`--try-tunnel`**. **`stack watch`** only appends JSON to **`.mcoder/logs/stack-watch.log`** — it does **not** run `ssh`, restart `systemd`, or spam the terminal unless you explicitly add **`--auto-tunnel`**, **`--auto-context`**, or **`--verbose`**.
+**Non-intrusive by default:** `stack check` is read-only unless you pass `--try-tunnel`. `stack watch` only appends JSON to `.mcoder/logs/stack-watch.log` — it does **not** run `ssh`, restart `systemd`, or spam the terminal unless you explicitly add `--auto-tunnel`, `--auto-context`, or `--verbose`.
 
 Add optional tunnel metadata to `.mcoder/config.yaml` (or use environment variables):
 
@@ -424,7 +377,7 @@ mcoder stack check
 mcoder stack check --try-tunnel
 ```
 
-`--try-tunnel` attempts a single `ssh -L` forward when `plan_gate_url` is `http://127.0.0.1:8089` (or localhost) and Plan-Gate is down. Unattended tunneling uses **`BatchMode=yes`**; configure **SSH key auth** to the GPU host (`ssh harshil@45.195.82.10` should work non-interactively).
+`--try-tunnel` attempts a single `ssh -L` forward when `plan_gate_url` is `http://127.0.0.1:8089` (or localhost) and Plan-Gate is down. Unattended tunneling uses `BatchMode=yes`; configure **SSH key auth** to the GPU host (`ssh harshil@45.195.82.10` should work non-interactively).
 
 **Watch loop** (observe-only unless you opt in):
 
@@ -439,12 +392,12 @@ Optional **remediation** (only if you want the daemon to act):
 mcoder stack watch --interval 60 --auto-tunnel --auto-context
 ```
 
-- **`--auto-tunnel`**: if Plan-Gate on loopback is unhealthy, run `ssh -L` (writes `.mcoder/stack/tunnel.log` and `tunnel.pid`).
-- **`--auto-context`**: if Context Layer is unhealthy, run `systemctl --user restart mcoder-context`.
-- **`--verbose`**: mirror each JSON log line to stdout (otherwise console stays quiet).
-- **`--quiet`**: no startup banner (still only writes the log file by default).
+- `--auto-tunnel`: if Plan-Gate on loopback is unhealthy, run `ssh -L` (writes `.mcoder/stack/tunnel.log` and `tunnel.pid`).
+- `--auto-context`: if Context Layer is unhealthy, run `systemctl --user restart mcoder-context`.
+- `--verbose`: mirror each JSON log line to stdout (otherwise console stays quiet).
+- `--quiet`: no startup banner (still only writes the log file by default).
 
-Run under **systemd --user** or **`tmux`** on WSL. Example — **observe-only** service:
+Run under **systemd --user** or `tmux` on WSL. Example — **observe-only** service:
 
 ```ini
 [Unit]
@@ -461,7 +414,7 @@ Restart=on-failure
 WantedBy=default.target
 ```
 
-Add **`--auto-tunnel --auto-context`** to `ExecStart` only when you intentionally want remediation.
+Add `--auto-tunnel --auto-context` to `ExecStart` only when you intentionally want remediation.
 
 This does **not** replace installing the wheel or starting long-lived GPU services; it **records** status and can **optionally repair** the local path when those flags are set.
 
@@ -474,6 +427,12 @@ mcoder doctor
 ```
 
 Checks config/workspace/service reachability plus Neo4j driver warning.
+
+Authority index readiness gate (explicit PASS/FAIL):
+
+```bash
+mcoder doctor --verify-authority-index --authority-max-files 500
+```
 
 ### 2) Health with auto-fix
 
@@ -489,7 +448,15 @@ Auto-fix behavior:
 
 ### 3) Smoke prompt
 
-Each `prompt` waits on **two** HTTP calls (`export_evidence` on Context Layer, then `/v1/ask` on Plan-Gate); **both** use `--timeout-sec`. Default `15s` often fails on large workspaces or slow GPU—use **`120`** or **`300`** when you see timeouts.
+Each `prompt` waits on **two** HTTP calls (`export_evidence` on Context Layer, then `/v1/ask` on Plan-Gate); **both** use `--timeout-sec`. Default `15s` often fails on large workspaces or slow GPU — use `120` or `300` when you see timeouts.
+
+For phase timings, run prompt with `--verbose`:
+
+```bash
+mcoder --verbose --timeout-sec 120 prompt "How does alert correlation work?"
+```
+
+This prints `export_evidence_ms` and `ask_ms` in CLI output.
 
 ```bash
 mcoder --timeout-sec 120 prompt "How does alert correlation work?"
@@ -717,10 +684,12 @@ If only evidence export fails:
 ---
 
 # readiness
+
 mcoder doctor
 mcoder --timeout-sec 10 health --auto-fix
 
 # ask
+
 mcoder --timeout-sec 20 prompt "Which class is the base class for all APIs?"
 mcoder --timeout-sec 20 prompt "How does mail server configuration work?"
 mcoder --timeout-sec 20 prompt "How are config stores organized?"
@@ -728,6 +697,7 @@ mcoder --timeout-sec 20 prompt "Explain the API layer architecture."
 mcoder --timeout-sec 20 prompt "Find all classes that handle notifications."
 
 # debug
+
 mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java --query "Debug why availability correlation might skip enrichment branches."
 mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java --query "Debug why mail server updates are not reflected after API update."
 mcoder --timeout-sec 20 debug --file motadata/src/main/java/com/mindarray/store/AbstractConfigStore.java --query "Debug null-return paths in AbstractConfigStore.getItem and related callers."
