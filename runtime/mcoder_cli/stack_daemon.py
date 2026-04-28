@@ -32,6 +32,8 @@ class StackMonitorConfig:
     plan_gate_ssh_target: str = ""
     plan_gate_ssh_remote_port: int = 8089
     verbose: bool = False
+    verify_authority_index: bool = False
+    authority_max_files: int = 500
 
 
 def _now_utc() -> str:
@@ -287,7 +289,10 @@ def run_bootstrap(cfg: StackMonitorConfig, *, fix: bool = True, json_out: bool =
     is_lo, _lp = plan_gate_loopback_info(cfg.plan_gate_url)
     if pg_ok:
         lines.append({"step": 4, "name": "ssh_tunnel", "ok": None, "detail": "not_needed"})
-        _out("[4/5] SSH tunnel: not needed (Plan-Gate already healthy)")
+        if is_lo:
+            _out("[4/5] SSH tunnel: not needed (Plan-Gate already reachable on loopback; existing SSH tunnel or local service)")
+        else:
+            _out("[4/5] SSH tunnel: not needed (Plan-Gate already healthy)")
     elif not fix:
         lines.append({"step": 4, "name": "ssh_tunnel", "ok": None, "detail": "skipped_check_only"})
         _out("[4/5] SSH tunnel: SKIP (--check-only)")
@@ -326,6 +331,35 @@ def run_bootstrap(cfg: StackMonitorConfig, *, fix: bool = True, json_out: bool =
             "plan_gate_http": pg_final,
         }
     )
+
+    verify_authority_index = bool(getattr(cfg, "verify_authority_index", False))
+    authority_probe_ok = True
+    authority_probe_lines: list[str] = []
+    authority_probe_max_files = int(getattr(cfg, "authority_max_files", 500))
+    if verify_authority_index:
+        authority_probe_ok, authority_probe_lines = venv_diagnose.build_authority_index_report(
+            cfg.workspace_root,
+            max_files=authority_probe_max_files,
+        )
+        lines.append(
+            {
+                "step": "5a",
+                "name": "authority_index_readiness",
+                "ok": authority_probe_ok,
+                "max_files": authority_probe_max_files,
+                "details": authority_probe_lines,
+            }
+        )
+        if not json_out:
+            _out("")
+            _out(
+                f"[5a/5] Authority index readiness probe (max_files={authority_probe_max_files}) "
+                f"→ {'PASS' if authority_probe_ok else 'FAIL'}"
+            )
+            for ln in authority_probe_lines:
+                _out(f"       {ln}")
+
+    all_ok = all_ok and authority_probe_ok
 
     if json_out:
         print(

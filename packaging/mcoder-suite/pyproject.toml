@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcoder-suite"
-version = "0.1.0"
+version = "0.1.1"
 description = "Unified m-coder developer package (mcoder CLI + Context Layer service)"
 readme = "README.md"
 requires-python = ">=3.10"
