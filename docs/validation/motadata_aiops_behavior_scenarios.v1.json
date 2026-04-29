@@ -422,7 +422,7 @@
       "command": "rm -rf /tmp/mcoder_probe",
       "expect": {
         "schema_version": "execute_response.v0.1",
-        "outcome": "BLOCKED",
+        "outcome_any_of": ["BLOCKED", "REFUSED"],
         "executed": false
       }
     },

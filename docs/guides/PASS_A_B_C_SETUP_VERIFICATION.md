@@ -320,7 +320,8 @@ PYTHONPATH=. pytest -q \
   runtime/tests/test_ask_v1_ingest.py \
   runtime/tests/test_answer_shaping_pass_a.py \
   runtime/tests/test_articulated_answer.py \
-  runtime/tests/test_bounded_ask_narrator.py
+  runtime/tests/test_bounded_ask_narrator.py \
+  runtime/tests/test_motadata_20_code_scenarios.py
 make cig-smoke
 ```
 
