@@ -446,14 +446,46 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
             if dbg_quality == "CURATED":
                 issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
                 print(f"debug_note: narration curated by governance for precision{issue_note}")
-        if steps:
+        gta = md.get("graph_traversal_availability")
+        if (
+            isinstance(gta, dict)
+            and gta.get("artifact_status") == "missing"
+            and task_type == "general"
+        ):
+            print(
+                "note: code intelligence graph cache is not available on the Plan-Gate host; "
+                "structural graph hints are omitted. Build CIG artifacts to enable them."
+            )
+        if steps or resp.get("articulated_answer"):
+            art = resp.get("articulated_answer")
+            printed_articulated = False
+            if isinstance(art, dict):
+                paras = art.get("paragraphs")
+                if isinstance(paras, list) and paras:
+                    printed_articulated = True
+                    print("--- explanation (read-only, evidence-bounded) ---")
+                    for p in paras:
+                        p = str(p).strip()
+                        if p:
+                            print(p)
+                            print("")
+                    sup = art.get("supporting_plan_bullets")
+                    if isinstance(sup, list) and sup and cfg.verbose:
+                        print("supporting (from plan):")
+                        for b in sup[:5]:
+                            print(f"  - {b}")
+                    el = art.get("evidence_limit")
+                    if isinstance(el, str) and el.strip():
+                        print(f"evidence_limit: {el.strip()}")
             shaped = shape_prompt_summary(query, resp)
             answer_1 = str(shaped.get("answer_1") or "").strip()
             next_step = str(shaped.get("next_step") or "").strip()
-            if answer_1:
+            if not printed_articulated and answer_1:
                 print(f"answer_1: {answer_1}")
             if next_step:
-                print(f"next_step: {next_step}")
+                narr = "\n\n".join(str(p) for p in (art.get("paragraphs") or []) if isinstance(art, dict)) if printed_articulated else ""
+                if not narr or (next_step not in narr):
+                    print(f"next_step: {next_step}")
         if cfg.verbose:
             print(f"timing: export_evidence_ms={export_ms:.1f} ask_ms={ask_ms:.1f}")
         print("")

@@ -501,6 +501,7 @@ def _build_plan_only_response(
     code_reasoning_trace: Dict[str, Any] | None = None,
     patch_proposal: Dict[str, Any] | None = None,
     graph_traversal: Dict[str, Any] | None = None,
+    articulated_answer: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     files = [
         {
@@ -572,6 +573,8 @@ def _build_plan_only_response(
         payload["patch_proposal"] = patch_proposal
     if graph_traversal is not None:
         payload["graph_traversal"] = graph_traversal
+    if articulated_answer is not None:
+        payload["articulated_answer"] = articulated_answer
     return payload
 
 

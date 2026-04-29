@@ -23,6 +23,31 @@ def _default_graph_dir() -> Path:
     return _runtime_root() / ".cache" / "code_intelligence_graph"
 
 
+def probe_code_intelligence_graph_availability(
+    graph_dir: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """
+    Non-throwing probe so clients can tell missing cache from empty traversal.
+    """
+    gdir = graph_dir or _default_graph_dir()
+    if not gdir.exists():
+        return {
+            "artifact_status": "missing",
+            "reason": "directory_not_found",
+            "path_hint": str(gdir),
+        }
+    try:
+        load_graph_artifacts(gdir)
+        return {"artifact_status": "present", "path_hint": str(gdir)}
+    except Exception as exc:
+        return {
+            "artifact_status": "missing",
+            "reason": "load_failed",
+            "detail": str(exc)[:240],
+            "path_hint": str(gdir),
+        }
+
+
 def _is_structural_query(query: str) -> bool:
     q = (query or "").lower()
     return any(x in q for x in ("base class", "parent class", "extends", "implements"))

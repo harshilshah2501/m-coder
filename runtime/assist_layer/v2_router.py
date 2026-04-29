@@ -140,6 +140,24 @@ def augment_assist_v2_with_response(
 
     owner = _extract_primary_owner(plan_steps)
     out["answer"] = _build_answer_block(plan_steps, owner)
+    articulated = ask_response.get("articulated_answer")
+    if isinstance(articulated, dict) and mode != AssistV2Mode.DEBUG.value:
+        paras = articulated.get("paragraphs")
+        if isinstance(paras, list) and paras:
+            ans = out.get("answer") if isinstance(out.get("answer"), dict) else {}
+            text_join = "\n\n".join(str(p).strip() for p in paras if str(p).strip())
+            if text_join:
+                ans["narrative_paragraphs"] = [str(p).strip() for p in paras if str(p).strip()]
+                prev_direct = str(ans.get("direct_grounded_answer") or "").strip()
+                if len(text_join) > len(prev_direct):
+                    ans["direct_grounded_answer"] = text_join
+                bullets = articulated.get("supporting_plan_bullets")
+                if isinstance(bullets, list) and bullets:
+                    ans["supporting_plan_bullets"] = [str(b).strip() for b in bullets if str(b).strip()][:5]
+                el = articulated.get("evidence_limit")
+                if isinstance(el, str) and el.strip():
+                    ans["evidence_limit"] = el.strip()
+                out["answer"] = ans
     out["evidence"] = _build_evidence_block(meta, context_files, owner)
     out["gaps"] = _build_gaps_block(meta, plan_steps, notes)
     out["next_steps"] = _build_next_steps_block(meta, owner, context_files)

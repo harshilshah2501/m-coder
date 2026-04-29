@@ -41,7 +41,8 @@ from .plan_contract_builder import build_plan_contract_v1
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
-from .graph_traversal_payload import build_graph_traversal_payload
+from .articulated_answer import build_articulated_answer
+from .graph_traversal_payload import build_graph_traversal_payload, probe_code_intelligence_graph_availability
 
 LOG = logging.getLogger(__name__)
 
@@ -259,6 +260,7 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         metadata["authority_resolution_present"] = True
         metadata["authority_status"] = str(authority_resolution.get("authority_status") or "")
         metadata["authority_confidence"] = str(authority_resolution.get("authority_confidence") or "")
+    metadata["graph_traversal_availability"] = probe_code_intelligence_graph_availability()
 
     selected_file = ask_request.get("selected_file")
     selection = (
@@ -353,6 +355,22 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         plan_contract = _maybe_build_plan_contract([], metadata)
         code_reasoning_trace = _maybe_build_code_reasoning_trace([], metadata, plan_contract)
         patch_proposal = _maybe_build_patch_proposal([], metadata, plan_contract, code_reasoning_trace)
+        gt_blocked = build_graph_traversal_payload(
+            query=query,
+            task_type=str(task_type or "general"),
+            authority_resolution=authority_resolution,
+            selected_file=str(selected_file or ""),
+        )
+        ctx_files_blocked = [
+            {"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items
+        ]
+        articulated_blocked = build_articulated_answer(
+            query=query,
+            plan_steps=[],
+            context_files=ctx_files_blocked,
+            graph_traversal=gt_blocked,
+            metadata=metadata,
+        )
         return _build_plan_only_response(
             request_id=request_id,
             bundle=bundle,
@@ -371,12 +389,8 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             plan_contract=plan_contract,
             code_reasoning_trace=code_reasoning_trace,
             patch_proposal=patch_proposal,
-            graph_traversal=build_graph_traversal_payload(
-                query=query,
-                task_type=str(task_type or "general"),
-                authority_resolution=authority_resolution,
-                selected_file=str(selected_file or ""),
-            ),
+            graph_traversal=gt_blocked,
+            articulated_answer=articulated_blocked,
         )
 
     if quality.blocked and skip_grounding_block_for_explain_debug:
@@ -504,6 +518,22 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         plan_contract,
         code_reasoning_trace,
     )
+    gt_payload = build_graph_traversal_payload(
+        query=query,
+        task_type=str(task_type or "general"),
+        authority_resolution=authority_resolution,
+        selected_file=str(selected_file or ""),
+    )
+    ctx_files = [{"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items]
+    articulated: Dict[str, Any] | None = None
+    if routing_mode == "plan_only":
+        articulated = build_articulated_answer(
+            query=query,
+            plan_steps=plan_steps,
+            context_files=ctx_files,
+            graph_traversal=gt_payload,
+            metadata=metadata,
+        )
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,
@@ -522,10 +552,6 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         plan_contract=plan_contract,
         code_reasoning_trace=code_reasoning_trace,
         patch_proposal=patch_proposal,
-        graph_traversal=build_graph_traversal_payload(
-            query=query,
-            task_type=str(task_type or "general"),
-            authority_resolution=authority_resolution,
-            selected_file=str(selected_file or ""),
-        ),
+        graph_traversal=gt_payload,
+        articulated_answer=articulated,
     )
