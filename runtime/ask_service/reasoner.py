@@ -20,6 +20,10 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 from runtime.context.contracts import ContextBundle, ContextItem
+from runtime.ask_service.reasoning_context import (
+    build_reasoning_context,
+    render_reasoning_context_for_prompt,
+)
 
 
 LOG = logging.getLogger(__name__)
@@ -137,6 +141,39 @@ def _build_prompt(
         selection.strip() or "(no selection text)",
         "```",
     ]
+
+    # Add compact reasoning context (owner/anchors/sources) for grounded narration.
+    evidence_bundle: Dict[str, Any] = {
+        "entries": [
+            {
+                "relative_path": item.path,
+                "snippet": {"text": item.content[:8000], "selection_reason": item.selection_reason},
+            }
+            for item in _prioritize_bundle_items_for_selection(bundle, selected_file)
+        ],
+        "authority_resolution": {
+            "primary_owner": {
+                "file": selected_file,
+            }
+        },
+    }
+    reasoning_context = build_reasoning_context(
+        query=query,
+        evidence_bundle=evidence_bundle,
+        graph_traversal=None,
+    )
+
+    lines.extend(
+        [
+            "",
+            "## Compact reasoning context",
+            render_reasoning_context_for_prompt(reasoning_context),
+            "",
+            "## Citation discipline",
+            "- Every factual claim must include at least one citation token: E#, G#, or source file path.",
+            "- If no supporting citation exists in provided context, say Unknown based on provided evidence.",
+        ]
+    )
     if minimal:
         lines.extend(
             [

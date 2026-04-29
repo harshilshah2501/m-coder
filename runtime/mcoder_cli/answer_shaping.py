@@ -126,6 +126,136 @@ def _graph_block(resp: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def _reasoning_context_block(resp: dict[str, Any]) -> dict[str, Any]:
+    md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
+    rc = md.get("reasoning_context") if isinstance(md.get("reasoning_context"), dict) else {}
+    return rc
+
+
+def _has_citation(text: str) -> bool:
+    s = str(text or "")
+    if re.search(r"\bE\d+\b", s):
+        return True
+    if re.search(r"\bG\d+\b", s):
+        return True
+    if re.search(r"[A-Za-z0-9_./\-]+\.(?:java|kt|py|yml|yaml|xml|json)", s):
+        return True
+    return False
+
+
+def _uncertain_if_uncited(text: str) -> str:
+    t = str(text or "").strip()
+    if not t:
+        return ""
+    if _has_citation(t):
+        return t
+    return "Unknown based on provided evidence."
+
+
+def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[str, str] | None:
+    rc = _reasoning_context_block(resp)
+    if not rc:
+        return None
+
+    po = rc.get("primary_owner") if isinstance(rc.get("primary_owner"), dict) else {}
+    owner_cls = str(po.get("class") or "").strip()
+    owner_method = str(po.get("method") or "").strip()
+    owner_file = str(po.get("file") or "").strip()
+    owner_cite = str(po.get("citation") or "").strip()
+    owner_role = str(po.get("role_description") or "").strip()
+
+    anchor = str(rc.get("anchor_method") or "").strip()
+    inh = rc.get("inheritance") if isinstance(rc.get("inheritance"), dict) else {}
+    chain = [str(x).strip() for x in (inh.get("chain") or []) if str(x).strip()]
+    chain_cite = str(inh.get("citation") or "").strip()
+
+    # D.1 typed node buckets
+    typed = rc.get("typed_nodes") if isinstance(rc.get("typed_nodes"), dict) else {}
+    flow_steps = rc.get("flow_steps") if isinstance(rc.get("flow_steps"), list) else []
+    coverage_gaps = rc.get("coverage_gaps") if isinstance(rc.get("coverage_gaps"), list) else []
+    # backward-compat: flat collaborators list for discovery fallback
+    collabs_flat = rc.get("collaborators") if isinstance(rc.get("collaborators"), list) else []
+
+    if _is_explain_query(query):
+        owner_label = anchor or (f"{owner_cls}.{owner_method}" if owner_cls and owner_method else owner_cls)
+        owner_claim = f"The primary anchor is `{owner_label}`"
+        if owner_role:
+            owner_claim += f", which acts as the {owner_role}"
+        if owner_cite:
+            owner_claim += f" [{owner_cite}]"
+        elif owner_file:
+            owner_claim += f" [{owner_file}]"
+
+        # Typed node summary (skip duplicate of primary owner)
+        node_parts: list[str] = []
+        for bucket_key, section in [("abstractions", "abstraction"), ("handlers", "handler"), ("stores", "store")]:
+            nodes = [n for n in (typed.get(bucket_key) or []) if isinstance(n, dict) and n.get("class") and str(n.get("class") or "").lower() != owner_cls.lower()]
+            if nodes:
+                names = ", ".join(f"`{str(n.get('class') or '')}`" for n in nodes[:2])
+                node_parts.append(f"{names} ({section})")
+
+        collab_nodes = [n for n in (typed.get("collaborators") or []) if isinstance(n, dict) and n.get("class") and str(n.get("class") or "").lower() != owner_cls.lower()]
+        if collab_nodes:
+            names = ", ".join(f"`{str(n.get('class') or '')}`" for n in collab_nodes[:3])
+            node_parts.append(f"{names} (collaborator)")
+
+        body = owner_claim
+        if node_parts:
+            body += ". System components include: " + ", ".join(node_parts)
+
+        if flow_steps:
+            body += ". Flow: " + " → ".join(str(s) for s in flow_steps[:3])
+
+        chain_claim = ""
+        if chain:
+            chain_claim = "Inheritance: " + " → ".join(f"`{c}`" for c in chain)
+            if chain_cite:
+                chain_claim += f" [{chain_cite}]"
+        if chain_claim:
+            body += ". " + chain_claim
+
+        if coverage_gaps:
+            body += ". Confidence: " + "; ".join(str(g) for g in coverage_gaps[:2])
+        else:
+            body += ". This interpretation is based on current evidence and partial graph coverage."
+
+        body = _uncertain_if_uncited(body)
+        return {"answer_1": body, "next_step": "", "answer_shape": "explain"}
+
+    if _is_discovery_query(query):
+        # Build from typed nodes first, fall back to flat collaborators
+        all_names: list[str] = []
+        for bucket_key in ("handlers", "stores", "abstractions", "collaborators"):
+            for node in (typed.get(bucket_key) or []):
+                if not isinstance(node, dict):
+                    continue
+                cls = str(node.get("class") or "").strip()
+                if cls and cls.lower() != owner_cls.lower():
+                    all_names.append(cls)
+        if not all_names:
+            for item in collabs_flat[:8]:
+                if not isinstance(item, dict):
+                    continue
+                name = str(item.get("name") or "").strip()
+                if name:
+                    all_names.append(name)
+
+        if owner_cls:
+            owner_part = f"`{owner_cls}`"
+            if owner_cite:
+                owner_part += f" [{owner_cite}]"
+            elif owner_file:
+                owner_part += f" [{owner_file}]"
+            answer = "Primary owner: " + owner_part
+            if all_names:
+                formatted = ", ".join(f"`{n}`" for n in all_names[:6])
+                answer += "; related classes: " + formatted
+            answer = _uncertain_if_uncited(answer)
+            return {"answer_1": answer, "next_step": "", "answer_shape": "discovery"}
+
+    return None
+
+
 def _path_nodes(path: str) -> list[str]:
     return [p.strip() for p in str(path).split("->") if p.strip()]
 
@@ -494,6 +624,10 @@ def _compose_with_graph(query: str, resp: dict[str, Any]) -> dict[str, str] | No
 
 
 def shape_prompt_summary(query: str, resp: dict[str, Any]) -> dict[str, str]:
+    rc_shaped = _compose_with_reasoning_context(query, resp)
+    if rc_shaped:
+        return rc_shaped
+
     graph_shaped = _compose_with_graph(query, resp)
     if graph_shaped:
         return graph_shaped

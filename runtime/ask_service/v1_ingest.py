@@ -43,6 +43,7 @@ from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
 from .articulated_answer import build_articulated_answer
 from .graph_traversal_payload import build_graph_traversal_payload, probe_code_intelligence_graph_availability
+from .reasoning_context import build_reasoning_context
 
 LOG = logging.getLogger(__name__)
 
@@ -361,6 +362,11 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             authority_resolution=authority_resolution,
             selected_file=str(selected_file or ""),
         )
+        metadata["reasoning_context"] = build_reasoning_context(
+            query=query,
+            evidence_bundle=evidence_bundle,
+            graph_traversal=gt_blocked,
+        )
         ctx_files_blocked = [
             {"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items
         ]
@@ -523,6 +529,11 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         task_type=str(task_type or "general"),
         authority_resolution=authority_resolution,
         selected_file=str(selected_file or ""),
+    )
+    metadata["reasoning_context"] = build_reasoning_context(
+        query=query,
+        evidence_bundle=evidence_bundle,
+        graph_traversal=gt_payload,
     )
     ctx_files = [{"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items]
     articulated: Dict[str, Any] | None = None
