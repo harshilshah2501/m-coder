@@ -8,10 +8,13 @@ version = "0.1.1"
 description = "Unified m-coder developer package (mcoder CLI + Context Layer service)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "LicenseRef-Motadata-Proprietary" }
+license = "LicenseRef-Motadata-Proprietary"
 dependencies = [
     "PyYAML>=6.0",
 ]
+
+[tool.setuptools]
+license-files = ["LICENSE*"]
 
 [project.scripts]
 mcoder = "runtime.mcoder_cli.cli:main"
@@ -33,4 +36,3 @@ exclude = [
 "runtime.layer5.evidence" = ["evidence_bundle.v1.schema.json", "evidence_bundle.v1.md"]
 "runtime.layer5.retrieval" = ["domain_priors.yaml"]
 "runtime.layer5.authority" = ["product_authority_registry.yaml"]
-
