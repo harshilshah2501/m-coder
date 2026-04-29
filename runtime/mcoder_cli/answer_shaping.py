@@ -186,8 +186,7 @@ def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[st
             owner_claim += f", which acts as the {owner_role}"
         if owner_cite:
             owner_claim += f" [{owner_cite}]"
-        elif owner_file:
-            owner_claim += f" [{owner_file}]"
+        # NOTE: do not emit owner_file raw path — it may not be in evidence bundle
 
         # Typed node summary (skip duplicate of primary owner)
         node_parts: list[str] = []
@@ -247,8 +246,7 @@ def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[st
             owner_part = f"`{owner_cls}`"
             if owner_cite:
                 owner_part += f" [{owner_cite}]"
-            elif owner_file:
-                owner_part += f" [{owner_file}]"
+            # NOTE: do not emit owner_file raw path — it may not be in evidence bundle
             answer = "Primary owner: " + owner_part
             if all_names:
                 formatted = ", ".join(f"`{n}`" for n in all_names[:6])
