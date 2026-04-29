@@ -32,6 +32,7 @@ def _meta_rc(owner_cls: str, owner_method: str, gaps: list[str] | None = None) -
 
 
 def test_articulated_answer_unified_contract_default():
+    # Non-routine gap → one bounded-confidence sentence (custom gap, not snapshot boilerplate).
     out = build_articulated_answer(
         query="Explain the API layer architecture.",
         plan_steps=["Primary implementation owner: `APIServer` in `src/APIServer.java`, method `start`."],
@@ -45,8 +46,27 @@ def test_articulated_answer_unified_contract_default():
     assert "APIServer.start" in text
     assert "AbstractAPI" in text
     assert "AlarmAPI" in text or "ObjectConfigStore" in text
-    assert text.count("not fully proven by current evidence") == 1
+    assert "not established from this evidence alone" in text.lower()
     assert "graph" not in text.lower()
+
+
+def test_strong_routine_gaps_skip_forensic_disclaimer():
+    """Production reasoning_context often only adds routine snapshot gaps; prose stays direct."""
+    routine = [
+        "Full request routing not resolved in current evidence.",
+        "No graph call-paths available; flow is inferred from class names only.",
+    ]
+    out = build_articulated_answer(
+        query="Explain the API layer architecture.",
+        plan_steps=["Primary implementation owner: `APIServer` in `src/APIServer.java`, method `start`."],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=_meta_rc("APIServer", "start", gaps=routine),
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "not established from this evidence alone" not in text.lower()
+    assert "not fully proven" not in text.lower()
 
 
 def test_articulated_answer_returns_none_when_empty():
@@ -84,7 +104,7 @@ def test_articulated_answer_hard_guard_when_components_insufficient():
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
     assert "strongest grounded component" in text.lower()
-    assert "not fully proven by current evidence" in text.lower()
+    assert "not established from this evidence alone" in text.lower()
 
 
 def test_articulated_answer_legacy_renderer_flag(monkeypatch):
@@ -105,11 +125,16 @@ def test_articulated_answer_legacy_renderer_flag(monkeypatch):
 
 
 def test_unified_contract_handles_mail_notification_config_and_ambiguous_queries():
+    # Align with typical reasoning_context: routine snapshot gaps only → no closing disclaimer.
+    routine_only = [
+        "Persistence/store call chain not resolved.",
+        "No graph call-paths available; flow is inferred from class names only.",
+    ]
     cases = [
-        ("How does mail server configuration work?", _meta_rc("MailServerConfiguration", "beforeUpdate", gaps=["Call chain unresolved"])),
-        ("Find all classes that handle notifications.", _meta_rc("NotificationEngine", "start", gaps=["Class list incomplete"])),
-        ("How are config stores organized?", _meta_rc("AbstractConfigStore", "getItem", gaps=["Store chain unresolved"])),
-        ("How are APIs structured internally?", _meta_rc("APIServer", "start", gaps=["Branch routing unresolved"])),
+        ("How does mail server configuration work?", _meta_rc("MailServerConfiguration", "beforeUpdate", gaps=routine_only)),
+        ("Find all classes that handle notifications.", _meta_rc("NotificationEngine", "start", gaps=routine_only)),
+        ("How are config stores organized?", _meta_rc("AbstractConfigStore", "getItem", gaps=routine_only)),
+        ("How are APIs structured internally?", _meta_rc("APIServer", "start", gaps=routine_only)),
     ]
     for query, meta in cases:
         out = build_articulated_answer(
@@ -121,6 +146,6 @@ def test_unified_contract_handles_mail_notification_config_and_ambiguous_queries
         )
         assert out is not None
         text = "\n".join(out.get("paragraphs") or [])
-        assert "not fully proven by current evidence" in text
+        assert "not established from this evidence alone" not in text.lower()
         assert "graph" not in text.lower()
         assert "partial graph" not in text.lower()

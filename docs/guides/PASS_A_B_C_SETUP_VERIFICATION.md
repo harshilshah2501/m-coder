@@ -133,6 +133,27 @@ Expected:
 - listener owned by `ssh`
 - `/healthz` returns `200`
 
+### 3.4 Commit parity check (WSL + GPU)
+
+Before runtime acceptance, ensure both sides are on the same m-coder commit.
+
+**[WSL]**
+
+```bash
+cd ~/Harshil-PoCs/m-coder
+git rev-parse HEAD
+```
+
+**[GPU]**
+
+```bash
+cd ~/Harshil-PoCs/m-coder
+git rev-parse HEAD
+```
+
+Expected:
+- both hashes are identical for the verification run.
+
 ---
 
 ## 4) Pass B Build (Where Motadata Exists)
@@ -276,7 +297,8 @@ Acceptance bar:
 - Mail config: includes `MailServerConfiguration.beforeUpdate`, lifecycle/store/collaborator flow when present
 - Notifications: includes owner + collaborators when graph resolves them
 - Config stores: explains `AbstractConfigStore` + read/write/store relationships when present
-- Default renderer follows unified C-style constraints: 2-4 concise sentences, flow-oriented explanation, and one confidence-limit sentence when gaps exist
+- Default renderer follows unified C-style constraints: 2-4 concise sentences, flow-oriented explanation; a confidence-limit sentence appears for non-routine `coverage_gaps` or weaker evidence (routine snapshot-only gaps from `reasoning_context` do not append the chain disclaimer)
+- C-style unified rendering is the default when `MCODER_LEGACY_ASK_RENDERER` is unset
 - If fewer than 2 grounded components are available, output is minimal and truthful (no forced/fake flow)
 - CLI may print a read-only narrative block `--- explanation (read-only, evidence-bounded) ---` before legacy fallback lines
 - Fallback `answer_1` / `next_step` output remains valid when narrative block is absent
@@ -315,8 +337,13 @@ If responses regress to anchor-only phrasing:
 
 If fluency/shape unexpectedly regresses:
 
+- PLAN_ONLY Ask prose is composed deterministically in Plan-Gate (`articulated_answer`); it is not vLLM output filtered by plan-gate. Over-cautious tone usually comes from composer rules or `coverage_gaps`, not model censorship.
+
 - Verify `MCODER_LEGACY_ASK_RENDERER` is unset in shell/service environment.
 - Re-run one query with and without `MCODER_LEGACY_ASK_RENDERER=1` to confirm default/legacy path split.
+- Verify environment drift is not forcing stale behavior:
+  - `echo "PYTHONPATH=$PYTHONPATH"`
+  - `echo "MCODER_LEGACY_ASK_RENDERER=$MCODER_LEGACY_ASK_RENDERER"`
 
 If `/v1/ask` returns `500`:
 - run direct probe script from section 5.1

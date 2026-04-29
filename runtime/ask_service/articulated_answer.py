@@ -17,6 +17,16 @@ from runtime.mcoder_cli.answer_shaping import shape_prompt_summary
 _SCHEMA = "articulated_answer.v0"
 _LEGACY_ENV = "MCODER_LEGACY_ASK_RENDERER"
 
+# When graph paths are absent, reasoning_context always adds these; they describe
+# snapshot limits, not failures — STRONG asks should not end with a forensic disclaimer.
+_ROUTINE_COVERAGE_GAPS = frozenset(
+    {
+        "Full request routing not resolved in current evidence.",
+        "Persistence/store call chain not resolved.",
+        "No graph call-paths available; flow is inferred from class names only.",
+    }
+)
+
 
 def _strengthen_phrasing(text: str, evidence_quality: str) -> str:
     """Reduce timid hedging when evidence quality is STRONG (still bounded, not speculative)."""
@@ -91,7 +101,7 @@ def _evidence_limit_note(metadata: Optional[Dict[str, Any]]) -> str:
     reasons = meta.get("quality_reasons") if isinstance(meta.get("quality_reasons"), list) else []
     r0 = str(reasons[0]) if reasons else ""
     if q == "STRONG":
-        return "Evidence quality is strong for this ask; interpretation stays within retrieved anchors and plan steps."
+        return "Grounded to the retrieved anchors and plan steps above."
     if q == "WEAK":
         return "Evidence quality is weak; expand symbols in the query or use Explain/Debug with a selected method for tighter grounding."
     if q == "NO_MATCH":
@@ -132,8 +142,28 @@ def _collect_components(reasoning_context: Dict[str, Any]) -> Dict[str, List[str
     return groups
 
 
-def _render_list(items: List[str], limit: int = 3) -> str:
-    shown = [f"`{x}`" for x in items[:limit] if x]
+def _dedupe_labels(items: List[str], *, drop: Optional[str] = None) -> List[str]:
+    """Drop duplicates and optional anchor label so we do not repeat `Cls.method` twice."""
+    seen: set[str] = set()
+    out: List[str] = []
+    drop_key = (drop or "").strip().lower()
+    for raw in items:
+        label = str(raw or "").strip()
+        if not label:
+            continue
+        key = label.lower()
+        if drop_key and key == drop_key:
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(label)
+    return out
+
+
+def _render_list(items: List[str], limit: int = 3, *, drop: Optional[str] = None) -> str:
+    uniq = _dedupe_labels(items, drop=drop)
+    shown = [f"`{x}`" for x in uniq[:limit] if x]
     if not shown:
         return ""
     if len(shown) == 1:
@@ -141,6 +171,23 @@ def _render_list(items: List[str], limit: int = 3) -> str:
     if len(shown) == 2:
         return f"{shown[0]} and {shown[1]}"
     return ", ".join(shown[:-1]) + f", and {shown[-1]}"
+
+
+def _routine_coverage_only(gaps: List[str]) -> bool:
+    if not gaps:
+        return False
+    for g in gaps:
+        if str(g).strip() not in _ROUTINE_COVERAGE_GAPS:
+            return False
+    return True
+
+
+def _should_append_chain_disclaimer(evidence_quality: str, gaps: List[str]) -> bool:
+    if not gaps:
+        return False
+    if str(evidence_quality or "").upper() == "STRONG" and _routine_coverage_only(gaps):
+        return False
+    return True
 
 
 def _query_intent(query: str) -> str:
@@ -185,7 +232,7 @@ def _unified_paragraphs(
             else "Available context is insufficient to confirm a full architecture flow."
         )
         if gaps:
-            return [base + " The exact flow is not fully proven by current evidence."]
+            return [base + " The full flow is not established from this evidence alone."]
         if str(evidence_quality or "").upper() != "STRONG":
             return [base + " Additional grounded evidence is needed for a reliable flow explanation."]
         return [base]
@@ -202,27 +249,27 @@ def _unified_paragraphs(
         sentences.append(
             f"Mail server configuration centers on `{anchor}`, which acts as the update lifecycle entrypoint."
         )
-        follow = _render_list(stores or collaborators or handlers, limit=3)
+        follow = _render_list(stores or collaborators or handlers, limit=3, drop=anchor)
         if follow:
             sentences.append(f"It coordinates supporting components such as {follow} for validation and persistence-related behavior.")
     elif intent == "notification":
-        owners = _render_list(([anchor] if anchor else []) + handlers, limit=3)
-        collab = _render_list(collaborators or stores, limit=4)
+        owners = _render_list(([anchor] if anchor else []) + handlers, limit=3, drop=None)
+        collab = _render_list(collaborators or stores, limit=4, drop=anchor)
         sentences.append(f"Notification handling is anchored around {owners or '`NotificationEngine`'}.")
         if collab:
             sentences.append(f"Related notification components include {collab}.")
     elif intent == "config_store":
-        abs_label = _render_list(abstractions or ([anchor] if anchor else []), limit=2)
+        abs_label = _render_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
         sentences.append(
             f"Config store organization is centered on {abs_label or f'`{anchor}`'} as the shared abstraction for read/write operations."
         )
-        concrete = _render_list(stores or collaborators, limit=3)
+        concrete = _render_list(stores or collaborators, limit=3, drop=anchor)
         if concrete:
             sentences.append(f"Concrete store and manager components include {concrete}.")
     else:
         sentences.append(f"The API architecture starts at `{anchor}` and routes into concrete handlers.")
-        mid = _render_list(abstractions, limit=2)
-        end = _render_list(handlers or collaborators or stores, limit=3)
+        mid = _render_list(abstractions, limit=2, drop=anchor)
+        end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
         if mid and end:
             sentences.append(f"It relies on shared abstractions like {mid} and implementation components such as {end}.")
         elif end:
@@ -231,12 +278,13 @@ def _unified_paragraphs(
     if flow_steps:
         step = " -> ".join(flow_steps[:2])
         if step:
-            sentences.append(f"Flow evidence indicates: {step}.")
+            # Snapshot-local trace; avoid forensic tone ("Flow evidence indicates").
+            sentences.append(f"In this snapshot the trace runs: {step}")
 
-    # Keep 2-4 concise sentences total, with exactly one confidence sentence when gaps exist.
-    if gaps:
+    # One bounded-confidence sentence only when gaps are non-routine or evidence is not STRONG.
+    if gaps and _should_append_chain_disclaimer(evidence_quality, gaps):
         sentences = sentences[:3]
-        sentences.append("The exact downstream call chain is not fully proven by current evidence.")
+        sentences.append("The full downstream call chain is not established from this evidence alone.")
     else:
         sentences = sentences[:4]
     return [" ".join(s.strip() for s in sentences if s.strip())]
