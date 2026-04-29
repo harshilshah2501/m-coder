@@ -295,16 +295,16 @@ def _infer_flow_steps(
     po_meth = str(primary_owner.get("method") or "")
     anchor = f"{po_cls}.{po_meth}" if po_cls and po_meth else (po_cls or "(unknown anchor)")
 
-    # Step 1: entrypoint or primary owner
+    # Step 1: entrypoint or primary owner (human explanation tone, not diagnostic labels)
     entrypoints = typed_nodes.get("entrypoints", [])
     if entrypoints:
         ep = entrypoints[0]
         ep_cls = str(ep.get("class") or "")
         ep_meth = str(ep.get("method") or "")
         ep_anchor = f"{ep_cls}.{ep_meth}" if ep_cls and ep_meth else (ep_cls or "(entry)")
-        steps.append(f"{ep_anchor} bootstraps / receives the request.")
+        steps.append(f"{ep_anchor} starts here and routes incoming work.")
     elif po_cls:
-        steps.append(f"{anchor} receives or initiates processing.")
+        steps.append(f"{anchor} is the entrypoint and delegates to downstream components.")
 
     # Step 2: handler or abstraction
     handlers = typed_nodes.get("handlers", [])
@@ -312,21 +312,26 @@ def _infer_flow_steps(
     if handlers:
         names = ", ".join(str(h.get("class") or "") for h in handlers[:2] if h.get("class"))
         if names:
-            steps.append(f"Request is processed through {names}.")
+            steps.append(f"Handlers such as {names} carry the request forward.")
     elif abstractions:
         names = ", ".join(str(a.get("class") or "") for a in abstractions[:2] if a.get("class"))
         if names:
-            steps.append(f"Shared lifecycle behavior is provided by {names}.")
+            steps.append(f"Shared lifecycle behavior runs through {names}.")
 
-    # Step 3: store/persistence or graph path
+    # Step 3: store/persistence or graph-derived continuation (no G# debug tokens)
     stores = typed_nodes.get("stores", [])
     if stores:
         names = ", ".join(str(s.get("class") or "") for s in stores[:2] if s.get("class"))
         if names:
-            steps.append(f"State/configuration is persisted or accessed through {names}.")
+            steps.append(f"Configuration and state flow through {names}.")
     elif graph_paths:
         p = graph_paths[0]
-        steps.append(f"Graph path ({p.get('id', 'G1')}): {str(p.get('path') or '')[:120]}.")
+        raw = str(p.get("path") or "").strip()
+        snippet = raw[:200] if raw else ""
+        if snippet:
+            steps.append(f"Call relationships extend through: {snippet}.")
+        else:
+            steps.append("Additional call relationships appear in the retrieved structure snapshot.")
 
     return steps[:3]
 

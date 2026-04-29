@@ -46,8 +46,10 @@ def test_articulated_answer_unified_contract_default():
     assert "APIServer.start" in text
     assert "AbstractAPI" in text
     assert "AlarmAPI" in text or "ObjectConfigStore" in text
-    assert "not established from this evidence alone" in text.lower()
+    assert "not fully visible in this snapshot" in text.lower()
     assert "graph" not in text.lower()
+    assert "receives or initiates" not in text.lower()
+    assert "flow evidence" not in text.lower()
 
 
 def test_strong_routine_gaps_skip_forensic_disclaimer():
@@ -65,8 +67,9 @@ def test_strong_routine_gaps_skip_forensic_disclaimer():
     )
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
-    assert "not established from this evidence alone" not in text.lower()
+    assert "not fully visible in this snapshot" not in text.lower()
     assert "not fully proven" not in text.lower()
+    assert "graph path" not in text.lower()
 
 
 def test_articulated_answer_returns_none_when_empty():
@@ -104,7 +107,7 @@ def test_articulated_answer_hard_guard_when_components_insufficient():
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
     assert "strongest grounded component" in text.lower()
-    assert "not established from this evidence alone" in text.lower()
+    assert "not fully visible in this snapshot" in text.lower()
 
 
 def test_articulated_answer_legacy_renderer_flag(monkeypatch):
@@ -146,6 +149,6 @@ def test_unified_contract_handles_mail_notification_config_and_ambiguous_queries
         )
         assert out is not None
         text = "\n".join(out.get("paragraphs") or [])
-        assert "not established from this evidence alone" not in text.lower()
+        assert "not fully visible in this snapshot" not in text.lower()
         assert "graph" not in text.lower()
         assert "partial graph" not in text.lower()

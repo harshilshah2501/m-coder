@@ -101,7 +101,7 @@ def _evidence_limit_note(metadata: Optional[Dict[str, Any]]) -> str:
     reasons = meta.get("quality_reasons") if isinstance(meta.get("quality_reasons"), list) else []
     r0 = str(reasons[0]) if reasons else ""
     if q == "STRONG":
-        return "Grounded to the retrieved anchors and plan steps above."
+        return "Grounded to the anchors and plan steps shown for this request."
     if q == "WEAK":
         return "Evidence quality is weak; expand symbols in the query or use Explain/Debug with a selected method for tighter grounding."
     if q == "NO_MATCH":
@@ -232,7 +232,7 @@ def _unified_paragraphs(
             else "Available context is insufficient to confirm a full architecture flow."
         )
         if gaps:
-            return [base + " The full flow is not established from this evidence alone."]
+            return [base + " The full downstream chain is not fully visible in this snapshot."]
         if str(evidence_quality or "").upper() != "STRONG":
             return [base + " Additional grounded evidence is needed for a reliable flow explanation."]
         return [base]
@@ -242,49 +242,57 @@ def _unified_paragraphs(
     handlers = groups.get("handlers", [])
     stores = groups.get("stores", [])
     collaborators = groups.get("collaborators", [])
-    flow_steps = [str(s).strip() for s in _as_list(reasoning_context.get("flow_steps")) if str(s).strip()]
 
+    # 2–3 direct sentences: active voice, no pasted flow_steps (avoids G# / diagnostic traces).
     sentences: List[str] = []
     if intent == "mail":
         sentences.append(
-            f"Mail server configuration centers on `{anchor}`, which acts as the update lifecycle entrypoint."
+            f"Mail server configuration is anchored at `{anchor}`, which participates in the update lifecycle before changes persist."
         )
         follow = _render_list(stores or collaborators or handlers, limit=3, drop=anchor)
         if follow:
-            sentences.append(f"It coordinates supporting components such as {follow} for validation and persistence-related behavior.")
+            sentences.append(
+                f"It coordinates with {follow} for validation, transport settings, and persistence."
+            )
     elif intent == "notification":
-        owners = _render_list(([anchor] if anchor else []) + handlers, limit=3, drop=None)
+        owners = _render_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
+        head = owners or "`NotificationEngine`"
         collab = _render_list(collaborators or stores, limit=4, drop=anchor)
-        sentences.append(f"Notification handling is anchored around {owners or '`NotificationEngine`'}.")
+        sentences.append(
+            f"Notification handling centers on {head}, which owns startup and dispatch for notification-related work."
+        )
         if collab:
-            sentences.append(f"Related notification components include {collab}.")
+            sentences.append(f"It works alongside {collab} for configuration, discovery, and supporting services.")
     elif intent == "config_store":
         abs_label = _render_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
+        abs_ref = abs_label or f"`{anchor}`"
         sentences.append(
-            f"Config store organization is centered on {abs_label or f'`{anchor}`'} as the shared abstraction for read/write operations."
+            f"Config stores are organized around {abs_ref}, which provides shared access and lookup for configuration data."
         )
         concrete = _render_list(stores or collaborators, limit=3, drop=anchor)
         if concrete:
-            sentences.append(f"Concrete store and manager components include {concrete}.")
+            sentences.append(
+                f"Concrete components such as {concrete} handle domain-specific reads, validation, and updates."
+            )
     else:
-        sentences.append(f"The API architecture starts at `{anchor}` and routes into concrete handlers.")
+        sentences.append(
+            f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
+        )
         mid = _render_list(abstractions, limit=2, drop=anchor)
         end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
         if mid and end:
-            sentences.append(f"It relies on shared abstractions like {mid} and implementation components such as {end}.")
+            sentences.append(
+                f"Shared lifecycle behavior flows through {mid}, and work coordinates with {end}."
+            )
         elif end:
-            sentences.append(f"Implementation components involved include {end}.")
-
-    if flow_steps:
-        step = " -> ".join(flow_steps[:2])
-        if step:
-            # Snapshot-local trace; avoid forensic tone ("Flow evidence indicates").
-            sentences.append(f"In this snapshot the trace runs: {step}")
+            sentences.append(f"Key implementation components include {end}.")
+        elif mid:
+            sentences.append(f"Shared abstractions include {mid}.")
 
     # One bounded-confidence sentence only when gaps are non-routine or evidence is not STRONG.
     if gaps and _should_append_chain_disclaimer(evidence_quality, gaps):
         sentences = sentences[:3]
-        sentences.append("The full downstream call chain is not established from this evidence alone.")
+        sentences.append("The full downstream chain is not fully visible in this snapshot.")
     else:
         sentences = sentences[:4]
     return [" ".join(s.strip() for s in sentences if s.strip())]
