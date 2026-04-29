@@ -14,6 +14,10 @@ def _resp_with_graph(graph_traversal: dict) -> dict:
     return {"plan_summary": {"steps": []}, "graph_traversal": graph_traversal}
 
 
+def _resp_with_reasoning_context(rc: dict) -> dict:
+    return {"plan_summary": {"steps": []}, "metadata": {"reasoning_context": rc}}
+
+
 def test_base_api_class_prefers_direct_answer_and_hides_owner_boilerplate():
     shaped = shape_prompt_summary(
         "Which class is the base class for all APIs?",
@@ -274,4 +278,50 @@ def test_graph_notifications_owner_collaborators_preserved():
     )
     assert "primary owners:" in shaped["answer_1"]
     assert "collaborators:" in shaped["answer_1"]
+
+
+def test_reasoning_context_owner_file_allows_answer_without_explicit_EG_tags():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_reasoning_context(
+            {
+                "primary_owner": {
+                    "class": "APIServer",
+                    "method": "start",
+                    "file": "src/main/java/com/mindarray/api/APIServer.java",
+                    "citation": "",
+                    "role_description": "entrypoint / bootstrap (APIServer.start)",
+                },
+                "inheritance": {"chain": ["APIServer", "AbstractAPI"], "citation": ""},
+                "typed_nodes": {
+                    "abstractions": [{"class": "AbstractAPI"}],
+                    "handlers": [{"class": "AlarmAPI"}],
+                    "stores": [],
+                    "collaborators": [],
+                },
+                "flow_steps": ["APIServer.start -> AlarmAPI.beforeUpdate"],
+                "coverage_gaps": [],
+                "anchor_method": "APIServer.start",
+            }
+        ),
+    )
+    assert shaped["answer_1"] != "Unknown based on provided evidence."
+    assert "APIServer.start" in shaped["answer_1"]
+
+
+def test_reasoning_context_without_anchor_or_citation_returns_unknown():
+    shaped = shape_prompt_summary(
+        "Explain the API layer architecture.",
+        _resp_with_reasoning_context(
+            {
+                "primary_owner": {"class": "", "method": "", "file": "", "citation": "", "role_description": ""},
+                "inheritance": {"chain": [], "citation": ""},
+                "typed_nodes": {"abstractions": [], "handlers": [], "stores": [], "collaborators": []},
+                "flow_steps": [],
+                "coverage_gaps": [],
+                "anchor_method": "",
+            }
+        ),
+    )
+    assert shaped["answer_1"] == "Unknown based on provided evidence."
 

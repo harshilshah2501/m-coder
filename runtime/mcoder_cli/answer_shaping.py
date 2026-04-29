@@ -143,11 +143,13 @@ def _has_citation(text: str) -> bool:
     return False
 
 
-def _uncertain_if_uncited(text: str) -> str:
+def _uncertain_if_uncited(text: str, allow_grounded_anchor: bool = False) -> str:
     t = str(text or "").strip()
     if not t:
         return ""
     if _has_citation(t):
+        return t
+    if allow_grounded_anchor:
         return t
     return "Unknown based on provided evidence."
 
@@ -163,6 +165,7 @@ def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[st
     owner_file = str(po.get("file") or "").strip()
     owner_cite = str(po.get("citation") or "").strip()
     owner_role = str(po.get("role_description") or "").strip()
+    owner_is_grounded = bool(owner_cls) and bool(owner_file or owner_cite)
 
     anchor = str(rc.get("anchor_method") or "").strip()
     inh = rc.get("inheritance") if isinstance(rc.get("inheritance"), dict) else {}
@@ -219,7 +222,7 @@ def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[st
         else:
             body += ". This interpretation is based on current evidence and partial graph coverage."
 
-        body = _uncertain_if_uncited(body)
+        body = _uncertain_if_uncited(body, allow_grounded_anchor=owner_is_grounded)
         return {"answer_1": body, "next_step": "", "answer_shape": "explain"}
 
     if _is_discovery_query(query):
@@ -250,7 +253,7 @@ def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[st
             if all_names:
                 formatted = ", ".join(f"`{n}`" for n in all_names[:6])
                 answer += "; related classes: " + formatted
-            answer = _uncertain_if_uncited(answer)
+            answer = _uncertain_if_uncited(answer, allow_grounded_anchor=owner_is_grounded)
             return {"answer_1": answer, "next_step": "", "answer_shape": "discovery"}
 
     return None
