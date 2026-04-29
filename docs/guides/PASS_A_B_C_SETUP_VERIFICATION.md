@@ -226,7 +226,11 @@ def post(url, body):
 ev = post(f"{CTX}/v1/export_evidence", {"workspace_root":WS,"query":Q,"top_k":8,"task_type":"general"})
 resp = post(f"{ASK}/v1/ask", {"schema_version":"ask_request.v1.0","request_id":str(uuid.uuid4()),"timestamp_utc":datetime.datetime.now(datetime.UTC).isoformat(),"query":Q,"task_type":"general","evidence_bundle":ev})
 gt = resp.get("graph_traversal")
+ga = (resp.get("metadata") or {}).get("graph_traversal_availability")
+aa = resp.get("articulated_answer") if isinstance(resp.get("articulated_answer"), dict) else {}
 print("graph_traversal_present:", isinstance(gt, dict))
+print("graph_availability:", ga)
+print("articulated_answer_schema:", aa.get("schema_version"))
 if isinstance(gt, dict):
     print("keys:", sorted(gt.keys()))
     print("flow_paths_count:", len(gt.get("flow_paths") or []))
@@ -238,7 +242,9 @@ PY
 ```
 
 Expected:
-- `graph_traversal_present: True`
+- `graph_availability` is printed and distinguishes artifact state (`present` / `missing`)
+- `articulated_answer_schema: articulated_answer.v0` for general Ask plan-only responses
+- `graph_traversal_present` may be `False` when artifacts are missing or traversal has no relevant signal
 
 ### 5.2 CLI prompt verification
 
@@ -251,12 +257,30 @@ mcoder prompt "Find all classes that handle notifications."
 mcoder prompt "How are config stores organized?"
 ```
 
+Renderer mode check:
+
+- Default (`MCODER_LEGACY_ASK_RENDERER` unset): unified C-style contract is active for articulated Ask output.
+- Debug fallback (`MCODER_LEGACY_ASK_RENDERER=1`): legacy deterministic renderer path is active.
+
+Quick toggle check:
+
+```bash
+unset MCODER_LEGACY_ASK_RENDERER
+mcoder prompt "Explain the API layer architecture."
+MCODER_LEGACY_ASK_RENDERER=1 mcoder prompt "Explain the API layer architecture."
+```
+
 Acceptance bar:
 
 - API architecture: includes `APIServer`, `AbstractAPI`, concrete handlers/extensions; not only `APIServer.start`
 - Mail config: includes `MailServerConfiguration.beforeUpdate`, lifecycle/store/collaborator flow when present
 - Notifications: includes owner + collaborators when graph resolves them
 - Config stores: explains `AbstractConfigStore` + read/write/store relationships when present
+- Default renderer follows unified C-style constraints: 2-4 concise sentences, flow-oriented explanation, and one confidence-limit sentence when gaps exist
+- If fewer than 2 grounded components are available, output is minimal and truthful (no forced/fake flow)
+- CLI may print a read-only narrative block `--- explanation (read-only, evidence-bounded) ---` before legacy fallback lines
+- Fallback `answer_1` / `next_step` output remains valid when narrative block is absent
+- A graph-cache note may appear when Plan-Gate reports missing code-intelligence artifacts
 
 ---
 
@@ -271,7 +295,8 @@ PYTHONPATH=. pytest -q \
   runtime/tests/test_code_intelligence_graph_v1.py \
   runtime/tests/test_graph_traversal_payload.py \
   runtime/tests/test_ask_v1_ingest.py \
-  runtime/tests/test_answer_shaping_pass_a.py
+  runtime/tests/test_answer_shaping_pass_a.py \
+  runtime/tests/test_articulated_answer.py
 make cig-smoke
 ```
 
@@ -284,8 +309,14 @@ If responses regress to anchor-only phrasing:
 1. Verify tunnel and `/healthz` on `127.0.0.1:8089`
 2. Verify `graph_traversal_payload.py` exists in GPU runtime
 3. Verify CIG artifacts exist in GPU `runtime/.cache/code_intelligence_graph`
-4. Verify probe shows `graph_traversal_present: True`
-5. Restart GPU Plan-Gate and retry
+4. Verify probe prints `metadata.graph_traversal_availability` and confirm artifact state (`present` / `missing`)
+5. If availability is `present`, verify traversal signal (`graph_traversal_present`) and traversal keys for your prompt type
+6. Restart GPU Plan-Gate and retry
+
+If fluency/shape unexpectedly regresses:
+
+- Verify `MCODER_LEGACY_ASK_RENDERER` is unset in shell/service environment.
+- Re-run one query with and without `MCODER_LEGACY_ASK_RENDERER=1` to confirm default/legacy path split.
 
 If `/v1/ask` returns `500`:
 - run direct probe script from section 5.1
