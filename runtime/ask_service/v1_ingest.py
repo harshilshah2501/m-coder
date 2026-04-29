@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -42,6 +43,7 @@ from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
 from .articulated_answer import build_articulated_answer
+from .bounded_ask_narrator import try_governed_ask_narration
 from .graph_traversal_payload import build_graph_traversal_payload, probe_code_intelligence_graph_availability
 from .reasoning_context import build_reasoning_context
 
@@ -538,13 +540,33 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
     ctx_files = [{"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items]
     articulated: Dict[str, Any] | None = None
     if routing_mode == "plan_only":
-        articulated = build_articulated_answer(
-            query=query,
-            plan_steps=plan_steps,
-            context_files=ctx_files,
-            graph_traversal=gt_payload,
-            metadata=metadata,
-        )
+        legacy_renderer = str(os.environ.get("MCODER_LEGACY_ASK_RENDERER", "")).strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        if not legacy_renderer:
+            articulated = try_governed_ask_narration(
+                query=query,
+                bundle=bundle,
+                plan_steps=plan_steps,
+                metadata=metadata,
+                request_id=request_id,
+                trace_id=trace_id,
+            )
+            if articulated is not None:
+                metadata["ask_narration_source"] = "governed_vllm"
+        if articulated is None:
+            articulated = build_articulated_answer(
+                query=query,
+                plan_steps=plan_steps,
+                context_files=ctx_files,
+                graph_traversal=gt_payload,
+                metadata=metadata,
+            )
+        if metadata.get("ask_narration_source") is None and articulated is not None:
+            metadata["ask_narration_source"] = "deterministic_legacy" if legacy_renderer else "deterministic_unified"
     return _build_plan_only_response(
         request_id=request_id,
         bundle=bundle,

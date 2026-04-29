@@ -282,6 +282,7 @@ Renderer mode check:
 
 - Default (`MCODER_LEGACY_ASK_RENDERER` unset): unified C-style contract is active for articulated Ask output.
 - Debug fallback (`MCODER_LEGACY_ASK_RENDERER=1`): legacy deterministic renderer path is active.
+- Governed vLLM narration (optional): set `MCODER_GOVERNED_ASK_NARRATOR=1` on **Plan-Gate** so PLAN_ONLY Ask tries a bounded vLLM narrator before deterministic prose. Uses the same endpoint as Explain/Debug (`MOTADATA_EXPLAIN_VLLM_URL`, `MOTADATA_EXPLAIN_MODEL`). Responses are validated (anchor present, backticks ⊆ allowlist, generic-phrase filter); on failure or timeout, output falls back to the deterministic composer. Response metadata may include `ask_narration_source`: `governed_vllm` vs `deterministic_unified` vs `deterministic_legacy`.
 
 Quick toggle check:
 
@@ -318,7 +319,8 @@ PYTHONPATH=. pytest -q \
   runtime/tests/test_graph_traversal_payload.py \
   runtime/tests/test_ask_v1_ingest.py \
   runtime/tests/test_answer_shaping_pass_a.py \
-  runtime/tests/test_articulated_answer.py
+  runtime/tests/test_articulated_answer.py \
+  runtime/tests/test_bounded_ask_narrator.py
 make cig-smoke
 ```
 

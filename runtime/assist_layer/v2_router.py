@@ -157,6 +157,9 @@ def augment_assist_v2_with_response(
                 el = articulated.get("evidence_limit")
                 if isinstance(el, str) and el.strip():
                     ans["evidence_limit"] = el.strip()
+                ns = meta.get("ask_narration_source")
+                if isinstance(ns, str) and ns.strip():
+                    ans["narration_source"] = ns.strip()
                 out["answer"] = ans
     out["evidence"] = _build_evidence_block(meta, context_files, owner)
     out["gaps"] = _build_gaps_block(meta, plan_steps, notes)
