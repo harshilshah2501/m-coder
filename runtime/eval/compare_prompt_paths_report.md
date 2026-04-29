@@ -1,6 +1,6 @@
 # Prompt Path Diagnostic Report
 
-Generated: 2026-04-29T14:30:52.797596Z
+Generated: 2026-04-29T14:36:13.871654Z
 Workspace: /root/Harshil-PoCs/Motadata
 Context URL: http://127.0.0.1:8091
 Plan-Gate URL: http://127.0.0.1:8089
@@ -13,18 +13,18 @@ timeout_sec: 180
 
 | Query | Path | graph_traversal_presence | latency_ms | hallucination_markers | notes |
 |---|---|---:|---:|---|---|
-| Explain the API layer architecture. | A | yes | 8153.8 | none | fluent/shallow |
-| Explain the API layer architecture. | B | yes | 8153.8 | none | fluent/shallow |
-| Explain the API layer architecture. | C | yes | 6062.4 | none | fluent/shallow |
-| How does mail server configuration work? | A | yes | 8306.7 | none | fluent/shallow |
-| How does mail server configuration work? | B | yes | 8306.7 | none | fluent/shallow |
-| How does mail server configuration work? | C | yes | 5875.2 | none | fluent/shallow |
-| Find all classes that handle notifications. | A | yes | 9038.1 | none | stiff/shallow |
-| Find all classes that handle notifications. | B | yes | 9038.1 | none | stiff/shallow |
-| Find all classes that handle notifications. | C | yes | 7091.1 | none | fluent/shallow |
-| How are config stores organized? | A | yes | 8408.6 | none | fluent/shallow |
-| How are config stores organized? | B | yes | 8408.6 | none | fluent/shallow |
-| How are config stores organized? | C | yes | 5165.7 | none | fluent/shallow |
+| Explain the API layer architecture. | A | yes | 8432.1 | none | fluent/shallow |
+| Explain the API layer architecture. | B | yes | 8432.1 | none | fluent/shallow |
+| Explain the API layer architecture. | C | yes | 5975.7 | none | fluent/shallow |
+| How does mail server configuration work? | A | yes | 7592.8 | none | fluent/shallow |
+| How does mail server configuration work? | B | yes | 7592.8 | none | fluent/shallow |
+| How does mail server configuration work? | C | yes | 5502.8 | none | fluent/shallow |
+| Find all classes that handle notifications. | A | yes | 7724.0 | none | stiff/shallow |
+| Find all classes that handle notifications. | B | yes | 7724.0 | none | stiff/shallow |
+| Find all classes that handle notifications. | C | yes | 5219.9 | none | fluent/shallow |
+| How are config stores organized? | A | yes | 7133.5 | none | fluent/shallow |
+| How are config stores organized? | B | yes | 7133.5 | none | fluent/shallow |
+| How are config stores organized? | C | yes | 4757.1 | none | fluent/shallow |
 
 ## Per-Query Outputs
 
@@ -32,7 +32,7 @@ timeout_sec: 180
 
 #### Path A
 
-- latency_ms: 8153.8
+- latency_ms: 8432.1
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -45,7 +45,7 @@ The primary anchor is `APIServer.start`, which acts as the entrypoint / bootstra
 
 #### Path B
 
-- latency_ms: 8153.8
+- latency_ms: 8432.1
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -59,7 +59,7 @@ This interpretation is based on current evidence and partial graph coverage.
 
 #### Path C
 
-- latency_ms: 6062.4
+- latency_ms: 5975.7
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -67,14 +67,14 @@ This interpretation is based on current evidence and partial graph coverage.
 Answer text:
 
 ```
-The API layer architecture is centered around the `APIServer` class, which acts as the entry point for incoming HTTP requests. When `APIServer.start` is invoked, it initializes the HTTP server using Vert.x, setting up the necessary configurations and handlers. The `DiscoveryEngine` and `DependencyQueryProcessor` classes handle specific types of requests, processing them according to their defined logic. Configuration data is stored and retrieved using the `ObjectConfigStore`. This setup allows for modular and event-driven processing of API requests within the system. Confidence limits: full request routing and persistence/store call chains are not fully resolved in the provided evidence.
+The API layer architecture starts with `APIServer.start`, which acts as the entry point for initiating the server. This method sets up the HTTP server and likely handles incoming requests. The `DiscoveryEngine` and `DependencyQueryProcessor` classes handle specific request processing tasks, such as initiating discovery processes and processing dependency queries, respectively. The `ObjectConfigStore` provides configuration storage and persistence functionalities. While the exact flow of request handling and persistence calls is not fully resolved, this structure outlines the primary components and their roles within the API layer.
 ```
 
 ### How does mail server configuration work?
 
 #### Path A
 
-- latency_ms: 8306.7
+- latency_ms: 7592.8
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -87,7 +87,7 @@ The primary anchor is `MailServerConfiguration.beforeUpdate`, which acts as the 
 
 #### Path B
 
-- latency_ms: 8306.7
+- latency_ms: 7592.8
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -101,7 +101,7 @@ This interpretation is based on current evidence and partial graph coverage.
 
 #### Path C
 
-- latency_ms: 5875.2
+- latency_ms: 5502.8
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -109,14 +109,14 @@ This interpretation is based on current evidence and partial graph coverage.
 Answer text:
 
 ```
-The mail server configuration process starts with `MailServerConfiguration.beforeUpdate`, which handles updates to the mail server settings. This method processes incoming requests to update the mail server configuration and ensures that the changes are persisted correctly. The `UIActionEventHandler` collaborates with `MailServerConfiguration` to handle user interface actions related to updating the mail server settings. The specific handling of these actions is detailed in the `UIActionEventHandler` class at [E2]. Confidence limits: Full request routing and persistence/store call chains are not fully resolved in the provided evidence.
+The mail server configuration process begins when `MailServerConfiguration.beforeUpdate` is invoked, which acts as an entry point for handling updates to the mail server settings. This method processes the incoming update request and interacts with the underlying storage mechanism to persist the changes. The `UIActionEventHandler` handles events that trigger updates to the mail server configuration, ensuring that any necessary authentication status checks are performed before proceeding with the update. The exact details of how these components interact and the full extent of their responsibilities are not fully detailed in the provided evidence, leaving some aspects of the flow and persistence mechanisms unresolved.
 ```
 
 ### Find all classes that handle notifications.
 
 #### Path A
 
-- latency_ms: 9038.1
+- latency_ms: 7724.0
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: stiff/shallow
@@ -129,7 +129,7 @@ Primary owner: `NotificationEngine`; related classes: `UIActionEventHandler`, `O
 
 #### Path B
 
-- latency_ms: 9038.1
+- latency_ms: 7724.0
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: stiff/shallow
@@ -142,7 +142,7 @@ Based on deterministic graph evidence, primary owners: `NotificationEngine`; col
 
 #### Path C
 
-- latency_ms: 7091.1
+- latency_ms: 5219.9
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -150,19 +150,14 @@ Based on deterministic graph evidence, primary owners: `NotificationEngine`; col
 Answer text:
 
 ```
-The classes that handle notifications include `NotificationEngine`, `UIActionEventHandler`, `ObjectConfigStore`, and `DiscoveryEngine`. These classes are involved in processing notifications and handling related events. Specifically, `NotificationEngine` starts the notification process, while `UIActionEventHandler` handles UI action events, `ObjectConfigStore` manages configurations, and `DiscoveryEngine` processes discovery requests. [E1], [E2], [E3], [E4].
-
-Confidence limits:
-- Full request routing not resolved in current evidence.
-- Persistence/store call chain not resolved.
-- No graph call-paths available; flow is inferred from class names only.
+The `NotificationEngine` class acts as the entrypoint for handling notifications, initiating the process through its `start` method. This method likely triggers further processing handled by other components such as `UIActionEventHandler`, which processes specific UI actions related to notifications, and `DiscoveryEngine`, which might be involved in discovering or managing entities relevant to notifications. The `ObjectConfigStore` class, while not directly handling notifications, could be storing configurations or data used by these handlers. However, the exact flow and interactions between these components are not fully resolved by the current evidence.
 ```
 
 ### How are config stores organized?
 
 #### Path A
 
-- latency_ms: 8408.6
+- latency_ms: 7133.5
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -175,7 +170,7 @@ The primary anchor is `AbstractConfigStore.getItem`, which acts as the shared ab
 
 #### Path B
 
-- latency_ms: 8408.6
+- latency_ms: 7133.5
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -189,7 +184,7 @@ This interpretation is based on current evidence and partial graph coverage.
 
 #### Path C
 
-- latency_ms: 5165.7
+- latency_ms: 4757.1
 - graph_traversal_presence: yes
 - hallucination_markers: none
 - notes: fluent/shallow
@@ -197,5 +192,7 @@ This interpretation is based on current evidence and partial graph coverage.
 Answer text:
 
 ```
-Config stores are organized using an abstract base class `AbstractConfigStore`, which provides a method `getItem` for retrieving configuration items. This method is implemented in concrete classes like `ConfigManager` and `ObjectManager`, which handle specific configurations and persist them. The `ConfigResponseProcessor` also interacts with these stores to process configuration responses. The exact implementation details can be found in the respective source files cited. Confidence limits: Full request routing and persistence/store call chains are not fully resolved.
+Configuration stores are organized through an abstract base class `AbstractConfigStore`, which provides a method `getItem` for retrieving configuration items. This method checks if an item exists based on its ID and returns a copy of the item if found. The actual storage and retrieval logic is implemented in concrete subclasses that extend `AbstractConfigStore`. Collaborating components such as `ConfigManager`, `ObjectManager`, and `ConfigResponseProcessor` interact with these stores to manage and process configurations.
+
+Confidence limits: The exact call chain and full request routing are not resolved in the current evidence.
 ```
