@@ -125,6 +125,207 @@
         ],
         "must_include_risk_or_guardrail": true
       }
+    },
+    {
+      "id": "ask_structural_api_base_class",
+      "capability": "ask",
+      "description": "Structural Ask: identify shared API superclass (inheritance / AbstractAPI signal).",
+      "inputs": {
+        "task_type": "general",
+        "query": "Which class is the base class for concrete REST APIs in this codebase?",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "ask_path": "v1_evidence",
+        "execution": false,
+        "governance_posture": "PLAN_ONLY",
+        "min_plan_steps": 2,
+        "required_text_contains_any": [
+          "AbstractAPI",
+          "abstractapi",
+          "API",
+          "extends"
+        ],
+        "required_paths_any": [
+          "mindarray/api"
+        ]
+      }
+    },
+    {
+      "id": "ask_architecture_api_entrypoints",
+      "capability": "ask",
+      "description": "Architecture Ask: bootstrap and delegation from server entry to handlers (multi-component grounding).",
+      "inputs": {
+        "task_type": "general",
+        "query": "Explain how HTTP requests enter the product through APIServer and reach concrete handler classes.",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "ask_path": "v1_evidence",
+        "execution": false,
+        "governance_posture": "PLAN_ONLY",
+        "min_plan_steps": 3,
+        "required_text_contains_any": [
+          "APIServer",
+          "abstractapi",
+          "handler",
+          "route"
+        ],
+        "required_paths_any": [
+          "APIServer.java",
+          "mindarray/api"
+        ]
+      }
+    },
+    {
+      "id": "ask_discovery_notification_handlers",
+      "capability": "ask",
+      "description": "Discovery Ask: enumerate notification-related classes (list-style retrieval quality).",
+      "inputs": {
+        "task_type": "general",
+        "query": "List main classes involved in sending email or SMS notifications from the server.",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "ask_path": "v1_evidence",
+        "execution": false,
+        "governance_posture": "PLAN_ONLY",
+        "min_plan_steps": 2,
+        "required_text_contains_any": [
+          "Notification",
+          "Email",
+          "SMS",
+          "notification"
+        ],
+        "required_paths_any": [
+          "notification",
+          "mindarray"
+        ]
+      }
+    },
+    {
+      "id": "ask_planning_refactor_alert_pipeline",
+      "capability": "ask",
+      "description": "Planning-style Ask (still PLAN_ONLY): safe refactor framing; may be WEAK—honesty cues allowed.",
+      "inputs": {
+        "task_type": "general",
+        "query": "Plan a safe refactor for alert enrichment with rollback notes and validation checkpoints.",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "ask_path": "v1_evidence",
+        "execution": false,
+        "governance_posture": "PLAN_ONLY",
+        "min_plan_steps": 2,
+        "allowed_evidence_quality_any": [
+          "WEAK",
+          "STRONG",
+          "MODERATE"
+        ],
+        "required_text_contains_any": [
+          "alert",
+          "enrichment",
+          "correlation",
+          "rollback",
+          "plan",
+          "validation",
+          "risk",
+          "APIServer",
+          "Flow",
+          "AbstractAPI"
+        ]
+      }
+    },
+    {
+      "id": "debug_apiserver_route_registration",
+      "capability": "debug",
+      "description": "Anchored debug: route registration / startup with explicit APIServer.java anchor.",
+      "inputs": {
+        "task_type": "EXPLAIN_DEBUG",
+        "query": "Why might a newly registered API route not appear at runtime despite a successful start()?",
+        "workspace_root": "/home/harshil/Projects/Motadata",
+        "active_file": "motadata/src/main/java/com/mindarray/api/APIServer.java",
+        "selection_text": "Trace route registration order and failure modes from start() through AbstractAPI."
+      },
+      "utility_expect": {
+        "routing_mode": "explain_debug",
+        "required_explain_keys": [
+          "summary",
+          "logic_flow",
+          "likely_bug_risk"
+        ],
+        "must_reference_selected_file_or_symbol": true,
+        "required_text_contains_any": [
+          "route",
+          "start",
+          "API",
+          "register",
+          "abstractapi"
+        ],
+        "must_not_admit_missing_context_without_next_step": true,
+        "must_suggest_concrete_failure_points": true
+      }
+    },
+    {
+      "id": "debug_mail_tls_config_path",
+      "capability": "debug",
+      "description": "Anchored debug: mail configuration lifecycle with MailServerConfiguration anchor.",
+      "inputs": {
+        "task_type": "EXPLAIN_DEBUG",
+        "query": "What conditions could cause mail delivery settings to appear stale after an admin update?",
+        "workspace_root": "/home/harshil/Projects/Motadata",
+        "active_file": "motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+        "selection_text": "Focus on beforeUpdate / cache interaction and persistence timing."
+      },
+      "utility_expect": {
+        "routing_mode": "explain_debug",
+        "required_explain_keys": [
+          "summary",
+          "logic_flow",
+          "likely_bug_risk"
+        ],
+        "must_reference_selected_file_or_symbol": true,
+        "required_text_contains_any": [
+          "mail",
+          "update",
+          "configuration",
+          "beforeupdate",
+          "cache"
+        ],
+        "must_suggest_concrete_failure_points": true
+      }
+    },
+    {
+      "id": "plan_phased_rollout_rollback_alert_enrichment",
+      "capability": "plan",
+      "description": "Bounded plan: phased rollout with rollback and validation (intent embedded for /v0/plan path).",
+      "inputs": {
+        "intent": "Prepare a phased rollout for alert enrichment changes: feature flag, shadow mode, metrics, rollback procedure, and post-deploy validation. Reference correlation and notification paths.",
+        "workspace_root": "/home/harshil/Projects/Motadata"
+      },
+      "utility_expect": {
+        "schema_version": "decision_response.v0.1",
+        "decision_present": true,
+        "allowed_decisions_any": [
+          "REFUSAL",
+          "CONDITIONAL_BLOCK",
+          "APPROVE",
+          "BOUNDING"
+        ],
+        "must_identify_candidate_files": true,
+        "required_text_contains_any": [
+          "risk",
+          "validation",
+          "test",
+          "rollback",
+          "guard",
+          "correlation",
+          "flag",
+          "plan",
+          "metrics"
+        ],
+        "must_include_risk_or_guardrail": true
+      }
     }
   ]
 }
