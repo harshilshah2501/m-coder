@@ -451,17 +451,47 @@ def _run_ask_like(
         if task_type == "EXPLAIN_DEBUG":
             dbg_summary = str(explain_debug.get("summary") or "").strip()
             dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
+            dbg_risk = str(explain_debug.get("likely_bug_risk") or "").strip()
+            dbg_limits = str(explain_debug.get("confidence_limits") or "").strip()
+            dbg_evidence = explain_debug.get("evidence") if isinstance(explain_debug.get("evidence"), list) else []
+            cues = [str(x).strip() for x in dbg_evidence if str(x).strip()][:3]
+            missing_selected = any("missing_in_context" in c.lower() for c in cues)
             dbg_quality = str(md.get("debug_narration_quality") or "").strip().upper()
             dbg_issues = md.get("debug_narration_issues") if isinstance(md.get("debug_narration_issues"), list) else []
-            if dbg_summary:
-                print(f"debug_summary: {dbg_summary}")
-            if dbg_logic:
-                first = dbg_logic.splitlines()[0].strip()
-                if first:
-                    print(f"debug_logic_head: {first}")
-            if dbg_quality == "CURATED":
+            if missing_selected:
+                print("Debug hypothesis:")
+                print("Cannot debug this target because the selected file is not present in retrieved evidence.")
+                print("")
+                print("Next inspection:")
+                print("Retry with a selected file that is present in evidence (or narrow the query so retrieval includes that file).")
+            else:
+                if dbg_summary:
+                    print("Debug hypothesis:")
+                    print(dbg_summary)
+                    print("")
+                if cues:
+                    print("Evidence cues:")
+                    for c in cues:
+                        print(f"- {c}")
+                    print("")
+                if dbg_risk:
+                    print("Likely failure point:")
+                    print(dbg_risk)
+                    print("")
+                next_inspect = ""
+                if dbg_logic:
+                    next_inspect = dbg_logic.splitlines()[0].strip()
+                if next_inspect:
+                    print("Next inspection:")
+                    print(next_inspect)
+                    print("")
+                if dbg_limits:
+                    print("Limit:")
+                    print(dbg_limits)
+                    print("")
+            if cfg.verbose and dbg_quality == "CURATED":
                 issue_note = f", issues={len(dbg_issues)}" if dbg_issues else ""
-                print(f"debug_note: narration curated by governance for precision{issue_note}")
+                print(f"[debug-meta] narration curated by governance{issue_note}")
         gta = md.get("graph_traversal_availability")
         if (
             cfg.verbose
@@ -473,7 +503,7 @@ def _run_ask_like(
                 "note: code intelligence graph cache is not available on the Plan-Gate host; "
                 "structural graph hints are omitted. Build CIG artifacts to enable them."
             )
-        if steps or resp.get("articulated_answer"):
+        if task_type != "EXPLAIN_DEBUG" and (steps or resp.get("articulated_answer")):
             art = resp.get("articulated_answer")
             printed_articulated = False
             if isinstance(art, dict):
