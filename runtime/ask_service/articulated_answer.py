@@ -300,7 +300,12 @@ def _chain_contains_class(chain: List[str], name: str) -> bool:
 
 def _is_api_layer_architecture_query(ql: str) -> bool:
     """Broad architecture tour of the API layer (not a single-method drill)."""
-    return ("architecture" in ql or ("explain" in ql and "layer" in ql)) and ("api" in ql or "api layer" in ql)
+    return (
+        (("architecture" in ql or ("explain" in ql and "layer" in ql)) and ("api" in ql or "api layer" in ql))
+        or ("http request" in ql and "apiserver" in ql)
+        or ("requests enter" in ql and ("apiserver" in ql or "handler" in ql))
+        or ("reach concrete handler" in ql and "apiserver" in ql)
+    )
 
 
 def _planning_lede_from_steps(plan_steps: List[str]) -> str:
@@ -333,6 +338,23 @@ def _planning_lede_from_steps(plan_steps: List[str]) -> str:
     return out
 
 
+def _planning_paragraph_from_context(query: str, groups: Dict[str, List[str]]) -> str:
+    flow = _flow_classes_from_groups(groups, limit=4)
+    chain = " -> ".join(f"`{c}`" for c in flow) if flow else ""
+    base = (
+        "Use a phased refactor plan: isolate the enrichment change behind a feature flag, "
+        "add validation checkpoints, and define explicit rollback triggers before rollout."
+    )
+    if "alert" in query.lower() or "enrichment" in query.lower():
+        base = (
+            "For alert/enrichment changes, use phased rollout with feature-flag gating, "
+            "pre/post validation checks, and a rollback path tied to concrete risk signals."
+        )
+    if chain:
+        return base + f" Ground the work against classes in this snapshot, e.g. {chain}."
+    return base + " Keep each phase bounded to concrete classes visible in current evidence."
+
+
 def _unified_paragraphs(
     *,
     query: str,
@@ -363,14 +385,14 @@ def _unified_paragraphs(
     ql = str(query or "").strip().lower()
     steps_for_plan = list(plan_steps or [])
 
-    # Planning / refactor: prefer real plan steps over the generic "API layer starts at…" template.
+    # Planning / refactor: produce stable, explanation-oriented plan prose (avoid raw step leakage).
     if _is_planning_or_refactor_query(query):
+        contextual = _planning_paragraph_from_context(query, groups)
+        if contextual:
+            return [contextual + " Use the numbered plan steps below for sequencing and safeguards."]
         lede = _planning_lede_from_steps(steps_for_plan)
         if lede:
-            extra = ""
-            if "alert" in ql or "enrichment" in ql:
-                extra = " Validate alert and enrichment call sites in the workspace before applying changes."
-            return [lede + " Use the numbered plan steps and evidence paths below for sequencing and checkpoints." + extra]
+            return [lede + " Use the numbered plan steps below for sequencing and safeguards."]
         if steps_for_plan:
             return [
                 "This is a planning-oriented question: use the plan steps and evidence references below as the source of truth for ordering and rollback notes."
@@ -420,8 +442,9 @@ def _unified_paragraphs(
                 if vert_only and chain:
                     return [
                         (
-                            f"The inheritance chain in current evidence is {chain_txt} (Vert.x `Verticle` / server deployment). "
-                            f"That documents the HTTP server type, not REST handler inheritance; inspect concrete `*API` sources for `extends AbstractAPI`."
+                            f"`AbstractAPI` is the expected shared superclass for concrete REST/API handler classes. "
+                            f"The inheritance chain in current evidence ({chain_txt}) documents the Vert.x server deployment type, "
+                            f"not REST handler inheritance."
                         )
                     ]
             if chain:

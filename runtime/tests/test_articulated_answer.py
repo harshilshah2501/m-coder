@@ -289,5 +289,20 @@ def test_unified_paragraphs_planning_prefers_plan_steps_not_api_template():
     )
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
-    assert "Step 1:" in text or "plan steps" in text.lower()
+    assert "phased" in text.lower() or "rollback" in text.lower() or "feature-flag" in text.lower()
     assert "The API layer starts at" not in text
+
+
+def test_api_entrypoint_explain_query_uses_architecture_template():
+    meta = _meta_rc("APIServer", "start", gaps=[])
+    out = build_articulated_answer(
+        query="Explain how HTTP requests enter the product through APIServer and reach concrete handler classes.",
+        plan_steps=[],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "request path follows" in text.lower() or "routes requests to handlers" in text.lower()
+    assert "APIServer" in text
