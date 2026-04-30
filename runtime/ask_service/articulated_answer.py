@@ -183,6 +183,21 @@ def _render_class_list(items: List[str], limit: int = 3, *, drop: Optional[str] 
     return _render_list(classes, limit=limit, drop=drop_cls or None)
 
 
+def _flow_classes_from_groups(groups: Dict[str, List[str]], *, limit: int = 4) -> List[str]:
+    """Build a deterministic, class-level flow outline for explanation prose."""
+    ordered = []
+    for bucket in ("entrypoints", "abstractions", "handlers", "stores", "collaborators"):
+        ordered.extend(groups.get(bucket, []))
+    out: List[str] = []
+    for raw in ordered:
+        cls = _class_from_component_label(raw)
+        if cls and cls not in out:
+            out.append(cls)
+        if len(out) >= limit:
+            break
+    return out
+
+
 def _routine_coverage_only(gaps: List[str]) -> bool:
     if not gaps:
         return False
@@ -462,11 +477,15 @@ def _unified_paragraphs(
         sentences.append(
             f"Mail server configuration is handled by `{anchor_cls}`, with lifecycle hooks coordinating validation before settings are persisted."
         )
-        follow = _render_class_list(stores or collaborators or handlers, limit=3, drop=anchor)
+        follow = _render_class_list(stores or collaborators or handlers, limit=4, drop=anchor)
         if follow:
             sentences.append(
                 f"It works with {follow} for transport settings, validation, and persistence boundaries."
             )
+        flow = _flow_classes_from_groups(groups)
+        if len(flow) >= 3:
+            chain = " -> ".join(f"`{c}`" for c in flow[:3])
+            sentences.append(f"In this snapshot, the mail path is anchored by a flow like {chain}, where each layer narrows from API entry to concrete update logic.")
     elif intent == "notification":
         owners = _render_class_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
         head = owners or "`NotificationEngine`"
@@ -476,6 +495,10 @@ def _unified_paragraphs(
         )
         if collab:
             sentences.append(f"Key collaborators include {collab} for routing, configuration, and supporting services.")
+        flow = _flow_classes_from_groups(groups)
+        if len(flow) >= 3:
+            chain = " -> ".join(f"`{c}`" for c in flow[:4])
+            sentences.append(f"Operationally, request handling moves across a chain such as {chain}, which separates entry orchestration from delivery-specific behavior.")
     elif intent == "config_store":
         abs_label = _render_class_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
         abs_ref = abs_label or f"`{anchor}`"
@@ -487,6 +510,10 @@ def _unified_paragraphs(
             sentences.append(
                 f"Concrete implementations such as {concrete} handle domain-specific retrieval, validation, and update behavior."
             )
+        flow = _flow_classes_from_groups(groups)
+        if len(flow) >= 3:
+            chain = " -> ".join(f"`{c}`" for c in flow[:4])
+            sentences.append(f"In practice, store access flows through layers like {chain}, so callers remain decoupled from backend-specific retrieval details.")
     elif intent == "alert_flow":
         parts = _render_list(handlers or collaborators, limit=4, drop=anchor)
         anchor_bit = f"`{anchor}`" if anchor else "the entry components in evidence"
@@ -514,6 +541,10 @@ def _unified_paragraphs(
                 bits.append(f"Concrete REST handlers extend {mid} for shared routing and lifecycle behavior.")
             if end:
                 bits.append(f"Representative implementation classes in this snapshot include {end}.")
+            flow = _flow_classes_from_groups(groups)
+            if len(flow) >= 3:
+                chain = " -> ".join(f"`{c}`" for c in flow[:4])
+                bits.append(f"A typical request path follows {chain}, moving from server entry to shared API layer and then to concrete handlers.")
             if bits:
                 sentences.append(" ".join(bits))
             else:
