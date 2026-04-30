@@ -173,6 +173,16 @@ def _render_list(items: List[str], limit: int = 3, *, drop: Optional[str] = None
     return ", ".join(shown[:-1]) + f", and {shown[-1]}"
 
 
+def _render_class_list(items: List[str], limit: int = 3, *, drop: Optional[str] = None) -> str:
+    classes: List[str] = []
+    for raw in items:
+        c = _class_from_component_label(str(raw))
+        if c:
+            classes.append(c)
+    drop_cls = _class_from_component_label(drop or "")
+    return _render_list(classes, limit=limit, drop=drop_cls or None)
+
+
 def _routine_coverage_only(gaps: List[str]) -> bool:
     if not gaps:
         return False
@@ -448,33 +458,34 @@ def _unified_paragraphs(
     # 2–3 direct sentences: active voice, no pasted flow_steps (avoids G# / diagnostic traces).
     sentences: List[str] = []
     if intent == "mail":
+        anchor_cls = _class_from_component_label(anchor) or "MailServerConfiguration"
         sentences.append(
-            f"Mail server configuration is anchored at `{anchor}`, which participates in the update lifecycle before changes persist."
+            f"Mail server configuration is handled by `{anchor_cls}`, with lifecycle hooks coordinating validation before settings are persisted."
         )
-        follow = _render_list(stores or collaborators or handlers, limit=3, drop=anchor)
+        follow = _render_class_list(stores or collaborators or handlers, limit=3, drop=anchor)
         if follow:
             sentences.append(
-                f"It coordinates with {follow} for validation, transport settings, and persistence."
+                f"It works with {follow} for transport settings, validation, and persistence boundaries."
             )
     elif intent == "notification":
-        owners = _render_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
+        owners = _render_class_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
         head = owners or "`NotificationEngine`"
-        collab = _render_list(collaborators or stores, limit=4, drop=anchor)
+        collab = _render_class_list(collaborators or stores, limit=4, drop=anchor)
         sentences.append(
-            f"Notification handling centers on {head}, which owns startup and dispatch for notification-related work."
+            f"Notification handling centers on {head}, coordinating dispatch across notification-related components."
         )
         if collab:
-            sentences.append(f"It works alongside {collab} for configuration, discovery, and supporting services.")
+            sentences.append(f"Key collaborators include {collab} for routing, configuration, and supporting services.")
     elif intent == "config_store":
-        abs_label = _render_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
+        abs_label = _render_class_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
         abs_ref = abs_label or f"`{anchor}`"
         sentences.append(
-            f"Config stores are organized around {abs_ref}, which provides shared access and lookup for configuration data."
+            f"Config stores are organized around {abs_ref}, which provides the shared store contract for configuration reads and writes."
         )
-        concrete = _render_list(stores or collaborators, limit=3, drop=anchor)
+        concrete = _render_class_list(stores or collaborators, limit=3, drop=anchor)
         if concrete:
             sentences.append(
-                f"Concrete components such as {concrete} handle domain-specific reads, validation, and updates."
+                f"Concrete implementations such as {concrete} handle domain-specific retrieval, validation, and update behavior."
             )
     elif intent == "alert_flow":
         parts = _render_list(handlers or collaborators, limit=4, drop=anchor)
@@ -489,14 +500,14 @@ def _unified_paragraphs(
             )
     else:
         if _is_api_layer_architecture_query(ql):
-            ep = _render_list(groups.get("entrypoints", []), limit=1, drop=None)
-            mid = _render_list(abstractions, limit=2, drop=anchor)
-            end = _render_list(handlers or collaborators or stores, limit=4, drop=anchor)
+            ep = _render_class_list(groups.get("entrypoints", []), limit=1, drop=None)
+            mid = _render_class_list(abstractions, limit=2, drop=anchor)
+            end = _render_class_list(handlers or collaborators or stores, limit=4, drop=anchor)
             bits: List[str] = []
             if ep:
                 bits.append(f"{ep} is the HTTP/API entry; it wires the server and routes requests to handlers.")
             elif anchor:
-                bits.append(f"`{anchor}` is the strongest resolved API entry anchor in this snapshot.")
+                bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest resolved API entry anchor in this snapshot.")
             else:
                 bits.append("The API entrypoint is not clearly resolved in this snapshot.")
             if mid:

@@ -43,7 +43,7 @@ def test_articulated_answer_unified_contract_default():
     assert out is not None
     assert out.get("schema_version") == "articulated_answer.v0"
     text = "\n".join(out.get("paragraphs") or [])
-    assert "APIServer.start" in text
+    assert "APIServer" in text
     assert "AbstractAPI" in text
     assert "AlarmAPI" in text or "ObjectConfigStore" in text
     assert "not fully visible in this snapshot" in text.lower()
