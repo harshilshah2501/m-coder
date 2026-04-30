@@ -500,10 +500,10 @@ def render_reasoning_context_for_prompt(reasoning_context: Dict[str, Any]) -> st
         for i, step in enumerate(flow_steps[:3], start=1):
             lines.append(f"  {i}. {step}")
 
-    # --- Graph paths (first 2 raw, if available) ---
+    # --- Structural paths (first 2 raw, if available); avoid "Graph path" phrasing models echo to users ---
     if graph_paths:
         lines.append("")
-        lines.append("Graph paths (deterministic):")
+        lines.append("Structural call paths:")
         for p in graph_paths[:2]:
             if not isinstance(p, dict):
                 continue
@@ -523,10 +523,10 @@ def render_reasoning_context_for_prompt(reasoning_context: Dict[str, Any]) -> st
             role_tag = f" [{bucket}]" if bucket and bucket not in ("collaborator", "") else ""
             lines.append(f"  {cid}: {path}{span}{role_tag}")
 
-    # --- Confidence limits ---
+    # --- Coverage gaps (for narrator; not echoed verbatim to end users) ---
     if gaps:
         lines.append("")
-        lines.append("Confidence limits:")
+        lines.append("Coverage notes:")
         for gap in gaps:
             lines.append(f"  - {gap}")
 
@@ -534,7 +534,7 @@ def render_reasoning_context_for_prompt(reasoning_context: Dict[str, Any]) -> st
     lines.append(
         "Grounding rule: use only the nodes and evidence listed above. "
         "Reference source paths when you cite a component. "
-        "End with confidence limits if coverage is partial."
+        "If coverage is partial, mention it briefly in plain language without diagnostic labels."
     )
     return "\n".join(lines)
 

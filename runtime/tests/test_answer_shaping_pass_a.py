@@ -143,7 +143,7 @@ def test_graph_explain_composer_avoids_single_anchor_collapse():
     )
     assert "entrypoint flow" in shaped["answer_1"].lower()
     assert "base abstraction" in shaped["answer_1"].lower()
-    assert "This interpretation is based on current evidence and partial graph coverage" in shaped["answer_1"]
+    assert "This summary follows the code" in shaped["answer_1"]
     assert shaped["answer_1"] != "Based on deterministic graph evidence, flow: `APIServer.start`."
 
 
@@ -213,7 +213,7 @@ def test_graph_explain_shallow_avoids_diagnostic_leakage():
     low = shaped["answer_1"].lower()
     assert "reasoning is shallow" not in low
     assert "partial graph evidence" not in low
-    assert "this interpretation is based on current evidence and partial graph coverage." in low
+    assert "this summary follows the code and structure shown for this request" in low
     assert "apiserver.start" in low
 
 

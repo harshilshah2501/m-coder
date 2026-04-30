@@ -10,6 +10,20 @@ _OWNER_RE = re.compile(
 )
 
 
+# User-facing default prose: no diagnostic graph/debug phrasing (see docs/guides/BACKLOG_NARRATION_CIG_HOSTING.md).
+_HUMAN_CONFIDENCE_LINE = "This summary follows the code and structure shown for this request."
+
+
+def _human_confidence_one_sentence(coverage_gaps: list[str] | None) -> str:
+    """Single closing sentence (confidence or limitation)—max one such sentence in composed answers."""
+    gaps = [str(g).strip().rstrip(".") for g in (coverage_gaps or []) if str(g).strip()]
+    if not gaps:
+        return _HUMAN_CONFIDENCE_LINE
+    if len(gaps) == 1:
+        return f"Note: {gaps[0]}."
+    return f"Note: {gaps[0]}; other details may be only partly visible in this run."
+
+
 def _norm_query(q: str) -> str:
     return (q or "").strip().lower()
 
@@ -216,10 +230,7 @@ def _compose_with_reasoning_context(query: str, resp: dict[str, Any]) -> dict[st
         if chain_claim:
             body += ". " + chain_claim
 
-        if coverage_gaps:
-            body += ". Confidence: " + "; ".join(str(g) for g in coverage_gaps[:2])
-        else:
-            body += ". This interpretation is based on current evidence and partial graph coverage."
+        body += ". " + _human_confidence_one_sentence([str(g) for g in coverage_gaps])
 
         body = _uncertain_if_uncited(body, allow_grounded_anchor=owner_is_grounded)
         return {"answer_1": body, "next_step": "", "answer_shape": "explain"}
@@ -424,8 +435,17 @@ def _narrative_explain(
             ("Collaborators include " + collab_text) if collab_text else "Collaborator resolution is currently sparse"
         ) + (f", with supporting path {store_line}." if store_line else ".")
 
-    confidence = f"This interpretation is based on current evidence and partial graph coverage ({limit_line})."
-    return first + " " + second + "\n" + confidence
+    low_lim = (limit_line or "").lower()
+    if "coherent" in low_lim and "incomplete" not in low_lim and "sparse" not in low_lim:
+        closing = _HUMAN_CONFIDENCE_LINE
+    elif (limit_line or "").strip():
+        trimmed = (limit_line or "").strip()
+        if len(trimmed) > 160:
+            trimmed = trimmed[:157] + "..."
+        closing = f"This summary follows the code shown; {trimmed}."
+    else:
+        closing = _HUMAN_CONFIDENCE_LINE
+    return first + " " + second + " " + closing
 
 
 def _select_anchor_for_explain(flow_paths: list[str], owner: dict[str, str], owners: list[str]) -> str:
@@ -476,7 +496,7 @@ def _bounded_inference_explain(
         body = (
             f"The system appears to route through anchor `{anchor}` ({role}) with collaborators such as {collab_line}."
         )
-    return body + "\n" + "This interpretation is based on current evidence and partial graph coverage."
+    return body + " " + _HUMAN_CONFIDENCE_LINE
 
 
 def _select_paths(paths: list[str], owners: list[str], collaborators: list[str], limit: int = 3) -> list[str]:

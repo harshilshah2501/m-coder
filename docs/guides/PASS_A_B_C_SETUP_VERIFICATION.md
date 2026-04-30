@@ -301,7 +301,7 @@ Acceptance bar:
 - Default renderer follows unified C-style constraints: 2-4 concise sentences, flow-oriented explanation; a confidence-limit sentence appears for non-routine `coverage_gaps` or weaker evidence (routine snapshot-only gaps from `reasoning_context` do not append the chain disclaimer)
 - C-style unified rendering is the default when `MCODER_LEGACY_ASK_RENDERER` is unset
 - If fewer than 2 grounded components are available, output is minimal and truthful (no forced/fake flow)
-- CLI may print a read-only narrative block `--- explanation (read-only, evidence-bounded) ---` before legacy fallback lines
+- CLI verbose mode may print `--- explanation (read-only) ---` before narrative paragraphs; default mode uses the `Explanation` heading
 - Fallback `answer_1` / `next_step` output remains valid when narrative block is absent
 - A graph-cache note may appear when Plan-Gate reports missing code-intelligence artifacts
 

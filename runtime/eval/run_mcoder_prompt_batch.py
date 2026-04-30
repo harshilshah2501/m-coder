@@ -62,7 +62,8 @@ def run_query(mcoder_bin: Path, cwd: Path, query: str, timeout_sec: int) -> dict
 	lower = answer_text.lower()
 	has_reasoning_context = bool(((data or {}).get("metadata") or {}).get("reasoning_context"))
 	has_owner_anchor = "primary implementation owner" in lower or "primary owner" in lower
-	has_confidence_limit = "confidence" in lower or "partial graph coverage" in lower
+	# Human-facing scope line: limitation "Note:" or standard closing (replaces old "partial graph" phrasing)
+	has_confidence_limit = "note:" in lower or "this summary follows the code" in lower
 
 	return {
 		"query": query,

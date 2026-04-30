@@ -467,7 +467,7 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
                 paras = art.get("paragraphs")
                 if isinstance(paras, list) and paras:
                     printed_articulated = True
-                    hdr = "Explanation" if not cfg.verbose else "--- explanation (read-only, evidence-bounded) ---"
+                    hdr = "Explanation" if not cfg.verbose else "--- explanation (read-only) ---"
                     print(hdr)
                     for p in paras:
                         p = str(p).strip()

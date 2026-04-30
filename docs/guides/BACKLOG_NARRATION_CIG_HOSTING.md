@@ -13,7 +13,11 @@
 
 ---
 
-## P1 — Evidence breadth (feeds better narration)
+## P1 — Evidence breadth (**conditional** — only if P0 proves thin/wrong bundles)
+
+Do **not** start P1 unless P0 shows the **`evidence_bundle` is actually thin or wrong** for representative prompts. If `reasoning_context` is rich but prose still feels bad, prioritize **P2/P3** first.
+
+When triggered:
 
 - Tune Context Layer retrieval for **explain / architecture / how** intents: `top_k`, fusion, and intent so bundles include **multiple files** and **method-level** snippets, not a single anchor class list.
 - Add or tighten **intent-specific retrieval policy** (Layer-5 fusion / quality gate) where “explain” queries need broader neighborhood than “lookup symbol.”
@@ -28,10 +32,11 @@
 
 ---
 
-## P3 — Deterministic narration polish (when vLLM is off or fails)
+## P3 — Deterministic narration polish (when vLLM is off or fails) — **primary path with P2**
 
-- **`articulated_answer` / `answer_shaping`:** Continue separating **plan vs structural vs explain vs list**; reduce blanket hedging when evidence quality is **STRONG** and gaps are routine.
+- **`articulated_answer` / `answer_shaping`:** Continue separating **plan vs structural vs explain vs list**; **at most one** short confidence/limitation sentence in user-facing output.
 - **`next_step`:** Phrase as actionable colleague hints, not internal scaffolding.
+- **Banned in default user prose** (keep in JSON/debug only): `Flow evidence indicates`, `receives or initiates processing`, `Graph path`, `partial graph`, `evidence-bounded`, and similar diagnostic labelling.
 
 ---
 
@@ -39,6 +44,7 @@
 
 - Add **subjective or LLM-judge rubrics** (directness, structure, non-redundancy, actionable next step)—not only `ok` / `owner_anchor` flags.
 - Keep a small **golden prompt set** for regression on narration regressions.
+- **Target bar:** fluent, direct answer; **no** banned graph/debug wording in human-visible lines; **one** confidence/limitation sentence max.
 
 ---
 
@@ -82,17 +88,21 @@
 
 ---
 
-## Suggested execution order
+## Suggested execution order (tightened)
 
-1. P0 audit → P1 evidence → P2 governed vLLM + P3 deterministic in parallel where teams split.
-2. P4 eval alongside any narration change.
-3. **P6 CIG viewer** can proceed **in parallel** with P1–P3 (different surface; shared artifact path discipline).
-4. P5 only if P0 proves retrieval is the gap.
+1. **P0** — confirm `ask_narration_source` and fallback reason; capture one full Ask JSON.
+2. **P2** — governed vLLM narrator contract (fluent, direct, evidence-bounded).
+3. **P3** — deterministic fallback tone and banned-phrase cleanup.
+4. **P4** — golden prompts + rubric (include acceptance bar above).
+5. **P1** — **only if** P0 proves the evidence bundle is thin or wrong (not the default if `reasoning_context` is already present).
+6. **P6 CIG viewer** — **parallel only**; does not block narration work.
+7. **P5** — only if P1 trigger fires and embeddings are the next lever.
 
 ---
 
 ## References
 
+- P0 one-shot audit: [P0_ASK_NARRATION_AUDIT.md](P0_ASK_NARRATION_AUDIT.md)
 - CIG artifacts: `runtime/layer5/graph/storage.py`, `runtime/scripts/build_code_intelligence_graph.py`
 - Ask graph payload: `runtime/ask_service/graph_traversal_payload.py`
 - Articulated Ask: `runtime/ask_service/articulated_answer.py`, `runtime/ask_service/bounded_ask_narrator.py`
