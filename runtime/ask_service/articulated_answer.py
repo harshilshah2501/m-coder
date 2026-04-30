@@ -554,14 +554,14 @@ def _unified_paragraphs(
     if intent == "mail":
         anchor_cls = _class_from_component_label(anchor) or "MailServerConfiguration"
         sentences.append(
-            f"`{anchor_cls}` ({_role_label(anchor_cls)}) owns mail configuration lifecycle concerns, including validation boundaries before persistence."
+            f"`{anchor_cls}` handles validation and persistence before mail settings are applied."
         )
         follow = _render_class_list(stores or collaborators or handlers, limit=4, drop=anchor)
         if follow:
             sentences.append(
-                f"Related classes such as {follow} contribute supporting concerns (transport/event bridge/store interaction), rather than a strict execution pipeline."
+                f"It works with {follow} for transport, event bridging, and store updates."
             )
-        sentences.append("Without this separation, configuration hooks and side-effect handling would be tightly coupled and harder to validate safely.")
+        sentences.append("This keeps update hooks separate from delivery-side behavior.")
     elif intent == "notification":
         owners = _render_class_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
         head = owners or "`NotificationEngine`"
@@ -569,24 +569,22 @@ def _unified_paragraphs(
             query=query, reasoning_context=reasoning_context, groups=groups, limit=4
         )
         collab = _render_list(pclasses, limit=4, drop=_class_from_component_label(anchor))
-        sentences.append(
-            f"Notification behavior centers on {head}, which acts as orchestration responsibility rather than a linear processing chain."
-        )
+        sentences.append(f"Notification flow is coordinated by {head}.")
         if collab:
-            sentences.append(f"Key collaborators include {collab}, each covering channel delivery, trigger bridging, or configuration support.")
-        sentences.append("This hub-and-spoke separation prevents channel-specific logic from leaking into core dispatch behavior.")
+            sentences.append(f"Channel and trigger concerns are handled by {collab}.")
+        sentences.append("Delivery logic stays separate from orchestration.")
     elif intent == "config_store":
         abs_label = _render_class_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
         abs_ref = abs_label or f"`{anchor}`"
         sentences.append(
-            f"Config stores are structured around {abs_ref} as the shared abstraction boundary for configuration reads/writes."
+            f"Config stores are built around {abs_ref}, which defines the shared read/write contract."
         )
         concrete = _render_class_list(stores or collaborators, limit=3, drop=anchor)
         if concrete:
             sentences.append(
-                f"Concrete classes such as {concrete} implement domain-specific retrieval/update concerns under that abstraction."
+                f"{concrete} implement domain-specific retrieval and update behavior."
             )
-        sentences.append("That separation keeps callers decoupled from backend-specific storage details and reduces blast radius during store-level changes.")
+        sentences.append("Callers stay decoupled from backend-specific storage details.")
     elif intent == "alert_flow":
         parts = _render_list(handlers or collaborators, limit=4, drop=anchor)
         anchor_bit = f"`{anchor}`" if anchor else "the entry components in evidence"
@@ -605,20 +603,19 @@ def _unified_paragraphs(
             end = _render_class_list(handlers or collaborators or stores, limit=4, drop=anchor)
             bits: List[str] = []
             if ep:
-                bits.append(f"{ep} is the HTTP/API entrypoint, responsible for ingress and routing.")
+                bits.append(f"{ep} is the HTTP entrypoint and receives incoming requests.")
             elif anchor:
-                bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest resolved entrypoint signal in this snapshot.")
+                bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest entrypoint signal in this snapshot.")
             else:
                 bits.append("The API entrypoint is not clearly resolved in this snapshot.")
             if mid:
-                bits.append(f"{mid} provides shared API lifecycle abstractions that concrete handlers build on.")
+                bits.append(f"{mid} provides shared API lifecycle hooks used by concrete handlers.")
             if end:
-                bits.append(f"Domain-side components visible in this snapshot include {end}, which sit behind the API ingress layer.")
+                bits.append(f"Behind ingress, domain logic is handled by {end}.")
             tops = _top_classes(groups.get("entrypoints", []) + abstractions + handlers + stores + collaborators, limit=4)
             if tops:
-                role_map = ", ".join(f"`{c}` ({_role_label(c)})" for c in tops[:4])
-                bits.append(f"Role split in current evidence: {role_map}.")
-            bits.append("The exact route-to-handler mapping is not directly confirmed in this snapshot; roles above are grounded, sequencing beyond ingress is bounded.")
+                bits.append(f"Main components in evidence: {', '.join(f'`{c}`' for c in tops[:4])}.")
+            bits.append("Exact route-to-handler wiring is not directly confirmed in this snapshot.")
             if bits:
                 sentences.append(" ".join(bits))
             else:

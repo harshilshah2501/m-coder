@@ -165,7 +165,7 @@ def test_notification_discovery_with_email_sms_uses_notification_template():
     )
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
-    assert "Notification behavior centers on" in text
+    assert "Notification flow is coordinated by" in text
     assert "Mail server configuration is anchored" not in text
 
 

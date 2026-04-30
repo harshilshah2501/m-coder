@@ -510,8 +510,8 @@ def _run_ask_like(
                 paras = art.get("paragraphs")
                 if isinstance(paras, list) and paras:
                     printed_articulated = True
-                    hdr = "Explanation" if not cfg.verbose else "--- explanation (read-only) ---"
-                    print(hdr)
+                    if cfg.verbose:
+                        print("--- explanation (read-only) ---")
                     for p in paras:
                         p = str(p).strip()
                         if p:
@@ -524,8 +524,11 @@ def _run_ask_like(
                             print(f"  - {b}")
                     el = art.get("evidence_limit")
                     if isinstance(el, str) and el.strip():
-                        label = "Scope" if not cfg.verbose else "evidence_limit"
-                        print(f"{label}: {el.strip()}")
+                        # Keep concise mode natural: only show limit text when not strong.
+                        if cfg.verbose:
+                            print(f"evidence_limit: {el.strip()}")
+                        elif "This answer stays within" not in el:
+                            print(f"Limit: {el.strip()}")
             shaped = shape_prompt_summary(query, resp)
             answer_1 = str(shaped.get("answer_1") or "").strip()
             next_step = str(shaped.get("next_step") or "").strip()
