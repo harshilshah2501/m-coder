@@ -192,10 +192,15 @@ def _should_append_chain_disclaimer(evidence_quality: str, gaps: List[str]) -> b
 
 def _query_intent(query: str) -> str:
     q = str(query or "").strip().lower()
-    if "mail" in q:
-        return "mail"
-    if "notification" in q and any(k in q for k in ("find", "list", "class", "classes", "handle")):
+    # Discovery-style notification queries often include "email"/"sms";
+    # classify these before "mail" to avoid forcing the mail-config template.
+    if (
+        any(k in q for k in ("notification", "email", "sms"))
+        and any(k in q for k in ("find", "list", "class", "classes", "handle", "involved"))
+    ):
         return "notification"
+    if re.search(r"\bmail\b", q):
+        return "mail"
     if "config store" in q or "config stores" in q:
         return "config_store"
     if "alert" in q and any(k in q for k in ("enrichment", "correlation", "ingest", "pipeline")):
@@ -416,6 +421,11 @@ def _unified_paragraphs(
                 f"In this snapshot, the strongest grounded abstraction is `{abs_first}`. "
                 f"Use source `extends` / `implements` edges to confirm which concrete classes tie back to it."
             ]
+        if class_q:
+            return [
+                "Could not resolve a grounded inheritance chain for this API base-class question in the current snapshot. "
+                "Run Explain/Debug with a concrete `*API` file selected, or narrow the Ask to a known API class symbol."
+            ]
 
     if len(all_components) < 2:
         base = (
@@ -485,6 +495,10 @@ def _unified_paragraphs(
             bits: List[str] = []
             if ep:
                 bits.append(f"{ep} is the HTTP/API entry; it wires the server and routes requests to handlers.")
+            elif anchor:
+                bits.append(f"`{anchor}` is the strongest resolved API entry anchor in this snapshot.")
+            else:
+                bits.append("The API entrypoint is not clearly resolved in this snapshot.")
             if mid:
                 bits.append(f"Concrete REST handlers extend {mid} for shared routing and lifecycle behavior.")
             if end:
