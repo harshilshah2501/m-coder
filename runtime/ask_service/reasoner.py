@@ -205,7 +205,7 @@ def _build_prompt(
     lines.append("- Do not invent symbols, methods, files, or stack behavior not present in provided context.")
     lines.append("- If selected-file grounding is weak or missing, explicitly say analysis is insufficiently grounded.")
     lines.append("- Prefer concrete control-flow and method-level clues over generic advice.")
-    lines.append("- If you cannot cite at least one concrete method or branch clue from the selected file, state `insufficient_for_precise_trace` in confidence_limits.")
+    lines.append("- If method/branch clues are weak, describe that limit in plain natural language in confidence_limits.")
     lines.append("- Keep confidence limits explicit; avoid definitive root-cause claims without evidence.")
     lines.append("")
     lines.append(
@@ -406,11 +406,41 @@ def _sanitize_forbidden_generic_phrases(text: str) -> str:
         r"\bwithout more context\b": "with current selected-file evidence limits",
         r"\bspeculative risks\b": "preliminary risks from available anchors",
         r"\bnot directly visible\b": "not present in the current selected-file snippet window",
+        r"\bpotential issue\b": "observed risk signal",
+        r"\bmight stem from\b": "can be validated by",
+        r"\bcould be\b": "is likely tied to",
     }
     out = s
     for pat, repl in replacements.items():
         out = re.sub(pat, repl, out, flags=re.IGNORECASE)
     return out
+
+
+def _sanitize_debug_payload_text(text: str) -> str:
+    s = _sanitize_forbidden_generic_phrases(str(text or ""))
+    if "(Governance curation:" in s:
+        s = s.split("(Governance curation:", 1)[0]
+    s = s.replace("insufficient_for_precise_trace", "")
+    return " ".join(s.split()).strip()
+
+
+def _looks_speculative(text: str) -> bool:
+    t = f" {str(text or '').lower()} "
+    return any(
+        tok in t
+        for tok in (
+            " might ",
+            " could ",
+            " may ",
+            " potential ",
+            " possibly ",
+            " likely due to",
+            " might stem from",
+            " could be",
+            " is likely tied to ",
+            " observed risk signal ",
+        )
+    )
 
 
 def _debug_control_flow_marker_count(text: str) -> int:
@@ -620,9 +650,30 @@ def _ensure_selected_grounding(
         )
 
     # Final safety net: ensure banned generic phrases do not leak in any explain field.
-    summary = _sanitize_forbidden_generic_phrases(summary).strip()
-    logic_flow = _sanitize_forbidden_generic_phrases(logic_flow).strip()
-    likely = _sanitize_forbidden_generic_phrases(likely).strip()
+    summary = _sanitize_debug_payload_text(summary)
+    logic_flow = _sanitize_debug_payload_text(logic_flow)
+    likely = _sanitize_debug_payload_text(likely)
+    confidence = _sanitize_debug_payload_text(confidence)
+
+    # For narrow snippets, prevent causal narration that is not directly visible.
+    if minimal_sel and (not methods or not branches):
+        if _looks_speculative(summary):
+            summary = (
+                f"The selected snippet in `{sel_base}` is narrow and does not by itself prove the full failure path."
+            )
+        if _looks_speculative(likely):
+            likely = (
+                "Unknown based on provided evidence. The selected snippet does not yet prove a concrete root-cause branch."
+            )
+        if "mail" in str(query or "").lower():
+            ll = likely.lower()
+            if ("save" in ll or "persist" in ll or "update" in ll) and not any(
+                m.lower() in {"updatestore", "save", "persist"} for m in methods
+            ):
+                likely = (
+                    "The selected snippet does not yet prove a persistence/write failure; "
+                    "verify the concrete update method body before asserting that cause."
+                )
 
     # For executable-looking selected files, avoid purely linear narration.
     # Inject explicit branch/failure wording so debug depth checks see at least
@@ -636,8 +687,8 @@ def _ensure_selected_grounding(
         likely = (likely + " " if likely else "") + (
             "Primary risk is an early-return/exception branch skipping dispatch when validation conditions fail."
         )
-        logic_flow = _sanitize_forbidden_generic_phrases(logic_flow).strip()
-        likely = _sanitize_forbidden_generic_phrases(likely).strip()
+        logic_flow = _sanitize_debug_payload_text(logic_flow)
+        likely = _sanitize_debug_payload_text(likely)
 
     return ExplainDebugResult(
         summary=summary,

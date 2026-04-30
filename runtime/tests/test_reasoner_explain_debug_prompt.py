@@ -386,3 +386,85 @@ def test_ensure_selected_grounding_api_route_debug_dominates_main_body():
     assert "apiRouter" in text
     assert "APIRouter.init" in text
     assert "AbstractAPI.init" in text
+
+
+def test_narrow_availability_snippet_does_not_overclaim_causality():
+    b = ContextBundle(
+        task_id="t8",
+        revision="r8",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+                content="runningProbes.put(name, new HashSet<>());",
+                byte_size=80,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(
+        summary="This might be related to enrichment being skipped.",
+        logic_flow="",
+        likely_bug_risk="Potential issue could be missing branch checks.",
+        evidence=[],
+    )
+    out = _ensure_selected_grounding(
+        parsed,
+        query="Debug why availability correlation might skip enrichment branches.",
+        selected_file="motadata/src/main/java/com/mindarray/aiops/AvailabilityCorrelationEngine.java",
+        selection="runningProbes.put(...)",
+        bundle=b,
+    )
+    text = f"{out.summary} {out.likely_bug_risk}".lower()
+    assert "might" not in text
+    assert "could be" not in text
+    assert "unknown based on provided evidence" in (out.likely_bug_risk or "").lower()
+    assert "narrow" in (out.confidence_limits or "").lower()
+
+
+def test_mail_debug_does_not_claim_save_failure_without_write_evidence():
+    b = ContextBundle(
+        task_id="t9",
+        revision="r9",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+                content="JsonObject item = store.getItem(id); if (item != null) { return; }",
+                byte_size=120,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(
+        summary="Mail settings might not persist correctly.",
+        logic_flow="",
+        likely_bug_risk="Updates may fail to save to store after API call.",
+        evidence=[],
+    )
+    out = _ensure_selected_grounding(
+        parsed,
+        query="Debug why mail server updates are not reflected after API update.",
+        selected_file="motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
+        selection="store.getItem(id)",
+        bundle=b,
+    )
+    ll = (out.likely_bug_risk or "").lower()
+    assert (
+        "does not yet prove a persistence/write failure" in ll
+        or "unknown based on provided evidence" in ll
+    )

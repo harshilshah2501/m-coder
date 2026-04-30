@@ -407,7 +407,8 @@ def test_handle_ask_v1_curates_generic_debug_narration():
     assert md.get("debug_narration_quality") == "CURATED"
     assert "DEBUG_NARRATION_CURATED" in (md.get("quality_reasons") or [])
     assert md.get("debug_narration_issues")
-    assert "Governance curation:" in str(ed.get("summary") or "")
+    assert "Governance curation:" not in str(ed.get("summary") or "")
+    assert "insufficient_for_precise_trace" not in json.dumps(ed)
     assert ed.get("evidence")
 
 
