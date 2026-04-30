@@ -108,18 +108,11 @@ def apply_debug_narration_gate(
     quality = "STRONG"
     if issues:
         quality = "CURATED"
-        method_part = f" methods={', '.join(methods)};" if methods else " methods=not_visible;"
-        branch_part = " branch_signals=visible;" if branchy else " branch_signals=limited;"
-        original_summary = summary
-        if not original_summary:
-            original_summary = (
+        if not summary:
+            summary = (
                 "Selected snippet has limited direct trace context; grounding requires method/body and branch anchors "
                 "from selected file evidence."
             )
-        summary = (
-            f"{original_summary} "
-            f"(Governance curation: `{sf_base or selected_file}`;{method_part}{branch_part} grounded to selected-file evidence.)"
-        )
         if not logic:
             logic = "Trace selected-file control flow around anchor methods and verify conditional/early-return paths."
         if not likely:

@@ -302,6 +302,8 @@ def _load_eventbus_topology_context(query: str) -> Dict[str, Any]:
     unknown_focus = _is_unknown_focused_query(query)
     q = str(query or "").lower()
     include_websocket = ("websocket" in q) or ("streaming" in q)
+    notification_focus = "notification" in q
+    publish_consume_focus = any(t in q for t in ("publish", "consume", "producer", "consumer"))
 
     edges = [e for e in _as_list(payload.get("edges")) if isinstance(e, dict)]
     if not edges:
@@ -320,6 +322,27 @@ def _load_eventbus_topology_context(query: str) -> Dict[str, Any]:
             continue
 
     address_scores: Dict[str, int] = {}
+    exact_pair_addrs: set[str] = set()
+    pub_addrs: set[str] = set()
+    con_addrs: set[str] = set()
+    preferred_classes = {
+        "notificationengine",
+        "localeventchangenotificationhandler",
+        "remoteeventchangenotificationhandler",
+        "notification",
+        "emailnotification",
+        "smsnotification",
+    }
+    for e in filtered_edges:
+        addr = str(e.get("address") or "").strip()
+        et = str(e.get("edge_type") or "")
+        if not addr:
+            continue
+        if et == "PUBLISHES_TO_ADDRESS":
+            pub_addrs.add(addr)
+        elif et == "CONSUMES_FROM_ADDRESS":
+            con_addrs.add(addr)
+    exact_pair_addrs = pub_addrs & con_addrs
     for e in filtered_edges:
         addr = str(e.get("address") or "").strip()
         if not addr:
@@ -329,6 +352,14 @@ def _load_eventbus_topology_context(query: str) -> Dict[str, Any]:
             score += 3
         if any(tok in addr.lower() for tok in q.split()):
             score += 1
+        ev = _as_dict(e.get("evidence"))
+        cls = str(ev.get("class") or "").strip().lower()
+        if notification_focus and "notification" in addr.lower():
+            score += 4
+        if notification_focus and cls in preferred_classes:
+            score += 2
+        if publish_consume_focus and addr in exact_pair_addrs:
+            score += 5
         address_scores[addr] = address_scores.get(addr, 0) + score
     top_addresses = [a for a, _ in sorted(address_scores.items(), key=lambda kv: (-kv[1], kv[0]))[:3]]
     if not top_addresses:

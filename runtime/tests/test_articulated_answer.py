@@ -272,6 +272,32 @@ def test_structural_api_base_without_chain_does_not_fall_back_to_generic_api_tem
     assert "The API layer starts at" not in text
 
 
+def test_structural_api_base_uses_route_mapping_extends_abstractapi():
+    meta = {
+        "evidence_quality": "WEAK",
+        "reasoning_context": {
+            "schema_version": "reasoning_context.d1",
+            "primary_owner": {"class": "APIServer", "method": "start", "file": "src/APIServer.java"},
+            "anchor_method": "APIServer.start",
+            "inheritance": {"chain": ["APIServer", "AbstractVerticle"], "citation": "G1"},
+            "typed_nodes": {"entrypoints": [], "abstractions": [], "handlers": [], "stores": [], "collaborators": []},
+            "coverage_gaps": ["No graph call-paths available; flow is inferred from class names only."],
+            "api_route_mapping": _api_route_mapping(),
+        },
+    }
+    out = build_articulated_answer(
+        query="Which class is the base class for concrete REST APIs in this codebase?",
+        plan_steps=[],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "AbstractAPI" in text
+    assert "Could not resolve a grounded inheritance chain" not in text
+
+
 def test_api_base_class_prefers_abstract_api_over_verticle_chain():
     """Graph often reports APIServer → AbstractVerticle; REST handlers still extend AbstractAPI."""
     meta = {

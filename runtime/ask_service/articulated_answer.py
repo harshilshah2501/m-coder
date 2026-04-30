@@ -342,6 +342,13 @@ def _find_abstract_api_in_context(groups: Dict[str, List[str]], reasoning_contex
                 continue
             if str(node.get("class") or "").strip() == "AbstractAPI":
                 return "AbstractAPI"
+    route_mapping = _as_dict(reasoning_context.get("api_route_mapping"))
+    if str(route_mapping.get("schema_version") or "") == "api_route_handler_mapping.v1":
+        for c in _as_list(route_mapping.get("api_classes")):
+            if not isinstance(c, dict):
+                continue
+            if str(c.get("extends") or "").strip() == "AbstractAPI":
+                return "AbstractAPI"
     return ""
 
 

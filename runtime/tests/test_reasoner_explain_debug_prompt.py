@@ -349,3 +349,40 @@ def test_ensure_selected_grounding_tightens_wording_when_executable():
     assert "executable grounding" in out.logic_flow.lower()
     assert any(tok in out.likely_bug_risk.lower() for tok in ("branch", "early-return", "exception"))
     assert "insufficient_for_precise_trace" not in out.confidence_limits.lower()
+
+
+def test_ensure_selected_grounding_api_route_debug_dominates_main_body():
+    b = ContextBundle(
+        task_id="t7",
+        revision="r7",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="motadata/src/main/java/com/mindarray/api/APIServer.java",
+                content="public class APIServer { public void start() {} }",
+                byte_size=120,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(summary="generic", logic_flow="", likely_bug_risk="", evidence=[])
+    out = _ensure_selected_grounding(
+        parsed,
+        query="Why might a newly registered API route not appear at runtime despite a successful start()?",
+        selected_file="motadata/src/main/java/com/mindarray/api/APIServer.java",
+        selection="start",
+        bundle=b,
+    )
+    text = f"{out.summary} {out.logic_flow} {out.likely_bug_risk}"
+    assert "APIServer.start" in text
+    assert "/api/v1/*" in text
+    assert "apiRouter" in text
+    assert "APIRouter.init" in text
+    assert "AbstractAPI.init" in text

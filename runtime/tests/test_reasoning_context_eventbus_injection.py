@@ -128,3 +128,53 @@ def test_caps_enforced_total_nodes(monkeypatch, tmp_path: Path):
     eb = out.get("eventbus_context") or {}
     n = len(eb.get("addresses", [])) + len(eb.get("producers", [])) + len(eb.get("consumers", []))
     assert n <= 10
+
+
+def test_notification_publish_consume_prefers_exact_pair(monkeypatch, tmp_path: Path):
+    p = tmp_path / "eventbus_topology_mapping.v1.json"
+    payload = {
+        "schema_version": "motadata_wiring_map.v1",
+        "map_type": "eventbus_topology",
+        "edges": [
+            {
+                "edge_type": "PUBLISHES_TO_ADDRESS",
+                "address": "notification.paired",
+                "address_kind": "runtime",
+                "confidence": "bounded",
+                "evidence": {"file": "N1.java", "class": "NotificationEngine", "method": "start", "line": 11},
+            },
+            {
+                "edge_type": "CONSUMES_FROM_ADDRESS",
+                "address": "notification.paired",
+                "address_kind": "runtime",
+                "confidence": "bounded",
+                "evidence": {
+                    "file": "N2.java",
+                    "class": "LocalEventChangeNotificationHandler",
+                    "method": "handle",
+                    "line": 12,
+                },
+            },
+            {
+                "edge_type": "PUBLISHES_TO_ADDRESS",
+                "address": "notification.unpaired",
+                "address_kind": "runtime",
+                "confidence": "bounded",
+                "evidence": {"file": "N3.java", "class": "NotificationEngine", "method": "emit", "line": 13},
+            },
+        ],
+        "unknowns": [],
+        "validation_summary": {},
+    }
+    p.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(rc_mod, "_EVENTBUS_TOPOLOGY_CACHE_FILE", p)
+    out = rc_mod.build_reasoning_context(
+        query="Which components publish or consume notification events?",
+        evidence_bundle={},
+        graph_traversal={},
+    )
+    eb = out.get("eventbus_context") or {}
+    addrs = {a.get("address") for a in eb.get("addresses", [])}
+    assert "notification.paired" in addrs
+    assert any(x.get("address") == "notification.paired" for x in eb.get("producers", []))
+    assert any(x.get("address") == "notification.paired" for x in eb.get("consumers", []))

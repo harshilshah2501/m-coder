@@ -157,6 +157,8 @@ def test_v0_explain_debug_success_returns_explain_debug(mock_urlopen: MagicMock,
     ed = response["explain_debug"]
     assert "error" not in ed
     assert "summary" in ed and isinstance(ed.get("summary"), str)
+    assert "Governance curation" not in json.dumps(ed)
+    assert "insufficient_for_precise_trace" not in json.dumps(ed)
     assert "main.py" in json.dumps(ed).lower() or "main" in json.dumps(ed).lower()
     assert isinstance(ed.get("evidence"), list) and len(ed.get("evidence")) >= 1
     assert response.get("evidence_first_meta") is None
@@ -195,8 +197,8 @@ def test_v0_explain_debug_transport_error_explicit_error_no_planner_explanation(
     assert not any("step" in s.lower() and "repository" in s.lower() for s in steps)
 
 
-def test_v0_explain_debug_blocked_does_not_invoke_reasoner(tmp_path: Path):
-    """Quality gate blocked → early return; explain_debug must not run."""
+def test_v0_explain_debug_blocked_still_invokes_reasoner_when_selected_anchor_present(tmp_path: Path):
+    """EXPLAIN_DEBUG keeps selected-file anchored path even when quality gate blocks generic ask."""
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
     (repo_root / "src").mkdir()
@@ -234,9 +236,9 @@ def test_v0_explain_debug_blocked_does_not_invoke_reasoner(tmp_path: Path):
                 }
             )
 
-    mock_ed.assert_not_called()
-    assert "explain_debug" not in response
-    assert response["plan_summary"]["steps"] == []
+    mock_ed.assert_called_once()
+    assert "explain_debug" in response
+    assert response.get("metadata", {}).get("grounding_block_overridden_by_explain_debug") is True
 
 
 # --- v1 Explain/Debug ---

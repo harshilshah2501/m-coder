@@ -366,6 +366,15 @@ def _extract_explicit_target_method(query: str, selected_file: str) -> str:
     return method
 
 
+def _is_api_route_debug_query(query: str, selected_file: str) -> bool:
+    q = str(query or "").lower()
+    sf = _norm_rel_path(selected_file).lower()
+    return (
+        any(t in q for t in ("route", "router", "apiserver", "runtime"))
+        and sf.endswith("/apiserver.java")
+    )
+
+
 def _selection_linked_clues(text: str, tokens: List[str], cap: int = 2) -> List[str]:
     if not text or not tokens:
         return []
@@ -515,6 +524,22 @@ def _ensure_selected_grounding(
         confidence = "The selected snippet is narrow, so the exact downstream branch is not fully proven."
         evidence = [f"{sel_norm}:analysis_anchor"]
 
+    if _is_api_route_debug_query(query, selected_file):
+        summary = (
+            "Route visibility should be verified at API wiring points: "
+            "`APIServer.start` server/router initialization, `/api/v1/*` mount into `apiRouter`, "
+            "`APIRouter.init` registration, and `AbstractAPI.init` CRUD template hooks."
+        )
+        likely = (
+            "Likely failure is route registration mismatch across those wiring points "
+            "(mount path, router binding, or CRUD hook registration)."
+        )
+        if not logic_flow:
+            logic_flow = (
+                "Trace `APIServer.start` route mounts and confirm `/api/v1/*` forwards into `apiRouter`, "
+                "then validate `APIRouter.init` and `AbstractAPI.init` registration surfaces."
+            )
+
     # Push concrete clues to avoid generic-only language.
     if methods and not any(m.lower() in joined for m in methods):
         logic_flow = (logic_flow + " " if logic_flow else "") + (
@@ -584,9 +609,8 @@ def _ensure_selected_grounding(
             "Bounded to provided evidence bundle; validate against full caller/callee chain before code changes."
         )
     if not methods and not branches and not explicit_method:
-        marker = "insufficient_for_precise_trace"
-        if marker not in confidence.lower():
-            confidence += f" {marker}: selected file evidence lacks concrete method/branch anchors in this context window."
+        if "exact downstream branch is not fully proven" not in confidence.lower():
+            confidence += " The selected snippet is narrow, so the exact downstream branch is not fully proven."
     if minimal_sel:
         confidence += " Selected highlight is minimal; conclusions rely on broader selected-file context."
     if executable_grounding and "insufficient_for_precise_trace" not in confidence.lower():
