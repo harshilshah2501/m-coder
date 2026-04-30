@@ -14,7 +14,7 @@
 
 ## Overview
 
-This is the **single** Motadata verification runbook: **setup** (topology, wheel, services), **contract / production** checks (`motadata_behavior_verify` + AIOps scenarios), **split WSL+GPU** procedures (Pass A/B/C, CIG sync, CLI), **developer utility** scenarios (Ask/Debug/Plan usefulness heuristics), and **batch reports** (`batch_run_developer_eval.py`). Same stack as `docs/ARCHITECTURE_4_LAYER.md`: Context Layer (Layer-5 evidence) → Plan-Gate (Layer-3).
+This is the **single** Motadata verification runbook: **setup** (topology, wheel, services), **CLI-first testing** (`mcoder prompt/debug/plan/scenario`), **contract / production checks** (`motadata_behavior_verify` + AIOps scenarios), **split WSL+GPU** procedures (Pass A/B/C, CIG sync), **developer utility** scenarios (Ask/Debug/Plan usefulness heuristics including complex tiers), and **batch reports** (`batch_run_developer_eval.py`). Same stack as `docs/ARCHITECTURE_4_LAYER.md`: Context Layer (Layer-5 evidence) → Plan-Gate (Layer-3).
 
 ---
 
@@ -334,6 +334,52 @@ mcoder prompt "How does mail server configuration work?"
 mcoder prompt "Find all classes that handle notifications."
 mcoder prompt "How are config stores organized?"
 ```
+
+### 5.3 CLI-first scenario runs (core + complex)
+
+Use CLI runs for fast operator validation before contract gates.
+
+**[WSL]**
+
+```bash
+# Core Ask set (20-scenario primer Ask coverage)
+mcoder prompt "Which class is the base class for all APIs?"
+mcoder prompt "How does mail server configuration work?"
+mcoder prompt "How are config stores organized?"
+mcoder prompt "Explain the API layer architecture."
+mcoder prompt "Find all classes that handle notifications."
+
+# Complex Ask set (developer utility extended tier)
+mcoder prompt "Which class is the base class for concrete REST APIs in this codebase?"
+mcoder prompt "Explain how HTTP requests enter the product through APIServer and reach concrete handler classes."
+mcoder prompt "List main classes involved in sending email or SMS notifications from the server."
+mcoder prompt "Plan a safe refactor for alert enrichment with rollback notes and validation checkpoints."
+```
+
+Debug and plan CLI checks for complex scenarios:
+
+```bash
+mcoder debug --file "motadata/src/main/java/com/mindarray/api/APIServer.java" \
+  --query "Why might a newly registered API route not appear at runtime despite a successful start()?"
+mcoder debug --file "motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java" \
+  --query "What conditions could cause mail delivery settings to appear stale after an admin update?"
+
+mcoder plan "Prepare a phased rollout for alert enrichment changes: feature flag, shadow mode, metrics, rollback procedure, and post-deploy validation."
+```
+
+If you maintain text scenario lists, use the built-in CLI scenario runner:
+
+```bash
+mcoder scenario --type ask --file path/to/ask_scenarios.txt
+mcoder scenario --type debug --file path/to/debug_scenarios.txt
+mcoder scenario --type plan --file path/to/plan_scenarios.txt
+```
+
+### 5.4 Coverage note: CLI vs verifier
+
+- `mcoder` CLI validates operator behavior and answer quality quickly.
+- Full **contract gating** (including execute/code probes and strict expect checks) still uses `motadata_behavior_verify.py`.
+- Run both for release-grade validation: CLI-first smoke, then verifier slices/full suites.
 
 Renderer mode check:
 
@@ -1029,6 +1075,31 @@ Additional scenarios stress **multi-hop Ask**, **planning-style Ask** (still `PL
 - Verifier: `runtime/scripts/motadata_behavior_verify.py`
 - JSON report key: `developer_utility_suite` (alongside `scenario_suite` for contract scenarios).
 
+### CLI-first utility check (same scenario intent)
+
+Use this when you want operator-facing output quality checks before JSON gates:
+
+```bash
+mcoder prompt "Which class is the primary implementation owner for alert correlation logic?"
+mcoder prompt "How does alert correlation and enrichment work?"
+mcoder debug --file "motadata/src/main/java/com/mindarray/aiops/correlation/AlertCorrelationEngine.java" \
+  --query "Why might incident enrichment be skipped in alert correlation flow?"
+mcoder plan "Prepare a bounded plan to add debug logging around alert correlation skip cases without changing behavior."
+
+# Extended / complex utility probes
+mcoder prompt "Which class is the base class for concrete REST APIs in this codebase?"
+mcoder prompt "Explain how HTTP requests enter the product through APIServer and reach concrete handler classes."
+mcoder prompt "List main classes involved in sending email or SMS notifications from the server."
+mcoder prompt "Plan a safe refactor for alert enrichment with rollback notes and validation checkpoints."
+mcoder debug --file "motadata/src/main/java/com/mindarray/api/APIServer.java" \
+  --query "Why might a newly registered API route not appear at runtime despite a successful start()?"
+mcoder debug --file "motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java" \
+  --query "What conditions could cause mail delivery settings to appear stale after an admin update?"
+mcoder plan "Prepare a phased rollout for alert enrichment changes: feature flag, shadow mode, metrics, rollback procedure, and post-deploy validation. Reference correlation and notification paths."
+```
+
+Then run the verifier/batch commands below for pass/fail artifacts.
+
 ### Utility-only (behavior verify)
 
 ```bash
@@ -1082,6 +1153,15 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --utility-scenarios docs/validation/motadata_developer_utility_scenarios.v1.json \
   --print dev
 ```
+
+### Full scenario coverage checklist (including complex additions)
+
+- Contract 20 scenarios (Ask/Debug/Plan/Code): `docs/validation/motadata_aiops_behavior_scenarios.v1.json` (see `MOTADATA_20_SCENARIO_PRIMER.md`).
+- Utility core + extended complex scenarios: `docs/validation/motadata_developer_utility_scenarios.v1.json`.
+- Recommended order:
+  1. `mcoder` CLI smoke and complex probes (`prompt` / `debug` / `plan`) for quick qualitative checks.
+  2. `motadata_behavior_verify.py` contract slices + full 20-scenario gate.
+  3. `batch_run_developer_eval.py` for merged utility + prompt-batch reports.
 
 ## Evaluation / narration backlog
 

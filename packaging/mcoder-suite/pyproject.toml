@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=61", "setuptools-scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcoder-suite"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Unified m-coder developer package (mcoder CLI + Context Layer service)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -36,3 +36,7 @@ exclude = [
 "runtime.layer5.evidence" = ["evidence_bundle.v1.schema.json", "evidence_bundle.v1.md"]
 "runtime.layer5.retrieval" = ["domain_priors.yaml"]
 "runtime.layer5.authority" = ["product_authority_registry.yaml"]
+
+[tool.setuptools_scm]
+fallback_version = "0.1.1.dev0"
+local_scheme = "runtime.mcoder_cli.build_version:local_scheme"
