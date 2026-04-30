@@ -223,6 +223,56 @@ def _is_planning_or_refactor_query(q: str) -> bool:
     )
 
 
+def _class_from_component_label(label: str) -> str:
+    s = str(label or "").strip()
+    if not s:
+        return ""
+    return s.split(".")[0].strip()
+
+
+def _is_api_base_class_question(query: str) -> bool:
+    """User asks for the superclass of REST/handler APIs — not the Vert.x Verticle server type."""
+    ql = str(query or "").strip().lower()
+    if not any(
+        k in ql
+        for k in ("base class", "parent class", "which class", "what class", "extends", "implements")
+    ):
+        return False
+    return bool(
+        any(k in ql for k in (" api", "apis", "rest", "handler"))
+        or "all apis" in ql.replace("'", "")
+        or ql.startswith("which class is the base class for all apis")
+    )
+
+
+def _find_abstract_api_in_context(groups: Dict[str, List[str]], reasoning_context: Dict[str, Any]) -> str:
+    """Locate AbstractAPI from typed buckets (labels are `Class.method` strings)."""
+    for lab in groups.get("abstractions", []):
+        if _class_from_component_label(str(lab)) == "AbstractAPI":
+            return "AbstractAPI"
+    typed = _as_dict(reasoning_context.get("typed_nodes"))
+    for bucket in ("abstractions", "handlers", "entrypoints", "collaborators"):
+        for node in _as_list(typed.get(bucket)):
+            if not isinstance(node, dict):
+                continue
+            if str(node.get("class") or "").strip() == "AbstractAPI":
+                return "AbstractAPI"
+    return ""
+
+
+def _chain_contains_class(chain: List[str], name: str) -> bool:
+    want = name.strip().lower()
+    for raw in chain:
+        if _class_from_component_label(str(raw)).lower() == want:
+            return True
+    return False
+
+
+def _is_api_layer_architecture_query(ql: str) -> bool:
+    """Broad architecture tour of the API layer (not a single-method drill)."""
+    return ("architecture" in ql or ("explain" in ql and "layer" in ql)) and ("api" in ql or "api layer" in ql)
+
+
 def _planning_lede_from_steps(plan_steps: List[str]) -> str:
     """First substantive plan lines, skipping owner preambles and raw evidence dumps."""
     skip_prefixes = (
@@ -298,28 +348,72 @@ def _unified_paragraphs(
 
     # Structural (base class / inheritance): never use the generic API-layer paragraph.
     if _is_structural_query(query):
-        if chain:
-            chain_txt = " → ".join(f"`{c}`" for c in chain)
-            if any(k in ql for k in ("base class", "parent class", "extends", "implements", "what class", "which class")):
-                root = chain[-1]
-                return [
-                    (
-                        f"In the grounded inheritance evidence, `{root}` is the superclass at the base of this chain: "
-                        f"{chain_txt}. Subclasses add concrete API handlers while inheriting shared behavior from that type."
+        chain_txt = " → ".join(f"`{c}`" for c in chain) if chain else ""
+        class_q = any(
+            k in ql
+            for k in ("base class", "parent class", "extends", "implements", "what class", "which class")
+        )
+        if class_q:
+            # REST handler base (AbstractAPI) vs Vert.x Verticle server chain — do not conflate.
+            if _is_api_base_class_question(query):
+                api_root = _find_abstract_api_in_context(groups, reasoning_context)
+                vert_only = bool(chain) and _class_from_component_label(str(chain[-1])) == "AbstractVerticle"
+                if api_root and vert_only and not _chain_contains_class(chain, "AbstractAPI"):
+                    return [
+                        (
+                            f"`{api_root}` is the shared superclass for concrete REST/API handler classes in this codebase. "
+                            f"The chain in evidence ({chain_txt}) reflects the Vert.x HTTP server type hierarchy (`Verticle`), "
+                            f"which is separate from handler classes extending `{api_root}`."
+                        )
+                    ]
+                if chain and _chain_contains_class(chain, "AbstractAPI"):
+                    idx = next(
+                        i
+                        for i, x in enumerate(chain)
+                        if _class_from_component_label(str(x)) == "AbstractAPI"
                     )
-                ]
-            return [f"Inheritance in current evidence: {chain_txt}."]
-        abstractions = groups.get("abstractions", [])
-        abs_first = ""
-        for node in _as_list(abstractions):
-            if isinstance(node, dict):
-                c = str(node.get("class") or "").strip()
-                if c:
-                    abs_first = c
+                    sub = chain[: idx + 1]
+                    st = " → ".join(f"`{c}`" for c in sub)
+                    return [
+                        (
+                            f"In the grounded inheritance evidence, `AbstractAPI` is the superclass at the base of this API handler chain: "
+                            f"{st}. Concrete `*API` classes implement request behavior on top of that type."
+                        )
+                    ]
+                if api_root:
+                    return [
+                        (
+                            f"`{api_root}` is the shared superclass for concrete REST/API handler classes. "
+                            f"Confirm `extends` on concrete `*API` classes when the graph chain is partial or shows only deployment types."
+                        )
+                    ]
+                if vert_only and chain:
+                    return [
+                        (
+                            f"The inheritance chain in current evidence is {chain_txt} (Vert.x `Verticle` / server deployment). "
+                            f"That documents the HTTP server type, not REST handler inheritance; inspect concrete `*API` sources for `extends AbstractAPI`."
+                        )
+                    ]
+            if chain:
+                if class_q:
+                    root = chain[-1]
+                    return [
+                        (
+                            f"In the grounded inheritance evidence, `{root}` is the superclass at the base of this chain: "
+                            f"{chain_txt}. Subclasses extend that type per the inheritance edges visible in this snapshot."
+                        )
+                    ]
+                return [f"Inheritance in current evidence: {chain_txt}."]
+        abs_first = _find_abstract_api_in_context(groups, reasoning_context)
+        if not abs_first:
+            for lab in groups.get("abstractions", []):
+                c0 = _class_from_component_label(str(lab))
+                if c0:
+                    abs_first = c0
                     break
         if abs_first:
             return [
-                f"In this snapshot, the shared API abstraction is `{abs_first}`. "
+                f"In this snapshot, the strongest grounded abstraction is `{abs_first}`. "
                 f"Use source `extends` / `implements` edges to confirm which concrete classes tie back to it."
             ]
 
@@ -384,19 +478,47 @@ def _unified_paragraphs(
                 f"Alert-side processing in this snapshot is anchored at {anchor_bit}; review handlers and collaborators in the plan steps for the full flow."
             )
     else:
-        sentences.append(
-            f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
-        )
-        mid = _render_list(abstractions, limit=2, drop=anchor)
-        end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
-        if mid and end:
+        if _is_api_layer_architecture_query(ql):
+            ep = _render_list(groups.get("entrypoints", []), limit=1, drop=None)
+            mid = _render_list(abstractions, limit=2, drop=anchor)
+            end = _render_list(handlers or collaborators or stores, limit=4, drop=anchor)
+            bits: List[str] = []
+            if ep:
+                bits.append(f"{ep} is the HTTP/API entry; it wires the server and routes requests to handlers.")
+            if mid:
+                bits.append(f"Concrete REST handlers extend {mid} for shared routing and lifecycle behavior.")
+            if end:
+                bits.append(f"Representative implementation classes in this snapshot include {end}.")
+            if bits:
+                sentences.append(" ".join(bits))
+            else:
+                sentences.append(
+                    f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
+                )
+                mid2 = _render_list(abstractions, limit=2, drop=anchor)
+                end2 = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
+                if mid2 and end2:
+                    sentences.append(
+                        f"Shared lifecycle behavior flows through {mid2}, and work coordinates with {end2}."
+                    )
+                elif end2:
+                    sentences.append(f"Key implementation components include {end2}.")
+                elif mid2:
+                    sentences.append(f"Shared abstractions include {mid2}.")
+        else:
             sentences.append(
-                f"Shared lifecycle behavior flows through {mid}, and work coordinates with {end}."
+                f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
             )
-        elif end:
-            sentences.append(f"Key implementation components include {end}.")
-        elif mid:
-            sentences.append(f"Shared abstractions include {mid}.")
+            mid = _render_list(abstractions, limit=2, drop=anchor)
+            end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
+            if mid and end:
+                sentences.append(
+                    f"Shared lifecycle behavior flows through {mid}, and work coordinates with {end}."
+                )
+            elif end:
+                sentences.append(f"Key implementation components include {end}.")
+            elif mid:
+                sentences.append(f"Shared abstractions include {mid}.")
 
     # One bounded-confidence sentence only when gaps are non-routine or evidence is not STRONG.
     if gaps and _should_append_chain_disclaimer(evidence_quality, gaps):

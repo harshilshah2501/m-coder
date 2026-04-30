@@ -154,6 +154,40 @@ def test_unified_contract_handles_mail_notification_config_and_ambiguous_queries
         assert "partial graph" not in text.lower()
 
 
+def test_api_base_class_prefers_abstract_api_over_verticle_chain():
+    """Graph often reports APIServer → AbstractVerticle; REST handlers still extend AbstractAPI."""
+    meta = {
+        "evidence_quality": "STRONG",
+        "reasoning_context": {
+            "schema_version": "reasoning_context.d1",
+            "primary_owner": {"class": "APIServer", "method": "start", "file": "src/APIServer.java"},
+            "anchor_method": "APIServer.start",
+            "inheritance": {"chain": ["APIServer", "AbstractVerticle"], "citation": "G1"},
+            "typed_nodes": {
+                "entrypoints": [{"class": "APIServer", "method": "start"}],
+                "abstractions": [{"class": "AbstractAPI", "method": ""}],
+                "handlers": [{"class": "AlarmAPI", "method": "beforeUpdate"}],
+                "stores": [],
+                "collaborators": [],
+            },
+            "coverage_gaps": [],
+        },
+    }
+    out = build_articulated_answer(
+        query="Which class is the base class for all APIs?",
+        plan_steps=[],
+        context_files=[{"path": "src/APIServer.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "AbstractAPI" in text
+    assert "AbstractVerticle" in text
+    assert "`APIServer` → `AbstractVerticle`" in text or "Verticle" in text
+    assert "concrete REST/API handler" in text.lower() or "handler classes" in text.lower()
+
+
 def test_unified_paragraphs_structural_base_class_uses_inheritance_chain():
     meta = {
         "evidence_quality": "STRONG",
