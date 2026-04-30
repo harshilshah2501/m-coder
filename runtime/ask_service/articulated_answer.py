@@ -212,6 +212,47 @@ def _role_label(cls: str) -> str:
     return "component"
 
 
+def _prioritized_collaborator_classes(
+    *,
+    query: str,
+    reasoning_context: Dict[str, Any],
+    groups: Dict[str, List[str]],
+    limit: int = 4,
+) -> List[str]:
+    """Prefer authority + subsystem-relevant collaborators over lexical top-k noise."""
+    ql = str(query or "").lower()
+    tokens: List[str] = []
+    if any(t in ql for t in ("notification", "email", "sms")):
+        tokens = ["notification", "email", "sms"]
+    elif "mail" in ql:
+        tokens = ["mail", "smtp", "credential"]
+
+    objs = [x for x in _as_list(reasoning_context.get("collaborators")) if isinstance(x, dict)]
+    authority: List[str] = []
+    graph: List[str] = []
+    for c in objs:
+        cls = _class_from_component_label(str(c.get("name") or "") or str(c.get("file") or ""))
+        if not cls:
+            continue
+        cite = str(c.get("citation") or "")
+        if cite.startswith("G:"):
+            if cls not in graph:
+                graph.append(cls)
+        else:
+            if cls not in authority:
+                authority.append(cls)
+    pool = authority + graph
+    for raw in groups.get("handlers", []) + groups.get("collaborators", []) + groups.get("stores", []):
+        cls = _class_from_component_label(raw)
+        if cls and cls not in pool:
+            pool.append(cls)
+    if tokens:
+        focused = [c for c in pool if any(t in c.lower() for t in tokens)]
+        if focused:
+            return focused[:limit]
+    return pool[:limit]
+
+
 def _routine_coverage_only(gaps: List[str]) -> bool:
     if not gaps:
         return False
@@ -524,7 +565,10 @@ def _unified_paragraphs(
     elif intent == "notification":
         owners = _render_class_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
         head = owners or "`NotificationEngine`"
-        collab = _render_class_list(collaborators or stores, limit=4, drop=anchor)
+        pclasses = _prioritized_collaborator_classes(
+            query=query, reasoning_context=reasoning_context, groups=groups, limit=4
+        )
+        collab = _render_list(pclasses, limit=4, drop=_class_from_component_label(anchor))
         sentences.append(
             f"Notification behavior centers on {head}, which acts as orchestration responsibility rather than a linear processing chain."
         )
@@ -569,11 +613,12 @@ def _unified_paragraphs(
             if mid:
                 bits.append(f"{mid} provides shared API lifecycle abstractions that concrete handlers build on.")
             if end:
-                bits.append(f"Representative implementation classes include {end}, which cover domain behavior rather than API ingress itself.")
+                bits.append(f"Domain-side components visible in this snapshot include {end}, which sit behind the API ingress layer.")
             tops = _top_classes(groups.get("entrypoints", []) + abstractions + handlers + stores + collaborators, limit=4)
             if tops:
                 role_map = ", ".join(f"`{c}` ({_role_label(c)})" for c in tops[:4])
                 bits.append(f"Role split in current evidence: {role_map}.")
+            bits.append("The exact route-to-handler mapping is not directly confirmed in this snapshot; roles above are grounded, sequencing beyond ingress is bounded.")
             if bits:
                 sentences.append(" ".join(bits))
             else:
