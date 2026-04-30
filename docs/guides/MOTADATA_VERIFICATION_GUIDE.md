@@ -95,6 +95,17 @@ Do not run `m-coder` source-path commands on WSL if WSL does not have the `m-cod
 cd ~/Harshil-PoCs/m-coder/packaging/mcoder-suite
 python3 -m build --wheel -o dist
 ls -1 dist/mcoder_suite-*.whl
+# quick traceability check (name + installed version if already installed)
+python3 - <<'PY'
+import glob, os
+ws = sorted(glob.glob("dist/mcoder_suite-*.whl"))
+print("latest_wheel:", os.path.basename(ws[-1]) if ws else "none")
+try:
+    import importlib.metadata as md
+    print("installed_mcoder_suite_version:", md.version("mcoder-suite"))
+except Exception:
+    print("installed_mcoder_suite_version: not installed in this interpreter")
+PY
 ```
 
 ### 2.2 Install wheel on WSL (CLI runtime env)
