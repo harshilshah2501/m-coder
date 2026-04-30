@@ -377,7 +377,16 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     return 0 if fails == 0 else 1
 
 
-def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = "", response_extensions: list[str] | None = None, print_json: bool = False) -> int:
+def _run_ask_like(
+    cfg: Cfg,
+    query: str,
+    *,
+    task_type: str,
+    selected_file: str = "",
+    response_extensions: list[str] | None = None,
+    print_json: bool = False,
+    save_json_path: str = "",
+) -> int:
     rid = str(uuid.uuid4())
     export_url = f"{cfg.context_url.rstrip('/')}/v1/export_evidence"
     ask_url = f"{cfg.plan_gate_url.rstrip('/')}/v1/ask"
@@ -420,6 +429,10 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
     if ac != 200:
         print(f"/v1/ask failed http={ac}", file=sys.stderr)
         return 1
+    if save_json_path:
+        out_path = Path(save_json_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(resp, indent=2), encoding="utf-8")
     if print_json:
         print(json.dumps(resp, indent=2))
     else:
@@ -535,16 +548,31 @@ def _cmd_scenario(args: argparse.Namespace) -> int:
         print(f"query: {line}")
         rc = 0
         if args.type == "ask":
-            rc = _run_ask_like(cfg, line, task_type="general")
+            out_file = out_dir / (str(total).zfill(3) + ".json")
+            rc = _run_ask_like(cfg, line, task_type="general", save_json_path=str(out_file))
         elif args.type == "plan":
-            rc = _run_ask_like(cfg, line, task_type="general", response_extensions=["plan_contract.v1"])
+            out_file = out_dir / (str(total).zfill(3) + ".json")
+            rc = _run_ask_like(
+                cfg,
+                line,
+                task_type="general",
+                response_extensions=["plan_contract.v1"],
+                save_json_path=str(out_file),
+            )
         else:
             if "|" not in line:
                 print("[FAIL] debug scenario must be selected_file|query", file=sys.stderr)
                 rc = 2
             else:
                 sf, q = line.split("|", 1)
-                rc = _run_ask_like(cfg, q.strip(), task_type="EXPLAIN_DEBUG", selected_file=sf.strip())
+                out_file = out_dir / (str(total).zfill(3) + ".json")
+                rc = _run_ask_like(
+                    cfg,
+                    q.strip(),
+                    task_type="EXPLAIN_DEBUG",
+                    selected_file=sf.strip(),
+                    save_json_path=str(out_file),
+                )
         if rc != 0:
             failed += 1
             print(f"[FAIL] scenario {total}")
