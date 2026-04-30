@@ -152,3 +152,68 @@ def test_unified_contract_handles_mail_notification_config_and_ambiguous_queries
         assert "not fully visible in this snapshot" not in text.lower()
         assert "graph" not in text.lower()
         assert "partial graph" not in text.lower()
+
+
+def test_unified_paragraphs_structural_base_class_uses_inheritance_chain():
+    meta = {
+        "evidence_quality": "STRONG",
+        "reasoning_context": {
+            "schema_version": "reasoning_context.d1",
+            "primary_owner": {"class": "AlarmAPI", "method": "beforeUpdate", "file": "src/AlarmAPI.java"},
+            "anchor_method": "AlarmAPI.beforeUpdate",
+            "inheritance": {"chain": ["AlarmAPI", "AbstractAPI"], "citation": "G1"},
+            "typed_nodes": {
+                "entrypoints": [{"class": "APIServer", "method": "start"}],
+                "abstractions": [{"class": "AbstractAPI", "method": ""}],
+                "handlers": [{"class": "AlarmAPI", "method": "beforeUpdate"}],
+                "stores": [],
+                "collaborators": [],
+            },
+            "coverage_gaps": [],
+        },
+    }
+    out = build_articulated_answer(
+        query="Which class is the base class for all APIs?",
+        plan_steps=["Primary implementation owner: `AlarmAPI` in `src/AlarmAPI.java`."],
+        context_files=[{"path": "src/AlarmAPI.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "AbstractAPI" in text
+    assert "inheritance" in text.lower()
+    assert "The API layer starts at" not in text
+
+
+def test_unified_paragraphs_planning_prefers_plan_steps_not_api_template():
+    meta = {
+        "evidence_quality": "STRONG",
+        "reasoning_context": {
+            "schema_version": "reasoning_context.d1",
+            "primary_owner": {"class": "FlowProcessor", "method": "process", "file": "src/FlowProcessor.java"},
+            "anchor_method": "FlowProcessor.process",
+            "typed_nodes": {
+                "entrypoints": [{"class": "APIServer", "method": "start"}],
+                "abstractions": [{"class": "AbstractAPI", "method": ""}],
+                "handlers": [{"class": "FlowProcessor", "method": "process"}],
+                "stores": [],
+                "collaborators": [{"class": "AvailabilityCorrelationEngine", "method": "run"}],
+            },
+            "coverage_gaps": [],
+        },
+    }
+    out = build_articulated_answer(
+        query="Plan a safe refactor for alert enrichment flow with rollback notes.",
+        plan_steps=[
+            "Primary implementation owner: `AlertEnrichmentHandler` in `src/AlertEnrichmentHandler.java`.",
+            "Step 1: isolate enrichment behind an interface; Step 2: add feature flag; Step 3: document rollback.",
+        ],
+        context_files=[{"path": "src/AlertEnrichmentHandler.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "Step 1:" in text or "plan steps" in text.lower()
+    assert "The API layer starts at" not in text

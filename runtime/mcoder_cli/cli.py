@@ -427,11 +427,14 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
         steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
         explain_debug = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
         print("")
-        print("=== Motadata Ask Summary ===")
-        print(f"request_id: {resp.get('request_id')}")
-        print(f"posture: {resp.get('governance_posture')}  executed: {resp.get('execution')}")
-        print(f"ask_path: {(resp.get('evidence_first_meta') or {}).get('ask_path')}")
-        print(f"quality: {md.get('evidence_quality')}  reasons: {md.get('quality_reasons')}")
+        if cfg.verbose:
+            print("=== Motadata Ask Summary (verbose) ===")
+            print(f"request_id: {resp.get('request_id')}")
+            print(f"posture: {resp.get('governance_posture')}  executed: {resp.get('execution')}")
+            print(f"ask_path: {(resp.get('evidence_first_meta') or {}).get('ask_path')}")
+            print(f"quality: {md.get('evidence_quality')}  reasons: {md.get('quality_reasons')}")
+        else:
+            print("=== Answer ===")
         if task_type == "EXPLAIN_DEBUG":
             dbg_summary = str(explain_debug.get("summary") or "").strip()
             dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
@@ -448,7 +451,8 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
                 print(f"debug_note: narration curated by governance for precision{issue_note}")
         gta = md.get("graph_traversal_availability")
         if (
-            isinstance(gta, dict)
+            cfg.verbose
+            and isinstance(gta, dict)
             and gta.get("artifact_status") == "missing"
             and task_type == "general"
         ):
@@ -463,7 +467,8 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
                 paras = art.get("paragraphs")
                 if isinstance(paras, list) and paras:
                     printed_articulated = True
-                    print("--- explanation (read-only, evidence-bounded) ---")
+                    hdr = "Explanation" if not cfg.verbose else "--- explanation (read-only, evidence-bounded) ---"
+                    print(hdr)
                     for p in paras:
                         p = str(p).strip()
                         if p:
@@ -476,7 +481,8 @@ def _run_ask_like(cfg: Cfg, query: str, *, task_type: str, selected_file: str = 
                             print(f"  - {b}")
                     el = art.get("evidence_limit")
                     if isinstance(el, str) and el.strip():
-                        print(f"evidence_limit: {el.strip()}")
+                        label = "Scope" if not cfg.verbose else "evidence_limit"
+                        print(f"{label}: {el.strip()}")
             shaped = shape_prompt_summary(query, resp)
             answer_1 = str(shaped.get("answer_1") or "").strip()
             next_step = str(shaped.get("next_step") or "").strip()

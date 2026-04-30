@@ -12,7 +12,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from runtime.mcoder_cli.answer_shaping import shape_prompt_summary
+from runtime.mcoder_cli.answer_shaping import _is_structural_query, shape_prompt_summary
 
 _SCHEMA = "articulated_answer.v0"
 _LEGACY_ENV = "MCODER_LEGACY_ASK_RENDERER"
@@ -101,7 +101,7 @@ def _evidence_limit_note(metadata: Optional[Dict[str, Any]]) -> str:
     reasons = meta.get("quality_reasons") if isinstance(meta.get("quality_reasons"), list) else []
     r0 = str(reasons[0]) if reasons else ""
     if q == "STRONG":
-        return "Grounded to the anchors and plan steps shown for this request."
+        return "This answer stays within the code evidence and plan steps attached to this run."
     if q == "WEAK":
         return "Evidence quality is weak; expand symbols in the query or use Explain/Debug with a selected method for tighter grounding."
     if q == "NO_MATCH":
@@ -198,7 +198,59 @@ def _query_intent(query: str) -> str:
         return "notification"
     if "config store" in q or "config stores" in q:
         return "config_store"
+    if "alert" in q and any(k in q for k in ("enrichment", "correlation", "ingest", "pipeline")):
+        return "alert_flow"
     return "api"
+
+
+def _is_planning_or_refactor_query(q: str) -> bool:
+    """User intent: design/change work, not a live architecture tour of the API layer."""
+    ql = str(q or "").strip().lower()
+    if ql.startswith("plan ") or " plan " in ql:
+        return True
+    return any(
+        k in ql
+        for k in (
+            "refactor",
+            "rollback",
+            "migration",
+            "safe change",
+            "roll out",
+            "rollout",
+            "feature flag",
+            "phased",
+        )
+    )
+
+
+def _planning_lede_from_steps(plan_steps: List[str]) -> str:
+    """First substantive plan lines, skipping owner preambles and raw evidence dumps."""
+    skip_prefixes = (
+        "primary implementation owner:",
+        "execution owner anchor",
+        "authority status:",
+        "explain/debug analysis completed",
+    )
+    parts: List[str] = []
+    for raw in plan_steps:
+        line = str(raw).strip()
+        if not line:
+            continue
+        low = line.lower()
+        if any(low.startswith(p) for p in skip_prefixes):
+            continue
+        if "method-window excerpt:" in low or "visible method-window evidence:" in low:
+            continue
+        if line not in parts:
+            parts.append(line)
+        if len(parts) >= 2:
+            break
+    if not parts:
+        return ""
+    out = " ".join(parts)
+    if len(out) > 1200:
+        return out[:1197] + "..."
+    return out
 
 
 def _unified_paragraphs(
@@ -206,6 +258,7 @@ def _unified_paragraphs(
     query: str,
     reasoning_context: Dict[str, Any],
     evidence_quality: str,
+    plan_steps: Optional[List[str]] = None,
 ) -> List[str]:
     groups = _collect_components(reasoning_context)
     owner = _as_dict(reasoning_context.get("primary_owner"))
@@ -225,6 +278,51 @@ def _unified_paragraphs(
         all_components.insert(0, anchor)
 
     gaps = [str(g).strip() for g in _as_list(reasoning_context.get("coverage_gaps")) if str(g).strip()]
+    inh = _as_dict(reasoning_context.get("inheritance"))
+    chain = [str(x).strip() for x in _as_list(inh.get("chain")) if str(x).strip()]
+    ql = str(query or "").strip().lower()
+    steps_for_plan = list(plan_steps or [])
+
+    # Planning / refactor: prefer real plan steps over the generic "API layer starts at…" template.
+    if _is_planning_or_refactor_query(query):
+        lede = _planning_lede_from_steps(steps_for_plan)
+        if lede:
+            extra = ""
+            if "alert" in ql or "enrichment" in ql:
+                extra = " Validate alert and enrichment call sites in the workspace before applying changes."
+            return [lede + " Use the numbered plan steps and evidence paths below for sequencing and checkpoints." + extra]
+        if steps_for_plan:
+            return [
+                "This is a planning-oriented question: use the plan steps and evidence references below as the source of truth for ordering and rollback notes."
+            ]
+
+    # Structural (base class / inheritance): never use the generic API-layer paragraph.
+    if _is_structural_query(query):
+        if chain:
+            chain_txt = " → ".join(f"`{c}`" for c in chain)
+            if any(k in ql for k in ("base class", "parent class", "extends", "implements", "what class", "which class")):
+                root = chain[-1]
+                return [
+                    (
+                        f"In the grounded inheritance evidence, `{root}` is the superclass at the base of this chain: "
+                        f"{chain_txt}. Subclasses add concrete API handlers while inheriting shared behavior from that type."
+                    )
+                ]
+            return [f"Inheritance in current evidence: {chain_txt}."]
+        abstractions = groups.get("abstractions", [])
+        abs_first = ""
+        for node in _as_list(abstractions):
+            if isinstance(node, dict):
+                c = str(node.get("class") or "").strip()
+                if c:
+                    abs_first = c
+                    break
+        if abs_first:
+            return [
+                f"In this snapshot, the shared API abstraction is `{abs_first}`. "
+                f"Use source `extends` / `implements` edges to confirm which concrete classes tie back to it."
+            ]
+
     if len(all_components) < 2:
         base = (
             f"The strongest grounded component is `{anchor}`."
@@ -273,6 +371,17 @@ def _unified_paragraphs(
         if concrete:
             sentences.append(
                 f"Concrete components such as {concrete} handle domain-specific reads, validation, and updates."
+            )
+    elif intent == "alert_flow":
+        parts = _render_list(handlers or collaborators, limit=4, drop=anchor)
+        anchor_bit = f"`{anchor}`" if anchor else "the entry components in evidence"
+        if parts:
+            sentences.append(
+                f"Alert and enrichment behavior in this snapshot is centered on {anchor_bit}, working together with {parts}."
+            )
+        else:
+            sentences.append(
+                f"Alert-side processing in this snapshot is anchored at {anchor_bit}; review handlers and collaborators in the plan steps for the full flow."
             )
     else:
         sentences.append(
@@ -375,7 +484,12 @@ def build_articulated_answer(
     md = _as_dict(metadata)
     rc = _as_dict(md.get("reasoning_context"))
     eq = str(md.get("evidence_quality") or "")
-    paragraphs = _unified_paragraphs(query=query, reasoning_context=rc, evidence_quality=eq)
+    paragraphs = _unified_paragraphs(
+        query=query,
+        reasoning_context=rc,
+        evidence_quality=eq,
+        plan_steps=steps,
+    )
     if not paragraphs and steps:
         paragraphs = [steps[0][:300]]
     if not paragraphs:
