@@ -3,18 +3,19 @@
 
 1. [Overview](#overview)
 2. [Quick bootstrap (optional orchestrator)](#single-command-bootstrap-wsl)
-3. [Split topology — Pass A / B / C](#split-topology--pass-a--pass-b--pass-c-wsl--gpu)
+3. [Split topology — Primary C + Pass-B fallback](#split-topology--primary-c--pass-b-fallback-wsl--gpu)
 4. [Production contract verification](#1-scope-and-acceptance)
 5. [Developer utility, evaluation batches, and reports](#developer-utility-usefulness-and-batch-reports)
 6. [Canonical manual Ask (`run_v1_ask`)](#canonical-manual-ask-v1)
+7. [One-command full suite JSON](#55-one-command-full-suite-json-output)
 
-**Former standalone guides merged here:** `PASS_A_B_C_SETUP_VERIFICATION.md`, `MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `MOTADATA_DEVELOPER_UTILITY_VALIDATION.md` (each now redirects).
+**Former standalone guides merged here:** `PASS_A_B_C_SETUP_VERIFICATION.md` (legacy filename; Pass-A is retired), `MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `MOTADATA_DEVELOPER_UTILITY_VALIDATION.md` (each now redirects).
 
 ---
 
 ## Overview
 
-This is the **single** Motadata verification runbook: **setup** (topology, wheel, services), **CLI-first testing** (`mcoder prompt/debug/plan/scenario`), **contract / production checks** (`motadata_behavior_verify` + AIOps scenarios), **split WSL+GPU** procedures (Pass A/B/C, CIG sync), **developer utility** scenarios (Ask/Debug/Plan usefulness heuristics including complex tiers), and **batch reports** (`batch_run_developer_eval.py`). Same stack as `docs/ARCHITECTURE_4_LAYER.md`: Context Layer (Layer-5 evidence) → Plan-Gate (Layer-3).
+This is the **single** Motadata verification runbook: **setup** (topology, wheel, services), **CLI-first testing** (`mcoder prompt/debug/plan/scenario`), **contract / production checks** (`motadata_behavior_verify` + AIOps scenarios), **split WSL+GPU** procedures (**Primary C** with **Pass-B** graph fallback), **developer utility** scenarios (Ask/Debug/Plan usefulness heuristics including complex tiers), and **batch reports** (`batch_run_developer_eval.py`). Same stack as `docs/ARCHITECTURE_4_LAYER.md`: Context Layer (Layer-5 evidence) → Plan-Gate (Layer-3).
 
 ---
 
@@ -55,7 +56,7 @@ runtime/.run/mcoder_wsl_e2e_bootstrap_<UTC>.log
 
 ---
 
-## Split topology — Pass A / Pass B / Pass C (WSL + GPU)
+## Split topology — Primary C + Pass-B fallback (WSL + GPU)
 
 This guide is for your real topology:
 
@@ -63,9 +64,12 @@ This guide is for your real topology:
 - **GPU:** has `m-coder` repo, runs Plan-Gate
 - **WSL <-> GPU:** connected by SSH tunnel (`127.0.0.1:8089`)
 
-Core invariant:
+Execution model:
 
 `Repo is truth. Graph is map. LLM is narrator. Runtime is judge.`
+
+- **Primary path:** Pass C runtime verification (CLI-first + verifier suites).
+- **Fallback path:** Pass B graph/CIG rebuild+sync only when graph artifacts are stale/missing.
 
 ---
 
@@ -213,8 +217,9 @@ Expected:
 
 ---
 
-## 4) Pass B Build (Where Motadata Exists)
+## 4) Pass-B fallback: graph/CIG rebuild (only when needed)
 
+Use this section only when graph artifacts are stale/missing or graph preflight is not `COMPLETE`.
 Because WSL has Motadata and GPU hosts Plan-Gate, build CIG where Motadata is readable, then sync artifacts to GPU.
 
 ### 4.1 Build CIG artifacts from Motadata
@@ -380,6 +385,23 @@ mcoder scenario --type plan --file path/to/plan_scenarios.txt
 - `mcoder` CLI validates operator behavior and answer quality quickly.
 - Full **contract gating** (including execute/code probes and strict expect checks) still uses `motadata_behavior_verify.py`.
 - Run both for release-grade validation: CLI-first smoke, then verifier slices/full suites.
+
+### 5.5 One-command full suite (JSON output)
+
+Run the complete suite (contract 20 scenarios + core pytest + utility/prompt batch) and generate a consolidated JSON:
+
+```bash
+export MOTADATA_REPO_ROOT="/path/to/Motadata"
+bash runtime/scripts/run_motadata_full_suite.sh
+```
+
+Primary artifacts:
+
+- `runtime/eval/reports/motadata_contract_20_<UTC>.json`
+- `runtime/eval/reports/motadata_pytest_<UTC>.txt`
+- `runtime/eval/reports/developer_eval_batch_<UTC>.json`
+- `runtime/eval/reports/developer_eval_batch_<UTC>.md`
+- `runtime/eval/reports/motadata_full_suite_<UTC>.json` (**single summary file**)
 
 Renderer mode check:
 
@@ -968,6 +990,7 @@ PYTHONPATH="$M_CODER_ROOT" .venv/bin/python runtime/scripts/motadata_behavior_ve
 Neo4j stack is down or unreachable (`127.0.0.1:7687`). Bring up graph stack and verify socket:
 
 ```bash
+# same graph bring-up as Step B
 ./scripts/graph_stack.sh up
 python3 - <<'PY'
 import socket
@@ -982,8 +1005,8 @@ PY
 Install either `docker-compose` (v1) or Docker CLI plugin `docker compose` (v2) on the host where `./scripts/graph_stack.sh` runs, then retry:
 
 ```bash
-./scripts/graph_stack.sh up
-./scripts/graph_stack.sh refresh
+# repeat Step B graph bring-up/refresh
+./scripts/graph_stack.sh up && ./scripts/graph_stack.sh refresh
 ```
 
 ### 9.4 Debug returns `plan_only` unexpectedly
