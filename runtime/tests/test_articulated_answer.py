@@ -165,7 +165,7 @@ def test_notification_discovery_with_email_sms_uses_notification_template():
     )
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
-    assert "Notification handling centers on" in text
+    assert "Notification behavior centers on" in text
     assert "Mail server configuration is anchored" not in text
 
 
@@ -304,5 +304,5 @@ def test_api_entrypoint_explain_query_uses_architecture_template():
     )
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
-    assert "request path follows" in text.lower() or "routes requests to handlers" in text.lower()
+    assert "entrypoint" in text.lower() or "ingress and routing" in text.lower()
     assert "APIServer" in text

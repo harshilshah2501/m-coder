@@ -183,19 +183,33 @@ def _render_class_list(items: List[str], limit: int = 3, *, drop: Optional[str] 
     return _render_list(classes, limit=limit, drop=drop_cls or None)
 
 
-def _flow_classes_from_groups(groups: Dict[str, List[str]], *, limit: int = 4) -> List[str]:
-    """Build a deterministic, class-level flow outline for explanation prose."""
-    ordered = []
-    for bucket in ("entrypoints", "abstractions", "handlers", "stores", "collaborators"):
-        ordered.extend(groups.get(bucket, []))
+def _top_classes(items: List[str], limit: int = 3) -> List[str]:
     out: List[str] = []
-    for raw in ordered:
+    for raw in items:
         cls = _class_from_component_label(raw)
         if cls and cls not in out:
             out.append(cls)
         if len(out) >= limit:
             break
     return out
+
+
+def _role_label(cls: str) -> str:
+    c = (cls or "").strip()
+    lc = c.lower()
+    if "server" in lc:
+        return "entrypoint"
+    if c.startswith("Abstract"):
+        return "abstraction"
+    if lc.endswith("engine"):
+        return "orchestrator"
+    if "handler" in lc:
+        return "bridge/handler"
+    if "store" in lc or "manager" in lc:
+        return "store/orchestrator"
+    if c.endswith("API"):
+        return "api handler"
+    return "component"
 
 
 def _routine_coverage_only(gaps: List[str]) -> bool:
@@ -339,8 +353,9 @@ def _planning_lede_from_steps(plan_steps: List[str]) -> str:
 
 
 def _planning_paragraph_from_context(query: str, groups: Dict[str, List[str]]) -> str:
-    flow = _flow_classes_from_groups(groups, limit=4)
-    chain = " -> ".join(f"`{c}`" for c in flow) if flow else ""
+    ordered = groups.get("entrypoints", []) + groups.get("abstractions", []) + groups.get("handlers", []) + groups.get("stores", []) + groups.get("collaborators", [])
+    flow = _top_classes(ordered, limit=4)
+    chain = ", ".join(f"`{c}`" for c in flow) if flow else ""
     base = (
         "Use a phased refactor plan: isolate the enrichment change behind a feature flag, "
         "add validation checkpoints, and define explicit rollback triggers before rollout."
@@ -385,11 +400,11 @@ def _unified_paragraphs(
     ql = str(query or "").strip().lower()
     steps_for_plan = list(plan_steps or [])
 
-    # Planning / refactor: produce stable, explanation-oriented plan prose (avoid raw step leakage).
+    # Planning / refactor in ASK: keep architecture framing, avoid pseudo-execution steps.
     if _is_planning_or_refactor_query(query):
         contextual = _planning_paragraph_from_context(query, groups)
         if contextual:
-            return [contextual + " Use the numbered plan steps below for sequencing and safeguards."]
+            return [contextual + " This is architectural guidance in ASK mode; use PLAN mode for executable sequencing, checkpoints, and rollback gates."]
         lede = _planning_lede_from_steps(steps_for_plan)
         if lede:
             return [lede + " Use the numbered plan steps below for sequencing and safeguards."]
@@ -498,45 +513,36 @@ def _unified_paragraphs(
     if intent == "mail":
         anchor_cls = _class_from_component_label(anchor) or "MailServerConfiguration"
         sentences.append(
-            f"Mail server configuration is handled by `{anchor_cls}`, with lifecycle hooks coordinating validation before settings are persisted."
+            f"`{anchor_cls}` ({_role_label(anchor_cls)}) owns mail configuration lifecycle concerns, including validation boundaries before persistence."
         )
         follow = _render_class_list(stores or collaborators or handlers, limit=4, drop=anchor)
         if follow:
             sentences.append(
-                f"It works with {follow} for transport settings, validation, and persistence boundaries."
+                f"Related classes such as {follow} contribute supporting concerns (transport/event bridge/store interaction), rather than a strict execution pipeline."
             )
-        flow = _flow_classes_from_groups(groups)
-        if len(flow) >= 3:
-            chain = " -> ".join(f"`{c}`" for c in flow[:3])
-            sentences.append(f"In this snapshot, the mail path is anchored by a flow like {chain}, where each layer narrows from API entry to concrete update logic.")
+        sentences.append("Without this separation, configuration hooks and side-effect handling would be tightly coupled and harder to validate safely.")
     elif intent == "notification":
         owners = _render_class_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
         head = owners or "`NotificationEngine`"
         collab = _render_class_list(collaborators or stores, limit=4, drop=anchor)
         sentences.append(
-            f"Notification handling centers on {head}, coordinating dispatch across notification-related components."
+            f"Notification behavior centers on {head}, which acts as orchestration responsibility rather than a linear processing chain."
         )
         if collab:
-            sentences.append(f"Key collaborators include {collab} for routing, configuration, and supporting services.")
-        flow = _flow_classes_from_groups(groups)
-        if len(flow) >= 3:
-            chain = " -> ".join(f"`{c}`" for c in flow[:4])
-            sentences.append(f"Operationally, request handling moves across a chain such as {chain}, which separates entry orchestration from delivery-specific behavior.")
+            sentences.append(f"Key collaborators include {collab}, each covering channel delivery, trigger bridging, or configuration support.")
+        sentences.append("This hub-and-spoke separation prevents channel-specific logic from leaking into core dispatch behavior.")
     elif intent == "config_store":
         abs_label = _render_class_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
         abs_ref = abs_label or f"`{anchor}`"
         sentences.append(
-            f"Config stores are organized around {abs_ref}, which provides the shared store contract for configuration reads and writes."
+            f"Config stores are structured around {abs_ref} as the shared abstraction boundary for configuration reads/writes."
         )
         concrete = _render_class_list(stores or collaborators, limit=3, drop=anchor)
         if concrete:
             sentences.append(
-                f"Concrete implementations such as {concrete} handle domain-specific retrieval, validation, and update behavior."
+                f"Concrete classes such as {concrete} implement domain-specific retrieval/update concerns under that abstraction."
             )
-        flow = _flow_classes_from_groups(groups)
-        if len(flow) >= 3:
-            chain = " -> ".join(f"`{c}`" for c in flow[:4])
-            sentences.append(f"In practice, store access flows through layers like {chain}, so callers remain decoupled from backend-specific retrieval details.")
+        sentences.append("That separation keeps callers decoupled from backend-specific storage details and reduces blast radius during store-level changes.")
     elif intent == "alert_flow":
         parts = _render_list(handlers or collaborators, limit=4, drop=anchor)
         anchor_bit = f"`{anchor}`" if anchor else "the entry components in evidence"
@@ -555,19 +561,19 @@ def _unified_paragraphs(
             end = _render_class_list(handlers or collaborators or stores, limit=4, drop=anchor)
             bits: List[str] = []
             if ep:
-                bits.append(f"{ep} is the HTTP/API entry; it wires the server and routes requests to handlers.")
+                bits.append(f"{ep} is the HTTP/API entrypoint, responsible for ingress and routing.")
             elif anchor:
-                bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest resolved API entry anchor in this snapshot.")
+                bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest resolved entrypoint signal in this snapshot.")
             else:
                 bits.append("The API entrypoint is not clearly resolved in this snapshot.")
             if mid:
-                bits.append(f"Concrete REST handlers extend {mid} for shared routing and lifecycle behavior.")
+                bits.append(f"{mid} provides shared API lifecycle abstractions that concrete handlers build on.")
             if end:
-                bits.append(f"Representative implementation classes in this snapshot include {end}.")
-            flow = _flow_classes_from_groups(groups)
-            if len(flow) >= 3:
-                chain = " -> ".join(f"`{c}`" for c in flow[:4])
-                bits.append(f"A typical request path follows {chain}, moving from server entry to shared API layer and then to concrete handlers.")
+                bits.append(f"Representative implementation classes include {end}, which cover domain behavior rather than API ingress itself.")
+            tops = _top_classes(groups.get("entrypoints", []) + abstractions + handlers + stores + collaborators, limit=4)
+            if tops:
+                role_map = ", ".join(f"`{c}` ({_role_label(c)})" for c in tops[:4])
+                bits.append(f"Role split in current evidence: {role_map}.")
             if bits:
                 sentences.append(" ".join(bits))
             else:
