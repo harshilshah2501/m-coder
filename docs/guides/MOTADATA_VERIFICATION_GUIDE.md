@@ -375,9 +375,9 @@ mcoder plan "Prepare a phased rollout for alert enrichment changes: feature flag
 If you maintain text scenario lists, use the built-in CLI scenario runner:
 
 ```bash
-mcoder scenario --type ask --file path/to/ask_scenarios.txt
-mcoder scenario --type debug --file path/to/debug_scenarios.txt
-mcoder scenario --type plan --file path/to/plan_scenarios.txt
+mcoder scenario --type ask --file docs/validation/scenario_lists/ask_scenarios.txt
+mcoder scenario --type debug --file docs/validation/scenario_lists/debug_scenarios.txt
+mcoder scenario --type plan --file docs/validation/scenario_lists/plan_scenarios.txt
 ```
 
 ### 5.4 Coverage note: CLI vs verifier

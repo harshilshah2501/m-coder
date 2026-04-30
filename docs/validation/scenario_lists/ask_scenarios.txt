@@ -1,0 +1,9 @@
+Which class is the base class for all APIs?
+How does mail server configuration work?
+How are config stores organized?
+Explain the API layer architecture.
+Find all classes that handle notifications.
+Which class is the base class for concrete REST APIs in this codebase?
+Explain how HTTP requests enter the product through APIServer and reach concrete handler classes.
+List main classes involved in sending email or SMS notifications from the server.
+Plan a safe refactor for alert enrichment with rollback notes and validation checkpoints.

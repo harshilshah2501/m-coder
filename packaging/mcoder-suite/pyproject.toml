@@ -39,4 +39,6 @@ exclude = [
 
 [tool.setuptools_scm]
 fallback_version = "0.1.1.dev0"
+version_scheme = "no-guess-dev"
 local_scheme = "runtime.mcoder_cli.build_version:local_scheme"
+root = "../.."
