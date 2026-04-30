@@ -15,4 +15,4 @@ Use this **before** investing in retrieval (P1). Goal: know whether the gap is *
 
 One paragraph in your runbook: narrator source, fallback reason (timeout, validation, env off), and whether bundles looked thin.
 
-See also: [BACKLOG_NARRATION_CIG_HOSTING.md](BACKLOG_NARRATION_CIG_HOSTING.md), [PASS_A_B_C_SETUP_VERIFICATION.md](PASS_A_B_C_SETUP_VERIFICATION.md).
+See also: [BACKLOG_NARRATION_CIG_HOSTING.md](BACKLOG_NARRATION_CIG_HOSTING.md), [MOTADATA_VERIFICATION_GUIDE.md](MOTADATA_VERIFICATION_GUIDE.md).

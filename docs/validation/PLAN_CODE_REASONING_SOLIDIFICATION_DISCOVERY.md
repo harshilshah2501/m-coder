@@ -93,7 +93,7 @@ Conclusion: the codebase has **strong governance primitives** (Plan-Gate posture
 | `docs/validation/motadata_aiops_behavior_scenarios.v1.json` | Plan/code **scenarios** (`plan_api_layer_change_shadow`, `plan_refusal_or_bounded_approval_*`, `code_safe_echo_probe`, `code_bounded_multistep_probe`, …). |
 | `runtime/scripts/motadata_behavior_verify.py` | Deep slice / scenario driver; **extend** for new Plan contract checks. |
 | `runtime/ci_gate/cli.py` | POSTs **plan_request** to `/v0/plan` — useful pattern for **additional** HTTP gates. |
-| `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` | Canonical verification commands. |
+| `docs/guides/MOTADATA_VERIFICATION_GUIDE.md` | Canonical verification commands. |
 
 ---
 

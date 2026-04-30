@@ -8,7 +8,7 @@
 
 | Path | Role |
 |------|------|
-| [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) | Primary spine: setup, §6 manual options, **§6.3.1 canonical `run_v1_ask`** |
+| [MOTADATA_VERIFICATION_GUIDE.md](MOTADATA_VERIFICATION_GUIDE.md) | **Single runbook:** split WSL+GPU (Pass A/B/C), production contract (Steps A–D), **§5.2** `run_v1_ask`, developer utility + batch reports |
 | [../../MCODER_USER_SCENARIOS_GUIDE.md](../../MCODER_USER_SCENARIOS_GUIDE.md) | Scenario semantics, links to simple path |
 | [../../MOTADATA_SIMPLE_PATH.md](../../MOTADATA_SIMPLE_PATH.md) | Thin router |
 | [../demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](../demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md) | Verifier stdout / JSON |
@@ -17,7 +17,6 @@
 | [../MOTADATA_DEMO_SCENARIOS.md](../MOTADATA_DEMO_SCENARIOS.md) | Demo success criteria |
 | [../DEBUG_PATH_VALIDATION_RUNBOOK.md](../DEBUG_PATH_VALIDATION_RUNBOOK.md) | Debug path capture (defers duplicate bash to production guide) |
 | [../Backend Production Validation Sheet.md](../Backend%20Production%20Validation%20Sheet.md) | Backend validation sheet |
-| [MOTADATA_DEVELOPER_UTILITY_VALIDATION.md](MOTADATA_DEVELOPER_UTILITY_VALIDATION.md) | Utility validation (optional cross-links) |
 
 **Schema/data (not prose merges):** `docs/validation/*.json` scenario packs — edit only when changing contracts, not as part of narrative consolidation.
 

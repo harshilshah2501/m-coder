@@ -3,7 +3,7 @@
 **Status tags:** `CANONICAL` (operator) · `IN_PRODUCT_SLICE`  
 **Last updated:** 2026-04-14  
 
-Primary runbook: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`. Developer-usefulness (heuristic) checks: `docs/guides/MOTADATA_DEVELOPER_UTILITY_VALIDATION.md`. **Layering:** Most rows are **Layer-3** (Plan-Gate) and/or **Layer-5** (Context Layer `export_evidence`); see `docs/ARCHITECTURE_4_LAYER.md`. This matrix is a **fast index** to entries, artifacts, and gates.
+Primary runbook: `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`. Developer-usefulness (heuristic) checks: `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`. **Layering:** Most rows are **Layer-3** (Plan-Gate) and/or **Layer-5** (Context Layer `export_evidence`); see `docs/ARCHITECTURE_4_LAYER.md`. This matrix is a **fast index** to entries, artifacts, and gates.
 
 | Module / Path | CLI or HTTP entry | Scenario | Expected output (high level) | Proof artifact | Invariant / gate | Status | Notes |
 |---------------|-------------------|----------|----------------------------|----------------|------------------|--------|-------|

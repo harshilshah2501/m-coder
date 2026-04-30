@@ -32,7 +32,7 @@ PYTHONPATH=. python3 runtime/scripts/motadata_behavior_verify.py \
   --out "runtime/.run/motadata_behavior_validation.CANDIDATE.<label>.motadata.json"
 ```
 
-Full stack setup: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
+Full stack setup: `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`.
 
 ---
 

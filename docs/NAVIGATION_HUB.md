@@ -21,7 +21,7 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 - **CLI command/output/error contract:** [`guides/MCODER_CLI_UX_CONTRACT_V1.md`](guides/MCODER_CLI_UX_CONTRACT_V1.md)
 - **Bring services up/down (governed path):** [`guides/ORCHESTRATOR_GUIDE.md`](guides/ORCHESTRATOR_GUIDE.md)
 - **Optional local systemd wrapper:** [`guides/ORCHESTRATOR_SERVICE_GUIDE.md`](guides/ORCHESTRATOR_SERVICE_GUIDE.md)
-- **Production verification flow (Motadata workspace):** [`guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md)
+- **Production verification flow (Motadata workspace):** [`guides/MOTADATA_VERIFICATION_GUIDE.md`](guides/MOTADATA_VERIFICATION_GUIDE.md)
 - **Demo machine setup (GPU -> WSL -> Windows):** [`MOTADATA_DEMO_SETUP_RUNBOOK.md`](MOTADATA_DEMO_SETUP_RUNBOOK.md)
 - **Demo narrative/success criteria:** [`MOTADATA_DEMO_SCENARIOS.md`](MOTADATA_DEMO_SCENARIOS.md)
 
@@ -46,7 +46,7 @@ This is the click-navigation entrypoint for docs. Use this page to move by inten
 
 - **General troubleshooting:** [`troubleshooting/DEBUGGING_GUIDE.md`](troubleshooting/DEBUGGING_GUIDE.md)
 - **Integration setup and checks:** [`guides/INTEGRATION_GUIDE.md`](guides/INTEGRATION_GUIDE.md)
-- **Verification command failure triage:** [`guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#8-troubleshooting-and-logs`](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#8-troubleshooting-and-logs)
+- **Verification command failure triage:** [`guides/MOTADATA_VERIFICATION_GUIDE.md#9-troubleshooting`](guides/MOTADATA_VERIFICATION_GUIDE.md#9-troubleshooting)
 
 ## Indexed Catalog (Machine-Readable)
 

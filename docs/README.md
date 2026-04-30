@@ -224,7 +224,7 @@ See **`docs/guides/ORCHESTRATOR_GUIDE.md`**. Optional systemd: **`docs/guides/OR
 
 ### Test Endpoints (legacy RAG API — archived stack only)
 
-The **8081** FastAPI service lived under **`archive/legacy_runtime_rag/`** and is **not** the governed product path. For current validation use **`docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`** (Context Layer + Plan-Gate).
+The **8081** FastAPI service lived under **`archive/legacy_runtime_rag/`** and is **not** the governed product path. For current validation use **`docs/guides/MOTADATA_VERIFICATION_GUIDE.md`** (Context Layer + Plan-Gate).
 
 ```bash
 # Only if you explicitly run the archived RAG server from archive/legacy_runtime_rag/
@@ -264,7 +264,7 @@ If your deployment writes service logs next to a separate `rag/` checkout or cus
 - **[guides/ORCHESTRATOR_GUIDE.md](guides/ORCHESTRATOR_GUIDE.md)** — Governed stack (`governed_services.sh`)
 - **[guides/ORCHESTRATOR_SERVICE_GUIDE.md](guides/ORCHESTRATOR_SERVICE_GUIDE.md)** — Optional systemd
 
-**Startup Sequence (historical / optional legacy stack):** Some deployments chained Qdrant, wrapper, and a **8081** RAG API; that RAG implementation is now **`archive/legacy_runtime_rag/`** and is **not** started by `governed_services.sh`. For the canonical slice, use Context Layer + Plan-Gate + vLLM per `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
+**Startup Sequence (historical / optional legacy stack):** Some deployments chained Qdrant, wrapper, and a **8081** RAG API; that RAG implementation is now **`archive/legacy_runtime_rag/`** and is **not** started by `governed_services.sh`. For the canonical slice, use Context Layer + Plan-Gate + vLLM per `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`.
 
 **Startup Time:** ~90-120 seconds (mostly vLLM model loading)
 

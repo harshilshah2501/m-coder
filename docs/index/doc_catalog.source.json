@@ -39,8 +39,8 @@
     },
     {
       "id": "production-verification-guide",
-      "title": "Motadata AIOps Production Verification Guide",
-      "path": "docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md",
+      "title": "Motadata verification guide",
+      "path": "docs/guides/MOTADATA_VERIFICATION_GUIDE.md",
       "role": "runbook",
       "tags": ["verification", "capabilities", "repeatability"]
     },

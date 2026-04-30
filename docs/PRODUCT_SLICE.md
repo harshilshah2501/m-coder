@@ -85,4 +85,4 @@ This document is the **Layer-5 + Layer-3 product boundary** for what must be pro
 | `docs/MASTER_SYSTEM_SPEC.md` | **Sole canonical** architecture entry; hierarchy of truth |
 | `docs/PRODUCT_SLICE_CHARTER.md` | Full contract tables, host modes A/B, observability requirements |
 | `docs/LIVE_ROADMAP_TRACKER.md` | What is **closed** vs follow-on |
-| `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` | **Active** CLI verification runbook |
+| `docs/guides/MOTADATA_VERIFICATION_GUIDE.md` | **Active** CLI verification runbook |

@@ -25,6 +25,6 @@
 ## Cross-links
 
 - Commands: `docs/CLI_VALIDATION_MATRIX.md`  
-- Contract vs developer-utility validation: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`, `docs/guides/MOTADATA_DEVELOPER_UTILITY_VALIDATION.md`  
+- Contract vs developer-utility validation: `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`, `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`  
 - Scope: `docs/PRODUCT_SLICE.md`  
 - Truth: `docs/SYSTEM_TRUTH.md`  

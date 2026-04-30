@@ -38,7 +38,7 @@
 | `archive/legacy_runtime_rag/` | **Archived** (2026-04-14); **off** Plan-Gate CLI slice | **RETIRED** from `runtime/`; optional revival for experiments only |
 | `runtime/plan_gate_stub/` | Small; **shared** with service | **KEEP** — protocol tests |
 | `AskClient.kt` (if still unused) | **DEAD_CANDIDATE** per audit | **NEEDS_CONFIRMATION** via `rg` before delete |
-| Duplicate runbooks (IDE + CLI) | Doc overlap | **Consolidate** reading order to `MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` + matrices |
+| Duplicate runbooks (IDE + CLI) | Doc overlap | **Consolidate** reading order to `MOTADATA_VERIFICATION_GUIDE.md` + matrices |
 
 ---
 

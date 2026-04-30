@@ -466,7 +466,7 @@ Goal:
 Files likely involved:
 - `runtime/tests/` new or extended test
 - `runtime/scripts/verify_ask_path.sh` or a new scenario runner
-- `docs/guides/PASS_A_B_C_SETUP_VERIFICATION.md`
+- `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`
 
 Acceptance criteria:
 - Tests assert content-level requirements for all four prompts.

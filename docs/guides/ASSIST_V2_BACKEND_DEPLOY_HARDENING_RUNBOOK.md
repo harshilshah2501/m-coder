@@ -96,7 +96,7 @@ Full objective, commands, observed results, and conclusion:
 
 Use canonical commands from:
 
-- `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`
+- `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`
 
 Minimum acceptance:
 

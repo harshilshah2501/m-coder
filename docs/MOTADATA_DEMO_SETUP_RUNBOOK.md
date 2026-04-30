@@ -1,6 +1,6 @@
 # Motadata AI Coding Assistant — Deterministic Demo Setup Runbook
 
-**After the stack is up:** for governed **verification** commands (verifier, manual `run_v1_ask`, scenario JSON), use [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) §6–7 and [MOTADATA_SIMPLE_PATH.md](../MOTADATA_SIMPLE_PATH.md).
+**After the stack is up:** for governed **verification** commands (verifier, manual `run_v1_ask`, scenario JSON), use [MOTADATA_VERIFICATION_GUIDE.md](guides/MOTADATA_VERIFICATION_GUIDE.md) (production section: manual Ask **§5**, regression **§8**) and [MOTADATA_SIMPLE_PATH.md](../MOTADATA_SIMPLE_PATH.md).
 
 **Purpose:** **Ordered** steps **GPU-server → WSL → Windows** with **commands**, **expected outputs**, and **validation gates**. No architecture theory here — see [MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md](MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md).
 

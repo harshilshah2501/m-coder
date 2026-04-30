@@ -166,13 +166,12 @@ Normalized scope recount (3I):
 
 | File path | Purpose | Current relevance | Canonicality | Overlaps with | Disposition | Notes |
 |---|---|---|---|---|---|---|
-| `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` | Canonical production verification runbook | Critical | Canonical | post-closure maintenance, baseline policy | keep | Primary verification runbook. |
+| `docs/guides/MOTADATA_VERIFICATION_GUIDE.md` | Single Motadata runbook: WSL+GPU setup (Pass A/B/C), production contract verify, **§5.2** `run_v1_ask`, developer utility + batch reports, troubleshooting | Critical | Canonical | post-closure maintenance, baseline policy, `PASS_*` / `MOTADATA_*` redirect stubs in same folder | keep | Merges former AIOPS + Pass A/B/C + developer-utility guides; redirects preserve old paths. |
 | `docs/guides/mapping_request_ids.md` | Trace mapping runbook | High | Active working | Host-A mapping docs | keep | Operationally useful and current. |
 | `docs/guides/STAGE2_REAL_AIOPS_TESTING_GUIDE.md` | Stage2 test procedure | Medium | Reference | production verification guide | keep | Historical but still useful context. |
 | `docs/guides/STAGE3_BURN_IN_AND_E2E_DEMO.md` | Stage3 burn-in/e2e demo runbook | Medium | Active working | stage3 burn-in report | keep | Active demo/verification aid. |
 | `docs/guides/HOST_A_PROOF_PACK_CLOSURE.md` | Host-A proof pack closure instructions | Medium | Reference | post-closure maintenance | keep | Supporting ops guide. |
 | `docs/guides/HOST_A_PLAN_GATE_LOG_MAPPING.md` | Host-A request-id mapping example | Medium | Reference | mapping_request_ids.md | keep | Example-focused guide. |
-| `docs/guides/MOTADATA_DEVELOPER_UTILITY_VALIDATION.md` | Utility validation runbook | High | Active working | behavior verify script, utility scenarios | keep | Current evaluation guidance. |
 | `docs/guides/JETBRAINS_PLUGIN_UI_FINAL_DEMO_RUNBOOK.md` | Plugin UI demo guide | Medium | Compatibility | plugin demo guide, tracker plugin closure | keep | Compatibility/demo support. |
 | `docs/guides/ORCHESTRATOR_SERVICE_GUIDE.md` | Governed services startup guide | Medium | Active working | orchestrator guide, demo setup | keep | Current service operation doc. |
 | `docs/guides/ORCHESTRATOR_GUIDE.md` | Systemd/ops wrapper guidance | Medium | Compatibility | orchestrator service guide | keep | Complementary ops guidance. |

@@ -1,6 +1,6 @@
 # Motadata Capability Demobook (Definitive)
 
-**Production-style verification (setup, manual HTTP, scenarios):** [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) and the thin router [MOTADATA_SIMPLE_PATH.md](../MOTADATA_SIMPLE_PATH.md) — use those when you need one spine instead of demo-only steps.
+**Production-style verification (setup, manual HTTP, scenarios):** [docs/guides/MOTADATA_VERIFICATION_GUIDE.md](guides/MOTADATA_VERIFICATION_GUIDE.md) and the thin router [MOTADATA_SIMPLE_PATH.md](../MOTADATA_SIMPLE_PATH.md) — use those when you need one spine instead of demo-only steps.
 
 This demobook is the single execution script for setup and capability testing. It is command-first and aligned to the current governed stack (`governed_services.sh` + Context Layer + Plan-Gate Ask v1).
 
@@ -119,7 +119,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 
 - verifier exits `0`
 - `runtime/.run/motadata_behavior_validation.json` has `all_pass: true`
-- when `--repeat 2`, repeatability is stable per the report (see `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` for full pass rules)
+- when `--repeat 2`, repeatability is stable per the report (see `docs/guides/MOTADATA_VERIFICATION_GUIDE.md` for full pass rules)
 
 **Reading the log and JSON:** With `--print dev`, the first printed `all_pass` line reflects **smoke only**; the JSON file’s top-level `all_pass` combines smoke **and** scenarios. See [`demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md`](demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md) (including [§3.5 — queries and commands from the scenario JSON](demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md#scenario-json-queries)).
 

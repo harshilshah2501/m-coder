@@ -4,7 +4,7 @@
 
 **Moved from:** `runtime/rag/` → `archive/legacy_runtime_rag/` (2026-04-14)
 
-This tree is **not** part of the governed Motadata AI Coding Assistant vertical slice validated by Plan-Gate + Context Layer + Layer-5 (`motadata_behavior_verify.py`, `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`). It was a **parallel** stack (FastAPI on port 8081, Qdrant/Neo4j, `rag_api.py`, orchestrator agents).
+This tree is **not** part of the governed Motadata AI Coding Assistant vertical slice validated by Plan-Gate + Context Layer + Layer-5 (`motadata_behavior_verify.py`, `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`). It was a **parallel** stack (FastAPI on port 8081, Qdrant/Neo4j, `rag_api.py`, orchestrator agents).
 
 **Canonical retrieval for the product slice** lives under `runtime/layer5/` and `runtime/context_layer_service/`.
 

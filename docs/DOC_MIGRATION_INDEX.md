@@ -15,7 +15,7 @@ Use this when editing or archiving. **Do not mass-delete** without owner review 
 | `docs/MOTADATA_AI_CODING_ASSISTANT_ARCHITECTURE.md` | **KEEP** | `docs/SYSTEM_TRUTH.md` | Architecture narrative; cross-check only |
 | `docs/audit/END_TO_END_SYSTEM_AUDIT_REPORT.md` | **KEEP** | `docs/REPO_REALITY_MAP.md` | Factual path audit; frozen in time |
 | `docs/audit/SURGICAL_NEXT_STEPS_PLAN.md` | **KEEP** | `docs/LIVE_ROADMAP_TRACKER.md` | Sequencing; may age — tracker supersedes “next” |
-| `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md` | **KEEP** | `docs/CLI_VALIDATION_MATRIX.md` | Active CLI runbook |
+| `docs/guides/MOTADATA_VERIFICATION_GUIDE.md` | **KEEP** | `docs/CLI_VALIDATION_MATRIX.md` | Active CLI runbook |
 | `docs/runtime/JETBRAINS_PLUGIN_DEMO_GUIDE.md` | **KEEP** | — | **DEFERRED_INTEGRATION** validation; still operator truth |
 | `docs/JETBRAINS_PLUGIN_FLOW_V0_1.md` | **KEEP** | `docs/SYSTEM_TRUTH.md` §contracts | API contract reference |
 | `docs/RUNTIME_PLAN_AND_LEDGER_V0_1.md` | **KEEP** | `docs/SYSTEM_TRUTH.md` | Plan/ledger schema |

@@ -88,7 +88,7 @@ Captured from `python3 runtime/scripts/motadata_behavior_verify.py --workspace-r
 
 - Behavior / utility verification: `runtime/scripts/motadata_behavior_verify.py`
 - Scenario JSON (examples): `docs/validation/motadata_aiops_behavior_scenarios.v1.json`, `docs/validation/motadata_developer_utility_scenarios.v1.json`
-- Production verification guide: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`
+- Production verification guide: `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`
 
 ---
 

@@ -169,7 +169,7 @@ Use these exact queries first before custom ones:
 
 ### Command sequence
 
-**Canonical wiring:** use the same **`run_v1_ask`** shell helper as in [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md §6.3.1](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1) (export → `ask_request.v1.0` → `POST /v1/ask`). Set `WORKSPACE_ROOT`, `CONTEXT_URL`, `PLAN_GATE_URL`, and `TOP_K` to match §A0.
+**Canonical wiring:** use the same **`run_v1_ask`** shell helper as in [MOTADATA_VERIFICATION_GUIDE.md §5.2](guides/MOTADATA_VERIFICATION_GUIDE.md#canonical-manual-ask-v1) (export → `ask_request.v1.0` → `POST /v1/ask`). Set `WORKSPACE_ROOT`, `CONTEXT_URL`, `PLAN_GATE_URL`, and `TOP_K` to match §A0.
 
 **This sheet’s historical replay:** after pasting `run_v1_ask` from that section, run:
 
@@ -177,7 +177,7 @@ Use these exact queries first before custom ones:
 run_v1_ask "${QUERY:-How does alert correlation work in this repo?}" /tmp/ask_v1_response.json
 ```
 
-(Add `request_id` / `trace_id` to the Ask payload only if you are reproducing a trace-correlated audit; the helper matches §6.3.1 defaults.)
+(Add `request_id` / `trace_id` to the Ask payload only if you are reproducing a trace-correlated audit; the helper matches §5.2 defaults.)
 
 ### Expected
 

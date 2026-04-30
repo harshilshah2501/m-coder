@@ -25,7 +25,7 @@ Constraints preserved:
 - Enhanced verifier observability in `runtime/scripts/motadata_behavior_verify.py`:
   - plan actual-summary now records mode/capabilities/action fields
   - code actual-summary now includes `code_observability` (bytes/lines/context-growth)
-- Expanded guide commands in `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.
+- Expanded guide commands in `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`.
 
 Artifacts:
 

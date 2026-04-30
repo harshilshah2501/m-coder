@@ -8,8 +8,8 @@ This document walks through what you see when you run `runtime/scripts/motadata_
 - Scenario definitions (expected vs actual): `docs/validation/motadata_aiops_behavior_scenarios.v1.json`
 - Plain-language narratives (titles and paragraphs per scenario id): `docs/validation/motadata_aiops_behavior_scenario_plain_language.v1.json`
 - Quality gates (retrieval / evidence rules): `docs/validation/motadata_evidence_quality_policy.v1.json`
-- Full operator runbook: `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`
-- Manual Ask over HTTP (single maintained `run_v1_ask` block): [MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md §6.3.1](../guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)
+- Full operator runbook: `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`
+- Manual Ask over HTTP (single maintained `run_v1_ask` block): [MOTADATA_VERIFICATION_GUIDE.md §5.2](../guides/MOTADATA_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)
 
 ---
 
@@ -444,4 +444,4 @@ Suggested order:
 
 ---
 
-*If ports, scenario IDs, or verifier flags change, update this guide alongside `docs/MOTADATA_DEMOBOOK.md` and `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`.*
+*If ports, scenario IDs, or verifier flags change, update this guide alongside `docs/MOTADATA_DEMOBOOK.md` and `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`.*

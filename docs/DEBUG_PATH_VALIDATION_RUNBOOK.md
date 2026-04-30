@@ -93,7 +93,7 @@ source /path/to/m-coder/docs/set-envars.sh
 
 ### 2.1 Define `run_v1_ask` in your shell (canonical copy)
 
-**Do not fork the bash here.** Paste the **`run_v1_ask`** function from the production verification guide — **§6.3.1** ([`MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1`](guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)) — so fixes stay in one place.
+**Do not fork the bash here.** Paste the **`run_v1_ask`** function from the production verification guide — **§5.2** ([`MOTADATA_VERIFICATION_GUIDE.md#canonical-manual-ask-v1`](guides/MOTADATA_VERIFICATION_GUIDE.md#canonical-manual-ask-v1)) — so fixes stay in one place.
 
 This runbook’s **unique** content below is the **query set**, **capture checklist**, and **v1 vs v0** notes — not a second copy of `curl`/`python3` wiring.
 

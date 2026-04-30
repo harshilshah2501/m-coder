@@ -8,7 +8,7 @@
 
 **Scope:** Motadata AIOps-style verification (Context Layer + Plan-Gate + optional vLLM). Product behavior is **governed**: evidence-first Ask, structured EXPLAIN_DEBUG, plan decisions, bounded execute, no public “agent” API route.
 
-**Deeper runbooks (setup, ports, troubleshooting):** [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md)  
+**Deeper runbooks (setup, ports, troubleshooting):** [docs/guides/MOTADATA_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_VERIFICATION_GUIDE.md)  
 **Verifier output interpretation:** [docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md)  
 **Documentation index:** [docs/NAVIGATION_HUB.md](docs/NAVIGATION_HUB.md)
 
@@ -76,7 +76,7 @@ Quality policy (thresholds used with retrieval) is separate: **[docs/validation/
 
 ## 4. How to run **all** scenarios (automated)
 
-**Prerequisites:** GPU Plan-Gate + vLLM and WSL Context Layer stacks are up; `MOTADATA_REPO_ROOT` points at your Motadata workspace clone. Full chronology: [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) §2–4.
+**Prerequisites:** GPU Plan-Gate + vLLM and WSL Context Layer stacks are up; `MOTADATA_REPO_ROOT` points at your Motadata workspace clone. Full chronology: [docs/guides/MOTADATA_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_VERIFICATION_GUIDE.md) §2–4.
 
 From the **m-coder repo root** (adjust `MOTADATA_REPO_ROOT`):
 
@@ -112,7 +112,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
   --print dev
 ```
 
-Plan and execute steps use the verifier’s **built-in** synthetic plan event and **safe** echo unless you call those APIs manually (see production guide §6.3 Option B).
+Plan and execute steps use the verifier’s **built-in** synthetic plan event and **safe** echo unless you call those APIs manually (for direct HTTP shape, see [MOTADATA_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_VERIFICATION_GUIDE.md) **Primary verification flow** — plan slice, code slice, appendix).
 
 ---
 
@@ -296,7 +296,7 @@ python3 runtime/scripts/motadata_behavior_verify.py \
 
 ## 6. Quick manual checklist (curl / IDE)
 
-Use when services are healthy ([production guide §6](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md)):
+Use when services are healthy ([verification guide — manual Ask §5 / regression §8](docs/guides/MOTADATA_VERIFICATION_GUIDE.md)):
 
 | Capability | Check |
 |------------|--------|
@@ -324,7 +324,7 @@ For **what to click** and demo-style flows (JetBrains-oriented notes), see:
 
 | Need | Document |
 |------|----------|
-| Full GPU + WSL setup, preflight, tunnels | [docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md) |
+| Full GPU + WSL setup, preflight, tunnels | [docs/guides/MOTADATA_VERIFICATION_GUIDE.md](docs/guides/MOTADATA_VERIFICATION_GUIDE.md) |
 | Understand verifier logs and JSON fields | [docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md](docs/demo/MOTADATA_BEHAVIOR_VERIFY_OUTPUT_GUIDE.md) |
 | Demo machine topology | [docs/MOTADATA_DEMO_SETUP_RUNBOOK.md](docs/MOTADATA_DEMO_SETUP_RUNBOOK.md) |
 | Architecture / layers | [docs/ARCHITECTURE_4_LAYER.md](docs/ARCHITECTURE_4_LAYER.md), [docs/PRODUCT_SLICE.md](docs/PRODUCT_SLICE.md) |

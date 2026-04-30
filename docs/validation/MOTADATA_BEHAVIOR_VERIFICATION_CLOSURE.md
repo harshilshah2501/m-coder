@@ -27,7 +27,7 @@ This is a **read-only** record: what is locked, what is follow-on, and where evi
 | **Named artifact** | `runtime/.run/motadata_behavior_validation.CANDIDATE.SERVICENOW_QUALITY_V3.motadata.json` (local / typically gitignored; regenerate with the command in §5) |
 | **Workspace identity hash** (Motadata snapshot for regressions) | `b9d432fe5fe0f734e2ea6c8c4e5c2f0115502d34736c888c408b9f57a4595b86` (from scenario `actual_summary.retrieval_gates.workspace_identity_hash`) |
 
-**Runbook:** `docs/guides/MOTADATA_AIOPS_PRODUCTION_VERIFICATION_GUIDE.md`  
+**Runbook:** `docs/guides/MOTADATA_VERIFICATION_GUIDE.md`  
 **Program snapshot:** `docs/PROGRAM_STATE_SNAPSHOT.md`  
 **Tracker:** `docs/LIVE_ROADMAP_TRACKER.md` §5 (Current Sprint).
 
