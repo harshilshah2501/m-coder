@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import subprocess
 import time
 from pathlib import Path
 
 from runtime.layer5.authority.registry_loader import load_registry
+from runtime.layer5.graph.eventbus_topology_map import build_eventbus_topology_map
 from runtime.layer5.graph import (
     GraphBuilder,
     validate_graph_integrity,
@@ -191,9 +193,20 @@ def main() -> int:
         return 2
     print("[cig] writing graph artifacts")
     paths = write_graph_artifacts(graph, out_dir)
+    eventbus_map = build_eventbus_topology_map(
+        workspace_root=workspace_root,
+        relative_files=index.files.keys(),
+        repo_identity={"commit_sha": _git_commit_sha(workspace_root)},
+    )
+    eventbus_path = out_dir / "eventbus_topology_mapping.v1.json"
+    eventbus_path.write_text(
+        json.dumps(eventbus_map, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(f"graph_jsonl: {paths['jsonl']}")
     print(f"graph_manifest: {paths['manifest']}")
     print(f"graph_adjacency: {paths['adjacency']}")
+    print(f"eventbus_topology_map: {eventbus_path}")
     print(f"graph_stats: {graph.stats}")
     print(f"[cig] total_elapsed_s={time.perf_counter() - t0:.2f}")
     return 0

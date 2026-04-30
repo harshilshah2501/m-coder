@@ -94,6 +94,7 @@ def test_ensure_selected_grounding_adds_selected_file_evidence_first():
     )
     out = _ensure_selected_grounding(
         parsed,
+        query="What does this do?",
         selected_file="motadata/src/AgentCacheManager.java",
         selection="getAgentCacheFileChunks()",
         bundle=b,
@@ -108,6 +109,7 @@ def test_ensure_selected_grounding_returns_insufficient_when_selected_missing():
     parsed = ExplainDebugResult(summary="ok")
     out = _ensure_selected_grounding(
         parsed,
+        query="Explain missing file behavior",
         selected_file="motadata/src/MissingFile.java",
         selection="foo()",
         bundle=b,
@@ -141,6 +143,7 @@ def test_ensure_selected_grounding_uses_selection_tokens_when_methods_absent():
     parsed = ExplainDebugResult(summary="Potential cache issue.", evidence=[])
     out = _ensure_selected_grounding(
         parsed,
+        query="Debug cache token path",
         selected_file="app/handler.py",
         selection="cache.get(key)",
         bundle=b,
@@ -175,6 +178,7 @@ def test_ensure_selected_grounding_uses_current_bundle_content_for_method_clues(
     parsed = ExplainDebugResult(summary="Potential issue.", evidence=[])
     out = _ensure_selected_grounding(
         parsed,
+        query="Explain overlay_hotfix behavior",
         selected_file="src/main.py",
         selection="overlay_hotfix()",
         bundle=b,
@@ -182,6 +186,43 @@ def test_ensure_selected_grounding_uses_current_bundle_content_for_method_clues(
     assert out.error is None
     assert out.evidence
     assert "src/main.py:overlay_hotfix" in out.evidence[0]
+
+
+def test_ensure_selected_grounding_guards_explicit_method_mismatch():
+    b = ContextBundle(
+        task_id="t6",
+        revision="r6",
+        created_at_utc="2026-01-01T00:00:00Z",
+        items=[
+            ContextItem(
+                path="motadata/src/main/java/com/mindarray/store/AbstractConfigStore.java",
+                content=(
+                    "public class AbstractConfigStore {\n"
+                    "  public JsonArray flatItems(String field) { return new JsonArray(); }\n"
+                    "}\n"
+                ),
+                byte_size=180,
+                selection_reason="retrieval",
+            ),
+        ],
+        limits=ContextBundleLimits(max_files=10, max_bytes=10000, truncated=False),
+        provenance=ContextBundleProvenance(
+            root_path="/tmp",
+            selectors=["direct"],
+            requested_files=[],
+            symbol_hints=[],
+        ),
+    )
+    parsed = ExplainDebugResult(summary="Potential null path.", evidence=[])
+    out = _ensure_selected_grounding(
+        parsed,
+        query="Debug null-return paths in AbstractConfigStore.getItem and related callers.",
+        selected_file="motadata/src/main/java/com/mindarray/store/AbstractConfigStore.java",
+        selection="flatItems",
+        bundle=b,
+    )
+    assert "does not include `AbstractConfigStore.getItem`" in out.summary
+    assert "cannot confirm that path" in out.summary
 
 
 def test_extract_method_clues_ignores_constructor_calls_and_prefers_declarations():
@@ -250,6 +291,7 @@ def test_ensure_selected_grounding_injects_branching_markers_when_linear():
     )
     out = _ensure_selected_grounding(
         parsed,
+        query="Debug SNMP trap parse",
         selected_file="motadata/src/main/java/com/mindarray/nms/SNMPTrapProcessor.java",
         selection="parse trap-types",
         bundle=b,
@@ -296,6 +338,7 @@ def test_ensure_selected_grounding_tightens_wording_when_executable():
     )
     out = _ensure_selected_grounding(
         parsed,
+        query="Debug mail settings stale",
         selected_file="motadata/src/main/java/com/mindarray/api/MailServerConfiguration.java",
         selection="beforeUpdate",
         bundle=b,

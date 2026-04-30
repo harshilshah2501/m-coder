@@ -353,6 +353,19 @@ def _extract_selection_tokens(selection: str, cap: int = 5) -> List[str]:
     return out
 
 
+def _extract_explicit_target_method(query: str, selected_file: str) -> str:
+    q = str(query or "")
+    m = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b", q)
+    if not m:
+        return ""
+    cls, method = m.group(1), m.group(2)
+    sf = _norm_rel_path(selected_file)
+    stem = sf.split("/")[-1].rsplit(".", 1)[0] if sf else ""
+    if stem and stem.lower() != cls.lower():
+        return ""
+    return method
+
+
 def _selection_linked_clues(text: str, tokens: List[str], cap: int = 2) -> List[str]:
     if not text or not tokens:
         return []
@@ -413,6 +426,7 @@ def _debug_control_flow_marker_count(text: str) -> int:
 def _ensure_selected_grounding(
     parsed: ExplainDebugResult,
     *,
+    query: str,
     selected_file: str,
     selection: str,
     bundle: ContextBundle,
@@ -487,6 +501,20 @@ def _ensure_selected_grounding(
             f"Grounded on `{sel_base}` from `{sel_norm}`."
         )
 
+    explicit_method = _extract_explicit_target_method(query, selected_file)
+    if explicit_method and all(m.lower() != explicit_method.lower() for m in methods):
+        target_cls = sel_symbol or sel_base
+        summary = (
+            f"The retrieved snippet does not include `{target_cls}.{explicit_method}`; "
+            "debug cannot confirm that path."
+        )
+        logic_flow = (
+            "Selected-file context is present, but the requested method body is not visible in the retrieved snippet."
+        )
+        likely = "Method-specific failure conditions remain unproven until the exact method body is retrieved."
+        confidence = "The selected snippet is narrow, so the exact downstream branch is not fully proven."
+        evidence = [f"{sel_norm}:analysis_anchor"]
+
     # Push concrete clues to avoid generic-only language.
     if methods and not any(m.lower() in joined for m in methods):
         logic_flow = (logic_flow + " " if logic_flow else "") + (
@@ -555,7 +583,7 @@ def _ensure_selected_grounding(
         confidence = (
             "Bounded to provided evidence bundle; validate against full caller/callee chain before code changes."
         )
-    if not methods and not branches:
+    if not methods and not branches and not explicit_method:
         marker = "insufficient_for_precise_trace"
         if marker not in confidence.lower():
             confidence += f" {marker}: selected file evidence lacks concrete method/branch anchors in this context window."
@@ -692,6 +720,7 @@ def explain_debug(
         return parsed
     parsed = _ensure_selected_grounding(
         parsed,
+        query=query,
         selected_file=selected_file,
         selection=selection,
         bundle=bundle,

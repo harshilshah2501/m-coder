@@ -18,6 +18,78 @@ from runtime.mcoder_cli import stack_daemon
 from runtime.mcoder_cli import venv_diagnose
 
 
+def _eventbus_debug_cues_from_reasoning_context(reasoning_context: dict[str, Any] | None) -> list[str]:
+    rc = reasoning_context if isinstance(reasoning_context, dict) else {}
+    eb = rc.get("eventbus_context") if isinstance(rc.get("eventbus_context"), dict) else {}
+    if not eb:
+        return []
+    producers = eb.get("producers") if isinstance(eb.get("producers"), list) else []
+    consumers = eb.get("consumers") if isinstance(eb.get("consumers"), list) else []
+    unknowns = eb.get("unknowns") if isinstance(eb.get("unknowns"), list) else []
+
+    p_addrs = {str(x.get("address") or "") for x in producers if isinstance(x, dict) and str(x.get("address") or "")}
+    c_addrs = {str(x.get("address") or "") for x in consumers if isinstance(x, dict) and str(x.get("address") or "")}
+    both = sorted(a for a in (p_addrs & c_addrs) if a)
+    only_p = sorted(a for a in (p_addrs - c_addrs) if a)
+    only_c = sorted(a for a in (c_addrs - p_addrs) if a)
+
+    cues: list[str] = []
+    if both:
+        cues.append(f"Exact producer-consumer match on address(es): {', '.join(both[:2])}.")
+    if only_p:
+        cues.append(f"Producer present but no matched consumer for address(es): {', '.join(only_p[:2])}.")
+    if only_c:
+        cues.append(f"Consumer present but no matched producer for address(es): {', '.join(only_c[:2])}.")
+    if unknowns:
+        u = unknowns[0] if isinstance(unknowns[0], dict) else {}
+        raw = str(u.get("raw_token") or "").strip()
+        typ = str(u.get("unknown_type") or "UNKNOWN").strip()
+        if raw:
+            cues.append(f"Unresolved/dynamic address token ({typ}): {raw}.")
+        else:
+            cues.append(f"Unresolved/dynamic address present ({typ}).")
+    return cues[:3]
+
+
+def _clean_debug_text(text: str) -> str:
+    s = str(text or "").strip()
+    if not s:
+        return s
+    if "(Governance curation:" in s:
+        s = s.split("(Governance curation:", 1)[0].strip()
+    s = s.replace("insufficient_for_precise_trace", "").strip()
+    s = " ".join(s.split())
+    return s
+
+
+def _naturalize_debug_limit(text: str) -> str:
+    s = _clean_debug_text(text)
+    if not s:
+        return ""
+    if "selected highlight is minimal" in s.lower() or "narrow" in s.lower():
+        return "The selected snippet is narrow, so the exact downstream branch is not fully proven."
+    if "insufficient grounding" in s.lower():
+        return "Selected-file grounding is incomplete, so this debug conclusion stays bounded."
+    return s
+
+
+def _api_route_debug_cues_from_reasoning_context(
+    query: str, reasoning_context: dict[str, Any] | None
+) -> list[str]:
+    q = str(query or "").lower()
+    if not any(t in q for t in ("route", "router", "apiserver", "runtime")):
+        return []
+    rc = reasoning_context if isinstance(reasoning_context, dict) else {}
+    m = rc.get("api_route_mapping") if isinstance(rc.get("api_route_mapping"), dict) else {}
+    if str(m.get("schema_version") or "") != "api_route_handler_mapping.v1":
+        return []
+    return [
+        "Check `APIServer.start` HTTP server and root router wiring.",
+        "Confirm `/api/v1/*` mount into `apiRouter` and `APIRouter.init` registration.",
+        "Validate `AbstractAPI.init` CRUD template hooks for endpoint lifecycle binding.",
+    ]
+
+
 def _now_utc() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -437,6 +509,7 @@ def _run_ask_like(
         print(json.dumps(resp, indent=2))
     else:
         md = resp.get("metadata") if isinstance(resp.get("metadata"), dict) else {}
+        rc = md.get("reasoning_context") if isinstance(md.get("reasoning_context"), dict) else {}
         steps = ((resp.get("plan_summary") or {}).get("steps") or []) if isinstance(resp.get("plan_summary"), dict) else []
         explain_debug = resp.get("explain_debug") if isinstance(resp.get("explain_debug"), dict) else {}
         print("")
@@ -453,6 +526,10 @@ def _run_ask_like(
             dbg_logic = str(explain_debug.get("logic_flow") or "").strip()
             dbg_risk = str(explain_debug.get("likely_bug_risk") or "").strip()
             dbg_limits = str(explain_debug.get("confidence_limits") or "").strip()
+            dbg_summary = _clean_debug_text(dbg_summary)
+            dbg_logic = _clean_debug_text(dbg_logic)
+            dbg_risk = _clean_debug_text(dbg_risk)
+            dbg_limits = _naturalize_debug_limit(dbg_limits)
             dbg_evidence = explain_debug.get("evidence") if isinstance(explain_debug.get("evidence"), list) else []
             cues = [str(x).strip() for x in dbg_evidence if str(x).strip()][:3]
             missing_selected = any("missing_in_context" in c.lower() for c in cues)
@@ -472,6 +549,18 @@ def _run_ask_like(
                 if cues:
                     print("Evidence cues:")
                     for c in cues:
+                        print(f"- {c}")
+                    print("")
+                eb_cues = _eventbus_debug_cues_from_reasoning_context(rc)
+                if eb_cues:
+                    print("EventBus inspection cues:")
+                    for c in eb_cues:
+                        print(f"- {c}")
+                    print("")
+                api_route_cues = _api_route_debug_cues_from_reasoning_context(query, rc)
+                if api_route_cues:
+                    print("API route inspection cues:")
+                    for c in api_route_cues:
                         print(f"- {c}")
                     print("")
                 if dbg_risk:

@@ -31,6 +31,30 @@ def _meta_rc(owner_cls: str, owner_method: str, gaps: list[str] | None = None) -
     }
 
 
+def _api_route_mapping() -> dict:
+    return {
+        "schema_version": "api_route_handler_mapping.v1",
+        "apiserver_entrypoints": [
+            {"class": "APIServer", "method": "start", "file": "src/main/java/com/mindarray/api/APIServer.java"}
+        ],
+        "routes": [
+            {"path": "/api/v1/*", "handler_or_subrouter": "subRouter(apiRouter)"},
+            {"path": "/settings/*,/system/*,/query/*", "handler_or_subrouter": "subRouter(...)"},
+        ],
+        "api_classes": [
+            {"class": "MailServerConfiguration", "extends": "AbstractAPI"},
+            {"class": "User", "extends": "AbstractAPI"},
+            {"class": "TraceService", "extends": "AbstractAPI"},
+        ],
+        "lifecycle_hooks": [
+            {"class": "AbstractAPI", "hook": "beforeUpdate"},
+            {"class": "MailServerConfiguration", "hook": "beforeUpdate"},
+        ],
+        "eventbus_handoffs": [{"class": "APIServer", "type": "send", "address": "EVENT_AUDIT"}],
+        "unknowns": [{"topic": "Exact per-endpoint overrides", "reason": "Needs class-by-class extraction"}],
+    }
+
+
 def test_articulated_answer_unified_contract_default():
     # Non-routine gap → one bounded-confidence sentence (custom gap, not snapshot boilerplate).
     out = build_articulated_answer(
@@ -156,6 +180,13 @@ def test_unified_contract_handles_mail_notification_config_and_ambiguous_queries
 
 def test_notification_discovery_with_email_sms_uses_notification_template():
     meta = _meta_rc("NotificationEngine", "start", gaps=[])
+    meta["reasoning_context"]["eventbus_context"] = {
+        "addresses": [{"address": "notification.dispatch"}],
+        "producers": [{"address": "notification.dispatch", "class": "NotificationEngine", "method": "start"}],
+        "consumers": [{"address": "notification.dispatch", "class": "EmailNotification", "method": "deliver"}],
+        "unknowns": [],
+        "confidence": {"confidence_distribution": {"bounded": 2}},
+    }
     out = build_articulated_answer(
         query="List main classes involved in sending email or SMS notifications from the server.",
         plan_steps=[],
@@ -166,7 +197,54 @@ def test_notification_discovery_with_email_sms_uses_notification_template():
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
     assert "Notification flow is coordinated by" in text
+    assert "publishes `notification.dispatch`" in text
+    assert "consumes `notification.dispatch`" in text
     assert "Mail server configuration is anchored" not in text
+
+
+def test_event_query_uses_eventbus_roles_without_fake_chain():
+    meta = _meta_rc("NotificationEngine", "start", gaps=[])
+    meta["reasoning_context"]["eventbus_context"] = {
+        "addresses": [{"address": "event.notification"}],
+        "producers": [{"address": "event.notification", "class": "NotificationEngine", "method": "start"}],
+        "consumers": [{"address": "event.notification", "class": "SMSNotification", "method": "deliver"}],
+        "unknowns": [],
+        "confidence": {},
+    }
+    out = build_articulated_answer(
+        query="Which event triggers notification dispatch and who consumes it?",
+        plan_steps=[],
+        context_files=[{"path": "src/NotificationEngine.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "publishes `event.notification`" in text
+    assert "consumes `event.notification`" in text
+    assert "->" not in text
+
+
+def test_publish_consume_query_prioritizes_eventbus_roles():
+    meta = _meta_rc("NotificationEngine", "start", gaps=[])
+    meta["reasoning_context"]["eventbus_context"] = {
+        "addresses": [{"address": "notification.event"}],
+        "producers": [{"address": "notification.event", "class": "NotificationEngine", "method": "start"}],
+        "consumers": [{"address": "notification.event", "class": "EmailNotification", "method": "deliver"}],
+        "unknowns": [],
+        "confidence": {},
+    }
+    out = build_articulated_answer(
+        query="Which components publish or consume notification events?",
+        plan_steps=[],
+        context_files=[{"path": "src/NotificationEngine.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "`NotificationEngine.start` publishes `notification.event`." in text
+    assert "`EmailNotification.deliver` consumes `notification.event`." in text
 
 
 def test_structural_api_base_without_chain_does_not_fall_back_to_generic_api_template():
@@ -295,6 +373,7 @@ def test_unified_paragraphs_planning_prefers_plan_steps_not_api_template():
 
 def test_api_entrypoint_explain_query_uses_architecture_template():
     meta = _meta_rc("APIServer", "start", gaps=[])
+    meta["reasoning_context"]["api_route_mapping"] = _api_route_mapping()
     out = build_articulated_answer(
         query="Explain how HTTP requests enter the product through APIServer and reach concrete handler classes.",
         plan_steps=[],
@@ -304,5 +383,26 @@ def test_api_entrypoint_explain_query_uses_architecture_template():
     )
     assert out is not None
     text = "\n".join(out.get("paragraphs") or [])
-    assert "entrypoint" in text.lower() or "ingress and routing" in text.lower()
-    assert "APIServer" in text
+    assert "`APIServer.start` creates the HTTP server and root router" in text
+    assert "`/api/v1/*`" in text
+    assert "`APIRouter.init`" in text
+    assert "`AbstractAPI.init`" in text
+    assert "Exact per-endpoint overrides still need class-by-class extraction." in text
+
+
+def test_http_request_flow_uses_api_route_mapping_and_avoids_fake_chain():
+    meta = _meta_rc("APIServer", "start", gaps=[])
+    meta["reasoning_context"]["api_route_mapping"] = _api_route_mapping()
+    out = build_articulated_answer(
+        query="How does HTTP request flow through API routes and handlers?",
+        plan_steps=[],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "`/api/v1/*`" in text
+    assert "`AbstractAPI.init` supplies the generic CRUD templates." in text
+    assert "ObjectConfigStore" not in text
+    assert "DiscoveryEngine" not in text

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Sequence
 
 # ---------------------------------------------------------------------------
@@ -15,6 +17,26 @@ _ABSTRACT_WORDS = {"abstract", "base", "iface", "interface"}
 _STORE_WORDS = {"store", "cache", "repository", "repo", "manager", "config", "registry", "database", "db"}
 _HANDLER_WORDS = {"handler", "processor", "listener", "consumer", "service", "engine", "dispatcher", "resolver"}
 _NOISE_WORDS = {"test", "mock", "stub", "fake", "helper", "util", "utils", "dto", "vo", "pojo"}
+_API_ROUTE_MAPPING_CACHE_FILE = (
+    Path(__file__).resolve().parents[1] / ".cache" / "api_route_handler_mapping.v1.json"
+)
+_EVENTBUS_TOPOLOGY_CACHE_FILE = (
+    Path(__file__).resolve().parents[1] / ".cache" / "code_intelligence_graph_motadata" / "eventbus_topology_mapping.v1.json"
+)
+_EVENTBUS_TOPOLOGY_FALLBACK_CACHE_FILE = (
+    Path(__file__).resolve().parents[1] / ".cache" / "eventbus_topology_mapping.v1.json"
+)
+_EVENT_INTENT_TERMS = (
+    "event",
+    "notification",
+    "async",
+    "trigger",
+    "correlation",
+    "streaming",
+    "consumer",
+    "producer",
+    "message bus",
+)
 
 
 def _as_dict(value: Any) -> Dict[str, Any]:
@@ -218,6 +240,169 @@ def _extract_graph_paths(graph_traversal: Dict[str, Any]) -> List[Dict[str, Any]
     return out
 
 
+def _load_api_route_mapping() -> Dict[str, Any]:
+    """
+    Load optional API route mapping cache produced by offline extraction.
+    Missing or malformed cache should never break Ask; return empty mapping.
+    """
+    if not _API_ROUTE_MAPPING_CACHE_FILE.exists():
+        return {}
+    try:
+        payload = json.loads(_API_ROUTE_MAPPING_CACHE_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    if str(payload.get("schema_version") or "") != "api_route_handler_mapping.v1":
+        return {}
+    return {
+        "schema_version": "api_route_handler_mapping.v1",
+        "apiserver_entrypoints": _as_list(payload.get("apiserver_entrypoints")),
+        "routes": _as_list(payload.get("routes")),
+        "api_classes": _as_list(payload.get("api_classes")),
+        "lifecycle_hooks": _as_list(payload.get("lifecycle_hooks")),
+        "eventbus_handoffs": _as_list(payload.get("eventbus_handoffs")),
+        "unknowns": _as_list(payload.get("unknowns")),
+    }
+
+
+def _is_event_intent(query: str) -> bool:
+    q = str(query or "").lower()
+    return any(term in q for term in _EVENT_INTENT_TERMS)
+
+
+def _is_debug_like_query(query: str) -> bool:
+    q = str(query or "").lower()
+    return any(t in q for t in ("debug", "failure", "failed", "drop", "missing consumer", "not consumed", "mismatch"))
+
+
+def _is_unknown_focused_query(query: str) -> bool:
+    q = str(query or "").lower()
+    return any(t in q for t in ("unknown", "unresolved", "dynamic address"))
+
+
+def _load_eventbus_topology_context(query: str) -> Dict[str, Any]:
+    if not _is_event_intent(query):
+        return {}
+    cache_file = _EVENTBUS_TOPOLOGY_CACHE_FILE
+    if not cache_file.exists():
+        cache_file = _EVENTBUS_TOPOLOGY_FALLBACK_CACHE_FILE
+    if not cache_file.exists():
+        return {}
+    try:
+        payload = json.loads(cache_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    if str(payload.get("map_type") or "") != "eventbus_topology":
+        return {}
+
+    debug_like = _is_debug_like_query(query)
+    unknown_focus = _is_unknown_focused_query(query)
+    q = str(query or "").lower()
+    include_websocket = ("websocket" in q) or ("streaming" in q)
+
+    edges = [e for e in _as_list(payload.get("edges")) if isinstance(e, dict)]
+    if not edges:
+        return {}
+    filtered_edges: List[Dict[str, Any]] = []
+    for e in edges:
+        kind = str(e.get("address_kind") or "unknown")
+        if kind == "runtime":
+            filtered_edges.append(e)
+            continue
+        if kind == "websocket" and include_websocket:
+            filtered_edges.append(e)
+            continue
+        if kind in {"test", "control"} and debug_like:
+            filtered_edges.append(e)
+            continue
+
+    address_scores: Dict[str, int] = {}
+    for e in filtered_edges:
+        addr = str(e.get("address") or "").strip()
+        if not addr:
+            continue
+        score = 1
+        if addr.lower() in q:
+            score += 3
+        if any(tok in addr.lower() for tok in q.split()):
+            score += 1
+        address_scores[addr] = address_scores.get(addr, 0) + score
+    top_addresses = [a for a, _ in sorted(address_scores.items(), key=lambda kv: (-kv[1], kv[0]))[:3]]
+    if not top_addresses:
+        return {}
+
+    producers: List[Dict[str, Any]] = []
+    consumers: List[Dict[str, Any]] = []
+    for e in filtered_edges:
+        if str(e.get("address") or "") not in top_addresses:
+            continue
+        ev = _as_dict(e.get("evidence"))
+        item = {
+            "address": str(e.get("address") or ""),
+            "address_kind": str(e.get("address_kind") or "unknown"),
+            "class": str(ev.get("class") or ""),
+            "method": str(ev.get("method") or ""),
+            "file": str(ev.get("file") or ""),
+            "line": ev.get("line"),
+            "confidence": str(e.get("confidence") or "bounded"),
+        }
+        et = str(e.get("edge_type") or "")
+        if et == "PUBLISHES_TO_ADDRESS" and len(producers) < 3:
+            producers.append(item)
+        elif et == "CONSUMES_FROM_ADDRESS" and len(consumers) < 3:
+            consumers.append(item)
+
+    selected_nodes = 0
+    selected_nodes += len(top_addresses)
+    selected_nodes += len(producers)
+    selected_nodes += len(consumers)
+    if selected_nodes > 10:
+        overflow = selected_nodes - 10
+        while overflow > 0 and consumers:
+            consumers.pop()
+            overflow -= 1
+        while overflow > 0 and producers:
+            producers.pop()
+            overflow -= 1
+
+    unknowns: List[Dict[str, Any]] = []
+    if debug_like or unknown_focus:
+        for u in _as_list(payload.get("unknowns"))[:20]:
+            if not isinstance(u, dict):
+                continue
+            src = _as_dict(u.get("source"))
+            unknowns.append(
+                {
+                    "unknown_type": str(u.get("unknown_type") or ""),
+                    "raw_token": str(u.get("raw_token") or ""),
+                    "reason": str(u.get("reason") or ""),
+                    "file": str(src.get("file") or ""),
+                    "class": str(src.get("class") or ""),
+                    "method": str(src.get("method") or ""),
+                    "line": src.get("line"),
+                }
+            )
+            if len(unknowns) >= 3:
+                break
+
+    vs = _as_dict(payload.get("validation_summary"))
+    return {
+        "addresses": [{"address": a} for a in top_addresses],
+        "producers": producers[:3],
+        "consumers": consumers[:3],
+        "unknowns": unknowns,
+        "confidence": {
+            "resolved_address_count": vs.get("resolved_address_count"),
+            "unresolved_address_count": vs.get("unresolved_address_count"),
+            "dynamic_address_count": vs.get("dynamic_address_count"),
+            "confidence_distribution": _as_dict(vs.get("confidence_distribution")),
+        },
+    }
+
+
 def _build_d1_typed_nodes(
     entry_refs: List[Dict[str, Any]],
     primary_owner: Dict[str, Any],
@@ -356,6 +541,8 @@ def build_reasoning_context(
     inheritance = _extract_inheritance(gt, entry_refs)
     collaborators = _extract_collaborators(authority, gt)
     graph_paths = _extract_graph_paths(gt)
+    api_route_mapping = _load_api_route_mapping()
+    eventbus_context = _load_eventbus_topology_context(str(query or ""))
 
     typed_nodes = _build_d1_typed_nodes(entry_refs, primary_owner, collaborators)
     flow_steps = _infer_flow_steps(primary_owner, typed_nodes, graph_paths)
@@ -384,6 +571,8 @@ def build_reasoning_context(
         "flow_steps": flow_steps,
         "coverage_gaps": coverage_gaps,
         "top_graph_paths": graph_paths,
+        "api_route_mapping": api_route_mapping,
+        "eventbus_context": eventbus_context,
         "evidence_citations": [ref.get("citation") for ref in entry_refs if ref.get("citation")],
         "evidence_sources": entry_refs,
         # Kept for backward-compat with answer_shaping / v1_ingest callers
@@ -408,6 +597,7 @@ def render_reasoning_context_for_prompt(reasoning_context: Dict[str, Any]) -> st
     gaps = _as_list(rc.get("coverage_gaps"))
     refs = _as_list(rc.get("evidence_sources"))
     graph_paths = _as_list(rc.get("top_graph_paths"))
+    api_route_mapping = _as_dict(rc.get("api_route_mapping"))
     inh = _as_dict(rc.get("inheritance"))
 
     lines: List[str] = ["Reasoning Context:"]
@@ -508,6 +698,32 @@ def render_reasoning_context_for_prompt(reasoning_context: Dict[str, Any]) -> st
             if not isinstance(p, dict):
                 continue
             lines.append(f"  {p.get('id', 'G?')}: {str(p.get('path') or '')[:140]}")
+
+    # --- API route mapping (if extracted cache is available) ---
+    if str(api_route_mapping.get("schema_version") or "") == "api_route_handler_mapping.v1":
+        entrypoints = _as_list(api_route_mapping.get("apiserver_entrypoints"))
+        routes = _as_list(api_route_mapping.get("routes"))
+        api_classes = _as_list(api_route_mapping.get("api_classes"))
+        hooks = _as_list(api_route_mapping.get("lifecycle_hooks"))
+        handoffs = _as_list(api_route_mapping.get("eventbus_handoffs"))
+        unknowns = _as_list(api_route_mapping.get("unknowns"))
+
+        lines.append("")
+        lines.append("API route mapping:")
+        lines.append(
+            "  - schema: api_route_handler_mapping.v1 "
+            f"(entrypoints={len(entrypoints)}, routes={len(routes)}, classes={len(api_classes)}, "
+            f"hooks={len(hooks)}, handoffs={len(handoffs)})"
+        )
+        if routes:
+            sample = routes[0] if isinstance(routes[0], dict) else {}
+            path = str(sample.get("path") or "").strip()
+            lr = str(sample.get("line_range") or "").strip()
+            src = str(sample.get("file") or "").strip()
+            if path or src:
+                lines.append(f"  - sample route: {path or '(unknown path)'} [{src}:{lr}]")
+        if unknowns:
+            lines.append(f"  - unresolved links tracked: {len(unknowns)}")
 
     # --- Evidence anchors ---
     if refs:

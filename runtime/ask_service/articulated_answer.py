@@ -363,6 +363,62 @@ def _is_api_layer_architecture_query(ql: str) -> bool:
     )
 
 
+def _is_api_route_flow_query(ql: str) -> bool:
+    return any(k in ql for k in ("api", "http", "route", "router", "handler", "apiserver"))
+
+
+def _api_route_mapping_summary(reasoning_context: Dict[str, Any]) -> Dict[str, Any]:
+    m = _as_dict(reasoning_context.get("api_route_mapping"))
+    if str(m.get("schema_version") or "") != "api_route_handler_mapping.v1":
+        return {}
+    return {
+        "entrypoints": [x for x in _as_list(m.get("apiserver_entrypoints")) if isinstance(x, dict)],
+        "routes": [x for x in _as_list(m.get("routes")) if isinstance(x, dict)],
+        "api_classes": [x for x in _as_list(m.get("api_classes")) if isinstance(x, dict)],
+        "lifecycle_hooks": [x for x in _as_list(m.get("lifecycle_hooks")) if isinstance(x, dict)],
+        "eventbus_handoffs": [x for x in _as_list(m.get("eventbus_handoffs")) if isinstance(x, dict)],
+        "unknowns": [x for x in _as_list(m.get("unknowns")) if isinstance(x, dict)],
+    }
+
+
+def _compose_api_route_mapping_paragraph(mapping: Dict[str, Any]) -> str:
+    if not mapping:
+        return ""
+    routes = mapping.get("routes") or []
+    api_classes = mapping.get("api_classes") or []
+    hooks = mapping.get("lifecycle_hooks") or []
+    unknowns = mapping.get("unknowns") or []
+
+    has_api_v1_mount = any("/api/v1/*" in str(r.get("path") or "") for r in routes)
+    has_namespace_routes = any("/settings/*" in str(r.get("path") or "") for r in routes)
+    has_abstract_api = any(str(c.get("extends") or "") == "AbstractAPI" for c in api_classes)
+    has_templates = any(str(h.get("class") or "") == "AbstractAPI" for h in hooks)
+
+    parts: List[str] = []
+    parts.append(
+        "`APIServer.start` creates the HTTP server and root router"
+        + (", mounts `/api/v1/*` into `apiRouter`" if has_api_v1_mount else "")
+        + "."
+    )
+    if has_namespace_routes:
+        parts.append("`apiRouter` binds namespace subrouters such as `/settings/*`, `/system/*`, and `/query/*`.")
+    parts.append("`APIRouter.init` registers concrete API classes.")
+    if has_templates:
+        parts.append("`AbstractAPI.init` supplies the generic CRUD templates.")
+    if has_abstract_api:
+        examples = []
+        for c in api_classes:
+            cls = str(c.get("class") or "").strip()
+            if cls and cls in {"MailServerConfiguration", "User", "TraceService"} and cls not in examples:
+                examples.append(cls)
+        if examples:
+            rendered = ", ".join(f"`{x}`" for x in examples)
+            parts.append(f"Classes like {rendered} provide endpoint-specific behavior via lifecycle hooks.")
+    if unknowns:
+        parts.append("Exact per-endpoint overrides still need class-by-class extraction.")
+    return " ".join(parts)
+
+
 def _planning_lede_from_steps(plan_steps: List[str]) -> str:
     """First substantive plan lines, skipping owner preambles and raw evidence dumps."""
     skip_prefixes = (
@@ -391,6 +447,43 @@ def _planning_lede_from_steps(plan_steps: List[str]) -> str:
     if len(out) > 1200:
         return out[:1197] + "..."
     return out
+
+
+def _eventbus_role_sentences(reasoning_context: Dict[str, Any]) -> List[str]:
+    eb = _as_dict(reasoning_context.get("eventbus_context"))
+    if not eb:
+        return []
+    producers = [x for x in _as_list(eb.get("producers")) if isinstance(x, dict)]
+    consumers = [x for x in _as_list(eb.get("consumers")) if isinstance(x, dict)]
+    by_addr_p: Dict[str, List[Dict[str, Any]]] = {}
+    by_addr_c: Dict[str, List[Dict[str, Any]]] = {}
+    for p in producers:
+        a = str(p.get("address") or "").strip()
+        if a:
+            by_addr_p.setdefault(a, []).append(p)
+    for c in consumers:
+        a = str(c.get("address") or "").strip()
+        if a:
+            by_addr_c.setdefault(a, []).append(c)
+    lines: List[str] = []
+    paired = sorted(set(by_addr_p.keys()) & set(by_addr_c.keys()))
+    if paired:
+        a = paired[0]
+        p = by_addr_p[a][0]
+        c = by_addr_c[a][0]
+        p_label = f"`{p.get('class')}.{p.get('method')}`" if p.get("class") and p.get("method") else "`Producer`"
+        c_label = f"`{c.get('class')}.{c.get('method')}`" if c.get("class") and c.get("method") else "`Consumer`"
+        lines.append(f"{p_label} publishes `{a}`.")
+        lines.append(f"{c_label} consumes `{a}`.")
+    else:
+        addrs = _as_list(eb.get("addresses"))
+        if addrs:
+            shown = [str(_as_dict(a).get("address") or "").strip() for a in addrs][:2]
+            shown = [s for s in shown if s]
+            if shown:
+                lines.append(f"Selected EventBus addresses include {', '.join(f'`{s}`' for s in shown)}.")
+        lines.append("No exact producer-consumer pair is proven for the selected address.")
+    return lines[:2]
 
 
 def _planning_paragraph_from_context(query: str, groups: Dict[str, List[str]]) -> str:
@@ -439,6 +532,7 @@ def _unified_paragraphs(
     inh = _as_dict(reasoning_context.get("inheritance"))
     chain = [str(x).strip() for x in _as_list(inh.get("chain")) if str(x).strip()]
     ql = str(query or "").strip().lower()
+    route_mapping = _api_route_mapping_summary(reasoning_context)
     steps_for_plan = list(plan_steps or [])
 
     # Planning / refactor in ASK: keep architecture framing, avoid pseudo-execution steps.
@@ -544,6 +638,7 @@ def _unified_paragraphs(
         return [base]
 
     intent = _query_intent(query)
+    event_publish_consume_query = any(k in ql for k in ("publish", "consume", "producer", "consumer", "event"))
     abstractions = groups.get("abstractions", [])
     handlers = groups.get("handlers", [])
     stores = groups.get("stores", [])
@@ -562,6 +657,12 @@ def _unified_paragraphs(
                 f"It works with {follow} for transport, event bridging, and store updates."
             )
         sentences.append("This keeps update hooks separate from delivery-side behavior.")
+    elif event_publish_consume_query:
+        eb_lines = _eventbus_role_sentences(reasoning_context)
+        if eb_lines:
+            sentences.extend(eb_lines)
+        else:
+            sentences.append("Event roles are not directly resolved in the current EventBus context.")
     elif intent == "notification":
         owners = _render_class_list(([anchor] if anchor else []) + handlers, limit=2, drop=None)
         head = owners or "`NotificationEngine`"
@@ -572,7 +673,16 @@ def _unified_paragraphs(
         sentences.append(f"Notification flow is coordinated by {head}.")
         if collab:
             sentences.append(f"Channel and trigger concerns are handled by {collab}.")
+        eb_lines = _eventbus_role_sentences(reasoning_context)
+        if eb_lines:
+            sentences.extend(eb_lines)
         sentences.append("Delivery logic stays separate from orchestration.")
+    elif any(k in ql for k in ("trigger", "message bus", "async")):
+        eb_lines = _eventbus_role_sentences(reasoning_context)
+        if eb_lines:
+            sentences.extend(eb_lines)
+        else:
+            sentences.append("Event roles are not directly resolved in the current EventBus context.")
     elif intent == "config_store":
         abs_label = _render_class_list(abstractions or ([anchor] if anchor else []), limit=2, drop=anchor)
         abs_ref = abs_label or f"`{anchor}`"
@@ -598,41 +708,64 @@ def _unified_paragraphs(
             )
     else:
         if _is_api_layer_architecture_query(ql):
-            ep = _render_class_list(groups.get("entrypoints", []), limit=1, drop=None)
-            mid = _render_class_list(abstractions, limit=2, drop=anchor)
-            end = _render_class_list(handlers or collaborators or stores, limit=4, drop=anchor)
-            bits: List[str] = []
-            if ep:
-                bits.append(f"{ep} is the HTTP entrypoint and receives incoming requests.")
-            elif anchor:
-                bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest entrypoint signal in this snapshot.")
+            mapped = _compose_api_route_mapping_paragraph(route_mapping)
+            if mapped:
+                sentences.append(mapped)
             else:
-                bits.append("The API entrypoint is not clearly resolved in this snapshot.")
-            if mid:
-                bits.append(f"{mid} provides shared API lifecycle hooks used by concrete handlers.")
-            if end:
-                bits.append(f"Behind ingress, domain logic is handled by {end}.")
-            tops = _top_classes(groups.get("entrypoints", []) + abstractions + handlers + stores + collaborators, limit=4)
-            if tops:
-                bits.append(f"Main components in evidence: {', '.join(f'`{c}`' for c in tops[:4])}.")
-            bits.append("Exact route-to-handler wiring is not directly confirmed in this snapshot.")
-            if bits:
-                sentences.append(" ".join(bits))
+                ep = _render_class_list(groups.get("entrypoints", []), limit=1, drop=None)
+                mid = _render_class_list(abstractions, limit=2, drop=anchor)
+                end = _render_class_list(handlers or collaborators or stores, limit=4, drop=anchor)
+                bits: List[str] = []
+                if ep:
+                    bits.append(f"{ep} is the HTTP entrypoint and receives incoming requests.")
+                elif anchor:
+                    bits.append(f"`{_class_from_component_label(anchor) or anchor}` is the strongest entrypoint signal in this snapshot.")
+                else:
+                    bits.append("The API entrypoint is not clearly resolved in this snapshot.")
+                if mid:
+                    bits.append(f"{mid} provides shared API lifecycle hooks used by concrete handlers.")
+                if end:
+                    bits.append(f"Behind ingress, domain logic is handled by {end}.")
+                tops = _top_classes(groups.get("entrypoints", []) + abstractions + handlers + stores + collaborators, limit=4)
+                if tops:
+                    bits.append(f"Main components in evidence: {', '.join(f'`{c}`' for c in tops[:4])}.")
+                bits.append("Exact route-to-handler wiring is not directly confirmed in this snapshot.")
+                if bits:
+                    sentences.append(" ".join(bits))
+                else:
+                    sentences.append(
+                        f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
+                    )
+                    mid2 = _render_list(abstractions, limit=2, drop=anchor)
+                    end2 = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
+                    if mid2 and end2:
+                        sentences.append(
+                            f"Shared lifecycle behavior flows through {mid2}, and work coordinates with {end2}."
+                        )
+                    elif end2:
+                        sentences.append(f"Key implementation components include {end2}.")
+                    elif mid2:
+                        sentences.append(f"Shared abstractions include {mid2}.")
+        elif _is_api_route_flow_query(ql):
+            mapped = _compose_api_route_mapping_paragraph(route_mapping)
+            if mapped:
+                sentences.append(mapped)
             else:
                 sentences.append(
                     f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
                 )
-                mid2 = _render_list(abstractions, limit=2, drop=anchor)
-                end2 = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
-                if mid2 and end2:
+                mid = _render_list(abstractions, limit=2, drop=anchor)
+                end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
+                if mid and end:
                     sentences.append(
-                        f"Shared lifecycle behavior flows through {mid2}, and work coordinates with {end2}."
+                        f"Shared lifecycle behavior flows through {mid}, and work coordinates with {end}."
                     )
-                elif end2:
-                    sentences.append(f"Key implementation components include {end2}.")
-                elif mid2:
-                    sentences.append(f"Shared abstractions include {mid2}.")
+                elif end:
+                    sentences.append(f"Key implementation components include {end}.")
+                elif mid:
+                    sentences.append(f"Shared abstractions include {mid}.")
         else:
+            ep = _render_class_list(groups.get("entrypoints", []), limit=1, drop=None)
             sentences.append(
                 f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
             )
