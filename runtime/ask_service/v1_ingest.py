@@ -42,6 +42,7 @@ from .plan_contract_builder import build_plan_contract_v1
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
+from .debug_output_finalize import finalize_explain_debug_prose
 from .articulated_answer import build_articulated_answer
 from .bounded_ask_narrator import try_governed_ask_narration
 from .graph_traversal_payload import build_graph_traversal_payload, probe_code_intelligence_graph_availability
@@ -443,7 +444,11 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
                 selected_file=str(selected_file),
                 bundle=bundle,
             )
-            explain_debug_result = gate.curated
+            explain_debug_result = finalize_explain_debug_prose(
+                gate.curated,
+                query=query,
+                selected_file=str(selected_file),
+            )
             metadata["debug_narration_quality"] = gate.quality
             if gate.issues:
                 metadata["debug_narration_issues"] = gate.issues

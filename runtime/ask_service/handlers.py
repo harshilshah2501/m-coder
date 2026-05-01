@@ -39,6 +39,7 @@ from .context_budget import (
 from .planner import PlanOnlyPlanner
 from .reasoner import explain_debug, ExplainDebugResult
 from .debug_narration_gate import apply_debug_narration_gate
+from .debug_output_finalize import finalize_explain_debug_prose
 from .graph_traversal_payload import build_graph_traversal_payload
 
 
@@ -374,7 +375,11 @@ def handle_ask_request(ask_request: dict) -> dict:
                 selected_file=str(selected_file),
                 bundle=bundle,
             )
-            explain_debug_result = gate.curated
+            explain_debug_result = finalize_explain_debug_prose(
+                gate.curated,
+                query=query,
+                selected_file=str(selected_file),
+            )
             metadata["debug_narration_quality"] = gate.quality
             if gate.issues:
                 metadata["debug_narration_issues"] = gate.issues

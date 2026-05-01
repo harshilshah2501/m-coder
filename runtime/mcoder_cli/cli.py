@@ -567,12 +567,10 @@ def _run_ask_like(
                     print("Likely failure point:")
                     print(dbg_risk)
                     print("")
-                next_inspect = ""
                 if dbg_logic:
-                    next_inspect = dbg_logic.splitlines()[0].strip()
-                if next_inspect:
                     print("Next inspection:")
-                    print(next_inspect)
+                    for line in [ln.strip() for ln in dbg_logic.splitlines() if ln.strip()][:3]:
+                        print(f"- {line}")
                     print("")
                 if dbg_limits:
                     print("Limit:")

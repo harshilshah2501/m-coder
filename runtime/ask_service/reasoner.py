@@ -680,13 +680,23 @@ def _ensure_selected_grounding(
     # two control-flow cues in the final explain text.
     combined = f"{summary} {logic_flow} {likely}"
     if has_flow and _debug_control_flow_marker_count(combined) < 2:
-        logic_flow = (logic_flow + " " if logic_flow else "") + (
-            "If file read/decrypt/parse condition checks fail, the method should return or throw before "
-            "downstream trap handling branches execute."
-        )
-        likely = (likely + " " if likely else "") + (
-            "Primary risk is an early-return/exception branch skipping dispatch when validation conditions fail."
-        )
+        content_l = (item.content or "").lower()
+        trapish = "trap" in content_l and ("snmp" in content_l or "parse" in content_l or "decrypt" in content_l)
+        if trapish:
+            logic_flow = (logic_flow + " " if logic_flow else "") + (
+                "If read/decrypt/parse of trap configuration fails, expect early exit before alert dispatch "
+                "(only when those operations appear in the snippet)."
+            )
+            likely = (likely + " " if likely else "") + (
+                "Primary risk: I/O or validation failure on trap configuration paths shown above, before downstream dispatch."
+            )
+        else:
+            logic_flow = (logic_flow + " " if logic_flow else "") + (
+                "Map visible if/return branches in this snippet — do not assume file/network I/O that is not shown."
+            )
+            likely = (likely + " " if likely else "") + (
+                "Primary risk: conditional or early-return path skipping the suspected operation."
+            )
         logic_flow = _sanitize_debug_payload_text(logic_flow)
         likely = _sanitize_debug_payload_text(likely)
 

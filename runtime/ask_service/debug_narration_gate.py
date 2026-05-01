@@ -114,9 +114,15 @@ def apply_debug_narration_gate(
                 "from selected file evidence."
             )
         if not logic:
-            logic = "Trace selected-file control flow around anchor methods and verify conditional/early-return paths."
+            logic = (
+                "Inspect anchor methods in the selected file.\n"
+                "Verify conditional and early-return paths.\n"
+                "Confirm null/exception handling before downstream calls."
+            )
         if not likely:
-            likely = "Risk likely centers on branch conditions or early return/exception paths before downstream dispatch."
+            likely = (
+                "Suspect explicit branch: null guard, early return, or exception before downstream dispatch."
+            )
         if not confidence:
             confidence = "Curated due to weak narration quality; validate against full caller/callee chain."
 
