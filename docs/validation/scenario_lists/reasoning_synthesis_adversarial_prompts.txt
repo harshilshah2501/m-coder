@@ -1,0 +1,22 @@
+# Adversarial / stress prompts for reasoning_synthesis shadow (one query per line; # comments ok)
+
+Tell me about the system architecture in broad strokes.
+How does stuff work when users change settings?
+Which notification subsystem publishes PaymentCompletedEvent to Kafka?
+Explain EmailNotification.handleQuotaExceeded — method body not in bundle.
+How does AbstractVerticle relate to Redis caching for sessions?
+What calls MailServerConfiguration.beforeUpdate when nothing selected?
+Does the EventBus route SNMP traps to NotificationEngine — prove it.
+How are config stores organized for LDAP and also for SAML?
+Debug-style: why might correlation skip enrichment without listing a file?
+Something something APIs and handlers?????
+List every class that touches notifications including imaginary FooBarNotifier.
+How does HTTP enter through NGINX then APIServer — full chain?
+Where is UserConfigStore persisted — disk path on Windows?
+Explain event-driven architecture vs polling for this product briefly.
+Which base class do all REST handlers extend — trick: answer Verticle only.
+How does mail server configuration work when SMTP is disabled?
+Tell me about stores without saying store or config.
+Does AvailabilityCorrelationEngine.subscribeToTelemetryEventBus — yes or no?
+Trace the notification pipeline end-to-end in three sentences.
+How does caching work in this codebase?

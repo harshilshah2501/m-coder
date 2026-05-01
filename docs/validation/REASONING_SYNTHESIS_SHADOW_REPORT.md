@@ -1,6 +1,6 @@
 # Reasoning synthesis shadow report
 
-Generated: 2026-05-01 05:16 UTC
+Generated: 2026-05-01 05:48 UTC
 
 Compares **legacy narration** (`articulated_answer` or `explain_debug` stub) with **metadata.reasoning_synthesis** (Phase A/B only; Ask prose unchanged). Explain/Debug calls are **stubbed** to avoid vLLM.
 
@@ -8,6 +8,9 @@ Compares **legacy narration** (`articulated_answer` or `explain_debug` stub) wit
 
 - Scenarios: **16**
 - Synthesis `method_collapse_risk.detected` true: **0**
+- Rubric `method_collapse_detected` true: **0**
+- Avg depth / fluency / grounding: **1.38** / **2.00** / **2.00**
+- Overclaim histogram: `{1: 16}`
 
 ## Per scenario
 
