@@ -73,16 +73,18 @@
 
 ## Extended run (`REASONING_SYNTHESIS_EXTENDED_SHADOW_REPORT.md`)
 
+After synthesis tuning (`_expand_grounded_classes`, richer flow steps, rubric depth tied to proven facts): regenerate with `--extended`.
+
 Latest generator output (36 rows = 9 Ask + 20 adversarial + 7 Debug):
 
 | Metric | Value |
 |--------|------:|
 | `method_collapse_risk.detected` true | 0 |
 | Rubric `method_collapse_detected` true | 0 |
-| Avg depth / fluency / grounding | 1.44 / 2.00 / 2.00 |
+| Avg depth / fluency / grounding | **~3.00** / 2.00 / 2.00 |
 | `overclaim_risk` | all **1** (`{1: 36}`) |
 
-**Read-through:** Adversarial prompts mostly reuse golden snapshot signals — synthesis **`system_summary`** stays subsystem-first and bounded; misleading prompts (e.g. fake Kafka event names) still map to **`general`** / **`api_layer`** from token overlap without inventing classes — **review row-by-row** in the extended Markdown table for taxonomy tuning before Phase D.
+**Read-through:** Depth rises from map/collaborator/EventBus **expansion** (same evidence bundle); overclaim stays low because **`proven_facts`** remain route/topology-backed. Review extended table before **`MCODER_REASONING_SYNTHESIS_V1`** Phase D.
 
 ---
 

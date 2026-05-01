@@ -65,7 +65,7 @@ def classify_query_intent(query: str, task_type: str = "general") -> str:
         k in q for k in ("debug", "why", "skip", "failure", "drop")
     ):
         return "correlation"
-    if any(k in q for k in ("how ", "how does", "workflow", "flow")):
+    if any(k in q for k in ("how ", "how does", "workflow", "flow", "change settings", "users change")):
         return "how"
     if any(
         k in q
@@ -77,9 +77,19 @@ def classify_query_intent(query: str, task_type: str = "general") -> str:
             "abstractapi",
             "base class",
             "extends",
+            "broad stroke",
+            "end-to-end",
+            "nginx",
+            "ingress",
         )
     ):
         return "architecture"
+    if any(k in q for k in ("caching", "cache", "session", "redis")):
+        return "architecture"
+    if any(k in q for k in ("trace", "pipeline")) and any(
+        k in q for k in ("notification", "event", "async")
+    ):
+        return "notification"
     return "unknown"
 
 
@@ -90,7 +100,7 @@ def _distinct_grounded_classes(reasoning_context: Dict[str, Any]) -> Tuple[List[
     anchor = str(reasoning_context.get("anchor_method") or "").strip()
     ac = _short_anchor_class(anchor)
     if ac:
-        seen.add(ac)
+        seen.add(ac.lower())
         order.append(ac)
     typed = _as_dict(reasoning_context.get("typed_nodes"))
     for bucket in ("entrypoints", "abstractions", "handlers", "stores", "collaborators"):
@@ -98,9 +108,57 @@ def _distinct_grounded_classes(reasoning_context: Dict[str, Any]) -> Tuple[List[
             if not isinstance(node, dict):
                 continue
             c = str(node.get("class") or "").strip()
-            if c and c not in seen:
-                seen.add(c)
+            if c and c.lower() not in seen:
+                seen.add(c.lower())
                 order.append(c)
+    return order, len(order)
+
+
+def _expand_grounded_classes(reasoning_context: Dict[str, Any]) -> Tuple[List[str], int]:
+    """
+    Extend distinct classes with symbols proven in maps, authority collaborators,
+    inheritance, and EventBus — same evidence bundle, deeper role graph for metrics.
+    """
+    base, _ = _distinct_grounded_classes(reasoning_context)
+    seen = {x.lower() for x in base}
+    order = list(base)
+
+    def add(raw: str) -> None:
+        s = str(raw or "").strip()
+        if not s:
+            return
+        short = s.split(".")[-1] if "." in s else s
+        if not short or short.lower() in seen:
+            return
+        seen.add(short.lower())
+        order.append(short)
+
+    for c in _as_list(reasoning_context.get("collaborators")):
+        if isinstance(c, dict):
+            add(str(c.get("name") or ""))
+
+    arm = _as_dict(reasoning_context.get("api_route_mapping"))
+    if str(arm.get("schema_version") or "") == "api_route_handler_mapping.v1":
+        for ep in _as_list(arm.get("apiserver_entrypoints")):
+            if isinstance(ep, dict):
+                add(str(ep.get("class") or ""))
+        for r in _as_list(arm.get("routes")):
+            if isinstance(r, dict):
+                add(str(r.get("class") or ""))
+        for c in _as_list(arm.get("api_classes")):
+            if isinstance(c, dict):
+                add(str(c.get("class") or ""))
+
+    inh = _as_dict(reasoning_context.get("inheritance"))
+    for x in _as_list(inh.get("chain")):
+        add(str(x).strip())
+
+    eb = _as_dict(reasoning_context.get("eventbus_context"))
+    for key in ("producers", "consumers"):
+        for item in _as_list(eb.get(key)):
+            if isinstance(item, dict):
+                add(str(item.get("class") or ""))
+
     return order, len(order)
 
 
@@ -150,8 +208,28 @@ def _subsystem_block(intent: str, anchor_cls: str, reasoning_context: Dict[str, 
     if eb.get("addresses") or eb.get("producers"):
         signals.append("eventbus_context")
 
-    conf = "high" if len(signals) >= 2 else ("medium" if signals else "low")
-    return {"label": label, "confidence": conf, "signals": signals[:8]}
+    arm = _as_dict(reasoning_context.get("api_route_mapping"))
+    if str(arm.get("schema_version") or "") == "api_route_handler_mapping.v1":
+        signals.append("api_route_mapping.v1")
+        if _as_list(arm.get("routes")):
+            signals.append("api_route_mapping.routes")
+        if _as_list(arm.get("api_classes")):
+            signals.append("api_route_mapping.api_classes")
+
+    # Align api_layer label when maps strongly indicate HTTP surface but intent was unknown.
+    if label == "general" and (
+        "api_route_mapping.routes" in signals and ("typed_nodes.handlers" in signals or eb.get("producers"))
+    ):
+        label = "api_layer"
+        signals.append("inferred_api_surface")
+
+    route_boost = "api_route_mapping.routes" in signals
+    typed_boost = bool(_as_list(typed.get("handlers")) or _as_list(typed.get("entrypoints")))
+    eb_boost = bool(eb.get("addresses") or eb.get("producers"))
+    strong_agreement = sum(1 for x in (route_boost, typed_boost, eb_boost) if x) >= 2
+
+    conf = "high" if strong_agreement or len(signals) >= 3 else ("high" if len(signals) >= 2 else ("medium" if signals else "low"))
+    return {"label": label, "confidence": conf, "signals": signals[:12]}
 
 
 def _collect_role_rows(
@@ -380,33 +458,76 @@ def _method_collapse_reason(
 
 
 def _control_flow_steps(intent: str, reasoning_context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Prefer ingress → abstraction → handler → store → async when evidence exists."""
     steps: List[Dict[str, Any]] = []
+    typed = _as_dict(reasoning_context.get("typed_nodes"))
     arm = _as_dict(reasoning_context.get("api_route_mapping"))
-    if _as_list(arm.get("routes")):
-        steps.append({"step": "api_request_routing", "support": "api_route_mapping"})
-    if _as_list(reasoning_context.get("flow_steps")):
-        steps.append({"step": "typed_flow_sketch", "support": "reasoning_context.flow_steps"})
+    has_routes = bool(_as_list(arm.get("routes")))
+    has_api_classes = bool(_as_list(arm.get("api_classes")))
+    has_ep = bool(_as_list(arm.get("apiserver_entrypoints")))
+
+    if has_ep or has_routes:
+        steps.append({"step": "ingress_bootstrap", "support": "api_route_mapping.apiserver_entrypoints|routes"})
+    if _as_list(typed.get("abstractions")) or has_api_classes:
+        steps.append({"step": "shared_abstraction_or_rest_contract", "support": "typed_nodes|api_route_mapping.api_classes"})
+    if _as_list(typed.get("handlers")) or has_api_classes:
+        steps.append({"step": "request_handler_or_concrete_api", "support": "typed_nodes.handlers|api_classes"})
+    if _as_list(typed.get("stores")):
+        steps.append({"step": "persistence_config_store", "support": "typed_nodes.stores"})
     eb = _as_dict(reasoning_context.get("eventbus_context"))
-    if eb.get("producers") or eb.get("consumers"):
+    if eb.get("producers") or eb.get("consumers") or eb.get("addresses"):
         steps.append({"step": "async_eventbus_handoff", "support": "eventbus_topology"})
+    if _as_list(reasoning_context.get("flow_steps")):
+        steps.append({"step": "flow_steps_sketch", "support": "reasoning_context.flow_steps"})
     if intent == "mail":
-        steps.append({"step": "configuration_validation_and_persistence", "support": "query_intent"})
-    return steps[:6]
+        steps.append({"step": "mail_configuration_lifecycle", "support": "query_intent"})
+    if not steps and has_routes:
+        steps.append({"step": "api_request_routing", "support": "api_route_mapping"})
+    return steps[:8]
 
 
 def _next_inspection_targets(reasoning_context: Dict[str, Any]) -> List[str]:
     out: List[str] = []
+    seen: set[str] = set()
+
+    def push(label: str, path: str) -> None:
+        p = str(path or "").strip()
+        if not p or p in seen:
+            return
+        seen.add(p)
+        out.append(f"{label}: {p}")
+
+    po = _as_dict(reasoning_context.get("primary_owner"))
+    pf = str(po.get("file") or "").strip()
+    if pf:
+        push("Primary owner", pf)
+
+    arm = _as_dict(reasoning_context.get("api_route_mapping"))
+    if str(arm.get("schema_version") or "") == "api_route_handler_mapping.v1":
+        for ep in _as_list(arm.get("apiserver_entrypoints"))[:1]:
+            if isinstance(ep, dict) and ep.get("file"):
+                push("APIServer / route bootstrap", str(ep.get("file")))
+        for r in _as_list(arm.get("routes"))[:2]:
+            if isinstance(r, dict) and r.get("file"):
+                push("Route mapping evidence", str(r.get("file")))
+        for c in _as_list(arm.get("api_classes"))[:1]:
+            if isinstance(c, dict) and c.get("file"):
+                push("Concrete API class", str(c.get("file")))
+
+    eb = _as_dict(reasoning_context.get("eventbus_context"))
+    for key in ("producers", "consumers"):
+        for item in _as_list(eb.get(key))[:2]:
+            if isinstance(item, dict) and item.get("file"):
+                push(f"EventBus {key[:-1]}", str(item.get("file")))
+
     for ref in _as_list(reasoning_context.get("evidence_sources"))[:6]:
         if not isinstance(ref, dict):
             continue
         p = str(ref.get("path") or "").strip()
-        if p and p not in out:
-            out.append(p)
-    po = _as_dict(reasoning_context.get("primary_owner"))
-    pf = str(po.get("file") or "").strip()
-    if pf and pf not in out:
-        out.insert(0, pf)
-    return out[:5]
+        if p:
+            push("Evidence entry", p)
+
+    return out[:8]
 
 
 def build_reasoning_synthesis(
@@ -418,7 +539,7 @@ def build_reasoning_synthesis(
     rc = _as_dict(reasoning_context)
     intent = classify_query_intent(query, task_type=task_type)
     anchor_cls = _short_anchor_class(str(rc.get("anchor_method") or ""))
-    classes, distinct_count = _distinct_grounded_classes(rc)
+    classes, distinct_count = _expand_grounded_classes(rc)
     multi_hop = _multi_hop_eligible(rc, distinct_count)
     subsystem = _subsystem_block(intent, anchor_cls, rc)
 
@@ -541,6 +662,11 @@ def compute_shadow_rubric(
     if distinct >= 2:
         depth = 2
     if distinct >= 3 and multi:
+        depth = 3
+    # Conservative depth lift: multiple distinct proven_facts without inventing components.
+    if depth < 2 and len(facts) >= 2:
+        depth = 2
+    if depth < 3 and distinct >= 2 and multi and len(facts) >= 2:
         depth = 3
 
     fluency = 2 if len(str(legacy_answer_text or "").split()) >= 12 else 1
