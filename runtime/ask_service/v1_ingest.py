@@ -46,6 +46,7 @@ from .articulated_answer import build_articulated_answer
 from .bounded_ask_narrator import try_governed_ask_narration
 from .graph_traversal_payload import build_graph_traversal_payload, probe_code_intelligence_graph_availability
 from .reasoning_context import build_reasoning_context
+from .reasoning_synthesis import attach_reasoning_synthesis_to_metadata
 
 LOG = logging.getLogger(__name__)
 
@@ -369,6 +370,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
             evidence_bundle=evidence_bundle,
             graph_traversal=gt_blocked,
         )
+        attach_reasoning_synthesis_to_metadata(
+            metadata, query=query, task_type=str(task_type or "general")
+        )
         ctx_files_blocked = [
             {"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items
         ]
@@ -536,6 +540,9 @@ def handle_ask_v1_request(ask_request: dict) -> dict:
         query=query,
         evidence_bundle=evidence_bundle,
         graph_traversal=gt_payload,
+    )
+    attach_reasoning_synthesis_to_metadata(
+        metadata, query=query, task_type=str(task_type or "general")
     )
     ctx_files = [{"path": item.path, "selection_reason": item.selection_reason} for item in bundle.items]
     articulated: Dict[str, Any] | None = None

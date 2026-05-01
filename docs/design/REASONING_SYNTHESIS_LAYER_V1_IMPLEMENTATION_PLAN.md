@@ -54,15 +54,23 @@ Then thread the result into:
 
 **Exit criteria:** Snapshots show `reasoning_synthesis.v1` present on successful asks; blocked paths either omit or include minimal synthesis from partial context (explicitly documented).
 
-### Phase C — Articulated answer consumption (Ask — controlled)
+### Phase C — Ask shadow mode (mandatory before production prose)
 
-1. Refactor `articulated_answer.build_articulated_answer` to prefer **`system_summary` + ordered roles** from synthesis when present.
-2. Fallback: existing `_unified_paragraphs` logic if synthesis missing (backward compat).
-3. Enforce narrative contract: **first paragraph** from `system_summary` rewrite rules if synthesis detects `method_collapse_risk.detected`.
+1. Do **not** change default Ask paragraphs yet. Run scenario suites with **`articulated_answer` unchanged** while recording parallel `metadata["reasoning_synthesis"]`.
+2. Compare legacy answer vs synthesis + shadow rubric (`compute_shadow_rubric`): depth, fluency, grounding, overclaim risk, method collapse.
+3. Emit `docs/validation/REASONING_SYNTHESIS_SHADOW_REPORT.md` via `runtime/scripts/gen_reasoning_synthesis_shadow_report.py`.
 
-**Exit criteria:** Existing Ask scenario suite (e.g. 9/9) still passes; rubric improvements on golden extracts.
+**Exit criteria:** Shadow report shows synthesis behavior is stable and rubric improves or stays neutral vs baseline; Ask scenario suite still passes unchanged.
 
-### Phase D — Debug / CLI alignment (optional v1.1)
+### Phase D — Ask production (articulated answer consumption)
+
+1. Refactor `articulated_answer.build_articulated_answer` to prefer **`system_summary` + ordered roles** from synthesis when enabled (flag).
+2. Fallback: existing `_unified_paragraphs` if synthesis missing (backward compat).
+3. Enforce narrative contract when `method_collapse_risk.detected`.
+
+**Exit criteria:** Phase C shadow eval wins; Ask scenario suite (e.g. 9/9) still passes.
+
+### Phase E — Debug / CLI alignment (later)
 
 1. Map synthesis `next_inspection_targets` + `proven_facts` into existing debug cue helpers in `cli.py` **without** duplicating reasoner logic.
 2. Keep `explain_debug` JSON generation in `reasoner.py` authoritative; synthesis supplies **structured hints** only.
@@ -152,7 +160,7 @@ When `task_type` in `architecture`, `general`, or broad Ask:
 | Drift between `_query_intent` and synthesis intent | Shared classifier or single source of truth |
 | Double-hedging (synthesis + articulated_answer) | Single “limits” merge point |
 | Debug confusion if two sources of “next steps” | Keep reasoner authoritative; synthesis as hints only |
-| Ask regression | Phase C behind flag until scenarios green |
+| Ask regression | Phase D production wiring behind flag until shadow + scenarios green |
 
 ---
 

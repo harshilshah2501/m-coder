@@ -182,6 +182,9 @@ def test_handle_ask_v1_happy_path_plan_only():
     steps = resp["plan_summary"]["steps"]
     assert len(steps) >= 1
     md = resp.get("metadata") or {}
+    rs = md.get("reasoning_synthesis") or {}
+    assert rs.get("schema_version") == "reasoning_synthesis.v1"
+    assert isinstance(rs.get("method_collapse_risk"), dict)
     cbp = md.get("context_budget_policy") or {}
     assert cbp.get("policy_version") == "context_budget_policy.v1"
     assert cbp.get("surface") == "ask"
