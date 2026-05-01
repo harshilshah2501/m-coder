@@ -89,17 +89,31 @@ Do not run `m-coder` source-path commands on WSL if WSL does not have the `m-cod
 
 ### 2.1 Build wheel (from m-coder repo)
 
+Use `build_wheel.sh` so `dist/` gets a **stable symlink** (`mcoder_suite-latest-py3-none-any.whl` → newest concrete wheel) and old versioned wheels are pruned (`MCODER_SUITE_WHEEL_KEEP`, default keeps one concrete file).
+
 **[m-coder host]**
 
 ```bash
 cd ~/Harshil-PoCs/m-coder/packaging/mcoder-suite
-python3 -m build --wheel -o dist
+pip install build   # if needed
+bash build_wheel.sh
+ls -l dist/mcoder_suite-latest-py3-none-any.whl
 ls -1 dist/mcoder_suite-*.whl
 # quick traceability check (name + installed version if already installed)
 python3 - <<'PY'
 import glob, os
-ws = sorted(glob.glob("dist/mcoder_suite-*.whl"))
-print("latest_wheel:", os.path.basename(ws[-1]) if ws else "none")
+stable = "dist/mcoder_suite-latest-py3-none-any.whl"
+paths = sorted(glob.glob("dist/mcoder_suite-*.whl"))
+concrete = [p for p in paths if "-latest-py3-none-any.whl" not in p]
+if os.path.islink(stable):
+    print("stable_symlink:", os.path.basename(stable), "->", os.readlink(stable))
+else:
+    print("stable_symlink: missing (run bash build_wheel.sh)")
+if concrete:
+    newest = max(concrete, key=os.path.getmtime)
+    print("newest_concrete_wheel:", os.path.basename(newest))
+else:
+    print("newest_concrete_wheel: none")
 try:
     import importlib.metadata as md
     print("installed_mcoder_suite_version:", md.version("mcoder-suite"))
@@ -110,16 +124,33 @@ PY
 
 ### 2.2 Install wheel on WSL (CLI runtime env)
 
-Copy wheel from GPU to WSL (example):
+Copy wheels from GPU to WSL, then install via the **stable name** (`mcoder_suite-latest-py3-none-any.whl`) every time:
+
+**Preferred:** sync the whole `dist/` folder so the relative symlink resolves on WSL.
 
 **[WSL]**
 
 ```bash
 mkdir -p ~/tmp/mcoder-wheel
-scp harshil@45.195.82.10:~/Harshil-PoCs/m-coder/packaging/mcoder-suite/dist/mcoder_suite-*.whl ~/tmp/mcoder-wheel/
-pip install --force-reinstall ~/tmp/mcoder-wheel/mcoder_suite-*.whl
+rsync -av --delete harshil@45.195.82.10:~/Harshil-PoCs/m-coder/packaging/mcoder-suite/dist/ ~/tmp/mcoder-wheel/
+pip install --force-reinstall ~/tmp/mcoder-wheel/mcoder_suite-latest-py3-none-any.whl
 which mcoder
 mcoder version
+```
+
+**Alternative (single scp):** OpenSSH `-L` copies symlink target bytes under the stable filename:
+
+```bash
+mkdir -p ~/tmp/mcoder-wheel
+scp -L harshil@45.195.82.10:~/Harshil-PoCs/m-coder/packaging/mcoder-suite/dist/mcoder_suite-latest-py3-none-any.whl ~/tmp/mcoder-wheel/
+pip install --force-reinstall ~/tmp/mcoder-wheel/mcoder_suite-latest-py3-none-any.whl
+```
+
+If you only copied the long versioned filenames, normalize the layout on WSL:
+
+```bash
+bash ~/path/to/m-coder/packaging/mcoder-suite/link_mcoder_suite_latest.sh ~/tmp/mcoder-wheel
+pip install --force-reinstall ~/tmp/mcoder-wheel/mcoder_suite-latest-py3-none-any.whl
 ```
 
 ### 2.3 Split topology deployment rule (WSL + GPU)
