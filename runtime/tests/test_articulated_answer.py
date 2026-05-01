@@ -527,6 +527,11 @@ def test_phase_d1_config_voice_skips_generic_ingress(monkeypatch):
     meta = _meta_rc("AbstractConfigStore", "getItem", gaps=["Custom gap"])
     syn = _minimal_reasoning_synthesis()
     syn["subsystem"] = {"label": "api_layer", "confidence": "medium"}
+    syn["control_flow_steps"] = list(syn["control_flow_steps"]) + [{"step": "flow_steps_sketch"}]
+    syn["proven_facts"] = [
+        "Route start /settings/* maps to apiRouter per api_route_mapping snapshot.",
+        "Store retrieval stays behind AbstractConfigStore contract.",
+    ]
     meta["reasoning_synthesis"] = syn
     out = build_articulated_answer(
         query="How are config stores organized?",
@@ -539,6 +544,9 @@ def test_phase_d1_config_voice_skips_generic_ingress(monkeypatch):
     text = "\n\n".join(out.get("paragraphs") or [])
     assert "traffic enters through server bootstrap" not in text.lower()
     assert "typed configuration abstractions mediate reads and writes" in text.lower()
+    assert "additional relationships appear in the grounded flow sketch" not in text.lower()
+    assert "route start /settings" not in text.lower()
+    assert "abstractconfigstore contract" in text.lower()
 
 
 def test_phase_d1_mail_voice_avoids_http_opener(monkeypatch):
@@ -547,7 +555,16 @@ def test_phase_d1_mail_voice_avoids_http_opener(monkeypatch):
     meta = _meta_rc("MailServerConfiguration", "beforeUpdate", gaps=routine)
     syn = _minimal_reasoning_synthesis()
     syn["subsystem"] = {"label": "api_layer"}
-    syn["control_flow_steps"] = [{"step": "ingress_bootstrap"}, {"step": "mail_configuration_lifecycle"}]
+    syn["control_flow_steps"] = [
+        {"step": "shared_abstraction_or_rest_contract"},
+        {"step": "request_handler_or_concrete_api"},
+        {"step": "flow_steps_sketch"},
+        {"step": "mail_configuration_lifecycle"},
+    ]
+    syn["proven_facts"] = [
+        "Route start /settings/*,/system/* maps to apiRouter.route(...).subRouter(...) per api_route_mapping snapshot.",
+        "Lifecycle hooks participate before persisted mail settings apply.",
+    ]
     meta["reasoning_synthesis"] = syn
     out = build_articulated_answer(
         query="How does mail server configuration work when SMTP is disabled?",
@@ -560,6 +577,9 @@ def test_phase_d1_mail_voice_avoids_http_opener(monkeypatch):
     text = "\n\n".join(out.get("paragraphs") or [])
     assert "the http/api surface in this evidence snapshot" not in text.lower()
     assert "traffic enters through server bootstrap" not in text.lower()
+    assert "shared rest abstractions" not in text.lower()
+    assert "concrete api classes implement endpoints" not in text.lower()
+    assert "route start /settings" not in text.lower()
     assert "validation and persistence" in text.lower() or "mail configuration updates" in text.lower()
 
 

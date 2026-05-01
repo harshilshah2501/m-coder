@@ -778,6 +778,19 @@ def _dedupe_phrase_order(phrases: List[str]) -> List[str]:
     return out
 
 
+def _provenance_fact_is_route_table_noise(line: str) -> bool:
+    """Route / graph snapshot lines from synthesis proven_facts — noisy for mail/config/notification asks."""
+    low = str(line or "").strip().lower()
+    if not low:
+        return False
+    return (
+        low.startswith("route start ")
+        or low.startswith("route init ")
+        or "api_route_mapping" in low
+        or low.startswith("graph path snapshot:")
+    )
+
+
 def _synthesis_flow_paragraph(
     *,
     query: str,
@@ -813,15 +826,31 @@ def _synthesis_flow_paragraph(
             "api_request_routing",
             "request_handler_or_concrete_api",
             "shared_abstraction_or_rest_contract",
+            "typed_flow_sketch",
+            "flow_steps_sketch",
         ):
             return
         if voice == "notification" and not allow_http:
             if key in drop_http_voice:
                 return
-            if key in ("request_handler_or_concrete_api", "shared_abstraction_or_rest_contract", "typed_flow_sketch"):
+            if key in (
+                "request_handler_or_concrete_api",
+                "shared_abstraction_or_rest_contract",
+                "typed_flow_sketch",
+                "flow_steps_sketch",
+            ):
                 return
-        if voice == "mail_configuration" and not allow_http and key in drop_http_voice:
-            return
+        if voice == "mail_configuration" and not allow_http:
+            if key in drop_http_voice:
+                return
+            if key in (
+                "request_handler_or_concrete_api",
+                "shared_abstraction_or_rest_contract",
+                "typed_flow_sketch",
+                "flow_steps_sketch",
+                "api_request_routing",
+            ):
+                return
         if voice == "general" and not allow_http and key in (
             "ingress_bootstrap",
             "api_request_routing",
@@ -881,16 +910,26 @@ def _synthesis_flow_paragraph(
     return f"In broad strokes, {body_core}."
 
 
-def _synthesis_anchors_paragraph(syn: Dict[str, Any], reasoning_context: Dict[str, Any]) -> str:
-    facts = _as_list(syn.get("proven_facts"))[:5]
+def _synthesis_anchors_paragraph(
+    syn: Dict[str, Any],
+    reasoning_context: Dict[str, Any],
+    *,
+    voice: str,
+    query: str,
+) -> str:
+    facts = _as_list(syn.get("proven_facts"))[:8]
     anchor = str(reasoning_context.get("anchor_method") or "").strip()
+    allow_route_facts = voice == "api_layer" or _query_implies_http_api_surface(query)
     parts: List[str] = []
     if anchor:
         parts.append(f"Primary anchor: `{anchor}`.")
     for f in facts:
         fs = str(f).strip()
-        if fs and fs not in parts:
-            parts.append(fs)
+        if not fs or fs in parts:
+            continue
+        if not allow_route_facts and _provenance_fact_is_route_table_noise(fs):
+            continue
+        parts.append(fs)
     if not parts:
         return ""
     return "Key evidence hooks: " + " ".join(parts)
@@ -947,7 +986,7 @@ def _synthesis_first_paragraphs(
     p2 = _synthesis_flow_or_route_mapping_paragraph(
         query=query, voice=voice, synthesis=syn, reasoning_context=reasoning_context
     )
-    p3 = _synthesis_anchors_paragraph(syn, reasoning_context)
+    p3 = _synthesis_anchors_paragraph(syn, reasoning_context, voice=voice, query=query)
     p4 = _synthesis_limits_paragraph(syn, evidence_quality)
     out: List[str] = []
     if p1:
