@@ -432,3 +432,63 @@ def test_http_request_flow_uses_api_route_mapping_and_avoids_fake_chain():
     assert "`AbstractAPI.init` supplies the generic CRUD templates." in text
     assert "ObjectConfigStore" not in text
     assert "DiscoveryEngine" not in text
+
+
+def _minimal_reasoning_synthesis() -> dict:
+    return {
+        "schema_version": "reasoning_synthesis.v1",
+        "subsystem": {"label": "api_layer", "confidence": "high", "signals": []},
+        "control_flow_steps": [
+            {"step": "ingress_bootstrap", "support": "t"},
+            {"step": "shared_abstraction_or_rest_contract", "support": "t"},
+            {"step": "request_handler_or_concrete_api", "support": "t"},
+        ],
+        "proven_facts": ["Route snapshot lists grouped paths under APIServer bootstrap."],
+        "confidence_limits": ["Per-endpoint overrides may require wider excerpts."],
+    }
+
+
+def test_phase_d_synthesis_flag_emits_synthesis_first_shape(monkeypatch):
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    meta = _meta_rc("APIServer", "start", gaps=["Custom gap for limits paragraph."])
+    meta["reasoning_synthesis"] = _minimal_reasoning_synthesis()
+    out = build_articulated_answer(
+        query="Explain the API layer architecture.",
+        plan_steps=["Primary implementation owner: `APIServer`."],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    assert out.get("shape") == "synthesis_first_v1"
+    text = "\n\n".join(out.get("paragraphs") or [])
+    assert "distinct grounded" not in text.lower()
+    assert "multi-hop elaboration" not in text.lower()
+    assert "HTTP/API surface" in text or "route" in text.lower()
+
+
+def test_phase_d_synthesis_flag_preserves_structural_base_class_path(monkeypatch):
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    meta = {
+        "evidence_quality": "WEAK",
+        "reasoning_synthesis": _minimal_reasoning_synthesis(),
+        "reasoning_context": {
+            "schema_version": "reasoning_context.d1",
+            "primary_owner": {"class": "APIServer", "method": "start", "file": "src/APIServer.java"},
+            "anchor_method": "APIServer.start",
+            "inheritance": {"chain": ["APIServer", "AbstractVerticle"], "citation": "G1"},
+            "typed_nodes": {"entrypoints": [], "abstractions": [], "handlers": [], "stores": [], "collaborators": []},
+            "coverage_gaps": ["No graph call-paths available; flow is inferred from class names only."],
+            "api_route_mapping": _api_route_mapping(),
+        },
+    }
+    out = build_articulated_answer(
+        query="Which class is the base class for concrete REST APIs in this codebase?",
+        plan_steps=[],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    assert out.get("shape") == "unified_contract"
+    assert "AbstractAPI" in "\n".join(out.get("paragraphs") or [])

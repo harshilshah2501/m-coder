@@ -12,10 +12,11 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from runtime.mcoder_cli.answer_shaping import _is_structural_query, shape_prompt_summary
+from runtime.mcoder_cli.answer_shaping import _is_discovery_query, _is_structural_query, shape_prompt_summary
 
 _SCHEMA = "articulated_answer.v0"
 _LEGACY_ENV = "MCODER_LEGACY_ASK_RENDERER"
+_SYNTHESIS_FLAG_ENV = "MCODER_REASONING_SYNTHESIS_V1"
 
 # When graph paths are absent, reasoning_context always adds these; they describe
 # snapshot limits, not failures — STRONG asks should not end with a forensic disclaimer.
@@ -511,6 +512,168 @@ def _planning_paragraph_from_context(query: str, groups: Dict[str, List[str]]) -
     return base + " Keep each phase bounded to concrete classes visible in current evidence."
 
 
+def _synthesis_flag_enabled() -> bool:
+    v = str(os.environ.get(_SYNTHESIS_FLAG_ENV, "")).strip().lower()
+    return v in {"1", "true", "yes", "on"}
+
+
+def _should_use_synthesis_first_narration(query: str, metadata: Dict[str, Any]) -> bool:
+    """Broad/system flows only — never structural, discovery listing, or planning."""
+    if not _synthesis_flag_enabled():
+        return False
+    syn = metadata.get("reasoning_synthesis")
+    if not isinstance(syn, dict):
+        return False
+    if str(syn.get("schema_version") or "") != "reasoning_synthesis.v1":
+        return False
+    if _is_planning_or_refactor_query(query):
+        return False
+    if _is_structural_query(query):
+        return False
+    if _is_discovery_query(query):
+        return False
+    return _is_broad_system_or_flow_query(query)
+
+
+def _is_broad_system_or_flow_query(query: str) -> bool:
+    q = str(query or "").strip().lower()
+    intent = _query_intent(query)
+    if intent in ("mail", "config_store", "notification", "alert_flow", "api"):
+        return True
+    keys = (
+        "architecture",
+        "layer",
+        "how does",
+        "how ",
+        "workflow",
+        "explain ",
+        "system ",
+        "flow",
+        "http ",
+        "api ",
+        "route",
+        "notification",
+        "mail ",
+        "config store",
+        "eventbus",
+        "async",
+        "enter ",
+        "requests ",
+    )
+    return any(k in q for k in keys)
+
+
+_SUBSYSTEM_SUMMARY_LEDE: Dict[str, str] = {
+    "api_layer": (
+        "The HTTP/API surface in this evidence snapshot is organized around server bootstrap, shared handler contracts, "
+        "and concrete route bindings where the offline route map applies."
+    ),
+    "mail_configuration": (
+        "Mail and delivery settings flow through validation and persistence-oriented components tied to the evidence bundle, "
+        "not a single isolated method."
+    ),
+    "notification": (
+        "Notification behavior is split between orchestration components and channel implementations; async handoffs apply "
+        "only where EventBus topology proves a matching address."
+    ),
+    "config_store": (
+        "Configuration storage is shaped by shared store abstractions with concrete implementations visible in this snapshot."
+    ),
+    "availability_correlation": (
+        "Availability and correlation logic anchors on engine-style components in evidence; wider excerpts are needed for branch-level causality."
+    ),
+    "general": (
+        "This answer summarizes subsystem roles visible in grounded evidence and maps; treat named classes as anchors, not a full runtime trace."
+    ),
+}
+
+
+_FLOW_STEP_PHRASES: Dict[str, str] = {
+    "ingress_bootstrap": "traffic enters through server bootstrap and route mounting",
+    "shared_abstraction_or_rest_contract": "shared REST abstractions define common handler contracts",
+    "request_handler_or_concrete_api": "concrete API classes implement endpoints backed by this snapshot",
+    "persistence_config_store": "configuration and state pass through store layers where visible",
+    "async_eventbus_handoff": "asynchronous work may cross the EventBus where topology ties producers and consumers to an address",
+    "flow_steps_sketch": "additional relationships appear in the grounded flow sketch",
+    "mail_configuration_lifecycle": "mail settings participate in validation and persistence hooks",
+    "api_request_routing": "HTTP routes are reflected in the route table captured in evidence",
+    "typed_flow_sketch": "the inferred typed-node sketch suggests how work moves between layers",
+    "configuration_validation_and_persistence": "configuration changes pass through validation-oriented hooks",
+}
+
+
+def _synthesis_summary_paragraph(syn: Dict[str, Any]) -> str:
+    sub = _as_dict(syn.get("subsystem"))
+    lab = str(sub.get("label") or "general").strip() or "general"
+    return _SUBSYSTEM_SUMMARY_LEDE.get(lab, _SUBSYSTEM_SUMMARY_LEDE["general"])
+
+
+def _synthesis_flow_paragraph(syn: Dict[str, Any]) -> str:
+    steps = _as_list(syn.get("control_flow_steps"))
+    phrases: List[str] = []
+    seen: set[str] = set()
+    for st in steps:
+        if not isinstance(st, dict):
+            continue
+        key = str(st.get("step") or "").strip()
+        ph = _FLOW_STEP_PHRASES.get(key)
+        if ph and ph not in seen:
+            seen.add(ph)
+            phrases.append(ph)
+    if not phrases:
+        return ""
+    body = "; ".join(phrases[:7])
+    return f"In broad strokes, {body}."
+
+
+def _synthesis_anchors_paragraph(syn: Dict[str, Any], reasoning_context: Dict[str, Any]) -> str:
+    facts = _as_list(syn.get("proven_facts"))[:5]
+    anchor = str(reasoning_context.get("anchor_method") or "").strip()
+    parts: List[str] = []
+    if anchor:
+        parts.append(f"Primary anchor: `{anchor}`.")
+    for f in facts:
+        fs = str(f).strip()
+        if fs and fs not in parts:
+            parts.append(fs)
+    if not parts:
+        return ""
+    return "Key evidence hooks: " + " ".join(parts)
+
+
+def _synthesis_limits_paragraph(syn: Dict[str, Any], evidence_quality: str) -> str:
+    lim = [str(x).strip() for x in _as_list(syn.get("confidence_limits")) if str(x).strip()]
+    if not lim:
+        return _evidence_limit_note({"evidence_quality": evidence_quality})
+    return "What this snapshot does not yet prove: " + " ".join(lim[:6])
+
+
+def _synthesis_first_paragraphs(
+    *,
+    query: str,
+    metadata: Dict[str, Any],
+    reasoning_context: Dict[str, Any],
+    evidence_quality: str,
+) -> Optional[List[str]]:
+    syn = metadata.get("reasoning_synthesis")
+    if not isinstance(syn, dict):
+        return None
+    p1 = _synthesis_summary_paragraph(syn)
+    p2 = _synthesis_flow_paragraph(syn)
+    p3 = _synthesis_anchors_paragraph(syn, reasoning_context)
+    p4 = _synthesis_limits_paragraph(syn, evidence_quality)
+    out: List[str] = []
+    if p1:
+        out.append(p1)
+    if p2:
+        out.append(p2)
+    if p3:
+        out.append(p3)
+    if p4:
+        out.append(p4)
+    return out if len(out) >= 2 else None
+
+
 def _unified_paragraphs(
     *,
     query: str,
@@ -873,22 +1036,45 @@ def build_articulated_answer(
     md = _as_dict(metadata)
     rc = _as_dict(md.get("reasoning_context"))
     eq = str(md.get("evidence_quality") or "")
-    paragraphs = _unified_paragraphs(
-        query=query,
-        reasoning_context=rc,
-        evidence_quality=eq,
-        plan_steps=steps,
-    )
+
+    shape_id = "unified_contract"
+    paragraphs: List[str]
+    if _should_use_synthesis_first_narration(query, md):
+        syn_par = _synthesis_first_paragraphs(
+            query=query,
+            metadata=md,
+            reasoning_context=rc,
+            evidence_quality=eq,
+        )
+        if syn_par:
+            paragraphs = [_strengthen_phrasing(p, eq) for p in syn_par]
+            shape_id = "synthesis_first_v1"
+        else:
+            paragraphs = _unified_paragraphs(
+                query=query,
+                reasoning_context=rc,
+                evidence_quality=eq,
+                plan_steps=steps,
+            )
+    else:
+        paragraphs = _unified_paragraphs(
+            query=query,
+            reasoning_context=rc,
+            evidence_quality=eq,
+            plan_steps=steps,
+        )
+
     if not paragraphs and steps:
         paragraphs = [steps[0][:300]]
     if not paragraphs:
         return None
 
+    max_para = 4 if shape_id == "synthesis_first_v1" else 1
     payload: Dict[str, Any] = {
         "schema_version": _SCHEMA,
-        "paragraphs": paragraphs[:1],
+        "paragraphs": paragraphs[:max_para],
         "supporting_plan_bullets": _supporting_bullets_from_steps(steps)[:5],
         "evidence_limit": _evidence_limit_note(metadata),
-        "shape": "unified_contract",
+        "shape": shape_id,
     }
     return payload
