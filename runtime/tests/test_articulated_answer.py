@@ -451,6 +451,7 @@ def _minimal_reasoning_synthesis() -> dict:
 def test_phase_d_synthesis_flag_emits_synthesis_first_shape(monkeypatch):
     monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
     meta = _meta_rc("APIServer", "start", gaps=["Custom gap for limits paragraph."])
+    meta["reasoning_context"]["api_route_mapping"] = _api_route_mapping()
     meta["reasoning_synthesis"] = _minimal_reasoning_synthesis()
     out = build_articulated_answer(
         query="Explain the API layer architecture.",
@@ -464,7 +465,28 @@ def test_phase_d_synthesis_flag_emits_synthesis_first_shape(monkeypatch):
     text = "\n\n".join(out.get("paragraphs") or [])
     assert "distinct grounded" not in text.lower()
     assert "multi-hop elaboration" not in text.lower()
-    assert "HTTP/API surface" in text or "route" in text.lower()
+    assert "`APIRouter.init` registers concrete API classes." in text
+    assert "`AbstractAPI.init` supplies the generic CRUD templates." in text
+    assert "In broad strokes, traffic enters through server bootstrap" not in text.lower()
+
+
+def test_synthesis_first_matches_unified_route_detail_for_http_ingress(monkeypatch):
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    meta = _meta_rc("APIServer", "start", gaps=["Custom gap."])
+    meta["reasoning_context"]["api_route_mapping"] = _api_route_mapping()
+    meta["reasoning_synthesis"] = _minimal_reasoning_synthesis()
+    out = build_articulated_answer(
+        query="Explain how HTTP requests enter the product through APIServer and reach concrete handler classes.",
+        plan_steps=["Primary implementation owner: `APIServer`."],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    assert out.get("shape") == "synthesis_first_v1"
+    text = "\n\n".join(out.get("paragraphs") or [])
+    assert "`apiRouter` binds namespace subrouters" in text
+    assert "`APIRouter.init` registers concrete API classes." in text
 
 
 def test_phase_d1_notification_voice_filters_http_bootstrap(monkeypatch):

@@ -903,6 +903,35 @@ def _synthesis_limits_paragraph(syn: Dict[str, Any], evidence_quality: str) -> s
     return "What this snapshot does not yet prove: " + " ".join(lim[:6])
 
 
+def _synthesis_flow_or_route_mapping_paragraph(
+    *,
+    query: str,
+    voice: str,
+    synthesis: Dict[str, Any],
+    reasoning_context: Dict[str, Any],
+) -> str:
+    """
+    Prefer the same concrete `api_route_mapping` paragraph as unified_contract when evidence
+    supports it — synthesis-only flow phrases are weaker for API architecture / HTTP ingress asks.
+    """
+    ql = str(query or "").strip().lower()
+    if voice != "api_layer":
+        return _synthesis_flow_paragraph(
+            query=query, voice=voice, synthesis=synthesis, reasoning_context=reasoning_context
+        )
+    route_mapping = _api_route_mapping_summary(reasoning_context)
+    mapped = _compose_api_route_mapping_paragraph(route_mapping).strip()
+    if not mapped:
+        return _synthesis_flow_paragraph(
+            query=query, voice=voice, synthesis=synthesis, reasoning_context=reasoning_context
+        )
+    if _is_api_layer_architecture_query(ql) or _query_implies_http_api_surface(query):
+        return mapped
+    return _synthesis_flow_paragraph(
+        query=query, voice=voice, synthesis=synthesis, reasoning_context=reasoning_context
+    )
+
+
 def _synthesis_first_paragraphs(
     *,
     query: str,
@@ -915,7 +944,7 @@ def _synthesis_first_paragraphs(
         return None
     voice = _effective_narration_subsystem(query, syn, reasoning_context)
     p1 = _synthesis_summary_paragraph(voice)
-    p2 = _synthesis_flow_paragraph(
+    p2 = _synthesis_flow_or_route_mapping_paragraph(
         query=query, voice=voice, synthesis=syn, reasoning_context=reasoning_context
     )
     p3 = _synthesis_anchors_paragraph(syn, reasoning_context)
