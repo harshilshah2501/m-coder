@@ -467,6 +467,80 @@ def test_phase_d_synthesis_flag_emits_synthesis_first_shape(monkeypatch):
     assert "HTTP/API surface" in text or "route" in text.lower()
 
 
+def test_phase_d1_notification_voice_filters_http_bootstrap(monkeypatch):
+    """Subsystem narration favors orchestration/EventBus over ingress phrases."""
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    meta = _meta_rc("NotificationEngine", "start", gaps=["Custom gap"])
+    meta["reasoning_context"]["eventbus_context"] = {
+        "addresses": [{"address": "alarm.notify"}],
+        "producers": [{"address": "alarm.notify", "class": "NotificationEngine", "method": "publish"}],
+        "consumers": [{"address": "alarm.notify", "class": "EmailNotification", "method": "deliver"}],
+        "unknowns": [],
+        "confidence": {},
+    }
+    syn = _minimal_reasoning_synthesis()
+    syn["subsystem"] = {"label": "api_layer", "confidence": "high"}
+    syn["control_flow_steps"] = [
+        {"step": "ingress_bootstrap"},
+        {"step": "request_handler_or_concrete_api"},
+        {"step": "async_eventbus_handoff"},
+    ]
+    meta["reasoning_synthesis"] = syn
+    out = build_articulated_answer(
+        query="How does notification dispatch coordinate channels?",
+        plan_steps=["Primary implementation owner: `NotificationEngine`."],
+        context_files=[{"path": "src/NotificationEngine.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    assert out.get("shape") == "synthesis_first_v1"
+    text = "\n\n".join(out.get("paragraphs") or [])
+    assert "traffic enters through server bootstrap" not in text.lower()
+    assert "orchestration coordinates channel-oriented handlers" in text.lower()
+
+
+def test_phase_d1_config_voice_skips_generic_ingress(monkeypatch):
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    meta = _meta_rc("AbstractConfigStore", "getItem", gaps=["Custom gap"])
+    syn = _minimal_reasoning_synthesis()
+    syn["subsystem"] = {"label": "api_layer", "confidence": "medium"}
+    meta["reasoning_synthesis"] = syn
+    out = build_articulated_answer(
+        query="How are config stores organized?",
+        plan_steps=["Primary implementation owner: `AbstractConfigStore.getItem`."],
+        context_files=[{"path": "src/store/AbstractConfigStore.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n\n".join(out.get("paragraphs") or [])
+    assert "traffic enters through server bootstrap" not in text.lower()
+    assert "typed configuration abstractions mediate reads and writes" in text.lower()
+
+
+def test_phase_d1_mail_voice_avoids_http_opener(monkeypatch):
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    routine = ["Persistence/store call chain not resolved."]
+    meta = _meta_rc("MailServerConfiguration", "beforeUpdate", gaps=routine)
+    syn = _minimal_reasoning_synthesis()
+    syn["subsystem"] = {"label": "api_layer"}
+    syn["control_flow_steps"] = [{"step": "ingress_bootstrap"}, {"step": "mail_configuration_lifecycle"}]
+    meta["reasoning_synthesis"] = syn
+    out = build_articulated_answer(
+        query="How does mail server configuration work when SMTP is disabled?",
+        plan_steps=[],
+        context_files=[{"path": "src/Mail.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n\n".join(out.get("paragraphs") or [])
+    assert "the http/api surface in this evidence snapshot" not in text.lower()
+    assert "traffic enters through server bootstrap" not in text.lower()
+    assert "validation and persistence" in text.lower() or "mail configuration updates" in text.lower()
+
+
 def test_phase_d_synthesis_flag_preserves_structural_base_class_path(monkeypatch):
     monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
     meta = {

@@ -563,6 +563,164 @@ def _is_broad_system_or_flow_query(query: str) -> bool:
     return any(k in q for k in keys)
 
 
+def _query_implies_http_api_surface(query: str) -> bool:
+    """True when prose should reference HTTP ingress, routers, or route tables."""
+    ql = str(query or "").strip().lower()
+    # Avoid bare "route" — it appears in notification/event phrasing unrelated to HTTP ingress.
+    needles = (
+        "http ",
+        "https:",
+        "apiserver",
+        "api server",
+        "rest ",
+        "ingress",
+        "nginx",
+        "/api/",
+        "api layer",
+        " router",
+        "routers ",
+        "api route",
+        "http route",
+        "routes and handler",
+        "routing through",
+        "route table",
+        "route mapping",
+        "handler class",
+        "request enters",
+        "through apiserver",
+        "reach concrete handler",
+        "http request",
+        " apis and handler",
+    )
+    return any(n in ql for n in needles)
+
+
+def _notification_evidence_heuristic(reasoning_context: Dict[str, Any], syn: Dict[str, Any]) -> bool:
+    if str(syn.get("query_intent") or "") == "notification":
+        return True
+    eb = _as_dict(reasoning_context.get("eventbus_context"))
+    if eb.get("producers") or eb.get("consumers") or eb.get("addresses"):
+        return True
+    typed = _as_dict(reasoning_context.get("typed_nodes"))
+    for bucket in ("handlers", "collaborators", "entrypoints"):
+        for node in _as_list(typed.get(bucket)):
+            if not isinstance(node, dict):
+                continue
+            c = str(node.get("class") or "").lower()
+            if any(tok in c for tok in ("notification", "notify", "email", "sms", "slack")):
+                return True
+    return False
+
+
+def _eventbus_topology_proven(reasoning_context: Dict[str, Any]) -> bool:
+    eb = _as_dict(reasoning_context.get("eventbus_context"))
+    return bool(eb.get("producers") or eb.get("consumers") or eb.get("addresses"))
+
+
+def _mail_delivery_tail_proven(reasoning_context: Dict[str, Any]) -> bool:
+    """Async/delivery collaborator visible in buckets (best-effort, evidence-only tail)."""
+    typed = _as_dict(reasoning_context.get("typed_nodes"))
+    for bucket in ("collaborators", "handlers"):
+        for node in _as_list(typed.get(bucket)):
+            if not isinstance(node, dict):
+                continue
+            c = str(node.get("class") or "").lower()
+            if any(tok in c for tok in ("mail", "smtp", "smtpclient", "send", "delivery", "deliver")):
+                return True
+    return False
+
+
+def _explicit_api_voice_query(query: str) -> bool:
+    """api_layer narration only when query clearly targets HTTP/API surface (Phase D.1)."""
+    return _query_implies_http_api_surface(query)
+
+
+def _effective_narration_subsystem(
+    query: str,
+    synthesis: Dict[str, Any],
+    reasoning_context: Dict[str, Any],
+) -> str:
+    """
+    Reconcile `_query_intent`, query text, synthesis subsystem label, and evidence so broad
+    questions are not flattened into generic API ingress prose.
+    """
+    ql = str(query or "").strip().lower()
+    qi = _query_intent(query)
+    syn_sub = str(_as_dict(synthesis.get("subsystem")).get("label") or "general").strip() or "general"
+
+    # Domain intents win unless the query is explicitly HTTP/API wording.
+    if qi == "mail" or bool(re.search(r"\bmail\b", ql)):
+        if not (_explicit_api_voice_query(query) and "mail" not in ql):
+            return "mail_configuration"
+    if qi == "config_store" or ("config store" in ql or "config stores" in ql):
+        if not _explicit_api_voice_query(query):
+            return "config_store"
+        return "api_layer"
+
+    notification_terms = (
+        "notification",
+        "notify",
+        "eventbus",
+        "event bus",
+        "message bus",
+        "publish",
+        "consume",
+        "producer",
+        "consumer",
+        "subscriber",
+        "dispatch",
+        "pipeline",
+    )
+    notification_q = qi == "notification" or any(k in ql for k in notification_terms)
+    notify_evidence = _notification_evidence_heuristic(reasoning_context, synthesis)
+
+    explicit_http = _explicit_api_voice_query(query)
+    if not explicit_http:
+        if notification_q and (notify_evidence or qi == "notification"):
+            return "notification"
+        if notify_evidence and (
+            "event-driven" in ql
+            or bool(re.search(r"\bevents?\b", ql))
+            or ("trap" in ql and "snmp" in ql)
+            or ("end-to-end" in ql and "notification" in ql)
+        ):
+            return "notification"
+
+    if any(k in ql for k in ("correlation engine", "correlation skip", "enrichment branch", "availability correlation")):
+        return "availability_correlation"
+
+    if explicit_http or ("explain" in ql and "api layer" in ql):
+        return "api_layer"
+
+    if syn_sub == "api_layer":
+        if notify_evidence and not explicit_http:
+            return "notification"
+        if qi == "mail" or bool(re.search(r"\bmail\b", ql)):
+            return "mail_configuration"
+        if not explicit_http:
+            return "general"
+
+    if syn_sub in _SUBSYSTEM_SUMMARY_LEDE:
+        return syn_sub
+    return "general"
+
+
+_FLOW_VOICE_PREFIX: Dict[str, str] = {
+    "notification": (
+        "Notification narrations here foreground orchestrators and delivery channels surfaced in evidence, not generic HTTP ingress."
+    ),
+    "config_store": (
+        "Configuration narrations emphasize abstraction layers and concrete stores rather than repeating server bootstrap language."
+    ),
+    "mail_configuration": (
+        "Mail settings narration centers validation hooks and persistence collaborators tied to the anchored classes."
+    ),
+    "availability_correlation": (
+        "Correlation narrations hinge on engine bootstrap evidence; widen snippets before asserting branch-level skips."
+    ),
+}
+
+
 _SUBSYSTEM_SUMMARY_LEDE: Dict[str, str] = {
     "api_layer": (
         "The HTTP/API surface in this evidence snapshot is organized around server bootstrap, shared handler contracts, "
@@ -592,38 +750,135 @@ _FLOW_STEP_PHRASES: Dict[str, str] = {
     "ingress_bootstrap": "traffic enters through server bootstrap and route mounting",
     "shared_abstraction_or_rest_contract": "shared REST abstractions define common handler contracts",
     "request_handler_or_concrete_api": "concrete API classes implement endpoints backed by this snapshot",
-    "persistence_config_store": "configuration and state pass through store layers where visible",
+    "persistence_config_store": "callers reach concrete configuration stores through the persistence boundary shown in evidence",
     "async_eventbus_handoff": "asynchronous work may cross the EventBus where topology ties producers and consumers to an address",
     "flow_steps_sketch": "additional relationships appear in the grounded flow sketch",
-    "mail_configuration_lifecycle": "mail settings participate in validation and persistence hooks",
+    "mail_configuration_lifecycle": "mail configuration updates run through API lifecycle hooks where those classes participate",
     "api_request_routing": "HTTP routes are reflected in the route table captured in evidence",
     "typed_flow_sketch": "the inferred typed-node sketch suggests how work moves between layers",
-    "configuration_validation_and_persistence": "configuration changes pass through validation-oriented hooks",
+    "configuration_validation_and_persistence": "validation and enrichment run before configuration state is written or refreshed",
+    "config_typed_abstraction": "typed configuration abstractions mediate reads and writes before concrete store implementations",
+    "notification_orchestration": "orchestration coordinates channel-oriented handlers before persistence side effects",
+    "mail_async_delivery_tail": "downstream collaborators may handle delivery asynchronously when evidence surfaces mail or SMTP-oriented handlers",
 }
 
 
-def _synthesis_summary_paragraph(syn: Dict[str, Any]) -> str:
-    sub = _as_dict(syn.get("subsystem"))
-    lab = str(sub.get("label") or "general").strip() or "general"
+def _synthesis_summary_paragraph(voice: str) -> str:
+    lab = voice if voice in _SUBSYSTEM_SUMMARY_LEDE else "general"
     return _SUBSYSTEM_SUMMARY_LEDE.get(lab, _SUBSYSTEM_SUMMARY_LEDE["general"])
 
 
-def _synthesis_flow_paragraph(syn: Dict[str, Any]) -> str:
-    steps = _as_list(syn.get("control_flow_steps"))
-    phrases: List[str] = []
+def _dedupe_phrase_order(phrases: List[str]) -> List[str]:
     seen: set[str] = set()
+    out: List[str] = []
+    for p in phrases:
+        if p and p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out
+
+
+def _synthesis_flow_paragraph(
+    *,
+    query: str,
+    voice: str,
+    synthesis: Dict[str, Any],
+    reasoning_context: Dict[str, Any],
+) -> str:
+    """Map synthesis control_flow_steps to prose; omit HTTP ingress for non-API voices unless the query asks for it."""
+    allow_http = voice == "api_layer" or _explicit_api_voice_query(query)
+    steps = _as_list(synthesis.get("control_flow_steps"))
+    keys_ordered: List[str] = []
     for st in steps:
         if not isinstance(st, dict):
             continue
         key = str(st.get("step") or "").strip()
+        if key and key not in keys_ordered:
+            keys_ordered.append(key)
+
+    drop_http_voice = frozenset({"ingress_bootstrap", "api_request_routing"})
+
+    phrases: List[str] = []
+    seen: set[str] = set()
+    eb_from_steps = False
+
+    def push_key(key: str) -> None:
+        nonlocal eb_from_steps
+        if key == "async_eventbus_handoff":
+            eb_from_steps = True
+        if not allow_http and key in drop_http_voice:
+            return
+        if voice == "config_store" and not allow_http and key in (
+            "ingress_bootstrap",
+            "api_request_routing",
+            "request_handler_or_concrete_api",
+            "shared_abstraction_or_rest_contract",
+        ):
+            return
+        if voice == "notification" and not allow_http:
+            if key in drop_http_voice:
+                return
+            if key in ("request_handler_or_concrete_api", "shared_abstraction_or_rest_contract", "typed_flow_sketch"):
+                return
+        if voice == "mail_configuration" and not allow_http and key in drop_http_voice:
+            return
+        if voice == "general" and not allow_http and key in (
+            "ingress_bootstrap",
+            "api_request_routing",
+            "request_handler_or_concrete_api",
+            "shared_abstraction_or_rest_contract",
+        ):
+            return
         ph = _FLOW_STEP_PHRASES.get(key)
         if ph and ph not in seen:
             seen.add(ph)
             phrases.append(ph)
+
+    for k in keys_ordered:
+        push_key(k)
+
+    if voice == "config_store":
+        if not allow_http:
+            phrases.insert(0, _FLOW_STEP_PHRASES["config_typed_abstraction"])
+            if _FLOW_STEP_PHRASES["persistence_config_store"] not in seen:
+                seen.add(_FLOW_STEP_PHRASES["persistence_config_store"])
+                phrases.append(_FLOW_STEP_PHRASES["persistence_config_store"])
+        else:
+            for k in ("shared_abstraction_or_rest_contract", "request_handler_or_concrete_api", "persistence_config_store"):
+                push_key(k)
+
+    elif voice == "notification":
+        phrases.insert(0, _FLOW_STEP_PHRASES["notification_orchestration"])
+        if _eventbus_topology_proven(reasoning_context) or eb_from_steps:
+            eb = _FLOW_STEP_PHRASES["async_eventbus_handoff"]
+            if eb not in seen:
+                seen.add(eb)
+                phrases.append(eb)
+
+    elif voice == "mail_configuration":
+        heads = (
+            _FLOW_STEP_PHRASES["mail_configuration_lifecycle"],
+            _FLOW_STEP_PHRASES["configuration_validation_and_persistence"],
+        )
+        phrases = _dedupe_phrase_order([*heads, *phrases])
+        if allow_http or _mail_delivery_tail_proven(reasoning_context):
+            tail = _FLOW_STEP_PHRASES["mail_async_delivery_tail"]
+            phrases = _dedupe_phrase_order([*phrases, tail])
+
+    elif voice == "api_layer":
+        push_key("ingress_bootstrap")
+        if not phrases:
+            phrases.append(_FLOW_STEP_PHRASES["shared_abstraction_or_rest_contract"])
+
+    phrases = _dedupe_phrase_order(phrases)[:8]
+    prefix = (_FLOW_VOICE_PREFIX.get(voice) or "").strip()
     if not phrases:
         return ""
-    body = "; ".join(phrases[:7])
-    return f"In broad strokes, {body}."
+
+    body_core = "; ".join(phrases)
+    if prefix:
+        return f"In broad strokes, {prefix} {body_core}."
+    return f"In broad strokes, {body_core}."
 
 
 def _synthesis_anchors_paragraph(syn: Dict[str, Any], reasoning_context: Dict[str, Any]) -> str:
@@ -658,8 +913,11 @@ def _synthesis_first_paragraphs(
     syn = metadata.get("reasoning_synthesis")
     if not isinstance(syn, dict):
         return None
-    p1 = _synthesis_summary_paragraph(syn)
-    p2 = _synthesis_flow_paragraph(syn)
+    voice = _effective_narration_subsystem(query, syn, reasoning_context)
+    p1 = _synthesis_summary_paragraph(voice)
+    p2 = _synthesis_flow_paragraph(
+        query=query, voice=voice, synthesis=syn, reasoning_context=reasoning_context
+    )
     p3 = _synthesis_anchors_paragraph(syn, reasoning_context)
     p4 = _synthesis_limits_paragraph(syn, evidence_quality)
     out: List[str] = []
