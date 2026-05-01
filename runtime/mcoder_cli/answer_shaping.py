@@ -29,8 +29,32 @@ def _norm_query(q: str) -> str:
 
 
 def _is_structural_query(q: str) -> bool:
+    """
+    Inheritance / type-shape questions — not definitional asks like 'What is PluginEngine?',
+    which must compose from role/anchors instead of collapsing to REST base-class boilerplate.
+    """
     ql = _norm_query(q)
-    return any(x in ql for x in ("base class", "parent class", "extends", "implements", "what is"))
+    if any(x in ql for x in ("base class", "parent class", "extends", "implements")):
+        return True
+    # Avoid bare "what is" (matches "... responsibility of Foo", "what is NetRoute...", etc.).
+    phrases = (
+        "what is the base class",
+        "what's the base class",
+        "what is the parent class",
+        "what's the parent class",
+        "what is the superclass",
+        "what superclass",
+        "what parent class",
+        "which class extends",
+        "which class implements",
+        "what class extends",
+        "what class implements",
+        "which interface does",
+        "what interface does",
+        "implements which",
+        "extends which",
+    )
+    return any(x in ql for x in phrases)
 
 
 def _is_discovery_query(q: str) -> bool:

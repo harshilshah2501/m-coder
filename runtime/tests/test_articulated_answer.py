@@ -416,6 +416,51 @@ def test_api_entrypoint_explain_query_uses_architecture_template():
     assert "Exact per-endpoint overrides still need class-by-class extraction." in text
 
 
+def test_plugin_engine_responsibility_avoids_structural_abstract_api_only():
+    meta = {
+        "evidence_quality": "STRONG",
+        "reasoning_context": {
+            "schema_version": "reasoning_context.d1",
+            "primary_owner": {"class": "PluginEngine", "method": "load", "file": "src/PluginEngine.java"},
+            "anchor_method": "PluginEngine.load",
+            "typed_nodes": {
+                "entrypoints": [{"class": "APIServer", "method": "start"}],
+                "abstractions": [{"class": "AbstractAPI", "method": ""}],
+                "handlers": [{"class": "PluginEngine", "method": "load"}],
+                "stores": [],
+                "collaborators": [],
+            },
+            "coverage_gaps": [],
+        },
+    }
+    out = build_articulated_answer(
+        query="What is the responsibility of PluginEngine?",
+        plan_steps=["Primary implementation owner: `PluginEngine` in `src/PluginEngine.java`, method `load`."],
+        context_files=[{"path": "src/PluginEngine.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "strongest grounded abstraction is `AbstractAPI`".lower() not in text.lower()
+    assert "`PluginEngine`" in text or "PluginEngine.load" in text
+
+
+def test_netroute_scheduler_name_not_matched_as_route_flow_query():
+    meta = _meta_rc("NetRouteScheduler", "tick", gaps=[])
+    out = build_articulated_answer(
+        query="What NetRouteScheduler actually does?",
+        plan_steps=[],
+        context_files=[{"path": "src/netroute/NetRouteScheduler.java"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    text = "\n".join(out.get("paragraphs") or [])
+    assert "`APIServer.start` creates the HTTP server" not in text
+    assert "`NetRouteScheduler`" in text
+
+
 def test_http_request_flow_uses_api_route_mapping_and_avoids_fake_chain():
     meta = _meta_rc("APIServer", "start", gaps=[])
     meta["reasoning_context"]["api_route_mapping"] = _api_route_mapping()

@@ -400,7 +400,156 @@ def _is_api_layer_architecture_query(ql: str) -> bool:
 
 
 def _is_api_route_flow_query(ql: str) -> bool:
-    return any(k in ql for k in ("api", "http", "route", "router", "handler", "apiserver"))
+    # Word-boundary-ish checks: class names like NetRouteScheduler contained "route".
+    if re.search(r"\bapi\b", ql) or "http" in ql or "apiserver" in ql.replace(" ", ""):
+        return True
+    return bool(
+        re.search(r"\broutes?\b", ql)
+        or re.search(r"\brouting\b", ql)
+        or re.search(r"\brouter\b", ql)
+        or re.search(r"\bhandlers?\b", ql)
+    )
+
+
+_CLASS_NAME_TOKEN_RE = re.compile(r"\b[A-Z][a-zA-Z0-9]{2,}\b")
+
+# Sentence-start / instruction words that match the Java class pattern but are not types.
+_NON_TYPE_CLASS_TOKENS = frozenset(
+    {
+        "What",
+        "When",
+        "Where",
+        "Which",
+        "Whose",
+        "How",
+        "Why",
+        "The",
+        "This",
+        "That",
+        "These",
+        "Those",
+        "Please",
+        "Explain",
+        "Describe",
+        "List",
+        "Find",
+        "Show",
+        "Give",
+        "Tell",
+    }
+)
+
+
+def _java_class_candidates_in_query(query: str) -> List[str]:
+    hits: List[str] = []
+    seen: set[str] = set()
+    for m in _CLASS_NAME_TOKEN_RE.finditer(query or ""):
+        tok = m.group(0).strip()
+        if tok in _NON_TYPE_CLASS_TOKENS:
+            continue
+        key = tok.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        hits.append(tok)
+    return hits
+
+
+def _is_named_class_capability_query(original: str, ql: str) -> bool:
+    if not _java_class_candidates_in_query(original):
+        return False
+    if any(
+        k in ql
+        for k in (
+            "responsibility",
+            "purpose",
+            "actually does",
+            "role of",
+            "role for",
+        )
+    ):
+        return True
+    if "actually" in ql and "does" in ql:
+        return True
+    if "what does" in ql or "what do " in ql:
+        return True
+    if "explain what " in ql or "describe what " in ql:
+        return True
+    if "what is " in ql:
+        if any(
+            m in ql
+            for m in (
+                "base class",
+                "parent class",
+                "inherits",
+                "inheritance",
+                "superclass",
+                "implements",
+                "extends",
+            )
+        ):
+            return False
+        return True
+    return False
+
+
+def _focus_class_for_capability_query(
+    query: str,
+    owner_cls: str,
+    anchor: str,
+    all_components: List[str],
+) -> str:
+    cand = _java_class_candidates_in_query(query)
+    if not cand:
+        return ""
+    comps = {_class_from_component_label(c) for c in all_components if _class_from_component_label(c)}
+    owner = (owner_cls or "").strip()
+    anch_cls = _class_from_component_label(anchor)
+    for pref in (owner, anch_cls):
+        if pref and pref in cand:
+            return pref
+    for tok in cand:
+        if tok in comps:
+            return tok
+    return cand[0]
+
+
+def _compose_named_class_capability_paragraph(
+    *,
+    focus_cls: str,
+    anchor: str,
+    groups: Dict[str, List[str]],
+) -> str:
+    anchor_cls = _class_from_component_label(anchor)
+    parts: List[str] = []
+    if anchor and anchor_cls == focus_cls:
+        parts.append(
+            f"This bundle anchors on **`{focus_cls}`** (`{anchor}`): use the attached plan steps and snippets as the authority for what that type does in this snapshot."
+        )
+    elif anchor:
+        parts.append(
+            f"Your question highlights **`{focus_cls}`** while retrieval anchored at `{anchor}` — both are constrained to the excerpts and plan below; weight evidence that names `{focus_cls}` first."
+        )
+    else:
+        parts.append(f"**`{focus_cls}`** is the clearest symbol named in your question; ground behavior only from the excerpts and plan below.")
+
+    cols: List[str] = []
+    seen: set[str] = set()
+    for key in ("handlers", "collaborators", "stores", "entrypoints", "abstractions"):
+        for lab in groups.get(key, []):
+            c = _class_from_component_label(str(lab))
+            if not c or c == focus_cls or c.lower() in seen:
+                continue
+            seen.add(c.lower())
+            cols.append(c)
+            if len(cols) >= 4:
+                break
+        if len(cols) >= 4:
+            break
+    cols_render = ", ".join(f"`{c}`" for c in cols[:4])
+    if cols_render:
+        parts.append(f"Neighboring grounded types in this view include {cols_render}.")
+    return " ".join(parts)
 
 
 def _api_route_mapping_summary(reasoning_context: Dict[str, Any]) -> Dict[str, Any]:
@@ -1295,20 +1444,37 @@ def _unified_paragraphs(
                 elif mid:
                     sentences.append(f"Shared abstractions include {mid}.")
         else:
-            ep = _render_class_list(groups.get("entrypoints", []), limit=1, drop=None)
-            sentences.append(
-                f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
-            )
-            mid = _render_list(abstractions, limit=2, drop=anchor)
-            end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
-            if mid and end:
-                sentences.append(
-                    f"Shared lifecycle behavior flows through {mid}, and work coordinates with {end}."
+            focus_cls = ""
+            if _is_named_class_capability_query(query, ql):
+                focus_cls = _focus_class_for_capability_query(
+                    query,
+                    owner_cls,
+                    anchor,
+                    all_components,
                 )
-            elif end:
-                sentences.append(f"Key implementation components include {end}.")
-            elif mid:
-                sentences.append(f"Shared abstractions include {mid}.")
+            if focus_cls:
+                sentences.append(
+                    _compose_named_class_capability_paragraph(
+                        focus_cls=focus_cls,
+                        anchor=anchor,
+                        groups=groups,
+                    )
+                )
+            else:
+                ep = _render_class_list(groups.get("entrypoints", []), limit=1, drop=None)
+                sentences.append(
+                    f"The API layer starts at `{anchor}`, which bootstraps routing and delegates requests to concrete handlers."
+                )
+                mid = _render_list(abstractions, limit=2, drop=anchor)
+                end = _render_list(handlers or collaborators or stores, limit=3, drop=anchor)
+                if mid and end:
+                    sentences.append(
+                        f"Shared lifecycle behavior flows through {mid}, and work coordinates with {end}."
+                    )
+                elif end:
+                    sentences.append(f"Key implementation components include {end}.")
+                elif mid:
+                    sentences.append(f"Shared abstractions include {mid}.")
 
     # One bounded-confidence sentence only when gaps are non-routine or evidence is not STRONG.
     if gaps and _should_append_chain_disclaimer(evidence_quality, gaps):
