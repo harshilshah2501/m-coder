@@ -6,6 +6,9 @@
 #   ./runtime/scripts/governed_services.sh start|stop|restart|status
 #   CONFIG_PATH=/path/to/demo_stack.env ./runtime/scripts/governed_services.sh restart
 #
+# Ask flags (Plan-Gate process): set MCODER_REASONING_SYNTHESIS_V1 / MCODER_GOVERNED_ASK_NARRATOR in
+# runtime/config/demo_stack.env (see demo_stack.env.example). Defaults applied if omitted.
+#
 # - stop: SIGTERM → wait → SIGKILL; then optional fuser -k on ports if still bound (no leaks).
 # - restart: full stop, wait, port cleanup, then start (clean cycle).
 # - status: HTTP checks + pid files.
@@ -133,6 +136,11 @@ cmd_start() {
     set +a
     ok "Loaded $CONFIG_PATH"
 
+    # Ask narration — Plan-Gate reads these when composing articulated_answer (not the mcoder CLI shell).
+    : "${MCODER_REASONING_SYNTHESIS_V1:=0}"
+    : "${MCODER_GOVERNED_ASK_NARRATOR:=0}"
+    export MCODER_REASONING_SYNTHESIS_V1 MCODER_GOVERNED_ASK_NARRATOR
+
     : "${VLLM_PORT:=8000}"
     : "${VLLM_SERVED_MODEL_NAME:=motadata-coder}"
     : "${MOTADATA_EXPLAIN_VLLM_URL:=http://127.0.0.1:$VLLM_PORT}"
@@ -176,6 +184,8 @@ cmd_start() {
         echo "MOTADATA_EXPLAIN_MODEL=$MOTADATA_EXPLAIN_MODEL"
         echo "ASK_DEFAULT_REPO_ROOT=${ASK_DEFAULT_REPO_ROOT:-}"
         echo "PLAN_GATE_PORT=$PLAN_GATE_PORT"
+        echo "MCODER_REASONING_SYNTHESIS_V1=$MCODER_REASONING_SYNTHESIS_V1"
+        echo "MCODER_GOVERNED_ASK_NARRATOR=$MCODER_GOVERNED_ASK_NARRATOR"
     } > "$EFFECTIVE_CONFIG"
     info "Effective config written to $EFFECTIVE_CONFIG"
 
