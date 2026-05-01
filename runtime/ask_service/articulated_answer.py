@@ -271,6 +271,34 @@ def _should_append_chain_disclaimer(evidence_quality: str, gaps: List[str]) -> b
     return True
 
 
+def _owner_anchor_resolved(reasoning_context: Dict[str, Any]) -> bool:
+    anchor = str(reasoning_context.get("anchor_method") or "").strip()
+    if anchor and "." in anchor:
+        return True
+    owner = _as_dict(reasoning_context.get("primary_owner"))
+    cls = str(owner.get("class") or "").strip()
+    meth = str(owner.get("method") or "").strip()
+    return bool(cls and meth)
+
+
+def _should_emit_synthesis_limits_paragraph(reasoning_context: Dict[str, Any], evidence_quality: str) -> bool:
+    """
+    Omit the closing uncertainty block when STRONG evidence already has a resolved anchor and only
+    routine snapshot gaps — avoids repeating boilerplate on every ASK response.
+    """
+    eq = str(evidence_quality or "").upper()
+    if eq != "STRONG":
+        return True
+    if not _owner_anchor_resolved(reasoning_context):
+        return True
+    gaps = [str(g).strip() for g in _as_list(reasoning_context.get("coverage_gaps")) if str(g).strip()]
+    if not gaps:
+        return False
+    if _routine_coverage_only(gaps):
+        return False
+    return True
+
+
 def _query_intent(query: str) -> str:
     q = str(query or "").strip().lower()
     # Discovery-style notification queries often include "email"/"sms";
@@ -752,7 +780,7 @@ _FLOW_STEP_PHRASES: Dict[str, str] = {
     "request_handler_or_concrete_api": "concrete API classes implement endpoints backed by this snapshot",
     "persistence_config_store": "callers reach concrete configuration stores through the persistence boundary shown in evidence",
     "async_eventbus_handoff": "asynchronous work may cross the EventBus where topology ties producers and consumers to an address",
-    "flow_steps_sketch": "additional relationships appear in the grounded flow sketch",
+    "flow_steps_sketch": "supporting classes tie into the grounded flow sketch where evidence lists them",
     "mail_configuration_lifecycle": "mail configuration updates run through API lifecycle hooks where those classes participate",
     "api_request_routing": "HTTP routes are reflected in the route table captured in evidence",
     "typed_flow_sketch": "the inferred typed-node sketch suggests how work moves between layers",
@@ -935,7 +963,13 @@ def _synthesis_anchors_paragraph(
     return "Key evidence hooks: " + " ".join(parts)
 
 
-def _synthesis_limits_paragraph(syn: Dict[str, Any], evidence_quality: str) -> str:
+def _synthesis_limits_paragraph(
+    syn: Dict[str, Any],
+    evidence_quality: str,
+    reasoning_context: Dict[str, Any],
+) -> str:
+    if not _should_emit_synthesis_limits_paragraph(reasoning_context, evidence_quality):
+        return ""
     lim = [str(x).strip() for x in _as_list(syn.get("confidence_limits")) if str(x).strip()]
     if not lim:
         return _evidence_limit_note({"evidence_quality": evidence_quality})
@@ -987,7 +1021,7 @@ def _synthesis_first_paragraphs(
         query=query, voice=voice, synthesis=syn, reasoning_context=reasoning_context
     )
     p3 = _synthesis_anchors_paragraph(syn, reasoning_context, voice=voice, query=query)
-    p4 = _synthesis_limits_paragraph(syn, evidence_quality)
+    p4 = _synthesis_limits_paragraph(syn, evidence_quality, reasoning_context)
     out: List[str] = []
     if p1:
         out.append(p1)
@@ -1396,11 +1430,14 @@ def build_articulated_answer(
         return None
 
     max_para = 4 if shape_id == "synthesis_first_v1" else 1
+    limit_note = _evidence_limit_note(metadata)
+    if shape_id == "synthesis_first_v1" and not _should_emit_synthesis_limits_paragraph(rc, eq):
+        limit_note = ""
     payload: Dict[str, Any] = {
         "schema_version": _SCHEMA,
         "paragraphs": paragraphs[:max_para],
         "supporting_plan_bullets": _supporting_bullets_from_steps(steps)[:5],
-        "evidence_limit": _evidence_limit_note(metadata),
+        "evidence_limit": limit_note,
         "shape": shape_id,
     }
     return payload

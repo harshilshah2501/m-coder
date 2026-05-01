@@ -470,6 +470,34 @@ def test_phase_d_synthesis_flag_emits_synthesis_first_shape(monkeypatch):
     assert "In broad strokes, traffic enters through server bootstrap" not in text.lower()
 
 
+def test_synthesis_first_strong_routine_gaps_omit_limits_footer(monkeypatch):
+    """STRONG + resolved anchor + only routine snapshot gaps → no closing uncertainty paragraph."""
+    monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
+    meta = _meta_rc(
+        "APIServer",
+        "start",
+        gaps=[
+            "Full request routing not resolved in current evidence.",
+            "Persistence/store call chain not resolved.",
+            "No graph call-paths available; flow is inferred from class names only.",
+        ],
+    )
+    meta["reasoning_context"]["api_route_mapping"] = _api_route_mapping()
+    meta["reasoning_synthesis"] = _minimal_reasoning_synthesis()
+    out = build_articulated_answer(
+        query="Explain the API layer architecture.",
+        plan_steps=["Primary implementation owner: `APIServer`."],
+        context_files=[{"path": "src/APIServer.java", "selection_reason": "rank"}],
+        graph_traversal=None,
+        metadata=meta,
+    )
+    assert out is not None
+    assert out.get("shape") == "synthesis_first_v1"
+    text = "\n\n".join(out.get("paragraphs") or [])
+    assert "What this snapshot does not yet prove" not in text
+    assert "This answer stays within the code evidence and plan steps" not in text
+
+
 def test_synthesis_first_matches_unified_route_detail_for_http_ingress(monkeypatch):
     monkeypatch.setenv("MCODER_REASONING_SYNTHESIS_V1", "1")
     meta = _meta_rc("APIServer", "start", gaps=["Custom gap."])
