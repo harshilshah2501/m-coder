@@ -9,7 +9,7 @@ ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
 # Canonical local DVC storage path (repo-adjacent)
-DVC_LOCAL_PATH="${DVC_LOCAL_PATH:-/home/harshil/Harshil-PoCs/m-coder_artifacts/dvc}"
+DVC_LOCAL_PATH="${DVC_LOCAL_PATH:-${HOME}/m-coder_artifacts/dvc}"
 
 # Create storage directory first (so it exists even before DVC is installed)
 mkdir -p "$DVC_LOCAL_PATH"

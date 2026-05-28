@@ -1,5 +1,0 @@
-(plugin-visible capture — NOT RUN in this automated pass)
-
-Operator: Ask with PRIMARY_NO_MATCH_QUERY from ../fixed_queries.txt. Paste plugin output here.
-
-HTTP proof: see v1_ask_response.json (governance_posture PLAN_ONLY for this run).

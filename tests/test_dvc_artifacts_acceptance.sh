@@ -8,7 +8,7 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
-DVC_LOCAL_PATH="${DVC_LOCAL_PATH:-/home/harshil/Harshil-PoCs/m-coder_artifacts/dvc}"
+DVC_LOCAL_PATH="${DVC_LOCAL_PATH:-${HOME}/m-coder_artifacts/dvc}"
 
 echo "=== DVC Artifact Acceptance Tests (Local Disk) ==="
 echo "Repo: $REPO_ROOT"

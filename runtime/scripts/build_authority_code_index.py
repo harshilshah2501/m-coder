@@ -4,7 +4,7 @@ Build and persist authority code index with progress reporting.
 
 Usage:
   PYTHONPATH=. python3 runtime/scripts/build_authority_code_index.py \
-    --workspace-root "/home/harshil/Projects/Motadata"
+    --workspace-root "/ABSOLUTE/PATH/TO/workspace"
 """
 
 from __future__ import annotations

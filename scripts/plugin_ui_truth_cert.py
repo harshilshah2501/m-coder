@@ -246,8 +246,8 @@ def main() -> int:
     log_hints = {
         "local_context_log": str(repo_root / "runtime" / ".run" / "wsl_context_layer.log"),
         "local_tunnel_log": str(repo_root / "runtime" / ".run" / "wsl_plan_gate_tunnel.log"),
-        "remote_plan_gate_log_hint": "~/Harshil-PoCs/m-coder/runtime/.run/plan_gate.log on TUNNEL_TARGET host",
-        "remote_vllm_log_hint": "~/Harshil-PoCs/m-coder/runtime/.run/vllm.log on TUNNEL_TARGET host",
+        "remote_plan_gate_log_hint": "~/m-coder/runtime/.run/plan_gate.log on TUNNEL_TARGET host",
+        "remote_vllm_log_hint": "~/m-coder/runtime/.run/vllm.log on TUNNEL_TARGET host",
         "intellij_log_hint": "IntelliJ: Help -> Show Log in Explorer/Finder/File Manager",
         "this_run_log": str(run_log),
     }

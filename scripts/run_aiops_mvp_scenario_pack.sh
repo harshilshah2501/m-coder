@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run all 8 AIOps MVP scenarios (Context Layer export + Plan-Gate /v1/ask) and write artifacts + summary.
 # Usage (from repo root on WSL):
-#   export MOTADATA_ROOT=/home/harshil/Projects/Motadata
+#   export MOTADATA_ROOT=/ABSOLUTE/PATH/TO/workspace
 #   export CONTEXT_URL=http://127.0.0.1:8091
 #   export PLAN_GATE_URL=http://127.0.0.1:8089   # or tunneled URL
 #   export AIOPS_MVP_LIVE_HTTP_TIMEOUT=600      # export_evidence; default ask timeout too

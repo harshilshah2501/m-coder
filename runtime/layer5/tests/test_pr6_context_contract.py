@@ -53,6 +53,6 @@ def test_pr6_canonical_mode_allowed_for_matching_root(tmp_path: Path) -> None:
 def test_pr6_guard_refuses_fixture_root_in_baseline_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PR6_AIOPS_ROOT", str(pr6_fixture_root()))
     monkeypatch.delenv("MOTADATA_AIOPS_REPO_ROOT", raising=False)
-    monkeypatch.setenv("PR6_CANONICAL_ROOT", "/home/harshil/Projects/Motadata")
+    monkeypatch.setenv("PR6_CANONICAL_ROOT", "/tmp/non-fixture-canonical-root")
     with pytest.raises(pytest.fail.Exception, match="refused non-baseline context"):
         guard_mod._resolve_real_repo_root()

@@ -226,19 +226,19 @@ class TestJetBrainsWslLocalhostBridge:
         if os.name != "posix":
             pytest.skip("bridge mapping applies on POSIX only")
         r = PathNormalizer.normalize(
-            "/mnt/wsl.localhost/Ubuntu-24.04/home/harshil/Projects/Motadata",
+            "/mnt/wsl.localhost/Ubuntu-24.04/home/testuser/Projects/TestProject",
             resolve_symlinks=False,
         )
-        assert r.canonical_path == "/home/harshil/Projects/Motadata"
+        assert r.canonical_path == "/home/testuser/Projects/TestProject"
 
     def test_wsl_localhost_without_mnt_prefix(self):
         if os.name != "posix":
             pytest.skip("bridge mapping applies on POSIX only")
         r = PathNormalizer.normalize(
-            "/wsl.localhost/Ubuntu-24.04/home/harshil/Projects/Motadata",
+            "/wsl.localhost/Ubuntu-24.04/home/testuser/Projects/TestProject",
             resolve_symlinks=False,
         )
-        assert r.canonical_path == "/home/harshil/Projects/Motadata"
+        assert r.canonical_path == "/home/testuser/Projects/TestProject"
 
 
 if __name__ == "__main__":

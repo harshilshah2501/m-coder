@@ -67,8 +67,8 @@ def test_normalize_workspace_root_wsl_bridge():
     if os.name != "posix":
         pytest.skip("WSL bridge mapping applies on POSIX only")
     assert (
-        _normalize_workspace_root("/mnt/wsl.localhost/Ubuntu-24.04/home/harshil/Projects/Motadata")
-        == "/home/harshil/Projects/Motadata"
+        _normalize_workspace_root("/mnt/wsl.localhost/Ubuntu-24.04/home/testuser/Projects/TestProject")
+        == "/home/testuser/Projects/TestProject"
     )
 
 

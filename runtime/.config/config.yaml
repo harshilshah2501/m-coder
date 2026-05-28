@@ -1,59 +1,63 @@
-# Motadata AI System - Main Configuration
-# This file contains the primary configuration for all services
+# m-coder — legacy configuration template (training / RAG paths).
+# For the active governed HTTP stack use runtime/config/host_local.env.example
+# and runtime/config/demo_stack.env.example instead.
+#
+# All absolute paths below must be set via env vars before this file is consumed.
+# Set M_CODER_WORKSPACE_ROOT to the root of your workspace checkout.
 
 system:
-  name: Motadata AI System
+  name: m-coder
   version: v15
-  root_dir: /home/harshil/Harshil-PoCs
+  root_dir: ${M_CODER_WORKSPACE_ROOT}
   log_level: INFO
 
 paths:
   venv:
-    training: /home/harshil/Harshil-PoCs/venv/training
-    vllm: /home/harshil/Harshil-PoCs/venv/vllm
-    rag: /home/harshil/Harshil-PoCs/venv/rag
-  
+    training: ${M_CODER_WORKSPACE_ROOT}/venv/training
+    vllm: ${M_CODER_WORKSPACE_ROOT}/venv/vllm
+    rag: ${M_CODER_WORKSPACE_ROOT}/venv/rag
+
   models:
-    root: /home/harshil/Harshil-PoCs/models
-    current: /home/harshil/Harshil-PoCs/models/v15/motadata-coder-v15-merged
-  
+    root: ${M_CODER_WORKSPACE_ROOT}/models
+    current: ${M_CODER_WORKSPACE_ROOT}/models/current/merged
+
   services:
-    rag: /home/harshil/Harshil-PoCs/rag
-    training: /home/harshil/Harshil-PoCs/training
-    evaluation: /home/harshil/Harshil-PoCs/evaluation
-  
+    rag: ${M_CODER_WORKSPACE_ROOT}/rag
+    training: ${M_CODER_WORKSPACE_ROOT}/training
+    evaluation: ${M_CODER_WORKSPACE_ROOT}/evaluation
+
   data:
-    logs: /home/harshil/Harshil-PoCs/logs
-    datasets: /home/harshil/Harshil-PoCs/training/data
-    checkpoints: /home/harshil/Harshil-PoCs/training/checkpoints
+    logs: ${M_CODER_WORKSPACE_ROOT}/logs
+    datasets: ${M_CODER_WORKSPACE_ROOT}/training/data
+    checkpoints: ${M_CODER_WORKSPACE_ROOT}/training/checkpoints
 
 services:
   vllm:
     port: 8000
-    model_name: motadata-coder
+    model_name: ${VLLM_SERVED_MODEL_NAME}
     dtype: bfloat16
     max_model_len: 16384
     gpu_memory_utilization: 0.95
     trust_remote_code: true
     disable_log_requests: true
-  
+
   api_wrapper:
     port: 8080
     timeout: 30
-  
+
   rag_api:
     port: 8081
     timeout: 60
     embedding_model: jina-embeddings-v2-base-code
     embedding_dim: 768
-  
+
   qdrant:
     port: 6333
     host: localhost
-    collection_name: motadata_code
+    collection_name: ${QDRANT_COLLECTION_NAME:-m_coder_code}
 
 docker:
-  compose_file: /home/harshil/Harshil-PoCs/rag/docker/docker-compose.yml
+  compose_file: ${M_CODER_WORKSPACE_ROOT}/rag/docker/docker-compose.yml
   images:
     qdrant: qdrant/qdrant:latest
 

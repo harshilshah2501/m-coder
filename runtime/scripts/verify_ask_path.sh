@@ -6,7 +6,7 @@
 #   3) Print compact PASS/FAIL diagnostics
 #
 # Usage:
-#   WORKSPACE_ROOT=/root/Harshil-PoCs/Motadata \
+#   WORKSPACE_ROOT=/ABSOLUTE/PATH/TO/workspace \
 #   QUERY='How does alert correlation work in this repo?' \
 #   bash runtime/scripts/verify_ask_path.sh
 #

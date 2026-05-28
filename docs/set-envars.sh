@@ -15,7 +15,7 @@
 #   **You do not need Motadata on the GPU** for that flow (evidence → POST /v1/ask).
 # PLAN_GATE_REPO_ROOT — **Optional / v0 only:** `repo_root` in `POST /v0/ask` (Plan-Gate reads repo
 #   on GPU). Skip unless you test server-side ContextEngine. See DEBUG_PATH_VALIDATION_RUNBOOK.md.
-#   export PLAN_GATE_REPO_ROOT=/home/harshil/Harshil-PoCs/Motadata
+#   export PLAN_GATE_REPO_ROOT=/ABSOLUTE/PATH/TO/workspace
 #
 # URLs (WSL → services)
 # ---------------------
@@ -25,10 +25,10 @@
 # VLLM_URL — Usually not called from WSL directly; forwarded 127.0.0.1:8000 or GPU IP. Used if you
 #   run local tools that probe vLLM.
 
-export WORKSPACE_ROOT="${WORKSPACE_ROOT:-$HOME/Harshil-PoCs/Motadata}"
+export WORKSPACE_ROOT="${WORKSPACE_ROOT:-}"
 
 # Plan-Gate /v0/ask: set explicitly (path on GPU, readable by Plan-Gate user — NOT /root/... unless root).
-# export PLAN_GATE_REPO_ROOT=/home/harshil/Harshil-PoCs/Motadata
+# export PLAN_GATE_REPO_ROOT=/ABSOLUTE/PATH/TO/workspace
 
 export CONTEXT_URL="${CONTEXT_URL:-http://127.0.0.1:8091}"
 export PLAN_GATE_URL="${PLAN_GATE_URL:-http://127.0.0.1:8089}"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Tuple
@@ -9,7 +10,10 @@ PR6_MODE_BASELINE = "baseline_real_repo"
 PR6_MODE_FIXTURE = "fixture_diagnostic"
 PR6_MODE_INVALID = "invalid"
 
-DEFAULT_CANONICAL_ROOT = Path("/home/harshil/Projects/Motadata")
+# Resolved at import time from env var; callers must set PR6_CANONICAL_ROOT
+# before importing if they need a non-fixture baseline.
+_env_canonical = os.environ.get("PR6_CANONICAL_ROOT", "").strip()
+DEFAULT_CANONICAL_ROOT = Path(_env_canonical) if _env_canonical else Path("/tmp/unset-pr6-canonical-root")
 _FIXTURE_ROOT = Path(__file__).resolve().parent / "fixture_noisy_aiops_workspace"
 
 

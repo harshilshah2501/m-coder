@@ -11,7 +11,6 @@ from typing import FrozenSet, Iterable, Tuple
 
 # PR-6 closure lock (canonical baseline)
 # Date: 2026-03-26
-# Validation repo: /home/harshil/Projects/Motadata (WSL)
 # Closure metrics: top-1=10/10, top-3=10/10, mean_rank=1.00, mean_noise=0.00
 # Any modification requires PR-6 audit re-validation.
 

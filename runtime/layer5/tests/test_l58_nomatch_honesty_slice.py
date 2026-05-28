@@ -9,9 +9,12 @@ from runtime.layer5.audit.l58_grounded_harness import run_l58_harness
 
 
 def _canonical_root() -> Path:
-    root = Path("/home/harshil/Projects/Motadata").resolve()
+    _env = os.environ.get("PR6_CANONICAL_ROOT", "").strip()
+    if not _env:
+        pytest.skip("PR6_CANONICAL_ROOT env var not set; skipping grounded baseline test.")
+    root = Path(_env).resolve()
     if not root.is_dir():
-        pytest.skip("Canonical PR-6 root not found.")
+        pytest.skip(f"PR6_CANONICAL_ROOT path not found: {root}")
     return root
 
 

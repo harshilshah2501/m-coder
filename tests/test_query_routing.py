@@ -25,7 +25,7 @@ from runtime.scripts.motadata_query_cli import _build_router_response, _merge_ev
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_WORKSPACE_ROOT = Path(os.environ.get("MOTADATA_ACCEPTANCE_WORKSPACE_ROOT", "/root/Harshil-PoCs/Motadata"))
+DEFAULT_WORKSPACE_ROOT = Path(os.environ.get("MOTADATA_ACCEPTANCE_WORKSPACE_ROOT", ""))
 
 
 def test_router_smoke_no_network():

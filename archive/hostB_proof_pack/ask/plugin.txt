@@ -1,5 +1,0 @@
-(plugin-visible capture — NOT RUN in this automated pass)
-
-Operator: With evidence-first VM options applied, run Tools → Ask Motadata AI using the exact string in ../fixed_queries.txt (PRIMARY_ASK_V1_EVIDENCE_QUERY). Paste notification + full dialog text here. Expect ask_path v1_evidence / POST /v1/ask semantics per AskResultDialogMessage.
-
-HTTP proof for the same query (backend parity): see v1_ask_response.json (evidence_first_meta.ask_path = "v1_evidence").

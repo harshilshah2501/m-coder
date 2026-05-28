@@ -1,7 +1,0 @@
-# Action 10 — Host B (closure). Exact primary query strings for proof rows.
-
-PRIMARY_ASK_V1_EVIDENCE_QUERY:
-Where is alert ingestion or normalization implemented in this Motadata codebase?
-
-PRIMARY_NO_MATCH_QUERY:
-Where is nonexistent_xyz_function_12345 defined?

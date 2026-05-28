@@ -11,13 +11,13 @@
 #   bash packaging/motadata-context-layer/build_and_verify_wsl_context_layer.sh
 #
 # Optional env:
-#   WORKSPACE_ROOT=/root/Harshil-PoCs/Motadata
+#   WORKSPACE_ROOT=/ABSOLUTE/PATH/TO/workspace
 #   SANITY_QUERY='How does alert correlation work in this repo?'
 #   TOP_K=8
 #   CONTEXT_LAYER_SMOKE_PORT=18091
 #   PLAN_GATE_URL=http://127.0.0.1:8089   # optional compatibility check
 #   DEPLOY_TARGET=root@172.30.127.150      # optional wheel copy target
-#   DEPLOY_PATH=/root/Harshil-PoCs/Motadata
+#   DEPLOY_PATH=/ABSOLUTE/PATH/TO/workspace
 #   DEPLOY_METHOD=scp                       # scp (default) or rsync
 #   DEPLOY_SSH_OPTS='-o StrictHostKeyChecking=no'
 #
@@ -44,7 +44,7 @@ PLAN_GATE_URL="${PLAN_GATE_URL:-}"
 SMOKE_BASE_URL="http://127.0.0.1:${SMOKE_PORT}"
 SMOKE_LOG="$PKG_DIR/context-layer-smoke.log"
 DEPLOY_TARGET="${DEPLOY_TARGET:-}"
-DEPLOY_PATH="${DEPLOY_PATH:-/root/Harshil-PoCs/Motadata}"
+DEPLOY_PATH="${DEPLOY_PATH:-}"
 DEPLOY_METHOD="${DEPLOY_METHOD:-scp}"
 DEPLOY_SSH_OPTS="${DEPLOY_SSH_OPTS:-}"
 
